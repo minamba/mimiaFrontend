@@ -1,43 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <!-- Le .ico reste en premier pour les vieux navigateurs et la barre de
+         favoris de Windows, qui l'exigent encore. Les PNG suivent : plus nets,
+         et ils gardent la transparence. -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16.png" />
+    <!-- Google n'affiche dans ses résultats qu'une icône carrée dont le côté est
+         un multiple de 48 px ; les 16 et 32 ci-dessus sont ignorés. Fond crème
+         opaque et non transparent : en mode sombre, les résultats sont posés sur
+         un fond sombre, où le bleu nuit du logo disparaîtrait. -->
+    <link rel="icon" type="image/png" sizes="48x48" href="%PUBLIC_URL%/icone-48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="%PUBLIC_URL%/icone-96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/icone-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#12304A" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Mimia — un professeur particulier par IA pour chacun de vos enfants, du CP à la Terminale. Il ne donne pas la réponse : il diagnostique ce qui bloque et reprend depuis là."
     />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <link rel="canonical" href="https://mimia.fr/" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <!-- APERÇU DE PARTAGE
+         Les adresses sont écrites en absolu, jamais avec %PUBLIC_URL% : les
+         robots de Facebook, WhatsApp, LinkedIn, iMessage et Slack lisent le HTML
+         brut sans exécuter de JavaScript, et rejettent un chemin relatif.
+         L'image fait 1200 × 630 (le ratio 1.91:1 attendu) et pèse 250 Ko, sous
+         la limite au-delà de laquelle WhatsApp n'affiche plus qu'un lien nu. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Mimia" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:url" content="https://mimia.fr/" />
+    <meta property="og:title" content="Mimia — le professeur particulier de vos enfants" />
+    <meta
+      property="og:description"
+      content="Un professeur par IA avec un prénom, un visage, une voix — et une mémoire qui suit votre enfant d'année en année. Il ne donne jamais la réponse : il cherche où ça bloque."
+    />
+    <meta property="og:image" content="https://mimia.fr/apercu.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Nora, professeure de mathématiques, explique une fraction à Emma et l'écrit au tableau."
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mimia — le professeur particulier de vos enfants" />
+    <meta
+      name="twitter:description"
+      content="Un professeur par IA avec un prénom, un visage, une voix — et une mémoire qui suit votre enfant d'année en année. Il ne donne jamais la réponse : il cherche où ça bloque."
+    />
+    <meta name="twitter:image" content="https://mimia.fr/apercu.png" />
+
+    <!-- Ce qui donne à Google le logo de la marque, distinct de l'icône des
+         résultats : il alimente le panneau de connaissance. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Mimia",
+        "url": "https://mimia.fr/",
+        "logo": "https://mimia.fr/logo512.png",
+        "description": "Cours particuliers par intelligence artificielle pour les élèves du CP à la Terminale."
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>Mimia — le professeur particulier de vos enfants</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>Vous devez activer JavaScript pour utiliser Mimia.</noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

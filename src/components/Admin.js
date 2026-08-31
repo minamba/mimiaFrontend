@@ -1,0 +1,1295 @@
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  chargerAdmin,
+  changerGranularite,
+  filtrerParEleve,
+  rechercher,
+  rechercherEleve,
+  filtrerParParent,
+  ouvrirFiche,
+  fermerFiche,
+  muter,
+  changerPeriodeCout,
+} from '../lib/actions/adminActions';
+import {
+  getHistoriqueEvaluations,
+  getHistoriqueRapports,
+  getCout,
+  getHistoriqueHeures,
+} from '../lib/api/adminApi';
+import ChoixEleve from './ChoixEleve';
+import FicheEleve from './FicheEleve';
+import Graphique from './Graphique';
+import Frequentation from './Frequentation';
+import Loader from './Loader';
+import Modes from './Modes';
+import Diffusion from './Diffusion';
+import Messagerie from './Messagerie';
+import Planches from './Planches';
+
+const GRANULARITES = [
+  { cle: 'jour', libelle: 'Jour' },
+  { cle: 'semaine', libelle: 'Semaine' },
+  { cle: 'mois', libelle: 'Mois' },
+  { cle: 'annee', libelle: 'Année' },
+];
+
+/** Valeurs de l'énumération Sexe côté serveur. */
+const SEXES = { 0: '—', 1: 'Fille', 2: 'Garçon' };
+
+/**
+ * Champ de recherche à propagation différée.
+ *
+ * Une frappe recharge tout le tableau de bord — six requêtes. Taper « Emma »
+ * en lancerait donc quatre séries pour un seul résultat utile. On attend que
+ * la saisie se stabilise avant d'interroger le serveur.
+ */
+function useSaisieDifferee(appliquer, delai = 350) {
+  const [valeur, setValeur] = useState('');
+  const premierRendu = useRef(true);
+  const dernierApplique = useRef('');
+
+  useEffect(() => {
+    // Au montage, la valeur est déjà celle du store : la propager relancerait
+    // un chargement identique à celui que le composant vient de déclencher.
+    if (premierRendu.current) {
+      premierRendu.current = false;
+      return undefined;
+    }
+
+    // Ne relance rien si le terme finalement retenu est celui déjà appliqué :
+    // vider un champ déjà vide ne doit pas recharger le tableau de bord.
+    if (valeur === dernierApplique.current) return undefined;
+
+    const minuteur = setTimeout(() => {
+      dernierApplique.current = valeur;
+      appliquer(valeur);
+    }, delai);
+
+    return () => clearTimeout(minuteur);
+  }, [valeur]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return [valeur, setValeur];
+}
+
+/** Chiffre de tête : pas de graphique pour une valeur unique. */
+function Tuile({ libelle, valeur, precision }) {
+  return (
+    <div className="stat">
+      <span className="stat__valeur">{(valeur ?? 0).toLocaleString('fr-FR')}</span>
+      <span className="stat__libelle">{libelle}</span>
+      {precision && <span className="stat__precision">{precision}</span>}
+    </div>
+  );
+}
+
+/**
+ * Ce qu'une famille consomme de son forfait, sur la période en cours.
+ *
+ * POURQUOI CE CHIFFRE ET PAS LE NOMBRE DE REQUÊTES
+ * ------------------------------------------------
+ * Le prix d'une formule est calculé sur un pot d'heures. Tant qu'on ignore
+ * quelle PART de ce pot est réellement consommée, la marge reste une
+ * hypothèse : au pot plein elle vaut la moitié de ce qu'elle vaut à moitié
+ * consommé. Le nombre de requêtes ne dit rien de ça — dix messages courts et
+ * dix longues séances s'y ressemblent.
+ *
+ * LA BARRE CHANGE DE TON, ET SEULEMENT AUX SEUILS QUI COMPTENT
+ * -----------------------------------------------------------
+ * En dessous de 80 %, la famille est dans son forfait et il n'y a rien à
+ * signaler — une couleur neutre. Au-delà, elle approche du pot : c'est le
+ * moment où elle achètera des heures ou se sentira bridée. À 100 %, elle y
+ * est. Trois teintes suffisent ; une échelle continue ferait joli et ne
+ * dirait rien.
+ *
+ * SANS ABONNEMENT, ON ÉCRIT UN TIRET
+ * ----------------------------------
+ * Compte tout neuf, essai fini, résiliation : un « 0 % » s'y lirait comme
+ * « cette famille n'utilise pas ce qu'elle paie », alors qu'elle ne paie rien.
+ */
+function Consommation({ parent }) {
+  const { formule, minutesPot, minutesConsommees } = parent;
+
+  if (!formule || !minutesPot) return <span className="conso__vide">—</span>;
+
+  const part = Math.round((minutesConsommees / minutesPot) * 100);
+  const ton = part >= 100 ? 'plein' : part >= 80 ? 'proche' : 'normal';
+
+  return (
+    <div className="conso" title={`${formule} — ${minutesConsommees} min sur ${minutesPot}`}>
+      <div className="conso__jauge">
+        {/* Bornée à 100 % : les recharges entrent dans le pot, donc dépasser
+            est impossible — mais une barre qui sortirait de son cadre sur une
+            donnée aberrante casserait la colonne entière. */}
+        <span
+          className={`conso__part conso__part--${ton}`}
+          style={{ width: `${Math.min(part, 100)}%` }}
+        />
+      </div>
+
+      {/* Le pourcentage ET les heures. Le premier situe dans le forfait, les
+          secondes disent l'usage réel : 16 % ne pèse pas pareil sur un pot de
+          neuf heures et sur un pot de vingt-quatre. */}
+      <span className="conso__chiffre">
+        {part} %
+        <span className="conso__heures">
+          {enHeures(minutesConsommees)} / {enHeures(minutesPot)}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Ce qu'il reste dans le pot, en heures.
+ *
+ * POURQUOI UNE COLONNE À PART PLUTÔT QU'UN TROISIÈME CHIFFRE DANS LA JAUGE
+ * -----------------------------------------------------------------------
+ * La cellule voisine répond à « quelle part du forfait est utilisée » — une
+ * question de rentabilité, celle de l'exploitant. Celle-ci répond à « combien
+ * de temps de cours reste-t-il » — la question du parent, celle qu'il pose au
+ * support. Deux lectures différentes, deux colonnes.
+ *
+ * C'est aussi le chiffre qu'on compare à ce que le parent voit sur son écran :
+ * mélangé à un pourcentage et à un total, il aurait fallu le calculer de tête.
+ */
+function Restant({ parent }) {
+  const { formule, minutesPot, minutesConsommees } = parent;
+
+  if (!formule || !minutesPot) return <span className="conso__vide">—</span>;
+
+  // Borné à zéro : un pot dépassé — ça n'arrive pas, les recharges entrent
+  // dedans — afficherait « -20 min », ce qui ne veut rien dire pour personne.
+  const reste = Math.max(0, minutesPot - (minutesConsommees ?? 0));
+
+  // Les mêmes trois seuils que la jauge, lus dans l'autre sens : il reste peu
+  // quand il est beaucoup consommé. Une famille à court d'heures est celle
+  // qu'on appelle, ou à qui on propose une recharge.
+  const part = minutesPot > 0 ? (reste / minutesPot) * 100 : 0;
+  const ton = part <= 0 ? 'plein' : part <= 20 ? 'proche' : 'normal';
+
+  return (
+    <span className={`restant restant--${ton}`} title={`${reste} min restantes sur ${minutesPot}`}>
+      {enHeures(reste)}
+    </span>
+  );
+}
+
+/**
+ * Le taux de change euro/dollar.
+ *
+ * FIGÉ, ET C'EST UN CHOIX. Le chiffre sert à comparer un coût à un abonnement
+ * encaissé en euros, pas à tenir une comptabilité. Un appel à un service de
+ * change à chaque affichage du tableau ajouterait une dépendance réseau — et
+ * un écran qui tombe en panne parce qu'un convertisseur ne répond pas — pour
+ * une précision dont personne n'a besoin ici.
+ *
+ * À relire si l'euro bouge de plus de dix pour cent.
+ */
+const EURO_PAR_DOLLAR = 0.92;
+
+/**
+ * Ce qu'une famille a coûté depuis son inscription.
+ *
+ * LE DIALOGUE EST MESURÉ, LA VOIX EST ESTIMÉE
+ * -------------------------------------------
+ * Chaque tour de parole enregistre ses jetons — entrée, sortie, cache lu,
+ * cache écrit — et le modèle qui les a produits. Le coût du dialogue est donc
+ * un relevé, pas une moyenne. La synthèse vocale, elle, n'est mesurée nulle
+ * part par famille : on la déduit des minutes de séance.
+ *
+ * Les deux sont additionnés parce que c'est le total qui répond à « suis-je
+ * déficitaire ». Le détail reste lisible au survol, pour qu'on sache toujours
+ * quelle part est relevée et quelle part est déduite.
+ *
+ * Les frais Stripe n'y sont pas : ils pèsent sur l'encaissement, pas sur
+ * l'usage, et se lisent dans le tableau de bord Stripe.
+ */
+function Cout({ parent }) {
+  const { coutDollars, coutDialogueDollars, prixMensuelCentimes } = parent;
+
+  if (coutDollars === null || coutDollars === undefined) {
+    return <span className="conso__vide">—</span>;
+  }
+
+  const euros = coutDollars * EURO_PAR_DOLLAR;
+  const voix = coutDollars - (coutDialogueDollars ?? 0);
+  const prix = (prixMensuelCentimes ?? 0) / 100;
+
+  /**
+   * LA COULEUR DIT LE RAPPORT AU PRIX PAYÉ, PAS LE MONTANT.
+   *
+   * « 22 € » ne veut rien dire seul : c'est excellent en face de 99 €,
+   * catastrophique en face de 39,90 €. Colorer le montant selon sa taille
+   * aurait donc coloré la mauvaise chose — et rassuré sur les familles
+   * chères parce qu'elles paient beaucoup.
+   *
+   * Les seuils sont ceux où une décision change : au-delà de la moitié du
+   * prix, la marge cesse d'être confortable ; aux deux tiers, la formule est
+   * à revoir. En dessous, il n'y a rien à signaler et le montant reste en
+   * encre ordinaire — colorer ce qui va bien apprend à ignorer la couleur.
+   */
+  const part = prix > 0 ? euros / prix : null;
+  const ton = part === null ? 'neutre'
+    : part >= 0.66 ? 'critique'
+      : part >= 0.5 ? 'vigilant'
+        : 'sain';
+
+  const detail = [
+    `dialogue ${(coutDialogueDollars ?? 0).toFixed(2)} $ (mesuré)`,
+    `voix ~${voix.toFixed(2)} $ (estimée)`,
+    prix > 0 ? `soit ${Math.round(part * 100)} % des ${prix.toFixed(2)} € payés` : null,
+  ].filter(Boolean).join(' · ');
+
+  return (
+    <div className="cout" title={detail}>
+      <span className="cout__dollars">{coutDollars.toFixed(2)} $</span>
+      <span className="cout__euros">
+        {euros.toFixed(2).replace('.', ',')} €
+        {part !== null && (
+          <span className={`cout__part cout__part--${ton}`}>
+            {' · '}{Math.round(part * 100)} % du prix
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Ce que toutes les familles coûtent sur la période courante.
+ *
+ * COURANTE, ET NON GLISSANTE. « Mois » veut dire depuis le 1er, pas les trente
+ * derniers jours : c'est ce qu'on compare à des abonnements encaissés au mois.
+ * Une fenêtre glissante donnerait un chiffre qui ne correspond à aucune
+ * recette.
+ *
+ * IL SE RECHARGE SEUL À CHAQUE CHANGEMENT DE PÉRIODE, et pas au montage
+ * seulement : sans ça, passer de « jour » à « mois » afficherait l'ancien
+ * chiffre sous le nouveau libellé — la pire des erreurs, celle qu'on ne
+ * remarque pas.
+ */
+const PERIODES = [
+  { cle: 'jour', libelle: 'Jour' },
+  { cle: 'semaine', libelle: 'Semaine' },
+  { cle: 'mois', libelle: 'Mois' },
+  { cle: 'annee', libelle: 'Année' },
+];
+
+/**
+ * Le libellé d'une période, construit sur les bornes RENVOYÉES PAR LE SERVEUR.
+ *
+ * Et non recalculées ici : lui seul sait où commence une semaine ou un mois, et
+ * deux calendriers qui divergent d'un jour donneraient un titre qui ment sur
+ * les chiffres affichés dessous.
+ */
+function libellePeriode(periode, debut) {
+  if (!debut) return '—';
+
+  const d = new Date(debut);
+
+  if (periode === 'jour') {
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  if (periode === 'semaine') {
+    const fin = new Date(d);
+    fin.setDate(fin.getDate() + 6);
+    const court = { day: 'numeric', month: 'short' };
+    return `${d.toLocaleDateString('fr-FR', court)} – ${fin.toLocaleDateString('fr-FR', court)}`;
+  }
+
+  if (periode === 'annee') return String(d.getFullYear());
+
+  return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+}
+
+/** Des minutes en « 3 h 52 », parce qu'on ne compte pas un cours en minutes. */
+function enHeures(minutes) {
+  const m = Math.max(0, Math.round(minutes ?? 0));
+  const h = Math.floor(m / 60);
+  return h === 0 ? `${m} min` : `${h} h ${String(m % 60).padStart(2, '0')}`;
+}
+
+/**
+ * Ce que toutes les familles coûtent, et le temps de cours, sur une période.
+ *
+ * LA PÉRIODE EST ENTIÈRE, PAS GLISSANTE. « Mois » va du 1er au dernier jour :
+ * c'est ce qu'on compare à des abonnements encaissés au mois. Une fenêtre
+ * glissante donnerait un chiffre qui ne correspond à aucune recette.
+ *
+ * LES CHEVRONS DÉPLACENT LA FENÊTRE D'UNE PÉRIODE, et le serveur seul calcule
+ * les bornes — l'écran ne fait que demander « la précédente ». Celui de droite
+ * s'éteint sur la période courante : on ne navigue pas dans un futur qui n'a
+ * pas eu lieu.
+ */
+function CoutTotal() {
+  // LA FENÊTRE VIT DANS L'ÉTAT PARTAGÉ, pas ici. Le tableau du dessous en
+  // dépend autant que ce bandeau : la garder locale afficherait un total de
+  // juillet au-dessus de lignes d'août, sans que rien ne le signale.
+  const dispatch = useDispatch();
+  const { periodeCout: periode, decalageCout: decalage } =
+    useSelector((state) => state.admin);
+
+  const setPeriode = (p) => dispatch(changerPeriodeCout(p, 0));
+  const setDecalage = (calculer) =>
+    dispatch(changerPeriodeCout(periode, calculer(decalage)));
+
+  const [cout, setCout] = useState(null);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
+
+  useEffect(() => {
+    let vivant = true;
+
+    setChargement(true);
+    setErreur(null);
+
+    getCout(periode, decalage)
+      .then(({ data }) => { if (vivant) setCout(data); })
+      .catch(() => { if (vivant) setErreur("Le coût n'a pas pu être calculé."); })
+      .finally(() => { if (vivant) setChargement(false); });
+
+    return () => { vivant = false; };
+  }, [periode, decalage]);
+
+  const dollars = cout?.totalDollars ?? 0;
+  const pale = chargement ? 'cout-total__pale' : '';
+
+  return (
+    <div className="cout-total">
+      <div className="cout-total__entete">
+        <div className="cout-total__periodes">
+          {PERIODES.map((p) => (
+            <button
+              key={p.cle}
+              type="button"
+              className={`onglet onglet--mini ${periode === p.cle ? 'onglet--actif' : ''}`}
+              onClick={() => setPeriode(p.cle)}
+            >
+              {p.libelle}
+            </button>
+          ))}
+        </div>
+
+        <div className="cout-total__navigation">
+          <button
+            type="button"
+            className="chevron"
+            aria-label="Période précédente"
+            onClick={() => setDecalage((d) => d - 1)}
+          >
+            ‹
+          </button>
+
+          <span className="cout-total__quand">{libellePeriode(periode, cout?.debut)}</span>
+
+          <button
+            type="button"
+            className="chevron"
+            aria-label="Période suivante"
+            disabled={decalage >= 0}
+            onClick={() => setDecalage((d) => Math.min(0, d + 1))}
+          >
+            ›
+          </button>
+
+          <button
+            type="button"
+            className="onglet onglet--mini"
+            disabled={decalage === 0}
+            onClick={() => setDecalage(() => 0)}
+          >
+            Aujourd'hui
+          </button>
+        </div>
+      </div>
+
+      {erreur && <div className="alert">{erreur}</div>}
+
+      {!erreur && (
+        <>
+          <h3 className="cout-total__titre">Ce que les familles me coûtent</h3>
+
+          <div className="cout-total__corps">
+            <div className="cout-total__montant">
+              {/* Le chiffre reste affiché pendant le rechargement, en retrait :
+                  le vider ferait clignoter la page à chaque clic, et un blanc
+                  se lit comme « zéro ». */}
+              <span className={pale}>{dollars.toFixed(2)} $</span>
+              <span className="cout-total__euros">
+                {(dollars * EURO_PAR_DOLLAR).toFixed(2).replace('.', ',')} €
+              </span>
+            </div>
+
+            {/* Le détail sépare ce qui est relevé de ce qui est déduit. Un total
+                seul laisserait croire que tout est mesuré. */}
+            <ul className="cout-total__detail">
+              <li>
+                <strong>{(cout?.dialogueDollars ?? 0).toFixed(2)} $</strong> de dialogue,
+                mesuré sur {(cout?.tours ?? 0).toLocaleString('fr-FR')} tours de parole
+              </li>
+              <li>
+                <strong>{(cout?.voixDollars ?? 0).toFixed(2)} $</strong> de synthèse vocale,
+                estimée d'après ces mêmes tours
+              </li>
+            </ul>
+          </div>
+
+          {/* Le temps de cours, sous le coût : c'est ce qui le produit. Les
+              deux se lisent ensemble — un coût qui monte sans que les heures
+              suivent, c'est un problème ; les deux ensemble, c'est le produit
+              qui marche. */}
+          <div className="cout-total__heures">
+            <span className={`cout-total__heures-valeur ${pale}`}>
+              {enHeures(cout?.minutesTravaillees)}
+            </span>
+            <span className="cout-total__heures-note">
+              de cours donnés sur la période, recalculés depuis les échanges —
+              légèrement inférieurs au compteur des forfaits, dont les
+              conversations purgées ont emporté la trace.
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * L'historique du pot d'heures supplémentaires d'un compte.
+ *
+ * AFFICHÉ LÀ OÙ ON AJUSTE, et pas dans un écran à part : le moment où l'on a
+ * besoin de savoir ce qui a déjà été donné est exactement celui où l'on
+ * s'apprête à donner. Un historique rangé ailleurs ne serait pas consulté.
+ */
+function HistoriqueHeures({ parentId }) {
+  const [lignes, setLignes] = useState(null);
+  const [erreur, setErreur] = useState(null);
+
+  useEffect(() => {
+    let vivant = true;
+
+    getHistoriqueHeures(parentId)
+      .then(({ data }) => { if (vivant) setLignes(data ?? []); })
+      .catch(() => { if (vivant) setErreur("L'historique n'a pas pu être chargé."); });
+
+    return () => { vivant = false; };
+  }, [parentId]);
+
+  if (erreur) return <p className="modale__note">{erreur}</p>;
+  if (!lignes) return <p className="modale__note">Chargement de l’historique…</p>;
+
+  if (lignes.length === 0) {
+    return <p className="modale__note">Aucune heure supplémentaire sur ce compte.</p>;
+  }
+
+  return (
+    <div className="historique-heures">
+      <h3 className="historique-heures__titre">Historique</h3>
+
+      <ul className="historique-heures__lignes">
+        {lignes.map((l, i) => (
+          <li key={`${l.date}-${i}`} className={l.dateRemboursement ? 'est-repris' : ''}>
+            <span className="historique-heures__quand">
+              {new Date(l.date).toLocaleDateString('fr-FR')}
+            </span>
+
+            <span className={`historique-heures__minutes ${l.minutes < 0 ? 'est-retrait' : ''}`}>
+              {l.minutes > 0 ? '+' : ''}{l.minutes} min
+            </span>
+
+            {/* Le motif pour un ajustement, le prix pour un achat : les deux
+                répondent à « d'où viennent ces heures », jamais en même temps. */}
+            {/* Le texte complet au survol : la mise en page le fait tenir dans
+                tous les cas testés, mais un motif de deux cents caractères
+                reste possible — le champ les autorise. Mieux vaut un recours
+                qui ne sert jamais qu'un motif qu'on devine. */}
+            <span className="historique-heures__motif" title={l.motif ?? undefined}>
+              {l.motif
+                ? l.motif
+                : l.prixCentimes > 0
+                  ? `Acheté ${(l.prixCentimes / 100).toFixed(2).replace('.', ',')}\u00A0€`
+                  : 'Offert'}
+            </span>
+
+            {l.dateRemboursement && (
+              <span className="historique-heures__repris">
+                repris le {new Date(l.dateRemboursement).toLocaleDateString('fr-FR')}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {/* UNE RECHARGE NE SE REPORTE PAS. Sans ce rappel, on additionne les
+          lignes de tête et on ne comprend pas pourquoi le pot ne correspond
+          pas : seules celles de la période en cours comptent. */}
+      <p className="modale__note">
+        Seules les lignes de la période en cours alimentent le pot : les heures
+        supplémentaires ne se reportent pas d’une période à l’autre.
+      </p>
+    </div>
+  );
+}
+
+export default function Admin() {
+  const dispatch = useDispatch();
+  const {
+    resume, serieRequetes, serieParents, serieEleves, serieAbonnements,
+    parents, eleves, elevesTableau,
+    granularite, eleveFiltre, rechercheEleve, parentFiltre, loading, muting, error,
+    fiche, ficheLoading, ficheError,
+  } = useSelector((state) => state.admin);
+
+  const [onglet, setOnglet] = useState('stats');
+
+  // La messagerie d'abord : c'est celle qu'on ouvre tous les jours, alors
+  // qu'une diffusion se prépare trois fois par an.
+  const [sousOnglet, setSousOnglet] = useState('messagerie');
+  const [edition, setEdition] = useState(null);
+
+  const [saisieParents, setSaisieParents] = useSaisieDifferee((terme) =>
+    dispatch(rechercher(terme)),
+  );
+  const [saisieEleves, setSaisieEleves] = useSaisieDifferee((terme) =>
+    dispatch(rechercherEleve(terme)),
+  );
+
+  useEffect(() => {
+    dispatch(chargerAdmin());
+  }, [dispatch]);
+
+  /**
+   * Bascule sur l'onglet élèves, restreint au compte cliqué.
+   * La recherche en cours est levée : garder « Emma » en filtre donnerait
+   * l'impression que ce parent n'a qu'un seul enfant.
+   */
+  const voirLesEnfants = (parent) => {
+    setSaisieEleves('');
+    dispatch(rechercherEleve(''));
+    dispatch(
+      filtrerParParent({
+        id: parent.id,
+        libelle: [parent.prenom, parent.nom].filter(Boolean).join(' ') || parent.mail,
+      }),
+    );
+    setOnglet('eleves');
+  };
+
+  // `donnee` porte, pour un parent, son adresse : elle sert à effacer aussi son
+  // compte de connexion, qui vit dans l'autre base. Le tableau est le seul
+  // endroit à la connaître — l'API métier n'expose pas le `sub`.
+  const confirmerSuppression = (operation, id, libelle, donnee) => {
+    // Une suppression de parent emporte ses enfants et toutes leurs
+    // conversations : elle mérite une confirmation explicite.
+    if (window.confirm(`Supprimer ${libelle} ? Cette action est irréversible.`)) {
+      dispatch(muter(operation, id, donnee));
+    }
+  };
+
+  const enregistrer = (evenement) => {
+    evenement.preventDefault();
+    const { operation, id, ...donnees } = edition;
+    dispatch(muter(operation, id, donnees));
+    setEdition(null);
+  };
+
+  if (loading && !resume) return <Loader texte="Chargement du tableau de bord…" />;
+
+  if (error && !resume) {
+    return (
+      <section className="page">
+        <div className="alert">{error}</div>
+      </section>
+    );
+  }
+
+  // Les deux séries d'inscriptions sont fusionnées sur l'axe des périodes :
+  // elles partagent la même granularité, donc les mêmes seaux.
+  const serieComptes = serieParents.map((p, i) => ({
+    periode: p.periode,
+    parents: p.valeur,
+    eleves: serieEleves[i]?.valeur ?? 0,
+  }));
+
+  const serieCumul = serieParents.map((p, i) => ({
+    periode: p.periode,
+    parents: p.cumul,
+    eleves: serieEleves[i]?.cumul ?? 0,
+  }));
+
+  // DEUX GRAPHIQUES ET NON UN SEUL, PARCE QU'IL Y A DEUX ÉCHELLES.
+  //
+  // Les abonnements actifs sont un STOCK : quelques dizaines, bientôt quelques
+  // centaines. Les demandes d'arrêt et les résiliations sont des FLUX : zéro,
+  // un, parfois trois. Sur un axe commun, les flux s'écrasent contre la ligne
+  // du zéro et deviennent illisibles — or ce sont eux qu'on surveille.
+  //
+  // Deux axes sur un même graphique règlerait le problème d'affichage en en
+  // créant un pire : deux échelles superposées se lisent comme une seule, et
+  // on croit voir des courbes qui se croisent alors qu'elles ne partagent
+  // rien. Deux graphiques disent la vérité.
+  const serieAbonnesActifs = serieAbonnements.map((p) => ({
+    periode: p.periode,
+    actifs: p.actifs,
+  }));
+
+  const serieSorties = serieAbonnements.map((p) => ({
+    periode: p.periode,
+    demandes: p.demandes,
+    arrets: p.arrets,
+  }));
+
+  // L'état à l'instant présent, c'est-à-dire le dernier point de la série.
+  const dernierAbonnement = serieAbonnements[serieAbonnements.length - 1];
+
+  // Les flux se lisent sur toute la fenêtre affichée, pas sur la dernière
+  // période : « trois arrêts ce mois-ci » n'a de sens qu'additionné.
+  const totalDemandes = serieAbonnements.reduce((n, p) => n + p.demandes, 0);
+  const totalArrets = serieAbonnements.reduce((n, p) => n + p.arrets, 0);
+
+  return (
+    <section className="page page--large">
+      <div className="page__entete">
+        <div>
+          <h1>Administration</h1>
+          <p className="page__sous-titre">Comptes, usage et consommation.</p>
+        </div>
+      </div>
+
+      {error && <div className="alert">{error}</div>}
+
+      <div className="onglets">
+        {[
+          { cle: 'stats', libelle: 'Statistiques' },
+          { cle: 'frequentation', libelle: 'Fréquentation' },
+          { cle: 'parents', libelle: `Parents (${parents.length})` },
+          { cle: 'mails', libelle: 'Mails' },
+          { cle: 'eleves', libelle: `Élèves (${eleves.length})` },
+          { cle: 'modes', libelle: 'Modes' },
+          { cle: 'schemas', libelle: 'Schémas' },
+        ].map((o) => (
+          <button
+            key={o.cle}
+            type="button"
+            className={`onglet ${onglet === o.cle ? 'onglet--actif' : ''}`}
+            onClick={() => setOnglet(o.cle)}
+          >
+            {o.libelle}
+          </button>
+        ))}
+      </div>
+
+      {/* ------------------------------------------------------ statistiques */}
+      {onglet === 'stats' && (
+        <>
+          <div className="stats">
+            <Tuile libelle="Comptes parents" valeur={resume?.nombreParents} />
+            <Tuile libelle="Profils élèves" valeur={resume?.nombreEleves} />
+            <Tuile libelle="Conversations" valeur={resume?.nombreConversations} />
+            <Tuile
+              libelle="Requêtes au total"
+              valeur={resume?.nombreRequetes}
+              precision={`${(resume?.requetesAujourdhui ?? 0).toLocaleString('fr-FR')} aujourd'hui`}
+            />
+            <Tuile
+              libelle="Tokens en entrée"
+              valeur={resume?.tokensEntree}
+              precision={`dont ${(resume?.tokensCacheLecture ?? 0).toLocaleString('fr-FR')} lus en cache`}
+            />
+            <Tuile libelle="Tokens en sortie" valeur={resume?.tokensSortie} />
+
+            {/* Les trois chiffres d'abonnement, à côté des graphiques qui les
+                détaillent. La tuile donne l'état, la courbe donne la tendance —
+                et un chiffre seul se lit plus vite qu'un point sur un axe. */}
+            <Tuile
+              libelle="Abonnements actifs"
+              valeur={dernierAbonnement?.actifs}
+              precision="à la fin de la période affichée"
+            />
+            <Tuile
+              libelle="Demandes d’arrêt"
+              valeur={totalDemandes}
+              precision="sur la période affichée"
+            />
+            <Tuile
+              libelle="Abonnements arrêtés"
+              valeur={totalArrets}
+              precision="sur la période affichée"
+            />
+          </div>
+
+          {/* Les filtres tiennent sur une seule ligne, au-dessus des graphiques. */}
+          <div className="filtres">
+            <div className="segmente" role="group" aria-label="Granularité">
+              {GRANULARITES.map((g) => (
+                <button
+                  key={g.cle}
+                  type="button"
+                  className={granularite === g.cle ? 'actif' : ''}
+                  onClick={() => dispatch(changerGranularite(g.cle))}
+                >
+                  {g.libelle}
+                </button>
+              ))}
+            </div>
+
+            <ChoixEleve
+              eleves={eleves}
+              valeur={eleveFiltre}
+              onChanger={(v) => dispatch(filtrerParEleve(v))}
+            />
+          </div>
+
+          <Graphique
+            titre="Requêtes envoyées au professeur"
+            description={
+              eleveFiltre
+                ? 'Filtré sur un élève.'
+                : 'Tous élèves confondus. Une requête = une réponse générée.'
+            }
+            granularite={granularite}
+            series={[{ nom: 'Requêtes', cle: 'valeur' }]}
+            donnees={serieRequetes}
+            type="barres"
+          />
+
+          <Graphique
+            titre="Nouveaux comptes par période"
+            granularite={granularite}
+            series={[
+              { nom: 'Parents', cle: 'parents' },
+              { nom: 'Élèves', cle: 'eleves' },
+            ]}
+            donnees={serieComptes}
+            type="barres"
+          />
+
+          <Graphique
+            titre="Total cumulé"
+            description="Comptes existants à la fin de chaque période."
+            granularite={granularite}
+            series={[
+              { nom: 'Parents', cle: 'parents' },
+              { nom: 'Élèves', cle: 'eleves' },
+            ]}
+            donnees={serieCumul}
+            type="lignes"
+          />
+
+          <Graphique
+            titre="Abonnements actifs"
+            description={
+              eleveFiltre
+                ? "Contrat de la famille de cet élève — un abonnement appartient au parent."
+                : "Abonnements en cours à la fin de chaque période. Une ligne, parce que c'est un état qui se suit, pas un volume qui se compare."
+            }
+            granularite={granularite}
+            series={[{ nom: 'Actifs', cle: 'actifs' }]}
+            donnees={serieAbonnesActifs}
+            type="lignes"
+          />
+
+          <Graphique
+            titre="Sorties d'abonnement"
+            description="Résiliations demandées, et abonnements réellement arrivés à leur terme. L'écart entre les deux, c'est le délai de préavis : une demande de mars se traduit par un arrêt en avril."
+            granularite={granularite}
+            series={[
+              { nom: 'Demandes d’arrêt', cle: 'demandes' },
+              { nom: 'Arrêts effectifs', cle: 'arrets' },
+            ]}
+            donnees={serieSorties}
+            type="barres"
+          />
+        </>
+      )}
+
+      {/* ----------------------------------------------------- fréquentation
+          UN ONGLET À PART, ET PAS UNE SECTION DE PLUS DANS « STATISTIQUES ».
+
+          Les deux ne se lisent pas de la même façon. L'autre montre une
+          fenêtre GLISSANTE dont on ne peut pas sortir — les trente derniers
+          jours, les vingt-quatre derniers mois — et répond à « comment ça
+          évolue ». Celui-ci montre une période CHOISIE, dans laquelle on se
+          déplace, et répond à « qu'est-ce qui s'est passé ce jour-là ». Les
+          mêler obligerait à un jeu de filtres qui vaudrait pour l'un et pas
+          pour l'autre. */}
+      {onglet === 'frequentation' && <Frequentation />}
+
+      {/* ------------------------------------------------------------ mails */}
+      {onglet === 'mails' && (
+        <>
+          {/* SOUS-ONGLETS, ET NON DEUX ONGLETS DE PREMIER NIVEAU.
+              Lire son courrier et écrire à tout le monde sont deux gestes
+              très différents — l'un se fait tous les jours, l'autre trois
+              fois par an — mais ils vivent au même endroit dans la tête :
+              « mes mails ». Les séparer en haut ferait chercher. */}
+          <div className="onglets onglets--secondaires">
+            {[
+              { cle: 'messagerie', libelle: 'Messagerie' },
+              { cle: 'diffusion', libelle: 'Message de diffusion' },
+            ].map((o) => (
+              <button
+                key={o.cle}
+                type="button"
+                className={`onglet onglet--mini ${sousOnglet === o.cle ? 'onglet--actif' : ''}`}
+                onClick={() => setSousOnglet(o.cle)}
+              >
+                {o.libelle}
+              </button>
+            ))}
+          </div>
+
+          {sousOnglet === 'messagerie' && <Messagerie />}
+          {sousOnglet === 'diffusion' && <Diffusion nombreParents={parents.length} />}
+        </>
+      )}
+
+      {/* ---------------------------------------------------------- parents */}
+      {onglet === 'parents' && (
+        <>
+          <CoutTotal />
+
+          <div className="filtres">
+            <input
+              type="search"
+              className="filtres__recherche"
+              placeholder="Rechercher par email, nom ou prénom…"
+              value={saisieParents}
+              onChange={(e) => setSaisieParents(e.target.value)}
+            />
+          </div>
+
+          <div className="tableau">
+            <table>
+              <thead>
+                <tr>
+                  {/* En tête de ligne : c'est la formule qui donne son sens à
+                      tout le reste — un pot de 540 minutes et un pot de 1 440
+                      ne se lisent pas de la même façon. */}
+                  <th scope="col">Forfait</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Nom</th>
+                  <th scope="col">Élèves</th>
+                  {/* Entre les élèves et les requêtes : c'est le chiffre qui
+                      dit si une formule gagne ou perd de l'argent, il mérite
+                      d'être lu avant le volume brut de messages. */}
+                  <th scope="col">Forfait consommé</th>
+                  {/* Juste après la consommation : les deux se lisent
+                      ensemble, et l'un est le complément de l'autre. */}
+                  <th scope="col">Restantes</th>
+                  <th scope="col">Ce qu'il a coûté</th>
+                  <th scope="col">Requêtes</th>
+                  <th scope="col">Inscrit le</th>
+                  <th scope="col">Dernière activité</th>
+                  <th scope="col" />
+                </tr>
+              </thead>
+              <tbody>
+                {parents.map((p) => (
+                  <tr key={p.id}>
+                    <td>
+                      {p.formule
+                        ? <span className="forfait">{p.formule}</span>
+                        : <span className="conso__vide">—</span>}
+                    </td>
+                    <td>{p.mail}</td>
+                    <td>{[p.prenom, p.nom].filter(Boolean).join(' ') || '—'}</td>
+                    <td className="num">{p.nombreEleves}</td>
+                    <td><Consommation parent={p} /></td>
+                    <td className="num"><Restant parent={p} /></td>
+                    <td><Cout parent={p} /></td>
+                    <td className="num">{p.nombreRequetes.toLocaleString('fr-FR')}</td>
+                    <td>{new Date(p.dateCreation).toLocaleDateString('fr-FR')}</td>
+                    <td>
+                      {p.derniereActivite
+                        ? new Date(p.derniereActivite).toLocaleDateString('fr-FR')
+                        : '—'}
+                    </td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="btn-ghost btn-ghost--mini"
+                        disabled={p.nombreEleves === 0}
+                        onClick={() => voirLesEnfants(p)}
+                      >
+                        {p.nombreEleves === 0
+                          ? 'Aucun enfant'
+                          : `Voir ${p.nombreEleves === 1 ? "l'enfant" : 'les enfants'}`}
+                      </button>
+                      {/* Placé avant « Modifier » : c'est le geste le plus
+                          fréquent des trois — dédommager, corriger, solder un
+                          remboursement partiel. */}
+                      <button
+                        type="button"
+                        className="btn-ghost btn-ghost--mini"
+                        disabled={!p.formule}
+                        title={p.formule ? undefined : 'Ce compte n’a aucun forfait en cours.'}
+                        onClick={() =>
+                          setEdition({
+                            operation: 'ajusterHeures',
+                            id: p.id,
+                            mail: p.mail,
+                            minutes: 60,
+                            motif: '',
+                            prevenir: true,
+                          })
+                        }
+                      >
+                        Heures
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-ghost btn-ghost--mini"
+                        onClick={() =>
+                          setEdition({
+                            operation: 'modifierParent',
+                            id: p.id,
+                            prenom: p.prenom ?? '',
+                            nom: p.nom ?? '',
+                            mail: p.mail ?? '',
+                          })
+                        }
+                      >
+                        Modifier
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-ghost btn-ghost--mini btn-ghost--danger"
+                        disabled={muting}
+                        onClick={() =>
+                          confirmerSuppression(
+                            'supprimerParent',
+                            p.id,
+                            `le compte ${p.mail} et ses ${p.nombreEleves} profil(s)`,
+                            p.mail,
+                          )
+                        }
+                      >
+                        Supprimer
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {parents.length === 0 && <div className="vide">Aucun compte.</div>}
+          </div>
+        </>
+      )}
+
+      {/* ----------------------------------------------------------- élèves */}
+      {onglet === 'eleves' && (
+        <>
+          <div className="filtres">
+            <input
+              type="search"
+              className="filtres__recherche"
+              placeholder="Rechercher par prénom, nom, âge, classe ou compte parent…"
+              value={saisieEleves}
+              onChange={(e) => setSaisieEleves(e.target.value)}
+            />
+
+            {/* Le filtre parent vient d'un clic dans l'autre onglet : sans
+                rappel visible, on croirait la liste des élèves incomplète. */}
+            {parentFiltre && (
+              <button
+                type="button"
+                className="puce-filtre"
+                onClick={() => dispatch(filtrerParParent(null))}
+                title="Retirer le filtre"
+              >
+                Enfants de {parentFiltre.libelle}
+                <span aria-hidden="true">×</span>
+              </button>
+            )}
+          </div>
+
+          <div className="tableau">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Prénom</th>
+                <th scope="col">Nom</th>
+                <th scope="col">Classe</th>
+                <th scope="col">Âge</th>
+                <th scope="col">Fille / Garçon</th>
+                <th scope="col">Compte parent</th>
+                <th scope="col">Requêtes</th>
+                <th scope="col">Dernière activité</th>
+                <th scope="col" />
+              </tr>
+            </thead>
+            <tbody>
+              {elevesTableau.map((e) => (
+                <tr key={e.id}>
+                  <td>{e.prenom}</td>
+                  <td>{e.nom || '—'}</td>
+                  <td>{e.niveauLibelle}</td>
+                  <td className="num">{e.age}</td>
+                  <td>{SEXES[e.sexe] ?? SEXES[0]}</td>
+                  <td>{e.parentMail}</td>
+                  <td className="num">{e.nombreRequetes.toLocaleString('fr-FR')}</td>
+                  <td>
+                    {e.derniereActivite
+                      ? new Date(e.derniereActivite).toLocaleDateString('fr-FR')
+                      : '—'}
+                  </td>
+                  <td className="actions">
+                    <button
+                      type="button"
+                      className="btn-ghost btn-ghost--mini btn-ghost--accent"
+                      onClick={() => dispatch(ouvrirFiche(e.id))}
+                    >
+                      Fiche
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost btn-ghost--mini"
+                      onClick={() =>
+                        setEdition({
+                          operation: 'modifierEleve',
+                          id: e.id,
+                          prenom: e.prenom ?? '',
+                          nom: e.nom ?? '',
+                          age: e.age,
+                          sexe: e.sexe ?? 0,
+                        })
+                      }
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost btn-ghost--mini btn-ghost--danger"
+                      disabled={muting}
+                      onClick={() =>
+                        confirmerSuppression('supprimerEleve', e.id, `le profil de ${e.prenom}`)
+                      }
+                    >
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {elevesTableau.length === 0 && (
+            <div className="vide">
+              {rechercheEleve
+                ? `Aucun profil ne correspond à « ${rechercheEleve} ».`
+                : parentFiltre
+                  ? `Ce compte n'a aucun profil enfant.`
+                  : 'Aucun profil élève.'}
+            </div>
+          )}
+          </div>
+        </>
+      )}
+
+      {/* --------------------------------------------------------- édition */}
+      {/* ------------------------------------------------------ fiche élève */}
+      {(fiche || ficheLoading || ficheError) && (
+        <FicheEleve
+          fiche={fiche}
+          chargement={ficheLoading}
+          erreur={ficheError}
+          onFermer={() => dispatch(fermerFiche())}
+          avecApercuBilan
+          chargerEvaluations={getHistoriqueEvaluations}
+          chargerRapports={getHistoriqueRapports}
+        />
+      )}
+
+      {edition && (
+        <div className="modale" role="dialog" aria-modal="true">
+          <form className="modale__boite" onSubmit={enregistrer}>
+            <h2>
+              {edition.operation === 'ajusterHeures'
+                ? 'Ajuster les heures'
+                : edition.operation === 'modifierParent'
+                  ? 'Modifier le compte'
+                  : 'Modifier le profil'}
+            </h2>
+
+            {/* TROIS PARTIES : titre figé, corps qui défile, boutons figés.
+                Une barre collante dans un conteneur qui défile laisse toujours
+                du contenu affleurer dans le rembourrage sous elle — on voyait
+                la bulle passer derrière les boutons. Ici le corps est le seul
+                à défiler, et rien ne peut passer sous quoi que ce soit. */}
+            <div className="modale__corps">
+
+            {edition.operation === 'ajusterHeures' && (
+              <>
+                <HistoriqueHeures parentId={edition.id} />
+
+                <p className="modale__note">
+                  Compte <strong>{edition.mail}</strong>. Ces minutes s’ajoutent
+                  au pot d’heures SUPPLÉMENTAIRES de la période en cours — le
+                  forfait de la formule n’est jamais entamé, il est facturé.
+                </p>
+
+                <div className="champ">
+                  <label htmlFor="ed-minutes">Minutes</label>
+                  <input
+                    id="ed-minutes"
+                    type="number"
+                    step={30}
+                    value={edition.minutes}
+                    onChange={(e) => setEdition({ ...edition, minutes: Number(e.target.value) })}
+                  />
+                  <span className="champ__aide">
+                    Positif pour ajouter, négatif pour retirer. 60 = une heure.
+                  </span>
+                </div>
+
+                <div className="champ">
+                  <label htmlFor="ed-motif">Motif</label>
+                  <input
+                    id="ed-motif"
+                    maxLength={200}
+                    value={edition.motif}
+                    onChange={(e) => setEdition({ ...edition, motif: e.target.value })}
+                    placeholder="Remboursement partiel du 19/08, incident du 12/08…"
+                  />
+                  <span className="champ__aide">
+                    {edition.prevenir
+                      ? 'Obligatoire, et LU PAR LE PARENT : il devient le texte du courriel. Écrivez-le pour lui.'
+                      : 'Obligatoire. Sans lui, cette ligne sera dans six mois un cadeau que personne ne s’explique.'}
+                  </span>
+                </div>
+
+                {/* COCHÉE PAR DÉFAUT, ET C'EST LE SENS QUI COMPTE. Un solde qui
+                    bouge sans explication ne se lit pas comme une
+                    régularisation mais comme une panne — ou comme un
+                    prélèvement qu'on n'a pas demandé. On la décoche pour les
+                    corrections internes, pas l'inverse. */}
+                {/* HORS DE LA CLASSE `champ`, ET C'EST NÉCESSAIRE. Elle impose
+                    `width: 100%` et un padding de douze pixels à tout `input`
+                    qu'elle contient : la case devenait un bloc pleine largeur
+                    et chassait son propre libellé hors de la boîte. */}
+                <label className={`case-bulle ${edition.prevenir ? 'est-active' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={edition.prevenir}
+                    onChange={(e) => setEdition({ ...edition, prevenir: e.target.checked })}
+                  />
+
+                  <span className="case-bulle__texte">
+                    <strong>Prévenir le parent par courriel</strong>
+                    <span className="case-bulle__aide">
+                      {edition.prevenir
+                        ? 'Le motif ci-dessus lui sera envoyé, avec son nouveau solde.'
+                        : 'Aucun message ne partira. À réserver aux corrections internes — une erreur reprise dans la minute, que le parent n’a jamais vue.'}
+                    </span>
+                  </span>
+                </label>
+              </>
+            )}
+
+            {edition.operation !== 'ajusterHeures' && (
+              <div className="champ">
+                <label htmlFor="ed-prenom">Prénom</label>
+                <input
+                  id="ed-prenom"
+                  value={edition.prenom}
+                  onChange={(e) => setEdition({ ...edition, prenom: e.target.value })}
+                />
+              </div>
+            )}
+
+            {edition.operation === 'ajusterHeures' ? null : edition.operation === 'modifierParent' ? (
+              <>
+                <div className="champ">
+                  <label htmlFor="ed-nom">Nom</label>
+                  <input
+                    id="ed-nom"
+                    value={edition.nom}
+                    onChange={(e) => setEdition({ ...edition, nom: e.target.value })}
+                  />
+                </div>
+                <div className="champ">
+                  <label htmlFor="ed-mail">Email</label>
+                  <input
+                    id="ed-mail"
+                    type="email"
+                    value={edition.mail}
+                    onChange={(e) => setEdition({ ...edition, mail: e.target.value })}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="champ">
+                  <label htmlFor="ed-nom-eleve">Nom de famille</label>
+                  <input
+                    id="ed-nom-eleve"
+                    value={edition.nom}
+                    onChange={(e) => setEdition({ ...edition, nom: e.target.value })}
+                  />
+                </div>
+
+                <div className="champ">
+                  <label htmlFor="ed-age">Âge</label>
+                  <input
+                    id="ed-age"
+                    type="number"
+                    min={5}
+                    max={25}
+                    value={edition.age}
+                    onChange={(e) => setEdition({ ...edition, age: Number(e.target.value) })}
+                  />
+                </div>
+
+                <div className="champ">
+                  <label htmlFor="ed-sexe">Fille ou garçon</label>
+                  <select
+                    id="ed-sexe"
+                    value={edition.sexe ?? 0}
+                    onChange={(e) => setEdition({ ...edition, sexe: Number(e.target.value) })}
+                  >
+                    <option value={0}>Non précisé</option>
+                    <option value={1}>Fille</option>
+                    <option value={2}>Garçon</option>
+                  </select>
+                  <span className="champ__aide">
+                    Détermine les accords du professeur quand il lui parle.
+                  </span>
+                </div>
+              </>
+            )}
+
+            </div>
+
+            <div className="modale__actions">
+              <button type="button" className="btn-ghost" onClick={() => setEdition(null)}>
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="btn btn--compact"
+                disabled={
+                  muting
+                  || (edition.operation === 'ajusterHeures'
+                      && (!edition.motif.trim() || !edition.minutes))
+                }
+              >
+                Enregistrer
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {onglet === 'modes' && <Modes />}
+
+      {/* Les schémas : quelles figures sont importées, lesquelles restent au
+          crayon du professeur. */}
+      {onglet === 'schemas' && <Planches />}
+    </section>
+  );
+}

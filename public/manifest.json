@@ -1,10 +1,11 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Mimia",
+  "name": "Mimia — le professeur particulier de vos enfants",
+  "description": "Un professeur particulier par IA pour chacun de vos enfants, du CP à la Terminale. Il ne donne pas la réponse : il diagnostique ce qui bloque et reprend depuis là.",
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "sizes": "32x32 16x16",
       "type": "image/x-icon"
     },
     {
@@ -20,6 +21,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "theme_color": "#12304A",
+  "background_color": "#faf7f2",
+  "lang": "fr"
 }

@@ -21,3 +21,37 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Les workflows N8N prêts à importer, clé d'agent comprise.
+#
+# Leur jumeau sans clé — mimia-import-planches.json — est versionné, lui : c'est
+# lui que lisent les tests de dérive. Ceux-ci ne sortent jamais de la machine.
+#
+# `.production.json` porte en plus l'adresse publique du service : deux raisons
+# de ne pas le publier plutôt qu'une.
+n8n/*.local.json
+n8n/*.production.json
+
+# ------------------------------------------------------------------ secrets
+#
+# Le front n'en a AUCUN, et ce n'est pas un oubli : `react-scripts build` fige
+# les variables REACT_APP_* dans le JavaScript livré. Tout ce qu'on y met est
+# lisible par n'importe quel visiteur, donc rien de secret ne peut y vivre.
+# Les clés — Claude, Brevo, Stripe, SQL — sont toutes côté API.
+#
+# `.env.development` et `.env.production` sont donc VERSIONNÉS À DESSEIN : ils
+# ne portent que des URL, et la construction de production en a besoin. Les
+# ignorer ferait perdre l'adresse du serveur d'identité au premier clonage, et
+# la panne ne se verrait qu'à la connexion.
+#
+# Ce qui suit n'a rien à faire ici pour autant — c'est le filet du jour où
+# quelqu'un dépose un certificat ou un fichier de secrets par mégarde.
+*.pem
+*.pfx
+*.p12
+secrets.*
+!secrets.example.*
+
+# Réglages d'éditeur, propres à une machine.
+.vscode/
+*.code-workspace.local
