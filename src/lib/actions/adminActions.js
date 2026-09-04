@@ -9,6 +9,17 @@ export const ADMIN_RECHERCHE_ELEVE = 'ADMIN_RECHERCHE_ELEVE';
 
 export const ADMIN_FILTRE_PARENT = 'ADMIN_FILTRE_PARENT';
 
+/**
+ * Tous les filtres tombent d'un coup.
+ *
+ * Ils vivent dans le store, donc ils survivent au démontage de l'écran : on
+ * quittait l'administration avec « ceo » en recherche, on y revenait, et un
+ * seul parent s'affichait. Le champ, lui, repartait vide — l'écran annonçait
+ * « aucun filtre » au-dessus d'une liste filtrée, et il fallait recharger la
+ * page pour s'en sortir.
+ */
+export const ADMIN_REINITIALISER_FILTRES = 'ADMIN_REINITIALISER_FILTRES';
+
 /** La fenêtre de temps du bandeau de coût ET du tableau des parents. */
 export const ADMIN_PERIODE_COUT = 'ADMIN_PERIODE_COUT';
 
@@ -56,6 +67,9 @@ export const filtrerParParent = (parent) => ({ type: ADMIN_FILTRE_PARENT, payloa
 export const ouvrirFiche = (eleveId) => ({ type: ADMIN_FICHE_REQUEST, payload: eleveId });
 
 export const fermerFiche = () => ({ type: ADMIN_FICHE_FERMER });
+
+/** Remet les filtres à zéro. Appelé en quittant l'administration. */
+export const reinitialiserFiltres = () => ({ type: ADMIN_REINITIALISER_FILTRES });
 
 /**
  * @param operation 'modifierParent' | 'modifierEleve' | 'supprimerParent' | 'supprimerEleve'

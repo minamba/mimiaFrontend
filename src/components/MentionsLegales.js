@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { MEDIATEUR } from './ConditionsVente';
 
 /**
  * Mentions légales.
@@ -113,6 +114,52 @@ export default function MentionsLegales() {
           y trouverez la nature des données collectées, leur durée de
           conservation, les destinataires, et la manière d'exercer vos droits.
         </p>
+      </section>
+
+      <section className="legal__section">
+        {/* CM2C IMPOSE LA MENTION « SUR VOTRE SITE INTERNET ET SUR VOS
+            CONDITIONS GÉNÉRALES ». Elle figure donc aux deux endroits.
+
+            La fiche vient de ConditionsVente : une seule source, une seule
+            adresse à corriger le jour où le médiateur déménage. Il l'a déjà
+            fait — les conditions d'un concurrent donnent encore l'ancienne
+            adresse, et un courrier de parent y arriverait nulle part. */}
+        <h2>Médiation de la consommation</h2>
+        <p>
+          Conformément aux dispositions du Code de la consommation concernant
+          «&nbsp;le processus de médiation des litiges de la consommation&nbsp;»,
+          après nous avoir sollicités et à défaut de réponse vous satisfaisant,
+          vous avez la possibilité de recourir gratuitement à une procédure de
+          médiation de la consommation auprès de&nbsp;:
+        </p>
+        <div className="legal__fiche">
+          <div>
+            <dt>Médiateur</dt>
+            <dd>{MEDIATEUR.nom}</dd>
+          </div>
+          <div>
+            <dt>Adresse</dt>
+            <dd>{MEDIATEUR.adresse}</dd>
+          </div>
+          <div>
+            <dt>Téléphone</dt>
+            <dd>{MEDIATEUR.telephone}</dd>
+          </div>
+          <div>
+            <dt>Courriel</dt>
+            <dd>
+              <a href={`mailto:${MEDIATEUR.mail}`}>{MEDIATEUR.mail}</a>
+            </dd>
+          </div>
+          <div>
+            <dt>Saisir le médiateur</dt>
+            <dd>
+              <a href={MEDIATEUR.saisine} target="_blank" rel="noreferrer">
+                Déclarer un litige en ligne
+              </a>
+            </dd>
+          </div>
+        </div>
       </section>
 
       <section className="legal__section">

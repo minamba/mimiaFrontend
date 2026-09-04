@@ -10,20 +10,40 @@ import { Link } from 'react-router-dom';
  * abonnements, pas repris d'un modèle. Des CGV qui promettent ce que le
  * produit ne sait pas faire exposent plus qu'elles ne protègent.
  *
- * LE MÉDIATEUR RESTE À DÉSIGNER
- * -----------------------------
- * Nommer un médiateur suppose d'avoir adhéré chez lui : l'écrire sans contrat
- * serait une fausse mention, et le consommateur qui le saisirait s'entendrait
- * répondre que l'entreprise n'est pas adhérente — au pire moment. La section
- * apparaît donc dès que la constante ci-dessous est renseignée, et pas avant.
+ * LE MÉDIATEUR
+ * ------------
+ * Obligatoire, et pas seulement recommandé : l'article L612-1 du Code de la
+ * consommation ouvre au consommateur un droit de recours gratuit, et le L616-1
+ * met à la charge du professionnel l'obligation d'en communiquer les
+ * coordonnées — sur le site, dans les conditions générales, sur les contrats.
+ * Le manquement porte sur l'INFORMATION : il est constitué avant tout litige.
+ *
+ * Cette constante est restée nulle jusqu'à l'adhésion, à dessein. Nommer un
+ * médiateur sans contrat aurait été une fausse mention, et le parent qui l'aurait
+ * saisi se serait entendu répondre que Mimia n'est pas adhérente — au pire
+ * moment possible, c'est-à-dire pendant un différend.
+ *
+ * Adhésion CM2C souscrite le 31 août 2026, valable jusqu'au 31 août 2029.
+ * À renouveler AVANT cette date : passé le terme, la mention resterait
+ * affichée alors que l'adhésion serait éteinte — c'est-à-dire exactement la
+ * fausse mention qu'on a évité d'écrire pendant tout ce temps.
+ *
+ * L'ADRESSE A ÉTÉ RELEVÉE SUR LE SITE DE CM2C, PAS RECOPIÉE AILLEURS. Les
+ * conditions générales d'un concurrent donnaient encore « 14 rue Saint-Jean,
+ * 75017 Paris » — l'ancienne. Une adresse de médiateur périmée dans des CGV
+ * revient à ne pas en avoir : le courrier du parent n'arrive nulle part.
  */
-const MEDIATEUR = null;
-// Exemple, une fois l'adhésion faite :
-// const MEDIATEUR = {
-//   nom: 'CM2C — Centre de Médiation de la Consommation de Conciliateurs de Justice',
-//   adresse: '14 rue Saint-Jean, 75017 Paris',
-//   site: 'https://www.cm2c.net',
-// };
+export const MEDIATEUR = {
+  nom: 'CM2C — Centre de Médiation de la Consommation de Conciliateurs de Justice',
+  adresse: '49 rue de Ponthieu, 75008 Paris',
+  telephone: '01 89 47 00 14',
+  mail: 'litiges@cm2c.net',
+
+  // L'ADRESSE DE SAISINE, ET NON L'ACCUEIL DU SITE. C'est celle que CM2C
+  // impose de publier : un parent en litige n'a pas à chercher dans un menu
+  // quelle page le concerne.
+  saisine: 'https://www.cm2c.net/declarer-un-litige.php',
+};
 
 export default function ConditionsVente() {
   return (
@@ -277,10 +297,18 @@ export default function ConditionsVente() {
         {MEDIATEUR && (
           <>
             <h3>Médiation de la consommation</h3>
+            {/* LA FORMULATION EST CELLE QUE CM2C IMPOSE, mot pour mot.
+                Elle est fournie dans l'espace professionnel sous le titre
+                « mention à indiquer sur votre site internet ». La reformuler
+                n'aurait rien gagné et aurait pu s'écarter de ce que le
+                médiateur reconnaît comme sa propre désignation. */}
             <p>
-              Conformément à l'article L612-1 du Code de la consommation, vous
-              pouvez recourir gratuitement à un médiateur de la consommation
-              après une démarche écrite préalable auprès de nous&nbsp;:
+              Conformément aux dispositions du Code de la consommation
+              concernant «&nbsp;le processus de médiation des litiges de la
+              consommation&nbsp;», après nous avoir sollicités et à défaut de
+              réponse vous satisfaisant, vous avez la possibilité de recourir
+              gratuitement à une procédure de médiation de la consommation
+              auprès de&nbsp;:
             </p>
             <div className="legal__fiche">
               <div>
@@ -292,10 +320,20 @@ export default function ConditionsVente() {
                 <dd>{MEDIATEUR.adresse}</dd>
               </div>
               <div>
-                <dt>Site</dt>
+                <dt>Téléphone</dt>
+                <dd>{MEDIATEUR.telephone}</dd>
+              </div>
+              <div>
+                <dt>Courriel</dt>
                 <dd>
-                  <a href={MEDIATEUR.site} target="_blank" rel="noreferrer">
-                    {MEDIATEUR.site.replace(/^https?:\/\//, '')}
+                  <a href={`mailto:${MEDIATEUR.mail}`}>{MEDIATEUR.mail}</a>
+                </dd>
+              </div>
+              <div>
+                <dt>Saisir le médiateur</dt>
+                <dd>
+                  <a href={MEDIATEUR.saisine} target="_blank" rel="noreferrer">
+                    Déclarer un litige en ligne
                   </a>
                 </dd>
               </div>

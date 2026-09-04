@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   getReglages,
   definirReglage,
+  definirOffreLancement,
   synchroniserCatalogueStripe,
   getFilesPlanches,
   viderFilesPlanches,
@@ -449,6 +450,224 @@ function FilesPlanches() {
   );
 }
 
+/**
+ * L'OFFRE DE LANCEMENT : UN INTERRUPTEUR ET DEUX RÉGLAGES.
+ *
+ * C'est le seul mode qui ne se résume pas à un booléen — il a un habillage,
+ * et cet habillage doit se préparer À FROID. On écrit le texte et l'échéance
+ * un vendredi, on allume le lundi. D'où deux champs sous l'interrupteur
+ * plutôt qu'un écran séparé : ce qui se règle ensemble se montre ensemble.
+ *
+ * LE BOUTON D'ENREGISTREMENT NE CONCERNE QUE LES DEUX CHAMPS. L'interrupteur,
+ * lui, part immédiatement — c'est le geste d'urgence, celui qu'on fait pour
+ * arrêter une promotion qui dérape, et il ne doit pas dépendre de l'état d'un
+ * formulaire à côté.
+ */
+function OffreLancement({
+  reglages, connu, occupe, occupeBandeau, onBasculer, onBasculerBandeau, onEnregistrer,
+}) {
+  const [texte, setTexte] = useState(reglages.offreLancementTexte);
+  const [fin, setFin] = useState(() => pourLeChamp(reglages.offreLancementFin));
+  const [envoi, setEnvoi] = useState(false);
+  const [erreur, setErreur] = useState(null);
+
+  // Les valeurs arrivent APRÈS le premier rendu — la lecture est
+  // asynchrone. Sans cette resynchronisation, les champs resteraient vides
+  // sur ce qui est pourtant enregistré, et le premier enregistrement
+  // effacerait le réglage en place.
+  useEffect(() => {
+    setTexte(reglages.offreLancementTexte);
+    setFin(pourLeChamp(reglages.offreLancementFin));
+  }, [reglages.offreLancementTexte, reglages.offreLancementFin]);
+
+  const echeance = fin ? new Date(fin) : null;
+  const passee = echeance !== null && !Number.isNaN(echeance.getTime())
+    && echeance.getTime() <= Date.now();
+
+  const enregistrer = async () => {
+    setEnvoi(true);
+    setErreur(null);
+
+    try {
+      // `toISOString()` PORTE LE FUSEAU. La valeur d'un `datetime-local` est
+      // une heure murale sans fuseau : l'envoyer telle quelle laisserait le
+      // serveur la lire comme de l’UTC, et la promotion finirait deux heures
+      // trop tôt en été.
+      await onEnregistrer(
+        texte.trim(), echeance && !Number.isNaN(echeance.getTime()) ? echeance.toISOString() : '');
+    } catch (e) {
+      setErreur(
+        e?.response?.data?.message ?? "L’offre n’a pas pu être enregistrée.");
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  return (
+    <div className="mode mode--reglable">
+      <div className="mode__texte">
+        <strong className="mode__titre">
+          Offre de lancement — 3 h offertes
+
+          <span className={`mode__etat ${connu && reglages.offreLancement ? 'mode__etat--actif' : ''}`}>
+            {!connu ? 'État inconnu' : reglages.offreLancement ? 'Activée' : 'Désactivée'}
+          </span>
+        </strong>
+
+        <p className="mode__description">
+          La formule Solo affiche 12 h au lieu de 9 h le premier mois, et les
+          3 h sont créditées automatiquement à la souscription. Le crédit est
+          géré chez nous, pas chez Stripe : éteindre l’interrupteur suffit à
+          arrêter les suivantes, et personne ne garde de remise à vie.
+        </p>
+
+        <ul className="mode__effets">
+          <li>La carte Solo porte la mention entre parenthèses, et la ligne des 9 h est barrée.</li>
+          <li>Un compte à rebours apparaît sur la page d’accueil, si une date de fin est réglée.</li>
+          <li>Les 3 h sont créditées après ENCAISSEMENT, jamais à l’ouverture de la page de paiement.</li>
+          <li>Mensuel uniquement : « le premier mois » n’a pas de sens sur un abonnement annuel.</li>
+          <li>Les heures déjà offertes restent acquises quand vous éteignez l’interrupteur.</li>
+        </ul>
+
+        {erreur && <div className="alert">{erreur}</div>}
+
+        <div className="mode__champs">
+          <div className="champ">
+            <label htmlFor="lancement-texte">Mention affichée à côté de « Solo »</label>
+            <input
+              id="lancement-texte"
+              maxLength={40}
+              value={texte}
+              onChange={(e) => setTexte(e.target.value)}
+              placeholder="OFFRE LANCEMENT"
+            />
+            <span className="champ__aide">
+              S’affiche entre parenthèses : ({texte.trim() || "OFFRE LANCEMENT"})
+            </span>
+          </div>
+
+          <div className="champ">
+            <label htmlFor="lancement-fin">Date et heure de fin</label>
+            <input
+              id="lancement-fin"
+              type="datetime-local"
+              value={fin}
+              onChange={(e) => setFin(e.target.value)}
+            />
+            <span className="champ__aide">
+              {/* CONTRAIGNANTE, PAS DÉCORATIVE. Annoncer une échéance et ne
+                  pas l’appliquer laisserait un visiteur souscrire après la
+                  fin en croyant recevoir le cadeau. */}
+              Laissée vide, l’offre court sans terme et aucun compte à rebours
+              n’apparaît. Passée cette date, l’offre s’éteint d’elle-même —
+              même si l’interrupteur est resté allumé.
+            </span>
+          </div>
+        </div>
+
+        {/* UN SECOND INTERRUPTEUR, PLUS PETIT, PARCE QUE C’EST UNE DÉCISION
+            PLUS PETITE. L’offre est un engagement commercial : elle change
+            la carte Solo et crédite des heures. Le compte à rebours n’est
+            qu’une vitrine — il presse le visiteur, et on peut vouloir de
+            l’un sans l’autre.
+
+            Le cas courant : les premiers jours, « il reste 26 jours » ne
+            presse personne. On allume l’offre tout de suite et le décompte
+            la dernière semaine, quand il a enfin quelque chose à dire. */}
+        <div className="mode__sous-reglage">
+          <div className="mode__sous-texte">
+            <strong>Compte à rebours sur la page d’accueil</strong>
+            <span>
+              {reglages.offreLancementBandeau
+                ? 'Le bandeau « Fin de l’offre dans… » est affiché en haut de la page d’accueil.'
+                : 'L’offre reste active, mais aucun décompte n’est affiché aux visiteurs.'}
+            </span>
+
+            {/* SANS DATE, PAS DE DÉCOMPTE — quel que soit cet interrupteur.
+                Le dire ici évite de chercher pourquoi le bandeau reste
+                invisible alors qu’il est allumé. */}
+            {!fin && (
+              <span className="mode__sous-note">
+                Réglez une date de fin ci-dessus : sans elle, il n’y a rien à
+                décompter et le bandeau ne s’affiche pas.
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className={`bascule bascule--mini ${reglages.offreLancementBandeau ? 'bascule--active' : ''}`}
+            onClick={onBasculerBandeau}
+            disabled={occupeBandeau || !connu}
+            role="switch"
+            aria-checked={reglages.offreLancementBandeau}
+            aria-label="Compte à rebours sur la page d’accueil"
+          >
+            <span className="bascule__piste">
+              <span className="bascule__bouton" />
+            </span>
+          </button>
+        </div>
+
+        {/* LE CAS QU’IL FAUT LE PLUS SIGNALER : l’interrupteur est allumé et
+            l’administrateur croit son offre en cours, alors qu’elle est morte
+            depuis mardi soir. */}
+        {passee && reglages.offreLancement && (
+          <p className="mode__alerte">
+            La date de fin est dépassée : l’offre n’est plus appliquée, malgré
+            l’interrupteur allumé.
+          </p>
+        )}
+
+        <div className="mode__actions">
+          <button
+            type="button"
+            className="btn btn--compact btn--fantome"
+            disabled={envoi || !connu}
+            onClick={enregistrer}
+          >
+            {envoi ? "Enregistrement…" : "Enregistrer la mention et la date"}
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        className={`bascule ${reglages.offreLancement ? 'bascule--active' : ''}`}
+        onClick={onBasculer}
+        disabled={occupe || !connu}
+        role="switch"
+        aria-checked={reglages.offreLancement}
+        aria-label="Offre de lancement"
+      >
+        <span className="bascule__piste">
+          <span className="bascule__bouton" />
+        </span>
+      </button>
+    </div>
+  );
+}
+
+/**
+ * L'échéance enregistrée, mise à la forme d'un champ `datetime-local`.
+ *
+ * Le champ n'accepte QUE « AAAA-MM-JJTHH:MM », en heure locale et sans
+ * fuseau. La valeur stockée, elle, est un ISO complet en UTC : la donner
+ * telle quelle laisserait le champ vide, sans erreur, et l'administrateur
+ * croirait n’avoir jamais réglé de date.
+ */
+function pourLeChamp(iso) {
+  if (!iso) return '';
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const deux = (n) => String(n).padStart(2, "0");
+
+  return `${date.getFullYear()}-${deux(date.getMonth() + 1)}-${deux(date.getDate())}`
+       + `T${deux(date.getHours())}:${deux(date.getMinutes())}`;
+}
+
 export default function Modes() {
   const [reglages, setReglages] = useState({
     modeTest: false,
@@ -456,6 +675,13 @@ export default function Modes() {
     essaisOuverts: true,
     tachesDeFond: true,
     maintenance: false,
+    voixDeSecours: false,
+
+    // L'offre de lancement : trois valeurs qui n'ont de sens qu'ensemble.
+    offreLancement: false,
+    offreLancementTexte: '',
+    offreLancementFin: '',
+    offreLancementBandeau: true,
   });
   const [chargement, setChargement] = useState(true);
   const [envoi, setEnvoi] = useState(null);
@@ -486,6 +712,18 @@ export default function Modes() {
           // Éteinte par défaut : une lecture qui échoue ne doit jamais
           // conclure que le site est fermé.
           maintenance: Boolean(data?.maintenance),
+
+          // Éteint par défaut : le modèle principal reste le meilleur des
+          // deux quand il fonctionne.
+          voixDeSecours: Boolean(data?.voixDeSecours),
+
+          offreLancement: Boolean(data?.offreLancement),
+          offreLancementTexte: data?.offreLancementTexte ?? '',
+          offreLancementFin: data?.offreLancementFin ?? '',
+
+          // Allumé par défaut : c'était le comportement avant que ce
+          // réglage existe.
+          offreLancementBandeau: data?.offreLancementBandeau !== false,
         });
 
         setLus(true);
@@ -515,7 +753,8 @@ export default function Modes() {
       // jusqu'au rechargement. Vrai pour les deux réglages publics, pas
       // seulement le mode test — l'essai en fait partie depuis qu'il pilote
       // le bouton de l'accueil.
-      if (cle === 'MODE_TEST' || cle === 'ESSAIS_OUVERTS' || cle === 'MAINTENANCE_ACTIVE') {
+      if (cle === 'MODE_TEST' || cle === 'ESSAIS_OUVERTS' || cle === 'MAINTENANCE_ACTIVE'
+          || cle === 'OFFRE_LANCEMENT' || cle === 'OFFRE_LANCEMENT_BANDEAU') {
         oublierReglages();
       }
     } catch {
@@ -536,6 +775,52 @@ export default function Modes() {
             interrupteur qui remplace le site entier par une autre page : le
             ranger au milieu des autres le ferait basculer par erreur, et le
             chercher sous la pression le ferait manquer. */}
+        {/* JUSTE APRÈS LA MAINTENANCE, ET POUR LA MÊME RAISON : c’est un
+            interrupteur qu’on cherche sous la pression, quand quelque chose
+            ne va pas. Il doit être en haut, pas au milieu des réglages de
+            confort. */}
+        {/* EN TÊTE DES RÉGLAGES DE CONFORT, sous les deux interrupteurs
+            d’urgence : une promotion se règle posément, mais elle se coupe
+            parfois vite — un prix mal annoncé se corrige en minutes, pas en
+            heures. */}
+        <OffreLancement
+          reglages={reglages}
+          connu={lus}
+          occupe={envoi === 'OFFRE_LANCEMENT'}
+          occupeBandeau={envoi === 'OFFRE_LANCEMENT_BANDEAU'}
+          onBasculer={() => basculer('OFFRE_LANCEMENT', 'offreLancement')}
+          onBasculerBandeau={() =>
+            basculer('OFFRE_LANCEMENT_BANDEAU', 'offreLancementBandeau')}
+          onEnregistrer={async (texte, fin) => {
+            await definirOffreLancement(texte, fin);
+
+            setReglages((etat) => ({
+              ...etat, offreLancementTexte: texte, offreLancementFin: fin,
+            }));
+
+            // Les drapeaux publics sont retenus le temps d’une session : sans
+            // cet oubli, la page des tarifs garderait l’ancienne mention
+            // jusqu’au rechargement.
+            oublierReglages();
+          }}
+        />
+
+        <Interrupteur
+          titre="Voix de secours — TTS-1"
+          actif={reglages.voixDeSecours}
+          connu={lus}
+          occupe={envoi === 'VOIX_DE_SECOURS'}
+          onBasculer={() => basculer('VOIX_DE_SECOURS', 'voixDeSecours')}
+          description={`En ce moment, le professeur parle avec ${reglages.voixDeSecours ? "TTS-1" : "GPT-4o-mini"}. Cet interrupteur bascule toute la synthèse vocale sur « tts-1 » quand le modèle principal se met à produire des clics — ce qui est arrivé le 3 septembre 2026, sans prévenir et sans qu’on puisse le corriger de notre côté.`}
+          effets={[
+            'Le professeur parle avec un modèle plus ancien, plus stable, et une voix choisie pour ce modèle-là — les timbres ne sont pas les mêmes que sur le modèle principal.',
+            'La lenteur des dictées est conservée : elle passe par le réglage de vitesse au lieu d’une consigne au modèle.',
+            'La prosodie est plus plate : le rythme ne varie plus à l’intérieur des phrases, et le ton ne s’adapte plus à l’âge de l’élève.',
+            'Le changement est immédiat, y compris pour les cours déjà commencés — le mode est relu à chaque phrase.',
+          ]}
+          note="MESURÉ, PAS SUPPOSÉ. Sur la même phrase, le modèle principal produisait 248 ruptures franches par seconde dans la voix de Nora ; le secours en produit 8. Le défaut vient bien du fournisseur : le même texte demandé directement à son interface, sans passer par l’application, sort déjà abîmé. À laisser éteint tant que le modèle principal se tient — il sonne mieux."
+        />
+
         <Interrupteur
           titre="Maintenance"
           actif={reglages.maintenance}

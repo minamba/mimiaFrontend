@@ -12,6 +12,7 @@ import {
   ADMIN_FICHE_SUCCESS,
   ADMIN_FICHE_FAILURE,
   ADMIN_FICHE_FERMER,
+  ADMIN_REINITIALISER_FILTRES,
   ADMIN_MUTATION_REQUEST,
   ADMIN_MUTATION_SUCCESS,
   ADMIN_MUTATION_FAILURE,
@@ -93,6 +94,18 @@ export default function adminReducer(state = initialState, action) {
 
     case ADMIN_FICHE_REQUEST:
       return { ...state, ficheLoading: true, ficheError: null, fiche: null };
+
+    // LES DONNÉES RESTENT, LES FILTRES TOMBENT. Vider aussi les listes
+    // ferait clignoter l'écran au retour : elles seront de toute façon
+    // rechargées au montage suivant, sans filtre cette fois.
+    case ADMIN_REINITIALISER_FILTRES:
+      return {
+        ...state,
+        recherche: '',
+        rechercheEleve: '',
+        eleveFiltre: '',
+        parentFiltre: null,
+      };
 
     case ADMIN_FICHE_SUCCESS:
       return { ...state, ficheLoading: false, fiche: action.payload };

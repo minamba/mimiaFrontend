@@ -284,9 +284,17 @@ h1, h2, h3 {
   backdrop-filter: saturate(160%) blur(12px);
 }
 
+/* LE LOGO EST CE QUI CÈDE QUAND LA PLACE MANQUE.
+
+   `min-width: 0` désarme le minimum automatique du flex, sans quoi une
+   image refuse de descendre sous sa largeur intrinsèque et pousse les
+   boutons hors de l'écran. Avec, la marque se réduit et les trois portes
+   restent visibles — un mot-marque plus petit se lit encore, un bouton
+   absent ne s'ouvre plus. */
 .navbar__brand {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 11px;
   font-family: var(--display);
   font-size: 19px;
@@ -304,7 +312,10 @@ h1, h2, h3 {
    Ils partagent en revanche une hauteur (38 px) et une forme (pilule). C'est
    ce qui manquait le plus : trois rectangles de hauteurs différentes, dont un
    arrondi en pilule, donnaient une ligne qui ondulait. */
-.navbar__right { display: flex; align-items: center; gap: 10px; }
+/* Les boutons, eux, ne rétrécissent jamais : leur libellé est déjà
+   insécable, et les laisser se comprimer rendrait la barre illisible avant
+   de la rendre étroite. */
+.navbar__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .navbar__user { font-size: 14px; color: var(--encre-douce); }
 
 .navbar__right > .btn-ghost,
@@ -319,6 +330,13 @@ h1, h2, h3 {
   padding-top: 0;
   padding-bottom: 0;
   border-radius: 999px;
+
+  /* LA CAUSE DU BOUTON EN TROIS LIGNES. Sans cette ligne, « J'ai un code »
+     se replie mot par mot dès que la place manque, et la pilule — qui a
+     une hauteur fixe de 38 px — voit son texte déborder par le haut et par
+     le bas. Un libellé de bouton ne se coupe pas : on rétrécit le bouton,
+     ou on le retire, jamais entre les deux. */
+  white-space: nowrap;
 }
 
 /* Un fond OPAQUE, et c'est le point important.
@@ -400,7 +418,17 @@ h1, h2, h3 {
 
 /* Hauteur fixe, largeur libre : le logo garde ses proportions quelle que
    soit la variante servie. */
-.navbar__logo { display: block; height: 34px; width: auto; }
+/* `object-fit: contain` plutôt qu’un simple `max-width` : à largeur
+   contrainte, l'image se met à l'échelle au lieu d'être rognée. Le
+   mot-marque rapetisse, il ne se coupe pas en deux. */
+.navbar__logo {
+  display: block;
+  height: 34px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
 .navbar__logo--sombre { display: none; }
 
 @media (prefers-color-scheme: dark) {
@@ -408,12 +436,51 @@ h1, h2, h3 {
   .navbar__logo--sombre { display: block; }
 }
 
-/* Sur mobile, deux boutons plus le logo débordent : l'invitation à s'inscrire
-   s'efface, la connexion reste — c'est elle qui manquait. */
+/* SUR TÉLÉPHONE, LES TROIS PORTES RESTENT OUVERTES.
+
+   Seule l'invitation à s'inscrire s'efface : la connexion mène au même
+   formulaire en un clic de plus. « Tarifs » et « J'ai un code » restent —
+   le second est la seule entrée des enfants et n'existe nulle part
+   ailleurs, le premier est ce qu’un parent vient chercher.
+
+   La place se prend sur les gouttières, sur le corps du texte et sur le
+   logo, qui cède le premier (voir `.navbar__brand` plus haut).
+
+   L'ANCIENNE RÈGLE MASQUAIT CES DEUX LIENS, ET N'A JAMAIS RIEN FAIT :
+   `.navbar__lien-direct` pèse 0,1,0 face au `.navbar__right > .btn-ghost`
+   plus haut, qui pèse 0,2,0 et impose `display: inline-flex`. Le défaut
+   était donc invisible ET heureux — il gardait les portes ouvertes. */
 @media (max-width: 560px) {
   .navbar__inscription { display: none; }
   .navbar__logo { height: 28px; }
-  .navbar__lien-direct { display: none; }
+  /* Rien ne disparaît : tout se resserre, et le logo cède le reste. */
+  .navbar__right { gap: 7px; }
+
+  .navbar__right > .btn-ghost,
+  .navbar__right > .btn,
+  .navbar__right .menu-compte__bouton {
+    height: 34px;
+    padding-left: 13px;
+    padding-right: 13px;
+    font-size: 13px;
+  }
+}
+
+/* Sous 380 px — un iPhone SE, un vieil Android — même resserrés, le logo et
+   les deux boutons se disputent la ligne. Le logo passe à son seul
+   pictogramme : la marque reste reconnaissable, et les deux portes restent
+   ouvertes. */
+@media (max-width: 400px) {
+  .navbar__right { gap: 6px; }
+  .navbar__logo { height: 24px; }
+
+  .navbar__right > .btn-ghost,
+  .navbar__right > .btn,
+  .navbar__right .menu-compte__bouton {
+    padding-left: 11px;
+    padding-right: 11px;
+    font-size: 12.5px;
+  }
 }
 
 /* ------------------------------------------------------- menu « Mon compte » */
@@ -2651,11 +2718,17 @@ h1, h2, h3 {
   color: var(--encre-douce);
 }
 
+/* LE TOTAL ET SES DEUX BULLES, CÔTE À CÔTE.
+
+   L'alignement se faisait sur la ligne de base : il convenait à une liste de
+   phrases, il ne convient plus à des cartes bordées, dont le grand chiffre
+   se serait retrouvé collé au bas de leur première ligne de texte. Il tient
+   maintenant le haut, comme les deux en-têtes. */
 .cout-total__corps {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 10px 28px;
+  align-items: flex-start;
+  gap: 14px 28px;
 }
 
 /* Le montant en grand : c'est la réponse, le reste est justification.
@@ -2674,6 +2747,7 @@ h1, h2, h3 {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  padding-top: 6px;
   color: #b45309;
 }
 
@@ -2690,31 +2764,801 @@ h1, h2, h3 {
   color: #0f766e;
 }
 
-/* Les montants du détail sont en dollars : ils prennent l'ambre, comme le
-   grand chiffre au-dessus dont ils sont la décomposition. */
-.cout-total__detail strong { color: #b45309; }
-
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .cout-total__euros { color: #5eead4; }
-  :root:not([data-theme='light']) .cout-total__detail strong { color: #fbbf24; }
 }
 
 :root[data-theme='dark'] .cout-total__euros { color: #5eead4; }
-:root[data-theme='dark'] .cout-total__detail strong { color: #fbbf24; }
+
+/* ------------------------------------------------------------------ */
+/* LE FICHIER CLIENTS                                                  */
+/* ------------------------------------------------------------------ */
+
+/* Une surface distincte du bandeau de coût juste au-dessus, et non une
+   section de plus dedans : l'un compte une période, l'autre décrit un état.
+   Les confondre ferait chercher pourquoi ces chiffres ne bougent pas quand
+   on change de période. */
+.fichier {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .fichier { background: rgba(255, 255, 255, 0.03); }
+}
+
+:root[data-theme='dark'] .fichier { background: rgba(255, 255, 255, 0.03); }
+
+.fichier__entete {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 14px;
+}
+
+.fichier__titre {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.fichier__note { font-size: 12px; color: var(--encre-douce); }
+
+.fichier__corps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+}
+
+/* Le total en grand : la question posée est « combien de familles », le
+   reste en est la décomposition. */
+.fichier__total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fichier__total-valeur {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--encre);
+}
+
+.fichier__total-libelle { font-size: 13px; color: var(--encre-douce); }
+
+.fichier__cases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Chaque case : le nombre au-dessus de son libellé, jamais dans la phrase.
+   Cinq nombres alignés sur une même ligne de base se comparent d'un coup
+   d’œil ; noyés dans du texte, il faut les lire un par un. */
+.fichier__case {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fichier__case strong {
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--encre);
+}
+
+.fichier__case span { font-size: 12px; color: var(--encre-douce); }
+
+/* Les payants portent la couleur ; les quatre autres restent en encre. Une
+   seule case colorée dit laquelle compte, là où cinq teintes obligeraient à
+   retenir une légende pour lire cinq nombres. */
+.fichier__case--fort strong { color: #b45309; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .fichier__case--fort strong { color: #fbbf24; }
+}
+
+:root[data-theme='dark'] .fichier__case--fort strong { color: #fbbf24; }
+
+.fichier__forfaits {
+  width: auto;
+  min-width: min(100%, 360px);
+  margin-top: 16px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.fichier__forfaits th,
+.fichier__forfaits td {
+  padding: 7px 16px 7px 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--trait);
+}
+
+.fichier__forfaits th:first-child,
+.fichier__forfaits td:first-child {
+  text-align: left;
+  padding-right: 28px;
+}
+
+.fichier__forfaits th {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.fichier__forfaits td { color: var(--encre-douce); }
+
+.fichier__forfaits td:first-child { color: var(--encre); font-weight: 500; }
+
+.fichier__forfaits-total { color: var(--encre); font-weight: 600; }
+
+.fichier__forfaits tr:last-child th,
+.fichier__forfaits tr:last-child td { border-bottom: none; }
+
+/* ------------------------------------------------------------------ */
+/* LA RELECTURE DES AVIS, EN ADMINISTRATION                            */
+/* ------------------------------------------------------------------ */
+
+.relecture__resume { margin: 0 0 16px; font-size: 13px; color: var(--encre-douce); }
+
+.relecture {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.relecture__carte {
+  display: grid;
+  gap: 9px;
+  padding: 16px 18px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .relecture__carte { background: rgba(255, 255, 255, 0.03); }
+}
+
+:root[data-theme='dark'] .relecture__carte { background: rgba(255, 255, 255, 0.03); }
+
+/* Ce qui attend une décision porte un liseré, et rien de plus. Une couleur
+   de fond entière ferait ressembler l'attente à une alerte — or il n'y a
+   rien d'anormal à ce qu'un avis vienne d'arriver. */
+.relecture__carte--attente { border-left: 3px solid var(--corail); }
+
+.relecture__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.relecture__auteur { font-weight: 600; color: var(--encre); }
+
+.relecture__mail { font-size: 12px; color: var(--encre-douce); }
+
+.relecture__titre { margin: 0; font-size: 15px; font-weight: 600; color: var(--encre); }
+
+.relecture__texte {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.relecture__texte--vide { font-style: italic; opacity: 0.75; }
+
+.relecture__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding-top: 6px;
+  border-top: 1px solid var(--trait);
+  font-size: 12px;
+  color: var(--encre-douce);
+}
+
+.relecture__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ------------------------------------------------------------------ */
+/* LA QUESTION DU CASQUE                                               */
+/* ------------------------------------------------------------------ */
+
+.modale__boite--casque { max-width: 540px; }
+
+/* Deux choix de POIDS ÉGAL, et c’est le point.
+
+   Un « Oui » mis en avant et un « Non » discret pousseraient l'enfant vers
+   la réponse qui a l'air attendue — et une réponse fausse ici lui rend
+   précisément le cours inutilisable. Ce n’est pas une préférence à
+   influencer, c’est un fait à constater. */
+.casque-choix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 22px 0 18px;
+}
+
+.casque-option {
+  display: grid;
+  gap: 4px;
+  padding: 18px 16px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.casque-option:hover {
+  border-color: var(--corail);
+  transform: translateY(-2px);
+}
+
+.casque-option:focus-visible {
+  outline: 2px solid var(--corail);
+  outline-offset: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .casque-option { background: rgba(255, 255, 255, 0.04); }
+}
+
+:root[data-theme='dark'] .casque-option { background: rgba(255, 255, 255, 0.04); }
+
+.casque-option__icone { font-size: 26px; line-height: 1; }
+
+.casque-option__titre {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.casque-option__detail { font-size: 12.5px; color: var(--encre-douce); }
+
+/* Le rappel pendant le cours : présent, jamais encombrant. Il énonce une
+   règle du jeu, il ne signale pas une panne — d’où le ton neutre et non
+   la couleur d’alerte. */
+.chat__demi-duplex {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 10px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .chat__demi-duplex { background: rgba(255, 255, 255, 0.06); }
+}
+
+:root[data-theme='dark'] .chat__demi-duplex { background: rgba(255, 255, 255, 0.06); }
+
+/* ------------------------------------------------------------------ */
+/* LES AVIS DES FAMILLES                                               */
+/* ------------------------------------------------------------------ */
+
+.avis { padding: 90px 0; }
+
+/* Le résumé chiffré et la répartition, côte à côte tant que la place le
+   permet. En dessous de 640px la répartition passe sous la note plutôt que
+   de se comprimer : cinq barres étroites ne se comparent plus. */
+.avis__resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 22px 56px;
+  margin-bottom: 34px;
+}
+
+.avis__note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.avis__moyenne {
+  font-family: var(--display);
+  font-size: 46px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--encre);
+}
+
+.avis__total { font-size: 13px; color: var(--encre-douce); }
+
+.avis__barres {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: min(100%, 300px);
+  flex: 1 1 300px;
+  max-width: 460px;
+}
+
+.avis__barres li {
+  display: grid;
+  grid-template-columns: 5.5em 1fr 3em;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--encre-douce);
+}
+
+.avis__barre-part { text-align: right; font-variant-numeric: tabular-nums; }
+
+.avis__barre {
+  height: 9px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .avis__barre { background: rgba(255, 255, 255, 0.09); }
+}
+
+:root[data-theme='dark'] .avis__barre { background: rgba(255, 255, 255, 0.09); }
+
+.avis__barre-remplie {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--corail);
+}
+
+/* LES ÉTOILES. Une seule teinte, celle de la marque : les colorer par note
+   — vert à 5, rouge à 1 — jugerait l'avis à la place du lecteur. */
+.etoiles { display: inline-flex; gap: 2px; line-height: 1; }
+
+.etoile { color: var(--trait); font-size: 15px; }
+
+.etoile--pleine { color: var(--corail); }
+
+.etoiles--grande .etoile { font-size: 22px; }
+
+/* En saisie, les ronds du groupe radio sont masqués mais TOUJOURS LÀ : ce
+   sont eux qui portent le focus clavier et l'annonce du lecteur d'écran.
+   Les remplacer par des <span> cliquables rendrait la note impossible à
+   donner sans souris. */
+.etoiles--saisie .etoile {
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.etoiles--saisie .etoile:hover { transform: scale(1.15); }
+
+.etoiles--saisie input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.etoiles--saisie .etoile:focus-within {
+  outline: 2px solid var(--corail);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------- déposer son avis */
+
+.avis__moi { margin-bottom: 34px; }
+
+/* Le même formulaire vit dans « Mon compte » : la phrase qui l’introduit y
+   prend le ton des autres blocs de réglages. */
+.bloc-profil__intro {
+  margin: -6px 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+.avis__invite { font-size: 14px; color: var(--encre-douce); }
+
+.avis__lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--corail);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.avis__etat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  font-size: 14px;
+  color: var(--encre-douce);
+}
+
+.avis__formulaire {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+  padding: 22px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .avis__formulaire { background: rgba(255, 255, 255, 0.03); }
+}
+
+:root[data-theme='dark'] .avis__formulaire { background: rgba(255, 255, 255, 0.03); }
+
+.avis__champ { display: grid; gap: 7px; font-size: 14px; }
+
+.avis__champ > span { font-weight: 600; color: var(--encre); }
+
+.avis__champ em { font-weight: 400; font-style: normal; color: var(--encre-douce); }
+
+.avis__champ input,
+.avis__champ textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: var(--papier);
+  color: var(--encre);
+  font: inherit;
+  font-size: 14px;
+}
+
+.avis__champ textarea { resize: vertical; }
+
+.avis__champ small { font-size: 11px; color: var(--encre-douce); text-align: right; }
+
+.avis__mention { margin: 0; font-size: 12px; color: var(--encre-douce); }
+
+.avis__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* --------------------------------------------------------- les cartes */
+
+/* La grille de la page « tous les avis » : elle se remplit toute seule,
+   trois colonnes au large, une sur téléphone, sans point de rupture à tenir
+   à jour. */
+.avis__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* LE CARROUSEL                                                        */
+/* ------------------------------------------------------------------ */
+
+/* TROIS COLONNES : flèche, piste, flèche.
+
+   Les commandes encadrent la piste au lieu de la recouvrir. Posées
+   par-dessus les cartes — l'habitude des sites marchands — elles masquent le
+   début d'un nom et la fin d'une phrase, c'est-à-dire ce qu'on vient lire.
+
+   `minmax(0, 1fr)` et non `1fr` : sans le minimum à zéro, une piste qui
+   déborde force sa colonne à la largeur de son contenu, et les deux flèches
+   sortent de l'écran. */
+.carrousel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+/* LE DÉFILEMENT EST CELUI DU NAVIGATEUR. `scroll-snap` cale les cartes,
+   `overflow-x` fait le reste : glissement au doigt, molette, inertie et
+   navigation au clavier viennent gratuitement. Une piste animée à la main
+   réimplémente tout ça, et mal.
+
+   La marge négative puis le rembourrage laissent la première carte affleurer
+   le bord du texte tout en gardant de la place pour l'ombre au survol. */
+.carrousel__piste {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 2px;
+  padding: 4px 2px;
+  margin: 0 -2px;
+
+  /* LA BARRE EST MASQUÉE, LE DÉFILEMENT RESTE. Les flèches sont la
+     commande visible ; la barre faisait doublon et donnait au bloc
+     l'air d'un tableau qui déborde. Le glissement au doigt continue de
+     fonctionner — et devient la seule commande sur téléphone, où les
+     flèches se retirent. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.carrousel__piste::-webkit-scrollbar { display: none; }
+
+.carrousel__piste:focus-visible {
+  outline: 2px solid var(--corail);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
+/* Une carte par écran sur téléphone, deux ou trois ensuite. La base en
+   pourcentage plutôt qu'en pixels : la carte suit la largeur disponible au
+   lieu de laisser un demi-blanc au bord. */
+.carrousel__element {
+  flex: 0 0 min(100%, 340px);
+  scroll-snap-align: start;
+}
+
+.carrousel__element .avis__carte { height: 100%; }
+
+
+/* Une flèche grisée aux extrémités : une flèche qui ne fait rien est pire
+   qu'une flèche absente — on clique deux fois avant de comprendre. */
+.carrousel__fleche {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--trait);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--encre);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.carrousel__fleche:hover:not(:disabled) {
+  border-color: var(--corail);
+  color: var(--corail);
+}
+
+.carrousel__fleche:disabled { opacity: 0.3; cursor: default; }
+
+/* SUR TÉLÉPHONE, LES FLÈCHES SE RETIRENT. Deux boutons de 38 px plus leurs
+   gouttières mangent le quart d'un écran de 360 px, et la carte devient
+   illisible. Le glissement au doigt les remplace, et il est de toute façon
+   le geste naturel à cette taille. */
+@media (max-width: 640px) {
+  .carrousel { grid-template-columns: minmax(0, 1fr); }
+  .carrousel__fleche { display: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .carrousel__fleche { background: rgba(255, 255, 255, 0.05); }
+}
+
+:root[data-theme='dark'] .carrousel__fleche { background: rgba(255, 255, 255, 0.05); }
+
+.avis__vers-tous { margin-top: 20px; }
+
+/* ------------------------------------------------------------------ */
+/* LA PAGE « TOUS LES AVIS »                                           */
+/* ------------------------------------------------------------------ */
+
+.page--avis { padding: 40px 0 90px; }
+
+.page__entete { margin: 18px 0 34px; }
+
+.page__entete h1 { margin: 0 0 16px; }
+
+/* Sur la page dédiée, la note se lit en ligne : il n’y a pas la
+   répartition à côté pour occuper la colonne. */
+.avis__note--enligne {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.page__actions { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+.avis__carte {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 18px 20px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .avis__carte { background: rgba(255, 255, 255, 0.03); }
+}
+
+:root[data-theme='dark'] .avis__carte { background: rgba(255, 255, 255, 0.03); }
+
+.avis__carte-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.avis__auteur { font-weight: 600; color: var(--encre); }
+
+/* Le pendant de « achat vérifié ». Discret : c'est une précision, pas une
+   médaille. */
+.avis__verifie {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .avis__verifie { background: rgba(255, 255, 255, 0.09); }
+}
+
+:root[data-theme='dark'] .avis__verifie { background: rgba(255, 255, 255, 0.09); }
+
+.avis__titre { margin: 0; font-size: 16px; font-weight: 600; color: var(--encre); }
+
+.avis__date { font-size: 12px; color: var(--encre-douce); }
+
+.avis__texte { margin: 0; font-size: 14px; line-height: 1.55; color: var(--encre-douce); }
 
 /* Pendant le rechargement : pâli, jamais vidé. Un blanc se lit comme zéro. */
 .cout-total__pale { opacity: 0.45; }
 
-.cout-total__detail {
+/* LES DEUX NATURES DE DÉPENSE, CHACUNE SUR SA SURFACE.
+
+   Les montants vivaient dans la phrase, donc décalés les uns des autres, et
+   le retrait des sous-lignes les décalait une seconde fois : aucun des cinq
+   chiffres ne pouvait être comparé à un autre. Ils tiennent maintenant une
+   colonne à eux, à droite de chaque bulle.
+
+   La largeur minimale de 240px est ce qui décide du passage à une colonne :
+   en dessous, le libellé et son montant se toucheraient. */
+.cout-total__groupes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  flex: 1 1 420px;
+}
+
+.cout-bulle {
+  flex: 1 1 240px;
+  min-width: 240px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .cout-bulle {
+    background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+:root[data-theme='dark'] .cout-bulle { background: rgba(255, 255, 255, 0.03); }
+
+/* L'en-tête porte le sous-total : c'est le chiffre qui répond à « combien
+   pour ce groupe », et il doit se lire sans parcourir les lignes. */
+.cout-bulle__entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.cout-bulle__nom {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre);
+  line-height: 1.35;
+}
+
+.cout-bulle__nom small,
+.cout-bulle__lignes small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--encre-douce);
+}
+
+.cout-bulle__somme {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #b45309;
+}
+
+.cout-bulle__lignes {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 3px;
+  gap: 7px;
+  padding-top: 8px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--encre-douce);
 }
+
+.cout-bulle__lignes li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Bord droit commun et chiffres tabulaires : les virgules de toutes les
+   lignes d'une bulle s'empilent, sous-total compris. */
+.cout-bulle__lignes strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: #b45309;
+}
+
+.cout-bulle__vide {
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .cout-bulle__somme,
+  :root:not([data-theme='light']) .cout-bulle__lignes strong { color: #fbbf24; }
+}
+
+:root[data-theme='dark'] .cout-bulle__somme,
+:root[data-theme='dark'] .cout-bulle__lignes strong { color: #fbbf24; }
 
 /* La formule du parent, en tête de ligne.
 
@@ -3663,6 +4507,38 @@ h1, h2, h3 {
   max-height: calc(100vh - 40px);
   overflow-y: auto;
 }
+
+/* LES TABLEAUX DE LA FICHE NE SE LAISSENT PAS ÉCRASER.
+   ----------------------------------------------------
+   Relevé en séance : depuis l'administration, « ses évaluations », « ses
+   séances » et « derniers cours » apparaissaient VIDES — alors que le serveur
+   renvoyait bien six évaluations, dix comptes rendus et six séances, et que
+   les lignes étaient PRÉSENTES DANS LE DOM. Elles étaient simplement hautes de
+   zéro pixel.
+
+   POURQUOI CES TROIS-LÀ ET PAS LES AUTRES
+   ---------------------------------------
+   « modale__boite » est une colonne flex bornée en hauteur. Quand son contenu
+   la dépasse, flexbox comprime ses enfants — et la règle veut qu'un enfant
+   garde au moins la taille de son contenu, SAUF s'il est lui-même un conteneur
+   de défilement. « tableau » porte overflow-x pour ses colonnes larges : sa
+   taille minimale automatique tombe donc à zéro, et il s'écrase entièrement.
+
+   Les autres blocs de la fiche — la grille des matières, le dernier cours, la
+   progression — ne défilent pas, gardent leur minimum automatique, et sont
+   restés visibles. D'où trois sections vides au milieu d'une fiche pleine, ce
+   qui ressemblait à des données manquantes alors que rien ne manquait. Trois
+   captures du réseau et un test de rendu ont été nécessaires pour écarter le
+   serveur, la route, la charge utile et le composant avant d'arriver ici.
+
+   POURQUOI SEULEMENT DANS L'ADMINISTRATION
+   ---------------------------------------
+   Côté parent, la même fiche s'affiche EN PAGE, dans une section ordinaire
+   sans hauteur maximale. Rien ne comprime, rien ne s'écrase — et le défaut
+   restait invisible de ce côté-là.
+
+   « flex-shrink: 0 » leur rend leur hauteur. Le dialogue, lui, défile déjà. */
+.modale__boite--large > .tableau { flex-shrink: 0; }
 
 /* ------------------------------------------------------------ fiche élève */
 .fiche__entete {
@@ -5026,10 +5902,29 @@ h1, h2, h3 {
 
 .chat__entete {
   display: flex;
+
+  /* LA RANGÉE PASSE À LA LIGNE PLUTÔT QUE DE DÉBORDER.
+     Elle ne le savait pas, et rien ne la retenait : à la fin d une séance,
+     « Relancer 6 min » s ajoute à « Quitter », au nom du professeur, au
+     chronomètre et au bouton de son. La colonne de conversation ne fait que la
+     moitié de l écran — le tableau occupe l autre — et les derniers éléments
+     sortaient tout simplement du cadre, cachés derrière la planche.
+     La version mobile savait déjà le faire ; le bureau, non. */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 10px 14px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--trait);
+}
+
+/* ET LE NOM SE RÉTRÉCIT AVANT QUE QUOI QUE CE SOIT NE SORTE.
+   « min-width: 0 » est ce qui l autorise : sans lui, un élément flex refuse de
+   descendre sous la largeur de son contenu, et c est le voisin qui déborde. Un
+   nom tronqué se relit ; un bouton invisible ne se clique pas. */
+.chat__entete .chat__titre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat__titre {
@@ -9897,6 +10792,1019 @@ h1, h2, h3 {
 }
 
 .frequentation__chiffre--visite strong { color: var(--serie-3); }
+.frequentation__chiffre--essai strong { color: var(--serie-1); }
 .frequentation__chiffre--entree strong { color: var(--serie-2); }
 .frequentation__chiffre--alerte strong { color: #c58a12; }
 .frequentation__chiffre--sortie strong { color: var(--serie-1); }
+
+
+/* ------------------------------------------------------------------ tunnel
+   Trois étapes en ligne, avec le taux de passage entre chacune. */
+.tunnel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tunnel__etape {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 20px;
+  min-width: 150px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: var(--fond-carte, transparent);
+}
+
+.tunnel__etape strong { font-size: 28px; line-height: 1; color: var(--encre); }
+.tunnel__etape span { font-size: 12.5px; color: var(--encre-douce); }
+
+.tunnel__passage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+}
+
+.tunnel__taux { font-size: 12px; font-weight: 600; color: var(--serie-2); }
+.tunnel__fleche { font-size: 15px; color: var(--encre-douce); }
+
+.frequentation__note {
+  max-width: 760px;
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+/* ------------------------------------------------- en-tête de colonne triable
+   Un bouton dans le `th` : c'est lui qui rend la colonne atteignable au
+   clavier. Il doit se fondre dans l'en-tête, pas s'annoncer comme un bouton —
+   d'où l'absence de fond et de bordure, et l'héritage de la typographie. */
+.tri-colonne {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tri-colonne:hover { color: var(--encre); text-decoration: underline; }
+.tri-colonne--actif { color: var(--encre); }
+
+/* Une largeur fixe : sans elle, la colonne se décale d'un caractère quand la
+   flèche apparaît, et tout le tableau tressaute au clic. */
+.tri-colonne__fleche { display: inline-block; width: 9px; font-size: 11px; }
+
+/* ========================================================== bandeau d'information
+
+   Le mot de l'exploitant à ses visiteurs : maintenance prévue, incident en
+   cours, nouveauté. Écrit dans l'administration, affiché en une seconde.
+
+   AMBRE, ET NI ROUGE NI CORAIL.
+   -----------------------------
+   Le rouge est déjà pris — c'est la couleur des erreurs et des effacements
+   définitifs, et un bandeau rouge en permanence apprend au visiteur à ignorer
+   le rouge. Le corail est la marque : un avis de service peint aux couleurs de
+   la maison se lit comme une promotion. L'ambre est la teinte de l'avis, elle
+   ne dit ni « tout va bien » ni « c'est cassé », ce qui est exactement le
+   registre.
+
+   PLEINE LARGEUR ET DANS LE FLUX. La barre de navigation est déjà collante ;
+   deux bandes fixées superposées mangeraient un tiers de l'écran d'un
+   téléphone pour une phrase déjà lue. Celle-ci se lit en arrivant, puis
+   défile. */
+.bandeau-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--bandeau-trait);
+  background: var(--bandeau-fond);
+  color: var(--bandeau-encre);
+}
+
+/* LE POINT D'EXCLAMATION EST DESSINÉ, PAS ÉCRIT EN ÉMOJI.
+
+   Un émoji d'avertissement change de forme et de couleur d'un système à
+   l'autre — jaune sur Android, orange sur Apple, plat sur Windows — et vient
+   avec sa propre teinte qui jure avec celle du bandeau. Un disque et un
+   caractère, eux, sont les mêmes partout. */
+.bandeau-info__icone {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--bandeau-pastille);
+  color: var(--bandeau-fond);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bandeau-info__texte {
+  flex: 1 1 auto;
+
+  /* `min-width: 0` désarme le minimum automatique du flex : sans lui, une
+     phrase longue sans espace refuse de se couper et pousse la croix de
+     fermeture hors de l'écran. */
+  min-width: 0;
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.5;
+
+  /* Un message tapé dans une zone de texte peut contenir des retours à la
+     ligne. Les honorer coûte une propriété et évite un pavé illisible. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .bandeau-info { padding: 10px 16px; gap: 10px; }
+  .bandeau-info__texte { font-size: 13.5px; }
+}
+
+:root {
+  /* Ambre pâle sur encre brune : 8,9:1. Le bandeau doit se lire d'un coup
+     d'œil, pas être décodé. */
+  --bandeau-fond: #fef3c7;
+  --bandeau-encre: #613b06;
+  --bandeau-trait: #f5d98a;
+  --bandeau-pastille: #a35d05;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Le thème sombre n'est PAS l'inverse du clair : un ambre pâle y
+     éblouirait, et un ambre foncé sous du texte ambre ne se lirait plus. On
+     garde la teinte et on échange les rôles — fond brun profond, texte ambre
+     clair (9,4:1). */
+  :root:not([data-theme='light']) {
+    --bandeau-fond: #3a2a08;
+    --bandeau-encre: #fcd968;
+    --bandeau-trait: #5c4310;
+    --bandeau-pastille: #fcd968;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bandeau-fond: #3a2a08;
+  --bandeau-encre: #fcd968;
+  --bandeau-trait: #5c4310;
+  --bandeau-pastille: #fcd968;
+}
+
+/* --------------------------------------- l'écran d'administration du bandeau */
+.info-bandeau { display: flex; flex-direction: column; gap: 18px; }
+
+/* L'ÉTAT AVANT LE FORMULAIRE : en arrivant, la question n'est pas « qu'est-ce
+   que j'écris » mais « y a-t-il quelque chose d'affiché en ce moment ». */
+.info-bandeau__etat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface-2);
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.info-bandeau__etat strong { color: var(--encre); }
+
+/* Le bandeau EST affiché : l'écran doit le dire avec la couleur du bandeau
+   lui-même, pas avec du gris. */
+.info-bandeau__etat.est-active {
+  border-color: var(--bandeau-trait);
+  background: var(--bandeau-fond);
+  color: var(--bandeau-encre);
+}
+
+.info-bandeau__etat.est-active strong { color: var(--bandeau-encre); }
+
+.info-bandeau__ok {
+  padding: 10px 14px;
+  border-radius: var(--rayon);
+  background: color-mix(in srgb, var(--action-ajouter) 14%, transparent);
+  font-size: 13.5px;
+  color: var(--action-ajouter);
+}
+
+/* L'APERÇU EST LE VRAI BANDEAU, avec ses vraies classes — pas une maquette.
+   Le seul défaut probable de cet écran est un texte qui tient dans le champ
+   et déborde en haut du site ; le montrer l'élimine. Le cadre en pointillé
+   dit « ceci est une répétition », sans quoi on croit voir le site. */
+.info-bandeau__apercu {
+  padding: 10px;
+  border: 1px dashed var(--contour);
+  border-radius: var(--rayon);
+}
+
+.info-bandeau__apercu-titre {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.info-bandeau__apercu .bandeau-info {
+  border: 1px solid var(--bandeau-trait);
+  border-radius: calc(var(--rayon) - 6px);
+}
+
+.info-bandeau__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.info-bandeau__reste-court { color: var(--danger); }
+
+.info-bandeau__avertissement {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.info-bandeau__note {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--trait);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+/* ====================================================== bandeau promotionnel
+
+   Le visuel de campagne en haut de la page d'accueil : rentrée, remise,
+   parrainage.
+
+   UNE BULLE, ET NON UNE BANDE D'UN BORD À L'AUTRE.
+   ------------------------------------------------
+   La pleine largeur avait sa logique — un visuel de 2 400 px mérite d'être vu
+   à son échelle. Mais elle faisait de la promotion un objet d'une autre
+   nature que tout ce qui la suit : la page d'accueil est une suite de cartes
+   arrondies dans une colonne de 1 124 px, et une image à fond perdu par
+   dessus se lisait comme une publicité collée sur le site plutôt que comme
+   une partie du site.
+
+   Dans la colonne, elle parle la même langue que le compte à rebours posé
+   juste en dessous — mêmes bords, même arrondi, même ombre. Les deux se
+   lisent alors comme un seul bloc « offre en cours ».
+
+   LA LARGEUR EST CALCULÉE, PAS RECOPIÉE. `.landing` fait 1 180 px avec 28 px
+   de marge intérieure, soit 1 124 px de contenu. Écrire 1 124 en dur ici
+   laisserait les deux dériver le jour où la marge change ; le `calc` sur la
+   largeur reproduit la marge au lieu de la deviner.
+
+   `overflow: hidden` PLUTÔT QU'UN ARRONDI SUR L'IMAGE : le lien de survol et
+   le cadre de focus portent sur la bulle, et un arrondi posé seulement sur
+   l'image laisserait quatre coins carrés apparaître au focus. */
+.promo {
+  display: block;
+  width: calc(100% - 56px);
+  max-width: 1124px;
+  margin: 26px auto 0;
+  overflow: hidden;
+  border-radius: var(--rayon-l);
+  background: var(--surface-2);
+
+  /* L'ombre fait flotter la bulle au-dessus du papier quadrillé. Discrète :
+     le visuel porte déjà sa propre couleur, une ombre marquée le ferait
+     ressortir comme une fenêtre modale. */
+  box-shadow: 0 14px 34px rgb(0 0 0 / 22%);
+}
+
+/* LA HAUTEUR RESTE PLAFONNÉE, mais elle se déclenche beaucoup moins souvent.
+
+   Dans la colonne, un visuel de 3,16:1 fait 356 px de haut — sous le
+   plafond, donc intact. C'était l'effet de bord heureux du passage en bulle :
+   la largeur réduite ramène d'elle-même la hauteur à une taille tenable, et
+   le recadrage redevient ce qu'il aurait toujours dû être — un filet de
+   sécurité pour les cas extrêmes, pas la règle ordinaire.
+
+   380 px N'EST PAS ARBITRAIRE : c'est ce que rend un export au ratio 5:1 sur
+   la largeur de la colonne, à quelques pixels près. Le plafond ne déforme
+   donc rien quand le visuel est aux bonnes dimensions.
+
+   `cover` ROGNE PAR LE HAUT ET PAR LE BAS, à parts égales — ce sont les
+   marges décoratives d'un bandeau qui partent en premier. La limite à
+   connaître : un texte collé au bord haut ou bas d'un visuel trop haut sera
+   coupé. */
+.promo__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 1100px) {
+  /* Le plafond suit la largeur : sur une tablette, 380 px prendraient la
+     même part d'écran que 600 px sur un moniteur. */
+  .promo__image { max-height: 300px; }
+}
+
+/* 640 px, PARCE QUE C'EST LÀ QUE LA SOURCE CHANGE : sous ce seuil, la balise
+   sert la version téléphone du visuel — plus haute que large par
+   construction. Le plafond est donc large, il ne sert qu'à rattraper un
+   visuel démesuré et non à recadrer un format déjà correct. */
+@media (max-width: 640px) {
+  .promo__image { max-height: 60vh; }
+}
+
+/* 560 px, PARCE QUE C'EST LÀ QUE `.landing` RESSERRE SA MARGE — de 28 px à
+   20 px. La bulle doit suivre, sans quoi elle serait décalée de huit pixels
+   par rapport à la carte du compte à rebours posée juste en dessous, et rien
+   ne dirait pourquoi. */
+@media (max-width: 560px) {
+  .promo {
+    width: calc(100% - 40px);
+    margin-top: 18px;
+
+    /* Un arrondi de 22 px sur une bulle large de 350 px paraît mou : le
+       rayon suit la taille de l'objet, pas une constante. */
+    border-radius: var(--rayon);
+  }
+}
+
+
+/* Le survol ne fait bouger QUE ce qui ne décale rien : une ombre et un voile.
+   Un agrandissement, même léger, pousserait le contenu de la page sous le
+   curseur. */
+.promo--lien { transition: filter 160ms ease; }
+.promo--lien:hover { filter: brightness(1.04) saturate(1.04); }
+
+.promo--lien:focus-visible {
+  outline: 3px solid var(--corail);
+  outline-offset: -3px;
+}
+
+/* ------------------------------------------- la bibliothèque, côté administration */
+.promos { display: flex; flex-direction: column; gap: 18px; }
+
+.promos__etat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface-2);
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.promos__etat strong { color: var(--encre); }
+
+.promos__etat.est-active {
+  border-color: color-mix(in srgb, var(--action-ajouter) 45%, transparent);
+  background: color-mix(in srgb, var(--action-ajouter) 10%, transparent);
+}
+
+.promos__barre { display: flex; gap: 10px; }
+
+.promos__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* UNE VIGNETTE, UN TEXTE, DES BOUTONS. La vignette d'abord parce qu'un visuel
+   se reconnaît avant de se lire — six lignes de noms se ressemblent toutes,
+   six images non. */
+.promos__carte {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+/* Le bandeau en ligne se distingue au trait, pas au fond : un aplat vert
+   derrière une vignette fausserait la lecture des couleurs du visuel. */
+.promos__carte.est-active {
+  border-color: var(--action-ajouter);
+  box-shadow: inset 3px 0 0 var(--action-ajouter);
+}
+
+.promos__vignette {
+  flex: 0 0 auto;
+  width: 132px;
+  height: 56px;
+
+  /* Ici le recadrage est justifié, contrairement à l'affichage réel : c'est
+     une vignette de reconnaissance, pas le visuel qu'on lit. */
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.promos__infos {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  /* Désarme le minimum automatique du flex : sans lui, un texte alternatif
+     long refuse de se couper et pousse les boutons hors de la carte. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.promos__titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  color: var(--encre);
+}
+
+.promos__pastille {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--action-ajouter);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #fff;
+}
+
+.promos__alt {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+.promos__meta { font-size: 12px; color: var(--encre-douce); }
+
+.promos__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  .promos__carte { flex-wrap: wrap; }
+  .promos__vignette { width: 100%; height: 90px; }
+  .promos__boutons { width: 100%; }
+}
+
+/* ------------------------------------------------------ le formulaire */
+.promos__formulaire { display: flex; flex-direction: column; gap: 18px; }
+
+/* CÔTE À CÔTE, parce que les deux visuels d'un même bandeau se comparent :
+   on vérifie que le message survit au recadrage téléphone. Empilés, il
+   faudrait faire défiler entre les deux pour s'en assurer. */
+.promos__visuels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.promos__visuel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--contour);
+  border-radius: var(--rayon);
+}
+
+.promos__visuel-titre { font-size: 13.5px; color: var(--encre); }
+
+.promos__requis { font-weight: 400; color: var(--danger); }
+
+.promos__visuel-aide {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+/* `contain` et non `cover` : dans un formulaire, on veut voir le visuel
+   ENTIER, y compris ce qui déborde. C'est précisément l'endroit où un mauvais
+   cadrage doit se remarquer. */
+.promos__apercu {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.promos__apercu--vide {
+  display: grid;
+  place-items: center;
+  height: 90px;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+}
+
+.promos__visuel-pied {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.promos__poids { font-size: 12px; color: var(--encre-douce); }
+
+.promos__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.promos__note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+/* ================================================== offre de lancement
+
+   Trois surfaces pour une même campagne : la mention sur la carte Solo, la
+   ligne d'heures barrée puis remplacée, et le compte à rebours de la page
+   d'accueil. Elles partagent une teinte — l'accent de la marque — parce
+   qu'un visiteur qui voit la promotion sur deux pages doit reconnaître la
+   même offre, pas en découvrir deux. */
+
+/* ------------------------------------------ la mention sur la carte Solo */
+
+/* DANS LE TITRE, PAS EN RUBAN. Le ruban est déjà pris par « Le plus
+   choisi » sur la carte voisine ; deux étiquettes du même genre sur une
+   même rangée s'annulent — on ne sait plus laquelle compte. */
+.tarif__mention {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--corail-btn);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  color: #fff;
+
+  /* Le titre est en serif à 26 px ; la mention ne doit pas être entraînée
+     par sa ligne de base, sinon elle flotte au-dessus du mot « Solo ». */
+  vertical-align: middle;
+}
+
+/* --------------------------------------- la ligne d'heures, avant / après */
+
+/* C'EST L'ÉCART QUI VEND, PAS LE CHIFFRE. « 12 h » seul ne dit rien à qui
+   découvre la page ; « 9 h » rayé au-dessus de « 12 h » dit tout, sans une
+   phrase d'explication. D'où deux lignes empilées et non une seule
+   réécrite. */
+.tarif__detail--promo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tarif__barre {
+  text-decoration: line-through;
+
+  /* `text-decoration-color` séparé : un trait à la même opacité que le
+     texte gris le rend illisible, et on ne comprend plus ce qui est barré. */
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  opacity: 0.65;
+}
+
+.tarif__detail--promo strong {
+  color: var(--corail-texte);
+  font-weight: 700;
+}
+
+/* ================================================== le compte à rebours
+
+   UNE CARTE, PAS UNE BANDE.
+   -------------------------
+   La première version portait un fond pleine largeur et un filet en bas —
+   la grammaire d'un bandeau de site. Mais elle vit DANS `.landing`, une
+   colonne de 1 180 px : le fond s'arrêtait donc à 28 px des bords, et on
+   voyait une boîte grise flotter au milieu du papier quadrillé, sans savoir
+   si c'était voulu. Une carte assume sa largeur au lieu de la subir.
+
+   UN SEUL APLAT SATURÉ : LE BOUTON.
+   ---------------------------------
+   Il y avait trois coraux qui se disputaient le regard — la pastille pleine,
+   la phrase, le bouton. Trois accents valent zéro accent. La pastille passe
+   en contour, la phrase garde le corail sur les seuls mots qui portent
+   l'offre, et le bouton reste le seul aplat plein : c'est lui qu'on doit
+   cliquer.
+
+   L'OFFRE D'ABORD, L'URGENCE ENSUITE, l'action en dernier. Une promotion se
+   lit dans cet ordre ; l'inverse presse quelqu'un qui ne sait pas encore
+   pourquoi. */
+.rebours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px 30px;
+  margin: 30px 0 -18px;
+  padding: 22px 26px;
+  border: 1px solid color-mix(in srgb, var(--corail) 30%, transparent);
+  border-radius: var(--rayon-l);
+
+  /* Une teinte corail très diluée, en biais : la carte se détache du papier
+     quadrillé sans devenir un aplat de couleur. À 10 %, la nuance se voit
+     dans les deux thèmes sans écraser le texte posé dessus. */
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--corail) 11%, var(--surface)),
+      var(--surface) 62%);
+}
+
+/* La colonne du message prend la place restante : c'est elle qui plie en
+   premier quand la carte rétrécit, et c'est ce qu'on veut — le compteur et
+   le bouton ont une largeur incompressible. */
+.rebours__offre { flex: 1 1 260px; min-width: 0; }
+
+/* EN CONTOUR ET NON EN APLAT. Pleine, elle rivalisait avec le bouton ; c'est
+   une étiquette de rangement, pas un appel à l'action. */
+.rebours__mention {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--corail) 60%, transparent);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--corail-texte);
+}
+
+.rebours__phrase {
+  margin: 10px 0 0;
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.4;
+  color: var(--encre);
+}
+
+/* Le corail ne porte QUE ce qui est offert. Étendu à la phrase entière, il
+   cessait de désigner quoi que ce soit. */
+.rebours__phrase strong { color: var(--corail-texte); font-weight: 700; }
+
+/* ---------------------------------------------------------- l'échéance */
+
+/* SÉPARÉE PAR UN FILET sur écran large : deux nombres collés à une phrase se
+   lisent comme la fin de la phrase. Le filet dit que c'est autre chose. */
+.rebours__fin {
+  flex: 0 0 auto;
+  padding-left: 30px;
+  border-left: 1px solid var(--trait);
+}
+
+/* LA LÉGENDE, sans laquelle « 26 JOURS 19 HEURES » ne veut rien dire : ça
+   pourrait aussi bien être une durée de cours qu'un délai de livraison.
+   Au-dessus des cases, parce que c'est ce que l'œil doit lire en premier
+   dans ce bloc. */
+.rebours__libelle {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.rebours__cases { display: flex; align-items: stretch; gap: 8px; }
+
+/* Une largeur MINIMALE plutôt que fixe : « 7 » et « 26 » n'ont pas la même
+   largeur, et sans plancher les cases sautent d'un cran à chaque jour qui
+   passe. Le minimum les stabilise sans rogner « 120 ». */
+.rebours__case {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 8px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+
+  /* Le fond de page et non la surface : les cases se creusent dans la carte
+     au lieu de flotter dessus. */
+  background: var(--papier);
+}
+
+.rebours__case strong {
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--encre);
+
+  /* Les chiffres tabulaires empêchent la case de respirer quand « 11 »
+     devient « 10 » — sans eux, la largeur bouge à chaque minute. */
+  font-variant-numeric: tabular-nums;
+}
+
+.rebours__case small {
+  margin-top: 3px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.rebours__bouton { flex: 0 0 auto; }
+
+/* LE DERNIER JOUR SE VOIT, et lui seul. Signaler l'urgence pendant les
+   trois semaines qui précèdent apprend à ne plus la voir. */
+.rebours--urgent {
+  border-color: var(--corail);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--corail) 20%, var(--surface)),
+      var(--surface) 68%);
+}
+
+.rebours--urgent .rebours__case { border-color: color-mix(in srgb, var(--corail) 55%, transparent); }
+.rebours--urgent .rebours__libelle { color: var(--corail-texte); }
+
+/* ------------------------------------------------------------ petit écran */
+@media (max-width: 820px) {
+  .rebours {
+    gap: 16px;
+    padding: 18px 18px 20px;
+    margin: 22px 0 -8px;
+  }
+
+  /* Le filet vertical n'a plus de sens une fois les blocs empilés : il
+     séparerait de haut en bas ce qui est maintenant l'un sous l'autre. */
+  .rebours__fin {
+    width: 100%;
+    padding-left: 0;
+    padding-top: 16px;
+    border-left: 0;
+    border-top: 1px solid var(--trait);
+  }
+
+  .rebours__bouton { width: 100%; justify-content: center; }
+}
+
+
+/* ----------------------------- le bloc de réglage, en administration */
+
+/* Le seul mode qui porte un formulaire. Sa colonne de texte s'élargit
+   d'elle-même ; il faut juste que les champs ne collent pas aux effets. */
+.mode--reglable .mode__champs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.mode--reglable .mode__actions { margin-top: 14px; }
+
+/* L'interrupteur est allumé, l'échéance est passée : l'offre est morte sans
+   que rien ne le dise. C'est le seul état contradictoire de cet écran, il
+   mérite d'être crié. */
+.mode__alerte {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--danger);
+  border-radius: 4px;
+  background: var(--danger-bg);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--danger);
+}
+
+/* ============================================ onglets repliables (mobile)
+
+   La rangée d'onglets de l'administration compte huit entrées. Sur un écran
+   de 390 px, un flex sans retour à la ligne les comprime jusqu'à
+   l'illisible et pousse la dernière hors de l'écran. Sous 760 px, la rangée
+   devient donc un menu déroulant.
+
+   LES DEUX FORMES SONT TOUJOURS RENDUES ; c'est la requête média qui en cache
+   une. Décider en JavaScript imposerait un rendu de plus après le montage —
+   donc un clignotement de la barre au chargement — pour une question que le
+   navigateur tranche déjà. */
+
+.onglets { position: relative; }
+
+/* Le déclencheur n'existe QUE sur petit écran. */
+.onglets__declencheur { display: none; }
+
+.onglets__liste {
+  display: flex;
+  gap: 4px;
+}
+
+/* ------------------------------------------------------------- petit écran */
+@media (max-width: 760px) {
+  .onglets {
+    margin-bottom: 20px;
+
+    /* Le filet du bas appartenait à la rangée ; replié, il soulignerait un
+       bouton unique, ce qui ne veut plus rien dire. */
+    border-bottom: 0;
+  }
+
+  .onglets__declencheur {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--contour);
+    border-radius: var(--rayon);
+    background: var(--surface);
+    color: var(--encre);
+    font-family: inherit;
+    font-size: 15px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  /* LES TROIS BARRES, DESSINÉES ET NON ÉCRITES. Un caractère « ☰ » change de
+     dessin et de chasse d'une police à l'autre, et disparaît là où la police
+     de repli ne le porte pas. Trois dégradés ne dépendent de rien. */
+  .onglets__barres {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 11px;
+    background:
+      linear-gradient(var(--encre-douce), var(--encre-douce)) 0 0 / 100% 2px,
+      linear-gradient(var(--encre-douce), var(--encre-douce)) 0 50% / 100% 2px,
+      linear-gradient(var(--encre-douce), var(--encre-douce)) 0 100% / 100% 2px;
+    background-repeat: no-repeat;
+  }
+
+  /* Le nom de la section courante prend toute la place restante : c'est lui
+     qui dit où l'on est, et il doit passer avant les deux icônes. */
+  .onglets__courant {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .onglets__chevron {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    margin-right: 2px;
+    border-right: 2px solid var(--encre-douce);
+    border-bottom: 2px solid var(--encre-douce);
+    transform: rotate(45deg) translate(-2px, -2px);
+    transition: transform 160ms ease;
+  }
+
+  .onglets--ouvert .onglets__chevron {
+    transform: rotate(-135deg) translate(-3px, -3px);
+  }
+
+  /* REPLIÉE PAR `display: none`, et pas par une opacité ou une hauteur nulle :
+     les boutons cachés sortent alors aussi du parcours de tabulation. La
+     version repliée n'est pas seulement invisible, elle est absente. */
+  .onglets:not(.onglets--ouvert) .onglets__liste { display: none; }
+
+  /* EN SURIMPRESSION, PAS DANS LE FLUX. Un menu qui pousse la page vers le bas
+     fait sauter le contenu à chaque ouverture, et on perd la ligne qu'on
+     lisait. */
+  .onglets__liste {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0;
+    padding: 6px;
+    border: 1px solid var(--contour);
+    border-radius: var(--rayon);
+    background: var(--surface);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+
+    /* Neuf entrées sur un écran bas ne tiennent pas : le panneau défile
+       plutôt que de sortir de l'écran par le bas. */
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .onglets__liste .onglet {
+    width: 100%;
+    padding: 11px 12px;
+    border-bottom: 0;
+    border-radius: 8px;
+    text-align: left;
+  }
+
+  /* L'onglet actif ne peut plus se signaler par un filet sous le texte — il
+     n'y a plus de rangée. Un aplat léger et un point corail le remplacent. */
+  .onglets__liste .onglet--actif {
+    background: var(--surface-2);
+    color: var(--encre);
+  }
+
+  .onglets__liste .onglet--actif::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--corail);
+    vertical-align: middle;
+  }
+
+  /* Les sous-onglets gardent leur taille réduite : ils restent secondaires,
+     même repliés. */
+  .onglets--secondaires .onglets__declencheur { padding: 8px 12px; font-size: 13.5px; }
+  .onglets--secondaires .onglets__liste .onglet { padding: 9px 10px; }
+}
+
+/* ------------------------------- un réglage SOUS un mode, dans sa carte
+
+   L'offre de lancement est le seul mode qui porte une décision secondaire :
+   afficher ou non le compte à rebours. Elle mérite son propre interrupteur,
+   mais pas le même poids — l'offre engage commercialement, le décompte n'est
+   qu'une vitrine. D'où un bloc encadré, à l'intérieur de la carte, avec une
+   bascule réduite. */
+.mode__sous-reglage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 13px 15px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface-2);
+}
+
+.mode__sous-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  /* Désarme le minimum automatique du flex : sans lui, la phrase refuse de
+     se couper et pousse la bascule hors de la carte. */
+  min-width: 0;
+}
+
+.mode__sous-texte strong { font-size: 13.5px; color: var(--encre); }
+
+.mode__sous-texte span {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+/* Sans date de fin, le décompte n'a rien à décompter — quel que soit
+   l'interrupteur. Le dire ici évite de chercher pourquoi le bandeau reste
+   invisible alors qu'il est allumé. */
+.mode__sous-note { color: var(--corail-texte) !important; }
+
+/* LA BASCULE RÉDUITE. Mêmes proportions, deux tiers de la taille : elle se
+   lit comme le même objet, en plus discret. Les valeurs sont recalculées et
+   non mises à l'échelle — `transform: scale` rendrait le trait du bouton
+   flou et le rectangle de clic plus petit que ce qu'on voit. */
+.bascule--mini { flex-shrink: 0; }
+
+.bascule--mini .bascule__piste { width: 34px; height: 20px; }
+
+.bascule--mini .bascule__bouton {
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+}
+
+.bascule--mini.bascule--active .bascule__bouton { transform: translateX(14px); }
+
+/* Éteinte parce qu'on ne sait pas encore, ou pendant l'envoi : le geste ne
+   doit pas paraître disponible. */
+.bascule--mini:disabled { opacity: 0.45; cursor: default; }
+
+@media (max-width: 620px) {
+  .mode__sous-reglage { flex-wrap: wrap; }
+}

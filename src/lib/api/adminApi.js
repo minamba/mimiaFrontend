@@ -33,6 +33,17 @@ export const getSerieAbonnements = (granularite, eleveId) =>
 export const getSerieVisites = (granularite, debut, fin) =>
   httpClient.get('/admin/stats/visites', { params: { granularite, debut, fin } });
 
+/**
+ * Le tunnel : combien sont venus, combien ont essayé, combien ont payé.
+ *
+ * LA CONVERSION N'EST PAS BORNÉE PAR LA FENÊTRE, et c'est voulu : un essai
+ * lancé lundi peut se transformer en abonnement des semaines plus tard. Le
+ * chiffre d'une période récente continue donc de monter — c'est la nature d'un
+ * tunnel, pas un défaut de mesure.
+ */
+export const getTunnel = (granularite, debut, fin) =>
+  httpClient.get('/admin/stats/tunnel', { params: { granularite, debut, fin } });
+
 /** Les abonnements sur la MÊME fenêtre, pour l'onglet Fréquentation. */
 export const getAbonnementsFenetre = (granularite, debut, fin) =>
   httpClient.get('/admin/stats/abonnements', { params: { granularite, debut, fin } });
@@ -54,6 +65,15 @@ export const getParents = (recherche, periode = 'mois', decalage = 0) =>
   httpClient.get('/admin/parents', {
     params: { recherche: recherche || undefined, periode, decalage },
   });
+
+/**
+ * La répartition du fichier clients, à cet instant.
+ *
+ * SANS FENÊTRE, contrairement à `getParents` juste au-dessus. « Trois
+ * familles en Solo mensuel » est un état, pas un événement daté : le
+ * rapporter à une semaine ne voudrait rien dire.
+ */
+export const getRepartitionParents = () => httpClient.get('/admin/parents/repartition');
 
 export const getEleves = (parentId, recherche) =>
   httpClient.get('/admin/eleves', {
@@ -155,6 +175,16 @@ export const ajusterHeures = (id, minutes, motif, prevenirLeParent) =>
 
 export const modifierParent = (id, data) => httpClient.put(`/admin/parents/${id}`, data);
 
+/**
+ * Accorde ou retire le droit d'administrer à un compte parent.
+ *
+ * Réservée au super-administrateur — l'API le revérifie. Le changement ne prend
+ * effet qu'à la PROCHAINE CONNEXION du parent : le rôle voyage dans son jeton,
+ * qui est signé et ne se réécrit pas à distance.
+ */
+export const definirAdministrateur = (id, actif) =>
+  httpClient.put(`/admin/parents/${id}/administrateur`, { actif });
+
 export const modifierEleve = (id, data) => httpClient.put(`/admin/eleves/${id}`, data);
 
 /**
@@ -197,6 +227,30 @@ export const getReglages = () => httpClient.get('/reglages');
 
 export const definirReglage = (cle, actif) =>
   httpClient.put(`/reglages/${cle}`, { actif });
+
+/**
+ * Le bandeau d'information : son texte et son affichage, en un seul appel.
+ *
+ * PAS `definirReglage`, parce qu'il n'écrit qu'un booléen. Et les deux
+ * ensemble parce que le geste est un : les séparer ouvrirait une fenêtre où
+ * l'ancien message serait affiché comme si on venait de le confirmer.
+ */
+export const definirBandeau = (message, actif) =>
+  httpClient.put('/reglages/bandeau', { message, actif });
+
+/**
+ * L'habillage de l'offre de lancement : son texte et son échéance.
+ *
+ * L'INTERRUPTEUR N'EST PAS ICI — il passe par `definirReglage`, comme les
+ * autres modes. Régler une campagne et la lancer sont deux gestes, faits à
+ * des moments différents.
+ *
+ * `fin` part en ISO 8601 AVEC son fuseau. Envoyer « 2026-09-30T23:59 » nu
+ * laisserait le serveur deviner, et il devinerait UTC : la promotion
+ * finirait deux heures trop tôt en été, un soir où personne ne regarde.
+ */
+export const definirOffreLancement = (texte, fin) =>
+  httpClient.put('/reglages/lancement', { texte, fin });
 
 // --------------------------------------------------------------- planches
 

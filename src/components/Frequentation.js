@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getSerieVisites, getAbonnementsFenetre } from '../lib/api/adminApi';
+import { getSerieVisites, getAbonnementsFenetre, getTunnel } from '../lib/api/adminApi';
 import Graphique from './Graphique';
 
 /**
@@ -96,6 +96,35 @@ function pourLeServeur(date) {
   return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}T00:00:00`;
 }
 
+/**
+ * Une étape du tunnel, et ce qu'il en reste par rapport à la précédente.
+ *
+ * LE POURCENTAGE EST CELUI DU PASSAGE, pas celui du total. « 12 % » entre les
+ * visiteurs et les essais dit combien de visiteurs ont essayé — pas combien de
+ * visiteurs ont fini par payer. Rapporter tout au premier chiffre écraserait
+ * la seconde marche sous la première, et c'est justement celle qu'on regarde
+ * quand la première va bien.
+ */
+function Etape({ valeur, libelle, precedent }) {
+  const taux = precedent > 0 ? Math.round((valeur / precedent) * 100) : null;
+
+  return (
+    <>
+      {precedent !== undefined && (
+        <div className="tunnel__passage">
+          <span className="tunnel__taux">{taux === null ? '—' : `${taux} %`}</span>
+          <span className="tunnel__fleche" aria-hidden="true">→</span>
+        </div>
+      )}
+
+      <div className="tunnel__etape">
+        <strong>{(valeur ?? 0).toLocaleString('fr-FR')}</strong>
+        <span>{libelle}</span>
+      </div>
+    </>
+  );
+}
+
 /** Un chiffre de tête, avec sa légende. */
 function Chiffre({ valeur, libelle, ton }) {
   return (
@@ -110,6 +139,7 @@ export default function Frequentation() {
   const [echelle, setEchelle] = useState('jour');
   const [decalage, setDecalage] = useState(0);
 
+  const [tunnel, setTunnel] = useState(null);
   const [visites, setVisites] = useState([]);
   const [visiteurs, setVisiteurs] = useState(0);
   const [abonnements, setAbonnements] = useState([]);
@@ -128,14 +158,16 @@ export default function Frequentation() {
       // LES DEUX APPELS PARTENT ENSEMBLE, sur la MÊME fenêtre. Les enchaîner
       // doublerait l'attente, et les laisser dériver ferait afficher des
       // visites d'août à côté d'abonnements de septembre.
-      const [v, a] = await Promise.all([
+      const [v, a, t] = await Promise.all([
         getSerieVisites(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)),
         getAbonnementsFenetre(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)),
+        getTunnel(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)),
       ]);
 
       setVisites(v.data?.points ?? []);
       setVisiteurs(v.data?.visiteurs ?? 0);
       setAbonnements(a.data ?? []);
+      setTunnel(t.data ?? null);
     } catch {
       setErreur("La fréquentation n'a pas pu être chargée.");
     } finally {
@@ -146,6 +178,7 @@ export default function Frequentation() {
   useEffect(() => { charger(); }, [charger]);
 
   const totaux = useMemo(() => ({
+    essais: abonnements.reduce((t, p) => t + (p.essais ?? 0), 0),
     nouveaux: abonnements.reduce((t, p) => t + (p.nouveaux ?? 0), 0),
     demandes: abonnements.reduce((t, p) => t + (p.demandes ?? 0), 0),
     arrets: abonnements.reduce((t, p) => t + (p.arrets ?? 0), 0),
@@ -212,6 +245,22 @@ export default function Frequentation() {
 
       {erreur && <div className="alert">{erreur}</div>}
 
+      <h2 className="frequentation__titre">Tunnel de conversion</h2>
+
+      <div className="tunnel">
+        <Etape valeur={tunnel?.visiteurs} libelle="visiteurs" />
+        <Etape valeur={tunnel?.essais} libelle="essais gratuits" precedent={tunnel?.visiteurs ?? 0} />
+        <Etape valeur={tunnel?.convertis} libelle="ont pris une offre" precedent={tunnel?.essais ?? 0} />
+      </div>
+
+      <p className="frequentation__note">
+        Les visiteurs et les essais sont datés dans la période. La conversion,
+        elle, est comptée quand qu’elle arrive&nbsp;: un essai lancé cette
+        semaine peut se transformer en abonnement le mois prochain, et ce
+        chiffre montera encore. Une période récente est donc toujours
+        sous-évaluée — c’est la nature d’un tunnel, pas une erreur de mesure.
+      </p>
+
       <h2 className="frequentation__titre">Visiteurs</h2>
 
       <Chiffre valeur={visiteurs} libelle="visiteurs uniques sur la période" ton="visite" />
@@ -227,13 +276,26 @@ export default function Frequentation() {
         series={[{ nom: 'Visiteurs', cle: 'valeur' }]}
         donnees={visites}
         type="lignes"
-        agregat="somme"
+        agregat="aucun"
+      />
+
+      <h2 className="frequentation__titre">Essais gratuits</h2>
+
+      <Chiffre valeur={totaux.essais} libelle="essais lancés sur la période" ton="essai" />
+
+      <Graphique
+        titre="Essais gratuits lancés"
+        description="Quand les essais démarrent. La même période et le même découpage que les autres graphiques — le bandeau du haut les commande tous."
+        granularite={reglage.granularite}
+        series={[{ nom: 'Essais', cle: 'essais' }]}
+        donnees={abonnements}
+        type="barres"
       />
 
       <h2 className="frequentation__titre">Abonnements / résiliations</h2>
 
       <div className="frequentation__chiffres">
-        <Chiffre valeur={totaux.nouveaux} libelle="abonnements" ton="entree" />
+        <Chiffre valeur={totaux.nouveaux} libelle="abonnements payants" ton="entree" />
         <Chiffre valeur={totaux.demandes} libelle="demandes de résiliation" ton="alerte" />
         <Chiffre valeur={totaux.arrets} libelle="résiliations effectives" ton="sortie" />
       </div>
@@ -243,7 +305,7 @@ export default function Frequentation() {
         description="Une demande de résiliation et l'arrêt qui en découle ne tombent pas dans la même période : l'écart entre les deux courbes, c'est le préavis."
         granularite={reglage.granularite}
         series={[
-          { nom: 'Abonnements', cle: 'nouveaux' },
+          { nom: 'Abonnements payants', cle: 'nouveaux' },
           { nom: 'Demandes de résiliation', cle: 'demandes' },
           { nom: 'Résiliations effectives', cle: 'arrets' },
         ]}

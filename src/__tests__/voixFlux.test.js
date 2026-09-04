@@ -48,7 +48,7 @@ class FausseSource {
     this.buffer = null;
   }
 
-  connect() {}
+  connect(suite) { return suite; }
 
   start(instant) {
     programmes.push({ instant, echantillons: Array.from(this.buffer.donnees) });
@@ -73,6 +73,32 @@ class FauxContexte {
       donnees,
       duration: longueur / frequence,
       getChannelData: () => donnees,
+    };
+  }
+
+/**
+   * Le robinet de coupure. Les tests ne mesurent pas le fondu — ils
+   * vérifient l'ordonnancement — mais le graphe doit exister, sans quoi
+   * `programmer` échoue avant même de programmer quoi que ce soit.
+   */
+/**
+   * Le passe-bas de sortie. Les tests ne mesurent pas le filtrage — ils
+   * verifient l ordonnancement — mais le noeud doit exister, sinon le graphe
+   * ne se construit pas.
+   */
+  createBiquadFilter() {
+    return { type: null, frequency: { value: 0 }, connect: (suite) => suite };
+  }
+
+  createGain() {
+    return {
+      gain: {
+        value: 1,
+        cancelScheduledValues() {},
+        setValueAtTime() {},
+        linearRampToValueAtTime() {},
+      },
+      connect: (suite) => suite,
     };
   }
 

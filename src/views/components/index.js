@@ -20,11 +20,13 @@ import {
   MentionsLegales,
   Confidentialite,
   ConditionsVente,
+  TousLesAvis,
   Footer,
   RouteProtegee,
   VerrouEleve,
   VerrouMaintenance,
   EntreeEleve,
+  BandeauInfo,
 } from '../../components';
 import { initAuth } from '../../lib/actions/authActions';
 import { authService } from '../../lib/storage/authService';
@@ -58,6 +60,14 @@ export const BaseApp = () => {
           même page, ce qui se lit comme un site cassé plutôt qu'un site en
           travaux. */}
       <VerrouMaintenance>
+      {/* AU-DESSUS DE LA BARRE, ET DANS LE FLUX.
+
+          Au-dessus, parce qu'un avis de service passe avant la navigation :
+          savoir que le site ferme à 8h change ce qu'on vient y faire. Dans le
+          flux et non fixé, parce que la barre est déjà collante — deux
+          bandeaux superposés en permanence, c'est un tiers d'écran de
+          téléphone perdu pour une phrase déjà lue. */}
+      <BandeauInfo />
       <Navbar />
       {/* Le verrou enveloppe TOUTES les routes, y compris les publiques : un
           enfant qui atterrit sur la page des tarifs doit revenir à ses cours,
@@ -79,6 +89,11 @@ export const BaseApp = () => {
           <Route path="/mentions-legales" element={<MentionsLegales />} />
           <Route path="/confidentialite" element={<Confidentialite />} />
           <Route path="/cgv" element={<ConditionsVente />} />
+
+          {/* PUBLIQUE, comme la page d'accueil dont elle est le
+              prolongement : un visiteur qui hésite est exactement celui
+              qui vient lire les avis. */}
+          <Route path="/avis" element={<TousLesAvis />} />
 
           {/* Publique, comme la connexion d'un parent : c'est la porte des enfants. */}
           <Route path="/code" element={<EntreeEleve />} />

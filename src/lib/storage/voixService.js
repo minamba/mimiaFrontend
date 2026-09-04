@@ -122,6 +122,14 @@ const AVANCE_PROGRAMMATION = 0.4;
 const FREQUENCE_PCM = 24000;
 
 /**
+ * Où couper les aigus à la lecture. Voir `obtenirSortie`.
+ *
+ * Sept kilohertz : la parole tient dessous, les artefacts du modèle de
+ * synthèse vivent au-dessus.
+ */
+const COUPURE_HZ = 7000;
+
+/**
  * De quoi jouer, en octets, avant de lancer le premier morceau d'un passage.
  *
  * LE PRIX DE LA DIFFUSION AU FIL DE L'EAU. En attendant le passage entier, on
@@ -260,8 +268,57 @@ function prononcable(texte) {
     // Les autres symboles que la voix laisse tomber. Écrits en toutes lettres
     // ils ne changent rien pour un modèle qui les prononçait déjà bien, et ils
     // sauvent ceux qu'il ignorait.
-    .replace(/(\d)\s*×\s*(\d)/g, '$1 fois $2')
+    // LA MULTIPLICATION, SOUS SES TROIS ÉCRITURES.
+    //
+    // La règle n'acceptait que des CHIFFRES des deux côtés : « 3 × 4 »
+    // passait, « 3 × BC » non. Or en géométrie le second membre est presque
+    // toujours une longueur nommée par des lettres.
+    //
+    // Le défaut ne s'entendait pas sur `gpt-4o-mini-tts`, qui devine
+    // l'intention et disait « trois fois BC » de lui-même. `tts-1` lit ce
+    // qu'on lui donne et disait « trois BC ». On ne le remarquait donc qu'en
+    // basculant sur le secours — et ce qui marchait ne marchait que par la
+    // bonne volonté d'un modèle.
+    //
+    // On l'écrit. Une lecture correcte ne doit pas dépendre de ce qu'un
+    // modèle veut bien comprendre.
+    .replace(/(\d)\s*[×*]\s*([\dA-Za-zà-öø-ÿ])/g, '$1 fois $2')
+
+    // LA MULTIPLICATION IMPLICITE : « 3BC », « 2AB ».
+    //
+    // DEUX MAJUSCULES AU MOINS, et c'est la borne qui rend la règle sûre.
+    // Une seule attraperait « 3D », « 4K », « 2H » — des mots, pas des
+    // produits. Deux majuscules collées à un chiffre ne se rencontrent, en
+    // cours, que pour un segment ou un produit : « 3BC », « 2AM ».
+    //
+    // Les minuscules sont épargnées pour la même raison : « 3e » est un
+    // rang, « 2h » une durée, et « 3x » resterait ambigu. Un professeur qui
+    // veut le produit écrit alors le symbole, et la règle du dessus s'en
+    // charge.
+    .replace(/(\d)([A-Z]{2,})\b/g, '$1 fois $2')
+
     .replace(/(\d)\s*÷\s*(\d)/g, '$1 divisé par $2')
+
+    // LES SIGNES QUE LA SYNTHÈSE AVALE EN SILENCE.
+    //
+    // « BC = 6,7 » se disait « BC six virgule sept » : le signe le plus
+    // important de la phrase disparaissait, et l’élève entendait deux choses
+    // côte à côte sans savoir qu’elles étaient égales.
+    //
+    // ENCADRÉS PAR DES ESPACES, toujours. Un tiret collé appartient à un mot
+    // — « peut-être », « rez-de-chaussée » — et le convertir en « moins »
+    // abîmerait la phrase pour réparer une équation. Le même raisonnement
+    // vaut pour le plus et pour les comparateurs, qu’on croise aussi dans du
+    // texte ordinaire.
+    .replace(/\s=\s/g, ' égale ')
+    .replace(/\s≈\s/g, ' environ égal à ')
+    .replace(/\s\+\s/g, ' plus ')
+    .replace(/\s[-−]\s/g, ' moins ')
+    .replace(/\s≤\s/g, ' inférieur ou égal à ')
+    .replace(/\s≥\s/g, ' supérieur ou égal à ')
+    .replace(/\s<\s/g, ' inférieur à ')
+    .replace(/\s>\s/g, ' supérieur à ')
+    .replace(/(\d)\s*%/g, '$1 pour cent')
     .replace(/(\d)²/g, '$1 au carré')
     .replace(/(\d)³/g, '$1 au cube')
 
@@ -419,6 +476,10 @@ class Lecteur {
      * milliseconde : le suivant démarre exactement là où le précédent finit.
      */
     this.contexte = null;
+
+    // Le point où tous les morceaux se rejoignent avant la carte son :
+    // voir `obtenirSortie`.
+    this.sortie = null;
     this.sources = new Set();
     this.prochaineFin = 0;
 
@@ -441,6 +502,14 @@ class Lecteur {
     // signal qui permet au mode mains libres de rendre la parole à l'élève
     // au bon moment, sans que le micro capte la voix du professeur.
     this.auSilence = null;
+
+    // Le pendant de `auSilence` : le professeur COMMENCE à parler.
+    //
+    // Sans ce signal, l'écran ne pouvait apprendre la reprise de parole
+    // qu'en observant un drapeau interne au fil des rendus — donc trop tard
+    // et par intermittence. Or fermer un micro doit se faire AVANT la
+    // première syllabe : après, la boucle a déjà commencé.
+    this.auDebutDeParole = null;
 
     // Appelé quand le navigateur refuse de jouer le son faute d'interaction.
     // Sans ce signal, l'échec était avalé : le texte défilait, aucune voix ne
@@ -819,6 +888,12 @@ class Lecteur {
     if (this.enLecture) return;
 
     this.enLecture = true;
+
+    // AVANT la première syllabe, et pas après : sur un appareil sans casque,
+    // c'est ce signal qui ferme le micro avant que la voix du professeur ne
+    // s'y engouffre. Une microseconde de retard suffit à laisser passer le
+    // début du mot, que le transcripteur prendra pour une interruption.
+    this.auDebutDeParole?.();
     const jeton = this.jeton;
 
     this.boucle(jeton).finally(() => {
@@ -1141,7 +1216,55 @@ class Lecteur {
   obtenirContexte({ silencieux = false } = {}) {
     if (!this.contexte) {
       const Contexte = window.AudioContext || window.webkitAudioContext;
-      this.contexte = new Contexte();
+
+      // ------------------------------------------------------------------
+      // LE CONTEXTE TOURNE À LA FRÉQUENCE DU FLUX, PAS À CELLE DE LA CARTE.
+      // ------------------------------------------------------------------
+      //
+      // C'est la correction des « bips » du 03/09/2026, et elle tient à un
+      // détail qui ne se voit pas en lisant le code.
+      //
+      // Sans argument, le contexte s'ouvre à la fréquence du périphérique —
+      // 48 kHz sur presque toutes les machines. Nos tampons, eux, sont
+      // fabriqués à 24 kHz, la fréquence du PCM. Le navigateur les
+      // rééchantillonne donc, ET IL LE FAIT MORCEAU PAR MORCEAU.
+      //
+      // Or l'interpolation qui termine un morceau ignore le morceau suivant.
+      // Les deux ne se raccordent pas : la tension saute au point de
+      // jointure. Une marche dans une onde, c'est un clic — large bande, très
+      // bref, et dont la hauteur dépend de là où la coupure est tombée dans
+      // la forme d'onde. D'où des « bips » qui changeaient de ton.
+      //
+      // CE QUI A ÉGARÉ LE DIAGNOSTIC. Le son sort PROPRE du fournisseur :
+      // mesuré à 4-13 ruptures par seconde en le demandant directement. Le
+      // même contenu joué par l'application en produisait bien davantage. Le
+      // défaut naissait donc entre les deux, à un endroit où personne ne
+      // pense à regarder puisqu'aucune ligne ne le fabrique.
+      //
+      // La voix du navigateur, elle, ne clique jamais — et pour cause : elle
+      // ne passe pas par ce graphe. Ça semblait accuser le fournisseur ; ça
+      // n'accusait que notre lecture.
+      //
+      // LE REPLI EXISTE PARCE QUE LA CONTRAINTE PEUT ÊTRE REFUSÉE. Certains
+      // périphériques ne savent pas ouvrir un contexte à 24 kHz et le
+      // constructeur lève. On repart alors sur le défaut : le son clique un
+      // peu, mais il sort — c'est le bon sens du compromis.
+      try {
+        this.contexte = new Contexte({ sampleRate: FREQUENCE_PCM });
+      } catch {
+        this.contexte = new Contexte();
+      }
+
+      // Le rééchantillonnage a-t-il vraiment été évité ? Le navigateur peut
+      // accepter le constructeur et servir une autre fréquence.
+      if (this.contexte.sampleRate !== FREQUENCE_PCM) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[voix] contexte à', this.contexte.sampleRate,
+          'Hz au lieu de', FREQUENCE_PCM,
+          '— les morceaux seront rééchantillonnés un par un, ce qui peut cliquer.',
+        );
+      }
     }
 
     // Le navigateur suspend le graphe tant que la page n'a pas été touchée.
@@ -1200,7 +1323,33 @@ class Lecteur {
     const contexte = this.obtenirContexte();
     const source = contexte.createBufferSource();
     source.buffer = tampon;
-    source.connect(contexte.destination);
+
+    // UN ROBINET PAR MORCEAU, POUR POUVOIR L'ÉTEINDRE EN DOUCEUR.
+    //
+    // `source.stop()` coupe l'onde à l'échantillon près, où qu'elle en
+    // soit. Si la tension valait 0,7 à cet instant, elle tombe à 0 en une
+    // seule période d'échantillonnage : c'est une marche, et une marche
+    // contient toutes les fréquences à la fois. On entend un clic sec.
+    //
+    // Un clic par interruption. Et une interruption arrive à chaque fois
+    // que le micro croit entendre l'élève — sur un haut-parleur, c'est la
+    // voix du professeur qui se coupe elle-même, plusieurs fois par
+    // réponse. Les « bips inexpliqués » sont ces coupures.
+    //
+    // Le robinet permet de descendre à zéro en quelques millisecondes
+    // avant d'arrêter : inaudible comme fondu, et il n'y a plus de marche.
+    const robinet = contexte.createGain();
+
+    // UNE SORTIE COMMUNE PLUTÔT QUE LA DESTINATION DIRECTE.
+    //
+    // Elle ne change rien à ce qu'on entend — un gain à 1 est transparent —
+    // mais elle donne un point unique où poser le filtre. Sans elle, il
+    // faudrait le répéter sur chaque source, et les sources vont et
+    // viennent à chaque morceau.
+    const sortie = this.obtenirSortie(contexte);
+
+    source.connect(robinet).connect(sortie);
+    source.robinet = robinet;
 
     // UN SON NE DÉMARRE JAMAIS SUR « MAINTENANT », TOUJOURS UN POIL APRÈS.
     //
@@ -1220,6 +1369,26 @@ class Lecteur {
     // le futur — c'est-à-dire tout au long d'un passage — c'est elle qui
     // l'emporte, et l'enchaînement reste bord à bord.
     const debut = Math.max(contexte.currentTime + AVANCE_DEMARRAGE, this.prochaineFin);
+
+    // LE FONDU D'ENTRÉE, ET SEULEMENT SUR LES REPRISES.
+    //
+    // On avait adouci l'arrêt sans toucher au démarrage, et c'était la moitié
+    // du travail. Une lecture qui REPART — après une interruption, ou au
+    // premier morceau d'une réponse — attaque le son à la valeur qu'a l'onde
+    // à cet instant. Si elle vaut 0,6, la tension saute de 0 à 0,6 en un seul
+    // échantillon : la même marche que la coupure, donc le même clic, à
+    // l'autre bout.
+    //
+    // `prochaineFin === 0` désigne exactement ces reprises : la valeur est
+    // remise à zéro par `arreter()` et à la construction. Tant qu'un passage
+    // se déroule elle porte la fin du morceau précédent, et les morceaux se
+    // suivent bord à bord — leur appliquer un fondu creuserait un trou toutes
+    // les quelques centaines de millisecondes, audible comme un tremblement.
+    if (this.prochaineFin === 0) {
+      robinet.gain.setValueAtTime(0, debut);
+      robinet.gain.linearRampToValueAtTime(1, debut + 0.008);
+    }
+
     source.start(debut);
 
     this.prochaineFin = debut + tampon.duration;
@@ -1339,6 +1508,59 @@ class Lecteur {
     });
   }
 
+  /**
+   * La sortie commune, créée à la demande.
+   *
+   * Gain à 1 : rigoureusement transparent. Elle n'existe que pour donner un
+   * point de branchement au magnétophone de diagnostic.
+   */
+  obtenirSortie(contexte) {
+    if (this.sortie) return this.sortie;
+
+    this.sortie = contexte.createGain();
+
+    // ------------------------------------------------------------------
+    // LE FILTRE QUI FAIT TAIRE LES BIPS.
+    // ------------------------------------------------------------------
+    //
+    // LE DÉFAUT N'EST PAS DANS NOTRE CODE. Mesuré en redemandant la même
+    // phrase au fournisseur, PCM brut, sans passer par le navigateur : la
+    // sortie de `gpt-4o-mini-tts` contient des oscillations violentes d'un
+    // échantillon au suivant — jusqu'à 0,76 d'amplitude, autour de 6,5 et
+    // 8,3 kHz. À 24 kHz d'échantillonnage, c'est le voisinage de Nyquist.
+    // Large bande, très bref : on l'entend comme un « bip » sec, au milieu
+    // des mots, sans régularité.
+    //
+    // COMBIEN : 10 886 sauts francs sur sept secondes de parole. Le même
+    // texte par `tts-1` en donne 173.
+    //
+    // POURQUOI FILTRER PLUTÔT QUE CHANGER DE MODÈLE. `tts-1` est propre,
+    // mais il ignore le paramètre `instructions` — celui qui fait ralentir
+    // le professeur pour une dictée et adapter son ton à l'âge de l'élève.
+    // On ne troque pas la pédagogie contre le silence.
+    //
+    // POURQUOI 7 kHz, ET PAS AILLEURS. Mesuré coupure par coupure sur le
+    // même audio : 8 kHz laisse encore 16 % des sauts, 7 kHz en laisse 1 %,
+    // et descendre plus bas n'enlève plus rien. La parole, elle, tient
+    // entièrement sous 7 kHz — seules les sifflantes perdent un peu de
+    // brillance, et personne ne remarque cela sur une voix de professeur.
+    //
+    // DEUX FILTRES EN CASCADE, pas un. Un biquad seul descend de 12 dB par
+    // octave : à 8 kHz il ne retire que la moitié de ce qui gêne. Deux en
+    // série doublent la pente, et c'est cette configuration-là que la
+    // mesure ci-dessus valide.
+    const premier = contexte.createBiquadFilter();
+    premier.type = "lowpass";
+    premier.frequency.value = COUPURE_HZ;
+
+    const second = contexte.createBiquadFilter();
+    second.type = "lowpass";
+    second.frequency.value = COUPURE_HZ;
+
+    this.sortie.connect(premier).connect(second).connect(contexte.destination);
+
+    return this.sortie;
+  }
   jouerAudio(url, jeton) {
     return new Promise((resoudre) => {
       const audio = new Audio(url);
@@ -1450,8 +1672,33 @@ class Lecteur {
     // Tout ce qui est déjà programmé dans la carte son doit être coupé : sans
     // ça, le professeur continuerait à parler pendant l'avance de
     // programmation alors que l'élève vient de l'interrompre.
+    // LE FONDU DE COUPURE : QUINZE MILLISECONDES.
+    //
+    // Assez long pour qu'il n'y ait plus de marche dans le signal, assez
+    // court pour qu'on n'entende aucune traîne — l'élève qui coupe la
+    // parole doit avoir le sentiment que le professeur se tait net.
+    //
+    // On arrête la source APRÈS le fondu, pas pendant : l'arrêter tout de
+    // suite rendrait le fondu inutile, puisque le son serait déjà coupé.
+    const maintenant = this.contexte?.currentTime ?? 0;
+    const FONDU = 0.015;
+
     this.sources.forEach((source) => {
-      try { source.stop(); } catch { /* déjà terminée */ }
+      try {
+        const robinet = source.robinet;
+
+        if (robinet) {
+          // On repart de la valeur courante et non de 1 : un morceau déjà
+          // en train de s'éteindre remonterait sinon au maximum avant de
+          // redescendre, ce qui produirait le claquement même qu’on évite.
+          robinet.gain.cancelScheduledValues(maintenant);
+          robinet.gain.setValueAtTime(robinet.gain.value, maintenant);
+          robinet.gain.linearRampToValueAtTime(0, maintenant + FONDU);
+          source.stop(maintenant + FONDU + 0.005);
+        } else {
+          source.stop();
+        }
+      } catch { /* déjà terminée */ }
     });
     this.sources.clear();
     this.prochaineFin = 0;

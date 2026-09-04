@@ -15,8 +15,34 @@ import { getReglagesPublics } from '../api/reglagesApi';
  * site qui les garde. Et un bouton qui dit « Commencer gratuitement » puis se
  * change en « S'inscrire » sous le curseur donne l'impression d'une offre
  * retirée à la dernière seconde.
+ *
+ * Le bandeau, lui, part à `null` : afficher un avertissement sur une panne
+ * de lecture inquiéterait sans rien apprendre.
  */
-const PAR_DEFAUT = { modeTest: false, essaisOuverts: true, maintenance: false };
+const PAR_DEFAUT = {
+  modeTest: false, essaisOuverts: true, maintenance: false, bandeau: null,
+
+  // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
+  // de lecture promet un cadeau que le serveur ne donnera pas — et le
+  // parent, lui, aura payé en la voyant.
+  offreLancement: { active: false, texte: '', fin: null, bandeau: false },
+};
+
+/**
+ * TOUT EST LU UNE FOIS PAR SESSION, SAUF QUE LE BANDEAU, LUI, CHANGE.
+ *
+ * Les autres drapeaux se décident une fois pour toutes : on n'ouvre pas
+ * l'essai gratuit en milieu d'après-midi. Le bandeau, si — il existe pour
+ * annoncer un incident PENDANT que les gens sont sur le site. Un message
+ * que seuls verraient ceux qui rechargent la page arriverait toujours trop
+ * tard.
+ *
+ * DEUX MINUTES : assez court pour qu’une annonce atteigne un parent en
+ * cours de navigation, assez long pour que la charge reste nulle — une
+ * requête de quelques octets, moins souvent que le battement de la
+ * diffusion.
+ */
+const RAFRAICHISSEMENT_MS = 120_000;
 
 let valeurs = PAR_DEFAUT;
 let sonde = null;
@@ -38,6 +64,29 @@ function interroger() {
           // à tout le monde. Le site se fermerait tout seul sur une panne de
           // lecture de réglage — exactement l'inverse de ce qu'on veut.
           maintenance: Boolean(data?.maintenance),
+
+          // Le serveur n'envoie le texte que si le bandeau est allumé :
+          // ici il n’y a rien à décider, juste à recopier. Une chaîne
+          // vide vaut absence — un bandeau vide est un bandeau cassé.
+          bandeau: data?.bandeau?.trim() ? data.bandeau : null,
+
+          // `active` VIENT DU SERVEUR, on ne le recalcule pas ici. Il tient
+          // déjà compte de l'échéance, et c'est lui qui décidera aussi de
+          // créditer les heures au moment du paiement. Deux horloges qui
+          // jugeraient séparément la même promotion finiraient par se
+          // contredire — et c'est le visiteur qui verrait la contradiction.
+          offreLancement: data?.offreLancement?.active
+            ? {
+                active: true,
+                texte: data.offreLancement.texte || 'OFFRE LANCEMENT',
+                fin: data.offreLancement.fin ?? null,
+
+                // Le serveur a déjà croisé ce drapeau avec la vitalité de
+                // l'offre : un décompte ne peut pas survivre à la
+                // promotion qu'il annonce.
+                bandeau: Boolean(data.offreLancement.bandeau),
+              }
+            : PAR_DEFAUT.offreLancement,
         };
 
         abonnes.forEach((notifier) => notifier(valeurs));
@@ -77,6 +126,40 @@ function useDrapeaux() {
 /** Vrai quand le service est en accès privé. */
 export function useModeTest() {
   return useDrapeaux().modeTest;
+}
+
+/**
+ * Le message d'information à afficher en haut du site, ou `null`.
+ *
+ * SEUL DRAPEAU RELU EN COURS DE SESSION, et c'est sa raison d'être : il
+ * sert à prévenir d'un incident pendant que les gens naviguent. Le
+ * battement vit ici et non dans le composant — le cache est partagé, et
+ * deux bandeaux affichés (le site, un aperçu) ne doivent pas doubler les
+ * appels.
+ */
+export function useBandeau() {
+  const message = useDrapeaux().bandeau;
+
+  useEffect(() => {
+    const battement = setInterval(oublierReglages, RAFRAICHISSEMENT_MS);
+
+    return () => clearInterval(battement);
+  }, []);
+
+  return message;
+}
+
+/**
+ * L'offre de lancement : est-elle vivante, comment s'appelle-t-elle, et
+ * jusqu'à quand ?
+ *
+ * RENDUE EN BLOC plutôt qu'en trois crochets séparés. Les trois valeurs
+ * n'ont de sens qu'ensemble : un texte sans drapeau habille une promotion
+ * éteinte, une échéance sans drapeau fait tourner un compte à rebours pour
+ * rien. Le composant qui les reçoit ne peut pas en oublier une.
+ */
+export function useOffreLancement() {
+  return useDrapeaux().offreLancement;
 }
 
 /**

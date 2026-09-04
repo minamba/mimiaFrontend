@@ -83,6 +83,12 @@ export default function Graphique({
   //               abonnements actifs, un cumul. Les additionner compterait le
   //               même abonnement autant de fois qu'il traverse de périodes,
   //               et rendrait un nombre qui ne veut rien dire.
+  //   'aucun'   : n'en affiche pas. Pour un DÉCOMPTE DISTINCT, où aucune des
+  //               deux réponses n'est juste : additionner les visiteurs
+  //               uniques de chaque heure compte trois fois celui qui est
+  //               revenu trois fois. Le bandeau affichait « TOTAL 3 » à côté
+  //               de « 1 visiteur unique » — deux chiffres vrais, côte à côte,
+  //               qui se contredisent à la lecture.
   //
   // Le défaut suit le type parce qu'ils vont ensemble dans cet écran : on
   // dessine les flux en barres et les stocks en lignes.
@@ -149,7 +155,7 @@ export default function Graphique({
               ensuite comment on y est arrivé. Le mettre sous le graphique
               obligerait à le parcourir des yeux pour lire une addition que la
               machine sait faire. */}
-          <p className="graphique__totaux">
+          <p className="graphique__totaux" hidden={agregat === 'aucun'}>
             <span className="graphique__totaux-libelle">
               {agregat === 'dernier' ? 'À la fin de' : 'Total sur'}{' '}
               {libelleFenetre(donnees.length, granularite)}

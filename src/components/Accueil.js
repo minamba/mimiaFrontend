@@ -8,6 +8,9 @@ import { getEquipe } from '../lib/api/referentielApi';
 import Avatar from './Avatar';
 import FondCraie from './FondCraie';
 import MotifMatiere from './MotifMatiere';
+import AvisClients from './AvisClients';
+import BandeauPromo from './BandeauPromo';
+import CompteARebours from './CompteARebours';
 
 /**
  * Séance rejouée en boucle dans le héros.
@@ -249,221 +252,259 @@ export default function Accueil() {
   }, []);
 
   return (
-    <div className="landing">
-      {/* ----------------------------------------------------------- héros */}
-      <section className="heros">
-        <FondCraie />
+    <>
+      {/* HORS DE `.landing`, ET C’EST TOUTE LA DIFFÉRENCE.
 
-        <div className="heros__texte">
-          <span className="etiquette">Du CP à la Terminale</span>
+          Le visuel doit courir d’un bord à l’autre de l’écran. Placé dans
+          `.landing` — une colonne de 1 180 px avec 28 px de marge — il
+          s’arrêtait à un huitième de l’écran de chaque côté, et on voyait
+          deux bandes sombres encadrer une image censée être pleine largeur.
 
-          <h1>
-            Des cours particuliers
-            <br />
-            d'une <em>nouvelle ère</em>.
-          </h1>
+          Le sortir du conteneur plutôt que le déborder au `calc(-50vw)` :
+          `100vw` compte la barre de défilement, donc cette astuce ajoute
+          une quinzaine de pixels de débordement horizontal sur Windows —
+          et une barre de défilement horizontale sur toute la page d’accueil.
 
-          <p className="heros__pitch">
-            Votre enfant a son professeur. Un prénom, un visage, une voix — et une
-            mémoire qui le suit d'année en année. Ils se parlent, il écrit au
-            tableau quand il faut écrire. Et il ne donne jamais la réponse : il
-            cherche <em>où</em> ça bloque, et reprend depuis là.
-          </p>
+          AVANT LE HÉROS, ET SEULEMENT SUR CETTE PAGE. Avant, parce qu’une
+          promotion placée sous le héros n’est vue que par ceux qui font
+          défiler — et ce sont ceux qui étaient déjà convaincus. Seulement
+          ici, parce qu’un parent venu travailler avec son enfant n’a pas à
+          voir une remise sur chaque écran.
 
-          {error && <div className="alert alert--heros">{error}</div>}
+          Ne rend RIEN quand il n’y a pas de promotion en cours, ce qui est
+          l’état ordinaire du site. */}
+      <BandeauPromo />
 
-          <div className="heros__actions">
-            <button type="button" className="btn btn--principal" onClick={seConnecter}>
-              {libelleAction}
-            </button>
-            <a className="btn btn--fantome" href="#methode">
-              Voir la méthode
-            </a>
-          </div>
+      <div className="landing">
+          {/* APRÈS LE VISUEL, AVANT LE HÉROS. L’un annonce, l’autre presse :
+              les mettre côte à côte donnerait deux appels à l’action qui se
+              disputent le même regard.
 
-          <p className="heros__note">
-            Un seul compte parent · Tous vos enfants · Sans engagement
-          </p>
-        </div>
+              Celui-ci reste DANS la colonne : c’est une carte, pas une bande.
+              Étirée d’un bord à l’autre, elle n’aurait plus de forme. */}
+          <CompteARebours />
 
-        <div className="heros__visuel">
-          <Seance />
-        </div>
-      </section>
+        {/* ----------------------------------------------------------- héros */}
+        <section className="heros">
+          <FondCraie />
 
-      {/* ---------------------------------------------------------- chiffres */}
-      <section className="bandeau">
-        <div>
-          <strong>12</strong>
-          <span>niveaux, du CP à la Terminale</span>
-        </div>
-        <div>
-          <strong>24/7</strong>
-          <span>disponible, même à 22h la veille du contrôle</span>
-        </div>
-        <div>
-          <strong>1 seul</strong>
-          <span>abonnement pour toute la fratrie</span>
-        </div>
-      </section>
+          <div className="heros__texte">
+            <span className="etiquette">Du CP à la Terminale</span>
 
-      {/* ---------------------------------------------------------- méthode */}
-      <section className="methode" id="methode">
-        <header className="section__entete">
-          <span className="etiquette etiquette--sombre">La méthode</span>
-          <h2>Trois choses qu'un chatbot ne fait pas</h2>
-        </header>
+            <h1>
+              Des cours particuliers
+              <br />
+              d'une <em>nouvelle ère</em>.
+            </h1>
 
-        <div className="methode__grille">
-          <article className="tuile">
-            <span className="tuile__num">01</span>
-            <h3>Un professeur, pas un outil</h3>
-            <p>
-              Nora en maths, Adrien en français. Ils ont un prénom, un visage, et
-              se souviennent de votre enfant. Ils lui parlent à voix haute, et
-              écrivent au tableau ce qui doit être écrit — un calcul, un énoncé.
-              Exactement comme en vrai.
+            <p className="heros__pitch">
+              Votre enfant a son professeur. Un prénom, un visage, une voix — et une
+              mémoire qui le suit d'année en année. Ils se parlent, il écrit au
+              tableau quand il faut écrire. Et il ne donne jamais la réponse : il
+              cherche <em>où</em> ça bloque, et reprend depuis là.
             </p>
-          </article>
 
-          <article className="tuile">
-            <span className="tuile__num">02</span>
-            <h3>Il diagnostique avant d'expliquer</h3>
-            <p>
-              Avant la moindre explication, il demande ce que votre enfant a déjà
-              essayé. Une seule question à la fois. On ne soigne pas ce qu'on n'a
-              pas identifié.
+            {error && <div className="alert alert--heros">{error}</div>}
+
+            <div className="heros__actions">
+              <button type="button" className="btn btn--principal" onClick={seConnecter}>
+                {libelleAction}
+              </button>
+              <a className="btn btn--fantome" href="#methode">
+                Voir la méthode
+              </a>
+            </div>
+
+            <p className="heros__note">
+              Un seul compte parent · Tous vos enfants · Sans engagement
             </p>
-          </article>
+          </div>
 
-          <article className="tuile">
-            <span className="tuile__num">03</span>
-            <h3>Il remonte à la vraie lacune</h3>
-            <p>
-              Un blocage en 4e vient rarement de la 4e. Notre graphe de compétences
-              relie chaque notion à ses prérequis, jusqu'au primaire s'il le faut.
+          <div className="heros__visuel">
+            <Seance />
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------- chiffres */}
+        <section className="bandeau">
+          <div>
+            <strong>12</strong>
+            <span>niveaux, du CP à la Terminale</span>
+          </div>
+          <div>
+            <strong>24/7</strong>
+            <span>disponible, même à 22h la veille du contrôle</span>
+          </div>
+          <div>
+            <strong>1 seul</strong>
+            <span>abonnement pour toute la fratrie</span>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------------- méthode */}
+        <section className="methode" id="methode">
+          <header className="section__entete">
+            <span className="etiquette etiquette--sombre">La méthode</span>
+            <h2>Trois choses qu'un chatbot ne fait pas</h2>
+          </header>
+
+          <div className="methode__grille">
+            <article className="tuile">
+              <span className="tuile__num">01</span>
+              <h3>Un professeur, pas un outil</h3>
+              <p>
+                Nora en maths, Adrien en français. Ils ont un prénom, un visage, et
+                se souviennent de votre enfant. Ils lui parlent à voix haute, et
+                écrivent au tableau ce qui doit être écrit — un calcul, un énoncé.
+                Exactement comme en vrai.
+              </p>
+            </article>
+
+            <article className="tuile">
+              <span className="tuile__num">02</span>
+              <h3>Il diagnostique avant d'expliquer</h3>
+              <p>
+                Avant la moindre explication, il demande ce que votre enfant a déjà
+                essayé. Une seule question à la fois. On ne soigne pas ce qu'on n'a
+                pas identifié.
+              </p>
+            </article>
+
+            <article className="tuile">
+              <span className="tuile__num">03</span>
+              <h3>Il remonte à la vraie lacune</h3>
+              <p>
+                Un blocage en 4e vient rarement de la 4e. Notre graphe de compétences
+                relie chaque notion à ses prérequis, jusqu'au primaire s'il le faut.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------ équipe */}
+        {/* La section entière disparaît tant qu'il n'y a personne à montrer.
+            Un titre « Une matière, un professeur » au-dessus d'une grille vide
+            se lit comme une page cassée — et c'est la page qui vend. */}
+        {equipe.length > 0 && (
+        <section className="equipe">
+          <header className="section__entete">
+            <span className="etiquette">L'équipe pédagogique</span>
+            <h2>Une matière, un professeur</h2>
+            <p className="section__intro">
+              Votre enfant retrouve le même professeur à chaque séance. C'est ce qui
+              fait la différence entre un outil qu'on ouvre et quelqu'un qu'on revoit.
             </p>
-          </article>
-        </div>
-      </section>
+          </header>
 
-      {/* ------------------------------------------------------------ équipe */}
-      {/* La section entière disparaît tant qu'il n'y a personne à montrer.
-          Un titre « Une matière, un professeur » au-dessus d'une grille vide
-          se lit comme une page cassée — et c'est la page qui vend. */}
-      {equipe.length > 0 && (
-      <section className="equipe">
-        <header className="section__entete">
-          <span className="etiquette">L'équipe pédagogique</span>
-          <h2>Une matière, un professeur</h2>
-          <p className="section__intro">
-            Votre enfant retrouve le même professeur à chaque séance. C'est ce qui
-            fait la différence entre un outil qu'on ouvre et quelqu'un qu'on revoit.
-          </p>
-        </header>
+          {/* L'ÉQUIPE VIENT DU SERVEUR, ELLE N'EST PLUS RECOPIÉE ICI.
+              -------------------------------------------------------
+              Elle l'a été longtemps, et le défaut est apparu exactement comme on
+              l'attendait : la philosophie ajoutée partout ailleurs — semeur,
+              grille des matières, avatars — restait invisible sur la page
+              d'accueil, parce que c'était le seul endroit qui ne lisait pas la
+              base. Avant elle, deux teintes avaient déjà divergé.
 
-        {/* L'ÉQUIPE VIENT DU SERVEUR, ELLE N'EST PLUS RECOPIÉE ICI.
-            -------------------------------------------------------
-            Elle l'a été longtemps, et le défaut est apparu exactement comme on
-            l'attendait : la philosophie ajoutée partout ailleurs — semeur,
-            grille des matières, avatars — restait invisible sur la page
-            d'accueil, parce que c'était le seul endroit qui ne lisait pas la
-            base. Avant elle, deux teintes avaient déjà divergé.
+              Une liste recopiée ne se trompe pas le jour où on l'écrit ; elle se
+              trompe six mois plus tard, silencieusement, et sur la page que voit
+              le plus de monde.
 
-            Une liste recopiée ne se trompe pas le jour où on l'écrit ; elle se
-            trompe six mois plus tard, silencieusement, et sur la page que voit
-            le plus de monde.
+              LE REGROUPEMENT PAR VISAGE EST FAIT PAR LE SERVEUR. Yann tient deux
+              matières et ne doit apparaître qu'une fois — la promesse de cette
+              section est « une matière, un professeur », un Yann en double la
+              démentirait à l'écran.
 
-            LE REGROUPEMENT PAR VISAGE EST FAIT PAR LE SERVEUR. Yann tient deux
-            matières et ne doit apparaître qu'une fois — la promesse de cette
-            section est « une matière, un professeur », un Yann en double la
-            démentirait à l'écran.
+              LE MOTIF EST CELUI DE L'ESPACE ENFANT, PAS UN AUTRE. Ces cartes
+              annoncent ce que l'enfant retrouvera : même professeur, même
+              couleur, même objet. Deux vocabulaires pour la même matière et la
+              promesse sonnerait faux dès la première connexion. */}
+          <ul className="equipe__grille">
+            {equipe.map((prof) => (
+              <li key={prof.avatar} className="prof" style={{ '--teinte': prof.couleur }}>
+                <MotifMatiere code={prof.code} />
+                <Avatar nom={prof.avatar} taille={72} couleur={prof.couleur} />
+                <strong>{prof.prenom}</strong>
 
-            LE MOTIF EST CELUI DE L'ESPACE ENFANT, PAS UN AUTRE. Ces cartes
-            annoncent ce que l'enfant retrouvera : même professeur, même
-            couleur, même objet. Deux vocabulaires pour la même matière et la
-            promesse sonnerait faux dès la première connexion. */}
-        <ul className="equipe__grille">
-          {equipe.map((prof) => (
-            <li key={prof.avatar} className="prof" style={{ '--teinte': prof.couleur }}>
-              <MotifMatiere code={prof.code} />
-              <Avatar nom={prof.avatar} taille={72} couleur={prof.couleur} />
-              <strong>{prof.prenom}</strong>
+                {/* Le séparateur se décide ICI et pas au serveur : « Sciences et
+                    technologie et Physique-Chimie » serait illisible, et c'est
+                    une question de mise en forme, pas de données. */}
+                <span>{prof.matieres?.join(' · ')}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+        )}
 
-              {/* Le séparateur se décide ICI et pas au serveur : « Sciences et
-                  technologie et Physique-Chimie » serait illisible, et c'est
-                  une question de mise en forme, pas de données. */}
-              <span>{prof.matieres?.join(' · ')}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-      )}
-
-      {/* ------------------------------------------------------------ graphe */}
-      <section className="graphe">
-        <div className="graphe__texte">
-          <span className="etiquette">Ce qui nous distingue</span>
-          <h2>La mémoire d'un vrai prof particulier</h2>
-          <p>
-            Chaque échange nourrit un profil qui suit votre enfant d'année en année.
-            Quand il bloque sur les fractions en 6e, l'IA sait que la cause est une
-            multiplication mal ancrée en CM2 — et reprend là, pas ailleurs.
-          </p>
-          <p className="graphe__appui">
-            C'est exactement ce que fait un professeur particulier expérimenté après
-            trois séances. Sauf qu'ici, c'est acquis dès la première.
-          </p>
-        </div>
-
-        <div className="graphe__visuel">
-          <Remontee />
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------ parents */}
-      <section className="parents">
-        <header className="section__entete">
-          <span className="etiquette etiquette--sombre">Pour les parents</span>
-          <h2>Vous gardez la main</h2>
-        </header>
-
-        <div className="parents__grille">
-          <div className="point">
-            <h3>Un compte, plusieurs enfants</h3>
-            <p>Vous créez un profil par enfant. Chacun a son professeur, son niveau, son rythme.</p>
+        {/* ------------------------------------------------------------ graphe */}
+        <section className="graphe">
+          <div className="graphe__texte">
+            <span className="etiquette">Ce qui nous distingue</span>
+            <h2>La mémoire d'un vrai prof particulier</h2>
+            <p>
+              Chaque échange nourrit un profil qui suit votre enfant d'année en année.
+              Quand il bloque sur les fractions en 6e, l'IA sait que la cause est une
+              multiplication mal ancrée en CM2 — et reprend là, pas ailleurs.
+            </p>
+            <p className="graphe__appui">
+              C'est exactement ce que fait un professeur particulier expérimenté après
+              trois séances. Sauf qu'ici, c'est acquis dès la première.
+            </p>
           </div>
-          <div className="point">
-            <h3>Adapté à l'âge, pas seulement à la classe</h3>
-            <p>Un élève de 14 ans en 5e n'est pas traité comme un enfant de 11 ans.</p>
-          </div>
-          <div className="point">
-            <h3>Jamais la réponse toute faite</h3>
-            <p>Impossible de s'en servir pour faire ses devoirs à sa place. C'est le principe.</p>
-          </div>
-          <div className="point">
-            <h3>Vos données restent les vôtres</h3>
-            <p>Hébergement en Europe, conservation limitée, suppression sur simple demande.</p>
-          </div>
-        </div>
-      </section>
 
-      {/* ------------------------------------------------------------ final */}
-      <section className="final">
-        <h2>Essayez ce soir sur son prochain devoir.</h2>
-        <p>Création du compte en une minute. Premier échange dans la foulée.</p>
-        {/* Celui-ci dit « créer un compte » : il mène donc au formulaire
-            d'INSCRIPTION, pas à celui de connexion. Il ne pose pas non plus
-            d'intention d'essai — c'est le bouton du héros qui porte la
-            promesse de gratuité, et un seul chemin doit l'ouvrir. */}
-        <button
-          type="button"
-          className="btn btn--principal btn--large"
-          onClick={() => dispatch(login({ inscription: true }))}
-        >
-          Créer mon compte parent
-        </button>
-      </section>
-    </div>
+          <div className="graphe__visuel">
+            <Remontee />
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------ parents */}
+        <section className="parents">
+          <header className="section__entete">
+            <span className="etiquette etiquette--sombre">Pour les parents</span>
+            <h2>Vous gardez la main</h2>
+          </header>
+
+          <div className="parents__grille">
+            <div className="point">
+              <h3>Un compte, plusieurs enfants</h3>
+              <p>Vous créez un profil par enfant. Chacun a son professeur, son niveau, son rythme.</p>
+            </div>
+            <div className="point">
+              <h3>Adapté à l'âge, pas seulement à la classe</h3>
+              <p>Un élève de 14 ans en 5e n'est pas traité comme un enfant de 11 ans.</p>
+            </div>
+            <div className="point">
+              <h3>Jamais la réponse toute faite</h3>
+              <p>Impossible de s'en servir pour faire ses devoirs à sa place. C'est le principe.</p>
+            </div>
+            <div className="point">
+              <h3>Vos données restent les vôtres</h3>
+              <p>Hébergement en Europe, conservation limitée, suppression sur simple demande.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* PLACÉE JUSTE AVANT L'APPEL FINAL, et pas plus haut : les avis
+            répondent à la dernière hésitation, celle qui précède la décision.
+            Au milieu de la page, ils seraient lus avant que la question ne se
+            pose. */}
+        <AvisClients />
+
+        {/* ------------------------------------------------------------ final */}
+        <section className="final">
+          <h2>Essayez ce soir sur son prochain devoir.</h2>
+          <p>Création du compte en une minute. Premier échange dans la foulée.</p>
+          {/* Celui-ci dit « créer un compte » : il mène donc au formulaire
+              d'INSCRIPTION, pas à celui de connexion. Il ne pose pas non plus
+              d'intention d'essai — c'est le bouton du héros qui porte la
+              promesse de gratuité, et un seul chemin doit l'ouvrir. */}
+          <button
+            type="button"
+            className="btn btn--principal btn--large"
+            onClick={() => dispatch(login({ inscription: true }))}
+          >
+            Créer mon compte parent
+          </button>
+        </section>
+      </div>
+    </>
   );
 }

@@ -9,6 +9,7 @@ const initialState = {
   utilisateur: null,
   authentifie: false,
   estAdmin: false,
+  estSuperAdmin: false,
   /** Vrai au démarrage : on ne sait pas encore si une session existe. */
   loading: true,
   error: null,
@@ -21,11 +22,26 @@ const initialState = {
  *
  * Ce test ne sert QU'À l'affichage : l'API revérifie le rôle sur chaque appel.
  */
-function estAdministrateur(profil) {
+function aLeRole(profil, role) {
   const roles = profil?.role ?? profil?.roles;
   if (!roles) return false;
-  return Array.isArray(roles) ? roles.includes('Admin') : roles === 'Admin';
+  return Array.isArray(roles) ? roles.includes(role) : roles === role;
 }
+
+const estAdministrateur = (profil) => aLeRole(profil, 'Admin');
+
+/**
+ * Le SUPER-administrateur : celui dont l'adresse est en configuration.
+ *
+ * Il porte les deux rôles — « Admin » lui ouvre le tableau de bord comme aux
+ * autres, « SuperAdmin » ce qui ne se délègue pas : les Modes, et l'attribution
+ * du droit d'administrer lui-même.
+ *
+ * Comme le test du dessus, celui-ci ne sert QU'À l'affichage : cacher un onglet
+ * n'est pas une autorisation. L'API refuse ces routes sur son propre contrôle,
+ * et c'est lui qui protège.
+ */
+const estSuperAdministrateur = (profil) => aLeRole(profil, 'SuperAdmin');
 
 export default function authReducer(state = initialState, action) {
   switch (action.type) {
@@ -39,6 +55,7 @@ export default function authReducer(state = initialState, action) {
         utilisateur: action.payload,
         authentifie: Boolean(action.payload),
         estAdmin: estAdministrateur(action.payload),
+        estSuperAdmin: estSuperAdministrateur(action.payload),
       };
 
     case AUTH_INIT_FAILURE:
@@ -47,6 +64,7 @@ export default function authReducer(state = initialState, action) {
         loading: false,
         authentifie: false,
         estAdmin: false,
+        estSuperAdmin: false,
         error: action.payload,
       };
 

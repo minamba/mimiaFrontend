@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMonQuota, getOffres, souscrire } from '../lib/api/abonnementApi';
 import { login } from '../lib/actions/authActions';
-import { useEssaisOuverts } from '../lib/storage/modeTest';
+import { useEssaisOuverts, useOffreLancement } from '../lib/storage/modeTest';
 import Loader from './Loader';
 
 /**
@@ -51,13 +51,46 @@ const heures = (h) => {
   return h === Math.round(h) ? `${h} h` : `${h}`.replace('.', ',') + ' h';
 };
 
-/** Ce que chaque formule apporte, dit avec des mots de parent. */
-function Details({ offre }) {
+/**
+ * Les heures offertes par l'offre de lancement.
+ *
+ * EN DUR ICI, ET C'EST LE SEUL ENDROIT DU FRONT. Le serveur crédite le pack
+ * `PACK3H` du catalogue ; ce nombre-ci ne sert QU'À L'ANNONCER. Les deux
+ * doivent bouger ensemble le jour où l'offre changera — d'où cette
+ * constante nommée plutôt que trois « 12 » éparpillés dans du texte, qui
+ * ne se retrouveraient pas.
+ */
+const HEURES_OFFERTES = 3;
+
+/**
+ * Ce que chaque formule apporte, dit avec des mots de parent.
+ *
+ * `lancement` n'est passé QUE pour la formule concernée : la décision
+ * « cette carte est-elle en promotion » appartient à celui qui dessine les
+ * cartes, pas à celui qui écrit les lignes. Sans ça, ce composant devrait
+ * connaître le code de la formule en promotion, et il y en aurait deux à
+ * corriger le jour où elle change.
+ */
+function Details({ offre, lancement }) {
   const lignes = [
     offre.nombreEnfantsMax > 1
       ? `Jusqu'à ${offre.nombreEnfantsMax} enfants`
       : 'Un enfant',
-    `${heures(offre.heuresPot)} de cours par mois, à partager`,
+
+    // LA LIGNE DES HEURES, BARRÉE PUIS REMPLACÉE.
+    //
+    // Barrer plutôt que remplacer : c'est l'écart qui vend, pas le
+    // chiffre. « 12 h » seul ne dit rien à qui découvre la page ; « 9 h »
+    // rayé au-dessus de « 12 h » dit tout, sans une phrase d'explication.
+    lancement
+      ? {
+          cle: 'heures-promo',
+          barre: `${heures(offre.heuresPot)} de cours par mois`,
+          fort: `${heures(offre.heuresPot + HEURES_OFFERTES)} le premier mois, `
+              + `dont ${heures(HEURES_OFFERTES)} offertes`,
+        }
+      : `${heures(offre.heuresPot)} de cours par mois, à partager`,
+
     offre.nombreEnfantsMax > 1
       ? `${heures(offre.heuresPlafondEnfant)} maximum pour un seul enfant`
       : null,
@@ -68,9 +101,15 @@ function Details({ offre }) {
 
   return (
     <ul className="tarif__details">
-      {lignes.map((ligne) => (
-        <li key={ligne}>{ligne}</li>
-      ))}
+      {lignes.map((ligne) =>
+        typeof ligne === 'string' ? (
+          <li key={ligne}>{ligne}</li>
+        ) : (
+          <li key={ligne.cle} className="tarif__detail--promo">
+            <span className="tarif__barre">{ligne.barre}</span>
+            <strong>{ligne.fort}</strong>
+          </li>
+        ))}
     </ul>
   );
 }
@@ -86,6 +125,11 @@ export default function Tarifs() {
 
   // Les essais sont-ils encore proposés ? Pilote le bloc « Essayez d'abord ».
   const essaisOuverts = useEssaisOuverts();
+
+  // L'offre de lancement. `active` vient du serveur, échéance comprise : on
+  // ne rejuge pas ici avec l'horloge du visiteur, qu'il suffirait de reculer
+  // pour rouvrir une promotion fermée.
+  const lancement = useOffreLancement();
 
   const [formules, setFormules] = useState([]);
   const [recharges, setRecharges] = useState([]);
@@ -108,6 +152,21 @@ export default function Tarifs() {
    */
   const [periodicite, setPeriodicite] = useState('Mensuel');
   const annuel = periodicite === 'Annuel';
+
+  /**
+   * Cette formule est-elle en promotion en ce moment ?
+   *
+   * ÉCRIT UNE FOIS ET APPELÉ TROIS FOIS — le nom, les lignes, la carte. Les
+   * trois doivent être vrais ensemble : une carte encadrée dont le titre ne
+   * porte pas la mention, ou des heures barrées sans promotion annoncée, se
+   * lisent comme un bug d'affichage plutôt que comme une offre.
+   *
+   * `SOLO` EN DUR, parce que c'est la formule que l'offre vise et qu'un
+   * réglage de plus pour choisir laquelle serait un réglage que personne ne
+   * relit. Le serveur applique exactement la même règle de son côté.
+   */
+  const enPromotion = (offre) =>
+    lancement.active && offre.code === 'SOLO' && !annuel;
 
   // Le visiteur revient de la connexion avec une formule en tête. On le lui
   // rappelle plutôt que de souscrire à sa place : sans page de paiement en
@@ -437,7 +496,17 @@ export default function Tarifs() {
           >
             {offre.code === 'DUO' && <span className="tarif__ruban">Le plus choisi</span>}
 
-            <h2 className="tarif__nom">{offre.libelle}</h2>
+            <h2 className="tarif__nom">
+              {offre.libelle}
+
+              {/* LA MENTION EST DANS LE TITRE, pas au-dessus en ruban : le
+                  ruban est déjà pris par « Le plus choisi », et deux
+                  étiquettes empilées sur une même carte s'annulent — on ne
+                  sait plus laquelle compte. */}
+              {enPromotion(offre) && (
+                <span className="tarif__mention">({lancement.texte})</span>
+              )}
+            </h2>
             <p className="tarif__accroche">{offre.accroche}</p>
 
             {/* Le prix affiché suit le rythme choisi. En annuel on montre le
@@ -464,7 +533,7 @@ export default function Tarifs() {
               )
             )}
 
-            <Details offre={offre} />
+            <Details offre={offre} lancement={enPromotion(offre)} />
 
             {/* La contrepartie de l'autre rythme, pour que le choix reste
                 réversible sans remonter en haut de page. */}

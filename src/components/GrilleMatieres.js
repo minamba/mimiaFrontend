@@ -201,6 +201,74 @@ function CarteMatiere({ matiere, onOuvrir, fiches, evaluations, eleveId }) {
   );
 }
 
+/**
+ * La question du casque, posée juste avant d'entrer en cours.
+ *
+ * POURQUOI ELLE EXISTE
+ * --------------------
+ * Le micro reste ouvert pendant que le professeur parle — c’est ce qui
+ * permet à l'élève de l'interrompre. Sur un haut-parleur, ce micro capte la
+ * voix du professeur, la transcrit, et la lui renvoie comme une
+ * interruption : le professeur se coupe lui-même, en boucle.
+ *
+ * ON NE PEUT PAS LE DEVINER DEPUIS LE NAVIGATEUR. Aucune interface web ne
+ * dit si le son sort d'un casque ou d'un haut-parleur — l'annulation d'écho
+ * du navigateur aide, mais elle échoue précisément dans le cas qui nous
+ * occupe : une voix de synthèse jouée fort, à quelques centimètres du micro.
+ * La seule source fiable est celle qui est assise devant.
+ *
+ * POSÉE À CHAQUE COURS, et pas une fois pour toutes : un enfant met son
+ * casque le lundi et écoute sur la tablette du salon le mercredi. Une
+ * réponse mémorisée serait fausse une fois sur deux, et fausse en silence.
+ */
+function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
+  return (
+    <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-casque">
+      <div className="modale__boite modale__boite--casque">
+        <h2 id="titre-casque">Tu as un casque ou des écouteurs ?</h2>
+
+        <p className="modale__texte">
+          Avec un casque, tu peux couper la parole à {matiere.profPrenom} quand tu
+          veux. Sans casque, ton micro entendrait sa voix et croirait que c’est
+          toi qui parles.
+        </p>
+
+        <div className="casque-choix">
+          <button
+            type="button"
+            className="casque-option casque-option--oui"
+            onClick={() => onRepondre(true)}
+          >
+            <span className="casque-option__icone" aria-hidden="true">🎧</span>
+            <span className="casque-option__titre">Oui, j’ai un casque</span>
+            <span className="casque-option__detail">
+              Je peux interrompre le prof en parlant
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="casque-option"
+            onClick={() => onRepondre(false)}
+          >
+            <span className="casque-option__icone" aria-hidden="true">🔊</span>
+            <span className="casque-option__titre">Non, haut-parleur</span>
+            <span className="casque-option__detail">
+              J’attends que le prof ait fini pour parler
+            </span>
+          </button>
+        </div>
+
+        <div className="modale__actions">
+          <button type="button" className="btn-ghost" onClick={onAnnuler}>
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Choix de la durée, avant d'entrer en cours. */
 function ChoixDuree({ matiere, onValider, onAnnuler, estAdmin }) {
   return (
@@ -269,6 +337,10 @@ export default function GrilleMatieres() {
   const { eleveId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // La durée retenue entre les deux questions. `null` = on en est encore à
+  // la première.
+  const [dureeChoisie, setDureeChoisie] = useState(null);
 
   // Le référentiel n est plus lu ici : les matières de l élève viennent de sa
   // propre route, et le niveau ne sert plus à filtrer puisque le serveur s en
@@ -381,13 +453,27 @@ export default function GrilleMatieres() {
 
   return (
     <section className="page page--large">
-      {enAttente && (
+      {/* DEUX ÉTAPES, ET LA DURÉE D’ABORD. La question du casque tient à
+          l’équipement, pas au cours : la poser en premier ferait commencer
+          par de l’intendance quelqu’un qui vient travailler. */}
+      {enAttente && dureeChoisie === null && (
         <ChoixDuree
           matiere={enAttente}
           onAnnuler={() => setEnAttente(null)}
           estAdmin={estAdmin}
-          onValider={(minutes) =>
-            navigate(`/eleves/${eleveId}/matieres/${enAttente.id}/chat?duree=${minutes}`)
+          onValider={setDureeChoisie}
+        />
+      )}
+
+      {enAttente && dureeChoisie !== null && (
+        <ChoixCasque
+          matiere={enAttente}
+          onAnnuler={() => { setDureeChoisie(null); setEnAttente(null); }}
+          onRepondre={(casque) =>
+            navigate(
+              `/eleves/${eleveId}/matieres/${enAttente.id}/chat`
+              + `?duree=${dureeChoisie}&casque=${casque ? 1 : 0}`,
+            )
           }
         />
       )}
@@ -445,7 +531,11 @@ export default function GrilleMatieres() {
           <li key={matiere.id}>
             <CarteMatiere
               matiere={matiere}
-              onOuvrir={() => setEnAttente(matiere)}
+              /* La durée repart à zéro à chaque ouverture : sans ça, un élève
+                 qui annule au casque puis rouvre une AUTRE matière sauterait
+                 directement à la seconde question, avec la durée de la
+                 précédente. */
+              onOuvrir={() => { setDureeChoisie(null); setEnAttente(matiere); }}
               fiches={fiches[matiere.id]}
               evaluations={notes[matiere.id]}
               eleveId={eleveId}

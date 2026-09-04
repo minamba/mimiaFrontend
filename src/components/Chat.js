@@ -219,6 +219,26 @@ const SILENCES_AVANT_RELANCE = 20;
 const ECHECS_AVANT_REPLI = 3;
 
 /**
+ * Combien de temps on reste sur le moteur du navigateur après un renoncement.
+ *
+ * LE REPLI ÉTAIT DÉFINITIF, ET C’ÉTAIT UN DÉFAUT COÛTEUX.
+ *
+ * Trois coupures de WebSocket — ce qui arrive à CHAQUE redémarrage de l'API,
+ * donc à chaque déploiement — et l'élève finissait le cours sur la
+ * reconnaissance vocale de Chrome. Même une fois le serveur revenu.
+ *
+ * Or ce moteur-là ÉMET UN SON à chaque démarrage et à chaque arrêt : c'est
+ * une sonnerie du navigateur, qu’aucune option ne désactive. En mode mains
+ * libres le micro se relance à chaque tour — et depuis qu’il reste ouvert
+ * pendant les explications, ces sonneries tombent PENDANT que le professeur
+ * parle. Des « bips intempestifs », exactement.
+ *
+ * Deux minutes : assez pour laisser passer un redéploiement, assez court
+ * pour que la séance retrouve le temps réel sans recharger la page.
+ */
+const REPLI_MS = 120000;
+
+/**
  * Cette transcription justifie-t-elle de couper la parole au professeur ?
  *
  * Deux caractères au moins. Une syllabe isolée arrachée au bruit de fond n'est
@@ -615,6 +635,21 @@ export default function Chat() {
 
   const [parametres] = useSearchParams();
   const dureeChoisie = Number(parametres.get('duree'));
+
+  /**
+   * L'élève a-t-il dit écouter sur un haut-parleur ?
+   *
+   * DANS L'ADRESSE, ET PAS DANS UN ÉTAT REACT : un rechargement de page en
+   * plein cours — un enfant qui tire sur le câble, un téléphone qui met
+   * l'onglet en veille — ferait sinon repartir la séance en duplex intégral
+   * sur un appareil qui ne le supporte pas, sans que personne ne repose la
+   * question.
+   *
+   * Le défaut est « avec casque » : c'est le comportement historique, et
+   * c'est celui qu'on veut pour un lien ancien ou recopié à la main.
+   */
+  const sansCasque = parametres.get('casque') === '0';
+
   const dureeSeance = DUREES_VALIDES.includes(dureeChoisie) ? dureeChoisie : 25;
 
   const restant = Math.max(0, dureeSeance * 60 - secondes);
@@ -836,7 +871,12 @@ export default function Chat() {
    * cents millisecondes jusqu'à la fin du cours, sans que l'élève puisse jamais
    * parler.
    */
-  const tempsReelRef = useRef(ecouteTempsReel.supporte);
+  /**
+   * Depuis quand on est retombé sur le moteur du navigateur. 0 = jamais.
+   *
+   * Une DATE et non un booléen : c'est ce qui rend le repli temporaire.
+   */
+  const replriDepuisRef = useRef(0);
   const echecsTempsReelRef = useRef(0);
 
   // Le micro est disponible dès qu'UN des deux moteurs l'est. La transcription
@@ -854,6 +894,42 @@ export default function Chat() {
   // Ce que le professeur vient de dire, et quand il s'est tu. Sert à
   // reconnaître sa propre voix si elle revient par le micro.
   const paroleProfRef = useRef({ texte: '', finLe: 0 });
+
+  /**
+   * Le professeur est-il en train de parler, à cet instant ?
+   *
+   * UNE RÉFÉRENCE ET NON UN ÉTAT : elle est lue depuis les rappels du
+   * lecteur, qui ne sont pas rejoués au rendu. Un `useState` y renverrait la
+   * valeur figée à la dernière exécution de l’effet.
+   */
+  const profParleRef = useRef(false);
+
+  /**
+   * Le micro est-il en pause parce que le professeur parle ?
+   *
+   * UN ÉTAT EN PLUS DE LA RÉFÉRENCE, et les deux sont nécessaires. La
+   * référence sert aux rappels du lecteur, qui ne sont pas rejoués au
+   * rendu ; l'état sert à l'écran, qu'une référence ne redessine jamais.
+   *
+   * Sans lui, l'onde bleue continuait d'annoncer « Je t'écoute… » pendant
+   * une explication où le micro était fermé. Le pire mensonge possible :
+   * l'élève parle dans le vide en croyant être entendu.
+   */
+  const [micEnPause, setMicEnPause] = useState(false);
+
+  /**
+   * Le professeur parle-t-il, quel que soit le mode ?
+   *
+   * DISTINCT DE `micEnPause`, qui ne vaut que sans casque. Celui-ci est vrai
+   * dans les deux cas, parce que le bandeau doit rester à l’écran dans les
+   * deux cas — seul son message change.
+   *
+   * Avec casque, le micro reste ouvert : l'élève peut couper la parole, et
+   * c'est précisément ce qu'il faut lui dire à ce moment-là. Sans casque, le
+   * micro est fermé et il doit attendre. Deux situations opposées, un seul
+   * bandeau, deux phrases.
+   */
+  const [profParle, setProfParle] = useState(false);
   const [ecoute, setEcoute] = useState(false);
 
   /**
@@ -1092,6 +1168,7 @@ export default function Chat() {
     // la synthèse et ouvrir le graphe audio, au lieu de les payer au moment où
     // l'élève attend la première syllabe.
     if (!muet) lecteur.prechauffer();
+
     return () => {
       lecteur.arreter();
       ecouteRef.current?.arreter();
@@ -1319,7 +1396,66 @@ export default function Chat() {
 
     lecteur.auSilence = () => {
       paroleProfRef.current.finLe = Date.now();
+
+      // SANS CASQUE, LE MICRO REVIENT ICI — et nulle part ailleurs. C'est
+      // la seconde moitié du demi-duplex : la première ferme, celle-ci
+      // rouvre, et le tour de parole redevient celui de l'élève.
+      profParleRef.current = false;
+      setMicEnPause(false);
+      setProfParle(false);
+
+      // Le micro a été FERMÉ, pas suspendu : il n'y a rien à reprendre.
+      // C'est l'effet de réouverture qui en crée un neuf, au tour suivant.
+      arretVolontaireRef.current = false;
+
       setTourDeParole((n) => n + 1);
+    };
+
+    // LE DEMI-DUPLEX, ET POURQUOI IL N'EST PAS LE DÉFAUT.
+    //
+    // Le micro reste normalement ouvert pendant que le professeur parle :
+    // c'est ce qui permet de l'interrompre, et l'interruption est la moitié
+    // de ce qui fait un cours vivant. On ne la retire qu'à ceux qui ne
+    // peuvent pas en profiter.
+    //
+    // Sur un haut-parleur, ce micro ouvert capte la voix du professeur, la
+    // transcrit et la lui renvoie comme une interruption : il se coupe
+    // lui-même, indéfiniment. `estUnEcho` rattrape le cas en aval, mais
+    // APRÈS coup — il coupe alors le mode mains libres, ce qui règle la
+    // boucle en supprimant le dialogue. Fermer le micro à la source règle
+    // le même problème sans rien retirer.
+    lecteur.auDebutDeParole = () => {
+      profParleRef.current = true;
+      setProfParle(true);
+
+      // UNIQUEMENT EN MAINS LIBRES.
+      //
+      // Hors de ce mode, le micro ne s’ouvre que sur un clic délibéré de
+      // l’élève : le fermer d’office annulerait son geste, et il devrait
+      // recliquer sans comprendre pourquoi. C’est aussi la seule situation où
+      // la réouverture automatique existe pour le rallumer ensuite.
+      if (sansCasque && mainsLibresRef.current) {
+        setMicEnPause(true);
+
+        // ON FERME LE MICRO, ON NE LE SUSPEND PLUS.
+        //
+        // `suspendre` ne coupait que la TRANSMISSION : le flux
+        // `getUserMedia` restait ouvert, le programme de capture tournait,
+        // et il accumulait même le son dans une réserve. Le micro écoutait
+        // donc sans discontinuer pendant toute l'explication.
+        //
+        // `arreter` coupe pour de bon : pistes arrêtées, contexte audio
+        // fermé, liaison close. Rien ne tourne plus tant que le professeur
+        // parle — c'est ce que l'élève a demandé en répondant qu'il était
+        // sur haut-parleur, et ce que « suspendre » ne donnait pas.
+        //
+        // La réouverture est déjà en place : `auSilence` incrémente le tour
+        // de parole, l'effet de réouverture voit `ecoute` à faux et relance
+        // un écouteur neuf trois cents millisecondes plus tard.
+        arretVolontaireRef.current = true;
+        ecouteRef.current?.arreter();
+        setEcoute(false);
+      }
     };
 
     // Le navigateur exige une interaction avant de jouer un son. En arrivant
@@ -1366,12 +1502,18 @@ export default function Chat() {
 
     return () => {
       lecteur.auSilence = null;
+      lecteur.auDebutDeParole = null;
       lecteur.surBlocage = null;
       lecteur.surDelai = null;
       lecteur.surRepli = null;
       lecteur.surPauseDictee = null;
     };
-  }, []);
+
+  // `sansCasque` vient de l’adresse et ne bouge pas d’une séance à l’autre.
+  // Il figure quand même ici : le jour où l’élève pourra changer d’avis en
+  // plein cours, l’oubli laisserait les deux rappels branchés sur l’ancienne
+  // valeur, et le micro resterait fermé sans raison.
+  }, [sansCasque]);
 
   // Un clic, n'importe où, rend l'autorisation de jouer du son. On le dit à
   // l'élève plutôt que de le laisser devant un professeur muet.
@@ -2027,7 +2169,12 @@ export default function Chat() {
      * minutes sans que rien ne se referme derrière lui. Tout ce mécanisme
      * n'existait que pour compenser le Web Speech du navigateur.
      */
-    if (tempsReelRef.current && conversation) {
+    // Le temps réel reprend la main dès que le repli a expiré. Le compteur
+    // d'échecs repart de zéro à la première ouverture réussie, donc un
+    // serveur toujours en panne rebascule en trois essais, sans insister.
+    const enRepli = Date.now() - replriDepuisRef.current < REPLI_MS;
+
+    if (ecouteTempsReel.supporte && !enRepli && conversation) {
       ecouteRef.current = ecouteTempsReel.ecouter({
         conversationId: conversation.id,
 
@@ -2136,13 +2283,33 @@ export default function Chat() {
           if (echecsTempsReelRef.current >= ECHECS_AVANT_REPLI) {
             // On bascule sur le moteur du navigateur plutôt que de laisser
             // l'élève sans micro. Il perd en fluidité, pas en usage.
-            tempsReelRef.current = false;
+            //
+            // ON DATE LE RENONCEMENT AU LIEU DE LE GRAVER : voir `REPLI_MS`.
+            // Sans cette date, une panne de dix secondes coûtait le reste du
+            // cours, sonneries de Chrome comprises.
+            replriDepuisRef.current = Date.now();
             setErreurMicro(message);
           }
 
           setEcoute(false);
         },
       });
+
+      // NÉ SUSPENDU SI LE PROFESSEUR PARLE DÉJÀ.
+      //
+      // C'est ICI que la garde doit être posée, et pas seulement dans
+      // l'effet qui programme la réouverture. `profParleRef` est une
+      // référence : la changer ne rejoue aucun effet. Un micro déjà
+      // programmé — la réouverture passe par un délai de 300 ms — naissait
+      // donc ouvert quand le professeur prenait la parole entre-temps, et
+      // sa voix repartait aussitôt dans la transcription de l'élève.
+      //
+      // La règle est vraie par construction à l'endroit où l'écouteur est
+      // créé : quel que soit le chemin qui y mène, il ne peut pas naître
+      // ouvert pendant une explication.
+      if (sansCasque && profParleRef.current) {
+        ecouteRef.current?.suspendre?.(true, false);
+      }
 
       return;
     }
@@ -2296,7 +2463,8 @@ export default function Chat() {
         setErreurMicro(message);
       },
     });
-  }, [envoyerTexte, accumuler, signaler, couperLaParole, conversation]);
+  }, [envoyerTexte, accumuler, signaler, couperLaParole, conversation, sansCasque,
+      ]);
 
   const basculerMicro = () => {
     if (seanceTerminee) return;
@@ -2440,11 +2608,23 @@ export default function Chat() {
       return undefined;
     }
 
+    // SANS CASQUE, ON N'OUVRE PAS PENDANT QU'IL PARLE.
+    //
+    // Suspendre l’écouteur en cours ne suffisait pas : cet effet en crée un
+    // NEUF à chaque tour, et un écouteur neuf naît ouvert. La suspension
+    // posée par `auDebutDeParole` serait alors perdue au premier
+    // renouvellement, c’est-à-dire aussitôt.
+    //
+    // `tourDeParole` fait partie des dépendances et change au silence : la
+    // réouverture se rejoue donc toute seule dès que le professeur a fini.
+    if (sansCasque && profParleRef.current) return undefined;
+
     // Un court délai évite de rouvrir le micro dans la même image que sa
     // fermeture, ce qui ferait démarrer deux reconnaissances concurrentes.
     const minuteur = setTimeout(demarrerEcoute, 300);
     return () => clearTimeout(minuteur);
-  }, [mainsLibres, seanceTerminee, streaming, ecoute, tourDeParole, vocalDispo, demarrerEcoute]);
+  }, [mainsLibres, seanceTerminee, streaming, ecoute, tourDeParole, vocalDispo,
+      sansCasque, demarrerEcoute]);
 
   if (loading) return <Loader texte="Le professeur arrive…" />;
 
@@ -2624,6 +2804,18 @@ export default function Chat() {
         </button>
       </header>
       </div>
+
+      {/* DIT UNE FOIS, EN HAUT, ET PAS À CHAQUE TOUR.
+          L’élève a répondu qu’il écoutait sur haut-parleur : il doit savoir
+          que parler pendant l’explication ne servira à rien, sinon il
+          essaiera, échouera, et croira que le micro est cassé. */}
+      {sansCasque && mainsLibres && (
+        <p className="chat__demi-duplex">
+          <span aria-hidden="true">🔊</span>
+          Tu écoutes sur haut-parleur : ton micro se met en pause pendant que
+          le professeur parle, et se rouvre dès qu’il a fini.
+        </p>
+      )}
 
       <div className="chat__fil" ref={filRef}>
         {messages.length === 0 && !streaming && (
@@ -2834,16 +3026,30 @@ export default function Chat() {
           </div>
         )}
 
-        {ecoute && !pauseDictee && (
+        {/* LE BANDEAU RESTE PENDANT QUE LE PROFESSEUR PARLE.
+
+            Il ne s’affichait que si le micro était ouvert. En mode sans
+            casque, le micro se ferme pendant l’explication : le bandeau
+            disparaissait donc, et l’élève se retrouvait sans aucun repère au
+            moment précis où il en avait le plus besoin.
+
+            Il reste, et c’est son TEXTE qui change. L’onde continue de
+            bouger : ce qu’elle signale, c’est que la séance est vivante, pas
+            que le micro est ouvert. */}
+        {(ecoute || profParle) && !pauseDictee && (
           <div className="ecoute-active">
             <span className="ecoute-active__onde"><i /><i /><i /><i /></span>
 
             {/* UN RETRAIT SILENCIEUX SERAIT PIRE QUE LE DÉFAUT.
                 S'il tape et que la voix se tait sans rien dire, il parlerait
                 dans le vide sans comprendre pourquoi. On le dit. */}
-            {saisieTapee
-              ? 'Tu écris — je t’écoute à nouveau dès que le champ est vide.'
-              : saisie ? `« ${saisie} »` : 'Je t’écoute…'}
+            {micEnPause
+              ? 'Le professeur parle…'
+              : profParle && !saisieTapee && !saisie
+                ? 'Le professeur parle — tu peux le couper en parlant.'
+              : saisieTapee
+                ? 'Tu écris — je t’écoute à nouveau dès que le champ est vide.'
+                : saisie ? `« ${saisie} »` : 'Je t’écoute…'}
           </div>
         )}
       </div>
@@ -2899,6 +3105,7 @@ export default function Chat() {
               ? 'Parle quand tu veux, le micro se rouvre tout seul.'
               : 'Clique sur le micro pour parler.'}
           </span>
+
         </div>
       )}
 
@@ -3013,11 +3220,13 @@ export default function Chat() {
                   ? 'Dis-lui ce qui te bloque'
                   : copieDictee
                     ? 'Écris la phrase, puis Entrée'
-                    : ecoute
-                      ? 'Je t’écoute…'
-                      : vocalDispo
-                        ? 'Parle, ou écris ici'
-                        : 'Écris ton message…'
+                    : micEnPause
+                      ? 'Le professeur parle…'
+                      : ecoute
+                        ? 'Je t’écoute…'
+                        : vocalDispo
+                          ? 'Parle, ou écris ici'
+                          : 'Écris ton message…'
           }
           disabled={streaming || seanceTerminee}
           rows={2}

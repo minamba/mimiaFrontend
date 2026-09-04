@@ -10,6 +10,7 @@ import {
 import { chargerEleves, submitEleve } from '../lib/actions/elevesActions';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 import { getCapaciteEnfants } from '../lib/api/abonnementApi';
+import MonAvis from './MonAvis';
 import ChampMotDePasse from './ChampMotDePasse';
 import CodeEnfant from './CodeEnfant';
 import Loader from './Loader';
@@ -27,6 +28,10 @@ const ONGLETS = [
   { cle: 'forfait', libelle: 'Mon forfait' },
   { cle: 'securite', libelle: 'Mot de passe' },
   { cle: 'enfants', libelle: 'Mes enfants' },
+  // EN DERNIER, ET C’EST VOULU. Un parent vient ici pour régler quelque
+  // chose ; on ne lui demande pas son avis avant de l’avoir laissé faire ce
+  // pour quoi il est venu.
+  { cle: 'avis', libelle: 'Mon avis' },
 ];
 
 /** Date courte. Sur un profil retiré, le jour suffit — l'heure n'apprend rien. */
@@ -636,6 +641,17 @@ export default function MonProfil() {
       )}
 
       {onglet === 'forfait' && <Quota />}
+
+      {onglet === 'avis' && (
+        <div className="bloc-profil">
+          <h2>Votre avis sur Mimia</h2>
+          <p className="bloc-profil__intro">
+            Il apparaîtra sur la page d’accueil, signé de votre prénom et de
+            l’initiale de votre nom, après relecture.
+          </p>
+          <MonAvis />
+        </div>
+      )}
 
       {onglet === 'securite' && (
         <Securite

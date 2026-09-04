@@ -470,6 +470,10 @@ export const ecouteTempsReel = {
      */
     let suspendu = false;
 
+    // La réserve accumulée pendant la pause en cours vaut-elle la peine
+    // d'être transmise à la reprise ? Voir `suspendre`.
+    let avanceGardee = true;
+
 
     const desarmer = () => {
       if (sansRetour) clearTimeout(sansRetour);
@@ -481,13 +485,45 @@ export const ecouteTempsReel = {
      *
      * En pause, le son continue d'alimenter la RÉSERVE : sans elle, la reprise
      * tronquerait la première syllabe, exactement comme au démarrage.
+     *
+     * MAIS CE QUE VAUT LA RÉSERVE DÉPEND DU MOTIF DE LA PAUSE.
+     *
+     * Pause parce que l'élève TAPE : ces 300 ms ne contiennent que le bruit
+     * de la pièce, et les garder évite de manger sa première syllabe quand
+     * il repose le clavier pour parler. C'est le cas historique, et un test
+     * le protège.
+     *
+     * Pause parce que le PROFESSEUR PARLE — sur un appareil sans casque —
+     * la réserve contient sa voix. La transmettre au premier mot de
+     * l'élève collerait cette queue de phrase en tête de son tour, et le
+     * transcripteur en ferait un mot qu'il n'a jamais dit. C'est exactement
+     * la boucle qu'on cherche à casser, revenue par la porte de service.
+     *
+     * D'où le second paramètre : l'appelant sait pourquoi il suspend, la
+     * réserve ne peut pas le deviner.
+     *
+     * @param {boolean} oui Suspendre (vrai) ou reprendre (faux).
+     * @param {boolean} garderLAvance Conserver les 300 ms captées pendant la
+     *   pause. Vrai par défaut — le comportement du clavier.
      */
-    const suspendre = (oui) => {
+    const suspendre = (oui, garderLAvance = true) => {
       const nouveau = Boolean(oui);
       if (nouveau === suspendu) return;
       suspendu = nouveau;
 
-      if (!suspendu) return;
+      if (!suspendu) {
+        // Le motif est celui de la pause qui se termine, pas de la
+        // prochaine : d'où le drapeau retenu au moment de suspendre.
+        if (!avanceGardee) {
+          reserve.length = 0;
+          reserveEchantillons = 0;
+        }
+
+        avanceGardee = true;
+        return;
+      }
+
+      avanceGardee = garderLAvance;
 
       // Le tour en cours est clos net : rien ne part, donc rien n'est réclamé,
       // et le chien de garde n'a plus de réponse à attendre.
@@ -800,7 +836,6 @@ export const ecouteTempsReel = {
         };
 
         source.connect(capture);
-
         // Nécessaire sur Chrome : sans destination, le graphe ne tourne pas.
         // Le gain à zéro évite de renvoyer le micro dans les haut-parleurs.
         const silence = contexte.createGain();

@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   chargerAdmin,
   changerGranularite,
   filtrerParEleve,
   rechercher,
+  reinitialiserFiltres,
   rechercherEleve,
   filtrerParParent,
   ouvrirFiche,
@@ -17,16 +18,23 @@ import {
   getHistoriqueRapports,
   getCout,
   getHistoriqueHeures,
+  definirAdministrateur,
+  getRepartitionParents,
 } from '../lib/api/adminApi';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
 import Graphique from './Graphique';
 import Frequentation from './Frequentation';
+import RelectureAvis from './RelectureAvis';
 import Loader from './Loader';
 import Modes from './Modes';
 import Diffusion from './Diffusion';
 import Messagerie from './Messagerie';
+import MessageInformation from './MessageInformation';
+import PromosAdmin from './PromosAdmin';
+import Onglets from './Onglets';
 import Planches from './Planches';
+import { ranger, suivant, annoncerTri } from '../lib/triTableau';
 
 const GRANULARITES = [
   { cle: 'jour', libelle: 'Jour' },
@@ -34,6 +42,34 @@ const GRANULARITES = [
   { cle: 'mois', libelle: 'Mois' },
   { cle: 'annee', libelle: 'Année' },
 ];
+
+/**
+ * Un en-tête de colonne qui range le tableau.
+ *
+ * Un BOUTON dans le `th`, pas un `th` cliquable : c'est le bouton qui rend
+ * la colonne atteignable au clavier et annonçable par un lecteur d'écran.
+ * `aria-sort` sur le `th` dit ensuite dans quel sens elle est rangée.
+ */
+function ColonneTriable({ libelle, colonne, tri, onTrier, aDroite = false }) {
+  const actif = tri.colonne === colonne;
+
+  return (
+    <th scope="col" aria-sort={annoncerTri(tri, colonne)} className={aDroite ? 'num' : undefined}>
+      <button
+        type="button"
+        className={`tri-colonne ${actif ? 'tri-colonne--actif' : ''}`}
+        onClick={() => onTrier(colonne)}
+      >
+        {libelle}
+        {/* La flèche n'apparaît que sur la colonne active : en afficher une
+            partout ferait chercher laquelle est grise. */}
+        <span className="tri-colonne__fleche" aria-hidden="true">
+          {actif ? (tri.ascendant ? '↑' : '↓') : ''}
+        </span>
+      </button>
+    </th>
+  );
+}
 
 /** Valeurs de l'énumération Sexe côté serveur. */
 const SEXES = { 0: '—', 1: 'Fille', 2: 'Garçon' };
@@ -45,8 +81,15 @@ const SEXES = { 0: '—', 1: 'Fille', 2: 'Garçon' };
  * en lancerait donc quatre séries pour un seul résultat utile. On attend que
  * la saisie se stabilise avant d'interroger le serveur.
  */
-function useSaisieDifferee(appliquer, delai = 350) {
-  const [valeur, setValeur] = useState('');
+function useSaisieDifferee(appliquer, delai = 350, valeurInitiale = '') {
+  // ELLE PART DE CE QUE LE STORE CONTIENT, ET C'EST TOUT LE CORRECTIF ICI.
+  //
+  // Le commentaire ci-dessous affirmait depuis toujours « au montage, la
+  // valeur est déjà celle du store » — sauf qu'elle démarrait vide. Un filtre
+  // survivant au démontage donnait donc un champ vierge devant une liste
+  // filtrée : l'écran mentait sur son propre état, et rien ne permettait de
+  // défaire ce qu'on ne voyait pas.
+  const [valeur, setValeur] = useState(valeurInitiale);
   const premierRendu = useRef(true);
   const dernierApplique = useRef('');
 
@@ -324,6 +367,118 @@ function enHeures(minutes) {
  * s'éteint sur la période courante : on ne navigue pas dans un futur qui n'a
  * pas eu lieu.
  */
+/**
+ * Ce que chaque poste de fond veut dire, en français.
+ *
+ * Les clés sont celles écrites par l'API au moment de l'appel. Un poste
+ * inconnu affiche sa clé brute plutôt que de disparaître : un coût sans nom
+ * reste un coût, et le cacher rendrait le total à nouveau inexplicable.
+ */
+const LIBELLES_POSTES = {
+  bilan: 'bilans envoyés aux familles',
+  'reperes-planche': 'repères relevés sur les planches',
+  'description-planche': 'descriptions de planches',
+  'observation-competences': 'observations de séances',
+  'transcription-document': 'transcriptions de documents',
+};
+
+/**
+ * Où en est le fichier clients, en une bulle.
+ *
+ * SANS FENÊTRE, et c'est délibéré : le bandeau du dessus compte ce qui
+ * s'est passé pendant une période, celui-ci dit ce qui EST. Le sélecteur
+ * Jour/Semaine/Mois ne le concerne pas, et l'écrire sous le titre évite de
+ * chercher pourquoi les chiffres ne bougent pas en changeant de période.
+ *
+ * LES CASES SONT EXHAUSTIVES : payants, essais, en pause, résiliés et
+ * jamais abonnés retombent sur le total. Un parent est dans une case et
+ * une seule — sans quoi le bloc laisserait croire à des départs qu'il
+ * faudrait aller vérifier à la main.
+ */
+function FichierClients() {
+  const [donnees, setDonnees] = useState(null);
+  const [erreur, setErreur] = useState(false);
+
+  useEffect(() => {
+    let vivant = true;
+
+    getRepartitionParents()
+      .then(({ data }) => { if (vivant) setDonnees(data); })
+      .catch(() => { if (vivant) setErreur(true); });
+
+    return () => { vivant = false; };
+  }, []);
+
+  if (erreur || !donnees) return null;
+
+  const payants = (donnees.forfaits ?? []).reduce((n, f) => n + (f.total ?? 0), 0);
+
+  const cases = [
+    { cle: 'payants', libelle: 'abonnés payants', valeur: payants, fort: true },
+    { cle: 'essais', libelle: 'en essai gratuit', valeur: donnees.essais ?? 0 },
+    { cle: 'pause', libelle: 'en pause', valeur: donnees.enPause ?? 0 },
+    { cle: 'resilies', libelle: 'désabonnés', valeur: donnees.resilies ?? 0 },
+    { cle: 'jamais', libelle: 'jamais abonnés', valeur: donnees.jamaisAbonnes ?? 0 },
+  ];
+
+  return (
+    <div className="fichier">
+      <div className="fichier__entete">
+        <h3 className="fichier__titre">Le fichier clients</h3>
+        <span className="fichier__note">état du jour, indépendant de la période</span>
+      </div>
+
+      <div className="fichier__corps">
+        <div className="fichier__total">
+          <span className="fichier__total-valeur">{donnees.total ?? 0}</span>
+          <span className="fichier__total-libelle">
+            compte{(donnees.total ?? 0) > 1 ? 's' : ''} parent
+            {(donnees.total ?? 0) > 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* Les cinq cases, dans le même ordre que le cycle de vie : on
+            paie, on essaie, on suspend, on part, on n'est jamais venu. */}
+        <ul className="fichier__cases">
+          {cases.map((c) => (
+            <li key={c.cle} className={c.fort ? 'fichier__case fichier__case--fort' : 'fichier__case'}>
+              <strong>{c.valeur}</strong>
+              <span>{c.libelle}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* LE DÉTAIL PAR FORMULE ET PAR RYTHME. Le mensuel et l'annuel ne se
+          valent pas — un annuel encaisse onze mois d'avance et ne peut pas
+          partir le mois prochain — et les additionner effacerait justement
+          ce qui distingue les deux. */}
+      {(donnees.forfaits ?? []).length > 0 && (
+        <table className="fichier__forfaits">
+          <thead>
+            <tr>
+              <th>Formule</th>
+              <th>Mensuel</th>
+              <th>Annuel</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {donnees.forfaits.map((f) => (
+              <tr key={f.code}>
+                <td>{f.libelle ?? f.code}</td>
+                <td>{f.mensuel ?? 0}</td>
+                <td>{f.annuel ?? 0}</td>
+                <td className="fichier__forfaits-total">{f.total ?? 0}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 function CoutTotal() {
   // LA FENÊTRE VIT DANS L'ÉTAT PARTAGÉ, pas ici. Le tableau du dessous en
   // dépend autant que ce bandeau : la garder locale afficherait un total de
@@ -356,6 +511,13 @@ function CoutTotal() {
 
   const dollars = cout?.totalDollars ?? 0;
   const pale = chargement ? 'cout-total__pale' : '';
+
+  // Ce que les familles consomment vraiment : le dialogue et la voix, et rien
+  // d'autre. Le déduire du total plutôt que d'additionner les deux postes
+  // laisserait les frais de fond dedans le jour où l'API en ajoute un.
+  const famillesDollars = (cout?.dialogueDollars ?? 0) + (cout?.voixDollars ?? 0);
+
+  const postes = cout?.postes ?? [];
 
   return (
     <div className="cout-total">
@@ -410,7 +572,7 @@ function CoutTotal() {
 
       {!erreur && (
         <>
-          <h3 className="cout-total__titre">Ce que les familles me coûtent</h3>
+          <h3 className="cout-total__titre">Ce que le produit me coûte</h3>
 
           <div className="cout-total__corps">
             <div className="cout-total__montant">
@@ -423,18 +585,82 @@ function CoutTotal() {
               </span>
             </div>
 
-            {/* Le détail sépare ce qui est relevé de ce qui est déduit. Un total
-                seul laisserait croire que tout est mesuré. */}
-            <ul className="cout-total__detail">
-              <li>
-                <strong>{(cout?.dialogueDollars ?? 0).toFixed(2)} $</strong> de dialogue,
-                mesuré sur {(cout?.tours ?? 0).toLocaleString('fr-FR')} tours de parole
-              </li>
-              <li>
-                <strong>{(cout?.voixDollars ?? 0).toFixed(2)} $</strong> de synthèse vocale,
-                estimée d'après ces mêmes tours
-              </li>
-            </ul>
+            {/* DEUX BULLES, ET C'EST TOUTE LA CORRECTION.
+
+                Le total mêlait ce que les familles consomment et ce que le
+                produit dépense tout seul — bilans, planches, observations.
+                On lisait donc « ce que les familles me coûtent : 0,04 $ »
+                au-dessus d'un tableau où aucune famille n'avait rien
+                dépensé, sans rien pour expliquer l'écart. Les postes de fond
+                étaient déjà calculés par l'API et simplement jamais affichés.
+
+                DEUX SURFACES PLUTÔT QUE DEUX TITRES : les deux groupes ne
+                s'additionnent pas dans la même logique — l'un suit les
+                familles, l'autre suit le produit — et une liste unique, même
+                bien espacée, invite à les lire comme une seule colonne de
+                chiffres. La séparation doit être visible, pas déduite. */}
+            <div className="cout-total__groupes">
+              <section className="cout-bulle">
+                <header className="cout-bulle__entete">
+                  <div className="cout-bulle__nom">
+                    Consommé par les familles
+                    <small>ce que les cours ont brûlé</small>
+                  </div>
+                  <strong className="cout-bulle__somme">
+                    {famillesDollars.toFixed(2)} $
+                  </strong>
+                </header>
+
+                <ul className="cout-bulle__lignes">
+                  <li>
+                    <span>
+                      Dialogue
+                      <small>mesuré sur {(cout?.tours ?? 0).toLocaleString('fr-FR')} tours de parole</small>
+                    </span>
+                    <strong>{(cout?.dialogueDollars ?? 0).toFixed(2)} $</strong>
+                  </li>
+                  <li>
+                    <span>
+                      Synthèse vocale
+                      <small>estimée d'après ces mêmes tours</small>
+                    </span>
+                    <strong>{(cout?.voixDollars ?? 0).toFixed(2)} $</strong>
+                  </li>
+                </ul>
+              </section>
+
+              <section className="cout-bulle">
+                <header className="cout-bulle__entete">
+                  <div className="cout-bulle__nom">
+                    Frais de fond
+                    <small>hors forfait des familles</small>
+                  </div>
+                  <strong className="cout-bulle__somme">
+                    {(cout?.tachesDeFondDollars ?? 0).toFixed(2)} $
+                  </strong>
+                </header>
+
+                <ul className="cout-bulle__lignes">
+                  {postes.length === 0 && (
+                    <li className="cout-bulle__vide">
+                      Aucun appel de fond sur la période.
+                    </li>
+                  )}
+                  {postes.map((poste) => (
+                    <li key={poste.origine}>
+                      <span>
+                        {LIBELLES_POSTES[poste.origine] ?? poste.origine}
+                        <small>
+                          {(poste.appels ?? 0).toLocaleString('fr-FR')} appel
+                          {(poste.appels ?? 0) > 1 ? 's' : ''}
+                        </small>
+                      </span>
+                      <strong>{(poste.dollars ?? 0).toFixed(2)} $</strong>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
           </div>
 
           {/* Le temps de cours, sous le coût : c'est ce qui le produit. Les
@@ -539,9 +765,15 @@ export default function Admin() {
   const {
     resume, serieRequetes, serieParents, serieEleves, serieAbonnements,
     parents, eleves, elevesTableau,
-    granularite, eleveFiltre, rechercheEleve, parentFiltre, loading, muting, error,
+    granularite, eleveFiltre, recherche, rechercheEleve, parentFiltre, loading, muting, error,
     fiche, ficheLoading, ficheError,
   } = useSelector((state) => state.admin);
+
+  // Les Modes ferment ou ouvrent le site pour tout le monde : ils restent au
+  // super-administrateur. Cacher l onglet n est PAS l autorisation — l API
+  // refuse ces routes de son côté ; c est seulement ne pas montrer une porte
+  // qu on n ouvrira pas.
+  const { estSuperAdmin } = useSelector((state) => state.auth);
 
   const [onglet, setOnglet] = useState('stats');
 
@@ -550,15 +782,71 @@ export default function Admin() {
   const [sousOnglet, setSousOnglet] = useState('messagerie');
   const [edition, setEdition] = useState(null);
 
-  const [saisieParents, setSaisieParents] = useSaisieDifferee((terme) =>
-    dispatch(rechercher(terme)),
+  /**
+   * Le compte dont on est en train de changer le rôle.
+   *
+   * Un identifiant plutôt qu'un booléen : c'est ce qui permet de n'attendre que
+   * sur la ligne cliquée, et pas sur toutes.
+   */
+  const [roleEnCours, setRoleEnCours] = useState(null);
+
+  const basculerAdministrateur = async (parent) => {
+    setRoleEnCours(parent.id);
+
+    try {
+      await definirAdministrateur(parent.id, !parent.estAdministrateur);
+
+      // On recharge plutôt que de retoucher la ligne à la main : le tableau
+      // porte une douzaine de chiffres dérivés, et en corriger un seul ferait
+      // diverger l'affichage de la base au premier oubli.
+      dispatch(chargerAdmin());
+    } catch {
+      // Silencieux à dessein : un droit non accordé se voit à la ligne qui n'a
+      // pas changé, et l'erreur globale du tableau de bord dit le reste.
+    } finally {
+      setRoleEnCours(null);
+    }
+  };
+
+  /**
+   * Le rangement du tableau des élèves.
+   *
+   * ICI ET NON DANS LE STORE : c'est une préférence d'affichage du moment, qui
+   * n'a pas à survivre à la visite — les filtres, eux, viennent tout juste
+   * d'être remis à plat au départ pour cette raison exacte.
+   *
+   * Le tri est fait dans le NAVIGATEUR parce que la liste y est déjà entière :
+   * la demander au serveur ajouterait un aller-retour pour ranger ce qu'on a
+   * déjà sous la main.
+   */
+  const [triEleves, setTriEleves] = useState({ colonne: 'activite', ascendant: false });
+
+  const elevesRanges = useMemo(
+    () => ranger(elevesTableau, triEleves.colonne, triEleves.ascendant),
+    [elevesTableau, triEleves],
   );
-  const [saisieEleves, setSaisieEleves] = useSaisieDifferee((terme) =>
-    dispatch(rechercherEleve(terme)),
+
+  const trierEleves = (colonne) => setTriEleves((actuel) => suivant(actuel, colonne));
+
+  const [saisieParents, setSaisieParents] = useSaisieDifferee(
+    (terme) => dispatch(rechercher(terme)), 350, recherche,
+  );
+  const [saisieEleves, setSaisieEleves] = useSaisieDifferee(
+    (terme) => dispatch(rechercherEleve(terme)), 350, rechercheEleve,
   );
 
   useEffect(() => {
     dispatch(chargerAdmin());
+
+    // ON REPART PROPRE À CHAQUE VISITE.
+    //
+    // Les filtres vivent dans le store et survivaient donc au démontage :
+    // quitter l'administration avec « ceo » en recherche, revenir, et un seul
+    // parent s'affichait — sans qu'aucun champ ne dise pourquoi.
+    //
+    // La remise à plat se fait AU DÉPART et non à l'arrivée : au montage, elle
+    // relancerait un chargement par-dessus celui de la ligne du dessus.
+    return () => { dispatch(reinitialiserFiltres()); };
   }, [dispatch]);
 
   /**
@@ -614,12 +902,6 @@ export default function Admin() {
     eleves: serieEleves[i]?.valeur ?? 0,
   }));
 
-  const serieCumul = serieParents.map((p, i) => ({
-    periode: p.periode,
-    parents: p.cumul,
-    eleves: serieEleves[i]?.cumul ?? 0,
-  }));
-
   // DEUX GRAPHIQUES ET NON UN SEUL, PARCE QU'IL Y A DEUX ÉCHELLES.
   //
   // Les abonnements actifs sont un STOCK : quelques dizaines, bientôt quelques
@@ -661,26 +943,25 @@ export default function Admin() {
 
       {error && <div className="alert">{error}</div>}
 
-      <div className="onglets">
-        {[
+      {/* HUIT SECTIONS : la rangée ne tient pas sur un téléphone. `Onglets`
+          la replie en menu déroulant sous 760 px, en gardant le nom de la
+          section courante sur le déclencheur — une barre d'onglets sert
+          autant à se situer qu'à naviguer. */}
+      <Onglets
+        etiquette="Sections"
+        actif={onglet}
+        onChoisir={setOnglet}
+        items={[
           { cle: 'stats', libelle: 'Statistiques' },
           { cle: 'frequentation', libelle: 'Fréquentation' },
           { cle: 'parents', libelle: `Parents (${parents.length})` },
           { cle: 'mails', libelle: 'Mails' },
           { cle: 'eleves', libelle: `Élèves (${eleves.length})` },
-          { cle: 'modes', libelle: 'Modes' },
+          { cle: 'avis', libelle: 'Avis' },
+          ...(estSuperAdmin ? [{ cle: 'modes', libelle: 'Modes' }] : []),
           { cle: 'schemas', libelle: 'Schémas' },
-        ].map((o) => (
-          <button
-            key={o.cle}
-            type="button"
-            className={`onglet ${onglet === o.cle ? 'onglet--actif' : ''}`}
-            onClick={() => setOnglet(o.cle)}
-          >
-            {o.libelle}
-          </button>
-        ))}
-      </div>
+        ]}
+      />
 
       {/* ------------------------------------------------------ statistiques */}
       {onglet === 'stats' && (
@@ -767,17 +1048,12 @@ export default function Admin() {
             type="barres"
           />
 
-          <Graphique
-            titre="Total cumulé"
-            description="Comptes existants à la fin de chaque période."
-            granularite={granularite}
-            series={[
-              { nom: 'Parents', cle: 'parents' },
-              { nom: 'Élèves', cle: 'eleves' },
-            ]}
-            donnees={serieCumul}
-            type="lignes"
-          />
+          {/* « TOTAL CUMULÉ » A ÉTÉ RETIRÉ.
+              Il redisait la même chose que « nouveaux comptes par période » :
+              sur un produit où personne ne se désinscrit encore, la courbe
+              cumulée est l addition des barres du dessus. Deux graphiques pour
+              une seule information, et le second occupait la place sans jamais
+              rien apprendre que le premier ne montrait déjà. */}
 
           <Graphique
             titre="Abonnements actifs"
@@ -818,6 +1094,9 @@ export default function Admin() {
           pour l'autre. */}
       {onglet === 'frequentation' && <Frequentation />}
 
+      {/* ------------------------------------------------------------- avis */}
+      {onglet === 'avis' && <RelectureAvis />}
+
       {/* ------------------------------------------------------------ mails */}
       {onglet === 'mails' && (
         <>
@@ -826,24 +1105,32 @@ export default function Admin() {
               très différents — l'un se fait tous les jours, l'autre trois
               fois par an — mais ils vivent au même endroit dans la tête :
               « mes mails ». Les séparer en haut ferait chercher. */}
-          <div className="onglets onglets--secondaires">
-            {[
+          <Onglets
+            mini
+            etiquette="Courrier"
+            actif={sousOnglet}
+            onChoisir={setSousOnglet}
+            items={[
               { cle: 'messagerie', libelle: 'Messagerie' },
               { cle: 'diffusion', libelle: 'Message de diffusion' },
-            ].map((o) => (
-              <button
-                key={o.cle}
-                type="button"
-                className={`onglet onglet--mini ${sousOnglet === o.cle ? 'onglet--actif' : ''}`}
-                onClick={() => setSousOnglet(o.cle)}
-              >
-                {o.libelle}
-              </button>
-            ))}
-          </div>
+
+              // TROISIÈME PARCE QUE C'EST LE PLUS RARE, mais au même
+              // endroit que les deux autres : c'est une prise de parole,
+              // pas un réglage. On la cherche là où on écrit aux gens.
+              { cle: 'information', libelle: 'Message d’information' },
+
+              // Le seul des quatre qui ne soit pas du texte : un visuel
+              // de campagne. Il reste ici parce que c'est le même geste —
+              // dire quelque chose à tout le monde — et qu'on le cherche
+              // là où on écrit aux gens, pas dans les interrupteurs.
+              { cle: 'promo', libelle: 'Bandeau promo' },
+            ]}
+          />
 
           {sousOnglet === 'messagerie' && <Messagerie />}
           {sousOnglet === 'diffusion' && <Diffusion nombreParents={parents.length} />}
+          {sousOnglet === 'information' && <MessageInformation />}
+          {sousOnglet === 'promo' && <PromosAdmin />}
         </>
       )}
 
@@ -851,6 +1138,8 @@ export default function Admin() {
       {onglet === 'parents' && (
         <>
           <CoutTotal />
+
+          <FichierClients />
 
           <div className="filtres">
             <input
@@ -883,6 +1172,13 @@ export default function Admin() {
                   <th scope="col">Ce qu'il a coûté</th>
                   <th scope="col">Requêtes</th>
                   <th scope="col">Inscrit le</th>
+                  {/* DEUX COLONNES VOISINES QUI NE DISENT PAS LA MÊME CHOSE.
+                      « Dernière connexion » est celle du PARENT ; « dernière
+                      activité » celle de ses ENFANTS. Un enfant qui travaille
+                      tous les jours pendant que son parent n a rien ouvert
+                      depuis deux mois est un désabonnement qui se prépare, et
+                      rien ne le montrait tant qu on ne lisait qu une colonne. */}
+                  <th scope="col">Dernière connexion</th>
                   <th scope="col">Dernière activité</th>
                   <th scope="col" />
                 </tr>
@@ -904,11 +1200,58 @@ export default function Admin() {
                     <td className="num">{p.nombreRequetes.toLocaleString('fr-FR')}</td>
                     <td>{new Date(p.dateCreation).toLocaleDateString('fr-FR')}</td>
                     <td>
+                      {/* Le tiret est la bonne réponse pour un parent qui n est
+                          pas revenu depuis l ajout de la colonne : on n invente
+                          pas un passé qu on n a pas mesuré. */}
+                      {p.derniereConnexion
+                        ? new Date(p.derniereConnexion).toLocaleDateString('fr-FR')
+                        : '—'}
+                    </td>
+                    <td>
                       {p.derniereActivite
                         ? new Date(p.derniereActivite).toLocaleDateString('fr-FR')
                         : '—'}
                     </td>
                     <td className="actions">
+                      {/* LE DROIT D'ADMINISTRER, ET SEUL LE SUPER-ADMINISTRATEUR
+                          LE VOIT. Un administrateur qui pourrait promouvoir se
+                          donnerait un successeur, puis pourrait être retiré sans
+                          perdre la main. L'API refuse cette route de son côté :
+                          l'absence du bouton n'est pas la protection.
+
+                          Le changement ne prend effet qu'à la PROCHAINE
+                          CONNEXION du parent — son rôle voyage dans un jeton
+                          signé, qu'on ne réécrit pas à distance. */}
+                      {/* LE COMPTE SUPER-ADMINISTRATEUR NE SE TOUCHE PAS.
+                          Son rôle vient de la configuration du serveur, pas
+                          de la base : il n'y a rien à basculer ici, et une
+                          étiquette le dit mieux qu’un bouton grisé. */}
+                      {estSuperAdmin && p.estSuperAdministrateur && (
+                        <span className="badge badge--discret" title="Rôle défini dans la configuration du serveur.">
+                          Super-admin
+                        </span>
+                      )}
+                      {estSuperAdmin && !p.estSuperAdministrateur && (
+                        <button
+                          type="button"
+                          className={`btn-ghost btn-ghost--mini ${
+                            p.estAdministrateur ? 'btn-ghost--accent' : ''
+                          }`}
+                          disabled={roleEnCours === p.id}
+                          onClick={() => basculerAdministrateur(p)}
+                          title={
+                            p.estAdministrateur
+                              ? "Retirer l'accès à l'administration"
+                              : "Donner l'accès à l'administration"
+                          }
+                        >
+                          {roleEnCours === p.id
+                            ? '…'
+                            : p.estAdministrateur
+                              ? 'Administrateur'
+                              : 'Utilisateur'}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="btn-ghost btn-ghost--mini"
@@ -943,6 +1286,12 @@ export default function Admin() {
                       <button
                         type="button"
                         className="btn-ghost btn-ghost--mini"
+                        disabled={p.estSuperAdministrateur}
+                        title={
+                          p.estSuperAdministrateur
+                            ? "Le compte super-administrateur ne peut pas être modifié : son adresse porte le rôle."
+                            : undefined
+                        }
                         onClick={() =>
                           setEdition({
                             operation: 'modifierParent',
@@ -955,6 +1304,15 @@ export default function Admin() {
                       >
                         Modifier
                       </button>
+                      {/* PAS DE BOUTON GRISÉ POUR LE SUPER-ADMINISTRATEUR : il
+                          n'y a rien à lui expliquer, ce compte ne se supprime
+                          jamais. Un bouton désactivé se lit comme une
+                          permission manquante — donc comme quelque chose qu'on
+                          pourrait obtenir — là où c'est une règle définitive.
+
+                          L'API refuse cette route de son côté ; l'absence du
+                          bouton ne fait que ne pas montrer une porte murée. */}
+                      {!p.estSuperAdministrateur && (
                       <button
                         type="button"
                         className="btn-ghost btn-ghost--mini btn-ghost--danger"
@@ -963,13 +1321,18 @@ export default function Admin() {
                           confirmerSuppression(
                             'supprimerParent',
                             p.id,
-                            `le compte ${p.mail} et ses ${p.nombreEleves} profil(s)`,
+                            `le compte ${p.mail} et ses ${p.nombreEleves} profil(s)${
+                              p.formule
+                                ? `, en résiliant son abonnement ${p.formule} chez Stripe`
+                                : ''
+                            }`,
                             p.mail,
                           )
                         }
                       >
                         Supprimer
                       </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1014,17 +1377,17 @@ export default function Admin() {
               <tr>
                 <th scope="col">Prénom</th>
                 <th scope="col">Nom</th>
-                <th scope="col">Classe</th>
-                <th scope="col">Âge</th>
-                <th scope="col">Fille / Garçon</th>
+                <ColonneTriable libelle="Classe" colonne="classe" tri={triEleves} onTrier={trierEleves} />
+                <ColonneTriable libelle="Âge" colonne="age" tri={triEleves} onTrier={trierEleves} aDroite />
+                <ColonneTriable libelle="Fille / Garçon" colonne="sexe" tri={triEleves} onTrier={trierEleves} />
                 <th scope="col">Compte parent</th>
-                <th scope="col">Requêtes</th>
-                <th scope="col">Dernière activité</th>
+                <ColonneTriable libelle="Requêtes" colonne="requetes" tri={triEleves} onTrier={trierEleves} aDroite />
+                <ColonneTriable libelle="Dernière activité" colonne="activite" tri={triEleves} onTrier={trierEleves} />
                 <th scope="col" />
               </tr>
             </thead>
             <tbody>
-              {elevesTableau.map((e) => (
+              {elevesRanges.map((e) => (
                 <tr key={e.id}>
                   <td>{e.prenom}</td>
                   <td>{e.nom || '—'}</td>

@@ -75,7 +75,10 @@ export default function Navbar() {
               le service n'est pas ouvert, et une grille visible sans moyen de
               souscrire ne fait que promettre dans le vide. */}
           {!modeTest && (
-            <Link to="/tarifs" className="btn-ghost navbar__lien-direct">
+            <Link
+              to="/tarifs"
+              className="btn-ghost navbar__lien-direct navbar__lien-direct--tarifs"
+            >
               Tarifs
             </Link>
           )}
