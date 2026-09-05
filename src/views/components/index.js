@@ -8,6 +8,7 @@ import {
   ListeEleves,
   FormulaireEleve,
   GrilleMatieres,
+  Progression,
   Chat,
   Fiches,
   Fiche,
@@ -117,6 +118,19 @@ export const BaseApp = () => {
               </RouteProtegee>
             }
           />
+          {/* LA CARTE DE L’ENFANT, sur le même chemin que ses matières :
+              c’est son espace à lui, et la garde de route est la même —
+              un enfant ne peut ouvrir que la sienne, un parent celles de
+              ses enfants. */}
+          <Route
+            path="/eleves/:eleveId/progression"
+            element={
+              <RouteProtegee>
+                <Progression />
+              </RouteProtegee>
+            }
+          />
+
           <Route
             path="/eleves/:eleveId/matieres"
             element={

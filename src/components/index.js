@@ -34,3 +34,4 @@ export { default as TousLesAvis } from './TousLesAvis';
 export { default as BandeauInfo } from './BandeauInfo';
 export { default as BandeauPromo } from './BandeauPromo';
 export { default as CompteARebours } from './CompteARebours';
+export { default as Progression } from './Progression';

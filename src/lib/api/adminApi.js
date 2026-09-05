@@ -419,3 +419,21 @@ export const urlPieceJointeMessage = (id, nom) =>
  * texte par planche, aucune lecture d'image repayée.
  */
 export const requalifierPlanches = () => httpClient.post('/planches/requalifier');
+
+/**
+ * Le détail d'un compte rendu, et la copie d'une évaluation, VUS PAR
+ * L'ADMINISTRATION.
+ *
+ * Ils doublent les routes de l'espace parent, et c'est nécessaire : celles-là
+ * vérifient d'abord que l'enfant appartient au parent du jeton. Un
+ * administrateur consultant une autre famille échouait à cette garde — la
+ * liste des séances s'affichait, le bouton « Voir le rapport » renvoyait 404.
+ *
+ * La garde n'est pas levée, elle est remplacée par la bonne : l'autorisation
+ * d'administrateur sur le contrôleur, et le filtre sur l'élève dans la requête.
+ */
+export const getRapportEleve = (eleveId, rapportId) =>
+  httpClient.get(`/admin/eleves/${eleveId}/rapports/${rapportId}`);
+
+export const getCopieEleve = (eleveId, evaluationId) =>
+  httpClient.get(`/admin/eleves/${eleveId}/evaluations/${evaluationId}/copie`);

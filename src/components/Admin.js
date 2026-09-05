@@ -21,6 +21,8 @@ import {
   definirAdministrateur,
   getRepartitionParents,
   bannirParent,
+  getRapportEleve,
+  getCopieEleve,
 } from '../lib/api/adminApi';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
@@ -1502,6 +1504,8 @@ export default function Admin() {
           avecApercuBilan
           chargerEvaluations={getHistoriqueEvaluations}
           chargerRapports={getHistoriqueRapports}
+          chargerRapport={getRapportEleve}
+          chargerCopie={getCopieEleve}
         />
       )}
 

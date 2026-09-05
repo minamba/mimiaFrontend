@@ -9,7 +9,28 @@ export const getEleveById = (id) => httpClient.get(`/eleves/${id}`);
  * Le serveur vérifie que l'élève est bien rattaché au compte du jeton avant
  * de renvoyer quoi que ce soit.
  */
-export const getFicheEleve = (id) => httpClient.get(`/eleves/${id}/fiche`);
+/**
+ * `niveau` réduit TOUTE la fiche à une année scolaire — cours suivis, réponses
+ * du professeur, dernier cours, statistiques par matière, points fragiles,
+ * compétences acquises, progression, évaluations et séances.
+ *
+ * Le filtre est appliqué en base et non ici : les évaluations et les séances
+ * sont paginées côté serveur, et filtrer une tranche de dix lignes afficherait
+ * « aucune » à un élève qui en a trente.
+ */
+export const getFicheEleve = (id, niveau = null) =>
+  httpClient.get(`/eleves/${id}/fiche`, { params: niveau ? { niveau } : undefined });
+
+/**
+ * La carte des compétences de l'enfant.
+ *
+ * APPELÉE UNE FOIS PAR OUVERTURE, et ce n'est pas anodin : quand c'est
+ * l'ENFANT qui appelle, le serveur avance sa date de dernière visite et
+ * les victoires listées ne reparaîtront plus. Un appel en double — un
+ * effet qui se rejoue, un rechargement — lui volerait sa fanfare.
+ */
+export const getProgression = (eleveId) =>
+  httpClient.get(`/eleves/${eleveId}/progression`);
 
 /** Les évaluations d'un enfant, la plus récente d'abord. */
 export const getEvaluations = (eleveId) =>

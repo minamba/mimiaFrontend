@@ -63,6 +63,11 @@ const SCIENCES = [
   { cle: 'sc-objet-technique', titre: 'Les fonctions d’un objet technique', niveau: '6e' },
   { cle: 'sc-cycle-vie-objet', titre: 'Le cycle de vie d’un objet', niveau: '6e' },
   { cle: 'sc-levier', titre: 'Le levier et le point d’appui', niveau: '6e' },
+  { cle: 'sc-thermometre', titre: 'Lire un thermomètre', niveau: 'CP' },
+  { cle: 'sc-balance-masse', titre: 'Comparer des masses avec une balance', niveau: 'CP' },
+  { cle: 'sc-types-mouvement', titre: 'Les différents types de mouvement', niveau: 'CM1' },
+  { cle: 'sc-signal-information', titre: 'D’un signal à une information', niveau: 'CM1' },
+  { cle: 'sc-terre-active', titre: 'La Terre, une planète active', niveau: 'CM1' },
 ];
 
 /**
@@ -107,6 +112,13 @@ const PHYSIQUE_CHIMIE = [
   { cle: 'pc-diffraction-interferences', titre: 'Diffraction et interférences', niveau: 'Tle' },
   { cle: 'pc-effet-doppler', titre: 'L’effet Doppler', niveau: 'Tle' },
   { cle: 'pc-lunette-astronomique', titre: 'Une lunette astronomique', niveau: 'Tle' },
+  { cle: 'pc-signal-information', titre: 'D’un signal à une information', niveau: '5e' },
+  { cle: 'pc-echelles-univers', titre: 'Du kilomètre à l’année-lumière', niveau: '4e' },
+  { cle: 'pc-effet-de-serre', titre: 'L’effet de serre', niveau: '3e' },
+  { cle: 'pc-transformation-nucleaire', titre: 'Une transformation nucléaire', niveau: '2de' },
+  { cle: 'pc-capteur', titre: 'Le principe d’un capteur', niveau: '2de' },
+  { cle: 'pc-pression-fluide', titre: 'La pression dans un fluide au repos', niveau: '1re' },
+  { cle: 'pc-synthese-organique', titre: 'Les étapes d’une synthèse organique', niveau: 'Tle' },
 ];
 
 /**
@@ -145,6 +157,21 @@ const MATHS = [
   { cle: 'math-exponentielle-logarithme', titre: 'Les courbes de l’exponentielle et du logarithme', niveau: 'Tle' },
   { cle: 'math-integrale-aire', titre: 'L’intégrale comme aire sous la courbe', niveau: 'Tle' },
   { cle: 'math-loi-normale', titre: 'La courbe de la loi normale', niveau: 'Tle' },
+  { cle: 'math-schema-barres', titre: 'Le schéma en barres pour modéliser un problème', niveau: 'CP' },
+  { cle: 'math-solides-usuels', titre: 'Les solides usuels : cube, pavé, boule, cylindre', niveau: 'CP' },
+  { cle: 'math-monnaie', titre: 'Les pièces et les billets en euros', niveau: 'CP' },
+  { cle: 'math-fraction-tout', titre: 'La fraction, une part d’un tout', niveau: 'CE1' },
+  { cle: 'math-diagramme-barres', titre: 'Le diagramme en barres', niveau: 'CE1' },
+  { cle: 'math-bande-unite', titre: 'Placer une fraction sur une bande-unité graduée', niveau: 'CE2' },
+  { cle: 'math-contenances', titre: 'Les unités de contenance, du millilitre à l’hectolitre', niveau: 'CM1' },
+  { cle: 'math-angles-comparer', titre: 'Comparer des angles', niveau: 'CM1' },
+  { cle: 'math-tableau-proportionnalite', titre: 'Le tableau de proportionnalité', niveau: 'CM1' },
+  { cle: 'math-probabilites-issues', titre: 'Les issues d’une expérience aléatoire', niveau: 'CM1' },
+  { cle: 'math-nombre-inconnu', titre: 'Représenter un nombre inconnu', niveau: 'CM2' },
+  { cle: 'math-ensembles', titre: 'Appartenance, inclusion, réunion, intersection', niveau: '2de' },
+  { cle: 'math-taux-evolution', titre: 'Taux d’évolution, taux successifs et taux réciproque', niveau: '1re' },
+  { cle: 'math-nuage-ajustement', titre: 'Le nuage de points et son ajustement affine', niveau: '1re' },
+  { cle: 'math-lineaire-exponentiel', titre: 'Croissance linéaire et croissance exponentielle', niveau: '1re' },
 ];
 
 /**
@@ -174,6 +201,7 @@ const FRANCAIS = [
   { cle: 'fr-espace-theatral', titre: 'L’espace théâtral', niveau: '2de' },
   { cle: 'fr-registres', titre: 'Les registres littéraires', niveau: '2de' },
   { cle: 'fr-plan-dissertation', titre: 'Le plan d’une dissertation', niveau: '1re' },
+  { cle: 'fr-synonymes-antonymes', titre: 'Synonymes, antonymes et familles de mots', niveau: 'CM1' },
 ];
 
 /**
@@ -224,6 +252,13 @@ const HISTOIRE_GEO = [
   { cle: 'hg-metropolisation', titre: 'La métropolisation', niveau: '1re' },
   { cle: 'hg-zee-france', titre: 'La zone économique exclusive française', niveau: 'Tle' },
   { cle: 'hg-puissances-mondiales', titre: 'Les puissances dans le monde d’aujourd’hui', niveau: 'Tle' },
+  { cle: 'hg-empires-xvie', titre: 'Le monde au temps de Charles Quint et de Soliman', niveau: '5e' },
+  { cle: 'hg-etats-unis-territoire', titre: 'Le territoire des États-Unis et la mondialisation', niveau: '4e' },
+  { cle: 'hg-afrique-ensembles', titre: 'Les grands ensembles géographiques africains', niveau: '4e' },
+  { cle: 'hg-unification-nations', titre: 'L’unification de l’Italie et de l’Allemagne', niveau: '1re' },
+  { cle: 'hg-europe-1919', titre: 'L’Europe redessinée par les traités de 1919', niveau: '1re' },
+  { cle: 'hg-crise-1929', titre: 'La crise de 1929 et sa propagation', niveau: 'Tle' },
+  { cle: 'hg-elargissements-ue', titre: 'Les élargissements successifs de l’Union européenne', niveau: 'Tle' },
 ];
 
 /**
@@ -247,6 +282,9 @@ const ANGLAIS = [
   { cle: 'an-modaux', titre: 'Les auxiliaires modaux', niveau: '4e' },
   { cle: 'an-institutions-uk', titre: 'Les institutions britanniques', niveau: '2de' },
   { cle: 'an-institutions-us', titre: 'Les institutions américaines', niveau: '2de' },
+  { cle: 'an-pronoms', titre: 'Les pronoms personnels, possessifs et réfléchis', niveau: '6e' },
+  { cle: 'an-irlande', titre: 'L’Irlande : repères géographiques et historiques', niveau: '4e' },
+  { cle: 'an-commonwealth', titre: 'Le Commonwealth et ses membres', niveau: '2de' },
 ];
 
 /**
@@ -255,6 +293,21 @@ const ANGLAIS = [
  * La SVT n'y figure pas : ses figures viennent de `schemasSvt.js`, où elles
  * portent en plus leur dessin.
  */
+
+/**
+ * SVT — les quelques planches qu’un dessin ne remplace pas.
+ *
+ * Les trente-huit figures de `schemasSvt.js` sont dessinées et s’affichent
+ * sans rien importer. Les quatre ci-dessous ne le peuvent pas : une échelle
+ * des temps géologiques ou un cycle de transmission tracés au trait seraient
+ * faux, et une figure fausse est pire que pas de figure.
+ */
+const SVT = [
+  { cle: 'svt-temps-geologiques', titre: 'L’échelle des temps géologiques', niveau: '4e' },
+  { cle: 'svt-planetes', titre: 'Planètes telluriques et planètes gazeuses', niveau: '4e' },
+  { cle: 'svt-cycle-vectoriel', titre: 'Le cycle de transmission d’une maladie vectorielle', niveau: '2de' },
+  { cle: 'svt-enzyme', titre: 'L’action d’une enzyme sur son substrat', niveau: '1re' },
+];
 export const EMPLACEMENTS = [
   ...SCIENCES,
   ...PHYSIQUE_CHIMIE,
@@ -262,4 +315,5 @@ export const EMPLACEMENTS = [
   ...FRANCAIS,
   ...HISTOIRE_GEO,
   ...ANGLAIS,
+  ...SVT,
 ];

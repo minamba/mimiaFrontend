@@ -26,19 +26,30 @@ export default function PageEleve() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
 
+  // L'ANNÉE REGARDÉE. `null` = celle en cours, que le serveur choisit.
+  //
+  // Le changement RECHARGE la fiche au lieu de filtrer ce qui est déjà là :
+  // les évaluations et les séances arrivent par tranches de dix, et filtrer
+  // une tranche déjà chargée montrerait « aucune évaluation en 4e » à un élève
+  // qui en a vingt, simplement parce qu'aucune ne figure dans les dix
+  // dernières.
+  const [niveau, setNiveau] = useState(null);
+
+  useEffect(() => { setNiveau(null); }, [eleveId]);
+
   const charger = useCallback(async () => {
     setChargement(true);
     setErreur(null);
 
     try {
-      const { data } = await getFicheEleve(eleveId);
+      const { data } = await getFicheEleve(eleveId, niveau);
       setFiche(data);
     } catch {
       setErreur("Impossible de charger la fiche de votre enfant.");
     } finally {
       setChargement(false);
     }
-  }, [eleveId]);
+  }, [eleveId, niveau]);
 
   useEffect(() => {
     charger();
@@ -56,6 +67,8 @@ export default function PageEleve() {
         chargement={chargement}
         erreur={erreur}
         onFermer={() => navigate('/profil')}
+        niveau={niveau}
+        onNiveau={setNiveau}
         chargerEvaluations={getHistoriqueEvaluations}
         chargerRapports={getHistoriqueRapports}
       />

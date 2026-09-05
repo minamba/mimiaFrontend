@@ -12073,3 +12073,427 @@ h1, h2, h3 {
   font-weight: 500;
   color: var(--encre);
 }
+
+/* ============================================ la carte des compétences
+
+   L'écran de l'enfant : pas de note, pas de pourcentage par notion, aucune
+   comparaison. Trois états et un compteur.
+
+   BLOC `parcours` ET NON `carte`. `.carte` et `.progression` existent déjà
+   dans cette feuille, la première comme une carte HORIZONTALE
+   (`display: flex; align-items: center`). En hériter avait rangé toutes les
+   matières côte à côte en colonnes illisibles, et six classes entraient en
+   collision — dont `carte__corps` et `carte__meta`. Un nom de bloc se
+   vérifie avant d'être choisi. */
+.parcours { max-width: 760px; }
+
+.parcours__retour { margin-bottom: 14px; }
+
+/* LE CHIFFRE EN GRAND, PARCE QUE C'EST CE QU'ON VIENT CHERCHER. Le détail
+   par matière vient après, et c'est le bon ordre : « combien j'en ai »
+   d'abord, « où » ensuite. */
+.parcours__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 24px;
+  padding: 26px 24px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+  text-align: center;
+}
+
+.parcours__score > strong {
+  font-family: var(--display);
+  font-size: clamp(46px, 10vw, 68px);
+  line-height: 1;
+  color: var(--serie-2);
+}
+
+.parcours__score > span { font-size: 15px; color: var(--encre); }
+
+.parcours__score small { font-size: 12.5px; color: var(--encre-douce); }
+
+.parcours__jauge {
+  width: 100%;
+  max-width: 300px;
+  height: 10px;
+  margin: 14px 0 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.parcours__jauge > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--serie-2);
+
+  /* La barre pousse au chargement : le mouvement dit « ça a bougé » mieux
+     qu'un nombre posé. Coupé pour qui a demandé moins d'animation. */
+  transition: width 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ------------------------------------------------------------ la fanfare
+
+   Le seul moment de récompense du produit. Il ne se déclenche qu'après un
+   gain réel, et une seule fois : le serveur avance la date de dernière
+   visite en le servant. Une récompense qui se rejoue à chaque ouverture
+   cesse d'en être une. */
+.parcours__fanfare {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--serie-2) 45%, transparent);
+  border-radius: var(--rayon-l);
+  background: color-mix(in srgb, var(--serie-2) 12%, var(--surface));
+  animation: fanfare 500ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes fanfare {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.parcours__fanfare-icone { flex: 0 0 auto; font-size: 26px; line-height: 1.2; }
+
+/* Désarme le minimum automatique du flex : sans lui, un libellé long refuse
+   de se couper et pousse la croix hors du cadre. */
+.parcours__fanfare-texte { flex: 1 1 auto; min-width: 0; }
+
+.parcours__fanfare-texte strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--encre);
+}
+
+.parcours__fanfare-texte ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+.parcours__fanfare-texte p {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+}
+
+.parcours__fanfare-fermer {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--encre-douce);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------- les matières
+
+   REPLIABLES. Un collégien a plus de cent notions : dépliées, elles font un
+   mur où l'on ne trouve rien. Seules celles qui portent déjà un acquis
+   s'ouvrent — les réussites sous les yeux, le reste au repos. */
+.parcours__matiere {
+  margin-bottom: 12px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.parcours__matiere > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  font-size: 15px;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Le marqueur natif change de dessin d'un navigateur à l'autre, et Safari le
+   place ailleurs. On le retire ; la pastille de couleur tient le rôle. */
+.parcours__matiere > summary::-webkit-details-marker { display: none; }
+
+.parcours__matiere > summary strong { color: var(--encre); }
+
+.parcours__pastille {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--encre-douce);
+}
+
+.parcours__compte {
+  margin-left: auto;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--encre-douce);
+}
+
+/* Une jauge minuscule dans l'en-tête : elle dit l'avancement de la matière
+   sans qu'on ait à la déplier. */
+.parcours__mini {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.parcours__mini > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--serie-2);
+}
+
+.parcours__domaine { padding: 0 18px 14px; }
+
+.parcours__domaine-nom {
+  display: block;
+  margin: 10px 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.parcours__notions { margin: 0; padding: 0; list-style: none; }
+
+/* UNE GRILLE, ET NON UN FLEX, POUR QUE LES COLONNES TOMBENT DROIT.
+   En flex, chaque cellule prend la largeur de son contenu : le badge
+   « Histoire-Géographie » est deux fois plus large qu'« Anglais », donc la
+   colonne d'état se décalait d'une ligne à l'autre. Une grille fixe les
+   gouttières une fois pour toutes et l'œil descend la colonne d'un trait. */
+.parcours__notion {
+  display: grid;
+  grid-template-columns: 9px 1fr 88px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+/* Les années précédentes portent en plus le nom de la matière : une colonne
+   de quatre. Sa largeur est celle du plus long libellé — « Histoire-
+   Géographie » — pour qu'aucun badge ne déborde ni ne se tronque. */
+.parcours__avant .parcours__notion {
+  grid-template-columns: 9px 1fr 88px 136px;
+}
+
+.parcours__libelle { flex: 1 1 auto; min-width: 0; }
+
+/* UNE PASTILLE ET UNE GRAISSE, JAMAIS LA COULEUR SEULE. Un enfant daltonien
+   — un garçon sur douze — ne distinguerait pas le vert du gris. Deux signaux
+   par état : la forme de la puce ET l'épaisseur du texte. */
+.parcours__puce {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--trait);
+}
+
+.parcours__notion.est-acquise { color: var(--encre); font-weight: 600; }
+.parcours__notion.est-acquise .parcours__puce { background: var(--serie-2); }
+
+.parcours__notion.est-en-cours { color: var(--encre); }
+.parcours__notion.est-en-cours .parcours__puce {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--serie-2);
+}
+
+/* TRAVAILLÉE, MAIS QUI NE TIENT PAS ENCORE. Distincte de « à découvrir » :
+   même score bas, sens opposé. Un enfant qui vient de passer quatre séances
+   sur les fractions ne doit pas lire « tu n'as pas encore travaillé ça ».
+   La puce est PLEINE — il y a bien eu du travail — mais dans le ton du
+   travail en cours, pas de la réussite. */
+.parcours__notion.est-fragile { color: var(--encre); }
+.parcours__notion.est-fragile .parcours__puce {
+  background: var(--serie-3);
+}
+
+.parcours__notion.est-a-decouvrir { color: var(--encre-douce); }
+
+/* Le niveau d'une notion qui n'est pas de l'année en cours. Discret : c'est
+   une précision, pas un jugement — surtout pas « tu es en retard ». */
+.parcours__niveau {
+  /* Sans lui, la cellule de grille étirerait la pastille sur toute sa largeur :
+     « Anglais » deviendrait un badge de cent trente-six pixels aux trois quarts
+     vides. Elle épouse son texte, et c'est le bord GAUCHE des pastilles qui
+     s'aligne — le seul alignement qui se voie quand les mots sont de longueurs
+     différentes. */
+  justify-self: start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.parcours__note {
+  margin: 22px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+/* Le lien vers la carte, sur l'écran où l'enfant arrive. */
+.lien-carte {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--contour);
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: var(--encre);
+  text-decoration: none;
+}
+
+.lien-carte:hover { border-color: var(--serie-2); color: var(--serie-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .parcours__jauge > span { transition: none; }
+  .parcours__fanfare { animation: none; }
+}
+
+@media (max-width: 560px) {
+  .parcours__matiere > summary { flex-wrap: wrap; gap: 8px 10px; padding: 13px 14px; }
+  .parcours__mini { width: 100%; }
+  .parcours__domaine { padding: 0 14px 12px; }
+}
+
+/* ============================================ les classes de la progression
+
+   UNE CLASSE À LA FOIS. La fiche empilait les notions du CP à l'année en
+   cours dans une même liste : sur un suivi de niveau, ça ne veut rien dire.
+   L'année en cours s'ouvre par défaut, les précédentes restent à côté — rien
+   n'est perdu au passage dans la classe supérieure, et c'est visible. */
+.classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.classes__onglet {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border: 1px solid var(--contour);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13.5px;
+  color: var(--encre-douce);
+  cursor: pointer;
+}
+
+.classes__onglet:hover { border-color: var(--serie-2); color: var(--encre); }
+
+/* L'onglet actif porte SA COULEUR ET SON POIDS, pas seulement sa couleur :
+   distinguer deux pastilles par la seule teinte laisserait un parent
+   daltonien sans repère. */
+.classes__onglet.est-actif {
+  border-color: var(--serie-2);
+  background: color-mix(in srgb, var(--serie-2) 12%, var(--surface));
+  color: var(--encre);
+  font-weight: 600;
+}
+
+/* « en cours » plutôt qu'une pastille muette : le mot dit lequel des onglets
+   est l'année de l'enfant, y compris quand il n'est pas sélectionné. */
+.classes__encours {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--serie-2);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--surface);
+}
+
+/* Employée par quatre écrans et stylée par aucun jusqu'ici : les paragraphes
+   « rien à afficher » sortaient en corps de texte plein, comme une phrase
+   ordinaire. Une absence se dit en retrait. */
+.etat-vide {
+  margin: 12px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+/* --------------------------------- ce qui a été consolidé avant
+
+   SÉPARÉ DU PROGRAMME DE L'ANNÉE. Une carte titrée « programme de 3e » qui
+   listait des notions de CM1 additionnait deux choses différentes dans un
+   même compteur. Mais ces notions ne disparaissent pas : la méthode du
+   produit est de chercher où ça bloque, donc en amont, et pour un élève en
+   difficulté ce sont souvent ses SEULS acquis. Les masquer afficherait zéro
+   à celui qui a le plus besoin d'être encouragé. */
+.parcours__avant { margin-top: 28px; }
+
+.parcours__avant-titre {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+/* --------------------------------------- l'état, écrit en toutes lettres
+
+   UNE PASTILLE DE COULEUR NE SE DEVINE PAS. Elle sépare bien les états d'un
+   coup d'œil, mais elle ne dit pas lequel est lequel : un enfant qui ouvre sa
+   carte n'a aucune légende sous les yeux. Et ce qui n'est porté que par la
+   couleur est perdu pour un enfant daltonien — un garçon sur douze.
+
+   Largeur FIXE : les mots s'alignent en colonne au lieu de flotter au bout de
+   libellés de longueurs différentes, et l'œil descend la colonne d'un trait. */
+.parcours__etat {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--encre-douce);
+}
+
+/* La couleur REDIT ce que le mot dit déjà — elle ne le remplace pas. */
+.parcours__notion.est-acquise .parcours__etat { color: var(--serie-2); }
+.parcours__notion.est-en-cours .parcours__etat { color: var(--serie-2); }
+.parcours__notion.est-fragile .parcours__etat { color: var(--serie-3); }
+
+@media (max-width: 560px) {
+  /* Sur mobile la ligne se replie : le mot passe sous le libellé plutôt que
+     de l'écraser à trois caractères de large. */
+  /* Sur mobile, deux colonnes suffisent : l'état et la matière passent sous
+     le libellé plutôt que d'être écrasés à trois caractères de large. */
+  .parcours__notion,
+  .parcours__avant .parcours__notion {
+    grid-template-columns: 9px 1fr;
+    row-gap: 3px;
+  }
+
+  .parcours__etat,
+  .parcours__avant .parcours__niveau {
+    grid-column: 2;
+    justify-self: start;
+    width: auto;
+    text-align: left;
+  }
+}

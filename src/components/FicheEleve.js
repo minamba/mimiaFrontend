@@ -290,6 +290,12 @@ export default function FicheEleve({
   // recevrait un 403. Le bouton n'apparaît donc que pour l'administrateur.
   avecApercuBilan = false,
 
+  // L.année regardée, et le moyen d.en changer. Absents côté administration
+  // tant qu.elle ne recharge pas la fiche : un onglet qui ne fait rien vaut
+  // moins que pas d.onglet.
+  niveau = null,
+  onNiveau = null,
+
   /**
    * Rendue en pleine page plutôt qu'en fenêtre.
    *
@@ -318,6 +324,20 @@ export default function FicheEleve({
    */
   chargerEvaluations,
   chargerRapports,
+
+  // L'OUVERTURE DU DÉTAIL SE PARAMÈTRE AUSSI, comme les listes juste au-dessus.
+  //
+  // Elle était importée en dur depuis `elevesApi` : la fiche appelait donc
+  // toujours la route PARENT, qui commence par vérifier que l'enfant appartient
+  // au parent du jeton. Côté administration, la liste des séances s'affichait
+  // — elle, était injectée — mais « Voir le rapport » renvoyait 404. Le
+  // symptôme désignait mal sa cause : on cherchait un rapport manquant, c'était
+  // un contrôle d'accès.
+  //
+  // Par défaut, les routes parent : c'est le cas le plus courant, et l'espace
+  // parent n'a rien à passer.
+  chargerRapport = getRapport,
+  chargerCopie = getCopieEvaluation,
 }) {
   const [apercuEnCours, setApercuEnCours] = useState(false);
 
@@ -351,7 +371,7 @@ export default function FicheEleve({
     setCopieErreur(null);
 
     try {
-      const { data } = await getCopieEvaluation(fiche.id, evaluationId);
+      const { data } = await chargerCopie(fiche.id, evaluationId);
       setCopie(data);
     } catch {
       setCopieErreur("La copie n'a pas pu être chargée.");
@@ -365,7 +385,7 @@ export default function FicheEleve({
     setCopieErreur(null);
 
     try {
-      const { data } = await getRapport(fiche.id, rapportId);
+      const { data } = await chargerRapport(fiche.id, rapportId);
       setRapport(data);
     } catch {
       setCopieErreur("Le rapport n'a pas pu être chargé.");
@@ -491,6 +511,52 @@ export default function FicheEleve({
                 {enPage ? 'Retour' : 'Fermer'}
               </button>
             </header>
+
+            {/* ------------------------------------------------ l'année vue
+
+                POSÉE ICI, AVANT LES CHIFFRES, parce qu'elle les commande tous.
+                On suit le niveau d'UNE classe : cumuler « 44 compétences
+                maîtrisées » de la 6e à la 3e laisserait croire à un niveau de
+                3e qui n'est mesuré nulle part. Tout ce qui suit — cours,
+                réponses du professeur, dernier cours, matières, points
+                fragiles, progression, évaluations, séances — porte sur l'année
+                choisie.
+
+                Seules les années réellement passées chez nous figurent : elles
+                viennent du serveur, qui les lit sur le travail daté, et non du
+                niveau des notions travaillées. Un élève de 3e qui rattrape une
+                notion de CM1 n'a pas fait son CM1 ici. */}
+            {/* AFFICHÉ MÊME AVEC UNE SEULE ANNÉE, et ce n'est pas un oubli.
+                Tous les chiffres qui suivent portent sur l'année choisie. Un
+                parent qui lit « 44 compétences maîtrisées » sans savoir sur
+                quoi le compte porte peut l'entendre comme un cumul depuis le
+                début — l'étiquette lève l'ambiguïté, seule ou non. */}
+            {onNiveau && (fiche.classes?.length ?? 0) > 0 && (
+              <div className="classes" role="tablist" aria-label="Année scolaire">
+                {fiche.classes.map((c) => {
+                  // `niveau` vaut null tant qu'on n'a rien choisi : c'est
+                  // l'année en cours, que le serveur sert par défaut.
+                  const actif = niveau === null
+                    ? c.courante
+                    : niveau === c.niveauScolaireId;
+
+                  return (
+                    <button
+                      key={c.niveauScolaireId}
+                      type="button"
+                      role="tab"
+                      aria-selected={actif}
+                      className={`classes__onglet${actif ? ' est-actif' : ''}`}
+                      onClick={() => onNiveau(c.niveauScolaireId)}
+                      disabled={chargement}
+                    >
+                      {c.libelle}
+                      {c.courante && <span className="classes__encours">en cours</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* ---------------------------------------------------- chiffres
 
@@ -677,6 +743,7 @@ export default function FicheEleve({
             {(fiche.progression?.length ?? 0) > 0 && (
               <>
                 <h3>Sa progression</h3>
+
                 {fiche.progression.map((m) => (
                   <ProgressionMatiere key={m.matiereId} matiere={m} />
                 ))}

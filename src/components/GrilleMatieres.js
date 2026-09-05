@@ -531,6 +531,20 @@ export default function GrilleMatieres() {
         </Link>
       )}
 
+      {/* LA CARTE, ACCESSIBLE DEPUIS L ÉCRAN OÙ L ENFANT ARRIVE.
+
+          Enfouie dans un menu, elle ne serait jamais ouverte — or c est le
+          seul endroit du produit où il voit ses progrès. Elle est donc ici,
+          juste au-dessus du choix de la matière, à portée du premier regard.
+
+          Un lien et non un bouton : il mène à une page, et la barre
+          d adresse doit pouvoir y revenir. */}
+      {eleve && (
+        <Link to={`/eleves/${eleve.id}/progression`} className="lien-carte">
+          <span aria-hidden="true">🗺️</span> Ma carte
+        </Link>
+      )}
+
       <header className="salutation">
         <h1>
           {/* Le prénom porte la couleur d'identité de l'enfant, la même que
