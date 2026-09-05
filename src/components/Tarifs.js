@@ -51,16 +51,6 @@ const heures = (h) => {
   return h === Math.round(h) ? `${h} h` : `${h}`.replace('.', ',') + ' h';
 };
 
-/**
- * Les heures offertes par l'offre de lancement.
- *
- * EN DUR ICI, ET C'EST LE SEUL ENDROIT DU FRONT. Le serveur crédite le pack
- * `PACK3H` du catalogue ; ce nombre-ci ne sert QU'À L'ANNONCER. Les deux
- * doivent bouger ensemble le jour où l'offre changera — d'où cette
- * constante nommée plutôt que trois « 12 » éparpillés dans du texte, qui
- * ne se retrouveraient pas.
- */
-const HEURES_OFFERTES = 3;
 
 /**
  * Ce que chaque formule apporte, dit avec des mots de parent.
@@ -70,6 +60,16 @@ const HEURES_OFFERTES = 3;
  * cartes, pas à celui qui écrit les lignes. Sans ça, ce composant devrait
  * connaître le code de la formule en promotion, et il y en aurait deux à
  * corriger le jour où elle change.
+ */
+/**
+ * Ce que chaque formule apporte, dit avec des mots de parent.
+ *
+ * `lancement` porte le NOMBRE D'HEURES OFFERTES, et non plus un simple
+ * booléen. Il vient du serveur, qui le lit dans le pack réglé en
+ * administration : offrir dix heures au lieu de trois ne demande donc
+ * aucune retouche ici. La constante écrite en dur qui vivait à cet endroit
+ * aurait menti au premier changement d'offre — et personne n'aurait su
+ * qu'elle existait.
  */
 function Details({ offre, lancement }) {
   const lignes = [
@@ -82,12 +82,12 @@ function Details({ offre, lancement }) {
     // Barrer plutôt que remplacer : c'est l'écart qui vend, pas le
     // chiffre. « 12 h » seul ne dit rien à qui découvre la page ; « 9 h »
     // rayé au-dessus de « 12 h » dit tout, sans une phrase d'explication.
-    lancement
+    lancement > 0
       ? {
           cle: 'heures-promo',
           barre: `${heures(offre.heuresPot)} de cours par mois`,
-          fort: `${heures(offre.heuresPot + HEURES_OFFERTES)} le premier mois, `
-              + `dont ${heures(HEURES_OFFERTES)} offertes`,
+          fort: `${heures(offre.heuresPot + lancement)} le premier mois, `
+              + `dont ${heures(lancement)} offertes`,
         }
       : `${heures(offre.heuresPot)} de cours par mois, à partager`,
 
@@ -165,8 +165,19 @@ export default function Tarifs() {
    * réglage de plus pour choisir laquelle serait un réglage que personne ne
    * relit. Le serveur applique exactement la même règle de son côté.
    */
+  /**
+   * Cette formule est-elle en promotion en ce moment ?
+   *
+   * LES CODES VIENNENT DU SERVEUR, plus d'un `=== 'SOLO'` écrit ici. La
+   * campagne peut porter sur une formule, deux, ou les trois — et le
+   * webhook lit exactement la même liste, donc ce qui est annoncé est ce
+   * qui est crédité.
+   */
   const enPromotion = (offre) =>
-    lancement.active && offre.code === 'SOLO' && !annuel;
+    lancement.active
+    && lancement.heures > 0
+    && lancement.formules.includes(offre.code)
+    && !annuel;
 
   // Le visiteur revient de la connexion avec une formule en tête. On le lui
   // rappelle plutôt que de souscrire à sa place : sans page de paiement en
@@ -533,7 +544,7 @@ export default function Tarifs() {
               )
             )}
 
-            <Details offre={offre} lancement={enPromotion(offre)} />
+            <Details offre={offre} lancement={enPromotion(offre) ? lancement.heures : 0} />
 
             {/* La contrepartie de l'autre rythme, pour que le choix reste
                 réversible sans remonter en haut de page. */}

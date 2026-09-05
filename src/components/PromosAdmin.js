@@ -31,6 +31,11 @@ import {
 /** La même borne que le serveur — il refuse au-delà. */
 const TAILLE_MAX = 5 * 1024 * 1024;
 
+/** Une vidéo a droit à quatre fois plus — le serveur applique la même. */
+const TAILLE_MAX_VIDEO = 20 * 1024 * 1024;
+
+const estVideo = (fichier) => Boolean(fichier?.type?.startsWith('video/'));
+
 const kilos = (octets) => `${Math.round(octets / 1024).toLocaleString('fr-FR')} Ko`;
 
 /**
@@ -47,6 +52,7 @@ function Formulaire({ promo, onEnregistre, onAnnule }) {
   const [titre, setTitre] = useState(promo?.titre ?? '');
   const [texteAlternatif, setTexteAlternatif] = useState(promo?.texteAlternatif ?? '');
   const [lien, setLien] = useState(promo?.lien ?? '');
+  const [pleineLargeur, setPleineLargeur] = useState(Boolean(promo?.pleineLargeur));
 
   const [imageLarge, setImageLarge] = useState(null);
   const [imageMobile, setImageMobile] = useState(null);
@@ -66,8 +72,16 @@ function Formulaire({ promo, onEnregistre, onAnnule }) {
   }, []);
 
   const choisir = (quoi, fichier) => {
-    if (fichier && fichier.size > TAILLE_MAX) {
-      setErreur(`Ce fichier fait ${kilos(fichier.size)} : la limite est de 5 Mo.`);
+    // Le plafond dépend du format : mesurer avant de savoir ce qu'on tient
+    // obligerait à prendre le plus grand des deux, et laisserait passer une
+    // image de 18 Mo. Même ordre que côté serveur.
+    const plafond = estVideo(fichier) ? TAILLE_MAX_VIDEO : TAILLE_MAX;
+
+    if (fichier && fichier.size > plafond) {
+      setErreur(
+        `Ce fichier fait ${kilos(fichier.size)} : la limite est de `
+        + `${plafond / (1024 * 1024)} Mo pour ${estVideo(fichier) ? 'une vidéo' : 'une image'}.`,
+      );
       return;
     }
 
@@ -88,7 +102,9 @@ function Formulaire({ promo, onEnregistre, onAnnule }) {
     setErreur(null);
 
     try {
-      const donnees = { titre, texteAlternatif, lien, imageLarge, imageMobile };
+      const donnees = {
+        titre, texteAlternatif, lien, pleineLargeur, imageLarge, imageMobile,
+      };
 
       if (edition) await modifierPromo(promo.id, donnees);
       else await creerPromo(donnees);
@@ -157,22 +173,59 @@ function Formulaire({ promo, onEnregistre, onAnnule }) {
         </span>
       </div>
 
+      {/* LE CHOIX DE LARGEUR EST UNE DÉCISION DE MISE EN PAGE, pas de
+          contenu : il vient donc après le quoi et le où, juste avant les
+          fichiers auxquels il s’appliquera. */}
+      <div className="promos__largeur">
+        <strong className="promos__visuel-titre">Largeur du bandeau</strong>
+
+        <div className="promos__largeur-choix">
+          {[
+            {
+              valeur: false,
+              titre: 'Dans la colonne',
+              detail: 'Une bulle arrondie, alignée sur le reste de la page.',
+            },
+            {
+              valeur: true,
+              titre: 'Toute la largeur',
+              detail: 'Une bande d’un bord à l’autre de l’écran. Plus frappant.',
+            },
+          ].map((o) => (
+            <button
+              key={String(o.valeur)}
+              type="button"
+              className={`promos__largeur-option ${pleineLargeur === o.valeur ? 'est-choisie' : ''}`}
+              aria-pressed={pleineLargeur === o.valeur}
+              onClick={() => setPleineLargeur(o.valeur)}
+            >
+              <span className="promos__largeur-dessin" aria-hidden="true">
+                <span className={o.valeur ? 'est-pleine' : ''} />
+              </span>
+              <strong>{o.titre}</strong>
+              <span>{o.detail}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="promos__visuels">
         <ChoixImage
           identifiant="promo-large"
           titre="Image pour ordinateur"
-          aide="2400 × 480 pixels (ratio 5:1). À ce format, rien n’est rogné. Une image plus haute est recadrée par le haut et le bas — gardez votre message au centre. Titre en 60 à 80 px pour rester lisible une fois réduit."
+          aide="Image 2400 × 480 (ratio 5:1) ou vidéo MP4 au même format. À ce ratio, rien n’est rogné ; plus haut, le haut et le bas sont recadrés. Une vidéo joue en boucle, sans son et sans commandes — 20 Mo maximum."
           obligatoire={!edition}
           fichier={imageLarge}
           apercu={apercus.large}
           actuelle={edition ? urlImagePromo(promo.id, { version: promo.version }) : null}
+          actuelleVideo={edition && promo.estVideo}
           onChoisir={(f) => choisir('large', f)}
         />
 
         <ChoixImage
           identifiant="promo-mobile"
           titre="Image pour téléphone"
-          aide="1200 × 900 pixels (ratio 4:3). Refaites la mise en page en vertical, ne réduisez pas celle du dessus. Sans cette image, la version ordinateur est écrasée à 65 px de haut sur un téléphone."
+          aide="1200 × 900 (ratio 4:3), image ou vidéo. Refaites la mise en page en vertical plutôt que de réduire celle du dessus. Sans ce fichier, la version ordinateur est écrasée à 65 px de haut sur un téléphone."
           obligatoire={false}
           fichier={imageMobile}
           apercu={apercus.mobile}
@@ -181,6 +234,7 @@ function Formulaire({ promo, onEnregistre, onAnnule }) {
               ? urlImagePromo(promo.id, { mobile: true, version: promo.version })
               : null
           }
+          actuelleVideo={edition && promo.estVideo}
           onChoisir={(f) => choisir('mobile', f)}
         />
       </div>
@@ -216,8 +270,14 @@ function Formulaire({ promo, onEnregistre, onAnnule }) {
 }
 
 /** Un champ de fichier avec son aperçu — celui qu'on choisit, ou celui en place. */
-function ChoixImage({ identifiant, titre, aide, obligatoire, fichier, apercu, actuelle, onChoisir }) {
+function ChoixImage({
+  identifiant, titre, aide, obligatoire, fichier, apercu, actuelle, actuelleVideo, onChoisir,
+}) {
   const montre = apercu ?? actuelle;
+
+  // Le fichier choisi l'emporte sur celui déjà en place : c'est lui qu'on
+  // regarde.
+  const video = fichier ? estVideo(fichier) : Boolean(actuelleVideo);
 
   return (
     <div className="promos__visuel">
@@ -228,8 +288,15 @@ function ChoixImage({ identifiant, titre, aide, obligatoire, fichier, apercu, ac
 
       <span className="promos__visuel-aide">{aide}</span>
 
+      {/* UN APERÇU QUI SE TROMPE DE BALISE NE MONTRE RIEN. Le fichier
+          fraîchement choisi porte son type ; celui qui est déjà en place
+          nous vient du serveur, qui l’a dit dans `estVideo`. */}
       {montre ? (
-        <img className="promos__apercu" src={montre} alt="" />
+        video ? (
+          <video className="promos__apercu" src={montre} muted loop autoPlay playsInline />
+        ) : (
+          <img className="promos__apercu" src={montre} alt="" />
+        )
       ) : (
         <div className="promos__apercu promos__apercu--vide">Aucune image</div>
       )}
@@ -242,7 +309,7 @@ function ChoixImage({ identifiant, titre, aide, obligatoire, fichier, apercu, ac
         <input
           id={identifiant}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
           hidden
           onChange={(e) => onChoisir(e.target.files?.[0] ?? null)}
         />
@@ -355,11 +422,22 @@ export default function PromosAdmin() {
         <ul className="promos__liste">
           {promos.map((promo) => (
             <li key={promo.id} className={`promos__carte ${promo.actif ? 'est-active' : ''}`}>
-              <img
-                className="promos__vignette"
-                src={urlImagePromo(promo.id, { version: promo.version })}
-                alt=""
-              />
+              {promo.estVideo ? (
+                <video
+                  className="promos__vignette"
+                  src={urlImagePromo(promo.id, { version: promo.version })}
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                />
+              ) : (
+                <img
+                  className="promos__vignette"
+                  src={urlImagePromo(promo.id, { version: promo.version })}
+                  alt=""
+                />
+              )}
 
               <div className="promos__infos">
                 <strong className="promos__titre">
@@ -370,7 +448,11 @@ export default function PromosAdmin() {
                 <span className="promos__alt">{promo.texteAlternatif}</span>
 
                 <span className="promos__meta">
-                  {promo.lien ? `Mène à ${promo.lien}` : 'Non cliquable'}
+                  {promo.estVideo ? 'Vidéo' : 'Image'}
+                  {' · '}
+                  {promo.pleineLargeur ? 'toute la largeur' : 'dans la colonne'}
+                  {' · '}
+                  {promo.lien ? `mène à ${promo.lien}` : 'non cliquable'}
                   {' · '}
                   {kilos(promo.tailleLarge)}
 

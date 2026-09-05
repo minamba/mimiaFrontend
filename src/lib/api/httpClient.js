@@ -51,10 +51,36 @@ httpClient.interceptors.request.use(async (config) => {
  * comprendre. On efface la session pour qu'il retombe sur l'écran du code, qui
  * lui dira quoi faire.
  */
+/**
+ * UN COMPTE BANNI EST COUPÉ NET, y compris en pleine séance.
+ *
+ * Le serveur d’identité ferme les portes, mais quelqu’un déjà entré garderait
+ * son jeton jusqu’à son expiration. L’API refuse donc chaque requête d’un
+ * banni avec un 403 portant le code `BANNI` — et ce code existe précisément
+ * pour être distingué ici : un 403 ordinaire signale un droit manquant sur un
+ * écran d’administration, et fermer la session dans ce cas-là serait absurde.
+ */
+const BANNI = 'BANNI';
+
 httpClient.interceptors.response.use(
   (reponse) => reponse,
   (erreur) => {
-    if (erreur?.response?.status === 401 && jetonEleve()) {
+    const reponse = erreur?.response;
+
+    if (reponse?.status === 403 && reponse?.data?.code === BANNI) {
+      // La session de l’enfant s’efface d’abord : sans ça, il retomberait sur
+      // l’écran du code avec un jeton mort et se ferait refuser en boucle.
+      if (jetonEleve()) fermerSessionEleve();
+
+      // RECHARGEMENT COMPLET plutôt qu’une navigation interne. Ce qui reste en
+      // mémoire — le magasin Redux, les écrans ouverts — a été construit pour
+      // quelqu’un qui avait le droit d’être là. On repart de zéro.
+      window.location.assign('/');
+
+      return Promise.reject(erreur);
+    }
+
+    if (reponse?.status === 401 && jetonEleve()) {
       fermerSessionEleve();
       window.location.assign('/');
     }

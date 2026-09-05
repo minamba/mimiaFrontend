@@ -595,8 +595,23 @@ export default function Chat() {
   const [copie, setCopie] = useState(null);
   const [copieEnCours, setCopieEnCours] = useState(false);
 
+  /**
+   * ALLUMÉ PAR DÉFAUT, ET C’EST UN CHANGEMENT DU 04/09/2026.
+   *
+   * Le défaut était « éteint » : le mode ne s’allumait que si l’élève
+   * l’avait activé une fois sur CET appareil. Invisible sur les machines
+   * de test, où il l’avait été depuis longtemps ; flagrant sur un
+   * téléphone neuf, où le micro restait fermé et où l’élève devait
+   * cliquer avant chaque phrase — dans un produit dont toute la promesse
+   * est de PARLER à un professeur.
+   *
+   * `!== '0'` ET NON `=== '1'` : la nuance est ce qui distingue « jamais
+   * répondu » de « répondu non ». Celui qui a explicitement éteint le mode
+   * garde son choix ; celui qui n’a jamais rien touché reçoit le défaut.
+   * Tester l’égalité à `'1'` confondait les deux, au détriment du second.
+   */
   const [mainsLibres, setMainsLibres] = useState(
-    () => localStorage.getItem('school-ia-mains-libres') === '1',
+    () => localStorage.getItem('school-ia-mains-libres') !== '0',
   );
 
   // Incrémenté chaque fois que le professeur se tait. C'est le signal qui
@@ -3043,7 +3058,19 @@ export default function Chat() {
             {/* UN RETRAIT SILENCIEUX SERAIT PIRE QUE LE DÉFAUT.
                 S'il tape et que la voix se tait sans rien dire, il parlerait
                 dans le vide sans comprendre pourquoi. On le dit. */}
-            {micEnPause
+            {/* « TU PEUX LE COUPER » N’EST DIT QU’À QUI LE PEUT.
+
+                Ce message ne regardait que `micEnPause`, vrai seulement
+                quand le mode mains libres tourne. Mains libres éteint et
+                haut-parleur choisi, l’élève lisait donc qu’il pouvait
+                interrompre le professeur — alors que son micro était fermé.
+                Il essaie, rien ne se passe, et il en conclut que le micro
+                est cassé.
+
+                La promesse dépend maintenant de sa CAUSE — le choix du
+                haut-parleur — et non d’un état qui n’en est qu’une
+                conséquence. */}
+            {micEnPause || (sansCasque && profParle)
               ? 'Le professeur parle…'
               : profParle && !saisieTapee && !saisie
                 ? 'Le professeur parle — tu peux le couper en parlant.'

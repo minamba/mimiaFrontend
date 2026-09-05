@@ -218,6 +218,33 @@ export const supprimerParent = async (id, mail) => {
 
 export const supprimerEleve = (id) => httpClient.delete(`/admin/eleves/${id}`);
 
+// ------------------------------------------------------------ bannissement
+//
+// LA LISTE PORTE DES ADRESSES, PAS DES COMPTES : elle survit à la
+// suppression, et c'est précisément à ce moment-là qu'elle sert. Le refus,
+// lui, est appliqué par le SERVEUR D'IDENTITÉ, qui lit cette même table —
+// ces routes ne font qu'administrer.
+
+export const getBannis = () => httpClient.get('/admin/bannis');
+
+/** Bannit un parent depuis sa fiche. Son compte n'est PAS supprimé. */
+export const bannirParent = (id, motif) =>
+  httpClient.post(`/admin/parents/${id}/bannir`, { motif });
+
+/** Le seul chemin quand le compte n'existe plus, ou n'a jamais existé. */
+export const ajouterBanni = (mail, motif) =>
+  httpClient.post('/admin/bannis', { mail, motif });
+
+/**
+ * Lève un bannissement.
+ *
+ * L'adresse passe en paramètre d'URL et non dans un corps : `DELETE` avec
+ * un corps est mal pris en charge par une partie des relais et des
+ * navigateurs. `URLSearchParams` encode le `@` et les points.
+ */
+export const leverBanni = (mail) =>
+  httpClient.delete(`/admin/bannis?${new URLSearchParams({ mail })}`);
+
 /**
  * Les interrupteurs du produit, vus par l'administration.
  * La lecture publique passe par `getReglagesPublics` — elle n'exige pas de
@@ -249,8 +276,14 @@ export const definirBandeau = (message, actif) =>
  * laisserait le serveur deviner, et il devinerait UTC : la promotion
  * finirait deux heures trop tôt en été, un soir où personne ne regarde.
  */
-export const definirOffreLancement = (texte, fin) =>
-  httpClient.put('/reglages/lancement', { texte, fin });
+/**
+ * `minutes` ET NON DES HEURES : tout le reste du produit compte en
+ * minutes — les forfaits, les consommations, les recharges. La conversion
+ * se fait une seule fois, dans le champ de saisie, là où l'administrateur
+ * pense en heures.
+ */
+export const definirOffreLancement = (texte, fin, minutes, formules) =>
+  httpClient.put('/reglages/lancement', { texte, fin, minutes, formules });
 
 // --------------------------------------------------------------- planches
 

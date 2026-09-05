@@ -468,6 +468,16 @@ function OffreLancement({
 }) {
   const [texte, setTexte] = useState(reglages.offreLancementTexte);
   const [fin, setFin] = useState(() => pourLeChamp(reglages.offreLancementFin));
+  // EN HEURES DANS LE CHAMP, EN MINUTES SUR LE FIL. L'administrateur pense
+  // en heures ; le reste du produit compte en minutes. La conversion vit
+  // ici, à l'unique endroit où les deux se rencontrent.
+  const [heures, setHeures] = useState(() => reglages.offreLancementMinutes / 60);
+
+  // UN TABLEAU DANS L'ÉCRAN, UNE CHAÎNE SUR LE FIL. Les cases à cocher
+  // manipulent une liste ; le réglage est une chaîne séparée par des
+  // virgules. La conversion vit ici, au seul endroit où les deux formes se
+  // rencontrent.
+  const [formules, setFormules] = useState(() => enListe(reglages.offreLancementFormules));
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -478,7 +488,14 @@ function OffreLancement({
   useEffect(() => {
     setTexte(reglages.offreLancementTexte);
     setFin(pourLeChamp(reglages.offreLancementFin));
-  }, [reglages.offreLancementTexte, reglages.offreLancementFin]);
+    setHeures(reglages.offreLancementMinutes / 60);
+    setFormules(enListe(reglages.offreLancementFormules));
+  }, [
+    reglages.offreLancementTexte,
+    reglages.offreLancementFin,
+    reglages.offreLancementMinutes,
+    reglages.offreLancementFormules,
+  ]);
 
   const echeance = fin ? new Date(fin) : null;
   const passee = echeance !== null && !Number.isNaN(echeance.getTime())
@@ -494,7 +511,11 @@ function OffreLancement({
       // serveur la lire comme de l’UTC, et la promotion finirait deux heures
       // trop tôt en été.
       await onEnregistrer(
-        texte.trim(), echeance && !Number.isNaN(echeance.getTime()) ? echeance.toISOString() : '');
+        texte.trim(),
+        echeance && !Number.isNaN(echeance.getTime()) ? echeance.toISOString() : '',
+        Math.round(Number(heures) * 60),
+        formules,
+      );
     } catch (e) {
       setErreur(
         e?.response?.data?.message ?? "L’offre n’a pas pu être enregistrée.");
@@ -507,7 +528,7 @@ function OffreLancement({
     <div className="mode mode--reglable">
       <div className="mode__texte">
         <strong className="mode__titre">
-          Offre de lancement — 3 h offertes
+          Offre de lancement
 
           <span className={`mode__etat ${connu && reglages.offreLancement ? 'mode__etat--actif' : ''}`}>
             {!connu ? 'État inconnu' : reglages.offreLancement ? 'Activée' : 'Désactivée'}
@@ -515,21 +536,80 @@ function OffreLancement({
         </strong>
 
         <p className="mode__description">
-          La formule Solo affiche 12 h au lieu de 9 h le premier mois, et les
-          3 h sont créditées automatiquement à la souscription. Le crédit est
+          Les formules cochées affichent leur forfait augmenté des heures offertes, le
+          premier mois, et ces heures sont créditées automatiquement à la
+          souscription. Le crédit est
           géré chez nous, pas chez Stripe : éteindre l’interrupteur suffit à
           arrêter les suivantes, et personne ne garde de remise à vie.
         </p>
 
         <ul className="mode__effets">
-          <li>La carte Solo porte la mention entre parenthèses, et la ligne des 9 h est barrée.</li>
+          <li>Les cartes concernées portent la mention entre parenthèses, et leur ligne de forfait est barrée.</li>
           <li>Un compte à rebours apparaît sur la page d’accueil, si une date de fin est réglée.</li>
-          <li>Les 3 h sont créditées après ENCAISSEMENT, jamais à l’ouverture de la page de paiement.</li>
+          <li>Les heures sont créditées après ENCAISSEMENT, jamais à l’ouverture de la page de paiement.</li>
           <li>Mensuel uniquement : « le premier mois » n’a pas de sens sur un abonnement annuel.</li>
           <li>Les heures déjà offertes restent acquises quand vous éteignez l’interrupteur.</li>
         </ul>
 
         {erreur && <div className="alert">{erreur}</div>}
+
+        {/* CE QU’ON OFFRE VIENT AVANT COMMENT ON L’HABILLE. La mention et
+            l’échéance sont de la mise en scène ; ce champ-ci décide de ce
+            que le parent reçoit réellement. */}
+        {/* QUI AVANT COMBIEN. La formule concernée est la première décision :
+            offrir trois heures sur Solo et sur Famille ne coûte pas la même
+            chose, et ne vise pas les mêmes gens. */}
+        <div className="champ">
+          <span className="champ__intitule">Formules concernées</span>
+
+          <div className="mode__cases">
+            {reglages.formulesDisponibles.map((o) => (
+              <label key={o.code} className="mode__case">
+                <input
+                  type="checkbox"
+                  checked={formules.includes(o.code)}
+                  onChange={() => setFormules((liste) => (
+                    liste.includes(o.code)
+                      ? liste.filter((f) => f !== o.code)
+                      : [...liste, o.code]
+                  ))}
+                />
+                {o.libelle}
+              </label>
+            ))}
+          </div>
+
+          <span className="champ__aide">
+            {/* AUCUNE COCHÉE ÉTEINT L’OFFRE, et c’est dit : sinon on
+                chercherait pourquoi la carte ne change pas alors que
+                l’interrupteur est allumé. */}
+            {formules.length === 0
+              ? 'Aucune formule cochée : l’offre ne s’appliquera à rien.'
+              : 'Les cartes cochées porteront la mention et les heures offertes. '
+                + 'Les abonnements annuels ne sont jamais concernés.'}
+          </span>
+        </div>
+
+        <div className="champ">
+          <label htmlFor="lancement-heures">Heures offertes</label>
+          <input
+            id="lancement-heures"
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            value={heures}
+            onChange={(e) => setHeures(e.target.value)}
+          />
+          <span className="champ__aide">
+            {/* AUCUN RAPPORT AVEC LES PACKS VENDUS. Ce sont des heures
+                offertes, créditées chez nous — rien à créer chez Stripe, et
+                aucun produit marchand à inventer pour faire un cadeau. */}
+            Créditées automatiquement à la souscription, sur la période en
+            cours. Rien à créer chez Stripe : le cadeau se gère entièrement
+            ici. À zéro, l’offre ne donne plus rien et la mention disparaît.
+          </span>
+        </div>
 
         <div className="mode__champs">
           <div className="champ">
@@ -626,7 +706,7 @@ function OffreLancement({
             disabled={envoi || !connu}
             onClick={enregistrer}
           >
-            {envoi ? "Enregistrement…" : "Enregistrer la mention et la date"}
+            {envoi ? "Enregistrement…" : "Enregistrer les réglages de l’offre"}
           </button>
         </div>
       </div>
@@ -656,6 +736,20 @@ function OffreLancement({
  * telle quelle laisserait le champ vide, sans erreur, et l'administrateur
  * croirait n’avoir jamais réglé de date.
  */
+/**
+ * La chaîne du réglage, découpée en liste de codes.
+ *
+ * `SOLO,DUO` devient `['SOLO', 'DUO']`. Une chaîne vide donne une liste
+ * vide — et c'est une décision, pas une absence : l'administrateur a
+ * décoché toutes les formules.
+ */
+function enListe(chaine) {
+  return (chaine ?? '')
+    .split(',')
+    .map((c) => c.trim())
+    .filter(Boolean);
+}
+
 function pourLeChamp(iso) {
   if (!iso) return '';
 
@@ -682,6 +776,12 @@ export default function Modes() {
     offreLancementTexte: '',
     offreLancementFin: '',
     offreLancementBandeau: true,
+    offreLancementMinutes: 180,
+    offreLancementFormules: 'SOLO',
+
+    // Le catalogue, pour cocher des formules réelles plutôt que de faire
+    // taper des codes qui n'existent peut-être pas.
+    formulesDisponibles: [],
   });
   const [chargement, setChargement] = useState(true);
   const [envoi, setEnvoi] = useState(null);
@@ -724,6 +824,20 @@ export default function Modes() {
           // Allumé par défaut : c'était le comportement avant que ce
           // réglage existe.
           offreLancementBandeau: data?.offreLancementBandeau !== false,
+          // Absent = jamais réglé : on retombe sur le défaut du serveur,
+          // trois heures, plutôt que sur zéro qui éteindrait le cadeau.
+          offreLancementMinutes:
+            Number(data?.offreLancementMinutes) || 180,
+
+          // `?? 'SOLO'` et non `|| 'SOLO'` : une chaîne VIDE est une
+          // décision — toutes les formules ont été décochées — quand
+          // l’absence de clé veut dire « jamais réglé ». Les confondre
+          // recocherait Solo à chaque chargement.
+          offreLancementFormules: data?.offreLancementFormules ?? 'SOLO',
+
+          formulesDisponibles: Array.isArray(data?.formulesDisponibles)
+            ? data.formulesDisponibles
+            : [],
         });
 
         setLus(true);
@@ -791,11 +905,31 @@ export default function Modes() {
           onBasculer={() => basculer('OFFRE_LANCEMENT', 'offreLancement')}
           onBasculerBandeau={() =>
             basculer('OFFRE_LANCEMENT_BANDEAU', 'offreLancementBandeau')}
-          onEnregistrer={async (texte, fin) => {
-            await definirOffreLancement(texte, fin);
+          onEnregistrer={async (texte, fin, minutes, formules) => {
+            // LES QUATRE VALEURS, ET PAS DEUX.
+            //
+            // Ce gestionnaire n’en recevait que deux alors que le formulaire
+            // en envoie quatre : les heures et les formules étaient jetées
+            // ici, silencieusement, avant même de partir. Le serveur écrivait
+            // alors zéro heure et aucune formule, et l’offre s’éteignait toute
+            // seule pendant que l’écran continuait d’afficher ses valeurs par
+            // défaut.
+            //
+            // JavaScript ne dit rien quand on ignore des arguments. C’est
+            // exactement le genre de faute qu’aucun test d’écran ne rattrape,
+            // et qu’on ne voit qu’en regardant la base.
+            await definirOffreLancement(texte, fin, minutes, formules);
 
             setReglages((etat) => ({
-              ...etat, offreLancementTexte: texte, offreLancementFin: fin,
+              ...etat,
+              offreLancementTexte: texte,
+              offreLancementFin: fin,
+              offreLancementMinutes: minutes,
+
+              // Rangée sous la forme que la lecture rend : une chaîne séparée
+              // par des virgules. Y laisser le tableau ferait diverger l’état
+              // local de ce que renverra le prochain chargement.
+              offreLancementFormules: formules.join(','),
             }));
 
             // Les drapeaux publics sont retenus le temps d’une session : sans

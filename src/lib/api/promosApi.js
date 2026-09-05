@@ -58,12 +58,20 @@ export const getPromos = () => httpClient.get('/promos');
  * serveur, absent veut dire « ne touche pas à celui-là » : c'est ce qui
  * permet de corriger une faute dans le texte sans retéléverser deux images.
  */
-function corps({ titre, texteAlternatif, lien, imageLarge, imageMobile }) {
+function corps({
+  titre, texteAlternatif, lien, pleineLargeur, imageLarge, imageMobile,
+}) {
   const donnees = new FormData();
 
   donnees.append('titre', titre ?? '');
   donnees.append('texteAlternatif', texteAlternatif ?? '');
   donnees.append('lien', lien ?? '');
+
+  // `'true'` / `'false'` en toutes lettres : un `FormData` ne transporte
+  // que du texte, et la liaison de modèle d'ASP.NET lit ces deux mots.
+  // Un `Boolean` passé tel quel deviendrait « true » ou « false » de la
+  // même façon, mais par accident — autant que ce soit écrit.
+  donnees.append('pleineLargeur', pleineLargeur ? 'true' : 'false');
 
   if (imageLarge) donnees.append('imageLarge', imageLarge);
   if (imageMobile) donnees.append('imageMobile', imageMobile);

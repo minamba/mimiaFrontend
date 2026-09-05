@@ -25,7 +25,10 @@ const PAR_DEFAUT = {
   // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
   // de lecture promet un cadeau que le serveur ne donnera pas — et le
   // parent, lui, aura payé en la voyant.
-  offreLancement: { active: false, texte: '', fin: null, bandeau: false },
+  offreLancement: {
+    active: false, texte: '', fin: null, bandeau: false, heures: 0,
+    formules: [], formulesTexte: '',
+  },
 };
 
 /**
@@ -85,6 +88,21 @@ function interroger() {
                 // l'offre : un décompte ne peut pas survivre à la
                 // promotion qu'il annonce.
                 bandeau: Boolean(data.offreLancement.bandeau),
+
+                // CALCULÉ ICI, UNE FOIS. Le serveur envoie des minutes — la
+                // seule unité qui ne perd rien. Les convertir dans chaque
+                // écran ferait diverger les arrondis : « 1,5 h » ici et
+                // « 2 h » là.
+                heures: Math.round((data.offreLancement.minutesOffertes ?? 0) / 6) / 10,
+
+                // LES CODES POUR RECONNAÎTRE LES CARTES, LE TEXTE POUR LE
+                // DIRE. Le second est composé par le serveur, seul à
+                // connaître les libellés : « Solo et Duo » plutôt que
+                // « SOLO, DUO ».
+                formules: Array.isArray(data.offreLancement.formules)
+                  ? data.offreLancement.formules
+                  : [],
+                formulesTexte: data.offreLancement.formulesTexte ?? '',
               }
             : PAR_DEFAUT.offreLancement,
         };

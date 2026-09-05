@@ -70,6 +70,17 @@ const vivante = (fin, reste = {}) => ({
   active: true,
   texte: 'OFFRE LANCEMENT',
   bandeau: true,
+
+  // LE NOMBRE D HEURES VIENT DU SERVEUR, qui le lit dans le pack regle en
+  // administration. Zero veut dire que le pack est introuvable — le compte a
+  // rebours ne doit alors rien annoncer.
+  heures: 3,
+
+  // Les formules concernees, et leur ecriture pour un humain. Les deux
+  // viennent du serveur : lui seul connait les libelles.
+  formules: ['SOLO'],
+  formulesTexte: 'Solo',
+
   fin,
   ...reste,
 });
@@ -77,7 +88,7 @@ const vivante = (fin, reste = {}) => ({
 const dessiner = () => render(<CompteARebours />);
 
 beforeEach(() => {
-  mockOffre = { active: false, texte: '', fin: null, bandeau: false };
+  mockOffre = { active: false, texte: '', fin: null, bandeau: false, heures: 0 };
 });
 
 // ------------------------------------------------- ce que le serveur décide
@@ -87,7 +98,9 @@ test('offre éteinte : rien ne s’affiche, même avec une date de fin valide', 
   // même l'intérêt, on la garde pour la campagne suivante. Si le navigateur
   // jugeait sur la seule présence d'une date, l'offre resterait annoncée après
   // avoir été coupée.
-  mockOffre = { active: false, texte: 'OFFRE LANCEMENT', bandeau: false, fin: dansDesJours(10) };
+  mockOffre = {
+    active: false, texte: 'OFFRE LANCEMENT', bandeau: false, heures: 3, fin: dansDesJours(10),
+  };
 
   const { container } = dessiner();
 
@@ -202,4 +215,45 @@ test('le décompte mène à la page des tarifs', () => {
   // Une promotion qu'on annonce sans dire où la prendre laisse le visiteur
   // chercher dans la barre de navigation — et beaucoup renoncent là.
   expect(screen.getByRole('link')).toHaveAttribute('href', '/tarifs');
+});
+
+// ------------------------------------------------- ce qui est offert
+
+test('le nombre d’heures offertes vient du serveur, pas du code', () => {
+  // ÉCRIT EN DUR, IL AURAIT MENTI AU PREMIER CHANGEMENT D'OFFRE. Le pack est
+  // choisi dans l'administration ; passer de trois à dix heures ne doit
+  // demander aucune retouche du navigateur — et surtout, la page ne doit pas
+  // continuer d'annoncer trois heures pendant que le webhook en crédite dix.
+  mockOffre = vivante(dansDesJours(5), { heures: 10 });
+
+  dessiner();
+
+  expect(screen.getByText(/10 h de cours offertes/)).toBeInTheDocument();
+});
+
+test('sans pack résolu, le décompte ne promet rien', () => {
+  // `heures: 0` veut dire que le code réglé ne désigne aucun pack actif —
+  // supprimé, désactivé, mal saisi. Le serveur éteint déjà l'offre dans ce
+  // cas ; cette garde-ci est la seconde, du côté du navigateur. Annoncer des
+  // heures que le webhook serait incapable de créditer est la panne que tout
+  // ce dispositif existe pour empêcher.
+  mockOffre = vivante(dansDesJours(5), { heures: 0 });
+
+  const { container } = dessiner();
+
+  expect(container).toBeEmptyDOMElement();
+});
+
+test('les formules concernées sont nommées, pas devinées', () => {
+  // « Solo » écrit en dur ici aurait continué d'annoncer Solo le jour où la
+  // campagne porte sur Duo. Le libellé est composé par le serveur, seul à
+  // connaître le catalogue.
+  mockOffre = vivante(dansDesJours(5), {
+    formules: ['SOLO', 'DUO'],
+    formulesTexte: 'Solo et Duo',
+  });
+
+  dessiner();
+
+  expect(screen.getByText(/la formule Solo et Duo/)).toBeInTheDocument();
 });

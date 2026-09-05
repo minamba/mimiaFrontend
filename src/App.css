@@ -11808,3 +11808,268 @@ h1, h2, h3 {
 @media (max-width: 620px) {
   .mode__sous-reglage { flex-wrap: wrap; }
 }
+
+/* ------------------------------ l'avertissement du bouton silence (iOS)
+
+   Il tranche volontairement sur le reste de la popup : c'est le seul élément
+   qui parle d'un objet PHYSIQUE, sur la tranche du téléphone, et non d'un
+   choix à faire à l'écran. Lu comme une phrase parmi les autres, il serait
+   sauté — et c'est précisément celui dont l'oubli fait croire que le produit
+   est cassé. */
+.modale__silence {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--bandeau-trait);
+  border-radius: var(--rayon);
+  background: var(--bandeau-fond);
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-align: left;
+  color: var(--bandeau-encre);
+}
+
+/* L'émoji ne doit pas rétrécir quand la phrase passe sur trois lignes. */
+.modale__silence > [aria-hidden] { flex: 0 0 auto; font-size: 17px; line-height: 1.3; }
+
+/* --------------------------------- le bandeau promo en PLEINE LARGEUR
+
+   L'autre forme, choisie bandeau par bandeau : une bande d'un bord à l'autre
+   au lieu d'une bulle dans la colonne. Elle frappe plus fort et n'appartient
+   plus tout à fait à la page — c'est le compromis, et c'est pour ça que le
+   choix est fait en regardant le visuel plutôt qu'une fois pour toutes.
+
+   `.promo` sort déjà de `.landing` dans la page d'accueil : il n'y a donc
+   rien à déborder, seulement les contraintes de la bulle à relâcher. Pas de
+   `100vw` ni de marge négative — la barre de défilement s'y compte, et
+   provoquerait un débordement horizontal de toute la page sur Windows. */
+.promo--pleine {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 0;
+  border-radius: 0;
+
+  /* L'ombre servait à faire flotter la bulle au-dessus du papier quadrillé.
+     Une bande qui touche les deux bords ne flotte pas : elle EST le haut de
+     la page, et une ombre l'en détacherait sans raison. */
+  box-shadow: none;
+}
+
+@media (max-width: 560px) {
+  .promo--pleine { width: 100%; margin-top: 0; border-radius: 0; }
+}
+
+/* ------------------------------- le choix de largeur, en administration */
+.promos__largeur { display: flex; flex-direction: column; gap: 10px; }
+
+.promos__largeur-choix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+/* DEUX CARTES PLUTÔT QU'UNE CASE À COCHER. « Pleine largeur ☐ » demande de
+   se représenter le résultat ; deux options côte à côte, chacune avec son
+   petit dessin, se comparent d'un coup d'œil. C'est un choix de mise en
+   page — il se prend avec les yeux. */
+.promos__largeur-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.promos__largeur-option:hover { border-color: var(--contour); }
+
+.promos__largeur-option.est-choisie {
+  border-color: var(--corail);
+  background: color-mix(in srgb, var(--corail) 8%, var(--surface));
+}
+
+.promos__largeur-option strong { font-size: 13.5px; color: var(--encre); }
+
+.promos__largeur-option > span:last-child {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+/* LE DESSIN VAUT MIEUX QUE LA PHRASE. Un rectangle dans un cadre montre en
+   un instant ce que « dans la colonne » veut dire — et surtout la différence
+   avec l'autre, qui est tout le sujet. */
+.promos__largeur-dessin {
+  display: block;
+  height: 26px;
+  margin-bottom: 4px;
+  padding: 4px;
+  border: 1px dashed var(--contour);
+  border-radius: 5px;
+}
+
+.promos__largeur-dessin > span {
+  display: block;
+  width: 62%;
+  height: 100%;
+  margin: 0 auto;
+  border-radius: 3px;
+  background: var(--corail);
+}
+
+.promos__largeur-dessin > span.est-pleine { width: 100%; border-radius: 0; }
+
+/* La vignette et l'aperçu acceptent aussi une vidéo : mêmes règles que pour
+   une image, le sélecteur suffit à les couvrir toutes les deux. */
+.promos__vignette,
+.promos__apercu { background: var(--surface-2); }
+
+/* --------------------------------------------- la liste des adresses bannies
+
+   REPLIABLE, ET FERMÉE QUAND ELLE EST VIDE. C'est une liste qu'on consulte
+   trois fois par an : dépliée en permanence, elle mettrait un bloc mort entre
+   le fichier clients et le tableau des comptes. Ouverte d'office dès qu'elle
+   contient quelque chose, parce qu'un bannissement oublié est précisément ce
+   qu'on veut voir en passant. */
+.bannis {
+  margin-bottom: 22px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+.bannis__titre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--encre);
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Le marqueur natif du `details` change de dessin d'un navigateur à l'autre,
+   et Safari le place ailleurs. On le retire et le chevron vient du titre. */
+.bannis__titre::-webkit-details-marker { display: none; }
+
+.bannis__titre::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--encre-douce);
+  border-bottom: 2px solid var(--encre-douce);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 160ms ease;
+}
+
+.bannis[open] .bannis__titre::after { transform: rotate(-135deg) translate(-3px, -3px); }
+
+.bannis__compte {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--encre-douce);
+}
+
+.bannis__corps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+
+.bannis__note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+.bannis__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bannis__liste li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.bannis__infos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  /* Désarme le minimum automatique du flex : sans lui, une adresse longue
+     pousse le bouton « Lever » hors de la carte. */
+  min-width: 0;
+}
+
+.bannis__infos strong {
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+  color: var(--encre);
+}
+
+.bannis__meta { font-size: 12px; color: var(--encre-douce); }
+
+.bannis__motif {
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+.bannis__ajout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--trait);
+}
+
+.bannis__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Les formules cochées d'une offre de lancement. Une ligne de cases plutôt
+   qu'une liste verticale : elles sont trois, courtes, et se comparent d'un
+   coup d'œil — empilées, elles auraient l'air d'un formulaire. */
+.mode__cases { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 4px 0 6px; }
+
+.mode__case {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.mode__case input { accent-color: var(--corail); cursor: pointer; }
+
+/* L'intitulé d'un groupe de cases : ce n'est pas un `label`, il ne désigne
+   aucun champ unique — mais il doit peser comme les autres étiquettes. */
+.champ__intitule {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--encre);
+}

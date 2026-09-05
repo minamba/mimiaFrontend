@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { estIOS } from '../lib/storage/appareil';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
@@ -232,6 +233,42 @@ function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
           veux. Sans casque, ton micro entendrait sa voix et croirait que c’est
           toi qui parles.
         </p>
+
+        {/* LE MODE SILENCIEUX D’IOS, ET POURQUOI L’AVERTISSEMENT EST ICI.
+
+            Actif, il coupe le son du navigateur SANS RIEN AFFICHER dans la
+            page : pas d’icône, pas d’erreur, aucun état lisible en
+            JavaScript. Le professeur parle, le micro marche, le graphe
+            audio tourne — et l’élève n’entend rien. Le symptôme ressemble
+            trait pour trait à une panne de l’application.
+
+            ON NE NOMME AUCUN BOUTON, ET C’EST VOULU. La première version
+            disait « le petit bouton sur la tranche » — vrai jusqu’à
+            l’iPhone 14, faux depuis : le 15 l’a remplacé par un bouton
+            configurable, et le silencieux s’active aussi depuis le centre
+            de contrôle ou un mode de concentration. Envoyer chercher un
+            bouton qui n’existe pas fait douter de tout le reste du
+            message. On nomme donc l’ÉTAT, que l’élève sait retrouver, et
+            pas le chemin qui y mène, qui change avec le modèle.
+
+            DANS CETTE POPUP ET PAS AILLEURS. C’est déjà le moment où on
+            parle de son, c’est juste avant d’en avoir besoin, et surtout
+            c’est le seul instant où l’élève a encore le téléphone en main
+            pour vérifier. Un avertissement à la connexion serait lu vingt
+            minutes trop tôt, puis oublié.
+
+            SUR IOS SEULEMENT : aucun Android n’a ce bouton, et l’y envoyer
+            chercher lui ferait douter du reste. */}
+        {estIOS() && (
+          <p className="modale__silence">
+            <span aria-hidden="true">🔇</span>
+            <span>
+              <strong>Vérifie que ton téléphone n’est pas en silencieux.</strong>{' '}
+              Sinon tu n’entendras pas {matiere.profPrenom}, même si tout le
+              reste fonctionne.
+            </span>
+          </p>
+        )}
 
         <div className="casque-choix">
           <button

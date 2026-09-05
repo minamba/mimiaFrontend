@@ -4,22 +4,30 @@ import { getPromoActive, urlImagePromo } from '../lib/api/promosApi';
 /**
  * LE BANDEAU PROMOTIONNEL DE LA PAGE D'ACCUEIL.
  *
- * Un visuel pleine largeur, cliquable, au-dessus du reste : la rentrée, une
- * remise, un parrainage. Il vit dans la page d'accueil et nulle part ailleurs
- * — un parent venu travailler avec son enfant n'a pas besoin de voir une
+ * Un visuel cliquable au-dessus du reste : la rentrée, une remise, un
+ * parrainage. Il vit dans la page d'accueil et nulle part ailleurs — un
+ * parent venu travailler avec son enfant n'a pas besoin de voir une
  * promotion sur chaque écran.
  *
- * DEUX IMAGES, ET C'EST LA BALISE QUI CHOISIT
- * -------------------------------------------
- * Un visuel de 1920 × 320 ramené à la largeur d'un téléphone fait 65 pixels
- * de haut : le prix devient illisible, et la promotion ne sert plus à rien là
- * où se fait la moitié du trafic. Aucune règle de style ne rattrape ça — il
- * faut un autre cadrage, donc un autre fichier.
+ * IMAGE OU VIDÉO, ET LA BALISE N'EST PAS LA MÊME
+ * ----------------------------------------------
+ * `<picture>` et `<video>` ne se remplacent pas : une vidéo posée dans un
+ * `<img>` ne montre rien du tout. Le serveur dit donc lequel des deux avant
+ * qu'on demande le moindre octet, plutôt que de laisser l'écran deviner à
+ * partir d'une extension.
  *
- * `<picture>` PLUTÔT QU'UNE MESURE EN JAVASCRIPT. Le navigateur applique la
- * requête média AVANT de télécharger quoi que ce soit : un téléphone ne
- * charge jamais la version large. Mesurer la fenêtre en JavaScript
- * arriverait toujours trop tard — l'image large serait déjà en vol.
+ * DEUX VISUELS, ET C'EST LA BALISE QUI CHOISIT — POUR LES IMAGES
+ * -------------------------------------------------------------
+ * Un visuel de 2400 × 480 ramené à la largeur d'un téléphone fait 65 pixels
+ * de haut : le prix devient illisible là où se fait la moitié du trafic.
+ * `<picture>` applique la requête média AVANT de télécharger quoi que ce
+ * soit — un téléphone ne charge jamais la version large.
+ *
+ * POUR LA VIDÉO, IL FAUT MESURER SOI-MÊME. L'attribut `media` sur `<source>`
+ * fonctionne dans `<picture>` mais plus dans `<video>` : Chrome l'a retiré.
+ * On lit donc la largeur une seule fois, à l'initialisation de l'état, donc
+ * AVANT le premier rendu — pas dans un effet, qui arriverait après et ferait
+ * télécharger le mauvais fichier avant de le remplacer.
  *
  * IL NE RÉSERVE PAS SA PLACE, ET C'EST DÉLIBÉRÉ
  * ---------------------------------------------
@@ -27,11 +35,11 @@ import { getPromoActive, urlImagePromo } from '../lib/api/promosApi';
  * pas de cadre vide, pas de hauteur réservée. Une bande grise qui attend une
  * image qui n'existe pas la plupart du temps repousserait le titre de la page
  * sous la ligne de flottaison, tous les jours, pour l'exception.
- *
- * En contrepartie, l'arrivée du bandeau décale le contenu. C'est le bon
- * compromis ici : la promotion est rare, et le décalage se produit avant que
- * le visiteur ait eu le temps de lire — pas sous son doigt.
  */
+
+/** Le seuil où la version téléphone prend le relais. Le même qu'en CSS. */
+const SEUIL_MOBILE = '(max-width: 640px)';
+
 export default function BandeauPromo() {
   const [promo, setPromo] = useState(null);
 
@@ -39,6 +47,13 @@ export default function BandeauPromo() {
   // pas laisser un texte alternatif nu en haut de la page d'accueil : ça se
   // lit comme un site cassé. On efface tout.
   const [casse, setCasse] = useState(false);
+
+  // Lu à l'initialisation, donc avant le premier rendu. Ne sert qu'à la
+  // vidéo : les images passent par `<picture>`, que le navigateur résout
+  // mieux que nous.
+  const [surMobile, setSurMobile] = useState(
+    () => window.matchMedia?.(SEUIL_MOBILE).matches ?? false,
+  );
 
   useEffect(() => {
     let vivant = true;
@@ -55,18 +70,52 @@ export default function BandeauPromo() {
     return () => { vivant = false; };
   }, []);
 
+  // La rotation d'un téléphone franchit le seuil : sans cet écouteur, la
+  // vidéo resterait celle du format qu'on avait au chargement.
+  useEffect(() => {
+    const sonde = window.matchMedia?.(SEUIL_MOBILE);
+    if (!sonde) return undefined;
+
+    const suivre = (e) => setSurMobile(e.matches);
+    sonde.addEventListener('change', suivre);
+
+    return () => sonde.removeEventListener('change', suivre);
+  }, []);
+
   if (!promo || casse) return null;
 
   const version = promo.version;
+  const mobile = surMobile && promo.avecImageMobile;
 
-  const image = (
+  const media = promo.estVideo ? (
+    // MUET, EN BOUCLE, ET SANS COMMANDES.
+    //
+    // `muted` n'est pas un choix esthétique : sans lui, aucun navigateur ne
+    // lance la lecture automatique, et le bandeau resterait figé sur sa
+    // première image. `playsInline` est la même contrainte sur iPhone, qui
+    // sinon ouvre la vidéo en plein écran par-dessus le site.
+    //
+    // Pas de commandes : c'est un ornement, pas un lecteur. Une barre de
+    // lecture inviterait à mettre en pause une boucle de huit secondes.
+    <video
+      className="promo__image"
+      src={urlImagePromo(promo.id, { mobile, version })}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      aria-label={promo.texteAlternatif}
+      onError={() => setCasse(true)}
+    />
+  ) : (
     <picture>
       {/* La version téléphone n'est proposée que si elle existe. Sans elle,
           la balise retombe sur l'image large — le serveur ferait le même
           repli, mais autant ne pas demander un fichier qu'on sait absent. */}
       {promo.avecImageMobile && (
         <source
-          media="(max-width: 640px)"
+          media={SEUIL_MOBILE}
           srcSet={urlImagePromo(promo.id, { mobile: true, version })}
         />
       )}
@@ -80,15 +129,17 @@ export default function BandeauPromo() {
     </picture>
   );
 
+  const classe = `promo ${promo.pleineLargeur ? 'promo--pleine' : ''}`;
+
   // PAS DE LIEN, PAS DE CADRE CLIQUABLE. Un bloc qui réagit au survol et ne
   // mène nulle part est plus frustrant qu'une image inerte.
-  if (!promo.lien) return <div className="promo">{image}</div>;
+  if (!promo.lien) return <div className={classe}>{media}</div>;
 
   const externe = /^https?:/i.test(promo.lien);
 
   return (
     <a
-      className="promo promo--lien"
+      className={`${classe} promo--lien`}
       href={promo.lien}
       {...(externe
         // `noopener` sur toute cible extérieure : sans lui, la page ouverte
@@ -96,7 +147,7 @@ export default function BandeauPromo() {
         ? { target: '_blank', rel: 'noopener noreferrer' }
         : {})}
     >
-      {image}
+      {media}
     </a>
   );
 }

@@ -20,6 +20,7 @@ import {
   getHistoriqueHeures,
   definirAdministrateur,
   getRepartitionParents,
+  bannirParent,
 } from '../lib/api/adminApi';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
@@ -33,6 +34,7 @@ import Messagerie from './Messagerie';
 import MessageInformation from './MessageInformation';
 import PromosAdmin from './PromosAdmin';
 import Onglets from './Onglets';
+import Bannis from './Bannis';
 import Planches from './Planches';
 import { ranger, suivant, annoncerTri } from '../lib/triTableau';
 
@@ -782,6 +784,18 @@ export default function Admin() {
   const [sousOnglet, setSousOnglet] = useState('messagerie');
   const [edition, setEdition] = useState(null);
 
+  // Le parent qu’on s’apprête à bannir, et le compteur qui fait relire la
+  // liste après coup. Deux états plutôt qu’un couplage entre les deux
+  // composants : le tableau n’a pas à connaître la liste, il annonce
+  // seulement qu’elle a changé.
+  const [aBannir, setABannir] = useState(null);
+  const [versionBannis, setVersionBannis] = useState(0);
+
+  // Son propre message d'erreur, et non celui de l'écran : `error` vient du
+  // magasin Redux, il s'affiche tout en haut de la page — donc DERRIÈRE la
+  // modale, invisible pour qui vient de cliquer.
+  const [erreurBannissement, setErreurBannissement] = useState(null);
+
   /**
    * Le compte dont on est en train de changer le rôle.
    *
@@ -956,6 +970,13 @@ export default function Admin() {
           { cle: 'frequentation', libelle: 'Fréquentation' },
           { cle: 'parents', libelle: `Parents (${parents.length})` },
           { cle: 'mails', libelle: 'Mails' },
+
+          // JUSTE APRÈS LES MAILS, parce que c'est de là qu'il vient : ce
+          // fut un sous-onglet du courrier, et c'est là que la main va le
+          // chercher pendant quelques semaines. Un onglet déplacé à l'autre
+          // bout de la barre se perd, même quand la nouvelle place est plus
+          // juste.
+          { cle: 'promos', libelle: 'Promos' },
           { cle: 'eleves', libelle: `Élèves (${eleves.length})` },
           { cle: 'avis', libelle: 'Avis' },
           ...(estSuperAdmin ? [{ cle: 'modes', libelle: 'Modes' }] : []),
@@ -1119,18 +1140,18 @@ export default function Admin() {
               // pas un réglage. On la cherche là où on écrit aux gens.
               { cle: 'information', libelle: 'Message d’information' },
 
-              // Le seul des quatre qui ne soit pas du texte : un visuel
-              // de campagne. Il reste ici parce que c'est le même geste —
-              // dire quelque chose à tout le monde — et qu'on le cherche
-              // là où on écrit aux gens, pas dans les interrupteurs.
-              { cle: 'promo', libelle: 'Bandeau promo' },
+              // LE BANDEAU PROMO EST PARTI D'ICI, et c'était le bon geste.
+              // Ces trois-là sont du COURRIER — des mots qu'on adresse à
+              // quelqu'un. Une bibliothèque d'affiches de campagne n'en est
+              // pas : on l'y rangeait par commodité, parce que les deux
+              // servent à communiquer, et cette parenté-là est trop lâche
+              // pour ranger quoi que ce soit. Elle a maintenant son onglet.
             ]}
           />
 
           {sousOnglet === 'messagerie' && <Messagerie />}
           {sousOnglet === 'diffusion' && <Diffusion nombreParents={parents.length} />}
           {sousOnglet === 'information' && <MessageInformation />}
-          {sousOnglet === 'promo' && <PromosAdmin />}
         </>
       )}
 
@@ -1140,6 +1161,8 @@ export default function Admin() {
           <CoutTotal />
 
           <FichierClients />
+
+          <Bannis version={versionBannis} />
 
           <div className="filtres">
             <input
@@ -1312,6 +1335,20 @@ export default function Admin() {
 
                           L'API refuse cette route de son côté ; l'absence du
                           bouton ne fait que ne pas montrer une porte murée. */}
+                      {/* BANNIR N’EST PAS SUPPRIMER, et les deux boutons se
+                          suivent pour qu’on choisisse en connaissance de
+                          cause. Bannir ferme la porte et se lève ;
+                          supprimer efface et ne se reprend pas. */}
+                      {!p.estSuperAdministrateur && (
+                      <button
+                        type="button"
+                        className="btn-ghost btn-ghost--mini"
+                        disabled={muting}
+                        onClick={() => setABannir({ id: p.id, mail: p.mail, motif: '' })}
+                      >
+                        Bannir
+                      </button>
+                      )}
                       {!p.estSuperAdministrateur && (
                       <button
                         type="button"
@@ -1466,6 +1503,87 @@ export default function Admin() {
           chargerEvaluations={getHistoriqueEvaluations}
           chargerRapports={getHistoriqueRapports}
         />
+      )}
+
+      {/* UNE MODALE À PART, ET NON UN CAS DE PLUS DANS CELLE D’ÉDITION.
+          Cette dernière est déjà une chaîne de ternaires sur trois
+          opérations ; y greffer une quatrième branche aurait rendu les
+          quatre illisibles pour économiser un composant. */}
+      {aBannir && (
+        <div className="modale" role="dialog" aria-modal="true">
+          <form
+            className="modale__boite"
+            onSubmit={async (e) => {
+              e.preventDefault();
+
+              setErreurBannissement(null);
+
+              try {
+                await bannirParent(aBannir.id, aBannir.motif);
+                setABannir(null);
+                setVersionBannis((v) => v + 1);
+              } catch (err) {
+                // LA MODALE RESTE OUVERTE. La refermer sur un échec ferait
+                // disparaître le motif qu’on vient de taper, et laisserait
+                // croire que le bannissement est passé.
+                setErreurBannissement(
+                  err?.response?.data?.message
+                  ?? "Le bannissement n’a pas pu être enregistré.",
+                );
+              }
+            }}
+          >
+            <h2>Bannir {aBannir.mail}</h2>
+
+            <div className="modale__corps">
+              {erreurBannissement && (
+                <div className="alert">{erreurBannissement}</div>
+              )}
+
+              <p className="modale__note">
+                Son compte <strong>n’est pas supprimé</strong> : il reste en
+                l’état, avec ses élèves et son abonnement. Mais il ne pourra
+                plus se connecter, ni recréer de compte avec cette adresse
+                s’il la supprime.
+              </p>
+
+              <p className="modale__note">
+                Le bannissement se lève à tout moment depuis la liste des
+                adresses bannies, en haut de cet onglet.
+              </p>
+
+              <div className="champ">
+                <label htmlFor="bannir-motif">Motif</label>
+                <input
+                  id="bannir-motif"
+                  maxLength={300}
+                  value={aBannir.motif}
+                  onChange={(e) => setABannir({ ...aBannir, motif: e.target.value })}
+                  placeholder="Impayés répétés, comportement abusif…"
+                />
+                <span className="champ__aide">
+                  Facultatif. C’est lui qui rendra la décision révisable dans
+                  six mois, quand le compte aura disparu et qu’il ne restera
+                  que l’adresse.
+                </span>
+              </div>
+            </div>
+
+            <div className="modale__actions">
+              <button type="submit" className="btn btn--compact btn--danger">
+                Bannir cette adresse
+              </button>
+
+              <button
+                type="button"
+                className="btn btn--compact btn--fantome"
+                onClick={() => { setABannir(null); setErreurBannissement(null); }}
+              >
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       {edition && (
@@ -1647,6 +1765,9 @@ export default function Admin() {
           </form>
         </div>
       )}
+
+      {/* ---------------------------------------------------------- promos */}
+      {onglet === 'promos' && <PromosAdmin />}
 
       {onglet === 'modes' && <Modes />}
 

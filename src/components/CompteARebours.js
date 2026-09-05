@@ -79,7 +79,7 @@ export default function CompteARebours() {
   // serait un mensonge. Et `bandeau` est le choix de l'exploitant : les
   // premiers jours d'une campagne, l'urgence ne veut rien dire — il reste
   // trois semaines — et on préfère allumer le décompte à la fin.
-  if (!offre.active || !offre.bandeau || !temps) return null;
+  if (!offre.active || !offre.bandeau || !offre.heures || !temps) return null;
 
   const dernierJour = temps.jours === 0;
 
@@ -92,7 +92,11 @@ export default function CompteARebours() {
         <span className="rebours__mention">{offre.texte}</span>
 
         <p className="rebours__phrase">
-          <strong>3 h de cours offertes</strong> sur la formule Solo,
+          {/* LE NOMBRE VIENT DU SERVEUR, qui le lit dans le pack réglé en
+              administration. Écrit en dur, il aurait continué d’annoncer
+              trois heures le jour où l’offre en donne dix. */}
+          <strong>{offre.heures} h de cours offertes</strong>
+          {' '}sur {offre.formulesTexte ? `la formule ${offre.formulesTexte}` : 'nos formules'},
           {' '}le premier mois
         </p>
       </div>

@@ -152,3 +152,72 @@ test('un lien interne reste dans l’onglet', async () => {
 
   expect(screen.getByRole('link')).not.toHaveAttribute('target');
 });
+
+// ------------------------------------------------- vidéo et pleine largeur
+//
+// TOUS ASYNCHRONES, comme les précédents : le composant ne rend rien tant que
+// la promotion n'est pas revenue du serveur. Une assertion synchrone y trouve
+// un conteneur vide et échoue sans rapport avec ce qu'elle teste.
+
+test('une vidéo est rendue dans une balise vidéo, jamais dans une image', async () => {
+  // LES DEUX BALISES NE SE REMPLACENT PAS. Une vidéo posée dans un `<img>` ne
+  // montre rigoureusement rien — pas une image cassée avec son texte de
+  // remplacement : rien. Le défaut ne se voit qu'en téléversant une vraie
+  // vidéo, c'est-à-dire jamais pendant un remaniement.
+  mockPromo = { ...PROMO, estVideo: true };
+
+  const { container } = render(<BandeauPromo />);
+
+  const video = await waitFor(() => {
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access -- une balise vidéo sans commandes n'expose aucun rôle : aucune requête de Testing Library ne l'atteint.
+    const trouve = container.querySelector('video');
+    expect(trouve).toBeInTheDocument();
+
+    return trouve;
+  });
+
+  // `muted` ET `playsInline` NE SONT PAS COSMÉTIQUES : sans le premier, aucun
+  // navigateur ne lance la lecture automatique et le bandeau reste figé sur sa
+  // première image ; sans le second, l'iPhone ouvre la vidéo en plein écran
+  // par-dessus le site.
+  expect(video.muted).toBe(true);
+  expect(video.hasAttribute('playsinline')).toBe(true);
+  expect(video.loop).toBe(true);
+});
+
+test('une image reste une image', async () => {
+  mockPromo = { ...PROMO, estVideo: false };
+
+  const { container } = render(<BandeauPromo />);
+
+  await screen.findByRole('img');
+
+  // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access -- symétrique du test précédent : on vérifie qu'aucune balise vidéo n'est posée.
+  expect(container.querySelector('video')).not.toBeInTheDocument();
+});
+
+test('la pleine largeur pose la classe dont dépend la mise en page', async () => {
+  // C'est `.promo--pleine` que la feuille de style interroge pour relâcher la
+  // largeur et retirer l'arrondi. Renommée sans le savoir, le bandeau
+  // resterait une bulle alors que l'administration affiche « toute la
+  // largeur » — et rien d'autre ici ne le signalerait.
+  mockPromo = { ...PROMO, pleineLargeur: true };
+
+  const { container } = render(<BandeauPromo />);
+
+  await screen.findByRole('img');
+
+  // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access -- une classe n'a ni rôle ni texte.
+  expect(container.firstChild).toHaveClass('promo--pleine');
+});
+
+test('sans le drapeau, le bandeau reste une bulle', async () => {
+  mockPromo = { ...PROMO, pleineLargeur: false };
+
+  const { container } = render(<BandeauPromo />);
+
+  await screen.findByRole('img');
+
+  // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access -- idem.
+  expect(container.firstChild).not.toHaveClass('promo--pleine');
+});
