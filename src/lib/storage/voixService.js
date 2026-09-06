@@ -13,7 +13,7 @@
  */
 
 import httpClient, { API_BASE_URL, enTeteAuth } from '../api/httpClient';
-import { DEBUT_DICTEE, FIN_DICTEE } from './ardoise';
+import { DEBUT_DICTEE, FIN_DICTEE, DEBUT_ANGLAIS, FIN_ANGLAIS } from './ardoise';
 import { epelerLesChoix } from './epellation';
 
 /**
@@ -462,6 +462,12 @@ class Lecteur {
     // l'appelant à chaque tour, à partir du marqueur du professeur.
     this.dictee = false;
 
+    // ANGLAIS PRONONCÉ, bascule jumelle de la dictée et pour la même raison :
+    // un même message mêle une annonce en français et un passage à dire en
+    // anglais. Le drapeau suit la PHRASE, pas le tour de parole — sans quoi la
+    // consigne « lis ceci en anglais » s'appliquerait aussi à l'annonce.
+    this.anglais = false;
+
     /**
      * Lecture par le graphe audio plutôt que par des éléments <audio>.
      *
@@ -645,7 +651,8 @@ class Lecteur {
    * le mauvais débit.
    */
   alimenter(fragment) {
-    if (!fragment.includes(DEBUT_DICTEE) && !fragment.includes(FIN_DICTEE)) {
+    if (!fragment.includes(DEBUT_DICTEE) && !fragment.includes(FIN_DICTEE)
+        && !fragment.includes(DEBUT_ANGLAIS) && !fragment.includes(FIN_ANGLAIS)) {
       this.alimenterMorceau(fragment);
       return;
     }
@@ -656,8 +663,17 @@ class Lecteur {
     // par le linter, et c'est une bonne règle : ils sont presque toujours une
     // faute de frappe. Ici ils sont le sujet même de la découpe.
     // eslint-disable-next-line no-control-regex
-    for (const morceau of fragment.split(/([\u0001\u0002])/)) {
-      if (morceau === DEBUT_DICTEE) {
+    for (const morceau of fragment.split(/([\u0001\u0002\u0003\u0004])/)) {
+      if (morceau === DEBUT_ANGLAIS) {
+        // Le groupe en cours appartient au francais : on le vide avant de
+        // basculer, sinon la phrase d'annonce partirait elle aussi avec la
+        // consigne de langue anglaise.
+        this.viderGroupe();
+        this.anglais = true;
+      } else if (morceau === FIN_ANGLAIS) {
+        this.viderGroupe();
+        this.anglais = false;
+      } else if (morceau === DEBUT_DICTEE) {
         this.viderGroupe();
 
         // AVANT de basculer : cette phrase se dit à la voix normale, pas au
@@ -805,7 +821,12 @@ class Lecteur {
     // gel, les premières phrases partaient avec l'âge par défaut et les
     // suivantes avec le vrai — donc avec une autre consigne de jeu, et une
     // voix qui semblait changer au milieu du message.
-    const reglages = { avatar: this.avatar, age: this.age, dictee: this.dictee };
+    const reglages = {
+      avatar: this.avatar,
+      age: this.age,
+      dictee: this.dictee,
+      anglais: this.anglais,
+    };
 
     // Une phrase sans ponctuation peut dépasser la limite du serveur : on la
     // coupe sur un espace plutôt que de la laisser tronquer en plein mot.
@@ -1065,7 +1086,7 @@ class Lecteur {
    * pour une phrase puis revenait. C'est ce qui donnait l'impression d'un
    * timbre instable et robotique. On réessaie donc avant d'abandonner.
    */
-  async charger({ texte, avatar, age, dictee }, jeton) {
+  async charger({ texte, avatar, age, dictee, anglais }, jeton) {
     if (!(await serveurDisponible())) return null;
 
     for (let tentative = 0; tentative < 2; tentative += 1) {
@@ -1082,7 +1103,7 @@ class Lecteur {
         // les phrases, eux, fonctionnaient, et ils portaient à eux seuls tout
         // le rythme de l exercice. La lenteur d élocution, elle, manquait
         // simplement — et rien ne disait qu elle aurait dû être là.
-        return await this.diffuser({ texte, avatar, age, dictee }, jeton);
+        return await this.diffuser({ texte, avatar, age, dictee, anglais }, jeton);
       } catch (erreur) {
         const code = erreur?.statut ?? erreur?.response?.status;
 
@@ -1120,7 +1141,7 @@ class Lecteur {
    * qu'on veut éviter — le serveur vidange par blocs de quatre kilo-octets, et
    * personne ne les récupérait.
    */
-  async diffuser({ texte, avatar, age, dictee }, jeton) {
+  async diffuser({ texte, avatar, age, dictee, anglais }, jeton) {
     const controleur = new AbortController();
     const entete = await enTeteAuth();
 
@@ -1131,7 +1152,11 @@ class Lecteur {
         'Content-Type': 'application/json',
         ...(entete ? { Authorization: entete } : {}),
       },
-      body: JSON.stringify({ texte, avatar, age, dictee: Boolean(dictee) }),
+      body: JSON.stringify({
+        texte, avatar, age,
+        dictee: Boolean(dictee),
+        anglais: Boolean(anglais),
+      }),
     });
 
     if (!reponse.ok || !reponse.body) {

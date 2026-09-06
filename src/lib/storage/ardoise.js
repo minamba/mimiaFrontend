@@ -60,6 +60,28 @@ export const DEBUT_DICTEE = '\u0001';
 export const FIN_DICTEE = '\u0002';
 
 /**
+ * L'ANGLAIS PRONONCÉ, ET LES BORNES QUI LE SIGNALENT À LA VOIX.
+ *
+ * Le passage qu'elles entourent part à la synthèse avec une consigne de
+ * langue ; le reste du message continue en français. C'est ce qui permet de
+ * garder le principe pédagogique — on EXPLIQUE en français, on PRATIQUE en
+ * anglais — tout en rendant l'écoute possible.
+ *
+ * DIT MAIS PAS ÉCRIT, exactement comme la dictée : afficher le texte pendant
+ * qu'on le prononce supprimerait l'exercice, l'élève lirait au lieu
+ * d'écouter.
+ *
+ * Deux caractères de contrôle de plus, choisis pour les mêmes raisons que
+ * ceux de la dictée — aucun texte de professeur n'en contient, aucune
+ * synthèse ne saurait les prononcer.
+ */
+const ANGLAIS_OUVERTURE = '[EN]';
+const ANGLAIS_FERMETURE = '[/EN]';
+
+export const DEBUT_ANGLAIS = '\u0003';
+export const FIN_ANGLAIS = '\u0004';
+
+/**
  * La prochaine ouverture de dictée, quelle que soit sa variante.
  *
  * Rend l'index ET la longueur du marqueur : les deux formes n'ont pas la même
@@ -98,6 +120,36 @@ export function contientDictee(texte) {
  * Tolère un bloc encore ouvert — pendant le flux, la fermeture n'est pas
  * encore arrivée et le texte ne doit surtout pas apparaître en attendant.
  */
+/**
+ * Retire les passages d'anglais oral : ce qui se prononce pour être écouté
+ * ne s'affiche pas, sinon l'élève lit la réponse au lieu de l'entendre.
+ *
+ * Tolère un bloc encore ouvert, comme la dictée : pendant le flux, la
+ * fermeture n'est pas encore arrivée et le texte ne doit surtout pas
+ * apparaître en attendant.
+ */
+function retirerAnglaisOral(texte) {
+  let sortie = '';
+  let reste = texte;
+
+  while (reste.length > 0) {
+    const debut = reste.indexOf(ANGLAIS_OUVERTURE);
+
+    if (debut === -1) { sortie += reste; break; }
+
+    sortie += reste.slice(0, debut);
+
+    const apres = reste.slice(debut + ANGLAIS_OUVERTURE.length);
+    const fin = apres.indexOf(ANGLAIS_FERMETURE);
+
+    if (fin === -1) break;
+
+    reste = apres.slice(fin + ANGLAIS_FERMETURE.length);
+  }
+
+  return sortie;
+}
+
 function retirerDictees(texte) {
   let sortie = '';
   let reste = texte;
@@ -394,9 +446,9 @@ function retirerMarqueurs(texte) {
 export function decouper(texte) {
   const segments = [];
 
-  // La dictée est retirée AVANT tout le reste : c'est la seule chose du flux
-  // qui doit être entendue sans jamais être vue.
-  let reste = retirerDictees(retirerMarqueurs(texte));
+  // La dictée et l’anglais oral sont retirés AVANT tout le reste : ce sont les
+  // deux seules choses du flux qui s’entendent sans jamais se voir.
+  let reste = retirerAnglaisOral(retirerDictees(retirerMarqueurs(texte)));
 
   // UNE BALISE COUPÉE EN DEUX NE S'AFFICHE PAS.
   //
@@ -500,7 +552,9 @@ export function texteParle(texte, { bornes = false } = {}) {
   let reste = retirerMarqueurs(texte)
     .split(DICTEE_CLAVIER).join(bornes ? DEBUT_DICTEE : '')
     .split(DICTEE_OUVERTURE).join(bornes ? DEBUT_DICTEE : '')
-    .split(DICTEE_FERMETURE).join(bornes ? FIN_DICTEE : '');
+    .split(DICTEE_FERMETURE).join(bornes ? FIN_DICTEE : '')
+    .split(ANGLAIS_OUVERTURE).join(bornes ? DEBUT_ANGLAIS : '')
+    .split(ANGLAIS_FERMETURE).join(bornes ? FIN_ANGLAIS : '');
 
   while (reste.length > 0) {
     const debut = reste.indexOf(OUVERTURE);
