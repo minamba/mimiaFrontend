@@ -13,6 +13,7 @@ import {
   muter,
   changerPeriodeCout,
 } from '../lib/actions/adminActions';
+import { chargerReferentiel } from '../lib/actions/referentielActions';
 import {
   getHistoriqueEvaluations,
   getHistoriqueRapports,
@@ -23,6 +24,7 @@ import {
   bannirParent,
   getRapportEleve,
   getCopieEleve,
+  getDicteeEleve,
 } from '../lib/api/adminApi';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
@@ -32,9 +34,15 @@ import RelectureAvis from './RelectureAvis';
 import Loader from './Loader';
 import Modes from './Modes';
 import Diffusion from './Diffusion';
+import MessageParent from './MessageParent';
+import CalendrierEleveModale from './CalendrierEleveModale';
 import Messagerie from './Messagerie';
 import MessageInformation from './MessageInformation';
 import PromosAdmin from './PromosAdmin';
+import PeriodesVacancesAdmin from './PeriodesVacancesAdmin';
+import ProgrammeScolaireAdmin from './ProgrammeScolaireAdmin';
+import SignalementsAdmin from './SignalementsAdmin';
+import FournisseursIA from './FournisseursIA';
 import Onglets from './Onglets';
 import Bannis from './Bannis';
 import Planches from './Planches';
@@ -778,6 +786,7 @@ export default function Admin() {
   // refuse ces routes de son côté ; c est seulement ne pas montrer une porte
   // qu on n ouvrira pas.
   const { estSuperAdmin } = useSelector((state) => state.auth);
+  const { academies } = useSelector((state) => state.referentiel);
 
   const [onglet, setOnglet] = useState('stats');
 
@@ -785,6 +794,11 @@ export default function Admin() {
   // qu'une diffusion se prépare trois fois par an.
   const [sousOnglet, setSousOnglet] = useState('messagerie');
   const [edition, setEdition] = useState(null);
+
+  // L'élève dont on regarde le calendrier — l'objet entier, pas seulement
+  // son id : la fenêtre a besoin du prénom pour son titre, et le tableau l'a
+  // déjà sous la main, pas la peine de le redemander.
+  const [calendrierEleve, setCalendrierEleve] = useState(null);
 
   // Le parent qu’on s’apprête à bannir, et le compteur qui fait relire la
   // liste après coup. Deux états plutôt qu’un couplage entre les deux
@@ -853,6 +867,11 @@ export default function Admin() {
 
   useEffect(() => {
     dispatch(chargerAdmin());
+
+    // Les académies servent au champ « Académie » de la fenêtre de
+    // modification d'un élève — chargées une fois, comme le reste du
+    // référentiel côté parent.
+    dispatch(chargerReferentiel());
 
     // ON REPART PROPRE À CHAQUE VISITE.
     //
@@ -983,6 +1002,14 @@ export default function Admin() {
           { cle: 'avis', libelle: 'Avis' },
           ...(estSuperAdmin ? [{ cle: 'modes', libelle: 'Modes' }] : []),
           { cle: 'schemas', libelle: 'Schémas' },
+
+          // JUSTE AVANT LES PÉRIODES SCOLAIRES — voulu par Camara le
+          // 13/09/2026, les deux se lisent ensemble : l'un dit QUAND l'année
+          // scolaire se déroule, l'autre QUEL programme y est enseigné.
+          { cle: 'programme', libelle: 'Programme scolaire' },
+          { cle: 'periodes', libelle: 'Périodes scolaires' },
+          { cle: 'signalements', libelle: 'Signalements' },
+          { cle: 'fournisseurs', libelle: 'Anthropic / OpenAI' },
         ]}
       />
 
@@ -1135,6 +1162,12 @@ export default function Admin() {
             onChoisir={setSousOnglet}
             items={[
               { cle: 'messagerie', libelle: 'Messagerie' },
+
+              // ENTRE LIRE ET DIFFUSER : écrire à un parent précis est un
+              // geste ciblé, comme la messagerie, mais c'est une prise de
+              // parole nouvelle — pas une réponse dans un fil existant.
+              { cle: 'parent', libelle: 'Écrire à un parent' },
+
               { cle: 'diffusion', libelle: 'Message de diffusion' },
 
               // TROISIÈME PARCE QUE C'EST LE PLUS RARE, mais au même
@@ -1152,6 +1185,7 @@ export default function Admin() {
           />
 
           {sousOnglet === 'messagerie' && <Messagerie />}
+          {sousOnglet === 'parent' && <MessageParent parents={parents} />}
           {sousOnglet === 'diffusion' && <Diffusion nombreParents={parents.length} />}
           {sousOnglet === 'information' && <MessageInformation />}
         </>
@@ -1451,6 +1485,13 @@ export default function Admin() {
                     <button
                       type="button"
                       className="btn-ghost btn-ghost--mini"
+                      onClick={() => setCalendrierEleve(e)}
+                    >
+                      Calendrier
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost btn-ghost--mini"
                       onClick={() =>
                         setEdition({
                           operation: 'modifierEleve',
@@ -1459,6 +1500,7 @@ export default function Admin() {
                           nom: e.nom ?? '',
                           age: e.age,
                           sexe: e.sexe ?? 0,
+                          academieId: e.academieId ?? null,
                         })
                       }
                     >
@@ -1506,6 +1548,15 @@ export default function Admin() {
           chargerRapports={getHistoriqueRapports}
           chargerRapport={getRapportEleve}
           chargerCopie={getCopieEleve}
+          chargerDictee={getDicteeEleve}
+        />
+      )}
+
+      {/* --------------------------------------------------- calendrier élève */}
+      {calendrierEleve && (
+        <CalendrierEleveModale
+          eleve={calendrierEleve}
+          onFermer={() => setCalendrierEleve(null)}
         />
       )}
 
@@ -1745,6 +1796,35 @@ export default function Admin() {
                     Détermine les accords du professeur quand il lui parle.
                   </span>
                 </div>
+
+                <div className="champ">
+                  <label htmlFor="ed-academie">Académie</label>
+                  <select
+                    id="ed-academie"
+                    value={edition.academieId ?? ''}
+                    onChange={(e) =>
+                      setEdition({ ...edition, academieId: e.target.value ? Number(e.target.value) : null })}
+                  >
+                    <option value="">Non renseignée</option>
+                    <optgroup label="Zones A, B, C">
+                      {academies
+                        .filter((a) => ['A', 'B', 'C'].includes(a.zone))
+                        .map((a) => (
+                          <option key={a.id} value={a.id}>{a.libelle}</option>
+                        ))}
+                    </optgroup>
+                    <optgroup label="Corse et outre-mer">
+                      {academies
+                        .filter((a) => !['A', 'B', 'C'].includes(a.zone))
+                        .map((a) => (
+                          <option key={a.id} value={a.id}>{a.libelle}</option>
+                        ))}
+                    </optgroup>
+                  </select>
+                  <span className="champ__aide">
+                    Détermine les périodes de vacances affichées dans « Mon calendrier ».
+                  </span>
+                </div>
               </>
             )}
 
@@ -1778,6 +1858,14 @@ export default function Admin() {
       {/* Les schémas : quelles figures sont importées, lesquelles restent au
           crayon du professeur. */}
       {onglet === 'schemas' && <Planches />}
+
+      {onglet === 'programme' && <ProgrammeScolaireAdmin />}
+
+      {onglet === 'periodes' && <PeriodesVacancesAdmin />}
+
+      {onglet === 'signalements' && <SignalementsAdmin />}
+
+      {onglet === 'fournisseurs' && <FournisseursIA />}
     </section>
   );
 }

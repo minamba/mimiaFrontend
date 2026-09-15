@@ -17,7 +17,12 @@
  * Ce test lit le JSON produit et le compare au catalogue. S'il échoue, la
  * réponse est toujours la même : relancer le générateur.
  */
-describe('workflow N8N', () => {
+// EN PAUSE DEPUIS LE 14/09/2026 — Camara n'utilise plus n8n : les planches sont
+// importées à la main depuis l'administration. Le workflow n'est donc plus
+// régénéré, et ce test, qui exige qu'il recopie le catalogue, échouerait à
+// chaque emplacement ajouté. Rien n'est supprimé (dossier `n8n/`, générateur,
+// test) : si l'agent revient, retirer le `.skip` et relancer le générateur.
+describe.skip('workflow N8N', () => {
   const fs = require('fs');
   const path = require('path');
   const { catalogue, plancheRecommandee } = require('../lib/storage/schemas');

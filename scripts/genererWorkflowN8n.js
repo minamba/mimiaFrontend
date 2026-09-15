@@ -81,7 +81,18 @@ const MATIERES = {
   fr: 'FRANCAIS',
   hg: 'HISTOIRE_GEO',
   an: 'ANGLAIS',
+  es: 'ESPAGNOL',
   sc: 'SCIENCES',
+  // Spécialités des séries technologiques (14/09/2026).
+  bph: 'BIOLOGIE_HUMAINE',
+  biotech: 'BIOTECHNOLOGIES',
+  spcl: 'SPCL',
+  // Spécialités de la voie générale (14/09/2026).
+  hggsp: 'HGGSP',
+  ses: 'SES',
+  nsi: 'NSI',
+  si: 'SI',
+  eppcs: 'EPPCS',
 };
 
 /**
@@ -158,7 +169,7 @@ const REGLAGES = `
  * LES SEULS RÉGLAGES À TOUCHER.
  *
  * MATIERE   — le préfixe de la matière à traiter, ou '' pour TOUTES.
- *             svt, pc, math, fr, hg, an, sc
+ *             svt, pc, math, fr, hg, an, es, sc, bph, biotech, spcl, hggsp, ses, nsi, si, eppcs
  *
  * LIMITE    — combien de planches importer par exécution.
  *

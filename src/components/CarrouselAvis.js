@@ -70,7 +70,9 @@ export default function CarrouselAvis({ avis }) {
   const plusieurs = avis.length > 1;
 
   return (
-    <div className="carrousel">
+    // `carrousel--fin` : sur téléphone, le bord droit se fond tant qu'il reste
+    // une carte à venir — et plus du tout sur la dernière, qu'on lit en entier.
+    <div className={`carrousel${fin ? ' carrousel--fin' : ''}`}>
       {/* LES FLÈCHES ENCADRENT LA PISTE, elles ne la recouvrent pas. Posées
           par-dessus les cartes, elles masqueraient le début d'un nom et la fin
           d'une phrase — c'est-à-dire ce qu'on vient lire. */}

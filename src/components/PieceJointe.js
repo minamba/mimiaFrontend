@@ -96,7 +96,7 @@ const lisible = (octets) => {
  * garde donc l'input pour ce qu'il sait faire — ouvrir l'appareil photo ou la
  * galerie sur téléphone — et le bouton pour tout le reste.
  */
-export function BoutonPieceJointe({ onFichier, disabled, libelle }) {
+export function BoutonPieceJointe({ onFichier, disabled, libelle, enSurbrillance }) {
   const champRef = useRef(null);
 
   return (
@@ -125,7 +125,7 @@ export function BoutonPieceJointe({ onFichier, disabled, libelle }) {
           c'est le geste qui termine l'exercice, pas une option. */}
       <button
         type="button"
-        className={libelle ? 'btn btn--compact piece-jointe__rendre' : 'piece-jointe__bouton'}
+        className={`${libelle ? 'btn btn--compact piece-jointe__rendre' : 'piece-jointe__bouton'} ${enSurbrillance ? 'piece-jointe__bouton--surbrillance' : ''}`}
         onClick={() => champRef.current?.click()}
         disabled={disabled}
         title={libelle ?? 'Envoyer une photo ou un PDF'}

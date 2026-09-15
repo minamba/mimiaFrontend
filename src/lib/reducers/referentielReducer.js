@@ -7,6 +7,7 @@ import {
 const initialState = {
   niveaux: [],
   matieres: [],
+  academies: [],
   loading: false,
   error: null,
 };
@@ -22,6 +23,7 @@ export default function referentielReducer(state = initialState, action) {
         loading: false,
         niveaux: action.payload.niveaux,
         matieres: action.payload.matieres,
+        academies: action.payload.academies,
       };
 
     case REFERENTIEL_LOAD_FAILURE:

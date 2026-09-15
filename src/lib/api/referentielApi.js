@@ -9,6 +9,9 @@ export const getMatieres = () => httpClient.get('/referentiel/matieres', {
   params: { toutes: true },
 });
 
+/** Les 30 académies, chacune avec sa zone de vacances scolaires. */
+export const getAcademies = () => httpClient.get('/referentiel/academies');
+
 /**
  * L'équipe pédagogique, pour la page d'accueil.
  *
@@ -21,3 +24,10 @@ export const getMatieres = () => httpClient.get('/referentiel/matieres', {
  * regroupement est fait côté serveur pour qu'il ne soit pas à refaire partout.
  */
 export const getEquipe = () => httpClient.get('/referentiel/equipe');
+
+/**
+ * L'année scolaire en cours et le libellé « Programmes officiels 2026-2027 »
+ * — calculés par le serveur, publics : la page d'accueil l'affiche en badge
+ * à côté de son titre. Le 1er août, il passe tout seul à l'année suivante.
+ */
+export const getAnneeScolaire = () => httpClient.get('/referentiel/annee-scolaire');

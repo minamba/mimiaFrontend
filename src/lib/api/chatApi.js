@@ -95,6 +95,28 @@ export const deposerPieceJointe = (conversationId, fichier, options = {}) => {
 };
 
 /**
+ * La réponse à « L'énoncé et ta copie sont-ils séparés ? » — HORS de la
+ * conversation : un clic ne demande aucune réponse du professeur.
+ */
+export const poserChoixCopie = (conversationId, controleId, separee) =>
+  httpClient.post(`/conversations/${conversationId}/copie-controle/choix`, { controleId, separee });
+
+/** Le choix déjà enregistré : `{ separee: true | false | null }`. */
+export const getChoixCopie = (conversationId, controleId) =>
+  httpClient.get(`/conversations/${conversationId}/copie-controle/${controleId}`);
+
+/**
+ * Un QR code pour envoyer une photo depuis le téléphone : `{ jeton, expireLe }`.
+ * Voir `ScanMobileModale`.
+ */
+export const creerScanMobile = (conversationId) =>
+  httpClient.post(`/conversations/${conversationId}/scan-mobile`);
+
+/** La photo est-elle arrivée ? `{ etat: 'attente' | 'recu' | 'expire', piece }`. */
+export const etatScanMobile = (conversationId, jeton) =>
+  httpClient.get(`/conversations/${conversationId}/scan-mobile/${encodeURIComponent(jeton)}`);
+
+/**
  * L'adresse d'un document, pour l'afficher.
  *
  * Elle passe par l'API et non par un fichier statique : ce sont des copies
@@ -124,9 +146,29 @@ export const chargerPieceJointe = async (conversationId, pieceId) => {
 /**
  * Fait parler l'agent en premier, à l'ouverture de la séance.
  * Aucun message élève n'est envoyé ni enregistré.
+ *
+ * @param dureeChoisieMinutes la durée choisie par l'élève (voir DUREES dans
+ *   GrilleMatieres.js), pour que le compte rendu de cette séance la porte à
+ *   son tour — voir le calendrier de l'élève. Absente sur un simple retour
+ *   sur une séance déjà commencée : elle a déjà été transmise à l'accueil
+ *   qui a ouvert cette séance-ci.
+ * @param mode d'où vient l'élève ('controle', 'bilan', 'examen') ; absent pour
+ *   un cours normal, que le serveur pose alors lui-même.
+ * @param epreuveCode l'épreuve préparée, en mode 'examen'.
  */
-export const accueilStream = (conversationId, options) =>
-  consommerFlux(`/conversations/${conversationId}/accueil`, null, options);
+export const accueilStream = (
+  conversationId, options, dureeChoisieMinutes = null, controleId = null,
+  mode = null, epreuveCode = null,
+) =>
+  consommerFlux(
+    `/conversations/${conversationId}/accueil`,
+    dureeChoisieMinutes || controleId || mode || epreuveCode
+      ? {
+        dureeChoisieMinutes, controleId, mode, epreuveCode,
+      }
+      : null,
+    options,
+  );
 
 /**
  * Prise de parole commandée par l'horloge de séance.

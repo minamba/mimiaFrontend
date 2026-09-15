@@ -25,8 +25,13 @@ import {
  * six codes d'accès à l'écran, visibles de tous ceux qui passent derrière —
  * et déclencherait six requêtes pour une information qu'on regarde deux fois
  * par an.
+ *
+ * `avecActions` : « Suspendre l'accès » et « Nouveau code » cassent quelque
+ * chose, ils restent dans « Mon compte ». La fenêtre ouverte depuis « Vos
+ * enfants » (`ListeEleves.js`) ne sert qu'à lire et copier le code — ce
+ * qu'on vient y chercher quand l'enfant dit « j'ai oublié mon code ».
  */
-export default function CodeEnfant({ eleve }) {
+export default function CodeEnfant({ eleve, avecActions = true }) {
   const [etat, setEtat] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [copie, setCopie] = useState(false);
@@ -97,25 +102,68 @@ export default function CodeEnfant({ eleve }) {
       {etat && (
         <>
           <div className="code-enfant__haut">
-            <code className="code-enfant__valeur">{etat.code}</code>
+            {/* UNE TOUCHE PAR CARACTÈRE. Un code dicté à l'autre bout de la
+                pièce se lit caractère par caractère : les séparer à l'œil
+                évite de sauter ou de doubler une lettre. Les touches sont
+                décoratives ; le code entier reste lu d'un bloc par les
+                lecteurs d'écran. */}
+            <div className="code-enfant__valeur">
+              <code className="visuellement-cache">{etat.code}</code>
+              <span className="code-enfant__touches" aria-hidden="true">
+                {[...etat.code].map((caractere, rang) => (caractere === '-'
+                  ? <span key={rang} className="code-enfant__tiret" />
+                  : <span key={rang} className="code-enfant__touche">{caractere}</span>))}
+              </span>
+            </div>
 
-            <button type="button" className="btn-ghost btn-ghost--mini" onClick={copier}>
+            <button
+              type="button"
+              className={`btn btn--compact code-enfant__copier ${copie ? 'code-enfant__copier--fait' : ''}`}
+              onClick={copier}
+            >
+              <span className="code-enfant__copier-icone" aria-hidden="true">
+                {copie ? '✓' : (
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="12" height="12" rx="2" />
+                    <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+                  </svg>
+                )}
+              </span>
               {copie ? 'Copié' : 'Copier'}
             </button>
           </div>
 
+          {/* TROIS GESTES NUMÉROTÉS plutôt qu'une phrase : c'est ce qu'on lit
+              à l'enfant, dans l'ordre, en le regardant faire. */}
+          <ol className="code-enfant__etapes">
+            <li>
+              <span className="code-enfant__num" aria-hidden="true">1</span>
+              <span>Aller sur <strong>mimia.fr</strong></span>
+            </li>
+            <li>
+              <span className="code-enfant__num" aria-hidden="true">2</span>
+              <span>Cliquer sur <strong>« J’ai un code »</strong></span>
+            </li>
+            <li>
+              <span className="code-enfant__num" aria-hidden="true">3</span>
+              <span>Taper ce code</span>
+            </li>
+          </ol>
+
           <p className="code-enfant__note">
-            {eleve.prenom} tape ce code sur <strong>mimia.fr</strong>, bouton
-            « J’ai un code ». Il restera connecté sur son appareil : il n’aura
-            pas à le retaper.
+            Ensuite, plus besoin de le retaper : {eleve.prenom} reste connecté
+            sur cet appareil.
           </p>
 
+          {/* Affiché même sans les actions : un code qui ne marche pas doit
+              le dire, sinon le parent le redonne à l'enfant pour rien. */}
           {etat.suspendu && (
             <p className="code-enfant__suspendu">
               Accès suspendu — le code ne marche plus tant que vous ne le rouvrez pas.
             </p>
           )}
 
+          {avecActions && (
           <div className="code-enfant__actions">
             <button
               type="button"
@@ -138,6 +186,7 @@ export default function CodeEnfant({ eleve }) {
             </button>
 
           </div>
+          )}
         </>
       )}
     </div>

@@ -102,6 +102,33 @@ test('sans version téléphone, aucune source mobile n’est déclarée', async 
   expect(container.querySelector('source')).not.toBeInTheDocument();
 });
 
+test('sur téléphone, il s’affiche avec sa version téléphone', async () => {
+  // Retiré du téléphone le 14/09/2026, remis par Camara le 15/09/2026. Une
+  // vidéo n'a pas de `<source media>` : c'est le composant qui choisit le
+  // fichier téléphone, et ce choix ne se voit que sur un vrai téléphone.
+  mockPromo = { ...PROMO, estVideo: true };
+
+  const avant = window.matchMedia;
+  window.matchMedia = (requete) => ({
+    matches: true,
+    media: requete,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  });
+
+  try {
+    render(<BandeauPromo />);
+
+    // La vidéo porte son texte alternatif en `aria-label` : c'est par lui
+    // qu'on la retrouve, sans fouiller le DOM.
+    const video = await screen.findByLabelText(PROMO.texteAlternatif);
+
+    expect(video).toHaveAttribute('src', expect.stringContaining('format=mobile'));
+  } finally {
+    window.matchMedia = avant;
+  }
+});
+
 // --------------------------------------------------------------- le clic
 
 test('le texte alternatif porte l’offre, pas le nom du fichier', async () => {

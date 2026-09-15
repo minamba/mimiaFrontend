@@ -37,7 +37,40 @@ const MATIERES = {
   fr: { code: 'FRANCAIS', libelle: 'Français' },
   hg: { code: 'HISTOIRE_GEO', libelle: 'Histoire-Géographie' },
   an: { code: 'ANGLAIS', libelle: 'Anglais' },
+  es: { code: 'ESPAGNOL', libelle: 'Espagnol' },
   sc: { code: 'SCIENCES', libelle: 'Sciences et technologie' },
+  // Spécialités des séries technologiques : seulement leurs manques, le reste
+  // est emprunté à la SVT et à la physique-chimie côté serveur.
+  bph: { code: 'BIOLOGIE_HUMAINE', libelle: 'Biologie et physiopathologie humaines (ST2S)' },
+  biotech: { code: 'BIOTECHNOLOGIES', libelle: 'Biochimie, biologie et biotechnologies (STL)' },
+  spcl: { code: 'SPCL', libelle: 'Sciences physiques et chimiques en laboratoire (STL)' },
+  // Spécialités de la voie générale.
+  hggsp: { code: 'HGGSP', libelle: 'Histoire-géographie, géopolitique et sciences politiques' },
+  ses: { code: 'SES', libelle: 'Sciences économiques et sociales' },
+  nsi: { code: 'NSI', libelle: 'Numérique et sciences informatiques' },
+  si: { code: 'SI', libelle: 'Sciences de l’ingénieur' },
+  eppcs: { code: 'EPPCS', libelle: 'Éducation physique, pratiques et culture sportives' },
+  // Les dix-huit matières qui n'avaient aucun emplacement (14/09/2026). Le
+  // préfixe doit être ICI : c'est ce code qui part avec la planche importée, et
+  // un préfixe absent la rangerait sous « AUTRE », invisible pour le professeur.
+  sgn: { code: 'SCIENCES_GESTION', libelle: 'Sciences de gestion et numérique (STMG)' },
+  mgt: { code: 'MANAGEMENT', libelle: 'Management (STMG)' },
+  droiteco: { code: 'DROIT_ECONOMIE', libelle: 'Droit et économie (STMG)' },
+  stss: { code: 'SANITAIRE_SOCIAL', libelle: 'Sciences et techniques sanitaires et sociales (ST2S)' },
+  philo: { code: 'PHILOSOPHIE', libelle: 'Philosophie' },
+  hlp: { code: 'HLP', libelle: 'Humanités, littérature et philosophie' },
+  llceran: { code: 'LLCER_ANGLAIS', libelle: 'LLCER anglais' },
+  amc: { code: 'AMC', libelle: 'LLCER anglais, monde contemporain (AMC)' },
+  llceres: { code: 'LLCER_ESPAGNOL', libelle: 'LLCER espagnol' },
+  latin: { code: 'LLCA_LATIN', libelle: 'LLCA latin' },
+  grec: { code: 'LLCA_GREC', libelle: 'LLCA grec' },
+  artspla: { code: 'ARTS_PLASTIQUES', libelle: 'Arts plastiques' },
+  hda: { code: 'HISTOIRE_ARTS', libelle: 'Histoire des arts' },
+  cav: { code: 'CINEMA_AUDIOVISUEL', libelle: 'Cinéma-audiovisuel' },
+  musique: { code: 'MUSIQUE', libelle: 'Musique' },
+  theatre: { code: 'THEATRE', libelle: 'Théâtre' },
+  danse: { code: 'DANSE', libelle: 'Danse' },
+  cirque: { code: 'ARTS_CIRQUE', libelle: 'Arts du cirque' },
 };
 
 const matiereDeLaCle = (cle) => MATIERES[cle.split('-')[0]] ?? { code: 'AUTRE', libelle: 'Autre' };

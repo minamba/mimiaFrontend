@@ -1,18 +1,25 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import {
   Navbar,
+  BoutonSignalement,
   Accueil,
   Callback,
   ListeEleves,
   FormulaireEleve,
   GrilleMatieres,
   Progression,
+  CalendrierEleve,
+  ControlesEleve,
+  ControleFiche,
+  EpreuveFiche,
   Chat,
   Fiches,
   Fiche,
   Evaluations,
+  Dictees,
+  ComprehensionsOrales,
   PageEleve,
   Admin,
   MonProfil,
@@ -27,10 +34,12 @@ import {
   VerrouEleve,
   VerrouMaintenance,
   EntreeEleve,
+  ScanMobile,
   BandeauInfo,
 } from '../../components';
 import { initAuth } from '../../lib/actions/authActions';
 import { authService } from '../../lib/storage/authService';
+import { sessionEleve } from '../../lib/storage/sessionEleve';
 
 /**
  * Page servie dans l'iframe de renouvellement silencieux du jeton.
@@ -46,6 +55,13 @@ function SilentRenew() {
 
 export const BaseApp = () => {
   const dispatch = useDispatch();
+  const { authentifie } = useSelector((state) => state.auth);
+
+  // `state.auth.authentifie` ne couvre que la session OpenID Connect du
+  // parent. Un enfant connecté avec son code a sa propre session, tenue à
+  // part (voir `sessionEleve.js`) — même vérification que la barre de
+  // navigation pour savoir qui a le droit de voir le bouton.
+  const eleve = sessionEleve();
 
   // Restaure la session avant tout rendu de route protégée.
   useEffect(() => {
@@ -99,6 +115,11 @@ export const BaseApp = () => {
           {/* Publique, comme la connexion d'un parent : c'est la porte des enfants. */}
           <Route path="/code" element={<EntreeEleve />} />
 
+          {/* PUBLIQUE, ET IL LE FAUT : c'est la page qu'ouvre le téléphone
+              après le QR code du scanner, et ce téléphone n'est connecté à
+              rien. Le jeton dans l'adresse est sa seule autorisation. */}
+          <Route path="/scan/:jeton" element={<ScanMobile />} />
+
           <Route path="/callback" element={<Callback />} />
           <Route path="/silent-renew" element={<SilentRenew />} />
 
@@ -127,6 +148,38 @@ export const BaseApp = () => {
             element={
               <RouteProtegee>
                 <Progression />
+              </RouteProtegee>
+            }
+          />
+          <Route
+            path="/eleves/:eleveId/calendrier"
+            element={
+              <RouteProtegee>
+                <CalendrierEleve />
+              </RouteProtegee>
+            }
+          />
+          <Route
+            path="/eleves/:eleveId/controles"
+            element={
+              <RouteProtegee>
+                <ControlesEleve />
+              </RouteProtegee>
+            }
+          />
+          <Route
+            path="/eleves/:eleveId/controles/:controleId"
+            element={
+              <RouteProtegee>
+                <ControleFiche />
+              </RouteProtegee>
+            }
+          />
+          <Route
+            path="/eleves/:eleveId/examen/:epreuveCode"
+            element={
+              <RouteProtegee>
+                <EpreuveFiche />
               </RouteProtegee>
             }
           />
@@ -192,6 +245,29 @@ export const BaseApp = () => {
             }
           />
 
+          {/* Les dictées, réservées aux matières de langue — même rangement
+              que les évaluations : la copie s'ouvre en fenêtre, pas de page à
+              elle, une dictée ne se partage pas comme une fiche. */}
+          <Route
+            path="/eleves/:eleveId/matieres/:matiereId/dictees"
+            element={
+              <RouteProtegee>
+                <Dictees />
+              </RouteProtegee>
+            }
+          />
+
+          {/* Même rangement que les dictées, juste au-dessus : réservée aux
+              matières de langue, une fiche s'ouvre en fenêtre. */}
+          <Route
+            path="/eleves/:eleveId/matieres/:matiereId/comprehensions-orales"
+            element={
+              <RouteProtegee>
+                <ComprehensionsOrales />
+              </RouteProtegee>
+            }
+          />
+
           <Route
             path="/profil"
             element={
@@ -214,6 +290,11 @@ export const BaseApp = () => {
         </Routes>
       </main>
       </VerrouEleve>
+      {/* SUR TOUTE PAGE, UNE FOIS CONNECTÉ — parent ou enfant, même
+          sélecteur que la barre de navigation. Un visiteur non connecté n'a
+          personne à qui écrire un signalement : le serveur ne saurait pas
+          quel parent prévenir. */}
+      {(authentifie || eleve) && <BoutonSignalement />}
       <Footer />
       </VerrouMaintenance>
     </BrowserRouter>

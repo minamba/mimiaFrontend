@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { getApercuBilan, envoyerBilan } from '../lib/api/adminApi';
-import { getCopieEvaluation, getRapport } from '../lib/api/elevesApi';
+import { getCopieEvaluation, getRapport, getDictee } from '../lib/api/elevesApi';
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { styleMatiere } from '../lib/couleurMatiere';
 import Avatar from './Avatar';
@@ -8,6 +8,7 @@ import Loader from './Loader';
 import ProgressionMatiere from './ProgressionMatiere';
 import Controle from './Controle';
 import Rapport from './Rapport';
+import DicteeCopie from './DicteeCopie';
 import DeroulerListe from './DeroulerListe';
 import TriHistorique from './TriHistorique';
 
@@ -214,7 +215,41 @@ function Note({ valeur }) {
   );
 }
 
+/**
+ * Passé ce délai sans y revenir, la mesure ne garantit plus rien : la notion
+ * quitte « Compétences acquises » pour « À confirmer ». Le score, lui, n'est
+ * jamais retouché — le faire baisser sans observation afficherait un chiffre
+ * que rien n'a mesuré. Même valeur que SeuilsMaitrise.JoursAvantPeremption
+ * côté serveur, qui décide seul du classement.
+ */
+const JOURS_AVANT_PEREMPTION = 90;
+
+/** « il y a 4 mois », pour dire l'âge d'une mesure sans afficher une date brute. */
+export function anciennete(valeur) {
+  if (!valeur) return null;
+
+  const jours = Math.floor((Date.now() - new Date(valeur).getTime()) / 86400000);
+  if (jours < JOURS_AVANT_PEREMPTION) return null;
+
+  const mois = Math.floor(jours / 30);
+  return mois >= 12 ? "plus d'un an" : `${mois} mois`;
+}
+
+/** Au-delà, la colonne se replie — mais rien n'est retiré, tout se déplie. */
+const APERCU_COMPETENCES = 8;
+
 function ListeCompetences({ titre, competences, vide }) {
+  // LE REPLI SE DÉCIDE ICI, PAS DANS LA REQUÊTE.
+  //
+  // Le serveur coupait à dix, en silence : six compétences de compréhension
+  // orale, mesurées et à jour, n'atteignaient jamais l'écran. Il les envoie
+  // toutes désormais, et c'est l'affichage qui replie — visiblement, avec
+  // un bouton qui dit combien il en reste.
+  const [tout, setTout] = useState(false);
+
+  const visibles = tout ? competences : competences.slice(0, APERCU_COMPETENCES);
+  const restantes = competences.length - visibles.length;
+
   return (
     <div className="fiche__colonne">
       <h3>{titre}</h3>
@@ -223,7 +258,7 @@ function ListeCompetences({ titre, competences, vide }) {
         <p className="vide vide--compact">{vide}</p>
       ) : (
         <ul className="competences">
-          {competences.map((c) => (
+          {visibles.map((c) => (
             <li key={c.competenceId}>
               <div className="competences__ligne">
                 <span className="competences__libelle">{c.libelle}</span>
@@ -247,10 +282,32 @@ function ListeCompetences({ titre, competences, vide }) {
                 )}
                 {[c.niveauLibelle, c.domaine].filter(Boolean).join(' · ')}
                 {c.nombreObservations > 0 && ` · ${c.nombreObservations} observation${c.nombreObservations > 1 ? 's' : ''}`}
+                {/* CE QUI EST VRAI, PLUTÔT QUE CE QUI EST RASSURANT.
+                    Une notion montée à 85 % en septembre s'affichait encore
+                    85 % en juin, présentée comme une mesure de la veille. On
+                    ne dit pas que l'enfant a oublié — personne ne l'a vérifié
+                    — on dit depuis quand plus personne ne l'a vu faire. */}
+                {anciennete(c.derniereEvaluation) && (
+                  <span className="competences__age">
+                    {` · pas revu depuis ${anciennete(c.derniereEvaluation)}`}
+                  </span>
+                )}
               </span>
             </li>
           ))}
         </ul>
+      )}
+
+      {(restantes > 0 || tout) && competences.length > APERCU_COMPETENCES && (
+        <button
+          type="button"
+          className="competences__plus"
+          onClick={() => setTout((actuel) => !actuel)}
+        >
+          {tout
+            ? 'Réduire'
+            : `Voir les ${restantes} autre${restantes > 1 ? 's' : ''}`}
+        </button>
       )}
     </div>
   );
@@ -281,6 +338,23 @@ function matieresPresentes(...listes) {
  * qui portera l'année prochaine le français, l'histoire-géo et les sciences,
  * sans redécoupage ni reprise de l'historique accumulé d'ici là.
  */
+/**
+ * Le titre d'une colonne, avec le nombre RÉEL de compétences qu'elle couvre.
+ *
+ * Chaque liste est bornée à dix lignes. Sans ce compte, un élève avec douze
+ * notions fragiles en montrait dix, et rien ne disait que deux manquaient.
+ */
+const intitule = (libelle, total, affichees) => {
+  const nombre = total ?? affichees?.length ?? 0;
+  if (nombre === 0) return libelle;
+
+  const caches = nombre - (affichees?.length ?? 0);
+
+  return caches > 0
+    ? `${libelle} · ${nombre} (${caches} non affichée${caches > 1 ? 's' : ''})`
+    : `${libelle} · ${nombre}`;
+};
+
 export default function FicheEleve({
   fiche,
   chargement,
@@ -338,6 +412,7 @@ export default function FicheEleve({
   // parent n'a rien à passer.
   chargerRapport = getRapport,
   chargerCopie = getCopieEvaluation,
+  chargerDictee = getDictee,
 }) {
   const [apercuEnCours, setApercuEnCours] = useState(false);
 
@@ -357,6 +432,7 @@ export default function FicheEleve({
   const [copieErreur, setCopieErreur] = useState(null);
 
   const [rapport, setRapport] = useState(null);
+  const [dictee, setDictee] = useState(null);
 
   // Les deux historiques, chacun avec son curseur. Séparés : un parent
   // déroule les évaluations sans vouloir dérouler les séances, et l'inverse.
@@ -389,6 +465,26 @@ export default function FicheEleve({
       setRapport(data);
     } catch {
       setCopieErreur("Le rapport n'a pas pu être chargé.");
+    } finally {
+      setCopieChargement(null);
+    }
+  };
+
+  /**
+   * La dictée faite pendant CETTE séance, telle que l'élève la voit lui-même
+   * dans « Mes dictées » — même composant, même contenu, jusqu'à l'état « pas
+   * encore corrigée ». Le parent n'a pas une version résumée, il a exactement
+   * ce que son enfant a sous les yeux.
+   */
+  const voirLaDictee = async (dicteeId) => {
+    setCopieChargement(`d${dicteeId}`);
+    setCopieErreur(null);
+
+    try {
+      const { data } = await chargerDictee(fiche.id, dicteeId);
+      setDictee(data);
+    } catch {
+      setCopieErreur("La dictée n'a pas pu être chargée.");
     } finally {
       setCopieChargement(null);
     }
@@ -449,14 +545,21 @@ export default function FicheEleve({
   // Les matières réellement présentes dans les compétences de cet élève, et
   // le filtre qui en découle. Calculés ici plutôt que dans le rendu : les deux
   // colonnes doivent voir exactement la même liste.
-  const matieres = matieresPresentes(fiche?.lacunes, fiche?.acquises);
+  const matieres = matieresPresentes(
+    fiche?.lacunes, fiche?.enCours, fiche?.acquises, fiche?.aConfirmer,
+  );
 
   const filtrer = (liste) =>
     (liste ?? []).filter((c) => !matiereFiltre || c.matiereLibelle === matiereFiltre);
 
-  const Cadre = enPage ? 'section' : 'div';
+  // EN PAGE, PAS DE CADRE À ELLE : c'est `PageEleve.js` qui pose la
+  // `<section className="page page--large">`, avec le lien « Mon compte »
+  // DEDANS — sinon ce lien, posé à côté plutôt que dans cette section,
+  // n'hérite ni du centrage ni du rembourrage de la page, et se retrouve
+  // collé au bord gauche de l'écran pendant que la fiche, elle, est centrée.
+  const Cadre = enPage ? Fragment : 'div';
   const attributsCadre = enPage
-    ? { className: 'page page--large' }
+    ? {}
     : { className: 'modale', role: 'dialog', 'aria-modal': true, 'aria-label': 'Fiche élève' };
 
   return (
@@ -464,6 +567,7 @@ export default function FicheEleve({
       {/* La copie passe par-dessus la fiche : le parent y revient en fermant. */}
       {copie && <Controle copie={copie} onFermer={() => setCopie(null)} />}
       {rapport && <Rapport rapport={rapport} onFermer={() => setRapport(null)} />}
+      {dictee && <DicteeCopie copie={dictee} onFermer={() => setDictee(null)} />}
 
       <div className={enPage ? 'fiche-eleve' : 'modale__boite modale__boite--large'}>
         {chargement && <Loader texte="Chargement de la fiche…" />}
@@ -720,7 +824,7 @@ export default function FicheEleve({
 
             <div className="fiche__colonnes">
               <ListeCompetences
-                titre="Points fragiles"
+                titre={intitule('Points fragiles', fiche.totalFragiles, fiche.lacunes)}
                 competences={filtrer(fiche.lacunes)}
                 vide={
                   matiereFiltre
@@ -729,12 +833,45 @@ export default function FicheEleve({
                 }
               />
               <ListeCompetences
-                titre="Compétences acquises"
+                titre={intitule('Compétences acquises', fiche.totalAcquises, fiche.acquises)}
                 competences={filtrer(fiche.acquises)}
                 vide={
                   matiereFiltre
                     ? `Aucune compétence validée en ${matiereFiltre}.`
                     : "Aucune compétence validée pour l'instant."
+                }
+              />
+            </div>
+
+            {/* EN COURS : COMMENCÉES, PAS ENCORE TENUES.
+
+                Tout ce qui n'était pas acquis tombait dans « points fragiles » :
+                une notion à 74 %, travaillée et presque là, s'affichait comme
+                une faiblesse. C'est pourtant l'état le plus fréquent d'un
+                enfant qui progresse, et celui qui mérite le plus d'être vu. */}
+            <div className="fiche__colonnes">
+              <ListeCompetences
+                titre={intitule("En cours d'acquisition", fiche.totalEnCours, fiche.enCours)}
+                competences={filtrer(fiche.enCours)}
+                vide={
+                  matiereFiltre
+                    ? `Rien en cours en ${matiereFiltre}.`
+                    : "Rien en cours d'acquisition pour l'instant."
+                }
+              />
+
+              {/* À CONFIRMER : VUES UNE SEULE FOIS.
+
+                  Un seul jugement porté sur une seule séance devenait « 16 % de
+                  maîtrise » présenté comme un fait. Ces notions attendent une
+                  seconde observation avant d'être rangées ailleurs. */}
+              <ListeCompetences
+                titre={intitule('À confirmer', fiche.totalAConfirmer, fiche.aConfirmer)}
+                competences={filtrer(fiche.aConfirmer)}
+                vide={
+                  matiereFiltre
+                    ? `Rien à confirmer en ${matiereFiltre}.`
+                    : "Rien à confirmer pour l'instant."
                 }
               />
             </div>
@@ -895,14 +1032,30 @@ export default function FicheEleve({
                         </td>
                         <td><DateHeure valeur={r.dateCreation} /></td>
                         <td>
-                          <button
-                            type="button"
-                            className="btn-copie btn-copie--ligne"
-                            onClick={() => voirLeRapport(r.id)}
-                            disabled={copieChargement === `r${r.id}`}
-                          >
-                            {copieChargement === `r${r.id}` ? 'Ouverture…' : 'Voir le rapport'}
-                          </button>
+                          <div className="cellule-boutons">
+                            <button
+                              type="button"
+                              className="btn-copie btn-copie--ligne"
+                              onClick={() => voirLeRapport(r.id)}
+                              disabled={copieChargement === `r${r.id}`}
+                            >
+                              {copieChargement === `r${r.id}` ? 'Ouverture…' : 'Voir le rapport'}
+                            </button>
+
+                            {/* Seulement quand une dictée a été écrite OU
+                                corrigée pendant cette séance précise — voir
+                                RapportEleve.DicteeId côté serveur. */}
+                            {r.dicteeId && (
+                              <button
+                                type="button"
+                                className="btn-copie btn-copie--ligne"
+                                onClick={() => voirLaDictee(r.dicteeId)}
+                                disabled={copieChargement === `d${r.dicteeId}`}
+                              >
+                                {copieChargement === `d${r.dicteeId}` ? 'Ouverture…' : 'Voir la dictée'}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

@@ -28,6 +28,9 @@ export default function Footer() {
   // aucun, et l'élève verrait des liens de navigation pendant sa leçon.
   if (emplacement.pathname.endsWith('/chat')) return null;
 
+  // Même raison pour la page du scanner, sur le téléphone.
+  if (emplacement.pathname.startsWith('/scan/')) return null;
+
   return (
     <footer className="pied">
       <div className="pied__contenu">
@@ -67,7 +70,7 @@ export default function Footer() {
               {authentifie ? (
                 <>
                   <li><Link to="/eleves">Mes enfants</Link></li>
-                  <li><Link to="/profil">Mon profil</Link></li>
+                  <li><Link to="/profil">Mon compte</Link></li>
                 </>
               ) : (
                 // Un bouton et non un lien : la connexion passe par une

@@ -57,11 +57,42 @@ export function marquerCopieAuCahier(texte) {
 }
 
 /**
+ * LE PENDANT EXACT, POUR L'AUTRE SUPPORT.
+ *
+ * Relevé le 11/09/2026 : l'élève tape sa dictée au clavier, la rend, elle
+ * s'affiche entière dans le fil — et le professeur lui répond « envoie-moi la
+ * photo dès que tu peux ». Il n'a pas de cahier. Il n'y a rien à
+ * photographier. La copie était sous ses yeux.
+ *
+ * Même leçon que pour le cahier, et c'est pour cela que les deux vivent dans
+ * ce fichier : l'écran SAIT comment l'élève a écrit, et un fait posé dans le
+ * tour vaut mieux qu'une règle lue mille tokens plus haut.
+ *
+ * Il ne dit RIEN des passages manquants : cette vérification a été retirée le
+ * 11/09/2026, la façon de traiter les manques étant à redéfinir.
+ *
+ * Écrit sur une seule ligne, sans crochet à l'intérieur, pour la même raison
+ * que le marqueur du cahier.
+ */
+const MARQUEUR_CLAVIER =
+  '[DICTÉE AU CLAVIER : cette copie est celle que l’élève vient de rendre, '
+  + 'tapée au clavier — tu l’as sous les yeux. Ne lui demande JAMAIS de photo : '
+  + 'il n’a pas de cahier, il n’y a rien à photographier.]';
+
+/** Même ancrage, même garantie de retrait sûr. */
+const MOTIF_CLAVIER = /\n\[DICTÉE AU CLAVIER[^\]]*\]$/;
+
+/** Joint l'état de la copie rendue au clavier. */
+export function marquerCopieAuClavier(texte) {
+  return `${texte}\n${MARQUEUR_CLAVIER}`;
+}
+
+/**
  * Retire le marqueur pour l'affichage.
  *
  * Il est écrit POUR LE PROFESSEUR. L'élève, lui, a dit « j'ai fini » — il n'a
  * pas récité un état technique, et sa bulle doit montrer ce qu'il a dit.
  */
 export function retirerMarqueurCahier(texte) {
-  return (texte ?? '').replace(MOTIF, '');
+  return (texte ?? '').replace(MOTIF, '').replace(MOTIF_CLAVIER, '');
 }

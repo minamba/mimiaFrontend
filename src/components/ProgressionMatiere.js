@@ -127,8 +127,14 @@ function BarresNotions({ notions }) {
   return (
     <ul className="notions">
       {notions.map((notion) => {
+        // LES MÊMES SEUILS QUE PARTOUT AILLEURS — 0,80 et 0,50, ceux de
+        // `SeuilsMaitrise.cs` côté serveur. Ce fichier en gardait une
+        // cinquième copie (0,75 / 0,40) : une notion à 77 % s'affichait
+        // « acquise » au parent et « en cours » à l'enfant, sur la même
+        // donnée. Corrigé le 13/09/2026, au moment où la fiche d'un contrôle
+        // s'est mise à montrer ces mêmes notions.
         const niveau =
-          notion.score >= 0.75 ? 'acquis' : notion.score >= 0.4 ? 'fragile' : 'lacune';
+          notion.score >= 0.80 ? 'acquis' : notion.score >= 0.50 ? 'fragile' : 'lacune';
 
         return (
           <li key={notion.competenceId} className="notion">

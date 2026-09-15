@@ -233,3 +233,109 @@ test('la pause de la dernière phrase tombe APRÈS la fermeture, pas avant', asy
 
   expect(evenements.lastIndexOf('pause')).toBeGreaterThan(derniere);
 });
+
+/**
+ * LA RELECTURE COMPLÈTE — voulue par Camara le 11/09/2026.
+ *
+ * Après la dernière phrase et le temps de l'écrire, le professeur relit tout,
+ * au débit normal, puis dit quoi faire selon le support. Le texte relu est
+ * celui qui vient d'être dicté, et rien d'autre.
+ */
+describe('la relecture complète', () => {
+  const suivre = (lecteur) => {
+    const etats = [];
+    lecteur.surRelectureDictee = (etat) => etats.push(etat);
+    lecteur.surPauseDictee = (active) => { if (active) etats.push('pause'); };
+    return etats;
+  };
+
+  test('elle suit la fermeture ET le temps d\'écrire la dernière phrase', async () => {
+    const lecteur = voixService.creerLecteur();
+    lecteur.supportDictee = 'cahier';
+    const etats = suivre(lecteur);
+
+    dicter(lecteur);
+    await attendre(() => etats.includes('finie'));
+    lecteur.arreter();
+
+    const textes = prononces.map((p) => p.texte);
+    const fermeture = textes.indexOf("Voilà, c'était la dernière phrase.");
+    const annonce = textes.findIndex((t) => t.startsWith('Maintenant, je te relis'));
+
+    expect(annonce).toBeGreaterThan(fermeture);
+
+    // Le silence d'écriture de la dernière phrase tombe AVANT la relecture :
+    // sinon l'élève l'entendrait relue sans avoir fini de l'écrire.
+    expect(etats.lastIndexOf('pause')).toBeLessThan(etats.indexOf('en_cours'));
+    expect(etats.filter((e) => e !== 'pause')).toEqual(['en_cours', 'finie']);
+  });
+
+  test('le texte relu est celui dicté, d\'une traite, au débit normal', async () => {
+    const lecteur = voixService.creerLecteur();
+    const etats = suivre(lecteur);
+
+    dicter(lecteur);
+    await attendre(() => etats.includes('finie'));
+    lecteur.arreter();
+
+    const annonce = prononces.findIndex((p) => p.texte.startsWith('Maintenant, je te relis'));
+    const relue = prononces.slice(annonce + 1).find((p) => p.texte.includes('Le chat dort.'));
+
+    expect(relue.texte).toBe('Le chat dort. La nuit tombe.');
+    expect(relue.dictee).toBe(false);
+  });
+
+  test('au cahier, la consigne demande la photo', async () => {
+    const lecteur = voixService.creerLecteur();
+    lecteur.supportDictee = 'cahier';
+    const etats = suivre(lecteur);
+
+    dicter(lecteur);
+    await attendre(() => etats.includes('finie'));
+    lecteur.arreter();
+
+    expect(prononces.some((p) => p.texte.includes('prends ta page en photo'))).toBe(true);
+    expect(prononces.some((p) => p.texte.includes('Rendre ma copie'))).toBe(false);
+  });
+
+  test('au clavier, la consigne renvoie à « Rendre ma copie »', async () => {
+    const lecteur = voixService.creerLecteur();
+    lecteur.supportDictee = 'clavier';
+    const etats = suivre(lecteur);
+
+    dicter(lecteur);
+    await attendre(() => etats.includes('finie'));
+    lecteur.arreter();
+
+    expect(prononces.some((p) => p.texte.includes('Rendre ma copie'))).toBe(true);
+    expect(prononces.some((p) => p.texte.includes('photo'))).toBe(false);
+  });
+
+  test('une relecture coupée le dit à l\'écran', async () => {
+    const lecteur = voixService.creerLecteur();
+    const etats = suivre(lecteur);
+
+    dicter(lecteur);
+    await attendre(() => etats.includes('en_cours'));
+    lecteur.arreter();
+
+    expect(etats.filter((e) => e !== 'pause')).toEqual(['en_cours', 'interrompue']);
+  });
+
+  test('une dictée redonnée ne relit que son propre texte', async () => {
+    const lecteur = voixService.creerLecteur();
+    const etats = suivre(lecteur);
+
+    lecteur.alimenter(`${DEBUT_DICTEE}Le chien court.${FIN_DICTEE}`);
+    lecteur.alimenter(`${DEBUT_DICTEE}La souris mange.${FIN_DICTEE}`);
+    lecteur.terminer();
+
+    await attendre(() => etats.filter((e) => e === 'finie').length >= 2);
+    lecteur.arreter();
+
+    const relues = prononces.filter((p) => !p.dictee
+      && (p.texte.includes('Le chien court.') || p.texte.includes('La souris mange.')));
+
+    expect(relues.map((p) => p.texte)).toEqual(['Le chien court.', 'La souris mange.']);
+  });
+});

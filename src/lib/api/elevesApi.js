@@ -86,6 +86,112 @@ export const getFiche = (eleveId, ficheId) =>
 export const marquerFicheVue = (eleveId, ficheId) =>
   httpClient.post(`/eleves/${eleveId}/fiches/${ficheId}/vue`);
 
+/**
+ * Les compteurs de dictées par matière : `{ [matiereId]: { total, nouveautes } }`.
+ * Même principe que `getNombreFiches`, réservé aux matières de langue.
+ */
+export const getNombreDictees = (eleveId) => httpClient.get(`/eleves/${eleveId}/dictees`);
+
+/** Les dictées corrigées d'une matière, la plus récente d'abord. */
+export const getDictees = (eleveId, matiereId) =>
+  httpClient.get(`/eleves/${eleveId}/dictees?matiereId=${matiereId}`);
+
+/** Une dictée complète : le texte dicté, la copie, et la remarque du professeur. */
+export const getDictee = (eleveId, dicteeId) =>
+  httpClient.get(`/eleves/${eleveId}/dictees/${dicteeId}`);
+
+/** L'élève vient de lire la dictée : la pastille « à consulter » s'éteint. */
+export const marquerDicteeVue = (eleveId, dicteeId) =>
+  httpClient.post(`/eleves/${eleveId}/dictees/${dicteeId}/vue`);
+
+/**
+ * Les compteurs de compréhensions orales par matière :
+ * `{ [matiereId]: { total, nouveautes } }`. Même principe que `getNombreDictees`.
+ */
+export const getNombreComprehensionsOrales = (eleveId) =>
+  httpClient.get(`/eleves/${eleveId}/comprehensions-orales`);
+
+/** Les compréhensions orales d'une matière, la plus récente d'abord. */
+export const getComprehensionsOrales = (eleveId, matiereId) =>
+  httpClient.get(`/eleves/${eleveId}/comprehensions-orales?matiereId=${matiereId}`);
+
+/** Une compréhension orale complète : le passage, ce qui a été compris, la remarque. */
+export const getComprehensionOrale = (eleveId, comprehensionOraleId) =>
+  httpClient.get(`/eleves/${eleveId}/comprehensions-orales/${comprehensionOraleId}`);
+
+/**
+ * Charge l'audio du passage et rend une URL locale utilisable par `<audio>`.
+ *
+ * Même raison que `chargerPieceJointe` : l'endpoint exige le jeton, un
+ * `<audio src>` nu ne suffit pas. L'appelant DOIT appeler
+ * `URL.revokeObjectURL` quand il a fini.
+ */
+export const chargerAudioComprehensionOrale = async (eleveId, comprehensionOraleId) => {
+  const reponse = await httpClient.get(
+    `/eleves/${eleveId}/comprehensions-orales/${comprehensionOraleId}/audio`,
+    { responseType: 'blob' },
+  );
+
+  return URL.createObjectURL(reponse.data);
+};
+
+/** L'élève vient d'ouvrir la compréhension orale : la pastille « à consulter » s'éteint. */
+export const marquerComprehensionOraleVue = (eleveId, comprehensionOraleId) =>
+  httpClient.post(`/eleves/${eleveId}/comprehensions-orales/${comprehensionOraleId}/vue`);
+
+/**
+ * Le calendrier d'un mois : vacances, séances par matière, évaluations
+ * passées et à venir. `mois` de 1 à 12.
+ */
+export const getCalendrier = (eleveId, annee, mois) =>
+  httpClient.get(`/eleves/${eleveId}/calendrier`, { params: { annee, mois } });
+
+/**
+ * Pose un contrôle depuis le calendrier — par le parent ou l'enfant, hors
+ * séance. `matiereId` doit être une matière au programme de l'élève : le
+ * serveur la revérifie, ce n'est jamais qu'un confort ici.
+ */
+export const creerControle = (eleveId, { matiereId, sujet, dateControle, heureControle }) =>
+  httpClient.post(`/eleves/${eleveId}/controles`, { matiereId, sujet, dateControle, heureControle });
+
+/**
+ * Les contrôles de l'élève avec l'état de leur préparation. `statut` vaut
+ * « avenir » (par défaut) ou « passes ».
+ *
+ * Le nombre de jours restants vient du serveur, calculé en heure de Paris :
+ * on ne le recalcule jamais ici.
+ */
+export const getControles = (eleveId, statut = 'avenir', limite = 20) =>
+  httpClient.get(`/eleves/${eleveId}/controles`, { params: { statut, limite } });
+
+export const getControle = (eleveId, controleId) =>
+  httpClient.get(`/eleves/${eleveId}/controles/${controleId}`);
+
+/**
+ * Modifie la date, l'heure ou le sujet d'un contrôle.
+ *
+ * PAS LA MATIÈRE : elle se fige à la création. La déplacer viderait le
+ * programme et rattacherait les préparations déjà faites au mauvais
+ * professeur — le serveur l'ignore de toute façon.
+ */
+export const modifierControle = (eleveId, controleId, { sujet, dateControle, heureControle }) =>
+  httpClient.put(`/eleves/${eleveId}/controles/${controleId}`, {
+    sujet, dateControle, heureControle,
+  });
+
+export const supprimerControle = (eleveId, controleId) =>
+  httpClient.delete(`/eleves/${eleveId}/controles/${controleId}`);
+
+/**
+ * La préparation à l'examen de l'élève : `{ examen }`, où `examen` vaut
+ * `null` quand sa classe n'en passe pas cette année. Voir `PreparationExamen`.
+ */
+export const getExamen = (eleveId) => httpClient.get(`/eleves/${eleveId}/examen`);
+
+/** Une épreuve de son examen, avec les notions de chacune de ses matières. */
+export const getEpreuve = (eleveId, code) =>
+  httpClient.get(`/eleves/${eleveId}/examen/epreuves/${encodeURIComponent(code)}`);
+
 export const addEleve = (data) => httpClient.post('/eleves', data);
 
 export const updateEleve = (data) => httpClient.put('/eleves', data);

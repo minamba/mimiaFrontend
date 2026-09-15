@@ -50,6 +50,11 @@ export default function Navbar() {
 
   const nom = utilisateur?.given_name ?? utilisateur?.email ?? 'Mon compte';
 
+  // LA PAGE DU SCANNER, SUR LE TÉLÉPHONE : un seul geste, prendre la photo.
+  // « Commencer gratuitement » et le menu n'y feraient que distraire un enfant
+  // qui tient sa feuille d'une main.
+  if (emplacement.pathname.startsWith('/scan/')) return null;
+
   return (
     <header className="navbar">
       {/* Le logo porte déjà le nom : l'accompagner d'un texte le dirait deux
@@ -157,17 +162,27 @@ export default function Navbar() {
           </Link>
 
           <div className="menu-compte" ref={menuRef}>
+            {/* UNE SEULE BULLE, ICÔNE ET CHEVRON ENSEMBLE — sur toutes les
+                tailles d'écran, y compris l'ordinateur.
+
+                Il y a eu un essai avec l'icône en lien direct vers « Mon
+                compte » et le chevron séparé pour ouvrir le menu : deux
+                cibles voisines avec deux comportements différents, ce que
+                l'œil ne devine pas avant de cliquer au mauvais endroit.
+                « Mon compte » reste à un clic — premier lien du panneau —
+                et depuis la page « Vos enfants », le bouton dédié fait déjà
+                ce travail mieux qu'une icône de la barre. */}
             <button
               type="button"
               className={`menu-compte__bouton ${menuOuvert ? 'menu-compte__bouton--ouvert' : ''}`}
               onClick={() => setMenuOuvert(!menuOuvert)}
               aria-expanded={menuOuvert}
               aria-haspopup="true"
+              aria-label="Mon compte"
             >
               <span className="menu-compte__pastille" aria-hidden="true">
                 {nom.charAt(0).toUpperCase()}
               </span>
-              Mon compte
               <span className="menu-compte__chevron" aria-hidden="true" />
             </button>
 
@@ -179,7 +194,7 @@ export default function Navbar() {
                 </div>
 
                 <Link to="/profil" className="menu-compte__item" role="menuitem">
-                  Mon profil
+                  Mon compte
                 </Link>
                 <Link to="/eleves" className="menu-compte__item" role="menuitem">
                   Mes enfants

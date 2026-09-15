@@ -20,6 +20,11 @@ export default function VerrouEleve({ children }) {
 
   if (!session) return children;
 
+  // LA PAGE DU SCANNER RESTE OUVERTE, même à un enfant connecté sur ce
+  // téléphone : c'est justement son téléphone qui l'ouvre. Elle ne lit rien de
+  // son compte — le jeton du QR code est son autorisation.
+  if (pathname.startsWith('/scan/')) return children;
+
   if (adresseInterdite(pathname, session.eleveId)) {
     return <Navigate to={accueilEleve(session.eleveId)} replace />;
   }

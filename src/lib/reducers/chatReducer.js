@@ -58,6 +58,10 @@ export default function chatReducer(state = initialState, action) {
             role: 'user',
             contenu: action.payload.contenu,
             dateCreation: new Date().toISOString(),
+            // Sans lui, une photo tout juste envoyée restait invisible dans
+            // sa propre bulle jusqu'au prochain rechargement de la page —
+            // seul moment où le serveur redonne le message avec sa pièce.
+            pieceJointe: action.payload.pieceJointe ?? null,
           },
         ],
       };

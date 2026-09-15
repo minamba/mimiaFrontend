@@ -82,6 +82,10 @@ export default function BandeauPromo() {
     return () => sonde.removeEventListener('change', suivre);
   }, []);
 
+  // DE RETOUR SUR TÉLÉPHONE — Camara, le 15/09/2026. Il en avait été retiré
+  // le 14/09 parce qu'il repoussait le titre sous le premier écran ; il y
+  // revient, avec sa version téléphone quand elle existe (`<picture>` pour une
+  // image, `surMobile` pour une vidéo).
   if (!promo || casse) return null;
 
   const version = promo.version;

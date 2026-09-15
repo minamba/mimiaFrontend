@@ -35,8 +35,11 @@ jest.mock('react-redux', () => ({
   useDispatch: () => jest.fn(),
 }));
 
+let mockBlueSky = false;
+
 jest.mock('../lib/storage/modeTest', () => ({
   useMaintenance: () => mockMaintenance,
+  useBlueSky: () => mockBlueSky,
 }));
 
 // React Router v7 expose ses sous-chemins d'une façon que le résolveur de
@@ -58,6 +61,7 @@ function monter(chemin = '/') {
 beforeEach(() => {
   mockAuth = { estAdmin: false, loading: false };
   mockMaintenance = false;
+  mockBlueSky = false;
 });
 
 test('rideau levé : le site s’affiche', () => {
@@ -107,4 +111,25 @@ test('la page d’attente offre un chemin de connexion', () => {
   expect(
     screen.getByRole('button', { name: /accès administrateur/i }),
   ).toBeInTheDocument();
+});
+
+// LES DEUX STYLES DE LA PAGE D'ATTENTE — le mode « Blue Sky » de
+// l'administration choisit l'une ou l'autre. Ce qui ne doit JAMAIS changer
+// entre les deux : le titre qui rassure et la porte de l'administrateur.
+test('Blue Sky éteint : la page d’attente d’origine, sans les pastilles', () => {
+  mockMaintenance = true;
+  monter();
+
+  expect(screen.queryByText('Mise à jour en cours')).not.toBeInTheDocument();
+  expect(screen.getByText(/revenons très vite/i)).toBeInTheDocument();
+});
+
+test('Blue Sky allumé : la nouvelle page d’attente, avec la même porte de connexion', () => {
+  mockMaintenance = true;
+  mockBlueSky = true;
+  monter();
+
+  expect(screen.getByText('Mise à jour en cours')).toBeInTheDocument();
+  expect(screen.getByText(/revenons très vite/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /accès administrateur/i })).toBeInTheDocument();
 });

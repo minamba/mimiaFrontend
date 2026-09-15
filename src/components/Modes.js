@@ -770,6 +770,7 @@ export default function Modes() {
     tachesDeFond: true,
     maintenance: false,
     voixDeSecours: false,
+    blueSky: false,
 
     // L'offre de lancement : trois valeurs qui n'ont de sens qu'ensemble.
     offreLancement: false,
@@ -816,6 +817,9 @@ export default function Modes() {
           // Éteint par défaut : le modèle principal reste le meilleur des
           // deux quand il fonctionne.
           voixDeSecours: Boolean(data?.voixDeSecours),
+
+          // Éteint par défaut : le style d'origine reste la référence.
+          blueSky: Boolean(data?.blueSky),
 
           offreLancement: Boolean(data?.offreLancement),
           offreLancementTexte: data?.offreLancementTexte ?? '',
@@ -868,7 +872,8 @@ export default function Modes() {
       // seulement le mode test — l'essai en fait partie depuis qu'il pilote
       // le bouton de l'accueil.
       if (cle === 'MODE_TEST' || cle === 'ESSAIS_OUVERTS' || cle === 'MAINTENANCE_ACTIVE'
-          || cle === 'OFFRE_LANCEMENT' || cle === 'OFFRE_LANCEMENT_BANDEAU') {
+          || cle === 'OFFRE_LANCEMENT' || cle === 'OFFRE_LANCEMENT_BANDEAU'
+          || cle === 'BLUE_SKY') {
         oublierReglages();
       }
     } catch {
@@ -969,6 +974,24 @@ export default function Modes() {
             'Les élèves déjà en cours voient la page d’attente à leur prochaine navigation.',
           ]}
           note="C’EST UN RIDEAU, PAS UN VERROU. L’API continue de répondre derrière — sans quoi vous ne pourriez plus rien faire, pas même relever le rideau. Pour fermer vraiment le service, il faut arrêter l’API : c’est un autre geste. Ne comptez donc pas là-dessus pour protéger quoi que ce soit."
+        />
+
+        {/* LE STYLE DU SITE — voulu par Camara le 15/09/2026, pour faire
+            tester le nouveau style et revenir à l'ancien quand il veut. */}
+        <Interrupteur
+          titre="Blue Sky — nouveau style du site"
+          actif={reglages.blueSky}
+          connu={lus}
+          occupe={envoi === 'BLUE_SKY'}
+          onBasculer={() => basculer('BLUE_SKY', 'blueSky')}
+          description="Le style de la page de maintenance étendu à tout le site : le fond bleu de marque, des cartes en verre dépoli et les accents corail. Éteint, tout le site revient au style sombre d’origine."
+          effets={[
+            'Tout le site change d’allure : accueil, tarifs, espace parent et élève, administration, page d’attente de la maintenance.',
+            'La page de connexion suit aussi : le serveur d’identité relit ce réglage à chaque affichage, avec au plus quinze secondes de retard.',
+            'Tant qu’il est allumé, le site reste en sombre, même pour ceux qui ont choisi le thème clair ; leur choix revient dès que vous l’éteignez.',
+            'Vous le voyez tout de suite ; les autres visiteurs, au prochain chargement de page.',
+          ]}
+          note="RÉVERSIBLE À TOUT MOMENT. L’ancien style n’a pas été modifié : Blue Sky s’ajoute par-dessus. L’éteindre rend exactement le site d’avant, page de maintenance comprise."
         />
 
         <Interrupteur

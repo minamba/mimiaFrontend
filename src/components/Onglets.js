@@ -109,6 +109,10 @@ export default function Onglets({ items, actif, onChoisir, mini = false, etiquet
               actif === o.cle ? 'onglet--actif' : '',
             ].filter(Boolean).join(' ')}
             onClick={() => choisir(o.cle)}
+            // Optionnel : une explication au survol, pour un onglet dont le
+            // clic ne fait pas ce qu'on attendrait (« Mot de passe » qui ouvre
+            // une modale plutôt que de naviguer, sur un compte Google).
+            title={o.titre}
           >
             {o.libelle}
           </button>

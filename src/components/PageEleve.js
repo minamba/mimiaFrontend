@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getFicheEleve,
   getHistoriqueEvaluations,
@@ -21,6 +21,17 @@ import FicheEleve from './FicheEleve';
 export default function PageEleve() {
   const { eleveId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // LA PORTE PAR LAQUELLE ON EST ENTRÉ, PAS TOUJOURS LA MÊME.
+  //
+  // Deux chemins mènent ici : « Mon compte » et, depuis peu, le bandeau
+  // « Fiche de … » sous chaque enfant de « Mes enfants ». Le lien qui y a
+  // conduit pose `state.depuis` (voir `ListeEleves.js`) ; sans lui, on est
+  // venu de « Mon compte », comme avant que ce second chemin existe.
+  const retour = location.state?.depuis === 'mes-enfants'
+    ? { to: '/eleves', libelle: 'Mes enfants' }
+    : { to: '/profil', libelle: 'Mon compte' };
 
   const [fiche, setFiche] = useState(null);
   const [chargement, setChargement] = useState(true);
@@ -56,9 +67,9 @@ export default function PageEleve() {
   }, [charger]);
 
   return (
-    <>
-      <Link to="/profil" className="lien-retour">
-        <span aria-hidden="true">←</span> Mon compte
+    <section className="page page--large">
+      <Link to={retour.to} className="lien-retour">
+        <span aria-hidden="true">←</span> {retour.libelle}
       </Link>
 
       <FicheEleve
@@ -66,12 +77,12 @@ export default function PageEleve() {
         fiche={fiche}
         chargement={chargement}
         erreur={erreur}
-        onFermer={() => navigate('/profil')}
+        onFermer={() => navigate(retour.to)}
         niveau={niveau}
         onNiveau={setNiveau}
         chargerEvaluations={getHistoriqueEvaluations}
         chargerRapports={getHistoriqueRapports}
       />
-    </>
+    </section>
   );
 }

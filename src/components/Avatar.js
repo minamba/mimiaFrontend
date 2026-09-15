@@ -6,6 +6,44 @@
  * c'est ce visage qui fait qu'il retrouve « son » prof d'une séance à l'autre.
  */
 
+import photoNora from '../assets/profs/p_math.png';
+import photoAdrien from '../assets/profs/p_français.png';
+import photoSalim from '../assets/profs/p_histoire_geo.png';
+import photoMarine from '../assets/profs/p_anglais.png';
+import photoYann from '../assets/profs/p_sciences-technologie.png';
+import photoInes from '../assets/profs/p_svt.png';
+import photoCamille from '../assets/profs/p_philosophie.png';
+import photoLucia from '../assets/profs/p_espagnol.png';
+import photoKarim from '../assets/profs/p_droit.png';
+import photoElodie from '../assets/profs/p_sanitaires_sociales.png';
+import photoTheo from '../assets/profs/p_sport.png';
+import photoJeanne from '../assets/profs/p_arts.png';
+
+/**
+ * LES VISAGES ILLUSTRÉS — voulus par Camara le 14/09/2026, d'abord pour Nora
+ * (« j'ai envie de voir comment ça rend »), puis pour toute l'équipe. Les
+ * images sont nommées par matière ; un professeur qui en tient plusieurs garde
+ * UN visage — Yann en sciences comme en physique-chimie, Karim en STMG comme en
+ * SES. Le dessin ci-dessous reste le repli d'un professeur sans image.
+ *
+ * À REDIMENSIONNER AVANT LA MISE EN LIGNE : chaque image fait 1254 px et
+ * 1,1 à 1,7 Mo, pour un visage affiché entre 32 et 96 px.
+ */
+const PHOTOS = {
+  nora: photoNora,
+  adrien: photoAdrien,
+  salim: photoSalim,
+  marine: photoMarine,
+  yann: photoYann,
+  ines: photoInes,
+  camille: photoCamille,
+  lucia: photoLucia,
+  karim: photoKarim,
+  elodie: photoElodie,
+  theo: photoTheo,
+  jeanne: photoJeanne,
+};
+
 const PROFS = {
   nora: {
     peau: '#E8B48C',
@@ -65,6 +103,68 @@ const PROFS = {
     vetement: '#5A4A8C',
     lunettes: true,
   },
+
+  // ---------------------------------------------------------------------
+  // L'ÉQUIPE DES SÉRIES TECHNOLOGIQUES (14/09/2026).
+  //
+  // Même règle que pour les autres : deux professeurs d'une même grille ne
+  // se ressemblent pas. Un élève de STMG voit Karim à côté de Nora, Adrien,
+  // Salim, Marine et Camille ; un élève de ST2S voit Élodie à côté de Yann et
+  // d'Inès. Carnation, coupe, couleur de cheveux ou lunettes : au moins deux
+  // écarts avec chacun de ses voisins.
+  // ---------------------------------------------------------------------
+
+  // Économie-gestion de STMG.
+  karim: {
+    peau: '#A8744E',
+    cheveux: '#1C1714',
+    coupe: 'courte',
+    vetement: '#166534',
+    lunettes: true,
+  },
+  // Espagnol en LV2 (14/09/2026). Elle côtoie tous les autres dans la grille
+  // de l'élève qui l'a choisie : les cheveux roux ondulés et la carnation la
+  // distinguent de Marine, sa voisine de langue.
+  lucia: {
+    peau: '#DDA982',
+    cheveux: '#8E3B1E',
+    coupe: 'boucles',
+    vetement: '#BE123C',
+    lunettes: false,
+  },
+  // Sciences et techniques sanitaires et sociales.
+  elodie: {
+    peau: '#F1CFB0',
+    cheveux: '#5A3825',
+    coupe: 'queue',
+    vetement: '#B91C1C',
+    lunettes: false,
+  },
+
+  // ---------------------------------------------------------------------
+  // LES SPÉCIALITÉS DE LA VOIE GÉNÉRALE (14/09/2026) : deux nouveaux visages.
+  // Les autres spécialités vont à des professeurs déjà là.
+  // ---------------------------------------------------------------------
+
+  // Éducation physique, pratiques et culture sportives. Seuls cheveux blonds
+  // courts de l'équipe : il ne se confond ni avec Yann, ni avec Karim, ni
+  // avec Salim.
+  theo: {
+    peau: '#C68A5E',
+    cheveux: '#D9A441',
+    coupe: 'courte',
+    vetement: '#C2410C',
+    lunettes: false,
+  },
+  // Les sept enseignements artistiques. Des boucles blondes et des lunettes :
+  // deux écarts avec Inès et avec Lucía.
+  jeanne: {
+    peau: '#F5D0B5',
+    cheveux: '#E3C16F',
+    coupe: 'boucles',
+    vetement: '#86198F',
+    lunettes: true,
+  },
 };
 
 /** Chevelure : dessinée sous et sur le visage selon la coupe. */
@@ -110,12 +210,22 @@ function Cheveux({ coupe, couleur }) {
 export default function Avatar({ nom = 'nora', taille = 44, parle = false, couleur }) {
   const prof = PROFS[nom] ?? PROFS.nora;
   const accent = couleur ?? prof.vetement;
+  const photo = PHOTOS[nom];
 
   return (
     <span
       className={`avatar ${parle ? 'avatar--parle' : ''}`}
       style={{ width: taille, height: taille, '--avatar-accent': accent }}
     >
+      {photo ? (
+        // LE CADRE ROGNE L'IMAGE UN PEU À L'INTÉRIEUR DE SON DISQUE BLEU. Huit
+        // images sur douze ont un fond vert opaque autour du disque : sans ce
+        // rognage, un liseré vert entourerait le visage. Mesuré le 14/09/2026 :
+        // le disque occupe au moins 46,3 % du côté, centré à 1 % près.
+        <span className="avatar__cadre" style={{ width: taille, height: taille }} aria-hidden="true">
+          <img className="avatar__photo" src={photo} alt="" />
+        </span>
+      ) : (
       <svg viewBox="0 0 80 80" width={taille} height={taille} role="img" aria-hidden="true">
         <circle cx="40" cy="40" r="40" fill={accent} opacity="0.14" />
 
@@ -149,6 +259,7 @@ export default function Avatar({ nom = 'nora', taille = 44, parle = false, coule
           fill="none"
         />
       </svg>
+      )}
 
       {parle && (
         <span className="avatar__ondes">

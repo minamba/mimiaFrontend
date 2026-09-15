@@ -11,7 +11,11 @@
  * comporter, seul l'affichage serait abîmé. D'où ces tests.
  */
 
-import { marquerCopieAuCahier, retirerMarqueurCahier } from '../lib/storage/copieCahier';
+import {
+  marquerCopieAuCahier,
+  marquerCopieAuClavier,
+  retirerMarqueurCahier,
+} from '../lib/storage/copieCahier';
 
 test("l'aller-retour rend exactement ce que l'élève a dit", () => {
   const dit = "C'est bon, j'ai fini d'écrire.";
@@ -53,4 +57,49 @@ test('un crochet dans la phrase de l’élève ne déborde pas sur le marqueur',
   // dès qu'elle contient un crochet — et l'élève verrait sa bulle vide.
   const dit = "J'ai écrit [le mot] entre crochets.";
   expect(retirerMarqueurCahier(marquerCopieAuCahier(dit))).toBe(dit);
+});
+
+/**
+ * LE PENDANT CLAVIER.
+ *
+ * Relevé le 11/09/2026 : l'élève tape sa dictée, la rend, elle s'affiche
+ * entière — et le professeur répond « envoie-moi la photo dès que tu peux ».
+ * Il n'a pas de cahier.
+ */
+describe('marquerCopieAuClavier', () => {
+  const copie = 'la forêt s\'etendait a perte de vue\nchaque été mon frère et moi';
+
+  test('dit au professeur qu\'il a la copie sous les yeux', () => {
+    expect(marquerCopieAuClavier(copie)).toContain('sous les yeux');
+  });
+
+  test('lui interdit de réclamer une photo', () => {
+    expect(marquerCopieAuClavier(copie)).toContain('JAMAIS de photo');
+  });
+
+  test('ne dit rien des passages manquants : cette vérification est retirée', () => {
+    const charge = marquerCopieAuClavier(copie);
+
+    expect(charge).not.toMatch(/MANQUE/i);
+    expect(charge).not.toMatch(/RATTRAPAGE/i);
+  });
+
+  test('la copie de l\'élève reste intacte au début', () => {
+    expect(marquerCopieAuClavier(copie).startsWith(copie)).toBe(true);
+  });
+
+  test('aucun crochet dans le corps du marqueur', () => {
+    const charge = marquerCopieAuClavier('ma copie');
+
+    expect((charge.match(/\[/g) || []).length).toBe(1);
+    expect((charge.match(/\]/g) || []).length).toBe(1);
+  });
+
+  test('le marqueur disparaît de la bulle de l\'élève', () => {
+    expect(retirerMarqueurCahier(marquerCopieAuClavier(copie))).toBe(copie);
+  });
+
+  test('les deux marqueurs se retirent par la même porte', () => {
+    expect(retirerMarqueurCahier(marquerCopieAuCahier(copie))).toBe(copie);
+  });
 });

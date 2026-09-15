@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ouvrirSession } from '../lib/api/sessionEleveApi';
 import { accueilEleve, ouvrirSessionEleve } from '../lib/storage/sessionEleve';
+import imageSac from '../assets/sac.png';
 
 /**
  * L'entrée des enfants : leur code, et rien d'autre.
@@ -86,10 +87,26 @@ export default function EntreeEleve() {
 
   return (
     <section className="page entree-eleve">
-      <h1>Bonjour !</h1>
-      <p className="entree-eleve__note">
-        Tape le code que tes parents t’ont donné pour retrouver tes cours.
-      </p>
+      {/* UNE BULLE, ET NON PLUS UN FORMULAIRE POSÉ SUR LE FOND — Camara, le
+          15/09/2026 : « la y'a pas de bulle ». Pour un enfant, une carte avec
+          son cartable en tête dit « c'est ici, c'est pour toi » avant même
+          qu'il sache lire la consigne. */}
+      <div className="entree-eleve__bulle">
+        <div className="entree-eleve__medaillon" aria-hidden="true">
+          {/* `sac.png` et non plus l'emoji 🎒 — Camara, le 15/09/2026 : le
+              dessin est celui des autres illustrations du site, l'emoji
+              changeait d'allure d'un appareil à l'autre. */}
+          <img className="entree-eleve__cartable" src={imageSac} alt="" />
+          <span className="entree-eleve__etincelle entree-eleve__etincelle--1">✦</span>
+          <span className="entree-eleve__etincelle entree-eleve__etincelle--2">✦</span>
+        </div>
+
+        <p className="entree-eleve__etiquette">Espace élève</p>
+
+        <h1>Bonjour !</h1>
+        <p className="entree-eleve__note">
+          Tape le code que tes parents t’ont donné pour retrouver tes cours.
+        </p>
 
       <form onSubmit={valider} className="entree-eleve__forme">
         <input
@@ -116,16 +133,33 @@ export default function EntreeEleve() {
           placeholder="•••-•••"
         />
 
-        {erreur && <p className="entree-eleve__erreur">{erreur}</p>}
+        {/* `role="alert"` : le refus est lu à voix haute par un lecteur
+            d'écran dès qu'il apparaît, sans que l'enfant ait à le chercher. */}
+        {erreur && (
+          <p className="entree-eleve__erreur" role="alert">
+            <span aria-hidden="true">🤔</span> {erreur}
+          </p>
+        )}
 
-        <button type="submit" className="btn btn--large" disabled={code.length < 6 || envoi}>
+        <button
+          type="submit"
+          className="btn btn--large entree-eleve__bouton"
+          disabled={code.length < 6 || envoi}
+        >
           {envoi ? 'Un instant…' : 'C’est parti'}
+          {!envoi && <span className="entree-eleve__fleche" aria-hidden="true">→</span>}
         </button>
       </form>
+      </div>
 
+      {/* Une petite bulle à part : ce n'est pas la consigne, c'est le
+          recours — elle se lit quand on est bloqué, pas avant. */}
       <p className="entree-eleve__aide">
-        Tu n’as pas de code ? Demande à tes parents : il est dans leur espace,
-        sur ta fiche.
+        <span className="entree-eleve__aide-icone" aria-hidden="true">💡</span>
+        <span>
+          Tu n’as pas de code ? Demande à tes parents : il est dans leur espace,
+          sur ta fiche.
+        </span>
       </p>
     </section>
   );

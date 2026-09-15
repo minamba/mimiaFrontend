@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apercuDiffusion, lancerDiffusion, getEtatDiffusion } from '../lib/api/adminApi';
+import { useCompositionMessage } from '../lib/hooks/useCompositionMessage';
+import BarreOutilsTexte from './BarreOutilsTexte';
+import BlocPieces from './BlocPieces';
 
 /**
  * Écrire à tous les parents.
@@ -16,22 +19,25 @@ import { apercuDiffusion, lancerDiffusion, getEtatDiffusion } from '../lib/api/a
  * Un éditeur visuel produit du HTML qu'on ne relit jamais, et qui casse dans
  * la moitié des messageries — celles-ci n'implémentent qu'un sous-ensemble du
  * HTML, différent pour chacune. Ici le texte est du texte, les paragraphes
- * viennent des lignes vides, et les images se placent avec un marqueur.
- * Ce qu'on écrit est ce qui part.
+ * viennent des lignes vides, `**gras**` et les images se placent avec un
+ * marqueur (voir `useCompositionMessage`). Ce qu'on écrit est ce qui part.
  */
 export default function Diffusion({ nombreParents }) {
   const [sujet, setSujet] = useState('');
   const [titre, setTitre] = useState('');
-  const [texte, setTexte] = useState('');
-  const [images, setImages] = useState([]);
-  const [documents, setDocuments] = useState([]);
+
+  const {
+    texte, setTexte,
+    images, setImages,
+    documents, setDocuments,
+    zoneTexte,
+    insererMarqueur, insererEmoji, insererGras,
+  } = useCompositionMessage();
 
   const [confirme, setConfirme] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [etat, setEtat] = useState(null);
-
-  const zoneTexte = useRef(null);
 
   // Suit l'avancement pendant l'envoi. L'intervalle s'arrête dès que la
   // diffusion se termine : continuer à interroger une API pour un état qui ne
@@ -52,35 +58,6 @@ export default function Diffusion({ nombreParents }) {
   }, []);
 
   const enCours = etat?.enCours === true;
-
-  /**
-   * Insère le marqueur d'une image à l'endroit du curseur.
-   *
-   * Plutôt que de demander à l'administrateur de taper `[image:2]` sans se
-   * tromper de numéro : le rang est une donnée du système, pas quelque chose
-   * qu'un humain doit tenir à jour quand il réordonne ses fichiers.
-   */
-  const insererMarqueur = (rang) => {
-    const marqueur = `[image:${rang}]`;
-    const zone = zoneTexte.current;
-
-    if (!zone) {
-      setTexte((t) => `${t}\n\n${marqueur}`);
-      return;
-    }
-
-    const debut = zone.selectionStart ?? texte.length;
-    const fin = zone.selectionEnd ?? texte.length;
-
-    setTexte(`${texte.slice(0, debut)}${marqueur}${texte.slice(fin)}`);
-
-    // Le curseur se replace après le marqueur inséré, pour pouvoir continuer à
-    // écrire sans aller le rechercher à la souris.
-    requestAnimationFrame(() => {
-      zone.focus();
-      zone.setSelectionRange(debut + marqueur.length, debut + marqueur.length);
-    });
-  };
 
   const composition = { sujet, titre: titre || sujet, texte, images, documents };
 
@@ -177,6 +154,7 @@ export default function Diffusion({ nombreParents }) {
 
       <div className="champ">
         <label htmlFor="dif-texte">Message</label>
+        <BarreOutilsTexte onGras={insererGras} onEmoji={insererEmoji} />
         <textarea
           id="dif-texte"
           ref={zoneTexte}
@@ -186,100 +164,29 @@ export default function Diffusion({ nombreParents }) {
           placeholder={'Bonjour,\n\nUne ligne vide sépare deux paragraphes.\n\nÀ bientôt,\nL’équipe Mimia'}
         />
         <span className="champ__aide">
-          Une ligne vide crée un paragraphe. Le texte est envoyé tel quel — aucun
-          code HTML n’est interprété.
+          Une ligne vide crée un paragraphe. <strong>**Ainsi**</strong> devient du
+          gras ; le reste du texte part tel quel.
         </span>
       </div>
 
-      {/* ---------------------------------------------------------- images */}
-      <div className="diffusion__pieces">
-        <div className="diffusion__pieces-entete">
-          <strong>Images dans le message</strong>
-          <label className="btn btn--compact btn--fantome">
-            Ajouter des images
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              onChange={(e) => setImages([...images, ...Array.from(e.target.files ?? [])])}
-            />
-          </label>
-        </div>
+      <BlocPieces
+        titre="Images dans le message"
+        items={images}
+        onAjouter={(fichiers) => setImages([...images, ...fichiers])}
+        onRetirer={(i) => setImages(images.filter((_, n) => n !== i))}
+        onInserer={insererMarqueur}
+        accept="image/*"
+        videTexte="Aucune image. Ajoutez-en une, puis cliquez sur « Insérer ici » pour la placer à l’endroit du curseur dans votre texte."
+        avecMarqueur
+      />
 
-        {images.length === 0 ? (
-          <p className="diffusion__vide">
-            Aucune image. Ajoutez-en une, puis cliquez sur « Insérer ici » pour
-            la placer à l’endroit du curseur dans votre texte.
-          </p>
-        ) : (
-          <ul className="diffusion__liste">
-            {images.map((f, i) => (
-              <li key={`${f.name}-${i}`}>
-                <span className="diffusion__rang">[image:{i + 1}]</span>
-                <span className="diffusion__nom">{f.name}</span>
-                <span className="diffusion__poids">{Math.round(f.size / 1024)} Ko</span>
-
-                <button
-                  type="button"
-                  className="btn-ghost btn-ghost--mini"
-                  onClick={() => insererMarqueur(i + 1)}
-                >
-                  Insérer ici
-                </button>
-
-                <button
-                  type="button"
-                  className="btn-ghost btn-ghost--mini btn-ghost--danger"
-                  onClick={() => setImages(images.filter((_, n) => n !== i))}
-                >
-                  Retirer
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* ------------------------------------------------------- documents */}
-      <div className="diffusion__pieces">
-        <div className="diffusion__pieces-entete">
-          <strong>Documents joints</strong>
-          <label className="btn btn--compact btn--fantome">
-            Ajouter des documents
-            <input
-              type="file"
-              multiple
-              hidden
-              onChange={(e) => setDocuments([...documents, ...Array.from(e.target.files ?? [])])}
-            />
-          </label>
-        </div>
-
-        {documents.length === 0 ? (
-          <p className="diffusion__vide">
-            Aucun document. Ceux que vous ajoutez seront téléchargeables depuis
-            le courriel, et listés à la fin du message.
-          </p>
-        ) : (
-          <ul className="diffusion__liste">
-            {documents.map((f, i) => (
-              <li key={`${f.name}-${i}`}>
-                <span className="diffusion__nom">📎 {f.name}</span>
-                <span className="diffusion__poids">{Math.round(f.size / 1024)} Ko</span>
-
-                <button
-                  type="button"
-                  className="btn-ghost btn-ghost--mini btn-ghost--danger"
-                  onClick={() => setDocuments(documents.filter((_, n) => n !== i))}
-                >
-                  Retirer
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <BlocPieces
+        titre="Documents joints"
+        items={documents}
+        onAjouter={(fichiers) => setDocuments([...documents, ...fichiers])}
+        onRetirer={(i) => setDocuments(documents.filter((_, n) => n !== i))}
+        videTexte="Aucun document. Ceux que vous ajoutez seront téléchargeables depuis le courriel, et listés à la fin du message."
+      />
 
       {/* CINQ MÉGAOCTETS, ET C'EST UNE LIMITE DE DÉLIVRABILITÉ.
           Au-delà, beaucoup de messageries refusent le message ou le classent

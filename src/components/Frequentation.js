@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSerieVisites, getAbonnementsFenetre, getTunnel } from '../lib/api/adminApi';
+import { useEvenementsAdmin } from '../lib/hooks/useEvenementsAdmin';
 import Graphique from './Graphique';
 
 /**
@@ -150,9 +151,14 @@ export default function Frequentation() {
   const reglage = ECHELLES[echelle];
   const [debut, fin] = useMemo(() => reglage.fenetre(decalage), [reglage, decalage]);
 
-  const charger = useCallback(async () => {
-    setChargement(true);
-    setErreur(null);
+  // `silencieux` sert au rafraîchissement automatique : une visite ou un
+  // abonnement qui arrive pendant qu'on regarde déjà l'écran ne doit pas
+  // faire clignoter les graphiques en « Chargement… ».
+  const charger = useCallback(async ({ silencieux } = {}) => {
+    if (!silencieux) {
+      setChargement(true);
+      setErreur(null);
+    }
 
     try {
       // LES DEUX APPELS PARTENT ENSEMBLE, sur la MÊME fenêtre. Les enchaîner
@@ -169,13 +175,21 @@ export default function Frequentation() {
       setAbonnements(a.data ?? []);
       setTunnel(t.data ?? null);
     } catch {
-      setErreur("La fréquentation n'a pas pu être chargée.");
+      if (!silencieux) setErreur("La fréquentation n'a pas pu être chargée.");
     } finally {
-      setChargement(false);
+      if (!silencieux) setChargement(false);
     }
   }, [reglage, debut, fin]);
 
   useEffect(() => { charger(); }, [charger]);
+
+  // La période affichée n'est pas forcément « aujourd'hui » (l'admin peut
+  // naviguer dans le passé) : une nouvelle visite ne change alors rien à ce
+  // qui est affiché, mais recharger silencieusement ne coûte rien non plus
+  // et évite de distinguer les deux cas ici.
+  useEvenementsAdmin((type) => {
+    if (type === 'visite') charger({ silencieux: true });
+  });
 
   const totaux = useMemo(() => ({
     essais: abonnements.reduce((t, p) => t + (p.essais ?? 0), 0),

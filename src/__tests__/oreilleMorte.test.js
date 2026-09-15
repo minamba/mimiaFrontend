@@ -12,8 +12,13 @@
  * Aucune erreur, aucune fermeture, aucun moyen de s'en rendre compte.
  *
  * Ce que ces tests protègent : dès qu'on a RÉCLAMÉ une transcription, le
- * silence du serveur n'est plus une attente, c'est une panne — et on raccroche
- * pour que l'appelant rebâtisse une écoute.
+ * silence du serveur n'est plus une attente, c'est une panne — et on rappelle
+ * le serveur sur une liaison neuve.
+ *
+ * DEPUIS LE 13/09/2026, ON NE DÉFAIT PLUS L'ÉCOUTE POUR AUTANT. Raccrocher
+ * l'écoute entière faisait perdre tout ce qu'elle contenait : le tour sans
+ * verdict, et ce que l'élève disait pendant qu'on en rebâtissait une. Seule la
+ * liaison est remplacée, et le tour sans verdict repart dessus.
  *
  * Ce filet ne joue qu'en panne, donc jamais pendant le développement : sans
  * ces tests, il pourrait être cassé pendant des mois sans que rien ne le dise,
@@ -153,26 +158,44 @@ const unTourDeParole = async (rappels) => {
   return ecoute;
 };
 
-test("le tour de parole réclamé sans réponse fait raccrocher, et l'appelant est prévenu", async () => {
+test('le tour réclamé sans réponse fait rappeler le serveur, sans défaire l’écoute ni perdre le tour', async () => {
   const onFermeture = jest.fn();
-  await unTourDeParole({ onFermeture });
+  const onOreilleMorte = jest.fn();
+  await unTourDeParole({ onFermeture, onOreilleMorte });
+
+  const premiere = socketOuverte;
 
   // La demande est bien partie : c'est elle qui rend le silence anormal.
-  expect(socketOuverte.ordres).toContain('fin_tour');
+  expect(premiere.ordres).toContain('fin_tour');
 
   // Juste avant l'échéance, on patiente encore : une transcription lente
   // n'est pas une panne, et raccrocher à tort coûte une session.
   jest.advanceTimersByTime(SANS_RETOUR_MS - 1);
-  expect(onFermeture).not.toHaveBeenCalled();
-  expect(socketOuverte.fermee).toBe(false);
+  expect(onOreilleMorte).not.toHaveBeenCalled();
+  expect(premiere.fermee).toBe(false);
 
   jest.advanceTimersByTime(1);
 
-  // Raccroché, ET annoncé. L'annonce est le seul point qui compte : sans
-  // elle, on aurait remplacé un micro qui tourne dans le vide par un micro
-  // éteint en silence — la même séance perdue, en plus discret.
-  expect(socketOuverte.fermee).toBe(true);
-  expect(onFermeture).toHaveBeenCalledTimes(1);
+  // La liaison morte est raccrochée, ET la panne est annoncée : ce silence
+  // avait une cause, l'élève mérite de la connaître.
+  expect(premiere.fermee).toBe(true);
+  expect(onOreilleMorte).toHaveBeenCalledTimes(1);
+
+  // MAIS L'ÉCOUTE N'EST PAS DÉFAITE : l'appelant n'a rien à rebâtir. C'est le
+  // renversement du 13/09/2026 — le rebâtir perdait tout ce qu'elle gardait.
+  expect(onFermeture).not.toHaveBeenCalled();
+
+  // Le serveur est rappelé sur une liaison neuve…
+  jest.advanceTimersByTime(300);
+  await respirer();
+  expect(socketOuverte).not.toBe(premiere);
+
+  socketOuverte.onopen?.();
+
+  // … et le tour resté sans verdict repart dessus, son et fin de tour compris.
+  expect(socketOuverte.ordres).toContain('fin_tour');
+  expect(socketOuverte.envois.filter((envoi) => typeof envoi !== 'string').length)
+    .toBeGreaterThan(0);
 });
 
 test('une transcription qui revient désarme le chien de garde', async () => {

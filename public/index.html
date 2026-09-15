@@ -1,6 +1,34 @@
 <!DOCTYPE html>
 <html lang="fr">
   <head>
+    <!-- SOMBRE PAR DÉFAUT, POSÉ AVANT LA MOINDRE FEUILLE DE STYLE.
+         Mimia ne suit plus les réglages du système : le sombre est le thème
+         par défaut du produit, et seul un choix explicite enregistré dans
+         « Mes paramètres » (src/lib/storage/theme.js) fait basculer en clair.
+         Ce script tourne AVANT le CSS pour poser l'attribut dont il dépend —
+         sans lui, un parent qui a choisi le clair verrait un flash de sombre
+         à chaque chargement, le temps que React démarre. -->
+    <!-- LE STYLE « BLUE SKY », POSÉ AU MÊME MOMENT ET POUR LA MÊME RAISON.
+         C'est l'administration qui le décide (réglage BLUE_SKY), mais la
+         réponse du serveur arrive après le premier affichage : sans cette
+         mémoire de l'appareil (src/lib/storage/styleSite.js), chaque
+         chargement montrerait l'ancien style une fraction de seconde. Blue Sky
+         impose le sombre : ses couleurs sont faites pour le bleu de marque. -->
+    <script>
+      (function () {
+        var theme = 'dark';
+        var blueSky = false;
+        try {
+          if (window.localStorage.getItem('mimia_theme') === 'light') theme = 'light';
+          blueSky = window.localStorage.getItem('mimia_style') === 'blue-sky';
+        } catch (e) {}
+        if (blueSky) {
+          document.documentElement.setAttribute('data-da', 'blue-sky');
+          theme = 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
     <meta charset="utf-8" />
     <!-- Le .ico reste en premier pour les vieux navigateurs et la barre de
          favoris de Windows, qui l'exigent encore. Les PNG suivent : plus nets,
@@ -8,10 +36,29 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16.png" />
-    <!-- Google n'affiche dans ses résultats qu'une icône carrée dont le côté est
-         un multiple de 48 px ; les 16 et 32 ci-dessus sont ignorés. Fond crème
-         opaque et non transparent : en mode sombre, les résultats sont posés sur
-         un fond sombre, où le bleu nuit du logo disparaîtrait. -->
+    <!-- CE QUE GOOGLE DEMANDE VRAIMENT, vérifié dans sa documentation le
+         06/09/2026 : une image CARRÉE d'au moins 8 px, dans un format courant,
+         à une adresse STABLE et crawlable. Il recommande au-delà de 48 px pour
+         que l'icône tienne sur ses différentes surfaces — d'où les tailles
+         ci-dessous.
+
+         LA TRANSPARENCE EST CONSERVÉE : les coins de `icon_c.png` sont
+         détourés, et Google ne l'interdit pas — voir plus bas pour la seule
+         exception, l'apple-touch-icon.
+
+         LA SOURCE EST PETITE : 318 × 320, alors que `logo512.png` en fait
+         512. Un agrandissement, pas une perte de netteté visible sur un
+         dessin plat sans dégradé fin — mais si un jour la source se trouve
+         en plus grand, la reprendre fera un meilleur `logo512.png`.
+
+         Ces fichiers se régénèrent tous depuis `src/assets/icon_c.png` : ne
+         pas en retoucher un seul à la main, ils doivent rester identiques
+         entre eux. Leurs NOMS ne changent pas non plus — l'adresse devant
+         rester stable, la renommer ferait perdre à Google la trace de l'icône
+         déjà indexée.
+
+         En dessous de 32 px, c'est la silhouette du livre — pas ses détails —
+         qui porte la reconnaissance : le dessin reste trop chargé pour 16 px. -->
     <link rel="icon" type="image/png" sizes="48x48" href="%PUBLIC_URL%/icone-48.png" />
     <link rel="icon" type="image/png" sizes="96x96" href="%PUBLIC_URL%/icone-96.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/icone-192.png" />
@@ -21,6 +68,12 @@
       name="description"
       content="Mimia — un professeur particulier par IA pour chacun de vos enfants, du CP à la Terminale. Il ne donne pas la réponse : il diagnostique ce qui bloque et reprend depuis là."
     />
+    <!-- CETTE ICÔNE EST TOUJOURS GÉNÉRÉE SUR FOND BLANC FORCÉ, quelle que soit
+         la source : iOS compose du NOIR derrière la transparence d'un
+         apple-touch-icon, et un logo détouré y sortirait sur fond noir sur
+         l'écran d'accueil. Avec `icon_4.png`, qui n'a pas de transparence,
+         cette précaution ne change rien au résultat — mais elle doit rester,
+         pour la prochaine source qui, elle, en aura. -->
     <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="canonical" href="https://mimia.fr/" />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getReglagesPublics } from '../api/reglagesApi';
+import { appliquerBlueSky, blueSkyEnregistre } from './styleSite';
 
 /**
  * Les drapeaux publics du service, lus une fois et partagés.
@@ -21,6 +22,11 @@ import { getReglagesPublics } from '../api/reglagesApi';
  */
 const PAR_DEFAUT = {
   modeTest: false, essaisOuverts: true, maintenance: false, bandeau: null,
+
+  // LE STYLE, LUI, PART DE CE QUE L'APPAREIL A VU LA DERNIÈRE FOIS — le même
+  // que `public/index.html` a déjà posé sur la page. Partir de « éteint »
+  // ferait afficher l'ancienne page d'attente un instant avant la nouvelle.
+  blueSky: blueSkyEnregistre(),
 
   // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
   // de lecture promet un cadeau que le serveur ne donnera pas — et le
@@ -68,6 +74,10 @@ function interroger() {
           // lecture de réglage — exactement l'inverse de ce qu'on veut.
           maintenance: Boolean(data?.maintenance),
 
+          // Le style du site, décidé par l'administration pour tout le monde.
+          // Appliqué juste en dessous, avant de prévenir les abonnés.
+          blueSky: Boolean(data?.blueSky),
+
           // Le serveur n'envoie le texte que si le bandeau est allumé :
           // ici il n’y a rien à décider, juste à recopier. Une chaîne
           // vide vaut absence — un bandeau vide est un bandeau cassé.
@@ -106,6 +116,10 @@ function interroger() {
               }
             : PAR_DEFAUT.offreLancement,
         };
+
+        // ICI ET PAS DANS UN COMPOSANT : le style habille le site entier, y
+        // compris la page d'attente qui remplace tous les composants.
+        appliquerBlueSky(valeurs.blueSky);
 
         abonnes.forEach((notifier) => notifier(valeurs));
         return valeurs;
@@ -201,6 +215,17 @@ export function useEssaisOuverts() {
  */
 export function useMaintenance() {
   return useDrapeaux().maintenance;
+}
+
+/**
+ * Vrai quand le style « Blue Sky » habille le site.
+ *
+ * Presque personne n'en a besoin : le style se pose sur <html> et App.css fait
+ * le reste. Seuls les écrans dont le BALISAGE change s'en servent — la page
+ * d'attente, dont les deux versions ne sont pas faites des mêmes éléments.
+ */
+export function useBlueSky() {
+  return useDrapeaux().blueSky;
 }
 
 /**

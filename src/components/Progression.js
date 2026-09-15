@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import iconeCarte from '../assets/carte.png';
 import { getProgression } from '../lib/api/elevesApi';
 
 /**
@@ -112,6 +113,20 @@ export default function Progression() {
   // `Math.round` et non un décimal : « 6 % » se retient, « 5,8 % » se subit.
   const pourcent = total > 0 ? Math.round((acquises / total) * 100) : 0;
 
+  // LA BULLE DE PAGE, SOUS « RETOUR » — Camara, le 14/09/2026. La même que
+  // sur « Mon calendrier » (`.bandeau-page`) : le vert, l'illustration et la
+  // phrase de la carte « Ma carte » qui mène ici. Déclarée une fois, posée
+  // dans les deux affichages — carte vide comme carte remplie.
+  const bandeau = (
+    <header className="bandeau-page">
+      <img className="bandeau-page__illustration" src={iconeCarte} alt="" />
+      <div>
+        <h1>Ma carte</h1>
+        <p>Vois ce que tu as déjà réussi !</p>
+      </div>
+    </header>
+  );
+
   // UNE CARTE VIDE N'EST PAS UNE PANNE.
   //
   // Six niveaux du référentiel n'ont aucune compétence — 3e prépa-métiers,
@@ -128,6 +143,8 @@ export default function Progression() {
         >
           ← Retour
         </button>
+
+        {bandeau}
 
         <div className="parcours__score">
           <strong>🗺️</strong>
@@ -151,6 +168,8 @@ export default function Progression() {
       >
         ← Retour
       </button>
+
+      {bandeau}
 
       {/* LE CHIFFRE D'ABORD, ET EN GRAND. C'est ce que l'enfant vient
           chercher : combien j'en ai. Le détail par matière vient après. */}
@@ -314,6 +333,13 @@ export default function Progression() {
                       <span className="parcours__libelle">{c.libelle}</span>
                       <span className="parcours__etat">{LIBELLE_ETAT[c.etat]}</span>
                       <span className="parcours__niveau">{c.matiere}</span>
+                      {/* SORTIE DU PROGRAMME depuis qu'il l'a travaillée. Elle
+                          reste à lui — voulu par Camara : « les enfants ne
+                          perdent pas leur data » — mais dite comme telle, pour
+                          qu'il ne la cherche pas dans son programme de l'année. */}
+                      {c.ancienProgramme && (
+                        <span className="parcours__ancien">ancien programme</span>
+                      )}
                     </li>
                   ))}
                 </ul>

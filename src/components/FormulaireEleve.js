@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { submitEleve, resetEleve } from '../lib/actions/elevesActions';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 import Loader from './Loader';
+import { grouperClasses, specialitesDeLaClasse, specialitesAEnvoyer } from '../lib/niveauxScolaires';
+import ChoixSpecialites from './ChoixSpecialites';
 
 /**
  * Onboarding d'un profil enfant.
@@ -16,7 +18,7 @@ export default function FormulaireEleve() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { niveaux, loading: chargementReferentiel } = useSelector((state) => state.referentiel);
+  const { niveaux, academies, loading: chargementReferentiel } = useSelector((state) => state.referentiel);
   const { submitting, success, error } = useSelector((state) => state.eleves);
 
   const [champs, setChamps] = useState({
@@ -25,7 +27,17 @@ export default function FormulaireEleve() {
     age: '',
     niveauScolaireId: '',
     sexe: '',
+    academieId: '',
+    lv2Espagnol: false,
+    specialites: [],
   });
+
+  // LA CASE LV2 N'EXISTE QUE DANS LES CLASSES QUI ONT UNE LV2 — le serveur le
+  // dit classe par classe (`lv2Possible`). Ailleurs elle n'est ni montrée ni
+  // envoyée cochée : un CE2 n'a pas de LV2.
+  const niveauChoisi = niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId));
+  const lv2Possible = Boolean(niveauChoisi?.lv2Possible);
+  const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
 
   const set = (nom) => (evenement) =>
     setChamps((precedent) => ({ ...precedent, [nom]: evenement.target.value }));
@@ -50,6 +62,9 @@ export default function FormulaireEleve() {
         age: Number(champs.age),
         sexe: Number(champs.sexe),
         niveauScolaireId: Number(champs.niveauScolaireId),
+        academieId: champs.academieId ? Number(champs.academieId) : null,
+        lv2Espagnol: lv2Possible && champs.lv2Espagnol,
+        specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
       }),
     );
   };
@@ -58,11 +73,8 @@ export default function FormulaireEleve() {
     return <Loader texte="Chargement des niveaux…" />;
   }
 
-  // Regroupement par cycle : une liste plate de 12 niveaux est illisible.
-  const parCycle = niveaux.reduce((accumulateur, niveau) => {
-    (accumulateur[niveau.cycle] ??= []).push(niveau);
-    return accumulateur;
-  }, {});
+  // Regroupées par voie et par série : voir `grouperClasses`.
+  const groupes = grouperClasses(niveaux);
 
   return (
     <section className="page page--etroite">
@@ -112,7 +124,7 @@ export default function FormulaireEleve() {
             required
           >
             <option value="">Choisir une classe…</option>
-            {Object.entries(parCycle).map(([cycle, niveauxDuCycle]) => (
+            {groupes.map(([cycle, niveauxDuCycle]) => (
               <optgroup key={cycle} label={cycle}>
                 {niveauxDuCycle.map((niveau) => (
                   <option key={niveau.id} value={niveau.id}>
@@ -122,7 +134,38 @@ export default function FormulaireEleve() {
               </optgroup>
             ))}
           </select>
+          <span className="champ__aide">
+            Au lycée technologique, choisis la série : c'est ce qui donne à ton
+            enfant les bonnes spécialités.
+          </span>
         </div>
+
+        {lv2Possible && (
+          <div className="champ">
+            <label className="case">
+              <input
+                type="checkbox"
+                checked={champs.lv2Espagnol}
+                onChange={(e) => setChamps((p) => ({ ...p, lv2Espagnol: e.target.checked }))}
+              />
+              Il a l’espagnol en LVB
+            </label>
+            <span className="champ__aide">
+              Coche la case si l’espagnol est sa deuxième langue vivante, la LVB
+              (souvent encore appelée LV2) : un professeur d’espagnol apparaîtra dans
+              ses matières. La spécialité LLCER espagnol, elle, se coche avec les
+              spécialités.
+            </span>
+          </div>
+        )}
+
+        <ChoixSpecialites
+          id="specialites"
+          nombre={specialitesClasse.nombre}
+          possibles={specialitesClasse.possibles}
+          valeur={champs.specialites}
+          onChange={(specialites) => setChamps((p) => ({ ...p, specialites }))}
+        />
 
         <div className="champ">
           <label htmlFor="age">Âge</label>
@@ -172,6 +215,36 @@ export default function FormulaireEleve() {
             Uniquement pour que le professeur accorde correctement quand il lui parle.
           </span>
         </fieldset>
+
+        {/* FACULTATIF, VOLONTAIREMENT.
+            Un parent qui ne connaît pas l'académie de son enfant, ou qui ne
+            s'en soucie pas, ne doit pas être bloqué pour autant : sans elle,
+            « Mon calendrier » affiche simplement ses séances sans les
+            périodes de vacances, jusqu'à ce qu'elle soit renseignée. */}
+        <div className="champ">
+          <label htmlFor="academie">Académie (facultatif)</label>
+          <select id="academie" value={champs.academieId} onChange={set('academieId')}>
+            <option value="">Je ne sais pas / plus tard</option>
+            <optgroup label="Zones A, B, C">
+              {academies
+                .filter((a) => ['A', 'B', 'C'].includes(a.zone))
+                .map((a) => (
+                  <option key={a.id} value={a.id}>{a.libelle}</option>
+                ))}
+            </optgroup>
+            <optgroup label="Corse et outre-mer">
+              {academies
+                .filter((a) => !['A', 'B', 'C'].includes(a.zone))
+                .map((a) => (
+                  <option key={a.id} value={a.id}>{a.libelle}</option>
+                ))}
+            </optgroup>
+          </select>
+          <span className="champ__aide">
+            Sert uniquement à afficher les périodes de vacances scolaires dans
+            « Mon calendrier ».
+          </span>
+        </div>
 
         <button type="submit" className="btn" disabled={submitting}>
           {submitting ? 'Création…' : 'Créer le profil'}

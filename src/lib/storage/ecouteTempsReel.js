@@ -137,8 +137,9 @@ const SILENCE_FIN_MS = TRAINE_MS + 250;
  *
  * On ne peut pas énumérer les causes ; on peut constater le symptôme. Nous
  * avons émis de la parole ET annoncé la fin du tour : une réponse DOIT
- * revenir. Si rien ne vient, l'oreille est morte, on raccroche, et l'effet de
- * réouverture en rebâtit une trois cents millisecondes plus tard.
+ * revenir. Si rien ne vient, l'oreille est morte : on raccroche la LIAISON, et
+ * on rappelle le serveur sur une neuve — sans défaire l'écoute, et en renvoyant
+ * le tour resté sans verdict (voir `abandonner`).
  *
  * Huit secondes : la transcription mesurée tient sous les deux. On ne veut pas
  * raccrocher sur une lenteur passagère — une reconnexion à tort coûte une
@@ -154,6 +155,54 @@ const SANS_RETOUR_MS = 8000;
  * suffisent et ne coûtent presque rien.
  */
 const AVANCE_MS = 300;
+
+/**
+ * Le son parti sans texte revenu, au-delà duquel un texte est EN ROUTE.
+ *
+ * Au-dessus de la traîne (TRAINE_MS, six cents millisecondes) : après un
+ * texte, la fin de souffle qui part encore ne doit pas faire attendre chaque
+ * réponse. En dessous d'une réponse d'un mot : un « oui » dit après coup doit
+ * être transcrit avant que le message parte.
+ */
+const SEUIL_EN_ROUTE_MS = 700;
+
+/**
+ * La mémoire tampon de la parole, en millisecondes d'audio.
+ *
+ * VOULUE PAR CAMARA LE 13/09/2026 : « tout ce que je dis doit être mis dans
+ * une mémoire tampon et envoyé uniquement quand le système est prêt ; si la
+ * connexion se coupe, rien n'est perdu, tout part quand elle revient ».
+ *
+ * Elle remplace l'amorce de quatre secondes, qui était la même idée bridée :
+ * au-delà de quatre secondes de liaison pas encore prête — une reconnexion
+ * après un incident en prend souvent davantage —, le début de la phrase était
+ * effacé pour faire de la place à la fin.
+ *
+ * Deux minutes et pas l'infini : c'est de la mémoire vive, et une panne plus
+ * longue n'est plus une coupure mais une séance perdue, que le repli sur le
+ * moteur du navigateur prend en charge. Seule la PAROLE y entre : le silence
+ * entre deux phrases est jeté comme il l'est en ligne, sans quoi une coupure
+ * d'une minute remplirait la mémoire de bruit de fond.
+ */
+const TAMPON_MAX_MS = 120000;
+
+/**
+ * Les délais entre deux tentatives de reconnexion ; le dernier se répète.
+ *
+ * Rapides d'abord : la plupart des coupures durent le temps d'un changement de
+ * réseau. Espacés ensuite, pour ne pas marteler un serveur en panne.
+ */
+const DELAIS_RECONNEXION_MS = [300, 1000, 2000, 5000];
+
+/**
+ * Tentatives ratées d'affilée — sans une seule ouverture réussie — avant de
+ * renoncer et de laisser l'appelant basculer sur le moteur du navigateur.
+ *
+ * Vingt tentatives, plus d'une minute et demie : on préfère attendre une
+ * liaison qui revient que perdre la séance sur une panne passagère. La parole
+ * dite pendant ce temps reste dans la mémoire tampon.
+ */
+const RECONNEXIONS_MAX = 20;
 
 /**
  * Le petit programme qui tourne dans le fil audio.
@@ -296,6 +345,78 @@ export function estUnTourDeParole(texte) {
  * Le seul juge qui ne dépende ni du vocabulaire, ni de la langue, ni de la
  * matière : personne ne parle plus vite que la parole.
  */
+/**
+ * La fenêtre du crédit de son : seul le son transmis depuis ce délai peut
+ * justifier un texte.
+ *
+ * Quarante-cinq secondes couvrent la plus longue justification d'un enfant.
+ * Au-delà, le crédit se périme : une phrase inventée sur un silence, longtemps
+ * après la dernière vraie parole, ne peut pas s'appuyer sur elle.
+ */
+const FENETRE_CREDIT_MS = 45000;
+
+/**
+ * Inscrit du son TRANSMIS au crédit. Voir `jugerTranscription`.
+ *
+ * @param credit      la liste des versements, la plus ancienne en tête ;
+ *                    MODIFIÉE en place.
+ * @param echantillons le nombre d'échantillons partis.
+ * @param maintenant  l'horloge du versement, en millisecondes.
+ */
+export function crediter(credit, echantillons, maintenant) {
+  credit.push({ t: maintenant, n: echantillons });
+}
+
+/**
+ * CE TEXTE A-T-IL PU SORTIR DU SON RÉELLEMENT TRANSMIS ?
+ *
+ * POURQUOI UN CRÉDIT, ET PLUS UN APPARIEMENT — relevé par Camara le
+ * 13/09/2026 : « toute ma justification, cinq ou six lignes, s'est écrite
+ * puis effacée, et ensuite il a envoyé un bout de phrase ».
+ *
+ * On associait chaque texte revenu à la durée d'UN ordre de fin de tour, en
+ * supposant qu'à chaque ordre répondait exactement un texte. C'est faux par
+ * construction : le fournisseur détecte AUSSI les fins de phrase, et quand il
+ * le fait avant nous, le serveur écarte notre ordre — plus rien à clore — et
+ * aucun texte ne lui répond. Une durée orpheline restait dans la file, et le
+ * texte SUIVANT lui était associé : la justification de vingt-cinq secondes
+ * jugée contre les trois secondes du bout de phrase d'avant, déclarée
+ * impossible, jetée — et effacée de l'écran.
+ *
+ * Le crédit ne suppose rien de l'ordre d'arrivée. Tout le son transmis est
+ * versé ; chaque texte accepté en consomme la durée MINIMALE qu'il lui a
+ * fallu, le plus ancien d'abord. Un texte n'est impossible que s'il dépasse ce
+ * que tout le son récent aurait pu porter. La justification passe ; la phrase
+ * inventée sur un silence, sans crédit récent, reste écartée.
+ *
+ * @param credit     les versements (voir `crediter`) ; MODIFIÉE en place — le
+ *                   périmé tombe, le consommé est retiré.
+ * @param maintenant l'horloge du jugement, en millisecondes.
+ * @returns `{ impossible, secondes }` — `secondes` : le crédit disponible au
+ *          moment du jugement, pour le journal.
+ */
+export function jugerTranscription(texte, credit, maintenant) {
+  while (credit.length > 0 && maintenant - credit[0].t > FENETRE_CREDIT_MS) credit.shift();
+
+  const disponible = credit.reduce((somme, versement) => somme + versement.n, 0);
+  const secondes = disponible / FREQUENCE;
+
+  // eslint-disable-next-line no-use-before-define
+  if (debitImpossible(texte, secondes)) return { impossible: true, secondes };
+
+  const propre = (texte ?? '').trim();
+  let besoin = Math.ceil((propre.length / CARACTERES_PAR_SECONDE_MAX) * FREQUENCE);
+
+  while (besoin > 0 && credit.length > 0) {
+    const pris = Math.min(besoin, credit[0].n);
+    credit[0].n -= pris;
+    besoin -= pris;
+    if (credit[0].n === 0) credit.shift();
+  }
+
+  return { impossible: false, secondes };
+}
+
 export function debitImpossible(texte, secondes) {
   const propre = (texte ?? '').trim();
   if (propre.length < LONGUEUR_MINIMUM_JUGEE) return false;
@@ -407,16 +528,29 @@ export const ecouteTempsReel = {
    * @param onSilence      l'élève s'est tu depuis assez longtemps pour qu'on
    *                       n'attende plus le verdict du fournisseur. Sert à
    *                       envoyer soi-même la transcription en attente.
-   * @param onFermeture    la liaison est tombée. À l'appelant de relancer :
-   *                       sans ce signal, le micro tournait dans le vide et
-   *                       l'interface affichait « je t'écoute » alors que plus
-   *                       rien ne partait.
-   * @param onOuverture    la liaison est établie. Sert à l'appelant pour
-   *                       oublier les échecs précédents — c'est la seule preuve
-   *                       de bon fonctionnement qu'un élève silencieux produise.
+   * @param onReprise      l'élève REPREND la parole après un silence de fin de
+   *                       tour. Contrairement à `onVoix`, qui ne sert qu'une
+   *                       fois pour couper le professeur, celui-ci se répète à
+   *                       chaque reprise : c'est le seul signal qui dise « il
+   *                       n'avait pas fini », et il annule l'envoi programmé.
+   * @param onFermeture    la liaison est DÉFINITIVEMENT perdue, après
+   *                       `RECONNEXIONS_MAX` rappels ratés d'affilée. Une
+   *                       coupure ordinaire ne l'appelle plus : l'écoute
+   *                       rappelle seule, en gardant la parole en mémoire
+   *                       tampon. À l'appelant, alors seulement, de basculer.
+   * @param onOuverture    une liaison est établie — la première ou une
+   *                       nouvelle après un rappel. Sert à l'appelant pour
+   *                       oublier les échecs précédents.
+   * @param onOreilleMorte appelé UNIQUEMENT quand le chien de garde
+   *                       `SANS_RETOUR_MS` déclenche — jamais sur une fermeture
+   *                       normale. L'écoute raccroche alors la liaison et en
+   *                       rappelle une neuve elle-même ; ce signal sert à le
+   *                       DIRE à l'élève, plutôt que de le laisser parler dans
+   *                       un silence qui ne s'explique jamais.
    */
   ecouter({
-    conversationId, onPartiel, onFinal, onErreur, onVoix, onSilence, onFermeture, onOuverture,
+    conversationId, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
+    onFermeture, onOuverture, onOreilleMorte,
   }) {
     let socket = null;
     let contexte = null;
@@ -424,14 +558,117 @@ export const ecouteTempsReel = {
     let arrete = false;
 
     /**
-     * Le son RÉELLEMENT transmis depuis le début de ce tour, en échantillons.
-     *
-     * C'est lui qu'on oppose à la longueur du texte reçu. Il compte ce qui est
-     * parti sur le réseau, pas ce que le micro a entendu : le silence gardé en
-     * réserve n'en fait pas partie, et c'est bien ce qu'on veut — le
-     * transcripteur ne l'a jamais eu.
+     * LE CRÉDIT DE SON : ce qui a été réellement transmis, et qui peut encore
+     * justifier un texte. Voir `jugerTranscription` — c'est lui qui remplace
+     * l'appariement d'un texte à « son » ordre de fin de tour, faux dès que le
+     * fournisseur clôt une phrase avant nous.
      */
-    let echantillonsDuTour = 0;
+    const credit = [];
+
+    /**
+     * Le son parti depuis le DERNIER texte reçu, quel qu'il soit.
+     *
+     * Tant qu'il y en a assez, un texte est en route : le chat ne doit pas
+     * envoyer ce qu'il a déjà. Remis à zéro par chaque texte, accepté ou
+     * écarté — un texte écarté est revenu, lui aussi.
+     */
+    let sonDepuisDernierTexte = 0;
+
+    /**
+     * CE QUI EST À L'ÉCRAN NE S'EFFACE JAMAIS TANT QUE ÇA N'A PAS ÉTÉ ENVOYÉ.
+     *
+     * Règle posée par Camara le 13/09/2026, après avoir vu trois fois une
+     * justification entière s'écrire puis disparaître : « il ne devrait pas
+     * s'effacer tant qu'il n'a pas encore été envoyé ; l'enfant peut fuir la
+     * plateforme si on efface à chaque fois ce qu'il dit ».
+     *
+     * Chaque garde-fou — débit impossible, hésitation seule, alphabet non
+     * latin — écartait un texte ET effaçait le provisoire affiché. Or ce
+     * provisoire, c'était la parole de l'enfant, transcrite au fil de l'eau ;
+     * quand le garde-fou se trompait, elle disparaissait sous ses yeux. Un
+     * garde-fou n'a désormais le droit que de NE PAS AJOUTER un texte : jamais
+     * de retirer ce qui est déjà là. Ce qui est affiché part à l'envoi.
+     *
+     * UNE SEULE EXCEPTION, et elle ne peut rien perdre : quand AUCUN son n'a
+     * été transmis, ce qui est affiché n'a été dit par personne — c'est la
+     * phrase inventée sur un silence, « Qu'est-ce que signifie auxiliaire ? »,
+     * partie un jour au professeur. Elle seule s'efface encore.
+     */
+    const effacerSiRienDit = (secondesTransmises) => {
+      if (secondesTransmises > 0) return;
+      onPartiel?.('');
+    };
+
+    /**
+     * LA MÉMOIRE TAMPON DE LA PAROLE — voir TAMPON_MAX_MS.
+     *
+     * Tout ce qui doit partir au serveur passe par cette file, dans l'ordre où
+     * c'est dit : les trames de son ET les ordres de fin de tour. Les garder
+     * dans la même file est ce qui préserve l'ordre à la reconnexion — un
+     * « fin_tour » envoyé avant le son de sa phrase clôturerait un tampon vide
+     * chez le fournisseur, et la phrase partirait sans jamais être transcrite.
+     *
+     * Elle ne se vide que sur une liaison OUVERTE ; fermée, elle se remplit.
+     */
+    const fileEnAttente = [];
+    let fileEchantillons = 0;
+
+    /**
+     * Ce qui est déjà PARTI mais pas encore TRANSCRIT : trames de son et ordres
+     * de fin de tour, horodatés, dans l'ordre d'envoi.
+     *
+     * Envoyer n'est pas livrer : si la liaison tombe après l'envoi, le son
+     * était chez le fournisseur, dans une session qui meurt avec elle. Sans
+     * cette copie, la phrase disparaissait au moment précis où l'élève avait
+     * fini de la dire. On la renvoie donc sur la liaison suivante.
+     *
+     * DEUX FAÇONS D'EN SORTIR, ET AUCUNE NE SUPPOSE « UN ORDRE, UN TEXTE » :
+     * chaque texte revenu libère la plus ancienne phrase close ; et une
+     * phrase close depuis plus de SANS_RETOUR_MS est oubliée — si son texte
+     * s'était perdu, le chien de garde l'aurait déjà constaté et renvoyée.
+     */
+    let enVol = [];
+    let enVolEchantillons = 0;
+
+    const garderEnVol = (element) => {
+      enVol.push(element);
+      if (!element.pcm) return;
+      enVolEchantillons += element.pcm.length;
+
+      // Même plafond que la mémoire tampon : une copie ne doit pas coûter
+      // plus de mémoire que l'original.
+      // eslint-disable-next-line no-use-before-define
+      while (enVolEchantillons > tamponMax && enVol.length > 1) {
+        const ancien = enVol.shift();
+        if (ancien.pcm) enVolEchantillons -= ancien.pcm.length;
+      }
+    };
+
+    /** Retire les éléments jusqu'à l'indice donné, inclus. */
+    const retirerEnVolJusqua = (indice) => {
+      if (indice < 0) return;
+      enVol.splice(0, indice + 1).forEach((element) => {
+        if (element.pcm) enVolEchantillons -= element.pcm.length;
+      });
+    };
+
+    /** Oublie les phrases closes depuis plus de SANS_RETOUR_MS. */
+    const elaguerEnVol = (maintenant) => {
+      let dernierVieux = -1;
+      enVol.forEach((element, i) => {
+        if (element.fin && maintenant - element.t > SANS_RETOUR_MS) dernierVieux = i;
+      });
+      retirerEnVolJusqua(dernierVieux);
+    };
+
+    /** Un texte est revenu : la plus ancienne phrase close n'a plus à être renvoyée. */
+    const libererPremierePhrase = () => {
+      retirerEnVolJusqua(enVol.findIndex((element) => element.fin));
+    };
+
+    // La reconnexion : combien d'échecs d'affilée, et la tentative programmée.
+    let reconnexionsRatees = 0;
+    let minuteurReconnexion = null;
 
     // Le son gardé d'avance, pour ne pas tronquer la première syllabe.
     const reserve = [];
@@ -475,9 +712,60 @@ export const ecouteTempsReel = {
     let avanceGardee = true;
 
 
+    // Le sondage qui attend que le son soit vraiment parti. Voir `armerQuandLivre`.
+    let attenteLivraison = null;
+
     const desarmer = () => {
       if (sansRetour) clearTimeout(sansRetour);
       sansRetour = null;
+      if (attenteLivraison) clearInterval(attenteLivraison);
+      attenteLivraison = null;
+    };
+
+    /**
+     * ARME LE CHIEN DE GARDE QUAND LE SON EST PARTI — pas quand on l'a confié au
+     * navigateur.
+     *
+     * Relevé par Camara le 13/09/2026, après une tirade de cinquante secondes
+     * dite pendant une coupure. À la reconnexion, la mémoire tampon rendait
+     * tout d'un coup : des mégaoctets de son, que `send` accepte à l'instant
+     * mais que le réseau met de longues secondes à acheminer. Le chien de garde
+     * partait pourtant dès l'appel à `send`, concluait à une oreille morte au
+     * bout de huit secondes — alors que le son était encore en route —, coupait
+     * la liaison en plein envoi, et renvoyait le tout sur la suivante. Qui
+     * n'avait pas le temps non plus. Une boucle sans fin, le bandeau « petit
+     * souci de connexion » allumé en permanence, et rien de livré.
+     *
+     * `bufferedAmount` dit ce qui attend encore dans le navigateur. Tant qu'il
+     * n'est pas vide, le silence du serveur n'est pas une panne : il n'a
+     * simplement pas encore tout reçu. On attend qu'il le soit, PUIS on laisse
+     * au serveur ses huit secondes pour répondre.
+     */
+    const armerQuandLivre = () => {
+      if (sansRetour || attenteLivraison) return;
+
+      const toutEstParti = () => (socket?.bufferedAmount ?? 0) === 0;
+
+      if (toutEstParti()) {
+        // eslint-disable-next-line no-use-before-define
+        sansRetour = setTimeout(abandonner, SANS_RETOUR_MS);
+        return;
+      }
+
+      attenteLivraison = setInterval(() => {
+        if (!socket || arrete) {
+          clearInterval(attenteLivraison);
+          attenteLivraison = null;
+          return;
+        }
+
+        if (!toutEstParti()) return;
+
+        clearInterval(attenteLivraison);
+        attenteLivraison = null;
+        // eslint-disable-next-line no-use-before-define
+        if (!sansRetour) sansRetour = setTimeout(abandonner, SANS_RETOUR_MS);
+      }, 250);
     };
 
     /**
@@ -508,6 +796,15 @@ export const ecouteTempsReel = {
      */
     const suspendre = (oui, garderLAvance = true) => {
       const nouveau = Boolean(oui);
+
+      // DÉJÀ EN PAUSE, MAIS LE MOTIF PEUT S'AGGRAVER. L'élève tapait — pause
+      // qui garde son avance — quand le professeur prend la parole : la
+      // réserve va maintenant capter sa voix. Sans cette ligne, le premier
+      // motif l'emportait, et la reprise renvoyait la fin de la phrase du
+      // professeur en tête du tour de l'élève. Le motif sourd l'emporte
+      // toujours sur celui du clavier, jamais l'inverse.
+      if (nouveau && suspendu && !garderLAvance) avanceGardee = false;
+
       if (nouveau === suspendu) return;
       suspendu = nouveau;
 
@@ -540,31 +837,202 @@ export const ecouteTempsReel = {
       arrete = true;
 
       desarmer();
+      if (minuteurReconnexion) clearTimeout(minuteurReconnexion);
+      minuteurReconnexion = null;
+
       flux?.getTracks().forEach((piste) => piste.stop());
       contexte?.close().catch(() => {});
 
       if (socket && socket.readyState <= WebSocket.OPEN) socket.close();
     };
 
+    const tamponMax = Math.floor((TAMPON_MAX_MS / 1000) * FREQUENCE);
+    const seuilEnRoute = Math.floor((SEUIL_EN_ROUTE_MS / 1000) * FREQUENCE);
+
     /**
-     * Plus rien ne revient : on raccroche et on le DIT.
+     * Range un élément dans la mémoire tampon, en queue — ou en tête quand on
+     * y remet ce qui était parti sans être transcrit.
      *
-     * L'annonce est faite ici et non par `onclose`, qui se tait sur les
-     * fermetures voulues — et celle-ci l'est. Sans elle, on aurait remplacé un
-     * micro qui tourne dans le vide par un micro éteint en silence.
+     * Au-delà du plafond, c'est le SON le plus ancien qui cède, jamais un
+     * ordre de fin de tour : sans lui, la phrase qui suit ne serait jamais
+     * transcrite, et la mémoire aurait gardé du son pour rien.
      */
-    const abandonner = () => {
+    const ranger = (element, enTete = false) => {
+      if (enTete) fileEnAttente.unshift(element);
+      else fileEnAttente.push(element);
+
+      if (!element.pcm) return;
+      fileEchantillons += element.pcm.length;
+
+      while (fileEchantillons > tamponMax) {
+        const ancien = fileEnAttente.findIndex((e) => e.pcm);
+        if (ancien < 0) break;
+        fileEchantillons -= fileEnAttente[ancien].pcm.length;
+        fileEnAttente.splice(ancien, 1);
+      }
+    };
+
+    /**
+     * Envoie ce qui attend, dans l'ordre, tant que la liaison est OUVERTE.
+     *
+     * C'est le SEUL endroit qui parle au serveur. Qu'une trame arrive sur une
+     * liaison prête, pendant une reconnexion ou juste après, elle passe par
+     * ici et part à sa place — jamais avant ce qui a été dit avant elle.
+     */
+    const vider = () => {
+      while (fileEnAttente.length > 0 && socket?.readyState === WebSocket.OPEN) {
+        const element = fileEnAttente.shift();
+
+        if (element.pcm) {
+          const taille = element.pcm.length;
+          fileEchantillons -= taille;
+          socket.send(element.pcm.buffer);
+
+          // LE SON EST PARTI : il nourrit le crédit qui juge les textes, il
+          // compte comme « en route » jusqu'au prochain texte, et on en garde
+          // la copie tant qu'il peut encore se perdre avec la liaison.
+          const envoyeLe = performance.now();
+          crediter(credit, taille, envoyeLe);
+          sonDepuisDernierTexte += taille;
+          garderEnVol({ pcm: element.pcm, t: envoyeLe });
+          continue;
+        }
+
+        socket.send(JSON.stringify({ type: 'fin_tour' }));
+
+        const closLe = performance.now();
+        garderEnVol({ fin: true, t: closLe });
+        elaguerEnVol(closLe);
+
+        // On vient de réclamer une transcription : à partir d'ici, le silence
+        // du serveur n'est plus une attente, c'est une panne. On n'écrase pas
+        // une échéance déjà en cours — une oreille vraiment morte doit être
+        // constatée au premier tour perdu, pas repoussée par les suivants.
+        // eslint-disable-next-line no-use-before-define
+        armerQuandLivre();
+      }
+    };
+
+    /** Une trame de son ou une fin de tour : envoyée si possible, gardée sinon. */
+    const emettre = (element) => {
+      ranger(element);
+      vider();
+    };
+
+    /**
+     * La liaison est perdue : ce qui était PARTI SANS ÊTRE TRANSCRIT revient
+     * en tête de la mémoire tampon, dans son ordre d'origine, devant ce qui a
+     * été dit pendant la coupure.
+     *
+     * La session du fournisseur meurt avec la liaison, et le son qu'elle
+     * contenait avec elle. Le renvoyer est le prix de « ne jamais perdre » —
+     * au risque, rare, de transcrire deux fois une phrase dont le verdict
+     * s'est perdu en route. Une phrase en double se voit et se corrige ; une
+     * phrase perdue, l'enfant doit la redire sans savoir pourquoi.
+     *
+     * Les mesures repartent de zéro : elles seront reconstruites trame par
+     * trame au renvoi, appariées aux verdicts de la nouvelle session.
+     */
+    const reprendreLesToursEnVol = () => {
+      const aRenvoyer = enVol.map(({ pcm, fin }) => (fin ? { fin: true } : { pcm }));
+
+      enVol = [];
+      enVolEchantillons = 0;
+
+      // Ce qui repart sera recompté trame par trame à l'envoi. Le crédit, lui,
+      // n'est pas remis à zéro : le son renvoyé le nourrira de nouveau, ce qui
+      // ne peut que rendre le jugement plus généreux, jamais plus sévère.
+      sonDepuisDernierTexte = 0;
+
+      for (let i = aRenvoyer.length - 1; i >= 0; i -= 1) ranger(aRenvoyer[i], true);
+    };
+
+    /**
+     * Rappelle le serveur, de plus en plus patiemment.
+     *
+     * LA CAPTURE, ELLE, NE S'ARRÊTE PAS : c'est ce qui change tout. Pendant
+     * qu'on rappelle, l'élève continue de parler, et tout ce qu'il dit entre
+     * dans la mémoire tampon. Autrefois, la liaison perdue emportait l'écoute
+     * entière — micro, réserve, tours en cours — et l'appelant en rebâtissait
+     * une neuve, qui ne capturait rien tant qu'elle n'avait pas redemandé le
+     * micro au navigateur.
+     *
+     * On ne renonce qu'après RECONNEXIONS_MAX échecs d'affilée : l'appelant
+     * bascule alors sur le moteur du navigateur.
+     */
+    const programmerReconnexion = () => {
+      if (arrete || minuteurReconnexion) return;
+
+      reconnexionsRatees += 1;
+
+      if (reconnexionsRatees > RECONNEXIONS_MAX) {
+        onErreur?.("L'écoute a été interrompue. Tu peux écrire à la place.");
+        arreter();
+
+        // La liaison est définitivement perdue : l'appelant peut basculer
+        // sur le moteur du navigateur.
+        onFermeture?.();
+        return;
+      }
+
+      const rang = Math.min(reconnexionsRatees - 1, DELAIS_RECONNEXION_MS.length - 1);
+
+      minuteurReconnexion = setTimeout(() => {
+        minuteurReconnexion = null;
+        // eslint-disable-next-line no-use-before-define
+        ouvrirLiaison();
+      }, DELAIS_RECONNEXION_MS[rang]);
+    };
+
+    /**
+     * Plus rien ne revient : on RACCROCHE, ON RAPPELLE — et on ne perd rien.
+     *
+     * Autrefois on raccrochait l'écoute entière et l'appelant en rebâtissait
+     * une neuve : tout ce qui attendait sa transcription disparaissait, et
+     * l'élève devait redire la phrase qu'il venait de finir. Désormais seule
+     * la liaison est remplacée. Le tour sans verdict repart sur la nouvelle,
+     * et l'annonce est toujours faite — ce silence avait une cause, l'élève
+     * mérite de la connaître.
+     */
+    const abandonner = (motif) => {
       if (arrete) return;
 
       if (process.env.NODE_ENV !== 'production') {
-        console.warn(`[ecoute] aucune réponse depuis ${SANS_RETOUR_MS} ms : oreille morte, on rouvre.`);
+        console.warn(
+          typeof motif === 'string'
+            ? `[ecoute] ${motif} : on rappelle.`
+            : `[ecoute] aucune réponse depuis ${SANS_RETOUR_MS} ms : oreille morte, on rappelle.`,
+        );
       }
 
-      arreter();
-      onFermeture?.();
+      onOreilleMorte?.();
+      desarmer();
+
+      // On oublie la liaison AVANT de la fermer : son `onclose` se reconnaît
+      // alors comme celui d'une liaison déjà remplacée, et ne programme pas
+      // une seconde reconnexion par-dessus celle-ci.
+      const mourante = socket;
+      socket = null;
+      if (mourante && mourante.readyState <= WebSocket.OPEN) mourante.close();
+
+      reprendreLesToursEnVol();
+      programmerReconnexion();
     };
 
-    (async () => {
+    /**
+     * Ouvre une liaison vers le serveur : la première, ou une nouvelle après
+     * une coupure.
+     *
+     * SÉPARÉE DE LA CAPTURE, ET C'EST LE CŒUR DU CORRECTIF DU 13/09/2026.
+     * La liaison et le micro naissaient dans le même bloc et mouraient
+     * ensemble : une coupure détruisait l'écoute entière, et la suivante ne
+     * capturait rien tant qu'elle n'avait pas redemandé le micro au
+     * navigateur. Désormais le micro s'ouvre une fois pour la séance, et la
+     * liaison va et vient derrière lui sans qu'il s'en aperçoive.
+     */
+    const ouvrirLiaison = async () => {
+      if (arrete) return;
+
       try {
         // ON TRANSPORTE L'EN-TÊTE ENTIÈRE, SCHÉMA COMPRIS.
         //
@@ -577,25 +1045,50 @@ export const ecouteTempsReel = {
         // il supposait « Bearer », et toute session enfant se faisait fermer sur
         // le champ (code 1006). Le schéma part donc avec le jeton.
         const entete = await enTeteAuth();
-        if (!entete) throw new Error("Aucune session : l'écoute ne peut pas s'ouvrir.");
+
+        // SANS SESSION, RAPPELER NE SERT À RIEN : aucune tentative ne
+        // l'inventera. On le dit tout de suite plutôt qu'au vingtième essai.
+        if (!entete) {
+          onErreur?.("L'écoute n'a pas pu s'ouvrir. Tu peux écrire ton message.");
+          arreter();
+          return;
+        }
+
+        if (arrete) return;
 
         const base = API_BASE_URL.replace(/^http/, 'ws');
 
-        socket = new WebSocket(
+        // UNE VARIABLE PAR LIAISON, ET PAS SEULEMENT `socket`. Après une
+        // reconnexion, les événements d'une liaison déjà remplacée arrivent
+        // encore : chacun vérifie qu'il appartient à la liaison EN COURS avant
+        // d'agir, sans quoi une vieille fermeture programmerait un rappel
+        // par-dessus une liaison qui marche.
+        const liaison = new WebSocket(
           `${base}/api/ecoute/${conversationId}?access_token=${encodeURIComponent(entete)}`,
         );
-        socket.binaryType = 'arraybuffer';
+        liaison.binaryType = 'arraybuffer';
+        socket = liaison;
 
-        socket.onclose = (evenement) => {
+        liaison.onclose = (evenement) => {
           if (process.env.NODE_ENV !== 'production') {
             console.info(`[ecoute] liaison fermée (code ${evenement.code})`, evenement.reason);
           }
 
-          // Fermeture non voulue : on prévient, pour que l'appelant relance.
+          // Une liaison déjà remplacée n'a plus rien à dire.
+          if (socket !== liaison || arrete) return;
+
+          // FERMETURE NON VOULUE : ON RAPPELLE, SANS DÉFAIRE L'ÉCOUTE.
+          //
           // Une session de transcription a une durée de vie limitée chez le
-          // fournisseur ; sans reprise, le micro se taisait pour le reste du
-          // cours sans que rien ne l'indique.
-          if (!arrete) onFermeture?.();
+          // fournisseur, et le réseau d'un enfant coupe. Autrefois on
+          // prévenait l'appelant, qui détruisait l'écoute et en rebâtissait
+          // une — avec tout ce qu'elle contenait. Désormais seule la liaison
+          // change : ce qui était parti sans verdict repasse en tête de file,
+          // et la capture n'a jamais cessé d'écouter.
+          desarmer();
+          socket = null;
+          reprendreLesToursEnVol();
+          programmerReconnexion();
         };
 
         // L'OUVERTURE EST UN SIGNAL, PAS SEULEMENT UNE TRACE.
@@ -604,20 +1097,31 @@ export const ecouteTempsReel = {
         // qui réfléchit en silence n'en produit aucune autre. L'appelant s'en
         // sert pour oublier les échecs passés : sans elle, il ne peut que
         // compter les pannes, jamais les guérisons.
-        socket.onopen = () => {
+        liaison.onopen = () => {
+          if (socket !== liaison || arrete) return;
+
           if (process.env.NODE_ENV !== 'production') {
             console.info('[ecoute] liaison ouverte');
           }
 
           onOuverture?.();
+
+          // CE QUI ATTENDAIT PART MAINTENANT, dans l'ordre où ça a été dit :
+          // la parole prononcée pendant l'ouverture, et, après une coupure,
+          // les tours restés sans verdict.
+          vider();
         };
 
-        socket.onmessage = (evenement) => {
+        liaison.onmessage = (evenement) => {
+          if (socket !== liaison) return;
+
           // N'IMPORTE QUEL MESSAGE VAUT SIGNE DE VIE, MÊME UNE ERREUR.
           //
           // Ce qu'on surveille n'est pas la qualité de la transcription mais
-          // l'existence du relais. Un tour rendu vide en est une preuve
-          // aussi bonne qu'une phrase entière.
+          // l'existence du relais. Un tour rendu vide en est une preuve aussi
+          // bonne qu'une phrase entière — et c'est aussi la seule preuve de
+          // guérison qui remet le compteur de rappels à zéro : une liaison
+          // qui s'ouvre puis ne répond jamais n'a rien guéri.
           desarmer();
 
           let charge;
@@ -626,6 +1130,12 @@ export const ecouteTempsReel = {
           } catch {
             return;
           }
+
+          // UNE ERREUR N'EST PAS UNE GUÉRISON. Elle prouve que le relais est
+          // vivant, pas qu'il transcrit : remettre le compteur de rappels à
+          // zéro sur elle ferait tourner en boucle, sans jamais basculer sur le
+          // moteur du navigateur, un serveur qui échoue à chaque session.
+          if (charge.type !== 'erreur') reconnexionsRatees = 0;
 
           if (process.env.NODE_ENV !== 'production') {
             console.info(`[ecoute] ${charge.type} :`, charge.texte ?? charge.message);
@@ -641,17 +1151,54 @@ export const ecouteTempsReel = {
           //
           // Un texte vide est un ORDRE D'EFFACEMENT : le serveur vient de
           // reconnaître un écho et retire ce qu'il avait déjà laissé passer.
-          if (charge.type === 'partiel') onPartiel?.(charge.texte);
-          else if (charge.type === 'erreur') onErreur?.(charge.message);
+          if (charge.type === 'partiel') {
+            // UN PARTIEL VIDE N'EST PAS UN PARTIEL, C'EST UN EFFACEMENT — et
+            // il vient du serveur, pas d'ici. Le distinguer dans le journal
+            // sépare d'un coup d'œil « le filtre d'écho a mangé la phrase » de
+            // « le navigateur l'a écartée », deux causes qui produisent
+            // exactement le même vide à l'écran.
+            if (process.env.NODE_ENV !== 'production' && !charge.texte?.trim()) {
+              console.warn('[ecoute] effacement demandé par le serveur (écho repéré).');
+            }
+
+            onPartiel?.(charge.texte);
+          }
+          else if (charge.type === 'erreur') {
+            // UNE PANNE DU RELAIS N'EST PAS UNE FIN D'ÉCOUTE — relevé par
+            // Camara le 13/09/2026, le jour même où la mémoire tampon est née.
+            //
+            // Quand la transcription échoue, le serveur envoie ce message
+            // PUIS ferme la liaison. Le message remontait tel quel à
+            // l'appelant, qui détruisait l'écoute et en rebâtissait une
+            // neuve : la mémoire tampon partait avec, les tours sans verdict
+            // aussi, et le temps mort du démarrage revenait — exactement au
+            // moment où « le professeur a un problème ».
+            //
+            // On le traite donc comme l'oreille morte : la liaison est
+            // remplacée, la parole reste, le tour sans verdict repart. La
+            // fermeture qui suit arrive sur une liaison déjà remplacée et ne
+            // programme pas un second rappel. L'appelant n'est prévenu, par
+            // `onErreur`, qu'après RECONNEXIONS_MAX échecs d'affilée.
+            abandonner(`erreur du relais (${charge.message ?? 'sans détail'})`);
+            return;
+          }
           else if (charge.type === 'final') {
-            // La durée de TOUT le tour, y compris si le fournisseur le
-            // découpe en plusieurs verdicts. Voir la remise à zéro plus haut.
-            const secondes = echantillonsDuTour / FREQUENCE;
+            // UN TEXTE EST REVENU : le son parti avant lui n'est plus en route,
+            // et la plus ancienne phrase close n'a plus à être renvoyée.
+            sonDepuisDernierTexte = 0;
+            libererPremierePhrase();
+
+            // JUGÉ CONTRE LE CRÉDIT DE SON, ET NON CONTRE « SON » ORDRE DE FIN
+            // DE TOUR — voir `jugerTranscription`. L'appariement jetait une
+            // justification entière dès que le fournisseur avait clos une
+            // phrase avant nous.
+            const jugement = jugerTranscription(charge.texte, credit, performance.now());
+            const { secondes } = jugement;
 
             // Une phrase qu'aucune bouche n'a eu le temps de dire. Voir
             // CARACTERES_PAR_SECONDE_MAX : c'est ainsi qu'est partie au
             // professeur une question que l'élève n'avait jamais posée.
-            if (debitImpossible(charge.texte, secondes)) {
+            if (jugement.impossible) {
               if (process.env.NODE_ENV !== 'production') {
                 console.warn(
                   `[ecoute] tour écarté : ${charge.texte.length} caractères `
@@ -659,20 +1206,29 @@ export const ecouteTempsReel = {
                 );
               }
 
-              onPartiel?.('');
+              effacerSiRienDit(secondes);
               return;
             }
 
-            // Une hésitation seule n'est pas une réponse : on l'efface du champ
+            // Une hésitation seule n'est pas une réponse : on ne l'ajoute pas,
             // et on continue d'écouter, comme le ferait un professeur qui voit
             // que l'élève cherche encore.
             if (estUneHesitation(charge.texte)) {
-              onPartiel?.('');
+              // CE CHEMIN EFFAÇAIT SANS RIEN DIRE, et c'est ce qui rendait le
+              // défaut introuvable : l'élève voit son texte disparaître, et le
+              // journal ne porte aucune trace de qui l'a effacé. Trois chemins
+              // mènent au même effacement — on ne peut pas les départager en
+              // les regardant, seulement en les faisant parler.
+              if (process.env.NODE_ENV !== 'production') {
+                console.warn('[ecoute] tour écarté : hésitation seule —', charge.texte);
+              }
+
+              effacerSiRienDit(secondes);
               return;
             }
 
-            // Transcription hallucinée sur du bruit : on l'efface et on
-            // continue d'écouter, plutôt que d'envoyer au professeur un
+            // Transcription hallucinée sur du bruit : on ne l'ajoute pas, et
+            // on continue d'écouter, plutôt que d'envoyer au professeur un
             // message qu'il ne pourra que déclarer incompréhensible.
             if (!alphabetPlausible(charge.texte)) {
               // DEUX CAS SOUS LE MÊME REFUS, ET UN SEUL MÉRITE QU'ON REGARDE.
@@ -691,7 +1247,7 @@ export const ecouteTempsReel = {
                 );
               }
 
-              onPartiel?.('');
+              effacerSiRienDit(secondes);
               return;
             }
 
@@ -699,7 +1255,26 @@ export const ecouteTempsReel = {
           }
         };
 
-        socket.onerror = () => onErreur?.("L'écoute a été interrompue. Tu peux écrire à la place.");
+        // UNE ERREUR DE LIAISON N'EST PLUS UNE FIN D'ÉCOUTE. Le navigateur
+        // fait toujours suivre `onerror` d'une fermeture, et c'est elle qui
+        // rappelle le serveur. Prévenir l'appelant ici lui ferait détruire
+        // l'écoute — et tout ce qu'elle garde — pour une coupure qui va se
+        // réparer.
+        liaison.onerror = () => {};
+      } catch {
+        // La liaison n'a pas pu naître (réseau absent, adresse injoignable) :
+        // la parole reste en mémoire, et on rappelle.
+        if (!arrete) programmerReconnexion();
+      }
+    };
+
+    (async () => {
+      try {
+        // LA LIAISON ET LE MICRO S'OUVRENT EN MÊME TEMPS, pas l'un après
+        // l'autre : attendre l'une pour demander l'autre ajouterait sa durée
+        // au temps mort du démarrage. Ce que l'élève dit avant que la liaison
+        // soit prête attend dans la mémoire tampon.
+        ouvrirLiaison();
 
         // Annulation de l'écho demandée au navigateur : sans casque, le micro
         // capte la voix du professeur et la prend pour une interruption. Le
@@ -731,6 +1306,9 @@ export const ecouteTempsReel = {
 
         const avanceMax = Math.floor((AVANCE_MS / 1000) * FREQUENCE);
 
+        // La réserve de SILENCE : les 300 ms qui précèdent la voix, pour ne
+        // pas tronquer la première syllabe. Rien à voir avec la mémoire
+        // tampon — elle n'y entre qu'au moment où la voix commence.
         const garderEnReserve = (bloc) => {
           reserve.push(bloc);
           reserveEchantillons += bloc.length;
@@ -741,12 +1319,19 @@ export const ecouteTempsReel = {
         };
 
         capture.port.onmessage = ({ data }) => {
-          if (arrete || socket?.readyState !== WebSocket.OPEN) return;
+          if (arrete) return;
 
           const bloc = reechantillonner(data, contexte.sampleRate, FREQUENCE);
 
-          // EN PAUSE : on écoute sans transmettre. La réserve continue de
-          // tourner pour que la reprise ne coupe pas le premier mot.
+          // EN PAUSE, SOURD D'ABORD — avant toute question de liaison.
+          //
+          // Pendant que le professeur parle sans casque, ou que l'élève tape,
+          // rien n'entre dans la mémoire tampon. La réserve de silence tourne
+          // pour la reprise, et `suspendre` la jette si la pause était sourde.
+          //
+          // Cette vérification venait APRÈS celle de la liaison : pendant une
+          // reconnexion, la voix du professeur entrait alors dans l'amorce, et
+          // repartait en tête du tour de l'élève.
           if (suspendu) {
             garderEnReserve(bloc);
             return;
@@ -757,34 +1342,27 @@ export const ecouteTempsReel = {
           const maintenant = performance.now();
 
           if (parle) {
-            // LE COMPTEUR REPART AU DÉBUT DU TOUR, PAS À CHAQUE VERDICT.
-            //
-            // Le remettre à zéro sur chaque « final » condamnerait le second
-            // verdict d un tour que le fournisseur aurait découpé en deux : il
-            // arriverait sur un compteur vidé, donc sans audio, donc jeté.
-            // Le tour commence quand la voix revient après un silence.
-            if (silenceSignale) echantillonsDuTour = 0;
+            // Rien n'est remis à zéro ici : ce qui compte est le son TRANSMIS,
+            // mesuré dans `vider`, et jugé contre le crédit — voir
+            // `jugerTranscription`.
+            if (silenceSignale) {
+              // IL REPARLE : ce qui était programmé pendant la pause n'a plus
+              // lieu d'être. C'est le seul signal qui distingue « il a fini »
+              // de « il reprend son souffle ».
+              onReprise?.();
+            }
 
             dernierSon = maintenant;
             silenceSignale = false;
           } else if (!silenceSignale && maintenant - dernierSon > SILENCE_FIN_MS) {
             silenceSignale = true;
 
-            // On CLÔT LE TOUR nous-mêmes, au lieu d'attendre que le
-            // fournisseur veuille bien le faire. C'est ce qui supprime à la
-            // fois le mutisme et l'attente : il transcrit dès qu'il reçoit cet
-            // ordre, et nous savons mieux que lui quand l'élève s'est tu —
-            // nous mesurons le son, il le suppose.
-            if (socket?.readyState === WebSocket.OPEN) {
-              socket.send(JSON.stringify({ type: 'fin_tour' }));
-
-              // On vient de réclamer une transcription : à partir d'ici, le
-              // silence du serveur n'est plus une attente, c'est une panne.
-              // On n'écrase pas une échéance déjà en cours — une oreille
-              // vraiment morte doit être constatée au premier tour perdu, pas
-              // repoussée par chaque tour suivant.
-              if (!sansRetour) sansRetour = setTimeout(abandonner, SANS_RETOUR_MS);
-            }
+            // ON CLÔT LE TOUR NOUS-MÊMES : nous mesurons le son, le
+            // fournisseur le suppose. L'ordre entre dans la mémoire tampon À SA
+            // PLACE, derrière le son de sa phrase : même si la liaison est
+            // coupée à cet instant, il partira dans le bon ordre, et jamais
+            // avant le son qu'il doit clore.
+            emettre({ fin: true });
 
             onSilence?.();
           }
@@ -814,25 +1392,25 @@ export const ecouteTempsReel = {
             blocsVoises = 0;
           }
 
-          // Hors voix et hors traîne : on garde le son en réserve sans
-          // l'émettre. C'est ce qui fait tomber la facture de transcription —
-          // l'élève ne parle que cinq pour cent du temps.
+          // Hors voix et hors traîne : le silence reste en réserve. Il ne part
+          // pas en ligne — c'est ce qui fait tomber la facture —, et il n'entre
+          // pas non plus dans la mémoire tampon pendant une coupure, qu'une
+          // minute de bruit de fond remplirait pour rien.
           if (!parle && maintenant - dernierSon > TRAINE_MS) {
             garderEnReserve(bloc);
             voixSignalee = false;
             return;
           }
 
-          // On parle : la réserve part d'abord, puis le bloc courant.
+          // ON PARLE : la réserve entre d'abord dans la file, puis le bloc
+          // courant. Partis sur-le-champ si la liaison est prête, gardés dans
+          // l'ordre sinon — c'est `vider` qui décide, et lui seul.
           while (reserve.length > 0) {
-            const avance = reserve.shift();
-            echantillonsDuTour += avance.length;
-            socket.send(versPcm16(avance).buffer);
+            ranger({ pcm: versPcm16(reserve.shift()) });
           }
           reserveEchantillons = 0;
 
-          echantillonsDuTour += bloc.length;
-          socket.send(versPcm16(bloc).buffer);
+          emettre({ pcm: versPcm16(bloc) });
         };
 
         source.connect(capture);
@@ -861,7 +1439,38 @@ export const ecouteTempsReel = {
       }
     })();
 
-    return { arreter, suspendre };
+    /**
+     * L'élève est-il en train de parler, MAINTENANT ?
+     *
+     * Mesuré sur l'amplitude du micro, pas deviné sur le texte : c'est la
+     * seule information fiable pour savoir s'il a fini. Vrai depuis sa
+     * première syllabe jusqu'à SILENCE_FIN_MS après la dernière.
+     *
+     * Sert à ne JAMAIS programmer l'envoi d'un tour pendant qu'il parle
+     * encore — le défaut qui lui faisait perdre les neuf dixièmes d'une
+     * longue explication, chaque bout partant seul dès que le fournisseur
+     * le transcrivait.
+     */
+    const parleEnCeMoment = () => !arrete && !suspendu && !silenceSignale;
+
+    /**
+     * Un morceau déjà dit attend-il encore sa transcription ?
+     *
+     * Vrai quand du son est parti depuis le dernier texte reçu — au-delà de
+     * SEUIL_EN_ROUTE_MS —, ou quand de la parole attend dans la mémoire tampon
+     * pendant une coupure. C'est la seule source qui sache qu'un texte est EN
+     * ROUTE : le chat, lui, ne voit que ce qui est déjà arrivé, et il envoyait
+     * des bouts de phrase faute de le savoir. Voir `doitAttendreAvantEnvoi`.
+     *
+     * COMPTÉ SUR LE SON, PAS SUR LES ORDRES DE FIN DE TOUR : un ordre que le
+     * serveur écarte — le fournisseur ayant clos la phrase avant nous — ne
+     * reçoit aucun texte, et un indicateur bâti sur les ordres serait resté
+     * allumé, faisant attendre chaque envoi jusqu'au plafond.
+     */
+    const transcriptionEnCours = () => !arrete
+      && (sonDepuisDernierTexte >= seuilEnRoute || fileEchantillons > 0);
+
+    return { arreter, suspendre, parleEnCeMoment, transcriptionEnCours };
   },
 };
 

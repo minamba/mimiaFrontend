@@ -30,7 +30,10 @@ import {
  * repartirait de zéro à chaque ouverture.
  */
 function* ouvrirConversationSaga(action) {
-  const { eleveId, matiereId, seanceFinie } = action.payload;
+  const {
+    eleveId, matiereId, seanceFinie, dureeChoisieMinutes, controleId,
+    mode = null, epreuveCode = null,
+  } = action.payload;
 
   try {
     const existantes = yield call(getConversations, eleveId);
@@ -59,7 +62,12 @@ function* ouvrirConversationSaga(action) {
     // chaque rechargement était un appel au modèle facturé, autant de fois que
     // l'élève appuyait sur F5.
     if (!seanceFinie) {
-      yield put({ type: ACCUEIL_REQUEST, payload: { conversationId: conversation.id } });
+      yield put({
+        type: ACCUEIL_REQUEST,
+        payload: {
+          conversationId: conversation.id, dureeChoisieMinutes, controleId, mode, epreuveCode,
+        },
+      });
     }
   } catch (error) {
     yield put({
@@ -76,7 +84,10 @@ function* ouvrirConversationSaga(action) {
  * fois, alors qu'un flux émet N fois. Un eventChannel permet de faire un `take`
  * à chaque fragment et de dispatcher au fil de l'eau.
  */
-function creerCanalStream(conversationId, contenu, annonce, secondesRestantes, pieceJointeId) {
+function creerCanalStream(
+  conversationId, contenu, annonce, secondesRestantes, pieceJointeId, dureeChoisieMinutes,
+  controleId, mode, epreuveCode,
+) {
   return eventChannel((emit) => {
     const controller = new AbortController();
 
@@ -105,7 +116,11 @@ function creerCanalStream(conversationId, contenu, annonce, secondesRestantes, p
     // l'élève, à l'ouverture de la séance, ou parce que l'horloge le demande.
     let flux;
     if (annonce) flux = annonceStream(conversationId, annonce, options);
-    else if (contenu === null) flux = accueilStream(conversationId, options);
+    else if (contenu === null) {
+      flux = accueilStream(
+        conversationId, options, dureeChoisieMinutes, controleId, mode, epreuveCode,
+      );
+    }
     // Le temps restant n'accompagne que le message de l'élève : les annonces
     // portent déjà l'échéance dans leur type, et l'accueil ouvre la séance.
     else {
@@ -143,11 +158,14 @@ function creerCanalStream(conversationId, contenu, annonce, secondesRestantes, p
 function* envoyerMessageSaga(action) {
   const {
     conversationId, contenu = null, annonce = null,
-    secondesRestantes = null, pieceJointeId = null,
+    secondesRestantes = null, pieceJointeId = null, dureeChoisieMinutes = null,
+    controleId = null, mode = null, epreuveCode = null,
   } = action.payload;
 
   const canal = yield call(
-    creerCanalStream, conversationId, contenu, annonce, secondesRestantes, pieceJointeId,
+    creerCanalStream,
+    conversationId, contenu, annonce, secondesRestantes, pieceJointeId, dureeChoisieMinutes,
+    controleId, mode, epreuveCode,
   );
 
   try {

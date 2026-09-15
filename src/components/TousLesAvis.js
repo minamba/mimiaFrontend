@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getAvisPublics } from '../lib/api/avisApi';
 import CarteAvis from './CarteAvis';
 import Etoiles from './Etoiles';
+import RepartitionAvis from './RepartitionAvis';
 
 const PAR_PAGE = 24;
 
@@ -54,15 +55,18 @@ export default function TousLesAvis() {
       <header className="page__entete">
         <h1>Les avis de nos familles</h1>
         {total > 0 && (
-          <div className="avis__note avis__note--enligne">
-            <span className="avis__moyenne">
-              {(donnees.moyenne ?? 0).toFixed(1).replace('.', ',')}
-            </span>
-            <Etoiles note={donnees.moyenne} taille="grande" />
-            <span className="avis__total">
-              {total} avis vérifié{total > 1 ? 's' : ''}
-            </span>
-          </div>
+          <>
+            <div className="avis__note avis__note--enligne">
+              <span className="avis__moyenne">
+                {(donnees.moyenne ?? 0).toFixed(1).replace('.', ',')}
+              </span>
+              <Etoiles note={donnees.moyenne} taille="grande" />
+              <span className="avis__total">
+                {total} avis vérifié{total > 1 ? 's' : ''}
+              </span>
+            </div>
+            <RepartitionAvis repartition={donnees.repartition} total={total} />
+          </>
         )}
       </header>
 

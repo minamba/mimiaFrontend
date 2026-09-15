@@ -83,6 +83,15 @@ export const getEleves = (parentId, recherche) =>
 export const getFicheEleve = (id) => httpClient.get(`/admin/eleves/${id}/fiche`);
 
 /**
+ * Le calendrier d'un élève, côté administration — même forme que
+ * `elevesApi.getCalendrier(eleveId, annee, mois)`, pour alimenter le même
+ * composant (`CalendrierContenu`) sans qu'il ait à savoir laquelle des deux
+ * routes l'a appelé.
+ */
+export const getCalendrierEleve = (eleveId, annee, mois) =>
+  httpClient.get(`/admin/eleves/${eleveId}/calendrier`, { params: { annee, mois } });
+
+/**
  * Les tranches d'historique, côté administration.
  *
  * Mêmes tranches que côté parent, autres routes : la fiche est le même écran
@@ -186,6 +195,62 @@ export const definirAdministrateur = (id, actif) =>
   httpClient.put(`/admin/parents/${id}/administrateur`, { actif });
 
 export const modifierEleve = (id, data) => httpClient.put(`/admin/eleves/${id}`, data);
+
+/**
+ * Les périodes de vacances scolaires, toutes zones et années — pour
+ * l'onglet « Périodes scolaires ». Tenues à jour chaque jour par un worker
+ * côté serveur ; ces routes servent à corriger une date à la main.
+ */
+export const getPeriodesVacances = () => httpClient.get('/admin/periodes-vacances');
+
+export const creerPeriodeVacances = (data) => httpClient.post('/admin/periodes-vacances', data);
+
+export const modifierPeriodeVacances = (id, data) =>
+  httpClient.put(`/admin/periodes-vacances/${id}`, data);
+
+export const supprimerPeriodeVacances = (id) =>
+  httpClient.delete(`/admin/periodes-vacances/${id}`);
+
+/**
+ * Les échéances de révision du référentiel — pour l'onglet « Programme
+ * scolaire ». Tenues à jour par `EcheanceReferentielWorker`, qui relève
+ * seul la page officielle de chaque échéance et compare son empreinte à la
+ * précédente ; ces routes servent à consulter ce qu'il a constaté, et à
+ * marquer une échéance traitée une fois le référentiel revérifié à la main.
+ */
+export const getEcheancesReferentiel = () => httpClient.get('/admin/echeances-referentiel');
+
+/**
+ * Le programme scolaire entier, classe par classe : chaque matière avec ses
+ * notions (à jour, ajoutée, modifiée, retirée — et quand) et les échéances
+ * officielles rangées dessous. C'est ce que lit l'onglet « Programme
+ * scolaire » ; `getEcheancesReferentiel` reste pour la liste plate.
+ */
+export const getProgrammeScolaire = () => httpClient.get('/admin/programme-scolaire');
+
+/**
+ * La vérification des cartes d'examen : pour chaque carte, les notions
+ * retenues par matière, et tout ce qui la viderait en silence (faute de frappe
+ * dans une partie retenue ou exclue, matière fermée…).
+ */
+export const getVerificationExamens = () => httpClient.get('/admin/examens/verification');
+
+export const traiterEcheanceReferentiel = (id) =>
+  httpClient.post(`/admin/echeances-referentiel/${id}/traiter`);
+
+/**
+ * Les signalements déposés depuis le bouton « Signaler » — pour l'onglet
+ * « Signalements ».
+ */
+export const getSignalements = () => httpClient.get('/admin/signalements');
+
+export const creerSignalement = (data) => httpClient.post('/admin/signalements', data);
+
+export const modifierSignalement = (id, data) =>
+  httpClient.put(`/admin/signalements/${id}`, data);
+
+export const supprimerSignalement = (id) =>
+  httpClient.delete(`/admin/signalements/${id}`);
 
 /**
  * Supprimer un parent, DES DEUX CÔTÉS.
@@ -383,6 +448,17 @@ export const lancerDiffusion = (composition) =>
 /** L'avancement de la diffusion en cours, ou de la dernière. */
 export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
 
+/**
+ * Envoie un message personnalisé à UN parent, dans la même mise en page que
+ * la diffusion. Contrairement à `lancerDiffusion`, l'envoi tient dans le
+ * temps d'une requête : pas de suivi d'avancement à interroger après coup.
+ */
+export const envoyerMailParent = (composition) => {
+  const corps = corpsDiffusion(composition);
+  corps.append('destinataire', composition.destinataire ?? '');
+  return httpClient.post('/admin/mails/parent', corps);
+};
+
 // ------------------------------------------------ messagerie du support
 
 /** Les derniers messages reçus sur la boîte de support. */
@@ -437,3 +513,17 @@ export const getRapportEleve = (eleveId, rapportId) =>
 
 export const getCopieEleve = (eleveId, evaluationId) =>
   httpClient.get(`/admin/eleves/${eleveId}/evaluations/${evaluationId}/copie`);
+
+export const getDicteeEleve = (eleveId, dicteeId) =>
+  httpClient.get(`/admin/eleves/${eleveId}/dictees/${dicteeId}`);
+
+/**
+ * L'état d'Anthropic et d'OpenAI : ce que la dernière vérification a constaté.
+ *
+ * Ce n'est PAS le solde — aucune des deux API ne le donne. On sait si un appel
+ * payant passe, et sinon pourquoi (crédit épuisé, clé refusée, panne).
+ */
+export const getFournisseurs = () => httpClient.get('/admin/fournisseurs');
+
+/** Vérifie tout de suite, sans attendre le passage automatique. */
+export const verifierFournisseurs = () => httpClient.post('/admin/fournisseurs/verifier');

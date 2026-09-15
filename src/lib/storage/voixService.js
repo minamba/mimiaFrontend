@@ -13,8 +13,22 @@
  */
 
 import httpClient, { API_BASE_URL, enTeteAuth } from '../api/httpClient';
-import { DEBUT_DICTEE, FIN_DICTEE, DEBUT_ANGLAIS, FIN_ANGLAIS } from './ardoise';
+import {
+  DEBUT_DICTEE, FIN_DICTEE, FIN_ECOUTE, LANGUE_PAR_DEBUT_ECOUTE,
+} from './ardoise';
 import { epelerLesChoix } from './epellation';
+import { VITESSE_PAR_DEFAUT, facteurNavigateur } from './vitesseEcoute';
+
+/**
+ * Toutes les bornes de contrôle que le flux peut porter, réunies en une
+ * seule expression régulière — CONSTRUITE, pas recopiée : elle lit
+ * directement les caractères déclarés dans `ardoise.js`, une langue de plus
+ * là-bas y apparaît ici sans rien changer à ce fichier.
+ */
+// eslint-disable-next-line no-control-regex
+const BORNES_REGEX = new RegExp(
+  `([${DEBUT_DICTEE}${FIN_DICTEE}${[...LANGUE_PAR_DEBUT_ECOUTE.keys()].join('')}${FIN_ECOUTE}])`,
+);
 
 /**
  * LES DEUX ANNONCES DE DICTÉE, DITES PAR L'APPLICATION.
@@ -38,9 +52,37 @@ import { epelerLesChoix } from './epellation';
  * un paragraphe, si.
  */
 const OUVERTURE_DICTEE = 'Je commence. Première phrase.';
+
 const FERMETURE_DICTEE = "Voilà, c'était la dernière phrase.";
 
+/**
+ * LA RELECTURE COMPLÈTE, APRÈS LA DERNIÈRE PHRASE — voulue par Camara le
+ * 11/09/2026, comme en classe : une fois tout dicté, le professeur relit le
+ * texte d'une traite, au débit normal, et l'élève se relit en même temps pour
+ * voir s'il n'a rien oublié.
+ *
+ * DITE PAR L'APPLICATION, PAS DEMANDÉE AU PROFESSEUR. Même leçon que les deux
+ * annonces ci-dessus : elle SAIT ce qui a été dicté — elle vient de le
+ * prononcer phrase par phrase —, elle n'a qu'à le redire. Demander au modèle
+ * de réécrire son texte, c'était risquer une variante, un oubli, ou une
+ * relecture jamais faite.
+ *
+ * Et la consigne qui suit dépend du support : c'est l'écran qui le connaît.
+ */
+const ANNONCE_RELECTURE =
+  "Maintenant, je te relis toute la dictée, sans m'arrêter. "
+  + "Relis-toi en même temps, et vérifie que tu n'as rien oublié.";
+
+const CONSIGNE_APRES_RELECTURE = {
+  cahier: "C'est fini. Quand tu es prêt, prends ta page en photo et envoie-la-moi.",
+  clavier: "C'est fini. Tu peux encore corriger tes phrases. "
+    + 'Quand tu es prêt, clique sur Rendre ma copie.',
+};
+
+const CONSIGNE_APRES_RELECTURE_PAR_DEFAUT = "C'est fini. Quand tu es prêt, rends-moi ta copie.";
+
 const navigateurSupporte = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
 
 /** Longueur max d'un envoi ; au-delà le serveur tronque. */
 const LONGUEUR_MAX = 700;
@@ -243,11 +285,37 @@ function decouperEnPhrases(texte) {
  * sur deux mille vingt-six ». Une barre oblique voisine d'une autre n'est pas
  * une division — c'est le seul indice nécessaire, et il suffit.
  */
-function prononcable(texte) {
+/**
+ * LES TIRETS SONT MUETS EN COURS DE LANGUE.
+ *
+ * Relevé par Camara le 11/09/2026 : « "Le lit", exactement - "il courut se
+ * cacher sous le lit" » — et le professeur a dit « moins ». La règle qui fait
+ * lire « moins » a été écrite pour les équations ; en français, en anglais,
+ * en espagnol, un tiret entre deux espaces est une PAUSE, jamais un signe.
+ *
+ * - une suite de tirets — « ----- », le trou d'une copie — ne se dit pas ;
+ * - un tiret en tête de ligne — une liste, un dialogue — ne se dit pas ;
+ * - un tiret isolé entre deux mots devient une virgule : la pause qu'il
+ *   marquait à l'écrit.
+ *
+ * Les tirets COLLÉS sont épargnés : « peut-être », « a-t-il », et
+ * l'épellation « a-i-t » que pose `epelerLesChoix`, qui ne porte jamais
+ * d'espace.
+ */
+const TIRETS = '\\-‐‑‒–—―−';
+
+function sansTiretsMuets(texte) {
+  return texte
+    .replace(new RegExp(`[${TIRETS}]{2,}`, 'g'), ' ')
+    .replace(new RegExp(`(^|\\n)[ \\t]*[${TIRETS}][ \\t]+`, 'g'), '$1')
+    .replace(new RegExp(`\\s[${TIRETS}]\\s`, 'g'), ', ');
+}
+
+export function prononcable(texte, { langue = false } = {}) {
   // L ÉPELLATION DES CHOIX EN PREMIER : elle POSE des tirets, que la règle du
   // bas convertira ensuite en virgules. L inverse laisserait « a-i-t » intact
   // et la question resterait « X ou X ? ».
-  return epelerLesChoix(texte)
+  return epelerLesChoix(langue ? sansTiretsMuets(texte) : texte)
     .replace(/(\d+)\s*\/\s*(\d+)/g, (tout, a, b, index, chaine) => {
       const avant = chaine[index - 1];
       const apres = chaine[index + tout.length];
@@ -313,6 +381,10 @@ function prononcable(texte) {
     .replace(/\s=\s/g, ' égale ')
     .replace(/\s≈\s/g, ' environ égal à ')
     .replace(/\s\+\s/g, ' plus ')
+
+    // Le demi-cadratin et le cadratin ne sont jamais un « moins », dans
+    // aucune matière : ce sont des pauses d'incise.
+    .replace(/\s[–—]\s/g, ', ')
     .replace(/\s[-−]\s/g, ' moins ')
     .replace(/\s≤\s/g, ' inférieur ou égal à ')
     .replace(/\s≥\s/g, ' supérieur ou égal à ')
@@ -462,11 +534,23 @@ class Lecteur {
     // l'appelant à chaque tour, à partir du marqueur du professeur.
     this.dictee = false;
 
-    // ANGLAIS PRONONCÉ, bascule jumelle de la dictée et pour la même raison :
-    // un même message mêle une annonce en français et un passage à dire en
-    // anglais. Le drapeau suit la PHRASE, pas le tour de parole — sans quoi la
-    // consigne « lis ceci en anglais » s'appliquerait aussi à l'annonce.
-    this.anglais = false;
+    // ÉCOUTE EN LANGUE ÉTUDIÉE, bascule jumelle de la dictée et pour la même
+    // raison : un même message mêle une annonce au registre habituel et un
+    // passage à dire dans la langue du cours. Le drapeau suit la PHRASE, pas
+    // le tour de parole — sans quoi la consigne de langue s'appliquerait
+    // aussi à l'annonce. `null` au repos, sinon le code de la langue en
+    // cours ("en", "fr"...).
+    this.langue = null;
+
+    // Le cours est-il un cours de LANGUE ? Posé par l'écran. Les tirets y
+    // sont muets — voir `sansTiretsMuets` ; ailleurs, « 5 - 3 » reste
+    // « cinq moins trois ».
+    this.matiereLangue = false;
+
+    // À quelle vitesse lire les passages dans la langue étudiée : l'élève la
+    // choisit avant chaque exercice d'écoute — voir `vitesseEcoute.js`. Elle
+    // ne touche QUE ces passages ; les explications gardent le débit habituel.
+    this.vitesseEcoute = VITESSE_PAR_DEFAUT;
 
     /**
      * Lecture par le graphe audio plutôt que par des éléments <audio>.
@@ -538,6 +622,15 @@ class Lecteur {
     this.surRepli = null;
 
     /**
+     * Prévenu quand un passage s'est arrêté en plein milieu — une vraie
+     * coupure réseau après que la voix a déjà commencé à parler. Distinct de
+     * `surRepli` : ici il y a bien eu du son, il s'est juste interrompu sans
+     * prévenir. Sert à dire à l'élève que le professeur a été coupé, plutôt
+     * que de le laisser croire que le silence fait partie du cours.
+     */
+    this.surCoupure = null;
+
+    /**
      * Prévenu quand un silence de dictée s'ouvre et quand il se referme.
      *
      * L'élève entend une phrase puis PLUS RIEN pendant trente secondes. En
@@ -571,6 +664,29 @@ class Lecteur {
      * sans savoir que la dictée est finie. Zéro = rien en attente.
      */
     this.pauseDue = 0;
+
+    /**
+     * Les phrases de la dictée en cours, telles qu'elles ont été prononcées,
+     * avec leur langue. C'est le texte de la relecture complète : on redit
+     * exactement ce qu'on a dicté, rien d'autre.
+     */
+    this.phrasesDictees = [];
+
+    /**
+     * Le support choisi par l'élève — `'cahier'`, `'clavier'` ou `null`.
+     * Posé par l'écran : il décide de la consigne dite après la relecture.
+     */
+    this.supportDictee = null;
+
+    /**
+     * Prévenu quand la relecture complète commence (`'en_cours'`), quand
+     * elle s'achève (`'finie'`) et quand elle est coupée (`'interrompue'`).
+     * L'écran s'en sert pour dire ce qui se passe et mettre en avant le
+     * geste suivant — jamais pour bloquer : sans voix, il n'y a pas de
+     * relecture, et l'élève doit pouvoir rendre sa copie quand même.
+     */
+    this.surRelectureDictee = null;
+    this.relectureEnCours = false;
 
     // Incrémenté par arreter(). Une boucle dont le jeton a changé se sait
     // périmée et se retire — c'est ce qui garantit qu'un professeur interrompu
@@ -651,28 +767,23 @@ class Lecteur {
    * le mauvais débit.
    */
   alimenter(fragment) {
-    if (!fragment.includes(DEBUT_DICTEE) && !fragment.includes(FIN_DICTEE)
-        && !fragment.includes(DEBUT_ANGLAIS) && !fragment.includes(FIN_ANGLAIS)) {
+    if (!BORNES_REGEX.test(fragment)) {
       this.alimenterMorceau(fragment);
       return;
     }
 
-    // Le découpage GARDE les bornes — d'où le groupe capturant.
-    //
-    // Les caractères de contrôle dans une expression régulière sont signalés
-    // par le linter, et c'est une bonne règle : ils sont presque toujours une
-    // faute de frappe. Ici ils sont le sujet même de la découpe.
-    // eslint-disable-next-line no-control-regex
-    for (const morceau of fragment.split(/([\u0001\u0002\u0003\u0004])/)) {
-      if (morceau === DEBUT_ANGLAIS) {
-        // Le groupe en cours appartient au francais : on le vide avant de
-        // basculer, sinon la phrase d'annonce partirait elle aussi avec la
-        // consigne de langue anglaise.
+    // Le découpage GARDE les bornes — d'où le groupe capturant, préparé plus
+    // haut dans `BORNES_REGEX` à partir de ce qu'`ardoise.js` déclare.
+    for (const morceau of fragment.split(BORNES_REGEX)) {
+      if (LANGUE_PAR_DEBUT_ECOUTE.has(morceau)) {
+        // Le groupe en cours appartient au registre habituel : on le vide
+        // avant de basculer, sinon la phrase d'annonce partirait elle aussi
+        // avec la consigne de langue.
         this.viderGroupe();
-        this.anglais = true;
-      } else if (morceau === FIN_ANGLAIS) {
+        this.langue = LANGUE_PAR_DEBUT_ECOUTE.get(morceau);
+      } else if (morceau === FIN_ECOUTE) {
         this.viderGroupe();
-        this.anglais = false;
+        this.langue = null;
       } else if (morceau === DEBUT_DICTEE) {
         this.viderGroupe();
 
@@ -681,6 +792,9 @@ class Lecteur {
         // qui suit une phrase dictée.
         this.enfiler(OUVERTURE_DICTEE);
 
+        // Une dictée neuve — ou redonnée en entier — repart d'un texte vide :
+        // la relecture ne doit redire que CE QUI VIENT D'ÊTRE DICTÉ.
+        this.phrasesDictees = [];
         this.dictee = true;
       } else if (morceau === FIN_DICTEE) {
         this.viderGroupe();
@@ -711,10 +825,55 @@ class Lecteur {
         // la pause différée de la dernière phrase. L'élève apprend donc que
         // c'est fini, PUIS il a son temps pour écrire.
         this.enfiler(FERMETURE_DICTEE);
+
+        // Puis, APRÈS la pause que porte la fermeture — le temps d'écrire la
+        // dernière phrase —, la relecture complète et la consigne de fin.
+        this.enfilerRelecture();
       } else if (morceau) {
         this.alimenterMorceau(morceau);
       }
     }
+  }
+
+  /**
+   * La relecture complète : annonce, texte entier au débit normal, consigne.
+   *
+   * AU DÉBIT NORMAL, ET C'EST TOUT L'OBJET. Les phrases repartent avec
+   * `dictee: false` — ni débit lent, ni silence d'écriture : un professeur
+   * qui relit, pas un professeur qui dicte. Elles sont regroupées comme une
+   * réponse ordinaire, pour s'enchaîner sans hachure, mais JAMAIS au-delà d'un
+   * changement de langue : chaque groupe garde la voix de ses phrases.
+   */
+  enfilerRelecture() {
+    const phrases = this.phrasesDictees;
+    this.phrasesDictees = [];
+    if (phrases.length === 0) return;
+
+    this.enfiler(ANNONCE_RELECTURE, { langue: null, relecture: 'debut' });
+
+    let groupe = '';
+    let langueGroupe = phrases[0].langue;
+
+    const vider = () => {
+      if (groupe) this.enfiler(groupe, { langue: langueGroupe });
+      groupe = '';
+    };
+
+    phrases.forEach(({ texte, langue }) => {
+      if (langue !== langueGroupe || (groupe && groupe.length + texte.length > GROUPE)) {
+        vider();
+        langueGroupe = langue;
+      }
+
+      groupe = groupe ? `${groupe} ${texte}` : texte;
+    });
+
+    vider();
+
+    this.enfiler(
+      CONSIGNE_APRES_RELECTURE[this.supportDictee] ?? CONSIGNE_APRES_RELECTURE_PAR_DEFAUT,
+      { langue: null, relecture: 'fin' },
+    );
   }
 
   alimenterMorceau(fragment) {
@@ -807,9 +966,13 @@ class Lecteur {
     this.enfiler(texte);
   }
 
-  enfiler(texte) {
-    const propre = prononcable(texte.trim());
+  enfiler(texte, { langue, relecture } = {}) {
+    const propre = prononcable(texte.trim(), { langue: this.matiereLangue });
     if (!propre) return;
+
+    // Chaque phrase dictée est retenue, avec sa langue : c'est le texte que
+    // la relecture complète redira, mot pour mot.
+    if (this.dictee) this.phrasesDictees.push({ texte: propre, langue: this.langue });
 
     // Horodatage du premier passage d'un tour de parole : c'est lui qui donne
     // le délai « texte affiché → première syllabe entendue », la seule mesure
@@ -825,8 +988,16 @@ class Lecteur {
       avatar: this.avatar,
       age: this.age,
       dictee: this.dictee,
-      anglais: this.anglais,
+      // La relecture et ses annonces imposent leur langue : elles sont mises
+      // en file APRÈS la fin de dictée, quand `this.langue` peut encore être
+      // celle du passage étudié.
+      langue: langue !== undefined ? langue : this.langue,
+
+      // La vitesse choisie ne suit QUE la langue étudiée.
+      vitesse: (langue !== undefined ? langue : this.langue) ? this.vitesseEcoute : null,
     };
+
+    const debutFile = this.file.length;
 
     // Une phrase sans ponctuation peut dépasser la limite du serveur : on la
     // coupe sur un espace plutôt que de la laisser tronquer en plein mot.
@@ -838,6 +1009,13 @@ class Lecteur {
       reste = reste.slice(index).trim();
     }
     if (reste) this.file.push({ texte: reste, ...reglages });
+
+    // Les repères de relecture se posent sur le PREMIER morceau de l'annonce
+    // et sur le DERNIER de la consigne : c'est là que l'écran bascule.
+    if (relecture === 'debut' && this.file[debutFile]) this.file[debutFile].relecture = 'debut';
+    if (relecture === 'fin' && this.file.length > debutFile) {
+      this.file[this.file.length - 1].relecture = 'fin';
+    }
 
     this.demarrer();
   }
@@ -964,6 +1142,8 @@ class Lecteur {
 
       this.actif = true;
 
+      if (phrase.relecture === 'debut') this.signalerRelecture('en_cours');
+
       // Repère pour mesurer la durée réelle de ce passage : la différence
       // entre l'horloge audio avant et après sa programmation.
       const horlogeAvant = Math.max(this.contexte?.currentTime ?? 0, this.prochaineFin);
@@ -973,7 +1153,8 @@ class Lecteur {
       if (!passage) {
         this.surRepli?.();
         this.debutAttente = null;
-        await this.parlerNavigateur(phrase.texte, jeton);
+        await this.parlerNavigateur(phrase, jeton);
+        if (phrase.relecture === 'fin' && jeton === this.jeton) this.signalerRelecture('finie');
         continue;
       }
 
@@ -992,6 +1173,31 @@ class Lecteur {
         this.programmer(tampon, jeton);
         await this.attendreJusqua(this.prochaineFin - AVANCE_PROGRAMMATION, jeton);
       }
+
+      // LE PASSAGE S'EST ARRÊTÉ EN PLEIN MILIEU, ET RIEN NE LE DISAIT.
+      //
+      // `passage.erreur` était déjà posé par `diffuser()` — une vraie coupure
+      // réseau après le premier morceau — mais rien ne le lisait jamais : la
+      // phrase suivante enchaînait comme si de rien n'était, et la voix
+      // s'arrêtait au milieu d'un mot sans le moindre signal, ni dans la
+      // console, ni pour l'élève. Relevé en séance : une dictée coupée en
+      // pleine phrase, plus rien ensuite.
+      //
+      // On ne relance pas le passage ici — il faudrait rejouer le texte
+      // depuis le début, et l'élève aurait déjà entendu le morceau tronqué :
+      // la reprise reviendrait à répéter ce qu'il a déjà entendu. On se
+      // contente donc de le signaler, pour que ça se diagnostique la
+      // prochaine fois au lieu de ressembler à un silence inexpliqué.
+      if (passage.erreur) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[voix] passage interrompu en cours de lecture :', passage.erreur);
+        }
+        this.surCoupure?.(passage.erreur);
+      }
+
+      // La consigne de fin est programmée : la relecture est terminée, le
+      // geste suivant peut se mettre en avant pendant qu'elle se dit.
+      if (phrase.relecture === 'fin') this.signalerRelecture('finie');
 
       // LE SILENCE DE DICTÉE EST UNE VRAIE ATTENTE DE LA BOUCLE.
       //
@@ -1086,7 +1292,7 @@ class Lecteur {
    * pour une phrase puis revenait. C'est ce qui donnait l'impression d'un
    * timbre instable et robotique. On réessaie donc avant d'abandonner.
    */
-  async charger({ texte, avatar, age, dictee, anglais }, jeton) {
+  async charger({ texte, avatar, age, dictee, langue, vitesse }, jeton) {
     if (!(await serveurDisponible())) return null;
 
     for (let tentative = 0; tentative < 2; tentative += 1) {
@@ -1103,7 +1309,7 @@ class Lecteur {
         // les phrases, eux, fonctionnaient, et ils portaient à eux seuls tout
         // le rythme de l exercice. La lenteur d élocution, elle, manquait
         // simplement — et rien ne disait qu elle aurait dû être là.
-        return await this.diffuser({ texte, avatar, age, dictee, anglais }, jeton);
+        return await this.diffuser({ texte, avatar, age, dictee, langue, vitesse }, jeton);
       } catch (erreur) {
         const code = erreur?.statut ?? erreur?.response?.status;
 
@@ -1141,7 +1347,7 @@ class Lecteur {
    * qu'on veut éviter — le serveur vidange par blocs de quatre kilo-octets, et
    * personne ne les récupérait.
    */
-  async diffuser({ texte, avatar, age, dictee, anglais }, jeton) {
+  async diffuser({ texte, avatar, age, dictee, langue, vitesse }, jeton) {
     const controleur = new AbortController();
     const entete = await enTeteAuth();
 
@@ -1155,7 +1361,8 @@ class Lecteur {
       body: JSON.stringify({
         texte, avatar, age,
         dictee: Boolean(dictee),
-        anglais: Boolean(anglais),
+        langue: langue || null,
+        vitesse: vitesse || null,
       }),
     });
 
@@ -1504,6 +1711,12 @@ class Lecteur {
    * affiché après que l'élève a coupé la dictée, ou se rallumerait tout seul
    * une demi-minute plus tard.
    */
+  /** Tient l'écran au courant de la relecture complète. */
+  signalerRelecture(etat) {
+    this.relectureEnCours = etat === 'en_cours';
+    this.surRelectureDictee?.(etat);
+  }
+
   viderPausesDictee() {
     this.minuteursPause.forEach(clearTimeout);
     this.minuteursPause = [];
@@ -1636,7 +1849,8 @@ class Lecteur {
     });
   }
 
-  parlerNavigateur(texte, jeton) {
+  parlerNavigateur(phrase, jeton) {
+    const texte = phrase?.texte ?? '';
     return new Promise((resoudre) => {
       if (!navigateurSupporte) {
         resoudre();
@@ -1656,7 +1870,10 @@ class Lecteur {
 
       if (voix) enonce.voice = voix;
       enonce.lang = voix?.lang ?? 'fr-FR';
-      enonce.rate = this.age <= 8 ? 0.85 : this.age <= 11 ? 0.95 : 1.05;
+      // La vitesse choisie s'applique aussi à la voix de repli : elle ne sait
+      // pas lire une consigne, mais elle sait changer de débit.
+      const registre = this.age <= 8 ? 0.85 : this.age <= 11 ? 0.95 : 1.05;
+      enonce.rate = registre * facteurNavigateur(phrase?.vitesse);
 
       enonce.onend = finir;
       enonce.onerror = finir;
@@ -1677,6 +1894,10 @@ class Lecteur {
   /** Coupe net : changement de page, ou l'élève reprend la parole. */
   arreter() {
     this.jeton += 1; // périme la boucle en cours
+
+    // Une relecture coupée ne reprendra pas : l'écran doit le savoir, sans
+    // quoi il annoncerait une relecture qui n'a plus lieu.
+    if (this.relectureEnCours) this.signalerRelecture('interrompue');
 
     // L'indicateur de dictée tombe avec le reste : il annonce une attente qui
     // n'aura pas lieu.

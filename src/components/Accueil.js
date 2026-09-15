@@ -1,16 +1,93 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { login } from '../lib/actions/authActions';
 import { viserEssai } from '../lib/storage/essaiVise';
 import { signalerVisite } from '../lib/storage/visite';
 import { useEssaisOuverts } from '../lib/storage/modeTest';
-import { getEquipe } from '../lib/api/referentielApi';
+import { getEquipe, getAnneeScolaire } from '../lib/api/referentielApi';
+import { libelleProgrammes } from '../lib/storage/anneeScolaire';
 import Avatar from './Avatar';
 import FondCraie from './FondCraie';
 import MotifMatiere from './MotifMatiere';
 import AvisClients from './AvisClients';
+import ApercuParent from './ApercuParent';
+import Comparatif from './Comparatif';
+import ExercicesLangue from './ExercicesLangue';
 import BandeauPromo from './BandeauPromo';
 import CompteARebours from './CompteARebours';
+import iconeVoix from '../assets/voix.png';
+import iconeTableau from '../assets/tableau.png';
+import iconeCerveau from '../assets/cerveau.png';
+import iconeSuivi from '../assets/suivi.png';
+import iconeNoReponse from '../assets/noreponse.png';
+import iconeDonnees from '../assets/data.png';
+import iconeEnfants from '../assets/many.png';
+import iconeAge from '../assets/age.png';
+
+/**
+ * Les quatre mots qui disent le produit, sous la démonstration.
+ *
+ * Les icônes sont des images depuis le 12/09/2026, à la place des emojis :
+ * elles ne dépendent plus de la police du système — c'est ce qui faisait
+ * afficher « GB » au lieu d'un drapeau sous Windows, un peu plus bas.
+ *
+ * `alt` vide, et c'est voulu : le titre est juste en dessous, en toutes
+ * lettres. Le décrire une seconde fois ferait répéter chaque item aux
+ * lecteurs d'écran.
+ */
+const PREUVES = [
+  {
+    icone: iconeVoix,
+    titre: 'Une vraie conversation',
+    texte: 'Il écoute votre enfant et lui répond en temps réel.',
+    halo: true,
+  },
+  {
+    icone: iconeTableau,
+    titre: 'Un tableau',
+    texte: 'Il écrit ce qui doit être vu pour être compris.',
+  },
+  {
+    icone: iconeCerveau,
+    titre: 'Une mémoire',
+    texte: 'Il se souvient, d’une séance à l’autre.',
+  },
+  {
+    icone: iconeSuivi,
+    titre: 'Un vrai suivi',
+    texte: 'Vous recevez son bilan chaque semaine.',
+  },
+];
+
+/**
+ * Les quatre craintes d'un parent, dans l'ordre où elles se présentent.
+ *
+ * « Il va lui donner les réponses » vient en premier : c'est celle qui fait
+ * renoncer. Les icônes sont des images, comme celles de la bande de preuve.
+ */
+const CONFIANCE = [
+  {
+    icone: iconeNoReponse,
+    titre: 'Jamais la réponse toute faite',
+    texte: "Impossible de s'en servir pour faire ses devoirs à sa place. C'est le principe.",
+  },
+  {
+    icone: iconeDonnees,
+    titre: 'Vos données restent les vôtres',
+    texte: 'Hébergement en Europe, conservation limitée, suppression sur simple demande.',
+  },
+  {
+    icone: iconeEnfants,
+    titre: 'Un compte, plusieurs enfants',
+    texte: 'Vous créez un profil par enfant. Chacun a son professeur, son niveau, son rythme.',
+  },
+  {
+    icone: iconeAge,
+    titre: "Adapté à l'âge, pas seulement à la classe",
+    texte: "Un élève de 14 ans en 5e n'est pas traité comme un enfant de 11 ans.",
+  },
+];
 
 /**
  * Séance rejouée en boucle dans le héros.
@@ -238,12 +315,23 @@ export default function Accueil() {
    */
   const [equipe, setEquipe] = useState([]);
 
+  // « PROGRAMMES OFFICIELS 2026-2027 », À CÔTÉ DU TITRE — voulu par Camara le
+  // 13/09/2026, et JAMAIS écrit en dur : le serveur le calcule avec le
+  // référentiel, et le 1er août il passera à l'année suivante tout seul. Le
+  // repli local applique la même règle, pour qu'un réseau capricieux ne
+  // laisse pas un badge vide ou une année périmée.
+  const [programmes, setProgrammes] = useState(() => libelleProgrammes());
+
   useEffect(() => {
     let vivant = true;
 
     getEquipe()
       .then(({ data }) => { if (vivant) setEquipe(data ?? []); })
       .catch(() => { /* section masquée, rien à dire au visiteur */ });
+
+    getAnneeScolaire()
+      .then(({ data }) => { if (vivant && data?.libelle) setProgrammes(data.libelle); })
+      .catch(() => { /* le repli local est déjà affiché */ });
 
     // Le drapeau évite d'écrire dans un composant démonté : quelqu'un qui
     // clique sur « Commencer » pendant le chargement quitte la page avant la
@@ -289,19 +377,39 @@ export default function Accueil() {
           <FondCraie />
 
           <div className="heros__texte">
-            <span className="etiquette">Du CP à la Terminale</span>
+            {/* LE TITRE PART DU PROBLÈME DU PARENT, PAS DE LA CATÉGORIE.
+                Personne ne cherche « des cours particuliers d'une nouvelle
+                ère » : on cherche parce qu'un enfant bloque, que les notes
+                tombent, et qu'on ne sait plus comment l'aider. La formule de
+                marque reste, mais au-dessus — elle signe, elle ne vend pas. */}
+            <span className="etiquette">Le professeur particulier d'une nouvelle ère</span>
 
             <h1>
-              Des cours particuliers
+              Votre enfant bloque&nbsp;?
               <br />
-              d'une <em>nouvelle ère</em>.
+              Son professeur cherche <em>pourquoi</em>.
             </h1>
 
+            {/* LE BADGE DES PROGRAMMES, JUSTE SOUS LE TITRE. Essayé sous les
+                boutons le 14/09/2026, puis remis ici par Camara : il y perdait
+                sa visibilité. Une bulle qui respire — pas un clignotement :
+                elle attire l'œil une fois, puis se tient tranquille. Le
+                drapeau est dessiné en CSS, pas en emoji : l'emoji 🇫🇷
+                s'affiche « FR » en lettres sur Windows, qui n'a pas de
+                drapeaux. */}
+            <span className="hero__programmes" data-testid="badge-programmes">
+              <span className="hero__drapeau" aria-hidden="true" />
+              {programmes}
+            </span>
+
+            {/* « IL LUI PARLE » RESTE EN GRAS CORAIL — c'est l'argument que
+                Camara tenait à mettre en avant le 12/09/2026, et le seul que
+                cette page ne peut pas prouver d'elle-même : la démonstration
+                à côté le montre, mais elle ne peut pas se faire entendre. */}
             <p className="heros__pitch">
-              Votre enfant a son professeur. Un prénom, un visage, une voix — et une
-              mémoire qui le suit d'année en année. Ils se parlent, il écrit au
-              tableau quand il faut écrire. Et il ne donne jamais la réponse : il
-              cherche <em>où</em> ça bloque, et reprend depuis là.
+              Un professeur particulier disponible quand votre enfant en a besoin,
+              qui <strong>lui parle en temps réel</strong>, détecte ses lacunes et
+              se souvient de sa progression.
             </p>
 
             {error && <div className="alert alert--heros">{error}</div>}
@@ -315,8 +423,12 @@ export default function Accueil() {
               </a>
             </div>
 
+            {/* CE QUI LÈVE LE RISQUE, SOUS LE BOUTON ET NULLE PART AILLEURS.
+                Les trois sont vrais : l'offre d'essai ne porte aucun
+                identifiant de paiement — donc aucune carte n'est demandée
+                pour essayer — et aucune formule n'engage sur la durée. */}
             <p className="heros__note">
-              Un seul compte parent · Tous vos enfants · Sans engagement
+              30 minutes offertes · Sans carte bancaire · Du CP à la Terminale
             </p>
           </div>
 
@@ -325,20 +437,30 @@ export default function Accueil() {
           </div>
         </section>
 
-        {/* ---------------------------------------------------------- chiffres */}
-        <section className="bandeau">
-          <div>
-            <strong>12</strong>
-            <span>niveaux, du CP à la Terminale</span>
-          </div>
-          <div>
-            <strong>24/7</strong>
-            <span>disponible, même à 22h la veille du contrôle</span>
-          </div>
-          <div>
-            <strong>1 seul</strong>
-            <span>abonnement pour toute la fratrie</span>
-          </div>
+        {/* ------------------------------------------------------- la preuve
+            QUATRE MOTS POUR DIRE LE PRODUIT, JUSTE SOUS LA DÉMO. Le bandeau
+            portait trois chiffres — 12 niveaux, 24/7, 1 compte — tous déjà
+            dits ailleurs : l'étiquette du héros, son pitch, le bloc des prix.
+            À cette place, ce qu'un parent a besoin de comprendre n'est pas un
+            chiffre, c'est ce que fait le professeur.
+
+            « 1 seul abonnement pour toute la fratrie » a disparu avec eux, et
+            ce n'est pas un regret : c'était vrai du COMPTE, faux du prix, et
+            le bloc des tarifs le démentait deux écrans plus bas. */}
+        <section className="preuve">
+          {PREUVES.map((preuve) => (
+            <div key={preuve.titre} className="preuve__item">
+              <img
+                className={`preuve__icone${preuve.halo ? ' preuve__icone--halo' : ''}`}
+                src={preuve.icone}
+                alt=""
+              />
+              <strong className={preuve.halo ? 'preuve__titre--halo' : undefined}>
+                {preuve.titre}
+              </strong>
+              <span>{preuve.texte}</span>
+            </div>
+          ))}
         </section>
 
         {/* ---------------------------------------------------------- méthode */}
@@ -381,6 +503,11 @@ export default function Accueil() {
           </div>
         </section>
 
+        {/* LA DICTÉE ET L'ÉCOUTE, MONTRÉES. C'est ce qu'aucun chatbot ne fait,
+            et ça ne se raconte pas : la correction affichée ici est rendue par
+            le composant du produit lui-même. */}
+        <ExercicesLangue />
+
         {/* ------------------------------------------------------------ équipe */}
         {/* La section entière disparaît tant qu'il n'y a personne à montrer.
             Un titre « Une matière, un professeur » au-dessus d'une grille vide
@@ -389,7 +516,9 @@ export default function Accueil() {
         <section className="equipe">
           <header className="section__entete">
             <span className="etiquette">L'équipe pédagogique</span>
-            <h2>Une matière, un professeur</h2>
+            <h2>
+              Une matière, <em className="titre-accent">un professeur</em>
+            </h2>
             <p className="section__intro">
               Votre enfant retrouve le même professeur à chaque séance. C'est ce qui
               fait la différence entre un outil qu'on ouvre et quelqu'un qu'on revoit.
@@ -421,7 +550,7 @@ export default function Accueil() {
             {equipe.map((prof) => (
               <li key={prof.avatar} className="prof" style={{ '--teinte': prof.couleur }}>
                 <MotifMatiere code={prof.code} />
-                <Avatar nom={prof.avatar} taille={72} couleur={prof.couleur} />
+                <Avatar nom={prof.avatar} taille={96} couleur={prof.couleur} />
                 <strong>{prof.prenom}</strong>
 
                 {/* Le séparateur se décide ICI et pas au serveur : « Sciences et
@@ -438,7 +567,10 @@ export default function Accueil() {
         <section className="graphe">
           <div className="graphe__texte">
             <span className="etiquette">Ce qui nous distingue</span>
-            <h2>La mémoire d'un vrai prof particulier</h2>
+            {/* La mémoire en sarcelle, comme « la vraie cause » du graphe d'à côté. */}
+            <h2>
+              La <em className="titre-accent titre-accent--sarcelle">mémoire</em> d'un vrai prof particulier
+            </h2>
             <p>
               Chaque échange nourrit un profil qui suit votre enfant d'année en année.
               Quand il bloque sur les fractions en 6e, l'IA sait que la cause est une
@@ -457,29 +589,119 @@ export default function Accueil() {
 
         {/* ------------------------------------------------------------ parents */}
         <section className="parents">
+          {/* RETITRÉE : « Pour les parents » servait deux fois, ici et sur
+              l'aperçu du suivi. Celle-ci ne parle pas de suivi, elle répond à
+              la peur — « il va lui donner les réponses », « où vont ses
+              données ». C'est de la confiance, pas du tableau de bord. */}
           <header className="section__entete">
-            <span className="etiquette etiquette--sombre">Pour les parents</span>
-            <h2>Vous gardez la main</h2>
+            <span className="etiquette etiquette--sombre">La confiance</span>
+            <h2>
+              Conçu pour les <em className="titre-accent">enfants</em>. Pensé pour rassurer les parents.
+            </h2>
           </header>
 
           <div className="parents__grille">
-            <div className="point">
-              <h3>Un compte, plusieurs enfants</h3>
-              <p>Vous créez un profil par enfant. Chacun a son professeur, son niveau, son rythme.</p>
+            {CONFIANCE.map((point) => (
+              <div key={point.titre} className="point">
+                <img className="point__icone" src={point.icone} alt="" />
+                <h3>{point.titre}</h3>
+                <p>{point.texte}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* LE SUIVI PARENT, MONTRÉ. C'est ce qui fait renouveler l'abonnement :
+            le parent doit voir, avant de payer, ce qu'il verra chaque semaine. */}
+        <ApercuParent />
+
+        {/* Puis l'objection que tout le monde se pose, traitée de face. */}
+        <Comparatif />
+
+        {/* ------------------------------------------------------------- prix
+            L'ORDRE DE GRANDEUR AVANT LA PAGE DES TARIFS. Un parent qui parcourt
+            toute la page sans voir un prix se dit « ça doit être cher », et
+            découvre 39,90 € au pire moment. Comparé à une heure de cours
+            particulier, le même chiffre devient bon marché.
+
+            RIEN N'EST ARRONDI EN NOTRE FAVEUR : les heures et les prix sont
+            ceux des formules réelles, et le prix par enfant est calculé sur le
+            nombre d'enfants réellement couverts. */}
+        <section className="prix-apercu">
+          <header className="section__entete">
+            <span className="etiquette">Les tarifs</span>
+            {/* LE TITRE NOMME LES DEUX TERMES DE LA COMPARAISON — relevé par
+                Camara le 12/09/2026 : « le prix d'une heure de cours, pour le
+                mois entier » laissait deviner de quelle heure on parlait, et
+                de quel côté était Mimia. Ici, « cours particulier » désigne
+                sans ambiguïté le professeur humain, et « un mois entier » ce
+                qu'on obtient pour le même prix. */}
+            <h2>Un mois entier, pour le prix d’une heure de cours particulier</h2>
+          </header>
+
+          {/* UN SEUL PRIX, PAS TROIS FORMULES — voulu par Camara le
+              12/09/2026. Trois cartes obligeaient le parent à comparer et à
+              choisir avant même d'avoir envie du produit ; c'est le travail de
+              la page des tarifs, pas de la page qui donne envie.
+
+              LA COMPARAISON EST VRAIE, ET C'EST CE QUI LA REND UTILISABLE :
+              une heure de cours particulier se paie 30 à 50 €, 39,90 € tombe
+              dans cette fourchette. La phrase reste donc défendable devant un
+              parent qui connaît les tarifs — et le chiffre est écrit juste en
+              dessous pour qu'il puisse vérifier lui-même. */}
+          <div className="prix-phare">
+            <div className="prix-phare__montant">
+              <span className="prix-phare__depuis">À partir de</span>
+              <strong>39,90 €<small>/mois</small></strong>
+              {/* Le prix à l'heure a migré dans la confrontation, plus bas :
+                  l'afficher aux deux endroits ferait lire deux fois le même
+                  chiffre à quelques centimètres d'écart. */}
             </div>
-            <div className="point">
-              <h3>Adapté à l'âge, pas seulement à la classe</h3>
-              <p>Un élève de 14 ans en 5e n'est pas traité comme un enfant de 11 ans.</p>
-            </div>
-            <div className="point">
-              <h3>Jamais la réponse toute faite</h3>
-              <p>Impossible de s'en servir pour faire ses devoirs à sa place. C'est le principe.</p>
-            </div>
-            <div className="point">
-              <h3>Vos données restent les vôtres</h3>
-              <p>Hébergement en Europe, conservation limitée, suppression sur simple demande.</p>
+
+            <ul className="prix-phare__points">
+              <li>9 h de cours par mois, quand il en a besoin</li>
+              <li>Toutes les matières, du CP à la Terminale</li>
+              <li>Sans engagement : vous arrêtez quand vous voulez</li>
+            </ul>
+
+            {/* L'ARGUMENT LE PLUS FORT ÉTAIT LA LIGNE LA PLUS DISCRÈTE.
+                ------------------------------------------------------
+                Relevé par Camara le 12/09/2026 : « je ne l'avais même pas
+                vu ». Le tarif d'un professeur humain justifie tout le titre
+                de la section, et il était en gris clair, centré, noyé dans
+                une phrase qui parlait aussi de la fratrie.
+
+                COMPARÉ À UNITÉ ÉGALE, ET C'EST CE QUI REND L'ÉCART LISIBLE :
+                mettre « 30 à 50 € l'heure » en face de « 39,90 € le mois »
+                demande un calcul. En ramenant les deux à l'heure, le parent
+                n'a plus rien à calculer — il voit. */}
+            <div className="prix-phare__duel">
+              <div className="prix-phare__camp">
+                <span className="prix-phare__qui">Un professeur particulier</span>
+                <strong className="prix-phare__combien">30 à 50 €</strong>
+                <span className="prix-phare__unite">l’heure</span>
+              </div>
+
+              <span className="prix-phare__contre" aria-hidden="true">vs</span>
+
+              <div className="prix-phare__camp prix-phare__camp--nous">
+                <span className="prix-phare__qui">Avec Mimia</span>
+                <strong className="prix-phare__combien">4,43 €</strong>
+                <span className="prix-phare__unite">l’heure</span>
+              </div>
             </div>
           </div>
+
+          {/* Les autres formules restent à un clic : cacher qu'elles existent
+              se retournerait à l'écran de paiement, où un parent de trois
+              enfants découvrirait que Solo n'en couvre qu'un. */}
+          {/* Le tarif du professeur humain est remonté dans la carte : il ne
+              reste ici que ce qui est vraiment secondaire. */}
+          <p className="prix-apercu__note">
+            Plusieurs enfants&nbsp;? Les formules Duo et Famille partagent un même
+            pot d’heures.{' '}
+            <Link to="/tarifs">Voir toutes les formules</Link>
+          </p>
         </section>
 
         {/* PLACÉE JUSTE AVANT L'APPEL FINAL, et pas plus haut : les avis
@@ -490,7 +712,9 @@ export default function Accueil() {
 
         {/* ------------------------------------------------------------ final */}
         <section className="final">
-          <h2>Essayez ce soir sur son prochain devoir.</h2>
+          <h2>
+            Essayez <em className="titre-accent">ce soir</em> sur son prochain devoir.
+          </h2>
           <p>Création du compte en une minute. Premier échange dans la foulée.</p>
           {/* Celui-ci dit « créer un compte » : il mène donc au formulaire
               d'INSCRIPTION, pas à celui de connexion. Il ne pose pas non plus

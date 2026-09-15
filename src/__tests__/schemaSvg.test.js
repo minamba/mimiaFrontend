@@ -187,7 +187,15 @@ describe('catalogue du prompt', () => {
 describe('cohérence du catalogue', () => {
   const { catalogue, cleSchema, PREFIXE } = require('../lib/storage/schemas');
 
-  const PREFIXES = ['svt', 'pc', 'math', 'fr', 'hg', 'an', 'sc'];
+  // bph, biotech, spcl : les spécialités des séries technologiques (14/09/2026).
+  // hggsp, ses, nsi, si, eppcs : celles de la voie générale, le même jour.
+  // Les dix-huit suivants : les matières qui n'avaient aucun emplacement (même
+  // jour). Chacun doit aussi figurer dans `MATIERES` de `Planches.js`.
+  const PREFIXES = [
+    'svt', 'pc', 'math', 'fr', 'hg', 'an', 'es', 'sc', 'bph', 'biotech', 'spcl', 'hggsp', 'ses', 'nsi', 'si', 'eppcs',
+    'sgn', 'mgt', 'droiteco', 'stss', 'philo', 'hlp', 'llceran', 'amc', 'llceres', 'latin', 'grec',
+    'artspla', 'hda', 'cav', 'musique', 'theatre', 'danse', 'cirque',
+  ];
 
   it('n’a aucune clé en double', () => {
     const cles = catalogue().map((f) => f.cle);

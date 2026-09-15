@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../lib/actions/authActions';
 import { getMonAvis, deposerAvis, retirerMonAvis } from '../lib/api/avisApi';
+import { sessionEleve } from '../lib/storage/sessionEleve';
 import Etoiles from './Etoiles';
 
 const LONGUEUR_TITRE = 120;
@@ -27,6 +28,18 @@ export default function MonAvis({ surEnvoi }) {
   const dispatch = useDispatch();
   const { authentifie } = useSelector((state) => state.auth);
 
+  // `state.auth.authentifie` NE COUVRE QUE LA SESSION DU PARENT.
+  //
+  // Un enfant connecté avec son propre code a sa session à part (voir
+  // `sessionEleve.js`) — sans cette seconde vérification, il tombait sur
+  // « Connectez-vous » alors qu'il l'est déjà, exactement le même piège déjà
+  // corrigé pour le bouton « Signaler » (voir `BoutonSignalement.js`). Et
+  // c'est justement lui qu'`AvisModale.js` doit pouvoir ouvrir : un avis
+  // déposé par l'enfant reste celui du foyer (voir `AvisController.cs`),
+  // mais un enfant qui n'a pas le droit d'ouvrir le formulaire ne peut pas
+  // le déposer.
+  const connecte = authentifie || Boolean(sessionEleve());
+
   const [mien, setMien] = useState(null);
   const [ouvert, setOuvert] = useState(false);
   const [envoi, setEnvoi] = useState(false);
@@ -37,7 +50,7 @@ export default function MonAvis({ surEnvoi }) {
   const [commentaire, setCommentaire] = useState('');
 
   useEffect(() => {
-    if (!authentifie) { setMien(null); return undefined; }
+    if (!connecte) { setMien(null); return undefined; }
 
     let vivant = true;
 
@@ -58,7 +71,7 @@ export default function MonAvis({ surEnvoi }) {
       .catch(() => { if (vivant) setMien(null); });
 
     return () => { vivant = false; };
-  }, [authentifie]);
+  }, [connecte]);
 
   const envoyer = async (evenement) => {
     evenement.preventDefault();
@@ -96,7 +109,7 @@ export default function MonAvis({ surEnvoi }) {
     }
   };
 
-  if (!authentifie) {
+  if (!connecte) {
     return (
       <p className="avis__invite">
         Vous êtes client ?{' '}
@@ -113,16 +126,24 @@ export default function MonAvis({ surEnvoi }) {
       <div className="avis__etat">
         {mien ? (
           <>
+            {mien.publie && <span className="avis__coche" aria-hidden="true">✓</span>}
             <Etoiles note={mien.note} />
             <span>
-              Votre avis {mien.publie ? 'est en ligne.' : 'sera publié après relecture.'}
+              Votre avis {mien.publie ? 'est publié.' : 'sera publié après relecture.'}
             </span>
-            <button type="button" className="btn-ghost btn-ghost--mini" onClick={() => setOuvert(true)}>
-              Modifier
-            </button>
-            <button type="button" className="btn-ghost btn-ghost--mini btn-ghost--danger" onClick={retirer}>
-              Retirer
-            </button>
+            {/* LES DEUX BOUTONS ENSEMBLE, PAS CHACUN LIBRE DE SON CÔTÉ.
+                Sans ce regroupement, une ligne trop étroite pour tout tenir
+                (la fenêtre d'avis sur `AvisModale.js`, par exemple) faisait
+                retomber « Retirer » seul sur sa propre ligne, décentré par
+                rapport à tout le reste. */}
+            <span className="avis__etat-actions">
+              <button type="button" className="btn-ghost btn-ghost--mini" onClick={() => setOuvert(true)}>
+                Modifier
+              </button>
+              <button type="button" className="btn-ghost btn-ghost--mini btn-ghost--danger" onClick={retirer}>
+                Retirer
+              </button>
+            </span>
           </>
         ) : (
           <button type="button" className="btn btn--principal" onClick={() => setOuvert(true)}>
@@ -170,7 +191,7 @@ export default function MonAvis({ surEnvoi }) {
           Annoncer la relecture coûte une phrase. */}
       <p className="avis__mention">
         Votre avis est relu avant publication. Il apparaîtra signé de votre
-        prénom et de l'initiale de votre nom.
+        prénom, suivi de « Parent » ou « Étudiant » selon qui l'a rédigé.
       </p>
 
       <div className="avis__actions">

@@ -60,26 +60,47 @@ export const DEBUT_DICTEE = '\u0001';
 export const FIN_DICTEE = '\u0002';
 
 /**
- * L'ANGLAIS PRONONCÉ, ET LES BORNES QUI LE SIGNALENT À LA VOIX.
+ * L’ÉCOUTE EN LANGUE ÉTUDIÉE, ET LES BORNES QUI LA SIGNALENT À LA VOIX.
  *
- * Le passage qu'elles entourent part à la synthèse avec une consigne de
- * langue ; le reste du message continue en français. C'est ce qui permet de
- * garder le principe pédagogique — on EXPLIQUE en français, on PRATIQUE en
- * anglais — tout en rendant l'écoute possible.
+ * Le passage qu’elles entourent part à la synthèse avec une consigne de
+ * prononciation ; le reste du message continue au registre habituel. C’est
+ * ce qui permet de garder le principe pédagogique des langues étrangères —
+ * on EXPLIQUE en français, on PRATIQUE dans la langue étudiée — tout en
+ * rendant l’écoute possible, français comme langues étrangères.
  *
  * DIT MAIS PAS ÉCRIT, exactement comme la dictée : afficher le texte pendant
- * qu'on le prononce supprimerait l'exercice, l'élève lirait au lieu
- * d'écouter.
+ * qu’on le prononce supprimerait l’exercice, l’élève lirait au lieu
+ * d’écouter.
  *
- * Deux caractères de contrôle de plus, choisis pour les mêmes raisons que
- * ceux de la dictée — aucun texte de professeur n'en contient, aucune
- * synthèse ne saurait les prononcer.
+ * Ces caractères de contrôle sont choisis pour les mêmes raisons que ceux
+ * de la dictée — aucun texte de professeur n’en contient, aucune synthèse
+ * ne saurait les prononcer.
  */
-const ANGLAIS_OUVERTURE = '[EN]';
-const ANGLAIS_FERMETURE = '[/EN]';
+// UNE BALISE PAR LANGUE, UN SEUL MÉCANISME. Ajouter une langue, c'est
+// ajouter une ligne ici ; rien d'autre dans ce fichier ne connaît la liste
+// des langues enseignées. Un caractère de DÉBUT par langue ; un seul de
+// FIN, commun à toutes, puisqu'un passage qui se referme referme toujours
+// le même mode, quelle que soit la langue qui l'a ouvert.
+const LANGUES_ECOUTE = [
+  ['[EN]', '[/EN]', '\u0003', 'en'],
+  ['[FR]', '[/FR]', '\u0005', 'fr'],
+  ['[ES]', '[/ES]', '\u0006', 'es'],
+  ['[DE]', '[/DE]', '\u0007', 'de'],
+  ['[IT]', '[/IT]', '\u000b', 'it'],
+  ['[ZH]', '[/ZH]', '\u000e', 'zh'],
+];
 
-export const DEBUT_ANGLAIS = '\u0003';
-export const FIN_ANGLAIS = '\u0004';
+/** Caractère de début de la balise d'écoute d'une langue, par son code. */
+export const DEBUT_ECOUTE = Object.fromEntries(
+  LANGUES_ECOUTE.map(([, , debut, code]) => [code, debut]),
+);
+
+/** Code de langue par caractère de début — pour retrouver la langue à la lecture du flux. */
+export const LANGUE_PAR_DEBUT_ECOUTE = new Map(
+  LANGUES_ECOUTE.map(([, , debut, code]) => [debut, code]),
+);
+
+export const FIN_ECOUTE = '\u0004';
 
 /**
  * La prochaine ouverture de dictée, quelle que soit sa variante.
@@ -109,6 +130,21 @@ function prochaineDictee(texte, depuis = 0) {
  * caractère par caractère du flux, où l'on perdrait la frontière au premier
  * fragment coupé en deux.
  */
+/**
+ * Vrai quand ce message porte la correction d'une dictée.
+ *
+ * CE QUI CLÔT UNE DICTÉE, C'EST LA CORRECTION — PAS L'ENVOI DE LA COPIE.
+ *
+ * L'écran croyait la dictée finie dès que l'élève avait rendu sa copie. Mais
+ * le professeur relit souvent une phrase que l'enfant n'a pas eu le temps
+ * de retenir, et cette relecture est encore la même dictée. Faute de savoir
+ * la distinguer d'une dictée neuve, l'écran redemandait « comment veux-tu
+ * écrire ? » au milieu de celle qui était en cours, et repartait sur une
+ * copie vide.
+ */
+export function contientCorrectionDictee(texte) {
+  return typeof texte === 'string' && texte.includes(DICTEE_CORRIGEE_OUVERTURE);
+}
 export function contientDictee(texte) {
   return Boolean(texte)
     && (texte.includes(DICTEE_OUVERTURE) || texte.includes(DICTEE_CLAVIER));
@@ -121,33 +157,52 @@ export function contientDictee(texte) {
  * encore arrivée et le texte ne doit surtout pas apparaître en attendant.
  */
 /**
- * Retire les passages d'anglais oral : ce qui se prononce pour être écouté
- * ne s'affiche pas, sinon l'élève lit la réponse au lieu de l'entendre.
- *
- * Tolère un bloc encore ouvert, comme la dictée : pendant le flux, la
- * fermeture n'est pas encore arrivée et le texte ne doit surtout pas
- * apparaître en attendant.
+ * Retire les passages d'écoute en langue étudiée : ce qui se prononce pour
+ * être écouté ne s'affiche pas, sinon l'élève lit la réponse au lieu de
+ * l'entendre. Boucle sur toutes les langues de `LANGUES_ECOUTE`, avec le
+ * même retrait de bloc que les autres balises internes (`retirerBloc`, plus
+ * bas, définie plus loin mais utilisable ici — les déclarations de fonction
+ * sont hissées) : ajouter une langue là-bas suffit à la couvrir ici aussi.
  */
-function retirerAnglaisOral(texte) {
-  let sortie = '';
-  let reste = texte;
+/**
+ * LE TEXTE DES PASSAGES D'ÉCOUTE, toutes langues confondues.
+ *
+ * Sert à savoir qu'un exercice de compréhension orale commence — et à
+ * distinguer un passage INÉDIT d'une relecture du même texte, pour ne
+ * redemander la vitesse qu'au premier. Voir `vitesseEcoute.js`.
+ *
+ * TOLÈRE UN BLOC ENCORE OUVERT : le texte arrive en flux, et c'est justement
+ * AVANT la fin du passage qu'il faut poser la question — sinon la voix aurait
+ * déjà tout lu.
+ */
+export function extraireEcoutes(texte) {
+  if (!texte) return '';
 
-  while (reste.length > 0) {
-    const debut = reste.indexOf(ANGLAIS_OUVERTURE);
+  const passages = [];
 
-    if (debut === -1) { sortie += reste; break; }
+  for (const [ouverture, fermeture] of LANGUES_ECOUTE) {
+    let reste = texte;
 
-    sortie += reste.slice(0, debut);
+    for (;;) {
+      const debut = reste.indexOf(ouverture);
+      if (debut === -1) break;
 
-    const apres = reste.slice(debut + ANGLAIS_OUVERTURE.length);
-    const fin = apres.indexOf(ANGLAIS_FERMETURE);
+      const apres = reste.slice(debut + ouverture.length);
+      const fin = apres.indexOf(fermeture);
 
-    if (fin === -1) break;
-
-    reste = apres.slice(fin + ANGLAIS_FERMETURE.length);
+      passages.push(fin === -1 ? apres : apres.slice(0, fin));
+      reste = fin === -1 ? '' : apres.slice(fin + fermeture.length);
+    }
   }
 
-  return sortie;
+  return passages.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function retirerEcouteLangue(texte) {
+  return LANGUES_ECOUTE.reduce(
+    (texteCourant, [ouverture, fermeture]) => retirerBloc(texteCourant, ouverture, fermeture),
+    texte,
+  );
 }
 
 function retirerDictees(texte) {
@@ -201,6 +256,75 @@ const RAPPORT_FERMETURE = '[/RAPPORT]';
 const FICHE_OUVERTURE = '[FICHE]';
 const FICHE_FERMETURE = '[/FICHE]';
 
+/**
+ * Un contrôle scolaire annoncé par l'élève et noté par son professeur : rangé
+ * dans le calendrier, jamais lu ni affiché dans le chat — même nature que
+ * [FICHE] ou [EVALUATION].
+ */
+const CONTROLE_PROGRAMME_OUVERTURE = '[CONTROLE_PROGRAMME]';
+const CONTROLE_PROGRAMME_FERMETURE = '[/CONTROLE_PROGRAMME]';
+
+/** Les notions travaillées pour un contrôle : même nature, autre bloc. */
+const CONTROLE_NOTIONS_OUVERTURE = '[CONTROLE_NOTIONS]';
+const CONTROLE_NOTIONS_FERMETURE = '[/CONTROLE_NOTIONS]';
+
+/** Le verdict du professeur sur la préparation : l'élève est-il prêt ? */
+const CONTROLE_PRET_OUVERTURE = '[CONTROLE_PRET]';
+const CONTROLE_PRET_FERMETURE = '[/CONTROLE_PRET]';
+
+/** Le même verdict, pour une épreuve d'examen préparée. */
+const EXAMEN_PRET_OUVERTURE = '[EXAMEN_PRET]';
+const EXAMEN_PRET_FERMETURE = '[/EXAMEN_PRET]';
+
+/**
+ * La correction d'une évaluation remise au cours suivant vient d'avoir lieu —
+ * ou l'élève n'a pas voulu la faire. Un simple numéro entre deux balises, qui
+ * ne doit ni s'afficher ni se prononcer : « quatorze » lu à voix haute au
+ * milieu d'une phrase du professeur ne voudrait rien dire pour l'enfant.
+ */
+const EVALUATION_CORRIGEE_OUVERTURE = '[EVALUATION_CORRIGEE]';
+const EVALUATION_CORRIGEE_FERMETURE = '[/EVALUATION_CORRIGEE]';
+
+/** Ce que le contrôle a donné, une fois passé : la note, le ressenti, les erreurs. */
+const CONTROLE_RESULTAT_OUVERTURE = '[CONTROLE_RESULTAT]';
+const CONTROLE_RESULTAT_FERMETURE = '[/CONTROLE_RESULTAT]';
+
+/**
+ * Le professeur propose de regarder la copie d'un contrôle passé : l'écran
+ * affiche la question et les boutons d'envoi. Voir `copieControle.js`.
+ */
+const COPIE_CONTROLE_OUVERTURE = '[COPIE_CONTROLE]';
+const COPIE_CONTROLE_FERMETURE = '[/COPIE_CONTROLE]';
+
+/**
+ * Une évaluation reportée au prochain cours, faute de temps.
+ *
+ * Il manquait à cette liste depuis sa création — relevé par Camara le
+ * 13/09/2026, à la première séance qui en a produit un : « [EVALUATION_PREVUE]
+ * notion: Utiliser la réciproque de Thalès » affiché tel quel dans la bulle du
+ * professeur, et lu à voix haute avec ses crochets. Chaque bloc du prompt doit
+ * figurer ici ; c'est le plus facile à oublier, parce que l'oubli ne se voit
+ * qu'en séance.
+ */
+const EVALUATION_PREVUE_OUVERTURE = '[EVALUATION_PREVUE]';
+const EVALUATION_PREVUE_FERMETURE = '[/EVALUATION_PREVUE]';
+
+/**
+ * La dictée corrigée : même nature que [EVALUATION] — le professeur a déjà
+ * tout dit à l'oral, le bloc sert seulement à archiver la copie dans « Mes
+ * dictées ». Ni prononcé ni affiché.
+ */
+const DICTEE_CORRIGEE_OUVERTURE = '[DICTEE_CORRIGEE]';
+const DICTEE_CORRIGEE_FERMETURE = '[/DICTEE_CORRIGEE]';
+
+/**
+ * La compréhension orale archivée : même nature que [DICTEE_CORRIGEE] — le
+ * professeur a déjà tout dit à l'oral, le bloc sert seulement à archiver
+ * l'échange dans « Mes compréhensions orales ». Ni prononcé ni affiché.
+ */
+const COMPREHENSION_ORALE_OUVERTURE = '[COMPREHENSION_ORALE]';
+const COMPREHENSION_ORALE_FERMETURE = '[/COMPREHENSION_ORALE]';
+
 /** Marqueur posé par le professeur au moment où le contrôle commence. */
 export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
 
@@ -215,6 +339,76 @@ export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
  * contrôle sera reproposé en entier.
  */
 export const EVAL_ABANDON = '[EVALUATION_ABANDONNEE]';
+
+/**
+ * La dictée a été interrompue avant que la copie n'arrive.
+ *
+ * Posé par le serveur, comme l'abandon de contrôle : l'élève a quitté le
+ * cours — bouton ou onglet fermé — pendant que le professeur dictait ou
+ * relisait. La dictée est ANNULÉE : rien n'est archivé, et le professeur le
+ * lui dira à son retour.
+ */
+export const DICTEE_ABANDON = '[DICTEE_ABANDONNEE]';
+
+/** L'abandon d'une dictée est-il déclaré dans ce texte ? */
+export function dicteeAbandonnee(texte) {
+  return Boolean(texte) && texte.includes(DICTEE_ABANDON);
+}
+
+/**
+ * L'ÉLÈVE NE VEUT PLUS DE CETTE DICTÉE — voulu par Camara le 11/09/2026 :
+ * passée, abandonnée, ou refusée à la reprise, elle est SUPPRIMÉE de partout,
+ * pour que le professeur ne la ressorte jamais. Posé par le professeur :
+ * `[DICTEE_SUPPRIMEE]derniere[/DICTEE_SUPPRIMEE]`, ou avec le numéro d'une
+ * dictée archivée. Le serveur fait la suppression ; l'écran referme la
+ * dictée en cours et n'affiche rien du bloc.
+ */
+/**
+ * L'élève ne veut plus de cet exercice d'écoute : la fiche est supprimée de
+ * « Mes compréhensions orales », et le filet de fin de séance ne la
+ * reconstitue pas. Posé par le professeur, jamais affiché ni prononcé.
+ */
+const COMPREHENSION_SUPPRIMEE_OUVERTURE = '[COMPREHENSION_SUPPRIMEE]';
+const COMPREHENSION_SUPPRIMEE_FERMETURE = '[/COMPREHENSION_SUPPRIMEE]';
+
+const DICTEE_SUPPRIMEE_OUVERTURE = '[DICTEE_SUPPRIMEE]';
+const DICTEE_SUPPRIMEE_FERMETURE = '[/DICTEE_SUPPRIMEE]';
+
+export function dicteeSupprimee(texte) {
+  return Boolean(texte) && texte.includes(DICTEE_SUPPRIMEE_OUVERTURE);
+}
+
+/**
+ * UNE DICTÉE ARCHIVÉE, REMISE AU TABLEAU PAR SON NUMÉRO.
+ *
+ * Voulu par Camara le 11/09/2026 : revenir sur une dictée — même vieille de
+ * huit mois — doit la montrer comme dans « Mes dictées », erreurs numérotées.
+ * Le professeur ne recopie donc plus rien : il pose
+ * `[DICTEE_AU_TABLEAU]42[/DICTEE_AU_TABLEAU]`, et l'écran affiche l'archive
+ * elle-même — le texte dicté et la copie D'ORIGINE, jamais une version qu'il
+ * aurait corrigée en la recopiant.
+ */
+const DICTEE_AU_TABLEAU_OUVERTURE = '[DICTEE_AU_TABLEAU]';
+const DICTEE_AU_TABLEAU_FERMETURE = '[/DICTEE_AU_TABLEAU]';
+
+/**
+ * Ce que le tableau retient d'un tel geste : un repère, résolu ensuite par
+ * l'écran en allant chercher l'archive. Un caractère nul en tête — aucun
+ * contenu écrit par le professeur ne peut commencer ainsi.
+ */
+export const REPERE_DICTEE_ARCHIVEE = '\u0000dictee-archivee:';
+
+/** Le numéro de la dernière dictée remise au tableau dans ce texte, ou null. */
+export function dicteeAuTableau(texte) {
+  if (!texte) return null;
+
+  let numero = null;
+  for (const trouve of texte.matchAll(/\[DICTEE_AU_TABLEAU\]\s*(?:n°\s*)?(\d+)\s*\[\/DICTEE_AU_TABLEAU\]/g)) {
+    numero = Number(trouve[1]);
+  }
+
+  return numero;
+}
 
 /**
  * Marqueur d'adieu : le professeur vient de saluer l'élève et la séance est
@@ -251,6 +445,21 @@ export const TABLEAU_EFFACE = '[TABLEAU_EFFACE]';
 /** Ce message demande-t-il d'effacer le tableau ? */
 export function effaceLeTableau(texte) {
   return (texte ?? '').includes(TABLEAU_EFFACE);
+}
+
+/**
+ * LA DEMANDE DE DOCUMENT.
+ *
+ * Posée par le professeur quand il réclame un devoir, un contrôle ou un
+ * exercice fait sur le cahier : elle allume le trombone et la caméra pour que
+ * l'élève sache où répondre. Même famille que [FIN_SEANCE] et
+ * [TABLEAU_EFFACE] — retirée de l'affichage, jamais prononcée.
+ */
+export const DEMANDE_DOCUMENT = '[DEMANDE_DOCUMENT]';
+
+/** Le professeur vient-il de demander un document ? */
+export function demandeDocument(texte) {
+  return (texte ?? '').includes(DEMANDE_DOCUMENT);
 }
 
 /** Le professeur a-t-il dit au revoir dans ce texte ? */
@@ -300,6 +509,18 @@ const DEPARTS = [
   /\bmerci (pour tout|beaucoup)\b/,
 ];
 
+// Accents retirés, apostrophes ET traits d'union ramenés à l'espace : la
+// dictée vocale écrit « j'arrête », le clavier « j arrete », l'apostrophe
+// typographique diffère de celle du clavier, et « week-end » s'écrit aussi
+// « week end » ou « weekend ». Toutes ces formes doivent se valoir.
+function normaliserPourDeparts(texte) {
+  return texte
+    .normalize('NFD')
+    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
+    .replace(/['’`-]/g, ' ')
+    .toLowerCase();
+}
+
 /**
  * L'élève demande-t-il à s'arrêter ?
  *
@@ -308,17 +529,68 @@ const DEPARTS = [
 export function demandeArret(texte) {
   if (!texte) return false;
 
-  // Accents retirés, apostrophes ET traits d'union ramenés à l'espace : la
-  // dictée vocale écrit « j'arrête », le clavier « j arrete », l'apostrophe
-  // typographique diffère de celle du clavier, et « week-end » s'écrit aussi
-  // « week end » ou « weekend ». Toutes ces formes doivent se valoir.
-  const propre = texte
-    .normalize('NFD')
-    .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
-    .replace(/['’`-]/g, ' ')
-    .toLowerCase();
+  return DEPARTS.some((motif) => motif.test(normaliserPourDeparts(texte)));
+}
 
-  return DEPARTS.some((motif) => motif.test(propre));
+/**
+ * LE FILET CONTRE LE DOUBLE AU REVOIR.
+ *
+ * Le professeur dit-il adieu EN TOUTES LETTRES, sans avoir posé [FIN_SEANCE] ?
+ * On ne lit que la DERNIÈRE phrase : un adieu mentionné en passant plus tôt
+ * dans le message («la dernière fois qu'on s'est dit à bientôt…») ne compte
+ * pas, seule la formule de sortie réelle déclenche le filet.
+ */
+export function sembleDireAuRevoir(texte) {
+  if (!texte) return false;
+
+  const phrases = texte.split(/[.!?]+/).map((p) => p.trim()).filter(Boolean);
+  const derniere = phrases[phrases.length - 1];
+  if (!derniere) return false;
+
+  return DEPARTS.some((motif) => motif.test(normaliserPourDeparts(derniere)));
+}
+
+/**
+ * Les formules par lesquelles on PREND CONGÉ — et elles seules.
+ *
+ * Plus étroite que `DEPARTS` : « salut » n'y est pas, parce qu'il dit aussi
+ * bonjour. Sans cette exclusion, le « Salut Bilal ! » d'un accueil aurait pu
+ * passer pour un départ.
+ */
+const ADIEUX = /^(au revoir|a bientot|a plus|a demain|a la prochaine|a tres vite|a tout a l ?heure|bye|ciao|tchao|bonne (soiree|journee|nuit|fin de journee|semaine|vacances)|bon week ?end)\b/;
+
+/**
+ * LE PROFESSEUR PREND-IL CONGÉ, EN TOUTES LETTRES ?
+ *
+ * Relevé par Camara le 11/09/2026 : « OK, à la prochaine », dit l'élève ;
+ * « À bientôt Bilal ! On reprendra la fin de la dictée au prochain cours »,
+ * répond le professeur — sans poser [FIN_SEANCE]. La séance restait ouverte
+ * jusqu'au bout du minuteur, deux personnes qui s'étaient dit au revoir.
+ *
+ * Plus large que `sembleDireAuRevoir`, qui ne lit que la dernière phrase : ici
+ * l'adieu venait EN PREMIER, et la dernière phrase parlait du prochain cours.
+ * On regarde donc la première phrase ET la dernière — mais une formule doit
+ * OUVRIR la phrase, ou l'une de ses parties : « Parfait, à bientôt ! » compte,
+ * « la dernière fois qu'on s'est dit à bientôt, tu avais… » ne compte pas.
+ *
+ * Ne s'emploie JAMAIS seul — voir la corroboration dans `Chat.js` : il faut
+ * aussi que l'élève, juste avant, ait annoncé qu'il partait.
+ */
+export function prendConge(texte) {
+  if (!texte) return false;
+
+  const phrases = retirerMarqueurs(texte)
+    .split(/[.!?…]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  if (phrases.length === 0) return false;
+
+  const ouvreSurUnAdieu = (phrase) => normaliserPourDeparts(phrase)
+    .split(/[,;:—–]/)
+    .some((partie) => ADIEUX.test(partie.trim()));
+
+  return ouvreSurUnAdieu(phrases[0]) || ouvreSurUnAdieu(phrases[phrases.length - 1]);
 }
 
 /**
@@ -423,13 +695,28 @@ function retirerMarqueurs(texte) {
   const sansMarqueurs = (texte ?? '')
     .split(EVAL_DEBUT).join('')
     .split(EVAL_ABANDON).join('')
+    .split(DICTEE_ABANDON).join('')
     .split(FIN_SEANCE).join('')
-    .split(TABLEAU_EFFACE).join('');
+    .split(TABLEAU_EFFACE).join('')
+    .split(DEMANDE_DOCUMENT).join('');
 
   const blocs = [
     [EVAL_OUVERTURE, EVAL_FERMETURE],
     [RAPPORT_OUVERTURE, RAPPORT_FERMETURE],
     [FICHE_OUVERTURE, FICHE_FERMETURE],
+    [CONTROLE_PROGRAMME_OUVERTURE, CONTROLE_PROGRAMME_FERMETURE],
+    [CONTROLE_NOTIONS_OUVERTURE, CONTROLE_NOTIONS_FERMETURE],
+    [CONTROLE_PRET_OUVERTURE, CONTROLE_PRET_FERMETURE],
+    [EXAMEN_PRET_OUVERTURE, EXAMEN_PRET_FERMETURE],
+    [EVALUATION_CORRIGEE_OUVERTURE, EVALUATION_CORRIGEE_FERMETURE],
+    [CONTROLE_RESULTAT_OUVERTURE, CONTROLE_RESULTAT_FERMETURE],
+    [COPIE_CONTROLE_OUVERTURE, COPIE_CONTROLE_FERMETURE],
+    [EVALUATION_PREVUE_OUVERTURE, EVALUATION_PREVUE_FERMETURE],
+    [DICTEE_CORRIGEE_OUVERTURE, DICTEE_CORRIGEE_FERMETURE],
+    [COMPREHENSION_ORALE_OUVERTURE, COMPREHENSION_ORALE_FERMETURE],
+    [DICTEE_SUPPRIMEE_OUVERTURE, DICTEE_SUPPRIMEE_FERMETURE],
+    [COMPREHENSION_SUPPRIMEE_OUVERTURE, COMPREHENSION_SUPPRIMEE_FERMETURE],
+    [DICTEE_AU_TABLEAU_OUVERTURE, DICTEE_AU_TABLEAU_FERMETURE],
   ];
 
   return blocs.reduce(
@@ -446,9 +733,10 @@ function retirerMarqueurs(texte) {
 export function decouper(texte) {
   const segments = [];
 
-  // La dictée et l’anglais oral sont retirés AVANT tout le reste : ce sont les
-  // deux seules choses du flux qui s’entendent sans jamais se voir.
-  let reste = retirerAnglaisOral(retirerDictees(retirerMarqueurs(texte)));
+  // La dictée et l’écoute en langue étudiée sont retirées AVANT tout le
+  // reste : ce sont les seules choses du flux qui s’entendent sans jamais
+  // se voir.
+  let reste = retirerEcouteLangue(retirerDictees(retirerMarqueurs(texte)));
 
   // UNE BALISE COUPÉE EN DEUX NE S'AFFICHE PAS.
   //
@@ -552,9 +840,15 @@ export function texteParle(texte, { bornes = false } = {}) {
   let reste = retirerMarqueurs(texte)
     .split(DICTEE_CLAVIER).join(bornes ? DEBUT_DICTEE : '')
     .split(DICTEE_OUVERTURE).join(bornes ? DEBUT_DICTEE : '')
-    .split(DICTEE_FERMETURE).join(bornes ? FIN_DICTEE : '')
-    .split(ANGLAIS_OUVERTURE).join(bornes ? DEBUT_ANGLAIS : '')
-    .split(ANGLAIS_FERMETURE).join(bornes ? FIN_ANGLAIS : '');
+    .split(DICTEE_FERMETURE).join(bornes ? FIN_DICTEE : '');
+
+  // Une paire de bornes par langue, mais une seule fermeture pour toutes :
+  // voir le commentaire sur `LANGUES_ECOUTE`.
+  for (const [ouverture, fermeture, debut] of LANGUES_ECOUTE) {
+    reste = reste
+      .split(ouverture).join(bornes ? debut : '')
+      .split(fermeture).join(bornes ? FIN_ECOUTE : '');
+  }
 
   while (reste.length > 0) {
     const debut = reste.indexOf(OUVERTURE);

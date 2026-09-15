@@ -11,6 +11,7 @@ import { chargerEleves, submitEleve } from '../lib/actions/elevesActions';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 import { getCapaciteEnfants } from '../lib/api/abonnementApi';
 import MonAvis from './MonAvis';
+import Onglets from './Onglets';
 import ChampMotDePasse from './ChampMotDePasse';
 import CodeEnfant from './CodeEnfant';
 import Loader from './Loader';
@@ -20,6 +21,14 @@ import RetraitEnfant from './RetraitEnfant';
 import SuppressionCompte from './SuppressionCompte';
 import { logout } from '../lib/actions/authActions';
 import { getElevesArchives, restaurerEleve } from '../lib/api/elevesApi';
+import { themeEnregistre, definirTheme } from '../lib/storage/theme';
+import {
+  grouperClasses,
+  serieAPreciser,
+  specialitesDeLaClasse,
+  specialitesAEnvoyer,
+} from '../lib/niveauxScolaires';
+import ChoixSpecialites from './ChoixSpecialites';
 
 const ONGLETS = [
   { cle: 'infos', libelle: 'Mes informations' },
@@ -28,6 +37,7 @@ const ONGLETS = [
   { cle: 'forfait', libelle: 'Mon forfait' },
   { cle: 'securite', libelle: 'Mot de passe' },
   { cle: 'enfants', libelle: 'Mes enfants' },
+  { cle: 'parametres', libelle: 'Paramètres' },
   // EN DERNIER, ET C’EST VOULU. Un parent vient ici pour régler quelque
   // chose ; on ne lui demande pas son avis avant de l’avoir laissé faire ce
   // pour quoi il est venu.
@@ -260,7 +270,7 @@ function Securite({ compte, saving, succes, onChanger }) {
 }
 
 // ---------------------------------------------------------------- enfants
-function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, saving }) {
+function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, onRetirer, saving }) {
   const [ouvert, setOuvert] = useState(false);
   const [codeOuvert, setCodeOuvert] = useState(false);
   const [champs, setChamps] = useState({
@@ -269,7 +279,17 @@ function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, sa
     age: eleve.age ?? '',
     niveauScolaireId: eleve.niveauScolaireId ?? '',
     sexe: eleve.sexe ?? 0,
+    academieId: eleve.academieId ?? '',
+    lv2Espagnol: Boolean(eleve.lv2Espagnol),
+    specialites: eleve.specialites ?? [],
   });
+
+  // Même règle qu'à l'inscription : la case LV2 n'existe que dans les classes
+  // qui ont une LV2, et suit la classe choisie dans le formulaire.
+  const lv2Possible = Boolean(
+    niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId))?.lv2Possible,
+  );
+  const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
 
   const soumettre = (evenement) => {
     evenement.preventDefault();
@@ -280,14 +300,17 @@ function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, sa
       age: Number(champs.age),
       niveauScolaireId: Number(champs.niveauScolaireId),
       sexe: Number(champs.sexe),
+      academieId: champs.academieId ? Number(champs.academieId) : null,
+      lv2Espagnol: lv2Possible && champs.lv2Espagnol,
+      specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
     });
     setOuvert(false);
   };
 
-  const parCycle = niveaux.reduce((accumulateur, niveau) => {
-    (accumulateur[niveau.cycle] ??= []).push(niveau);
-    return accumulateur;
-  }, {});
+  // Regroupées par voie et par série ; la classe actuelle reste visible même
+  // si elle ne se choisit plus. Voir `grouperClasses`.
+  const parCycle = grouperClasses(niveaux, eleve.niveauScolaireId);
+  const aPreciser = serieAPreciser(niveaux, champs.niveauScolaireId);
 
   return (
     <li className="enfant-ligne">
@@ -399,7 +422,7 @@ function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, sa
                 onChange={(e) => setChamps({ ...champs, niveauScolaireId: e.target.value })}
                 required
               >
-                {Object.entries(parCycle).map(([cycle, duCycle]) => (
+                {parCycle.map(([cycle, duCycle]) => (
                   <optgroup key={cycle} label={cycle}>
                     {duCycle.map((niveau) => (
                       <option key={niveau.id} value={niveau.id}>
@@ -409,6 +432,35 @@ function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, sa
                   </optgroup>
                 ))}
               </select>
+
+              {/* UNE CLASSE TECHNOLOGIQUE SANS SÉRIE N'A PAS DE SPÉCIALITÉS.
+                  L'élève garde ses maths, son histoire-géographie, sa
+                  philosophie ; mais ni management, ni ingénierie, ni biologie
+                  humaine tant que la série n'est pas choisie. */}
+              {aPreciser && (
+                <span className="champ__aide champ__aide--alerte" role="alert">
+                  Précise la série : sans elle, ses spécialités n’apparaissent pas.
+                </span>
+              )}
+
+              {lv2Possible && (
+                <label className="case">
+                  <input
+                    type="checkbox"
+                    checked={champs.lv2Espagnol}
+                    onChange={(e) => setChamps({ ...champs, lv2Espagnol: e.target.checked })}
+                  />
+                  Espagnol en LVB
+                </label>
+              )}
+
+              <ChoixSpecialites
+                id={`e-specialites-${eleve.id}`}
+                nombre={specialitesClasse.nombre}
+                possibles={specialitesClasse.possibles}
+                valeur={champs.specialites}
+                onChange={(specialites) => setChamps({ ...champs, specialites })}
+              />
             </div>
 
             <div className="champ">
@@ -423,6 +475,34 @@ function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, sa
                 required
               />
             </div>
+          </div>
+
+          <div className="champ">
+            <label htmlFor={`e-academie-${eleve.id}`}>Académie (facultatif)</label>
+            <select
+              id={`e-academie-${eleve.id}`}
+              value={champs.academieId}
+              onChange={(e) => setChamps({ ...champs, academieId: e.target.value })}
+            >
+              <option value="">Je ne sais pas / plus tard</option>
+              <optgroup label="Zones A, B, C">
+                {academies
+                  .filter((a) => ['A', 'B', 'C'].includes(a.zone))
+                  .map((a) => (
+                    <option key={a.id} value={a.id}>{a.libelle}</option>
+                  ))}
+              </optgroup>
+              <optgroup label="Corse et outre-mer">
+                {academies
+                  .filter((a) => !['A', 'B', 'C'].includes(a.zone))
+                  .map((a) => (
+                    <option key={a.id} value={a.id}>{a.libelle}</option>
+                  ))}
+              </optgroup>
+            </select>
+            <span className="champ__aide">
+              Sert à afficher les périodes de vacances scolaires dans « Mon calendrier ».
+            </span>
           </div>
 
           <fieldset className="champ champ--choix">
@@ -459,13 +539,87 @@ function LigneEnfant({ eleve, niveaux, onEnregistrer, onVoirFiche, onRetirer, sa
   );
 }
 
+// -------------------------------------------------------------- paramètres
+/**
+ * Le thème du site.
+ *
+ * SOMBRE PAR DÉFAUT, PARTOUT. Mimia ne suit plus les réglages du système
+ * d'exploitation — c'est ce réglage-ci, et lui seul, qui décide. Un seul
+ * interrupteur suffit : il n'y a que deux thèmes, et « sombre » est déjà
+ * l'état de repos du site tant qu'on ne l'a pas touché.
+ *
+ * MÉMORISÉ SUR CET APPAREIL, PAS SUR LE COMPTE. Un choix posé dans le
+ * navigateur du salon ne doit rien changer sur la tablette de la chambre —
+ * chacune retombe sur le sombre tant qu'on ne l'a pas réglée à son tour.
+ */
+function Parametres() {
+  const [theme, setTheme] = useState(() => themeEnregistre());
+  const clair = theme === 'light';
+
+  const basculer = () => {
+    const nouveau = clair ? 'dark' : 'light';
+    setTheme(nouveau);
+    definirTheme(nouveau);
+  };
+
+  return (
+    <div className="bloc-profil bloc-profil--apparence">
+      <h2>Apparence</h2>
+      <p className="bloc-profil__intro">
+        Mimia s’affiche en sombre par défaut. Le clair reste à un clic, et
+        votre choix est retenu sur cet appareil pour vos prochaines visites.
+      </p>
+
+      {/* EN BLUE SKY, LE CHOIX DU THÈME N'A PLUS COURS — le style impose le
+          sombre (voir `styleSite.js`). Cette phrase remplace alors
+          l'interrupteur, masqué par App.css : un réglage qui ne fait rien
+          laisserait croire à une panne. Invisible hors Blue Sky. */}
+      <p className="bloc-profil__note-blue-sky">
+        Le site affiche en ce moment son nouveau style, toujours en sombre : le
+        choix du thème reviendra dès la fin de cet essai. Votre préférence est
+        gardée.
+      </p>
+
+      <div className="mode">
+        <div className="mode__texte">
+          <strong className="mode__titre">
+            Thème clair
+            <span className={`mode__etat ${clair ? 'mode__etat--actif' : ''}`}>
+              {clair ? 'Activé' : 'Désactivé'}
+            </span>
+          </strong>
+
+          <p className="mode__description">
+            {clair
+              ? 'Le site s’affiche en clair sur cet appareil.'
+              : 'Désactivé, le site reste en sombre — son thème par défaut.'}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className={`bascule ${clair ? 'bascule--active' : ''}`}
+          onClick={basculer}
+          role="switch"
+          aria-checked={clair}
+          aria-label="Thème clair"
+        >
+          <span className="bascule__piste">
+            <span className="bascule__bouton" />
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ page
 export default function MonProfil() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { parent, compte, loading, saving, error, succes } = useSelector((state) => state.profil);
   const { liste, submitting } = useSelector((state) => state.eleves);
-  const { niveaux } = useSelector((state) => state.referentiel);
+  const { niveaux, academies } = useSelector((state) => state.referentiel);
 
   /**
    * L'onglet ouvert. « Mes informations » par défaut — sauf au retour d'un
@@ -532,6 +686,15 @@ export default function MonProfil() {
 
   const complet = capacite !== null && !capacite.peutAjouter;
 
+  // L'infobulle de « Mot de passe » dépend du compte (Google ou non), donc
+  // ne peut pas vivre dans la liste statique `ONGLETS` : elle se calcule ici,
+  // à chaque rendu.
+  const ongletsAffiches = ONGLETS.map((o) => (
+    o.cle === 'securite' && compteExterne
+      ? { ...o, titre: 'Géré par votre fournisseur de connexion' }
+      : o
+  ));
+
   const changerOnglet = (cle) => {
     // L'onglet reste visible et cliquable pour un compte Google : le masquer
     // laisserait croire à une fonctionnalité absente, alors qu'elle est
@@ -590,23 +753,17 @@ export default function MonProfil() {
         </div>
       </div>
 
-      <div className="onglets">
-        {ONGLETS.map((o) => (
-          <button
-            key={o.cle}
-            type="button"
-            className={`onglet ${onglet === o.cle ? 'onglet--actif' : ''}`}
-            onClick={() => changerOnglet(o.cle)}
-            title={
-              o.cle === 'securite' && compteExterne
-                ? 'Géré par votre fournisseur de connexion'
-                : undefined
-            }
-          >
-            {o.libelle}
-          </button>
-        ))}
-      </div>
+      {/* SUR MOBILE, LES CINQ ONGLETS SE REPLIENT EN MENU — voir Onglets.js.
+          L'ancien balisage les mettait tous en rangée sans jamais prévoir le
+          repli : sur un petit écran, « Mot de passe » se coupait en deux
+          lignes et « Mon avis » sortait du cadre. Le composant partagé gère
+          déjà ce cas, avec la même bascule que l'administration. */}
+      <Onglets
+        items={ongletsAffiches}
+        actif={onglet}
+        onChoisir={changerOnglet}
+        etiquette="Section du compte"
+      />
 
       {error && <div className="alert">{error}</div>}
       {succes && <div className="alert alert--succes">{succes}</div>}
@@ -647,7 +804,7 @@ export default function MonProfil() {
           <h2>Votre avis sur Mimia</h2>
           <p className="bloc-profil__intro">
             Il apparaîtra sur la page d’accueil, signé de votre prénom et de
-            l’initiale de votre nom, après relecture.
+            votre rôle (Parent ou Étudiant), après relecture.
           </p>
           <MonAvis />
         </div>
@@ -681,6 +838,7 @@ export default function MonProfil() {
                     key={eleve.id}
                     eleve={eleve}
                     niveaux={niveaux}
+                    academies={academies}
                     saving={submitting}
                     onEnregistrer={(donnees) => dispatch(submitEleve(donnees))}
                     onVoirFiche={voirFiche}
@@ -763,6 +921,8 @@ export default function MonProfil() {
           )}
         </div>
       )}
+
+      {onglet === 'parametres' && <Parametres />}
     </section>
     </>
   );

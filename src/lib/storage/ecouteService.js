@@ -60,13 +60,16 @@ export const ecouteService = {
    * @param onFinal    transcription stabilisée
    * @param onFin      appelé une seule fois, avec le texte complet (peut être vide)
    * @param onErreur   message prêt à afficher
+   * @param langue     code BCP-47 — voir `langueTranscription.js`. Le français
+   *                   par défaut convient à tout sauf aux cours de langue,
+   *                   où le forcer abîme la réponse qu'on évalue.
    * @returns un objet avec .arreter()
    */
-  ecouter({ onPartiel, onFinal, onFin, onErreur } = {}) {
+  ecouter({ onPartiel, onFinal, onFin, onErreur, langue = 'fr-FR' } = {}) {
     if (!Reconnaissance) return { arreter: () => {} };
 
     const reconnaissance = new Reconnaissance();
-    reconnaissance.lang = 'fr-FR';
+    reconnaissance.lang = langue;
 
     // Continu : sans ça, Chrome coupe à la première hésitation, et un enfant
     // qui cherche ses mots se ferait interrompre en plein milieu. C'est le

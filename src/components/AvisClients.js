@@ -68,38 +68,23 @@ export default function AvisClients() {
         <h2>Les parents qui nous font confiance</h2>
       </header>
 
+      {/* LA NOTE SEULE, SANS LA RÉPARTITION — Camara, le 14/09/2026. Le
+          visiteur retient la note, le nombre d'avis et ce que disent les
+          parents : les cinq barres faisaient de la section un tableau de bord.
+          Elles vivent sur la page « tous les avis » (`RepartitionAvis.js`),
+          où va le lecteur méfiant qui veut le détail. */}
       {total > 0 && (
         <div className="avis__resume">
-          <div className="avis__note">
-            <span className="avis__moyenne">
-              {(publics.moyenne ?? 0).toFixed(1).replace('.', ',')}
-            </span>
+          <span className="avis__moyenne">
+            {(publics.moyenne ?? 0).toFixed(1).replace('.', ',')}
+            <span className="avis__sur">/5</span>
+          </span>
+          <span className="avis__resume-detail">
             <Etoiles note={publics.moyenne} taille="grande" />
             <span className="avis__total">
-              {total} avis vérifié{total > 1 ? 's' : ''}
+              Basé sur {total} avis vérifié{total > 1 ? 's' : ''}
             </span>
-          </div>
-
-          {/* LA RÉPARTITION, DE 5 À 1 ÉTOILE. Une moyenne seule cache la
-              différence entre « tout le monde met 4 » et « la moitié met 5,
-              l'autre met 3 » — et c'est précisément ce qu'un lecteur méfiant
-              cherche à savoir. */}
-          <ul className="avis__barres">
-            {[5, 4, 3, 2, 1].map((rang) => {
-              const nombre = publics.repartition?.[rang - 1] ?? 0;
-              const part = total === 0 ? 0 : Math.round((nombre / total) * 100);
-
-              return (
-                <li key={rang}>
-                  <span className="avis__barre-libelle">{rang} étoile{rang > 1 ? 's' : ''}</span>
-                  <span className="avis__barre">
-                    <span className="avis__barre-remplie" style={{ width: `${part}%` }} />
-                  </span>
-                  <span className="avis__barre-part">{part} %</span>
-                </li>
-              );
-            })}
-          </ul>
+          </span>
         </div>
       )}
 

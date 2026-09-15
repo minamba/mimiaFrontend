@@ -1,5 +1,5 @@
 import { all, call, put, takeLatest } from 'redux-saga/effects';
-import { getNiveaux, getMatieres } from '../api/referentielApi';
+import { getNiveaux, getMatieres, getAcademies } from '../api/referentielApi';
 import {
   REFERENTIEL_LOAD_REQUEST,
   REFERENTIEL_LOAD_SUCCESS,
@@ -8,12 +8,14 @@ import {
 
 function* chargerReferentielSaga() {
   try {
-    // Les deux appels sont indépendants : autant les lancer en parallèle.
-    const [niveaux, matieres] = yield all([call(getNiveaux), call(getMatieres)]);
+    // Les trois appels sont indépendants : autant les lancer en parallèle.
+    const [niveaux, matieres, academies] = yield all([
+      call(getNiveaux), call(getMatieres), call(getAcademies),
+    ]);
 
     yield put({
       type: REFERENTIEL_LOAD_SUCCESS,
-      payload: { niveaux: niveaux.data, matieres: matieres.data },
+      payload: { niveaux: niveaux.data, matieres: matieres.data, academies: academies.data },
     });
   } catch (error) {
     yield put({
