@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { retirerMarqueurImage } from '../storage/marqueursImages';
 
 /**
  * L'état et les gestes d'écriture partagés par tout écran qui compose un
@@ -11,6 +12,13 @@ import { useRef, useState } from 'react';
  * moitié des messageries. Ici, `**gras**` et les marqueurs d'image restent du
  * texte, lisible et modifiable à la main — seuls deux raccourcis évitent de
  * taper les astérisques ou le marqueur soi-même.
+ *
+ * DEUX SORTES DE PIÈCES DANS LES MÊMES LISTES (15/09/2026, templates)
+ * -------------------------------------------------------------------
+ * Un `File` choisi dans l'explorateur, ou une pièce déjà enregistrée dans un
+ * template : `{ id, name, size, type }`. Les deux s'affichent de la même
+ * façon ; seul l'envoi les distingue — un fichier se téléverse, une pièce
+ * enregistrée est relue par le serveur.
  */
 export function useCompositionMessage() {
   const [texte, setTexte] = useState('');
@@ -77,11 +85,41 @@ export function useCompositionMessage() {
   const insererEmoji = (emoji) => remplacerSelection(emoji);
   const insererGras = () => envelopperSelection('**', '**');
 
+  /** Insère un texte quelconque au curseur — une variable `{{prenom}}`, par exemple. */
+  const insererTexte = (valeur) => remplacerSelection(valeur);
+
+  /** Remplit tout d'un coup : l'ouverture d'un template. */
+  const charger = ({ texte: t = '', images: i = [], documents: d = [] } = {}) => {
+    setTexte(t ?? '');
+    setImages(i ?? []);
+    setDocuments(d ?? []);
+  };
+
+  const vider = () => charger();
+
+  /**
+   * RETIRER UNE IMAGE RENUMÉROTE LES MARQUEURS DU TEXTE.
+   *
+   * Le marqueur n'est que le rang dans la liste. Retirer la première de trois
+   * images laissait `[image:3]` dans le texte pour une liste qui n'en compte
+   * plus que deux : la dernière disparaissait du courriel et la deuxième
+   * prenait la place de la première. Même règle que le serveur.
+   */
+  const retirerImage = (index) => {
+    setImages((liste) => liste.filter((_, n) => n !== index));
+    setTexte((t) => retirerMarqueurImage(t, index + 1));
+  };
+
+  const retirerDocument = (index) => {
+    setDocuments((liste) => liste.filter((_, n) => n !== index));
+  };
+
   return {
     texte, setTexte,
     images, setImages,
     documents, setDocuments,
     zoneTexte,
-    insererMarqueur, insererEmoji, insererGras,
+    insererMarqueur, insererEmoji, insererGras, insererTexte,
+    charger, vider, retirerImage, retirerDocument,
   };
 }

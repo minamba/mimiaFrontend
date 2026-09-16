@@ -27,7 +27,10 @@ function Case({ valeur, colonne, quoi }) {
   const dit = { oui: 'oui', non: 'non', partiel: 'en partie' }[etat];
 
   return (
-    <td className={`comparatif__case comparatif__case--${etat}`}>
+    <td
+      className={`comparatif__case comparatif__case--${etat}${colonne === 'Mimia' ? ' comparatif__case--nous' : ''}`}
+      data-colonne={colonne}
+    >
       <span aria-hidden="true">{etat === 'oui' ? '✓' : etat === 'non' ? '—' : '~'}</span>
       <span className="visuellement-cache">{`${colonne} : ${dit} — ${quoi}`}</span>
     </td>
@@ -72,9 +75,9 @@ export default function Comparatif() {
 
             <tr className="comparatif__prix">
               <th scope="row">Ce que ça coûte</th>
-              <td>30 à 50 € l’heure</td>
-              <td>gratuit, ou 20 €/mois</td>
-              <td className="comparatif__nous">
+              <td data-colonne="Prof particulier">30 à 50 € l’heure</td>
+              <td data-colonne="ChatGPT">gratuit, ou 20 €/mois</td>
+              <td className="comparatif__nous" data-colonne="Mimia">
                 39,90 €/mois
                 <small>9 h de cours, soit 4,43 € l’heure</small>
               </td>

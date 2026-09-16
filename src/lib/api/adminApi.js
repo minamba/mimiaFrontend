@@ -194,6 +194,12 @@ export const modifierParent = (id, data) => httpClient.put(`/admin/parents/${id}
 export const definirAdministrateur = (id, actif) =>
   httpClient.put(`/admin/parents/${id}/administrateur`, { actif });
 
+/**
+ * La fiche d'un parent dont l'identité vient d'être créée — voir
+ * `creerIdentite` dans profilApi.js, qui rend l'`identityUserId` attendu ici.
+ */
+export const creerParent = (data) => httpClient.post('/admin/parents', data);
+
 export const modifierEleve = (id, data) => httpClient.put(`/admin/eleves/${id}`, data);
 
 /**
@@ -429,11 +435,17 @@ function corpsDiffusion({ sujet, titre, texte, images, documents }) {
   // L'ORDRE FAIT LA RÉFÉRENCE. `[image:1]` dans le texte désigne la première
   // image de cette liste : c'est le contrat avec le serveur, et il tient
   // uniquement à l'ordre d'ajout.
-  (images ?? []).forEach((f) => corps.append('images', f, f.name));
-  (documents ?? []).forEach((f) => corps.append('documents', f, f.name));
+  //
+  // SEULS LES VRAIS FICHIERS PARTENT. Une pièce déjà enregistrée dans un
+  // template (`{ id, name, size }`) n'a pas d'octets ici : c'est le serveur
+  // qui la relit.
+  (images ?? []).filter(estFichier).forEach((f) => corps.append('images', f, f.name));
+  (documents ?? []).filter(estFichier).forEach((f) => corps.append('documents', f, f.name));
 
   return corps;
 }
+
+const estFichier = (f) => typeof File !== 'undefined' && f instanceof File;
 
 /** Le message rendu en HTML, sans destinataire. */
 export const apercuDiffusion = (composition) =>
@@ -458,6 +470,68 @@ export const envoyerMailParent = (composition) => {
   corps.append('destinataire', composition.destinataire ?? '');
   return httpClient.post('/admin/mails/parent', corps);
 };
+
+// ------------------------------------------------- templates de courriel
+
+/** Les templates d'une nature (« Diffusion » ou « Automatique »), sans texte. */
+export const getModelesMail = (nature) =>
+  httpClient.get('/admin/modeles-mail', { params: { nature } });
+
+/** Un template complet : texte et pièces (sans leurs octets). */
+export const getModeleMail = (id) => httpClient.get(`/admin/modeles-mail/${id}`);
+
+/**
+ * Enregistre un message composé à la main comme nouveau template, fichiers
+ * compris — même corps multipart que la diffusion.
+ */
+export const creerModeleMail = (composition) => {
+  const corps = corpsDiffusion(composition);
+
+  // « Diffusion » par défaut ; « Automatique » pour un courriel automatique
+  // créé depuis l'écran, qui naît sans règle d'envoi.
+  corps.append('nature', composition.nature ?? 'Diffusion');
+  if (composition.nom) corps.append('nom', composition.nom);
+  if (composition.description) corps.append('description', composition.description);
+
+  return httpClient.post('/admin/modeles-mail', corps);
+};
+
+/** La sauvegarde automatique : objet, titre, message (et nom, description). */
+export const modifierModeleMail = (id, champs) =>
+  httpClient.put(`/admin/modeles-mail/${id}`, champs);
+
+/** Ajoute UNE pièce à un template : `genre` vaut « Image » ou « Document ». */
+export const ajouterPieceModele = (id, genre, fichier) => {
+  const corps = new FormData();
+  corps.append('genre', genre);
+  corps.append('fichier', fichier, fichier.name);
+  return httpClient.post(`/admin/modeles-mail/${id}/pieces`, corps);
+};
+
+/** Retire une pièce. Rend le template, texte renuméroté compris. */
+export const retirerPieceModele = (id, pieceId) =>
+  httpClient.delete(`/admin/modeles-mail/${id}/pieces/${pieceId}`);
+
+export const supprimerModeleMail = (id) => httpClient.delete(`/admin/modeles-mail/${id}`);
+
+/** Le template rendu en HTML, tel qu'il est enregistré. */
+export const apercuModeleMail = (id) =>
+  httpClient.post(`/admin/modeles-mail/${id}/apercu`, null, { responseType: 'text' });
+
+/** Lance la diffusion d'un template à TOUS les parents. */
+export const diffuserModeleMail = (id) => httpClient.post(`/admin/modeles-mail/${id}/diffusion`);
+
+/** Envoie un template à UN parent. */
+export const envoyerModeleParent = (id, destinataire) =>
+  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire });
+
+/**
+ * Programme un courriel automatique :
+ * `{ actif, frequence: 'Jour'|'Semaine'|'Mois', heure: 'HH:mm', jourSemaine, jourMois }`.
+ * Rend le template à jour, prochain envoi compris.
+ */
+export const planifierModeleMail = (id, regle) =>
+  httpClient.put(`/admin/modeles-mail/${id}/planification`, regle);
 
 // ------------------------------------------------ messagerie du support
 

@@ -117,7 +117,11 @@ export default function BoutonSignalement() {
                 </div>
               </div>
             ) : (
-              <form onSubmit={soumettre}>
+              // EN TROIS PARTIES : en-tête figé, corps qui défile, boutons
+              // figés — relevé par Camara le 15/09/2026, sur téléphone comme
+              // sur un écran d'ordinateur peu haut, les boutons sortaient de
+              // la fenêtre et on ne pouvait plus envoyer.
+              <form onSubmit={soumettre} className="signalement-modale__formulaire">
                 {/* L'EN-TÊTE, MIS EN VALEUR SANS CHANGER UN MOT — Camara, le
                     14/09/2026. Le médaillon reprend le drapeau du bouton
                     « Signaler » qui a ouvert la fenêtre : on sait d'où l'on
@@ -137,6 +141,7 @@ export default function BoutonSignalement() {
                   </div>
                 </header>
 
+                <div className="modale__corps">
                 {erreur && <div className="alert">{erreur}</div>}
 
                 <span className="champ__intitule">Catégorie</span>
@@ -172,6 +177,7 @@ export default function BoutonSignalement() {
                   <span className="champ__aide signalement-modale__compteur">
                     {description.length}/{LONGUEUR_MAX}
                   </span>
+                </div>
                 </div>
 
                 <div className="modale__actions">

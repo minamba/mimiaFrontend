@@ -64,11 +64,23 @@ const MATIERES = {
   SANITAIRE_SOCIAL: { clair: '#B91C1C', sombre: '#F59E9E' },
 
   // LES SPÉCIALITÉS DE LA VOIE GÉNÉRALE : même règle, la couleur suit le
-  // professeur — Salim en HGGSP, Camille en HLP, Karim en SES, Nora en NSI.
+  // professeur — Salim en HGGSP, Camille en HLP, Karim en SES.
   HGGSP: { clair: '#99277F', sombre: '#DC90D8' },
   HLP: { clair: '#5A4A8C', sombre: '#B7A8E8' },
   SES: { clair: '#166534', sombre: '#6FCF8B' },
-  NSI: { clair: '#0E7C7B', sombre: '#35B3AB' },
+  // LA NSI A SON PROFESSEUR, Minamba (15/09/2026) — elle portait le sarcelle de
+  // Nora. ORANGE, VOULU PAR CAMARA, comme la veste de son portrait (#D56420).
+  //
+  // LE PRIX, MESURÉ ET ASSUMÉ : un orange lisible (4,5:1 sur le papier) est
+  // forcément foncé, et tombe alors sur le brun orangé d'Adrien. La teinte
+  // retenue tire vers l'ambre, avec la chroma la plus forte qui tient le seuil :
+  //   — clair  #AA5F04 : ΔE 3,8 avec le français, 7,3 avec Théo. EN DESSOUS de
+  //     la pire paire tolérée ailleurs (maths ↔ anglais, 11,5) : sur fond
+  //     clair, NSI et français se distinguent par leur nom, pas leur couleur.
+  //   — sombre #FA8D00 : l'orange vif de la veste, ΔE 5,8 avec le français,
+  //     10,9 avec Théo.
+  // Un violet bleuté (#8158DA, ΔE 13 au plus proche) avait été retenu avant.
+  NSI: { clair: '#AA5F04', sombre: '#FA8D00' },
   LLCER_ANGLAIS: { clair: '#1D6FB8', sombre: '#7AB8F0' },
   AMC: { clair: '#1D6FB8', sombre: '#7AB8F0' },
   LLCER_ESPAGNOL: { clair: '#BE123C', sombre: '#FB7185' },

@@ -86,7 +86,7 @@ function* ouvrirConversationSaga(action) {
  */
 function creerCanalStream(
   conversationId, contenu, annonce, secondesRestantes, pieceJointeId, dureeChoisieMinutes,
-  controleId, mode, epreuveCode,
+  controleId, mode, epreuveCode, vitesseEcoute,
 ) {
   return eventChannel((emit) => {
     const controller = new AbortController();
@@ -125,7 +125,7 @@ function creerCanalStream(
     // portent déjà l'échéance dans leur type, et l'accueil ouvre la séance.
     else {
       flux = envoyerMessageStream(
-        conversationId, contenu, { ...options, secondesRestantes, pieceJointeId },
+        conversationId, contenu, { ...options, secondesRestantes, pieceJointeId, vitesseEcoute },
       );
     }
 
@@ -159,13 +159,13 @@ function* envoyerMessageSaga(action) {
   const {
     conversationId, contenu = null, annonce = null,
     secondesRestantes = null, pieceJointeId = null, dureeChoisieMinutes = null,
-    controleId = null, mode = null, epreuveCode = null,
+    controleId = null, mode = null, epreuveCode = null, vitesseEcoute = null,
   } = action.payload;
 
   const canal = yield call(
     creerCanalStream,
     conversationId, contenu, annonce, secondesRestantes, pieceJointeId, dureeChoisieMinutes,
-    controleId, mode, epreuveCode,
+    controleId, mode, epreuveCode, vitesseEcoute,
   );
 
   try {

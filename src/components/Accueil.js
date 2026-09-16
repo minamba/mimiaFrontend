@@ -11,6 +11,8 @@ import Avatar from './Avatar';
 import FondCraie from './FondCraie';
 import MotifMatiere from './MotifMatiere';
 import AvisClients from './AvisClients';
+import FicheProfesseur from './FicheProfesseur';
+import Faq from './Faq';
 import ApercuParent from './ApercuParent';
 import Comparatif from './Comparatif';
 import ExercicesLangue from './ExercicesLangue';
@@ -315,6 +317,10 @@ export default function Accueil() {
    */
   const [equipe, setEquipe] = useState([]);
 
+  // Le professeur dont la fiche est ouverte, ou null. Une seule fiche à la
+  // fois, comme le code d'un enfant sur « Vos enfants ».
+  const [profOuvert, setProfOuvert] = useState(null);
+
   // « PROGRAMMES OFFICIELS 2026-2027 », À CÔTÉ DU TITRE — voulu par Camara le
   // 13/09/2026, et JAMAIS écrit en dur : le serveur le calcule avec le
   // référentiel, et le 1er août il passera à l'année suivante tout seul. Le
@@ -326,7 +332,18 @@ export default function Accueil() {
     let vivant = true;
 
     getEquipe()
-      .then(({ data }) => { if (vivant) setEquipe(data ?? []); })
+      .then(({ data }) => {
+        if (!vivant) return;
+        // MINAMBA FERME LA GRILLE — Camara, le 16/09/2026 : « change la position
+        // de Minamba avec Jeanne ». L'ordre du serveur (celui des matières)
+        // plaçait la NSI avant l'EPPCS et les arts ; seul l'affichage de
+        // l'équipe change, pas l'ordre de la grille des matières. Le tri est
+        // stable : les autres gardent leur place.
+        const ordre = [...(data ?? [])].sort(
+          (a, b) => Number(a.avatar === 'minamba') - Number(b.avatar === 'minamba'),
+        );
+        setEquipe(ordre);
+      })
       .catch(() => { /* section masquée, rien à dire au visiteur */ });
 
     getAnneeScolaire()
@@ -548,18 +565,34 @@ export default function Accueil() {
               promesse sonnerait faux dès la première connexion. */}
           <ul className="equipe__grille">
             {equipe.map((prof) => (
-              <li key={prof.avatar} className="prof" style={{ '--teinte': prof.couleur }}>
-                <MotifMatiere code={prof.code} />
-                <Avatar nom={prof.avatar} taille={96} couleur={prof.couleur} />
-                <strong>{prof.prenom}</strong>
+              <li key={prof.avatar}>
+                {/* LA CARTE OUVRE SA FICHE — Camara, le 15/09/2026. Un bouton et
+                    non un lien : elle ouvre une fenêtre, elle ne mène nulle
+                    part. La carte ne dit plus que la matière ; le détail des
+                    disciplines est dans la fiche. */}
+                <button
+                  type="button"
+                  className="prof"
+                  style={{ '--teinte': prof.couleur }}
+                  aria-haspopup="dialog"
+                  onClick={() => setProfOuvert(prof)}
+                >
+                  <MotifMatiere code={prof.code} />
+                  <Avatar nom={prof.avatar} taille={96} couleur={prof.couleur} />
+                  <strong>{prof.prenom}</strong>
 
-                {/* Le séparateur se décide ICI et pas au serveur : « Sciences et
-                    technologie et Physique-Chimie » serait illisible, et c'est
-                    une question de mise en forme, pas de données. */}
-                <span>{prof.matieres?.join(' · ')}</span>
+                  {/* Le titre choisi pour la carte ; la liste d'avant en repli,
+                      tant qu'un serveur plus ancien ne le fournit pas. */}
+                  <span>{prof.titre || prof.matieres?.join(' · ')}</span>
+                  <span className="prof__voir">Voir sa fiche <span aria-hidden="true">→</span></span>
+                </button>
               </li>
             ))}
           </ul>
+
+          {profOuvert && (
+            <FicheProfesseur prof={profOuvert} onFermer={() => setProfOuvert(null)} />
+          )}
         </section>
         )}
 
@@ -709,6 +742,12 @@ export default function Accueil() {
             Au milieu de la page, ils seraient lus avant que la question ne se
             pose. */}
         <AvisClients />
+
+        {/* LES QUESTIONS FRÉQUENTES, APRÈS LES AVIS ET AVANT L'APPEL FINAL —
+            Camara, le 15/09/2026. Les avis rassurent sur le résultat ; les
+            questions lèvent les dernières objections pratiques (triche,
+            données, engagement) juste avant le bouton qui décide. */}
+        <Faq />
 
         {/* ------------------------------------------------------------ final */}
         <section className="final">

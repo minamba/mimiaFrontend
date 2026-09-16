@@ -1,5 +1,14 @@
 import { ouvreUneNouvelleDictee } from './comparaisonDictee';
 
+// LES QUATRE DESSINS, À LA PLACE DES EMOJIS — Camara, le 16/09/2026. L'escargot
+// et l'éclair ne se dessinent pas pareil d'un appareil à l'autre, et un emoji
+// de 15 px ne dit pas grand-chose à un enfant. Ici, le même personnage va de
+// plus en plus vite : l'image porte la vitesse mieux que le mot.
+import imageTresLent from '../../assets/tres_lent.png';
+import imageLent from '../../assets/lent.png';
+import imageNormal from '../../assets/normal.png';
+import imageRapide from '../../assets/rapide.png';
+
 /**
  * À QUELLE VITESSE LE PROFESSEUR LIT UN PASSAGE D'ÉCOUTE.
  *
@@ -18,14 +27,31 @@ import { ouvreUneNouvelleDictee } from './comparaisonDictee';
  * n'aide personne et allonge la séance.
  */
 
+// PLUS DE PHRASE SOUS LE NOM — Camara, le 16/09/2026, en séance puis sur la
+// page d'accueil. « mot à mot », « comme en classe » : le dessin les dit, et
+// quatre phrases sous quatre dessins allongeaient la carte pour rien. Le champ
+// `aide` a été retiré avec elles, plutôt que laissé sans emploi.
 export const VITESSES = [
-  { cle: 'tres_lent', libelle: 'Très lent', aide: 'mot à mot', icone: '🐢' },
-  { cle: 'lent', libelle: 'Lent', aide: 'pour bien tout entendre', icone: '🚶' },
-  { cle: 'normal', libelle: 'Normal', aide: 'comme en classe', icone: '💬' },
-  { cle: 'rapide', libelle: 'Rapide', aide: 'comme un vrai locuteur', icone: '⚡' },
+  { cle: 'tres_lent', libelle: 'Très lent', image: imageTresLent },
+  { cle: 'lent', libelle: 'Lent', image: imageLent },
+  { cle: 'normal', libelle: 'Normal', image: imageNormal },
+  { cle: 'rapide', libelle: 'Rapide', image: imageRapide },
 ];
 
 export const VITESSE_PAR_DEFAUT = 'normal';
+
+/**
+ * Cette clé désigne-t-elle une des quatre vitesses ?
+ *
+ * Le professeur pose lui-même la vitesse quand l'élève demande « plus lent »
+ * ou « plus vite » (voir `[VITESSE:cible]` dans `ardoise.js`). Un modèle de
+ * langue écrit parfois autre chose que ce qu'on lui a dit — « plus_lent »,
+ * « slow », un intitulé traduit. Une clé inconnue est ignorée : l'exercice
+ * continue au débit en cours plutôt que de partir sur une valeur inventée.
+ */
+export function estVitesseConnue(cle) {
+  return VITESSES.some((v) => v.cle === cle);
+}
 
 /**
  * Le facteur de la voix DE REPLI — celle du navigateur, quand le serveur est

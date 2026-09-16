@@ -549,9 +549,14 @@ export const ecouteTempsReel = {
    *                       un silence qui ne s'explique jamais.
    */
   ecouter({
-    conversationId, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
+    conversationId, chemin, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
     onFermeture, onOuverture, onOreilleMorte,
   }) {
+    // LE MÊME MICRO HORS D'UNE SÉANCE — `chemin` remplace l'identifiant de
+    // conversation dans l'adresse (« dictee/12 » pour la dictée d'un contrôle,
+    // voir `ControleForm`). Tout le reste — capture, mémoire tampon, rappels —
+    // est celui des cours, à l'identique.
+    const cible = chemin ?? conversationId;
     let socket = null;
     let contexte = null;
     let flux = null;
@@ -1064,7 +1069,7 @@ export const ecouteTempsReel = {
         // d'agir, sans quoi une vieille fermeture programmerait un rappel
         // par-dessus une liaison qui marche.
         const liaison = new WebSocket(
-          `${base}/api/ecoute/${conversationId}?access_token=${encodeURIComponent(entete)}`,
+          `${base}/api/ecoute/${cible}?access_token=${encodeURIComponent(entete)}`,
         );
         liaison.binaryType = 'arraybuffer';
         socket = liaison;

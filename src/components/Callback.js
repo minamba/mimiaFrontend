@@ -54,6 +54,18 @@ export default function Callback() {
       // Le visiteur s'est connecté depuis la page de tarifs, pour prendre une
       // formule précise. L'envoyer au tableau de bord lui ferait tout
       // recommencer : on le ramène là où il s'était arrêté.
+      // UNE DESTINATION RETENUE AVANT LA CONNEXION — « Donner mon avis »,
+      // depuis un courriel (voir `DonnerAvis`). Lue une fois puis oubliée, et
+      // seulement si c'est une page du site : jamais une adresse extérieure
+      // glissée dans le stockage de l'onglet.
+      const retour = sessionStorage.getItem('mimia-retour-apres-connexion');
+      sessionStorage.removeItem('mimia-retour-apres-connexion');
+
+      if (retour && retour.startsWith('/') && !retour.startsWith('//')) {
+        navigate(retour, { replace: true });
+        return;
+      }
+
       const formuleVisee = sessionStorage.getItem('mimia-formule-visee');
       navigate(formuleVisee ? '/tarifs' : '/eleves', { replace: true });
     })();

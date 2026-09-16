@@ -6,8 +6,8 @@ import { getCapaciteEnfants } from '../lib/api/abonnementApi';
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import Loader from './Loader';
 import QuotaEnfants from './QuotaEnfants';
-import BoutonTheme from './BoutonTheme';
 import CodeEnfant from './CodeEnfant';
+import BoutonAvis from './BoutonAvis';
 
 /**
  * Ancienneté en clair. « 2026-07-26T20:18 » ne dit rien à un parent ;
@@ -109,12 +109,14 @@ export default function ListeEleves() {
             il n'y a plus à le repérer, il saute aux yeux. Et sans icône, il
             n'y a rien d'autre à lire que son texte. */}
         <div className="page__entete-actions">
-          {/* MÊME RÉGLAGE QUE « MES PARAMÈTRES » ET « MES MATIÈRES »
-              (voir `GrilleMatieres.js`) — proposer ce raccourci ici n'en crée
-              pas un second, ça donne juste un chemin de plus vers le même
-              bouton, sur la première page qu'un parent ouvre après
-              connexion. */}
-          <BoutonTheme />
+          {/* Le bouton de thème est dans la barre du haut depuis le
+              15/09/2026 (voir Navbar.js). */}
+
+          {/* LE MÊME BOUTON D'AVIS QUE SUR LA PAGE DES MATIÈRES — Camara, le
+              15/09/2026. C'est la première page qu'un parent voit après
+              connexion : il doit pouvoir laisser son avis sans passer par la
+              page d'un enfant. */}
+          <BoutonAvis />
           <Link to="/profil" className="btn page__bouton-compte">
             Mon compte
           </Link>

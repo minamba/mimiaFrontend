@@ -43,9 +43,47 @@ const DUREE_MAX_MS = 20000;
  */
 const SEUIL_SILENCE = 4;
 
+/**
+ * L'IPHONE, ET POURQUOI « MICRO AUTORISÉ » NE SUFFIT PAS — relevé par Camara
+ * le 15/09/2026 : le micro était autorisé et la page affichait pourtant
+ * « bloqué par le système », même après rechargement.
+ *
+ * Sur iPhone et iPad, la reconnaissance vocale du navigateur est celle
+ * d'Apple (Siri et Dictée). Deux conditions, qu'aucune autorisation de site
+ * ne remplace :
+ *   1. SAFARI SEULEMENT. Chrome, Firefox, Edge sur iPhone exposent l'objet
+ *      mais le service leur est refusé : l'erreur `service-not-allowed`
+ *      tombe à chaque essai, quelle que soit l'autorisation du micro.
+ *   2. SIRI ET DICTÉE ACTIVÉS dans les réglages de l'appareil.
+ *
+ * Et une troisième, propre au code : sur iPhone, ouvrir le micro une seconde
+ * fois en parallèle (la sonde de niveau plus bas) fait échouer la
+ * reconnaissance. La sonde n'y est donc pas lancée.
+ */
+const SUR_IOS = typeof navigator !== 'undefined' && (
+  /iPad|iPhone|iPod/.test(navigator.userAgent)
+  // iPadOS se déclare « Macintosh » : c'est l'écran tactile qui le trahit.
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+);
+
+/** Chrome (CriOS), Firefox (FxiOS), Edge (EdgiOS)… sur iPhone : pas Safari. */
+const NAVIGATEUR_TIERS_IOS = SUR_IOS
+  && /CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(navigator.userAgent);
+
+const MESSAGE_IOS_TIERS =
+  "Sur iPhone, la dictée ne marche que dans Safari. Ouvre mimia.fr dans Safari, "
+  + "ou remplis les champs à la main.";
+
+const MESSAGE_IOS_SIRI =
+  "La dictée est coupée sur ce téléphone. Active « Siri » et « Dictée » dans "
+  + "Réglages, puis réessaie — ou remplis les champs à la main.";
+
 const MESSAGES = {
   'not-allowed': "Le micro est bloqué. Autorise-le dans les réglages du navigateur.",
-  'service-not-allowed': "Le micro est bloqué par le système.",
+  // Le message dit quoi FAIRE, et ce qu'il faut faire dépend de l'appareil.
+  'service-not-allowed': SUR_IOS
+    ? (NAVIGATEUR_TIERS_IOS ? MESSAGE_IOS_TIERS : MESSAGE_IOS_SIRI)
+    : "La dictée est bloquée par le système. Tu peux remplir les champs à la main.",
   'audio-capture': "Aucun micro détecté. Vérifie qu'il est bien branché.",
   network: "La reconnaissance vocale n'a pas pu joindre le service. Vérifie ta connexion.",
 };
@@ -67,6 +105,14 @@ export const ecouteService = {
    */
   ecouter({ onPartiel, onFinal, onFin, onErreur, langue = 'fr-FR' } = {}) {
     if (!Reconnaissance) return { arreter: () => {} };
+
+    // Chrome & co. sur iPhone : le service sera refusé à coup sûr. On le dit
+    // tout de suite, plutôt que de faire demander le micro pour rien.
+    if (NAVIGATEUR_TIERS_IOS) {
+      onErreur?.(MESSAGE_IOS_TIERS);
+      onFin?.('', { niveauMax: 0, peripherique: null, muet: false });
+      return { arreter: () => {} };
+    }
 
     const reconnaissance = new Reconnaissance();
     reconnaissance.lang = langue;
@@ -91,6 +137,11 @@ export const ecouteService = {
     let fermerSonde = null;
 
     (async () => {
+      // PAS SUR IPHONE : un second accès au micro pendant la reconnaissance la
+      // fait échouer (voir SUR_IOS). On y perd le diagnostic « micro muet »,
+      // pas la dictée.
+      if (SUR_IOS) return;
+
       try {
         const flux = await navigator.mediaDevices.getUserMedia({ audio: true });
         if (termine) {

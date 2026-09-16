@@ -29,6 +29,8 @@ import {
   Confidentialite,
   ConditionsVente,
   TousLesAvis,
+  Desabonnement,
+  DonnerAvis,
   Footer,
   RouteProtegee,
   VerrouEleve,
@@ -111,6 +113,13 @@ export const BaseApp = () => {
               prolongement : un visiteur qui hésite est exactement celui
               qui vient lire les avis. */}
           <Route path="/avis" element={<TousLesAvis />} />
+
+          {/* PUBLIQUES, ET IL LE FAUT : ce sont les pages des liens de
+              courriel. Un lien ouvert depuis une messagerie arrive dans un
+              onglet neuf, donc déconnecté. `DonnerAvis` fait se connecter puis
+              mène au formulaire ; le désabonnement n'a besoin que du jeton. */}
+          <Route path="/desabonnement" element={<Desabonnement />} />
+          <Route path="/donner-mon-avis" element={<DonnerAvis />} />
 
           {/* Publique, comme la connexion d'un parent : c'est la porte des enfants. */}
           <Route path="/code" element={<EntreeEleve />} />

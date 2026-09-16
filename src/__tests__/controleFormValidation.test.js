@@ -119,7 +119,12 @@ test('l’heure saisie part avec ses secondes, comme le serveur les attend', asy
 
   await userEvent.selectOptions(screen.getByLabelText('Matière'), '1');
   await userEvent.type(screen.getByLabelText(/Date du contrôle/), '2026-09-20');
-  await userEvent.type(screen.getByLabelText(/Heure/), '14:30');
+
+  // L'heure se choisit sur une horloge depuis le 16/09/2026 (voir
+  // `ChoixHeure`) : l'heure sur le cadran, puis les minutes. La valeur
+  // reste « HH:mm ».
+  await userEvent.click(screen.getByRole('button', { name: '14 h' }));
+  await userEvent.click(screen.getByRole('button', { name: '30 min' }));
 
   await userEvent.click(screen.getByRole('button', { name: /Ajouter le contrôle/ }));
 

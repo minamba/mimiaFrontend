@@ -27,7 +27,9 @@ import Loader from './Loader';
  * la formulation de l'un, on oublie l'autre, et l'écran finit par se
  * contredire lui-même.
  */
-function Interrupteur({ titre, actif, connu, occupe, onBasculer, description, effets, note }) {
+// Exporté : la programmation des courriels automatiques s'en sert aussi, et
+// une copie divergerait de celui-ci au premier changement.
+export function Interrupteur({ titre, actif, connu, occupe, onBasculer, description, effets, note }) {
   return (
     <div className="mode">
       <div className="mode__texte">
@@ -771,6 +773,7 @@ export default function Modes() {
     maintenance: false,
     voixDeSecours: false,
     blueSky: false,
+    modeDeveloppeur: false,
 
     // L'offre de lancement : trois valeurs qui n'ont de sens qu'ensemble.
     offreLancement: false,
@@ -820,6 +823,10 @@ export default function Modes() {
 
           // Éteint par défaut : le style d'origine reste la référence.
           blueSky: Boolean(data?.blueSky),
+
+          // Éteint par défaut, et il doit le rester hors essais : allumé, il
+          // vaut pour toutes les séances, celles des vrais élèves comprises.
+          modeDeveloppeur: Boolean(data?.modeDeveloppeur),
 
           offreLancement: Boolean(data?.offreLancement),
           offreLancementTexte: data?.offreLancementTexte ?? '',
@@ -992,6 +999,27 @@ export default function Modes() {
             'Vous le voyez tout de suite ; les autres visiteurs, au prochain chargement de page.',
           ]}
           note="RÉVERSIBLE À TOUT MOMENT. L’ancien style n’a pas été modifié : Blue Sky s’ajoute par-dessus. L’éteindre rend exactement le site d’avant, page de maintenance comprise."
+        />
+
+        {/* LE MODE DÉVELOPPEUR — voulu par Camara le 16/09/2026 pour ses
+            essais. Un interrupteur et NON une phrase tapée en séance : une
+            phrase se répète, et le premier élève qui l'apprend obtient les
+            réponses toutes faites. */}
+        <Interrupteur
+          titre="Mode développeur"
+          actif={reglages.modeDeveloppeur}
+          connu={lus}
+          occupe={envoi === 'MODE_DEVELOPPEUR'}
+          onBasculer={() => basculer('MODE_DEVELOPPEUR', 'modeDeveloppeur')}
+          description="Pour essayer le produit : le professeur exécute ce qu’on lui demande, sans discuter. Il relance un exercice autant de fois qu’on veut, même si le précédent n’a pas de réponse, et il donne les réponses si on les lui demande."
+          effets={[
+            'Une nouvelle dictée ou une nouvelle compréhension orale part immédiatement, sans qu’il réclame de finir la précédente.',
+            'Plus d’insistance, d’ultimatum ni de recadrage : aucune demande n’est discutée.',
+            'Il donne la réponse d’un exercice si on la lui demande — la règle qui l’interdit protège un élève qui apprend, pas un essai.',
+            'Les blocs techniques gardent leur forme exacte : c’est ce qu’on vient vérifier.',
+            'Le changement vaut pour le prochain message, y compris dans un cours déjà commencé.',
+          ]}
+          note="À ÉTEINDRE APRÈS VOS ESSAIS. Allumé, il vaut pour TOUTES les séances en cours, y compris celles de vrais élèves : ceux-là obtiendraient les réponses de leurs exercices. C’est un outil d’essai, pas un réglage de confort — et c’est pour cela qu’il vit ici, hors de portée d’un élève, plutôt que dans une phrase à taper en cours."
         />
 
         <Interrupteur

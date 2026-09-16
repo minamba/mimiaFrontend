@@ -18,6 +18,7 @@ import photoKarim from '../assets/profs/p_droit.png';
 import photoElodie from '../assets/profs/p_sanitaires_sociales.png';
 import photoTheo from '../assets/profs/p_sport.png';
 import photoJeanne from '../assets/profs/p_arts.png';
+import photoMinamba from '../assets/profs/p_nsi.png';
 
 /**
  * LES VISAGES ILLUSTRÉS — voulus par Camara le 14/09/2026, d'abord pour Nora
@@ -42,6 +43,10 @@ const PHOTOS = {
   elodie: photoElodie,
   theo: photoTheo,
   jeanne: photoJeanne,
+  // Fournie par Camara le 15/09/2026. Des trous transparents le long de la
+  // veste, dans la partie visible du disque, ont été bouchés avec la couleur
+  // de leurs voisins : on y aurait vu le fond de la page.
+  minamba: photoMinamba,
 };
 
 const PROFS = {
@@ -163,6 +168,18 @@ const PROFS = {
     cheveux: '#E3C16F',
     coupe: 'boucles',
     vetement: '#86198F',
+    lunettes: true,
+  },
+
+  // Numérique et sciences informatiques (15/09/2026), d'abord confiée à Nora.
+  // Son image (`p_nsi.png`) prime ; ce dessin n'est que le repli. Boucles
+  // courtes et carnation la plus foncée : deux écarts avec Salim, Karim, Inès
+  // et Jeanne.
+  minamba: {
+    peau: '#5E3A26',
+    cheveux: '#151111',
+    coupe: 'boucles',
+    vetement: '#AA5F04',
     lunettes: true,
   },
 };

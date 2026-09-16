@@ -7,6 +7,7 @@ import logoFondSombre from '../assets/logo-fond-sombre.png';
 import { useModeTest } from '../lib/storage/modeTest';
 import { fermerSessionEleve, sessionEleve } from '../lib/storage/sessionEleve';
 import { fermerSession } from '../lib/api/sessionEleveApi';
+import BoutonTheme from './BoutonTheme';
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -107,6 +108,13 @@ export default function Navbar() {
               L'accueil garde ses deux appels, à l'endroit où la promesse
               vient d'être faite. La barre ne porte plus que les portes
               d'entrée : le code élève et la connexion. */}
+
+          {/* LE THÈME, TOUT À DROITE, DANS LES TROIS BARRES — Camara, le
+              15/09/2026 : visiteur, enfant, parent. Il était posé dans deux
+              pages seulement (« Vos enfants », les matières) : ailleurs, on ne
+              pouvait pas changer de thème sans passer par « Mon compte ».
+              Masqué en Blue Sky, qui impose le sombre (voir App.css). */}
+          <BoutonTheme className="navbar__theme" />
         </div>
       )}
 
@@ -144,6 +152,8 @@ export default function Navbar() {
           >
             Quitter
           </button>
+
+          <BoutonTheme className="navbar__theme" />
         </div>
       )}
 
@@ -230,6 +240,8 @@ export default function Navbar() {
               </div>
             )}
           </div>
+
+          <BoutonTheme className="navbar__theme" />
         </div>
       )}
 

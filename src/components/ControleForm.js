@@ -1,7 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ecouteService } from '../lib/storage/ecouteService';
+import { ecouteTempsReel } from '../lib/storage/ecouteTempsReel';
 import { lireEnonce } from '../lib/storage/enonceControle';
 import { creerControle, modifierControle } from '../lib/api/elevesApi';
+import iconeVoix from '../assets/voix.png';
+import ChoixHeure from './ChoixHeure';
 
 /**
  * Le pictogramme de l'en-tête : une feuille de contrôle, dessinée au trait
@@ -38,10 +41,12 @@ const versISODate = (date) => {
  * Le formulaire d'un contrôle à venir, posé depuis le calendrier par le
  * parent ou l'enfant — matière, sujet (dicté ou tapé), heure facultative.
  *
- * MÊME MICRO QUE PARTOUT AILLEURS : `ecouteService`, pas `Chat.js` — celui-ci
- * est entièrement pris dans la logique d'une séance de tutorat (mains
- * libres, détection de silence, bascule haut-parleur) et n'a rien à faire
- * dans un simple champ de saisie.
+ * LE MÊME MICRO QU'EN COURS — `ecouteTempsReel`, la transcription par notre
+ * serveur (route `api/ecoute/dictee/{eleveId}`), depuis le 15/09/2026. La
+ * reconnaissance du navigateur (`ecouteService`) ne reste qu'en secours : elle
+ * était refusée à Chrome sur iPhone. On reprend le micro des cours, pas
+ * `Chat.js`, pris dans la logique d'une séance (mains libres, bascule
+ * haut-parleur) qui n'a rien à faire dans un simple formulaire.
  */
 export default function ControleForm({
   eleveId, matieres, jour, controle = null, sousTitre = null,
@@ -73,6 +78,20 @@ export default function ControleForm({
   const [manquants, setManquants] = useState({});
 
   const ecouteRef = useRef(null);
+
+  // Ce que l'enfant est en train de dire, affiché en direct sous « Je
+  // t'écoute… » : il voit que sa voix arrive, avant que les champs se remplissent.
+  const [entendu, setEntendu] = useState('');
+
+  // Le texte d'une dictée en cours : les tours terminés et le morceau en cours.
+  const dicteeRef = useRef({ final: '', partiel: '', minuteur: null, plafond: null });
+
+  // Le micro se referme si la fenêtre se ferme en pleine écoute.
+  useEffect(() => () => {
+    clearTimeout(dicteeRef.current.minuteur);
+    clearTimeout(dicteeRef.current.plafond);
+    ecouteRef.current?.arreter();
+  }, []);
 
   /**
    * LA PHRASE ENTIÈRE REMPLIT LE FORMULAIRE, PAS SEULEMENT LE SUJET.
@@ -108,13 +127,90 @@ export default function ControleForm({
     });
   };
 
+  /**
+   * Referme la dictée, en remplissant le formulaire avec tout ce qui a été dit.
+   * Appelée par le silence de l'enfant, par le plafond de durée ou par un
+   * second clic : une seule fois, quel que soit le chemin.
+   */
+  const conclureDictee = () => {
+    const d = dicteeRef.current;
+    clearTimeout(d.minuteur);
+    clearTimeout(d.plafond);
+
+    const tout = `${d.final} ${d.partiel}`.trim();
+    if (tout) remplirDepuisLaVoix(tout);
+
+    ecouteRef.current?.arreter();
+    ecouteRef.current = null;
+    dicteeRef.current = { final: '', partiel: '', minuteur: null, plafond: null };
+    setEntendu('');
+    setEcoute(false);
+  };
+
   const basculerMicro = () => {
     if (ecoute) {
-      ecouteRef.current?.arreter();
+      if (ecouteTempsReel.supporte) conclureDictee();
+      else ecouteRef.current?.arreter();
       return;
     }
 
+    setErreur(null);
     setEcoute(true);
+
+    // LE MÊME MICRO QU'EN COURS — Camara, le 15/09/2026. Le son part vers notre
+    // serveur, qui le transcrit : ça marche sur tous les navigateurs, y compris
+    // Chrome sur iPhone, là où la reconnaissance du navigateur était refusée.
+    if (ecouteTempsReel.supporte) {
+      dicteeRef.current = { final: '', partiel: '', minuteur: null, plafond: null };
+
+      // Plafond : une dictée de contrôle tient en une phrase. Au bout de trente
+      // secondes, on remplit avec ce qu'on a et on referme le micro.
+      dicteeRef.current.plafond = setTimeout(conclureDictee, 30000);
+
+      ecouteRef.current = ecouteTempsReel.ecouter({
+        chemin: `dictee/${eleveId}`,
+
+        onPartiel: (texte) => {
+          dicteeRef.current.partiel = texte;
+          setEntendu(`${dicteeRef.current.final} ${texte}`.trim());
+        },
+
+        // Un tour terminé : il rejoint le texte, et s'il arrive après le silence
+        // de l'enfant, c'est la fin de la phrase — on remplit et on referme.
+        onFinal: (texte) => {
+          const d = dicteeRef.current;
+          d.final = `${d.final} ${texte}`.trim();
+          d.partiel = '';
+          setEntendu(d.final);
+          remplirDepuisLaVoix(d.final);
+
+          if (d.minuteur) conclureDictee();
+        },
+
+        // L'enfant s'est tu : on laisse une seconde et demie au dernier tour
+        // pour arriver, puis on referme avec ce qu'on a.
+        onSilence: () => {
+          const d = dicteeRef.current;
+          clearTimeout(d.minuteur);
+          d.minuteur = setTimeout(conclureDictee, 1500);
+        },
+
+        // Il reprend la parole : il n'avait pas fini.
+        onReprise: () => {
+          clearTimeout(dicteeRef.current.minuteur);
+          dicteeRef.current.minuteur = null;
+        },
+
+        onErreur: (message) => {
+          setErreur(message);
+          conclureDictee();
+        },
+
+        onFermeture: conclureDictee,
+      });
+      return;
+    }
+
     ecouteRef.current = ecouteService.ecouter({
       // LE PROVISOIRE NE REMPLIT RIEN. Il arrive par morceaux — « j'ai
       // contrôle ven… » — et poser une date sur une phrase coupée en deux la
@@ -201,20 +297,30 @@ export default function ControleForm({
           Placé ici, avant les champs, il annonce ce qu'il fait : on parle une
           fois, le formulaire se remplit. En édition il n'a plus lieu d'être —
           on vient corriger un champ précis, pas tout redire. */}
-      {ecouteService.supporte && !edition && (
+      {(ecouteTempsReel.supporte || ecouteService.supporte) && !edition && (
         <div className={`controle-form__dictee${ecoute ? ' est-active' : ''}`}>
+          {/* LE MICRO DESSINÉ, QUI RESPIRE — Camara, le 15/09/2026. `voix.png`
+              remplace le pictogramme gris, et un halo qui gonfle doucement dit
+              à l'enfant « ceci se touche » sans qu'il ait à lire la consigne.
+              Pendant l'écoute, plus de respiration : une surbrillance FIXE,
+              pour qu'on voie que le micro est ouvert et qu'il ne clignote pas
+              sous ses yeux pendant qu'il parle. */}
           <button
             type="button"
-            className={`micro${ecoute ? ' micro--actif' : ''}`}
+            className={`controle-form__voix${ecoute ? ' controle-form__voix--actif' : ''}`}
             onClick={basculerMicro}
+            aria-pressed={ecoute}
             aria-label={ecoute ? 'Arrêter le micro' : 'Énoncer le contrôle à la voix'}
           >
-            <span className="micro__icone" aria-hidden="true" />
+            <img className="controle-form__voix-image" src={iconeVoix} alt="" />
           </button>
 
           <span className="controle-form__dictee-mot">
             {ecoute ? (
-              <strong>Je t’écoute…</strong>
+              <>
+                <strong>Je t’écoute…</strong>
+                {entendu && <span className="controle-form__entendu">« {entendu} »</span>}
+              </>
             ) : (
               <>
                 <strong>Dis-le simplement, tout se remplit.</strong>
@@ -289,7 +395,12 @@ export default function ControleForm({
         </span>
       </div>
 
-      <div className="duo">
+      {/* PLUS DE GRILLE À DEUX COLONNES POUR LA DATE ET L'HEURE — Camara, le
+          16/09/2026 : « sur desktop c'est moche et mal présenté ». Le duo
+          était fait pour deux petits champs ; le sélecteur d'heure en
+          pastilles, coincé dans la moitié droite, cassait son résumé en trois
+          lignes et empilait ses pastilles par deux. Chacun prend la largeur. */}
+      <>
         {/* Masquée quand elle vient de la case cliquée : redemander la date
             qu'on vient de désigner du doigt serait absurde. */}
         {!jour && (
@@ -316,17 +427,20 @@ export default function ControleForm({
         )}
 
         <div className="champ">
-          <label htmlFor="ctrl-heure">
+          {/* Plus de champ natif : ses roues et menus s'ouvraient mal sur
+              téléphone. Des pastilles, mêmes valeurs « HH:mm » — voir
+              `ChoixHeure`. */}
+          <span id="ctrl-heure-libelle" className="champ__libelle">
             Heure <span className="champ__option">(facultatif)</span>
-          </label>
-          <input
+          </span>
+          <ChoixHeure
             id="ctrl-heure"
-            type="time"
-            value={heure}
-            onChange={(e) => setHeure(e.target.value)}
+            valeur={heure}
+            onChange={setHeure}
+            labelledBy="ctrl-heure-libelle"
           />
         </div>
-      </div>
+      </>
 
       <div className="modale__actions">
         <button type="button" className="btn-ghost" onClick={onAnnule}>

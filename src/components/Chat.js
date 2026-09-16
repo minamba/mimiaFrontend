@@ -74,7 +74,10 @@ import LignesCopie from './LignesCopie';
 import { ContenuTableau, tableauDeDictee } from './ComparaisonDictee';
 import { copieDeReference } from '../lib/storage/diffDictee';
 import { estMatiereLangue } from '../lib/matieresLangues';
-import { VITESSES, VITESSE_PAR_DEFAUT, carteVitesseVisible } from '../lib/storage/vitesseEcoute';
+import {
+  VITESSES, VITESSE_PAR_DEFAUT, carteVitesseVisible, estVitesseConnue,
+} from '../lib/storage/vitesseEcoute';
+import { demandeChoixVitesse, vitesseDemandee } from '../lib/storage/ardoise';
 import HorlogeReelle from './HorlogeReelle';
 import Schema from './Schema';
 import ZoomSchema from './ZoomSchema';
@@ -1245,6 +1248,7 @@ export default function Chat() {
    * vitesse choisie, seul un passage inédit repose la question.
    */
   const [vitesseEcoute, setVitesseEcoute] = useState(VITESSE_PAR_DEFAUT);
+  const vitesseEcouteRef = useRef(VITESSE_PAR_DEFAUT);
   const tourVitesseRef = useRef(null);
   const passageEcouteChoisiRef = useRef('');
 
@@ -1604,6 +1608,63 @@ export default function Chat() {
     passageEcouteChoisiRef.current = passageEcoute;
   };
 
+  /**
+   * L'ÉLÈVE CHANGE DE VITESSE EN PLEIN EXERCICE — Camara, le 16/09/2026.
+   *
+   * « Il peut choisir une vitesse et se rendre compte qu'elle n'est pas
+   * adaptée » : il doit pouvoir en changer quand il veut, autant de fois qu'il
+   * veut. C'est le professeur qui le signale, par une balise que l'élève ne
+   * voit ni n'entend :
+   *
+   *   [VITESSE]        « change la vitesse » — la fenêtre se rouvre, il
+   *                    choisit de nouveau.
+   *   [VITESSE:lent]   « plus lent », « plus vite » — le professeur connaît le
+   *                    débit en cours et pose le cran voisin. Pas de fenêtre :
+   *                    l'élève a déjà dit ce qu'il voulait.
+   *
+   * LU PENDANT LE FLUX, et pas seulement sur le message terminé : le
+   * professeur relit le passage DANS CE MÊME message, et la voix attend que la
+   * question de vitesse soit réglée avant de prononcer quoi que ce soit. Poser
+   * le choix trop tard laisserait partir la lecture à l'ancien débit.
+   *
+   * Une clé inconnue est ignorée : mieux vaut relire au débit en cours que
+   * partir sur une valeur inventée par le modèle.
+   */
+  const vitesseTraiteeRef = useRef('');
+  useEffect(() => {
+    const texte = reponseEnCours
+      || (indexDernierProf === messages.length - 1
+        ? messages[indexDernierProf]?.contenu ?? ''
+        : '');
+
+    if (!texte) return;
+
+    const cible = vitesseDemandee(texte);
+    const rouvre = demandeChoixVitesse(texte);
+    if (!cible && !rouvre) return;
+
+    // Le même message arrive plusieurs fois — à chaque fragment du flux, puis
+    // versé dans l'historique. Sans cette signature, la fenêtre se rouvrirait
+    // juste après que l'élève a cliqué.
+    const signature = `${indexDernierProf}|${cible ?? ''}|${rouvre}`;
+    if (vitesseTraiteeRef.current === signature) return;
+    vitesseTraiteeRef.current = signature;
+
+    if (cible && estVitesseConnue(cible)) {
+      setVitesseEcoute(cible);
+      tourVitesseRef.current = tourEleve;
+      passageEcouteChoisiRef.current = passageEcoute;
+      return;
+    }
+
+    if (rouvre) {
+      // Oublier le choix précédent SUFFIT à rouvrir la fenêtre : elle
+      // s'affiche dès qu'un passage d'écoute n'a pas encore sa vitesse.
+      tourVitesseRef.current = null;
+      passageEcouteChoisiRef.current = '';
+    }
+  }, [reponseEnCours, messages, indexDernierProf, tourEleve, passageEcoute]);
+
   // LE PASSAGE GRANDIT PENDANT QUE LE PROFESSEUR ÉCRIT. Le choix a été fait
   // sur ses premiers mots ; sans cette mise à jour, la relecture du texte
   // ENTIER passerait pour un exercice inédit et reposerait la question.
@@ -1616,6 +1677,13 @@ export default function Chat() {
   // La voix lit les passages de la langue étudiée à cette vitesse-là.
   useEffect(() => {
     if (lecteurRef.current) lecteurRef.current.vitesseEcoute = vitesseEcoute;
+
+    // ET DANS UNE RÉFÉRENCE, POUR L'ENVOI. Le professeur reçoit le débit en
+    // cours avec chaque message de l'élève — sans quoi il ne saurait ni de
+    // quel cran descendre, ni qu'il lit déjà au plus lent. Une référence, et
+    // non l'état : la fonction d'envoi est mémorisée, et la lister dans ses
+    // dépendances la ferait recréer à chaque changement de vitesse.
+    vitesseEcouteRef.current = vitesseEcoute;
   }, [vitesseEcoute]);
 
   // En cours de langue, les tirets sont muets : le professeur ne dit pas
@@ -2587,6 +2655,7 @@ export default function Chat() {
 
       dispatch(envoyerMessage(
         conversation.id, aEnvoyer, restantRef.current, documentPret, pieceJointeApercu,
+        vitesseEcouteRef.current,
       ));
       viderSaisie();
 
@@ -4078,9 +4147,13 @@ export default function Chat() {
                   className="btn btn--fantome"
                   onClick={() => choisirVitesseEcoute(vitesse.cle)}
                 >
-                  <span aria-hidden="true">{vitesse.icone}</span>
+                  {/* LE DESSIN SUFFIT, SANS SA PHRASE — Camara, le 16/09/2026 :
+                      « enlève les sous-titres ». Le personnage qui traîne ou
+                      qui court dit le débit mieux que « mot à mot », et
+                      l'enfant choisit ici en une seconde. La phrase reste sur
+                      la page d'accueil, où c'est un parent qui lit. */}
+                  <img className="choix-dictee__image" src={vitesse.image} alt="" />
                   {vitesse.libelle}
-                  <small>{vitesse.aide}</small>
                 </button>
               ))}
             </div>

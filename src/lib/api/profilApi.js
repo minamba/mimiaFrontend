@@ -66,3 +66,14 @@ export const supprimerMonCompte = async () => {
  */
 export const supprimerIdentiteDe = (mail) =>
   clientIdentite.delete(`/api/admin/comptes/${encodeURIComponent(mail)}`);
+
+/**
+ * Crée l'identité d'un parent, à la demande d'un administrateur.
+ *
+ * PREMIER des trois appels de la création (identité, fiche, rôle) — l'inverse
+ * de la suppression, et pour la même raison : c'est le `sub` rendu ici qui
+ * relie la fiche au compte. Le parent reçoit un courriel pour choisir son mot
+ * de passe ; aucun mot de passe ne passe par l'administration.
+ */
+export const creerIdentite = ({ email, prenom, nom }) =>
+  clientIdentite.post('/api/admin/comptes', { email, prenom, nom });

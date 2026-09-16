@@ -329,6 +329,58 @@ const COMPREHENSION_ORALE_FERMETURE = '[/COMPREHENSION_ORALE]';
 export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
 
 /**
+ * CHANGER DE VITESSE EN COURS D'EXERCICE — voulu par Camara le 16/09/2026.
+ *
+ * « Un élève peut choisir une vitesse et se rendre compte qu'elle n'est pas
+ * adaptée » : il doit pouvoir en changer à tout moment, autant de fois qu'il
+ * veut, et réentendre le même passage au nouveau débit.
+ *
+ * DEUX FORMES, PARCE QUE DEUX DEMANDES DIFFÉRENTES :
+ *
+ *   [VITESSE]            « change la vitesse » — la fenêtre des quatre
+ *                        boutons se rouvre, l'élève choisit.
+ *   [VITESSE:lent]       « plus lent », « plus vite » — le professeur connaît
+ *                        le débit en cours (le marqueur le lui donne à chaque
+ *                        tour) et pose lui-même le cran voisin. Pas de
+ *                        fenêtre : l'élève a déjà dit ce qu'il voulait.
+ *
+ * Aux bornes, il n'y a PAS de balise : le professeur répond simplement qu'il
+ * lit déjà au plus lent — ou au plus rapide — et rien ne change.
+ *
+ * Ni affichée ni prononcée, comme les autres marqueurs.
+ */
+export const VITESSE_CHOIX = '[VITESSE]';
+
+/** `[VITESSE:tres_lent]` et ses trois sœurs, dans le texte du professeur. */
+const VITESSE_CIBLE = /\[VITESSE:([a-z_]+)\]/gi;
+
+/**
+ * Le professeur demande-t-il de ROUVRIR la fenêtre des quatre vitesses ?
+ *
+ * La forme nue seulement : `[VITESSE:lent]` dit une cible, pas une question à
+ * reposer.
+ */
+export function demandeChoixVitesse(texte) {
+  if (!texte) return false;
+
+  return texte.replace(VITESSE_CIBLE, '').includes(VITESSE_CHOIX);
+}
+
+/**
+ * La vitesse que le professeur vient de poser lui-même, ou null.
+ *
+ * La DERNIÈRE l'emporte : un message qui en porterait deux — cela arrive quand
+ * un modèle se reprend — doit laisser l'élève sur celle qu'il a annoncée en
+ * dernier, c'est-à-dire celle qu'il s'apprête à employer.
+ */
+export function vitesseDemandee(texte) {
+  if (!texte) return null;
+
+  const trouvees = [...texte.matchAll(VITESSE_CIBLE)];
+  return trouvees.length > 0 ? trouvees[trouvees.length - 1][1].toLowerCase() : null;
+}
+
+/**
  * Le contrôle a été abandonné : l'élève a quitté le cours en plein milieu.
  *
  * Posé par le serveur à la sortie, pas par le professeur. Il referme un
@@ -698,7 +750,11 @@ function retirerMarqueurs(texte) {
     .split(DICTEE_ABANDON).join('')
     .split(FIN_SEANCE).join('')
     .split(TABLEAU_EFFACE).join('')
-    .split(DEMANDE_DOCUMENT).join('');
+    .split(DEMANDE_DOCUMENT).join('')
+    .split(VITESSE_CHOIX).join('')
+    // La forme à cible porte un paramètre : elle se retire par motif, sinon
+    // l'élève lirait « :lent] » au milieu de la phrase et l'entendrait.
+    .replace(VITESSE_CIBLE, '');
 
   const blocs = [
     [EVAL_OUVERTURE, EVAL_FERMETURE],

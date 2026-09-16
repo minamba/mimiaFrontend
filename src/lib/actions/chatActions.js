@@ -64,9 +64,12 @@ export const ouvrirConversation = (
  */
 export const envoyerMessage = (
   conversationId, contenu, secondesRestantes = null, pieceJointeId = null, pieceJointe = null,
+  vitesseEcoute = null,
 ) => ({
   type: MESSAGE_SEND_REQUEST,
-  payload: { conversationId, contenu, secondesRestantes, pieceJointeId, pieceJointe },
+  payload: {
+    conversationId, contenu, secondesRestantes, pieceJointeId, pieceJointe, vitesseEcoute,
+  },
 });
 
 export const resetChat = () => ({ type: CHAT_RESET });

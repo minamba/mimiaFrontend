@@ -14,12 +14,28 @@ import {
   changerPeriodeCout,
 } from '../lib/actions/adminActions';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
+// La création d'un parent commence par son identité, sur le serveur
+// d'identité — l'inverse de la suppression, qui finit par elle.
+import { creerIdentite } from '../lib/api/profilApi';
+// LES MÊMES BRIQUES QUE LE FORMULAIRE PARENT — Camara, le 16/09/2026 : « je
+// suis admin, je dois tout contrôler ». La modale d'administration ne
+// proposait ni la classe ni les spécialités ; on reprend les règles du parent
+// (classes groupées par voie, série à préciser, LVB, spécialités) au lieu de
+// les recopier, pour qu'elles ne divergent jamais.
+import {
+  grouperClasses,
+  serieAPreciser,
+  specialitesDeLaClasse,
+  specialitesAEnvoyer,
+} from '../lib/niveauxScolaires';
+import ChoixSpecialites from './ChoixSpecialites';
 import {
   getHistoriqueEvaluations,
   getHistoriqueRapports,
   getCout,
   getHistoriqueHeures,
   definirAdministrateur,
+  creerParent,
   getRepartitionParents,
   bannirParent,
   getRapportEleve,
@@ -786,7 +802,7 @@ export default function Admin() {
   // refuse ces routes de son côté ; c est seulement ne pas montrer une porte
   // qu on n ouvrira pas.
   const { estSuperAdmin } = useSelector((state) => state.auth);
-  const { academies } = useSelector((state) => state.referentiel);
+  const { niveaux, academies } = useSelector((state) => state.referentiel);
 
   const [onglet, setOnglet] = useState('stats');
 
@@ -912,10 +928,75 @@ export default function Admin() {
     }
   };
 
+  // Ce que la classe choisie dans la modale autorise : la case LVB n'existe
+  // que dans les classes à LVB, les spécialités que dans la voie générale.
+  // Mêmes règles que `LigneEnfant` côté parent, sur les mêmes helpers.
+  const classeEdition = edition?.operation === 'modifierEleve' ? edition.niveauScolaireId : '';
+  const lv2PossibleEdition = Boolean(
+    niveaux.find((n) => String(n.id) === String(classeEdition))?.lv2Possible,
+  );
+  const specialitesEdition = specialitesDeLaClasse(niveaux, classeEdition);
+
+  /**
+   * LA CRÉATION D'UN PARENT, EN TROIS APPELS ET DANS CET ORDRE : l'identité
+   * sur le serveur d'identité, la fiche sur l'API métier, le rôle enfin. C'est
+   * l'inverse de la suppression, et pour la même raison — le `sub` rendu par
+   * le premier appel est ce qui relie la fiche au compte.
+   *
+   * Si le deuxième appel échouait, l'identité existerait sans fiche : la
+   * première connexion du parent la créerait, rien ne serait perdu. L'erreur
+   * est montrée dans la fenêtre, qui reste ouverte pour corriger.
+   */
+  const [creation, setCreation] = useState({ enCours: false, erreur: null });
+
+  const creerCompteParent = async ({ prenom, nom, mail, administrateur }) => {
+    setCreation({ enCours: true, erreur: null });
+
+    try {
+      const propre = { email: mail.trim(), prenom: prenom.trim(), nom: nom.trim() };
+      const { data: identite } = await creerIdentite(propre);
+      const { data: parent } = await creerParent({
+        identityUserId: identite.id, mail: propre.email, prenom: propre.prenom, nom: propre.nom,
+      });
+
+      if (administrateur && estSuperAdmin) {
+        await definirAdministrateur(parent.id, true);
+      }
+
+      setCreation({ enCours: false, erreur: null });
+      setEdition(null);
+      dispatch(chargerAdmin());
+    } catch (e) {
+      setCreation({
+        enCours: false,
+        erreur: e?.response?.data?.message
+          ?? 'La création a échoué. Vérifiez l’adresse et réessayez.',
+      });
+    }
+  };
+
   const enregistrer = (evenement) => {
     evenement.preventDefault();
     const { operation, id, ...donnees } = edition;
-    dispatch(muter(operation, id, donnees));
+
+    if (operation === 'creerParent') {
+      creerCompteParent(donnees);
+      return;
+    }
+
+    // NORMALISÉ COMME LE PARENT L'ENVOIE. Une classe vide vaut « pas de
+    // changement » ; une case LVB cochée dans une classe sans LVB ne part pas ;
+    // les spécialités sont ramenées à ce que la classe permet.
+    const charge = operation === 'modifierEleve'
+      ? {
+        ...donnees,
+        niveauScolaireId: donnees.niveauScolaireId ? Number(donnees.niveauScolaireId) : null,
+        lv2Espagnol: lv2PossibleEdition && Boolean(donnees.lv2Espagnol),
+        specialites: specialitesAEnvoyer(donnees.specialites ?? [], specialitesEdition),
+      }
+      : donnees;
+
+    dispatch(muter(operation, id, charge));
     setEdition(null);
   };
 
@@ -1199,6 +1280,28 @@ export default function Admin() {
           <FichierClients />
 
           <Bannis version={versionBannis} />
+
+          {/* CRÉER UN PARENT — Camara, le 16/09/2026 : « je peux tout faire
+              sauf créer un parent et lui donner un rôle ». Le compte naît
+              sans mot de passe connu de personne : le parent le choisit par
+              le courriel qu'il reçoit. */}
+          <div className="admin__creation">
+            <button
+              type="button"
+              className="btn btn--compact"
+              onClick={() =>
+                setEdition({
+                  operation: 'creerParent',
+                  prenom: '',
+                  nom: '',
+                  mail: '',
+                  administrateur: false,
+                })
+              }
+            >
+              Nouveau parent
+            </button>
+          </div>
 
           <div className="filtres">
             <input
@@ -1501,6 +1604,9 @@ export default function Admin() {
                           age: e.age,
                           sexe: e.sexe ?? 0,
                           academieId: e.academieId ?? null,
+                          niveauScolaireId: e.niveauScolaireId ?? '',
+                          lv2Espagnol: Boolean(e.lv2Espagnol),
+                          specialites: e.specialites ?? [],
                         })
                       }
                     >
@@ -1647,9 +1753,11 @@ export default function Admin() {
             <h2>
               {edition.operation === 'ajusterHeures'
                 ? 'Ajuster les heures'
-                : edition.operation === 'modifierParent'
-                  ? 'Modifier le compte'
-                  : 'Modifier le profil'}
+                : edition.operation === 'creerParent'
+                  ? 'Nouveau parent'
+                  : edition.operation === 'modifierParent'
+                    ? 'Modifier le compte'
+                    : 'Modifier le profil'}
             </h2>
 
             {/* TROIS PARTIES : titre figé, corps qui défile, boutons figés.
@@ -1738,7 +1846,7 @@ export default function Admin() {
               </div>
             )}
 
-            {edition.operation === 'ajusterHeures' ? null : edition.operation === 'modifierParent' ? (
+            {edition.operation === 'ajusterHeures' ? null : edition.operation === 'modifierParent' || edition.operation === 'creerParent' ? (
               <>
                 <div className="champ">
                   <label htmlFor="ed-nom">Nom</label>
@@ -1753,10 +1861,34 @@ export default function Admin() {
                   <input
                     id="ed-mail"
                     type="email"
+                    required={edition.operation === 'creerParent'}
                     value={edition.mail}
                     onChange={(e) => setEdition({ ...edition, mail: e.target.value })}
                   />
+                  {edition.operation === 'creerParent' && (
+                    <span className="champ__aide">
+                      Le parent recevra un courriel pour choisir son mot de passe.
+                      Aucun mot de passe ne passe par vous.
+                    </span>
+                  )}
                 </div>
+
+                {/* Le rôle ne se distribue que par le super-administrateur —
+                    l'API le revérifie. Les autres ne voient pas la case. */}
+                {edition.operation === 'creerParent' && estSuperAdmin && (
+                  <label className="case">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(edition.administrateur)}
+                      onChange={(e) => setEdition({ ...edition, administrateur: e.target.checked })}
+                    />
+                    Administrateur — peut ouvrir l’administration
+                  </label>
+                )}
+
+                {edition.operation === 'creerParent' && creation.erreur && (
+                  <p className="champ__erreur" role="alert">{creation.erreur}</p>
+                )}
               </>
             ) : (
               <>
@@ -1766,6 +1898,54 @@ export default function Admin() {
                     id="ed-nom-eleve"
                     value={edition.nom}
                     onChange={(e) => setEdition({ ...edition, nom: e.target.value })}
+                  />
+                </div>
+
+                {/* LA CLASSE, LA LVB ET LES SPÉCIALITÉS — ce que le parent a
+                    toujours pu régler, et que l'administration ne voyait pas.
+                    Même disposition que dans « Mes enfants ». */}
+                <div className="champ">
+                  <label htmlFor="ed-niveau">Classe</label>
+                  <select
+                    id="ed-niveau"
+                    value={edition.niveauScolaireId ?? ''}
+                    onChange={(e) => setEdition({ ...edition, niveauScolaireId: e.target.value })}
+                  >
+                    <option value="">Inchangée</option>
+                    {grouperClasses(niveaux, edition.niveauScolaireId).map(([cycle, duCycle]) => (
+                      <optgroup key={cycle} label={cycle}>
+                        {duCycle.map((niveau) => (
+                          <option key={niveau.id} value={niveau.id}>
+                            {niveau.libelle}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+
+                  {serieAPreciser(niveaux, edition.niveauScolaireId) && (
+                    <span className="champ__aide champ__aide--alerte" role="alert">
+                      Précisez la série : sans elle, ses spécialités n’apparaissent pas.
+                    </span>
+                  )}
+
+                  {lv2PossibleEdition && (
+                    <label className="case">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(edition.lv2Espagnol)}
+                        onChange={(e) => setEdition({ ...edition, lv2Espagnol: e.target.checked })}
+                      />
+                      Espagnol en LVB
+                    </label>
+                  )}
+
+                  <ChoixSpecialites
+                    id="ed-specialites"
+                    nombre={specialitesEdition.nombre}
+                    possibles={specialitesEdition.possibles}
+                    valeur={edition.specialites ?? []}
+                    onChange={(specialites) => setEdition({ ...edition, specialites })}
                   />
                 </div>
 
@@ -1838,12 +2018,15 @@ export default function Admin() {
                 type="submit"
                 className="btn btn--compact"
                 disabled={
-                  muting
+                  creation.enCours
+                  || muting
                   || (edition.operation === 'ajusterHeures'
                       && (!edition.motif.trim() || !edition.minutes))
                 }
               >
-                Enregistrer
+                {edition.operation === 'creerParent'
+                  ? (creation.enCours ? 'Création…' : 'Créer le compte')
+                  : 'Enregistrer'}
               </button>
             </div>
           </form>

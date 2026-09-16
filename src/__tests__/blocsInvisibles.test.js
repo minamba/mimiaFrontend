@@ -25,6 +25,10 @@ const BLOCS = [
 const MARQUEURS = [
   'DEBUT_EVALUATION', 'EVALUATION_ABANDONNEE', 'DICTEE_ABANDONNEE',
   'FIN_SEANCE', 'TABLEAU_EFFACE', 'DEMANDE_DOCUMENT',
+  // Rouvre la fenêtre des quatre vitesses (16/09/2026). Sa forme à cible,
+  // `[VITESSE:lent]`, porte un paramètre et ne rentre pas dans ce gabarit :
+  // elle est couverte par `changementVitesse.test.js`.
+  'VITESSE',
 ];
 
 describe.each(BLOCS)('le bloc [%s]', (nom) => {

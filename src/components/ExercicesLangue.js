@@ -1,6 +1,6 @@
 import { ContenuTableau } from './ComparaisonDictee';
 import LecteurAudio from './LecteurAudio';
-import { VITESSES } from '../lib/storage/vitesseEcoute';
+import { VITESSES, VITESSE_PAR_DEFAUT } from '../lib/storage/vitesseEcoute';
 import extraitAnglais from '../assets/demo_comprehension_oral_anglais.mp3';
 
 /**
@@ -86,11 +86,14 @@ export default function ExercicesLangue() {
               {VITESSES.map((vitesse) => (
                 <span
                   key={vitesse.cle}
-                  className={`exercices__vitesse${vitesse.cle === 'lent' ? ' est-choisie' : ''}`}
+                  /* LA VITESSE MISE EN AVANT EST CELLE PAR DÉFAUT — Camara, le
+                     16/09/2026 : « c'est normal, pas lent ». Elle n'est plus
+                     écrite ici : la démonstration lit `VITESSE_PAR_DEFAUT`,
+                     comme la séance, et suivra si ce choix change. */
+                  className={`exercices__vitesse${vitesse.cle === VITESSE_PAR_DEFAUT ? ' est-choisie' : ''}`}
                 >
-                  <span className="exercices__icone">{vitesse.icone}</span>
+                  <img className="exercices__icone" src={vitesse.image} alt="" />
                   <strong>{vitesse.libelle}</strong>
-                  <small>{vitesse.aide}</small>
                 </span>
               ))}
             </div>
@@ -121,9 +124,12 @@ export default function ExercicesLangue() {
             />
           </figure>
 
+          {/* SEULEMENT LES LANGUES ENSEIGNÉES — Camara, le 15/09/2026 : l'allemand,
+              l'italien et le chinois ne sont pas encore dans l'application.
+              Les annoncer ici promettait un cours qu'aucun parent ne trouverait. */}
           <p className="exercices__note">
-            Anglais, espagnol, allemand, italien, chinois&nbsp;: le passage est lu
-            par un locuteur natif, jamais avec l’accent français.
+            Anglais, espagnol&nbsp;: le passage est lu par un locuteur natif,
+            jamais avec l’accent français.
           </p>
         </article>
       </div>

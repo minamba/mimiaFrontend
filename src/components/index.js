@@ -34,6 +34,8 @@ export { default as MentionsLegales } from './MentionsLegales';
 export { default as Confidentialite } from './Confidentialite';
 export { default as ConditionsVente } from './ConditionsVente';
 export { default as TousLesAvis } from './TousLesAvis';
+export { default as Desabonnement } from './Desabonnement';
+export { default as DonnerAvis } from './DonnerAvis';
 export { default as BandeauInfo } from './BandeauInfo';
 export { default as BandeauPromo } from './BandeauPromo';
 export { default as CompteARebours } from './CompteARebours';

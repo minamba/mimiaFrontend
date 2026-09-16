@@ -34,7 +34,9 @@ export default function BlocPieces({
       ) : (
         <ul className="diffusion__liste">
           {items.map((f, i) => (
-            <li key={`${f.name}-${i}`}>
+            // Une pièce enregistrée a un identifiant stable ; un fichier tout
+            // juste choisi n'a que son nom et sa place.
+            <li key={f.id ?? `${f.name}-${i}`}>
               {avecMarqueur && <span className="diffusion__rang">[image:{i + 1}]</span>}
               <span className="diffusion__nom">
                 {avecMarqueur ? '' : '📎 '}{f.name}

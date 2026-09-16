@@ -61,14 +61,18 @@ export const quitterCours = (conversationId) =>
  * @param signal   AbortSignal pour interrompre la génération
  */
 export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
-  const { secondesRestantes, pieceJointeId, ...flux } = options;
+  const { secondesRestantes, pieceJointeId, vitesseEcoute, ...flux } = options;
 
   // Le chronomètre est tenu ici, dans le navigateur : le serveur ne sait pas
   // quelle durée l'élève a choisie ni quand il a commencé. Sans cette valeur,
   // le professeur devine le temps restant — et il conclut trop tôt.
+  // LA VITESSE D'ÉCOUTE PART AVEC LE MESSAGE, pour la même raison que le
+  // chronomètre : elle est choisie ici, dans le navigateur. Sans elle, le
+  // professeur ne saurait pas de quel cran descendre quand l'élève demande
+  // « plus lent », ni qu'il n'y en a plus en dessous.
   return consommerFlux(
     `/conversations/${conversationId}/messages`,
-    { contenu, secondesRestantes, pieceJointeId },
+    { contenu, secondesRestantes, pieceJointeId, vitesseEcoute },
     flux,
   );
 };

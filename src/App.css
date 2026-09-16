@@ -406,6 +406,24 @@ h1, h2, h3 {
    insécable, et les laisser se comprimer rendrait la barre illisible avant
    de la rendre étroite. */
 .navbar__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+/* LE BOUTON DE THÈME DANS LA BARRE — 15/09/2026. À la hauteur des autres
+   boutons (38 px) et non plus 46 comme dans les pages : plus haut, il
+   étirerait la barre. L'image déborde un peu du rond, comme ailleurs. */
+.navbar__right .navbar__theme {
+  width: 38px;
+  height: 38px;
+}
+
+.navbar__right .navbar__theme .bouton-theme__icone {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 560px) {
+  .navbar__right .navbar__theme { width: 34px; height: 34px; }
+  .navbar__right .navbar__theme .bouton-theme__icone { width: 40px; height: 40px; }
+}
 .navbar__user { font-size: 14px; color: var(--encre-douce); }
 
 .navbar__right > .btn-ghost,
@@ -744,13 +762,37 @@ h1, h2, h3 {
   color: var(--encre-douce);
 }
 
-.enfants-liste { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 12px; }
+.enfants-liste { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 16px; }
 
+/* LA CARTE SE DÉTACHE DU PANNEAU — Camara, le 16/09/2026 : « ton sur ton
+   avec le background, la séparation entre les enfants n'est pas assez
+   marquée ». La carte était posée sur `--surface`, le fond même du panneau
+   d'onglet : seul un trait fin les distinguait. Elle prend un fond un cran
+   plus clair — mêlé à l'encre, il s'éclaircit en sombre et se grise à peine
+   en clair, sans règle par thème —, un contour net, une ombre courte, et le
+   liseré corail de l'initiale à gauche : chaque enfant est un objet posé
+   sur la page, pas une zone de la page. */
 .enfant-ligne {
-  border: 1px solid var(--trait);
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--encre) 22%, var(--trait));
   border-radius: 14px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--encre) 7%, var(--surface));
+  box-shadow: 0 6px 18px color-mix(in srgb, #000 22%, transparent);
   overflow: hidden;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.enfant-ligne::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--corail), var(--corail-sombre));
+}
+
+.enfant-ligne:hover,
+.enfant-ligne:focus-within {
+  border-color: color-mix(in srgb, var(--corail) 45%, var(--trait));
 }
 
 /* QUATRE BOUTONS TIENNENT MAL SUR UNE SEULE LIGNE.
@@ -763,7 +805,9 @@ h1, h2, h3 {
   align-items: center;
   flex-wrap: wrap;
   gap: 13px;
-  padding: 15px 16px;
+  /* Quatre pixels de plus à gauche : la place du liseré corail de la carte,
+     pour que l'initiale ne vienne pas s'y coller. */
+  padding: 15px 16px 15px 20px;
 }
 
 /* Les boutons gardent leur largeur ; c'est l'identité qui absorbe le reste. */
@@ -883,6 +927,29 @@ h1, h2, h3 {
 
 @media (prefers-reduced-motion: reduce) {
   .hero__programmes { animation: none; }
+}
+
+/* EN THÈME CLAIR, LE BADGE ÉTAIT BLANC SUR BLANC — Camara, le 15/09/2026,
+   sur iPhone : on ne voyait plus que le drapeau. Écrit pour le héros sombre,
+   le texte, le contour et la lueur étaient blancs. Ici, l'encre de la page
+   sur un voile du bleu de marque, et une respiration dans ce même bleu. */
+:root[data-theme='light'] .hero__programmes {
+  border-color: rgba(0, 45, 97, 0.2);
+  background: rgba(0, 45, 97, 0.06);
+  color: var(--encre);
+  box-shadow: 0 0 0 0 rgba(0, 45, 97, 0.2);
+  animation-name: hero-programmes-respire-clair;
+}
+
+/* La bande blanche du drapeau se perdait dans le fond clair. */
+:root[data-theme='light'] .hero__drapeau {
+  box-shadow: inset 0 0 0 1px rgba(0, 45, 97, 0.18);
+}
+
+@keyframes hero-programmes-respire-clair {
+  0% { box-shadow: 0 0 0 0 rgba(0, 45, 97, 0.22); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 45, 97, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 45, 97, 0); }
 }
 
 /* LA CARTE « COPIE DU CONTRÔLE », dans le fil de la séance — même famille
@@ -1337,6 +1404,31 @@ h1, h2, h3 {
 }
 
 .btn--fantome:hover { background: var(--surface); border-color: var(--encre-douce); }
+
+/* « VOIR LA MÉTHODE » A UNE COULEUR AU REPOS — Camara, le 15/09/2026 : sans
+   la souris dessus, il disparaissait dans le héros. Un voile sarcelle (la
+   couleur de la confiance, voir l'en-tête du fichier) et un contour franc :
+   il se voit, sans disputer la vedette au bouton corail d'à côté.
+   Limité au héros : le même bouton, sous une copie de dictée, reste discret. */
+.heros__actions .btn--fantome {
+  background: rgba(53, 179, 171, 0.14);
+  border-color: rgba(53, 179, 171, 0.55);
+  color: var(--sarcelle);
+}
+
+.heros__actions .btn--fantome:hover {
+  background: rgba(53, 179, 171, 0.24);
+  border-color: var(--sarcelle);
+}
+
+:root[data-theme='light'] .heros__actions .btn--fantome {
+  background: rgba(14, 124, 123, 0.08);
+  border-color: rgba(14, 124, 123, 0.45);
+}
+
+:root[data-theme='light'] .heros__actions .btn--fantome:hover {
+  background: rgba(14, 124, 123, 0.16);
+}
 .btn--large { padding: 16px 34px; font-size: 17px; }
 .btn--compact { padding: 9px 16px; font-size: 14.5px; }
 
@@ -1851,6 +1943,470 @@ h1, h2, h3 {
 
 .prof > span { font-size: 13px; color: var(--encre-douce); }
 
+/* LA CARTE EST UN BOUTON — Camara, le 15/09/2026 : elle ouvre la fiche du
+   professeur. Les réglages du navigateur pour un bouton sont effacés, pour
+   qu'elle garde exactement l'allure de la carte d'avant. */
+.equipe__grille > li { display: flex; }
+
+/* LA DERNIÈRE CARTE, SEULE SUR SA RANGÉE, SE PLACE AU MILIEU — Camara, le
+   16/09/2026 : Minamba « sur la colonne du milieu, même s'il n'y a rien à
+   gauche ni à droite ». Treize professeurs en trois colonnes laissent une
+   carte isolée ; calée à gauche, elle se lisait comme un oubli. Sur PC
+   seulement : en deux colonnes (téléphone), la rangée suit son cours. */
+@media (min-width: 621px) {
+  .equipe__grille > li:last-child:nth-child(3n + 1) { grid-column: 2; }
+}
+
+button.prof {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button.prof:focus-visible {
+  outline: 2px solid var(--signature);
+  outline-offset: 3px;
+}
+
+/* L'invitation à cliquer, dans la couleur du professeur. Elle apparaît au
+   survol sur ordinateur ; sur un écran tactile, où rien ne survole, elle est
+   là d'emblée — sinon personne ne devinerait que la carte s'ouvre. */
+.prof > .prof__voir {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--signature);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.prof:hover > .prof__voir,
+.prof:focus-visible > .prof__voir {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: none) {
+  .prof > .prof__voir { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------------ la fiche professeur */
+.modale__boite.fiche-prof {
+  --signature: var(--teinte, var(--corail));
+  position: relative;
+  max-width: 560px;
+  padding-top: 0;
+  overflow: hidden;
+}
+
+:root:not([data-theme='light']) .modale__boite.fiche-prof {
+  --signature: color-mix(in srgb, var(--teinte, var(--corail)) 60%, #fff);
+}
+
+/* Le même filet coloré que la carte : la fiche prolonge la carte cliquée. */
+.fiche-prof::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--signature);
+}
+
+.fiche-prof__fermer {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--encre);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fiche-prof__fermer:hover { border-color: var(--encre-douce); }
+
+.fiche-prof__entete {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0 -26px 18px;
+  padding: 30px 60px 20px 26px;
+  border-bottom: 1px solid var(--trait);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--signature) 18%, transparent),
+    transparent 72%
+  );
+  overflow: hidden;
+}
+
+.fiche-prof__entete .motif-matiere {
+  position: absolute;
+  right: -14px;
+  bottom: -18px;
+  width: 150px;
+  color: var(--signature);
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.fiche-prof__entete .avatar { position: relative; flex-shrink: 0; }
+
+.fiche-prof__identite { position: relative; min-width: 0; }
+
+.fiche-prof__surtitre {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--signature);
+}
+
+/* Deux classes : la règle commune `.modale__boite h2` (19 px), écrite plus bas
+   dans le fichier, l'emportait à spécificité égale et rapetissait le prénom. */
+.fiche-prof .fiche-prof__identite h2 {
+  margin: 2px 0 0;
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--encre);
+}
+
+.fiche-prof__titre {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+/* SA PRÉSENTATION EST UNE BULLE : il parle, comme en séance. */
+.fiche-prof__bulle {
+  margin: 4px 0 22px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--signature) 32%, var(--trait));
+  border-radius: 16px 16px 16px 4px;
+  background: color-mix(in srgb, var(--signature) 11%, var(--surface));
+}
+
+.fiche-prof__bulle p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--encre);
+}
+
+.fiche-prof__rubrique {
+  margin: 0 0 10px;
+  /* La police du texte : un h3 prenait sinon celle des titres, en capitales
+     à empattements, trop chargée pour une simple rubrique. */
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.fiche-prof__disciplines {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiche-prof__discipline {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface-2, var(--surface));
+}
+
+.fiche-prof__puce {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--signature);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--signature) 22%, transparent);
+}
+
+.fiche-prof__discipline-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fiche-prof__discipline-texte strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--encre);
+}
+
+.fiche-prof__discipline-texte > span:not(.fiche-prof__etiquettes) {
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.fiche-prof__etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fiche-prof__etiquette {
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--signature) 38%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--signature) 14%, transparent);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.fiche-prof__etiquette--voie {
+  border-color: var(--trait);
+  background: transparent;
+  color: var(--encre-douce);
+}
+
+/* PLUS DE COULEUR EN SOMBRE — Camara, le 15/09/2026. Sur le fond marine, la
+   teinte du professeur se perdait : un filet, une puce, et tout le reste en
+   bleu nuit. Elle gagne ici l'en-tête, l'avatar, la bulle, la rubrique et
+   chaque discipline. La voie prend la sarcelle du site, pour qu'une seconde
+   couleur distingue « Série STL » de « 1re et Terminale ».
+   Le thème clair garde sa version sobre : sur blanc, ces mêmes teintes
+   deviendraient criardes. Le Blue Sky, toujours sombre, en profite aussi. */
+:root:not([data-theme='light']) {
+  .fiche-prof__entete {
+    background:
+      radial-gradient(circle at 70px 50%, color-mix(in srgb, var(--signature) 38%, transparent), transparent 150px),
+      linear-gradient(120deg, color-mix(in srgb, var(--signature) 30%, transparent), transparent 80%);
+    border-bottom-color: color-mix(in srgb, var(--signature) 35%, var(--trait));
+  }
+
+  .fiche-prof__entete .motif-matiere { opacity: 0.3; }
+
+  .fiche-prof__entete .avatar {
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--signature) 70%, transparent),
+      0 0 28px color-mix(in srgb, var(--signature) 45%, transparent);
+  }
+
+  .fiche-prof__titre { color: color-mix(in srgb, var(--signature) 55%, var(--encre)); }
+
+  .fiche-prof__fermer { border-color: color-mix(in srgb, var(--signature) 45%, var(--trait)); }
+
+  .fiche-prof__bulle {
+    border-color: color-mix(in srgb, var(--signature) 45%, transparent);
+    border-left: 4px solid var(--signature);
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--signature) 24%, var(--surface)),
+      color-mix(in srgb, var(--signature) 8%, var(--surface))
+    );
+  }
+
+  .fiche-prof__rubrique { color: var(--signature); }
+
+  .fiche-prof__discipline {
+    border-color: color-mix(in srgb, var(--signature) 28%, var(--trait));
+    border-left: 3px solid var(--signature);
+    background: linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--signature) 16%, var(--surface)),
+      var(--surface) 70%
+    );
+  }
+
+  .fiche-prof__puce {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--signature) 28%, transparent),
+      0 0 12px color-mix(in srgb, var(--signature) 60%, transparent);
+  }
+
+  .fiche-prof__etiquette {
+    border-color: color-mix(in srgb, var(--signature) 55%, transparent);
+    background: color-mix(in srgb, var(--signature) 26%, transparent);
+    color: #fff;
+  }
+
+  .fiche-prof__etiquette--voie {
+    border-color: color-mix(in srgb, var(--sarcelle) 55%, transparent);
+    background: color-mix(in srgb, var(--sarcelle) 20%, transparent);
+    color: #b8f0eb;
+  }
+}
+
+@media (max-width: 560px) {
+  .fiche-prof__entete {
+    flex-direction: column;
+    gap: 10px;
+    padding: 30px 20px 18px;
+    text-align: center;
+  }
+
+  .fiche-prof .fiche-prof__identite h2 { font-size: 26px; }
+}
+
+/* --------------------------------------------------- questions fréquentes */
+/* Un écart en bas aussi, comme la section des avis : sans lui, la dernière
+   question touchait le bandeau « Essayez ce soir ». */
+.faq { padding: var(--ecart-section) 0; }
+
+/* LA LISTE PREND TOUTE LA LARGEUR, LE TITRE RESTE À GAUCHE — Camara, le
+   15/09/2026, après deux essais : calée à gauche sur 860 px, elle laissait un
+   vide à droite ; centrée, elle flottait au milieu de la page. Pleine largeur,
+   elle s'aligne sur les bords des autres sections. Le texte des questions
+   reste aligné à gauche dans sa carte. */
+.faq__liste {
+  display: grid;
+  gap: 12px;
+  margin: 34px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.faq__item {
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faq__item:hover { border-color: color-mix(in srgb, var(--corail) 30%, var(--trait)); }
+
+.faq__item--ouverte {
+  border-color: color-mix(in srgb, var(--corail) 50%, var(--trait));
+  box-shadow: var(--ombre);
+}
+
+.faq__question { margin: 0; }
+
+.faq__question button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 20px;
+  border: 0;
+  background: none;
+  color: var(--encre);
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq__question button:focus-visible {
+  outline: 2px solid var(--corail);
+  outline-offset: -2px;
+  border-radius: var(--rayon);
+}
+
+/* Le « + » devient « − » à l'ouverture : la barre verticale s'efface. */
+.faq__signe {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--corail) 14%, transparent);
+  transition: background 0.2s ease, transform 0.25s ease;
+}
+
+.faq__signe::before,
+.faq__signe::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 2px;
+  margin: -1px 0 0 -6px;
+  border-radius: 2px;
+  background: var(--corail-texte);
+  transition: transform 0.25s ease;
+}
+
+.faq__signe::after { transform: rotate(90deg); }
+
+.faq__item--ouverte .faq__signe {
+  background: var(--corail);
+  transform: rotate(180deg);
+}
+
+.faq__item--ouverte .faq__signe::before,
+.faq__item--ouverte .faq__signe::after { background: #fff; }
+
+.faq__item--ouverte .faq__signe::after { transform: rotate(0deg); }
+
+.faq__reponse { padding: 0 20px 20px; }
+
+.faq__reponse p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--encre-douce);
+}
+
+.faq__liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 12px !important;
+}
+
+.faq__liens a {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--corail-texte);
+}
+
+@media (max-width: 560px) {
+  .faq__question button { padding: 16px; font-size: 15.5px; }
+  .faq__reponse { padding: 0 16px 16px; }
+  .faq__reponse p { font-size: 15px; }
+}
+
+/* En Blue Sky, les questions passent en verre, comme les autres cartes. */
+@media screen {
+  :root[data-da='blue-sky'] .landing .faq__item {
+    border-color: rgba(122, 184, 255, 0.24);
+    background: rgba(4, 20, 50, 0.55);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+  }
+}
+
 /* La pastille « bientôt » et l'estompage qui l'accompagnait ont été retirés
    avec le dernier professeur en attente : les sept matières sont ouvertes. */
 
@@ -2084,7 +2640,15 @@ h1, h2, h3 {
    comme c'était déjà le cas pour la barre de navigation. */
 @media (max-width: 620px) {
   .page__entete:has(.page__entete-actions) { flex-wrap: wrap; }
-  .page__entete-actions { align-self: flex-start; }
+
+  /* CENTRÉ SOUS LE TITRE — Camara, le 15/09/2026 : sur « Vos enfants », la
+     boule d'avis et « Mon compte » se calaient à gauche, collés au bord. Le
+     groupe prend toute la largeur et se centre. */
+  .page__entete-actions {
+    align-self: stretch;
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .cartes {
@@ -2235,8 +2799,50 @@ h1, h2, h3 {
   flex-shrink: 0;
 }
 
+/* SUR TÉLÉPHONE, LE BONJOUR SE LISAIT MAL — relevé par Camara le 15/09/2026 :
+   la boule d'avis se calait au milieu de l'en-tête et rognait la largeur de la
+   phrase, qui cassait en laissant un « ? » seul sur sa ligne, et le badge de
+   classe flottait sans fond à côté.
+
+   La boule monte donc à la hauteur du « Bonjour », en haut à droite, et la
+   phrase reprend TOUTE la largeur sous le titre. Le titre lui réserve sa place
+   à droite pour ne jamais passer dessous. */
 @media (max-width: 560px) {
-  .grille-matieres__entete { align-items: center; }
+  .grille-matieres__entete {
+    position: relative;
+    display: block;
+  }
+
+  .grille-matieres__actions {
+    position: absolute;
+    top: -4px;
+    right: 0;
+  }
+
+  .salutation { margin-bottom: 26px; }
+
+  .salutation h1 {
+    padding-right: 56px;
+    font-size: 30px;
+    line-height: 1.15;
+  }
+
+  .salutation__ligne {
+    align-items: flex-start;
+    margin-top: 12px;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .salutation__ligne > span:not(.badge) { text-wrap: pretty; }
+}
+
+/* Le badge de classe garde sa pastille partout, et ne rétrécit jamais : en
+   Blue Sky, `--surface-2` est presque transparent et le « 3e » flottait nu. */
+.salutation__ligne .badge--classe {
+  flex: none;
+  background: color-mix(in srgb, var(--corail) 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--corail) 35%, transparent);
 }
 
 /* ------------------------------------------ les boutons de thème et d'avis */
@@ -2289,6 +2895,24 @@ h1, h2, h3 {
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.28));
   pointer-events: none;
+}
+
+/* LA BOULE DE L'AVIS TOURNE — Camara, le 15/09/2026. Une rotation lente et
+   continue, qui attire l'œil sans agiter la page.
+
+   PAS D'ACCÉLÉRATION AU SURVOL : changer la durée d'une animation en cours la
+   fait sauter à une autre position, et la boule donnerait un à-coup sous le
+   curseur. Le survol garde son petit soulèvement, porté par le bouton. */
+.bouton-avis__icone {
+  animation: bouton-avis-rotation 9s linear infinite;
+}
+
+@keyframes bouton-avis-rotation {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bouton-avis__icone { animation: none; }
 }
 
 .matieres-grille {
@@ -3989,6 +4613,91 @@ button.eleve-bandeau {
   color: var(--encre-douce);
 }
 
+/* ------------------------------------------------- la carte « Apparence »
+   « TROP MONOCHROME » — Camara, le 16/09/2026. Du texte sur du bleu nuit,
+   un encadré du même bleu, une bascule grise : rien ne disait qu'on parlait
+   de lumière. La carte prend un liseré et une lueur ambrée dans un coin ;
+   l'encadré du réglage se détache du panneau (même ton sur ton que les
+   cartes enfants, même remède) ; la vignette lune/soleil porte la couleur, et
+   tout vire à l'ambre quand le clair est allumé. */
+.bloc-profil--apparence {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, #f5b84d 22%, transparent) 0%,
+      transparent 42%
+    ),
+    var(--surface);
+}
+
+.bloc-profil--apparence::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7ab8f0, #f5b84d);
+}
+
+.apparence__mode {
+  align-items: center;
+  border-color: color-mix(in srgb, var(--encre) 22%, var(--trait));
+  background: color-mix(in srgb, var(--encre) 7%, var(--surface));
+  box-shadow: 0 6px 18px color-mix(in srgb, #000 18%, transparent);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+/* La vignette : un disque sombre étoilé pour la lune, un halo chaud pour le
+   soleil. Les images ont un fond propre, on ne les rogne pas. */
+.apparence__visuel {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, #7ab8f0 30%, transparent), transparent 60%),
+    color-mix(in srgb, #0b1a35 85%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #7ab8f0 35%, transparent);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.apparence__visuel img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px color-mix(in srgb, #000 35%, transparent));
+}
+
+/* Clair allumé : l'encadré et la vignette passent à l'ambre, la bascule aussi. */
+.apparence__mode--clair {
+  border-color: color-mix(in srgb, #f5b84d 55%, var(--trait));
+  background: color-mix(in srgb, #f5b84d 10%, var(--surface));
+}
+
+.apparence__mode--clair .apparence__visuel {
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, #f5b84d 55%, transparent), transparent 70%),
+    color-mix(in srgb, #f5b84d 18%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f5b84d 60%, transparent);
+}
+
+.apparence__mode--clair .bascule--active .bascule__piste { background: #e8a13a; }
+
+.apparence__mode--clair .mode__etat--actif {
+  border-color: color-mix(in srgb, #e8a13a 55%, transparent);
+  background: color-mix(in srgb, #e8a13a 16%, transparent);
+  color: #b26a00;
+}
+
+:root:not([data-theme='light']) .apparence__mode--clair .mode__etat--actif { color: #f5b84d; }
+
+@media (max-width: 560px) {
+  .apparence__mode { flex-wrap: wrap; }
+}
+
 /* La phrase qui remplace le choix du thème en Blue Sky : masquée ailleurs. */
 .bloc-profil__note-blue-sky {
   display: none;
@@ -4537,6 +5246,16 @@ button.eleve-bandeau {
   align-items: center;
   gap: 14px;
   margin-bottom: 22px;
+}
+
+/* LE BOUTON « NOUVEAU PARENT », SUR SA PROPRE LIGNE — Camara, le 16/09/2026 :
+   « trop collé au filtre ». Un geste de création n'est pas un filtre : il se
+   range à droite, au-dessus de la recherche, avec un vrai espace entre les
+   deux. */
+.admin__creation {
+  display: flex;
+  justify-content: flex-end;
+  margin: 4px 0 18px;
 }
 
 /* Même style que .tri-histo select : sans lui, un <select> posé nu dans
@@ -5402,6 +6121,53 @@ button.eleve-bandeau {
    catégories, avec leur icône, respirent mal en dessous de 460px. */
 .modale__boite--signalement { max-width: 460px; }
 
+/* LE FORMULAIRE EST L'ENFANT DE LA BOÎTE, ET C'EST LUI QUI SE DÉCOUPE en
+   en-tête, corps et boutons (15/09/2026). `min-height: 0` : sans lui, un
+   enfant flex refuse de rétrécir sous sa hauteur de contenu, et le corps ne
+   défile jamais — les boutons repassaient sous le bord de l'écran. */
+.signalement-modale__formulaire {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.signalement-modale__formulaire > .signalement-modale__entete { flex: 0 0 auto; }
+
+.signalement-modale__formulaire > .modale__actions {
+  flex: 0 0 auto;
+  margin-top: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--trait);
+}
+
+/* LE FILET DE SÉCURITÉ DE TOUTES LES FENÊTRES — même jour. Une fenêtre qui
+   n'est pas découpée en corps qui défile (formulaire d'un contrôle, dialogues
+   courts) débordait de sa boîte dès que l'écran était moins haut qu'elle : le
+   bas, donc les boutons, passait hors de portée. Elle défile désormais tout
+   entière À L'INTÉRIEUR de sa boîte. Les fenêtres découpées gardent leur
+   comportement : leur corps défile déjà. */
+.modale__boite:not(:has(.modale__corps)) {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* LA PAGE FIGÉE DERRIÈRE UNE FENÊTRE — posée par `verrouDefilement.js`, qui
+   fige aussi le corps en position fixe (seule parade fiable sur iPhone). */
+html.defilement-bloque,
+html.defilement-bloque body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 480px) {
+  .modale__boite--signalement .signalement-modale__entete { gap: 12px; margin-bottom: 14px; padding-bottom: 12px; }
+  .modale__boite--signalement .signalement-modale__badge { width: 40px; height: 40px; border-radius: 12px; }
+  .modale__boite--signalement .signalement-modale__titre { font-size: 20px; }
+  .modale__boite--signalement .signalement-modale__intro { font-size: 13px; }
+  .modale__boite--signalement .signalement-modale__categories { gap: 8px; margin-bottom: 16px; }
+}
+
 .signalement-modale__intro {
   margin: 0 0 20px;
   color: var(--encre-douce);
@@ -5531,9 +6297,11 @@ button.eleve-bandeau {
   transform: scale(1.06);
 }
 
+/* 58 px sur téléphone (était 68) : quatre scènes de 68 px, plus leurs
+   libellés, prenaient à elles seules la moitié de la fenêtre. */
 @media (max-width: 420px) {
-  .signalement-categorie { padding: 12px 8px 10px; font-size: 13px; }
-  .signalement-categorie__icone { width: 68px; height: 68px; }
+  .signalement-categorie { padding: 10px 8px 9px; gap: 6px; font-size: 13px; }
+  .signalement-categorie__icone { width: 58px; height: 58px; }
 }
 
 .signalement-modale__compteur {
@@ -12568,6 +13336,473 @@ button.eleve-bandeau {
    qui déclenche. */
 .diffusion { max-width: 720px; }
 
+/* ------------------------------------------------ l'atelier des courriels
+   LE FORMULAIRE À GAUCHE, LES TEMPLATES À DROITE — Camara, le 15/09/2026.
+   La colonne reste visible pendant qu'on fait défiler un long message
+   (`sticky`), et passe sous le formulaire quand la place manque : sur un
+   écran étroit, deux colonnes serreraient le texte à trois mots par ligne. */
+.atelier-mails {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+.atelier-mails .diffusion { max-width: none; }
+
+/* La description d'un template : deux lignes, pas la grande zone du message. */
+.diffusion textarea.champ-description { min-height: 64px; }
+
+/* ------------------------------------------ les groupes du formulaire
+   DES CARTES NUMÉROTÉES — Camara, le 15/09/2026 : « séparer les groupes
+   d'information ». Le template, le destinataire, le courriel : chacun sa
+   carte, son numéro et son liseré de couleur, pour qu'on reconnaisse le
+   groupe avant d'en lire le titre. */
+.section-mail {
+  --section-teinte: var(--trait);
+  position: relative;
+  margin-bottom: 18px;
+  padding: 20px 22px 6px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--encre) 4%, transparent);
+  overflow: hidden;
+}
+
+/* Le liseré en haut de la carte, pas un cadre entier : on signe le groupe,
+   on ne l'enferme pas. */
+.section-mail::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--section-teinte);
+}
+
+.section-mail--sarcelle { --section-teinte: var(--sarcelle); }
+.section-mail--corail { --section-teinte: var(--corail); }
+.section-mail--bleu { --section-teinte: #5b8def; }
+
+.section-mail__entete {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-mail__numero {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--section-teinte) 18%, transparent);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--section-teinte);
+}
+
+.section-mail__titre {
+  margin: 3px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--encre);
+}
+
+.section-mail__aide {
+  margin: 3px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+/* Les pièces jointes, déjà encadrées, se posent sur un fond légèrement
+   différent pour ne pas faire carte dans la carte. */
+.section-mail .diffusion__pieces {
+  border-style: dashed;
+  background: var(--surface-2, var(--surface));
+}
+
+.section-mail .diffusion__poids-total { margin-bottom: 14px; }
+
+/* La programmation a déjà sa carte : dans une section, elle s'efface. */
+.section-mail .planification {
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* Les champs eux-mêmes suivent la règle commune du thème sombre, en fin de
+   fichier (« LES CHAMPS DE SAISIE SE DÉTACHENT »). Le libellé passe en gras,
+   au-dessus d'un champ désormais bien distinct. */
+.section-mail .champ label { font-weight: 600; color: var(--encre); }
+
+/* LA BARRE D'ACTIONS RESTE EN BAS DE L'ÉCRAN pendant qu'on écrit un long
+   message : relire, enregistrer ou envoyer sans redescendre. */
+.diffusion__actions--barre {
+  position: sticky;
+  bottom: 12px;
+  z-index: 4;
+  align-items: center;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--ombre-l, var(--ombre));
+}
+
+/* Le geste principal, poussé à droite de la barre. */
+.diffusion__actions--barre .diffusion__envoi { margin-left: auto; }
+
+@media (max-width: 560px) {
+  .section-mail { padding: 16px 14px 4px; }
+
+  .diffusion__actions--barre { bottom: 8px; }
+  .diffusion__actions--barre .btn { flex: 1 1 auto; }
+  .diffusion__actions--barre .diffusion__envoi { margin-left: 0; }
+}
+
+.diffusion__note-creation {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--corail) 45%, var(--trait));
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+.diffusion__note-creation strong { color: var(--encre); }
+
+.modeles {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+}
+
+@media (max-width: 980px) {
+  .atelier-mails { grid-template-columns: minmax(0, 1fr); }
+  .modeles { position: static; }
+}
+
+.modeles__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modeles__titre { margin: 0; font-size: 16px; font-weight: 700; color: var(--encre); }
+
+.modeles .onglets--secondaires { margin: 0; }
+
+.modeles__vide,
+.modeles__erreur {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+.modeles__erreur { color: var(--danger); }
+
+.modeles__liste {
+  display: grid;
+  gap: 8px;
+  max-height: 60vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.modeles__item {
+  border: 1px solid var(--trait);
+  border-left: 3px solid transparent;
+  border-radius: 12px;
+  background: var(--surface-2, var(--surface));
+}
+
+/* Le template ouvert porte le corail : c'est lui qu'on modifie. */
+.modeles__item.est-choisi {
+  border-color: color-mix(in srgb, var(--corail) 45%, var(--trait));
+  border-left-color: var(--corail);
+}
+
+.modeles__choisir {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.modeles__nom { font-size: 14px; font-weight: 600; color: var(--encre); }
+
+.modeles__description { font-size: 12.5px; line-height: 1.45; color: var(--encre-douce); }
+
+.modeles__badge {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre-douce) 14%, transparent);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.modeles__badge--programme {
+  background: color-mix(in srgb, var(--sarcelle) 18%, transparent);
+  color: var(--sarcelle);
+}
+
+.modeles__supprimer,
+.modeles__confirmation { margin: 0 12px 10px; }
+
+.modeles__confirmation { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* « Vous avez choisi un template » : en sarcelle, comme une information qui
+   rassure, pas en corail comme une alerte. */
+.bandeau-modele {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--sarcelle) 40%, var(--trait));
+  border-left: 3px solid var(--sarcelle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sarcelle) 8%, transparent);
+  font-size: 14px;
+}
+
+.bandeau-modele__aide { font-size: 13px; color: var(--encre-douce); }
+
+.etat-enregistrement {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.etat-enregistrement--enregistre { color: var(--sarcelle); }
+.etat-enregistrement--erreur { color: var(--danger); }
+
+.diffusion__note-auto { margin: 0; font-size: 13.5px; color: var(--encre-douce); }
+
+.modeles__badge--attente {
+  background: color-mix(in srgb, var(--corail) 14%, transparent);
+  color: var(--corail);
+}
+
+/* Tant qu'aucun courriel automatique n'est choisi : un cadre en pointillés,
+   pas un formulaire vide qu'on croirait pouvoir remplir. */
+.diffusion--attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 24px;
+  border: 1px dashed var(--trait);
+  border-radius: var(--rayon-l);
+}
+
+.diffusion__vide-auto {
+  max-width: 42ch;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--encre-douce);
+}
+
+.modele-auto__description {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--surface-2, var(--surface));
+}
+
+.modele-auto__description strong { display: block; font-size: 16px; color: var(--encre); }
+
+.modele-auto__description p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+/* Les variables : du texte à recopier, en chasse fixe, comme les marqueurs
+   d'image — et cliquables. */
+.variables-mail { margin: -8px 0 20px; }
+
+.variables-mail__titre {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+}
+
+.variables-mail__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.variables-mail__liste li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 13px;
+}
+
+.variables-mail__puce {
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--corail) 40%, var(--trait));
+  border-radius: 6px;
+  background: var(--surface-2, var(--surface));
+  font-family: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+  font-size: 12.5px;
+  color: var(--corail);
+  cursor: pointer;
+}
+
+.variables-mail__puce:hover { background: color-mix(in srgb, var(--corail) 12%, transparent); }
+
+.variables-mail__description { color: var(--encre-douce); }
+
+/* La programmation d'un courriel automatique, sous son contenu. */
+.planification {
+  margin-top: 26px;
+  padding: 18px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+}
+
+.planification__titre { font-size: 15px; color: var(--encre); }
+
+.planification--bloquee p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+.planification__champs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin-top: 16px;
+}
+
+.planification__champs .champ { flex: 1 1 160px; margin-bottom: 12px; }
+
+.planification__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.planification__actions .etat-enregistrement { margin-left: 0; }
+
+.planification__infos {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.planification__infos strong { color: var(--encre); }
+
+/* Les pages des liens de courriel : désabonnement et avis. Une carte seule,
+   centrée — on y arrive pour un seul geste. */
+.desabonnement,
+.donner-avis {
+  display: flex;
+  justify-content: center;
+  padding-block: 60px;
+}
+
+.desabonnement__carte,
+.donner-avis__carte {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+  box-shadow: var(--ombre);
+  text-align: center;
+}
+
+.desabonnement__carte h1,
+.donner-avis__carte h1 {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-size: 26px;
+  color: var(--encre);
+}
+
+.desabonnement__texte,
+.donner-avis__texte {
+  margin: 0 0 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+.desabonnement__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.desabonnement__confirmation {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--sarcelle) 12%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sarcelle);
+}
+
+@media (max-width: 560px) {
+  .desabonnement__carte,
+  .donner-avis__carte { padding: 24px 18px; }
+}
+
 .diffusion textarea {
   min-height: 220px;
   line-height: 1.6;
@@ -13253,9 +14488,40 @@ button.eleve-bandeau {
   line-height: 1.35;
 }
 
-/* QUATRE BOUTONS, PAS DEUX : ils tiennent sur une ligne sur un écran large,
-   et se rangent deux par deux sur un téléphone. */
-.choix-dictee--vitesse .choix-dictee__boutons .btn { flex: 1 1 130px; }
+/* DEUX PAR DEUX — Camara, le 16/09/2026 : « très lent et lent sur une ligne,
+   normal et rapide sur l'autre ». À quatre sur une ligne, les libellés
+   passaient à la ligne chacun à sa façon et la quatrième carte tombait seule
+   en dessous : on lisait trois vitesses plus une, au lieu de quatre. Une
+   grille à deux colonnes range les cartes et leur donne la même taille. */
+.choix-dictee--vitesse .choix-dictee__boutons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* TOUT EST CENTRÉ DANS LA CARTE — Camara, le 16/09/2026. Le dessin occupe
+   toute la largeur de la carte : un libellé calé à gauche sous une image
+   centrée déséquilibrait chaque case. Les deux autres questions (le mode de
+   dictée) gardent leur texte à gauche : elles n'ont pas d'image. */
+.choix-dictee--vitesse .choix-dictee__boutons .btn {
+  align-items: center;
+  text-align: center;
+}
+
+/* Le dessin de la vitesse, dans la question posée en séance : assez grand pour
+   qu'un enfant le lise d'un coup d'œil, cadré comme sur la page d'accueil.
+   Centré dans sa carte, le texte restant calé à gauche sous lui. */
+.choix-dictee__image {
+  display: block;
+  align-self: center;
+  /* Agrandi le 16/09/2026, une fois les sous-titres retirés : c'est le dessin
+     qui porte la vitesse, le mot ne fait que la nommer. Puis ramené de 104 à
+     72 px le même jour — « ça ne rentre pas dans la fenêtre » : la carte
+     mangeait toute la hauteur de la séance, message du professeur compris. */
+  width: 72px;
+  height: 72px;
+  margin-bottom: 4px;
+  object-fit: contain;
+}
 
 .choix-dictee__boutons .btn small {
   font-size: 12px;
@@ -15370,11 +16636,17 @@ button.eleve-bandeau {
   margin-bottom: 22px;
 }
 
+/* SUR LA MÊME LIGNE, MÊME SUR TÉLÉPHONE — Camara, le 15/09/2026. Les deux
+   pastilles s'empilaient sous 720 px, alors qu'elles tiennent côte à côte sur
+   un écran de 390 : l'empilement ne faisait que repousser le « Bonjour ».
+   `flex-wrap` garde un repli sur les écrans vraiment étroits, où la seconde
+   passe à la ligne plutôt que de déborder. */
 @media (max-width: 720px) {
-  /* Sans ce `flex-start`, un enfant flex empilé s'étire par défaut sur
-     toute la largeur — juste pour deux pastilles qui doivent rester aussi
-     compactes qu'à côté l'une de l'autre. */
-  .liens-carte { flex-direction: column; }
+  .liens-carte { flex-wrap: wrap; gap: 8px; }
+}
+
+@media (max-width: 380px) {
+  .liens-carte .lien-carte { padding: 6px 12px; font-size: 13px; }
 }
 
 /* Le lien vers la carte, sur l'écran où l'enfant arrive.
@@ -15394,6 +16666,47 @@ button.eleve-bandeau {
 }
 
 .lien-carte:hover { border-color: var(--serie-2); color: var(--serie-2); }
+
+/* L'ILLUSTRATION EN BADGE — 15/09/2026. `carte.png` et `calendrier.png` en
+   position absolue, à cheval sur le bord gauche de la pastille, qui leur
+   réserve la place : le libellé ne passe jamais dessous. Le badge déborde en
+   haut et en bas — la ligne garde donc un peu d'air autour. */
+/* EN BADGE DE NOTIFICATION — Camara, même jour : d'abord à gauche, puis à
+   droite à mi-hauteur, le badge monte au COIN HAUT DROIT de la pastille, plus
+   petit, comme la pastille rouge d'une application sur un téléphone. Il
+   déborde vers le haut : la ligne lui garde cet espace au-dessus. */
+.liens-carte:has(.lien-carte--badge) {
+  gap: 16px 20px;
+  padding: 14px 8px 2px 0;
+}
+
+.lien-carte--badge {
+  position: relative;
+  padding: 8px 22px 8px 16px;
+  font-weight: 500;
+}
+
+.lien-carte__badge {
+  position: absolute;
+  top: -15px;
+  right: -11px;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+  transform: rotate(8deg);
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+
+.lien-carte--badge:hover .lien-carte__badge {
+  transform: rotate(0deg) scale(1.1);
+}
+
+@media (max-width: 380px) {
+  .liens-carte .lien-carte--badge { padding: 7px 18px 7px 12px; }
+  .lien-carte__badge { width: 28px; height: 28px; top: -13px; right: -9px; }
+}
 
 /* « Ma carte », en grand, sur la page d'accueil de l'ENFANT.
    -------------------------------------------------------------------------
@@ -16186,6 +17499,73 @@ button.eleve-bandeau {
 
 .controle-form__dictee .micro { flex-shrink: 0; }
 
+/* LE MICRO « VOIX.PNG » — 15/09/2026. Au repos il RESPIRE : un halo corail qui
+   gonfle et se dissout, et l'image qui s'avance d'un rien. Pendant l'écoute, la
+   respiration s'arrête net et laisse une surbrillance FIXE — anneau plein et
+   fond teinté — : on sait que le micro est ouvert sans rien qui bouge. */
+.controle-form__voix {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: 2px solid color-mix(in srgb, var(--corail) 45%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--corail) 10%, var(--surface));
+  cursor: pointer;
+  animation: controle-voix-respire 2.2s ease-in-out infinite;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.controle-form__voix-image {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  animation: controle-voix-image 2.2s ease-in-out infinite;
+}
+
+@keyframes controle-voix-respire {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--corail) 45%, transparent); }
+  60%      { box-shadow: 0 0 0 12px color-mix(in srgb, var(--corail) 0%, transparent); }
+}
+
+@keyframes controle-voix-image {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+
+.controle-form__voix:hover { background: color-mix(in srgb, var(--corail) 20%, var(--surface)); }
+
+.controle-form__voix:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--corail) 60%, transparent);
+  outline-offset: 3px;
+}
+
+/* En écoute : immobile, et nettement allumé. */
+.controle-form__voix--actif,
+.controle-form__voix--actif .controle-form__voix-image {
+  animation: none;
+}
+
+.controle-form__voix--actif {
+  border-color: var(--corail);
+  background: color-mix(in srgb, var(--corail) 30%, var(--surface));
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--corail) 35%, transparent),
+    0 0 22px color-mix(in srgb, var(--corail) 55%, transparent);
+}
+
+.controle-form__voix--actif .controle-form__voix-image { transform: scale(1.06); }
+
+@media (prefers-reduced-motion: reduce) {
+  .controle-form__voix,
+  .controle-form__voix-image { animation: none; }
+}
+
 .controle-form__dictee-mot {
   display: flex;
   flex-direction: column;
@@ -16201,6 +17581,13 @@ button.eleve-bandeau {
   font-size: 12.5px;
   font-style: italic;
   color: var(--encre-douce);
+}
+
+/* Ce que l'enfant dit, en direct pendant la dictée : en encre pleine, pour
+   qu'il voie SA phrase arriver, pas une consigne grisée. */
+.controle-form__dictee-mot .controle-form__entendu {
+  color: var(--encre);
+  font-style: normal;
 }
 
 .controle-form__saisie {
@@ -16224,6 +17611,23 @@ button.eleve-bandeau {
   border-radius: 0 0 var(--rayon-l) var(--rayon-l);
   border-top: 1px solid var(--trait);
   background: var(--surface-2);
+}
+
+/* LES BOUTONS RESTENT EN VUE — 15/09/2026. Sur un téléphone, la fenêtre défile
+   (voir le filet de sécurité des fenêtres) et la barre « Annuler / Ajouter »
+   passait sous le bord : on croyait le formulaire coupé. Collée au bas de la
+   fenêtre, elle reste visible pendant que les champs défilent au-dessus.
+   `bottom: -26px` compense le rembourrage de la boîte, d'où la barre part déjà
+   par sa marge négative. Le fond est rendu OPAQUE (surface-2 posée sur
+   surface) : les champs qui passent dessous ne doivent pas transparaître. */
+.controle-form .modale__actions {
+  position: sticky;
+  bottom: -26px;
+  z-index: 1;
+  background:
+    linear-gradient(var(--surface-2), var(--surface-2)),
+    linear-gradient(var(--surface), var(--surface)),
+    var(--papier);
 }
 
 /* Le micro était un rond gris sur fond sombre, qu'on pouvait prendre pour un
@@ -16279,10 +17683,191 @@ button.eleve-bandeau {
   opacity: 1;
 }
 
+/* ------------------------------------------------- l'heure sur une horloge
+   LE CHAMP NATIF EST PARTI — Camara, le 16/09/2026 : « sur mobile l'heure
+   s'ouvre mal ». Des pastilles ont été essayées le même jour, « pas fan » :
+   il voulait « une vraie horloge, l'heure d'abord, puis les minutes ». Le
+   cadran est un SVG dessiné par `ChoixHeure` ; ici, ses couleurs et sa
+   taille. */
+.champ__libelle {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cadran-heure {
+  padding: 12px 14px 14px;
+  border: 1px solid color-mix(in srgb, var(--encre) 14%, var(--trait));
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.cadran-heure__resume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.cadran-heure__icone {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px color-mix(in srgb, #000 30%, transparent));
+}
+
+/* « 9 h » et « 05 » sont deux boutons : toucher l'un rouvre son cadran, la
+   partie active est en corail — comme sur un téléphone. */
+.cadran-heure__valeur {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cadran-heure__partie {
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--encre-douce);
+  font-family: var(--display);
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.cadran-heure__partie.est-active {
+  background: color-mix(in srgb, var(--corail) 14%, transparent);
+  color: var(--corail-texte);
+}
+
+.cadran-heure__partie:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--corail) 30%, transparent);
+}
+
+.cadran-heure__vide { font-size: 14px; color: var(--encre-douce); }
+
+.cadran-heure__effacer {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--trait-bouton);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre-douce);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.cadran-heure__effacer:hover { color: var(--encre); border-color: var(--encre-douce); }
+
+.cadran-heure__consigne {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--encre-douce);
+}
+
+/* Le cadran prend la largeur disponible, jusqu'à 260 px : assez grand pour
+   le pouce, assez petit pour tenir dans la modale sans la faire défiler.
+   `touch-action: none` : glisser l'aiguille ne doit pas faire défiler la
+   page sur téléphone. */
+.cadran-heure__cadran {
+  display: block;
+  width: min(100%, 260px);
+  height: auto;
+  margin: 0 auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cadran-heure__fond {
+  fill: var(--surface);
+  stroke: var(--trait);
+  stroke-width: 1;
+}
+
+.cadran-heure__aiguille {
+  stroke: var(--corail);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.cadran-heure__axe { fill: var(--corail); }
+
+.cadran-heure__pointe { fill: var(--corail); }
+
+.cadran-heure__nombre { cursor: pointer; outline: none; }
+
+.cadran-heure__nombre circle {
+  fill: transparent;
+  transition: fill 0.15s;
+}
+
+.cadran-heure__nombre:hover circle { fill: color-mix(in srgb, var(--corail) 18%, transparent); }
+
+.cadran-heure__nombre:focus-visible circle {
+  stroke: var(--corail);
+  stroke-width: 2;
+}
+
+.cadran-heure__nombre text {
+  fill: var(--encre);
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.cadran-heure__nombre--petit text {
+  font-size: 12px;
+  font-weight: 500;
+  fill: var(--encre-douce);
+}
+
+/* Le nombre choisi est sous la pointe de l'aiguille : il passe en blanc sur
+   le disque corail. */
+.cadran-heure__nombre.est-choisi text { fill: #fff; }
+
 /* Sur un téléphone, les deux champs date/heure côte à côte deviennent trop
    étroits pour que leur icône reste atteignable au pouce. */
 @media (max-width: 480px) {
   .controle-form .duo { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* LE CHAMP « HEURE » SORTAIT DU FORMULAIRE SUR IPHONE — relevé par Camara le
+   15/09/2026. Safari donne aux champs date et heure une largeur propre, qu'il
+   ne réduit pas, et une case de grille ne descend pas sous la largeur de son
+   contenu (`min-width: auto`). Les deux verrous sautent ensemble. */
+.controle-form .duo > .champ { min-width: 0; }
+
+.controle-form input[type='date'],
+.controle-form input[type='time'] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* SUR IPHONE SEULEMENT (`-webkit-touch-callout` n'existe que là) : l'apparence
+   native y impose aussi sa hauteur, qui s'effondre quand le champ est vide.
+   Ailleurs, on garde l'icône du calendrier et de l'horloge du navigateur. */
+@supports (-webkit-touch-callout: none) {
+  .controle-form input[type='date'],
+  .controle-form input[type='time'] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 48px;
+    text-align: left;
+  }
+
+  .controle-form input[type='date']::-webkit-date-and-time-value,
+  .controle-form input[type='time']::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 /* LE MOT « CONTRÔLE » DANS LA CASE — la couleur seule ne porte pas
@@ -16364,22 +17949,56 @@ button.eleve-bandeau {
 /* Le titre et le bouton aux deux bouts d'une MÊME ligne, à l'intérieur du
    panneau : le bouton partait sinon à l'autre bout de l'écran, aligné sur
    rien, à mille pixels du titre auquel il se rapporte. */
+/* TITRES CENTRÉS, ILLUSTRATION AU BORD GAUCHE — Camara, le 15/09/2026, pour
+   « Mes contrôles » comme pour la préparation aux examens (mêmes classes).
+   Trois colonnes : le titre au milieu, le bouton « Ajouter un contrôle » à
+   droite, et une colonne gauche de même largeur que la droite, sans quoi le
+   titre serait centré sur l'espace restant et non sur la carte.
+   L'illustration sort du flux (`position: absolute` sur l'en-tête) : restée
+   dans la ligne, elle poussait le titre vers la droite ou suivait le centre. */
 .controles-section__entete {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 18px;
-  flex-wrap: wrap;
   margin-bottom: 20px;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--trait);
 }
 
 .controles-section__titre {
-  display: flex;
-  align-items: center;
-  gap: 13px;
+  grid-column: 2;
   min-width: 0;
+  text-align: center;
+}
+
+/* Préfixé par le titre : l'emporte sur la règle de base de l'illustration,
+   écrite plus bas, sans toucher à sa taille ni à son inclinaison. */
+.controles-section__titre .controles-section__icone {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.controles-section__entete > .btn-controle {
+  grid-column: 3;
+  justify-self: end;
+}
+
+/* Trop étroit pour trois colonnes : le bouton passe sous le titre, centré.
+   Une marge de la largeur de l'illustration DE CHAQUE CÔTÉ : le texte ne
+   passe jamais dessous, et reste au milieu. */
+@media (max-width: 1000px) {
+  .controles-section__entete { display: flex; flex-direction: column; }
+  .controles-section__titre { padding: 0 96px; }
+  .controles-section__entete > .btn-controle { align-self: center; }
+}
+
+/* Sur téléphone, les marges latérales écraseraient le texte : il descend
+   sous l'illustration, qui garde sa place au bord gauche. */
+@media (max-width: 620px) {
+  .controles-section__titre { padding: 50px 0 0; }
 }
 
 /* L'ILLUSTRATION QUI SORT DE LA CARTE — Camara, le 14/09/2026.
@@ -16422,18 +18041,81 @@ button.eleve-bandeau {
 
 /* Au même rang que « Bientôt avec toi » et les titres de matière : la section
    n'est pas un sous-chapitre de la grille, elle lui succède. */
+/* DES TITRES QUI SE VOIENT — Camara, le 15/09/2026 : « tristes, pas assez mis
+   en valeur ». Plus grands, plus gras, et un TRAIT LUMINEUX dessous, dans la
+   couleur de la section : l'orange des contrôles, l'or de la médaille pour
+   les examens. Un surligneur a été essayé d'abord : sur le fond marine,
+   l'orange translucide virait au marron.
+   En sombre, le titre passe du blanc à une teinte chaude vers le bas ; en
+   clair il garde l'encre de la page, qui porte déjà assez de contraste. */
+.controles-section {
+  --titre-trait-a: #f28c1e;
+  --titre-trait-b: #ffc46b;
+  --titre-lueur: rgba(242, 140, 30, 0.55);
+  --titre-teinte: #ffd6a0;
+}
+
+.examen-section {
+  --titre-trait-a: #f5b014;
+  --titre-trait-b: #ffe28a;
+  --titre-lueur: rgba(245, 176, 20, 0.5);
+  --titre-teinte: #ffe7a6;
+}
+
+:root[data-theme='light'] .controles-section {
+  --titre-trait-a: #c96712;
+  --titre-trait-b: #f28c1e;
+  --titre-lueur: rgba(201, 103, 18, 0.28);
+}
+
+:root[data-theme='light'] .examen-section {
+  --titre-trait-a: #b7791f;
+  --titre-trait-b: #f5b014;
+  --titre-lueur: rgba(183, 121, 31, 0.28);
+}
+
 .controles-section h2 {
+  position: relative;
+  display: inline-block;
   margin: 0;
+  padding-bottom: 14px;
   font-family: var(--display);
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
   color: var(--encre);
 }
 
+:root:not([data-theme='light']) .controles-section h2 {
+  background: linear-gradient(180deg, #ffffff 35%, var(--titre-teinte) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.controles-section h2::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 60px;
+  height: 5px;
+  margin-left: -30px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--titre-trait-a), var(--titre-trait-b));
+  box-shadow: 0 0 14px var(--titre-lueur);
+}
+
 .controles-section__titre p {
-  margin: 2px 0 0;
-  font-size: 13.5px;
+  margin: 8px 0 0;
+  font-size: 14.5px;
   color: var(--encre-douce);
+}
+
+@media (max-width: 620px) {
+  .controles-section h2 { font-size: 25px; }
+  .controles-section__titre p { font-size: 13.5px; }
 }
 
 /* ------------------------------------------------ le bouton « Ajouter un contrôle »
@@ -18234,6 +19916,81 @@ button.eleve-bandeau {
 .comparatif__prix .comparatif__nous { font-size: 15px; color: var(--encre); }
 .comparatif__prix small { display: block; font-size: 12.5px; color: var(--encre-douce); }
 
+/* SUR TÉLÉPHONE, UNE CARTE PAR CRITÈRE — Camara, le 16/09/2026 : « l'utilisateur
+   ne va jamais slider ». Le tableau défilant cachait la colonne Mimia, celle
+   qu'on vient voir, derrière un geste que personne ne fait. Chaque ligne
+   devient un bloc : le critère sur toute la largeur, puis les trois réponses
+   côte à côte, chacune sous le nom de sa colonne (`data-colonne`). L'en-tête
+   n'est plus affiché, mais reste lu : chaque case porte déjà sa phrase
+   complète pour les lecteurs d'écran. */
+@media (max-width: 620px) {
+  .comparatif__cadre { overflow-x: visible; }
+
+  .comparatif { min-width: 0; }
+
+  .comparatif thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .comparatif tbody { display: block; }
+
+  .comparatif tbody tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 14px 12px;
+  }
+
+  .comparatif tbody th {
+    grid-column: 1 / -1;
+    padding: 0 2px 4px;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .comparatif td {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Le nom en haut, la réponse en bas : « PROF PARTICULIER » tient sur deux
+       lignes, et centrer décalait son ✓ sous ceux des deux autres cases. */
+    justify-content: space-between;
+    gap: 4px;
+    padding: 8px 4px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    line-height: 1.3;
+  }
+
+  .comparatif td::before {
+    content: attr(data-colonne);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--encre-douce);
+  }
+
+  /* Mimia garde son fond sarcelle et gagne un liseré : sans colonne, c'est
+     le seul repère qui la signale. */
+  .comparatif td:is(.comparatif__nous, .comparatif__case--nous) {
+    background: color-mix(in srgb, var(--sarcelle) 14%, var(--surface-2));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sarcelle) 45%, transparent);
+  }
+
+  .comparatif td:is(.comparatif__nous, .comparatif__case--nous)::before { color: var(--sarcelle); }
+
+  .comparatif__prix td { font-size: 13px; }
+  .comparatif__prix .comparatif__nous { font-size: 14px; }
+  .comparatif__prix small { font-size: 11.5px; }
+}
+
 /* ------------------------------------------------------------------ prix */
 /* UN SEUL PRIX, MIS EN AVANT — remplace les trois cartes le 12/09/2026.
    Le montant occupe la moitié gauche, ce qu'on obtient pour ce prix la
@@ -18606,9 +20363,15 @@ button.eleve-bandeau {
 
 .exercices__boutons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 
+/* CENTRÉE, COMME EN SÉANCE — Camara, le 16/09/2026 : la démonstration de
+   l'accueil montre le vrai écran, elle doit donc bouger avec lui. Le dessin,
+   le nom et la phrase sont centrés ; seule la phrase reste ici, parce que
+   c'est un parent qui lit cette page. */
 .exercices__vitesse {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 2px;
   padding: 10px 12px;
   border: 1px solid var(--trait-bouton);
@@ -18624,7 +20387,16 @@ button.eleve-bandeau {
   background: color-mix(in srgb, var(--sarcelle) 14%, var(--surface));
 }
 
-.exercices__icone { font-size: 15px; }
+/* LE DESSIN DE LA VITESSE (16/09/2026). Les images ne sont pas au même
+   cadrage : `contain` les fait tenir dans le même carré sans les déformer, et
+   les quatre lignes de texte restent alignées. */
+.exercices__icone {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 4px;
+  object-fit: contain;
+}
 .exercices__vitesse strong { font-size: 14px; color: var(--encre); }
 .exercices__vitesse small { font-size: 12px; color: var(--encre-douce); }
 
@@ -19722,6 +21494,16 @@ button.eleve-bandeau {
     }
   }
 
+  /* SUR TÉLÉPHONE, LA BOULE D'AVIS RESTE EN HAUT À DROITE. La règle juste
+     au-dessus la passait en `position: relative` pour la garder devant le
+     voile : plus précise que le placement du téléphone, elle la faisait
+     tomber sous la phrase. Elle reste devant le voile, en position absolue. */
+  @media (max-width: 560px) {
+    :root[data-da='blue-sky'] .grille-matieres__entete > .grille-matieres__actions {
+      position: absolute;
+    }
+  }
+
   /* PAS DE CHOIX DU THÈME EN BLUE SKY — Camara, le 15/09/2026. Le style impose
      le sombre (`appliquerTheme`) : le bouton lune/soleil ne ferait plus rien,
      il disparaît partout. Dans « Mon compte », l'interrupteur « Thème clair »
@@ -19794,4 +21576,92 @@ button.eleve-bandeau {
       0 0 0 1px rgba(255, 122, 92, 0.18),
       0 0 60px rgba(255, 122, 92, 0.12);
   }
+}
+
+/* ================================================================
+   LES CHAMPS DE SAISIE SE DÉTACHENT — thème sombre et Blue Sky
+   ================================================================
+   Camara, le 15/09/2026 : « la ton sur ton je me perds entre le champ de
+   saisie et le label ». Chaque écran posait ses champs sur `--surface` ou
+   `--surface-2`, le bleu nuit exact de la carte. Le blanc pur, essayé d'abord
+   sur les courriels, était « trop violent ». Retenu : un fond un cran plus
+   clair que ce qui l'entoure et un contour net — puis « partout dans
+   l'application ».
+
+   EN FIN DE FICHIER ET AVEC `:root:not(...)` : la règle passe devant celles
+   de chaque écran (`.champ input`, `.chat__saisie textarea`, `.filtres select`…)
+   sans qu'on aille les retoucher une à une. Le thème clair n'est pas concerné ;
+   Blue Sky impose le sombre et en hérite.
+
+   HORS CHAMP : cases à cocher, boutons radio, curseurs, fichiers et boutons.
+   `color-mix` lit la `--surface` de l'endroit : sur le verre de l'accueil
+   Blue Sky, le champ reste en verre, simplement plus clair. */
+:root:not([data-theme='light']) :is(
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color'],
+    [type='submit'], [type='button'], [type='reset'], [type='image'], [type='hidden']),
+  select,
+  textarea
+) {
+  border-color: color-mix(in srgb, var(--encre) 26%, transparent);
+  background-color: color-mix(in srgb, var(--encre) 8%, var(--surface));
+  color: var(--encre);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+:root:not([data-theme='light']) select option,
+:root:not([data-theme='light']) select optgroup {
+  background: var(--papier);
+  color: var(--encre);
+}
+
+:root:not([data-theme='light']) :is(input, textarea)::placeholder {
+  color: color-mix(in srgb, var(--encre-douce) 75%, transparent);
+  opacity: 1;
+}
+
+:root:not([data-theme='light']) :is(
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color'],
+    [type='submit'], [type='button'], [type='reset'], [type='image'], [type='hidden']),
+  select,
+  textarea
+):hover:not(:disabled, :focus) {
+  border-color: color-mix(in srgb, var(--corail) 50%, var(--trait));
+}
+
+:root:not([data-theme='light']) :is(
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color'],
+    [type='submit'], [type='button'], [type='reset'], [type='image'], [type='hidden']),
+  select,
+  textarea
+):focus {
+  outline: none;
+  border-color: var(--corail);
+  background-color: color-mix(in srgb, var(--encre) 11%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--corail) 24%, transparent);
+}
+
+/* Un champ verrouillé se refond dans la carte : clair, on le croirait
+   modifiable. */
+:root:not([data-theme='light']) :is(
+  input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color'],
+    [type='submit'], [type='button'], [type='reset'], [type='image'], [type='hidden']),
+  select,
+  textarea
+):disabled {
+  border-color: var(--trait);
+  background-color: var(--surface-2);
+  color: var(--encre-douce);
+}
+
+/* Le champ obligatoire laissé vide (fenêtre « contrôle ») garde son rouge :
+   la règle commune ci-dessus l'aurait effacé. */
+:root:not([data-theme='light']) .controle-form .champ--manquant :is(input, select),
+:root:not([data-theme='light']) .controle-form .champ--manquant :is(input, select):hover {
+  border-color: var(--danger);
+  background-color: color-mix(in srgb, var(--danger) 12%, var(--surface));
+}
+
+:root:not([data-theme='light']) .controle-form .champ--manquant :is(input, select):focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
 }

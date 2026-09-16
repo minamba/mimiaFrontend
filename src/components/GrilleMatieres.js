@@ -14,7 +14,6 @@ import { estMatiereLangue } from '../lib/matieresLangues';
 import Avatar from './Avatar';
 import MotifMatiere from './MotifMatiere';
 import Loader from './Loader';
-import BoutonTheme from './BoutonTheme';
 import BoutonAvis from './BoutonAvis';
 import MesControles from './MesControles';
 import iconeCarte from '../assets/carte.png';
@@ -720,11 +719,16 @@ export default function GrilleMatieres() {
           retour sur d'autres pages, où il doit rester sur sa ligne. */}
       {identite && !enfant && (
         <div className="liens-carte">
-          <Link to={`/eleves/${identite.id}/progression`} className="lien-carte">
-            <span aria-hidden="true">🗺️</span> Ma carte
+          {/* LES ILLUSTRATIONS EN BADGE — Camara, le 15/09/2026 : `carte.png` et
+              `calendrier.png`, les mêmes que sur la page de l'enfant, à la
+              place des emojis. Posées à cheval sur le bord de la pastille. */}
+          <Link to={`/eleves/${identite.id}/progression`} className="lien-carte lien-carte--badge">
+            <img className="lien-carte__badge" src={iconeCarte} alt="" />
+            Ma carte
           </Link>
-          <Link to={`/eleves/${identite.id}/calendrier`} className="lien-carte">
-            <span aria-hidden="true">📅</span> Mon calendrier
+          <Link to={`/eleves/${identite.id}/calendrier`} className="lien-carte lien-carte--badge">
+            <img className="lien-carte__badge" src={iconeCalendrier} alt="" />
+            Mon calendrier
           </Link>
         </div>
       )}
@@ -758,19 +762,15 @@ export default function GrilleMatieres() {
 
           <p className="salutation__ligne">
             {identite && <span className="badge badge--classe">{identite.niveauLibelle}</span>}
-            <span>Sur quoi veux-tu travailler aujourd'hui ?</span>
+            {/* Espace insécable avant « ? » : le point d'interrogation ne
+                part jamais seul à la ligne sur un téléphone. */}
+            <span>Sur quoi veux-tu travailler aujourd’hui&nbsp;?</span>
           </p>
         </header>
 
         <div className="grille-matieres__actions">
-          {/* SUR CETTE PAGE, QUE CE SOIT L'ENFANT QUI L'AIT OUVERTE AVEC SON
-              PROPRE CODE, OU LE PARENT QUI Y NAVIGUE DEPUIS SON COMPTE. C'est
-              le même réglage que celui de « Mes paramètres » (même stockage,
-              voir `lib/storage/theme.js`) : le proposer ici aussi ne crée pas
-              un second réglage, ça donne juste un raccourci de plus vers le
-              même bouton. */}
-          <BoutonTheme />
-
+          {/* Le bouton de thème a rejoint la barre du haut le 15/09/2026 (voir
+              Navbar.js) : il n'est plus répété ici. */}
           {/* MÊME FORMULAIRE QUE « MON COMPTE » ET LA PAGE D'ACCUEIL
               (`MonAvis.js`), ouvert ici en fenêtre : c'est la page où
               l'enfant comme le parent passent vraiment, contrairement aux

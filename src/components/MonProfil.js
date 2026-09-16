@@ -29,6 +29,10 @@ import {
   specialitesAEnvoyer,
 } from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
+// Les mêmes images que le bouton de thème de la barre : déjà en cache, elles
+// donnent à la carte « Apparence » sa couleur — voir `Apparence`.
+import iconeLune from '../assets/lune.png';
+import iconeSoleil from '../assets/soleil.png';
 
 const ONGLETS = [
   { cle: 'infos', libelle: 'Mes informations' },
@@ -580,7 +584,15 @@ function Parametres() {
         gardée.
       </p>
 
-      <div className="mode">
+      {/* UNE VIGNETTE QUI CHANGE AVEC L'ÉTAT — Camara, le 16/09/2026 : « trop
+          monochrome ». La carte n'avait que du texte sur du bleu nuit ; la
+          lune ou le soleil du bouton de thème y met la couleur, et dit d'un
+          coup d'œil dans quel état on est. La classe d'état teinte le reste. */}
+      <div className={`mode apparence__mode ${clair ? 'apparence__mode--clair' : ''}`}>
+        <span className="apparence__visuel" aria-hidden="true">
+          <img src={clair ? iconeSoleil : iconeLune} alt="" />
+        </span>
+
         <div className="mode__texte">
           <strong className="mode__titre">
             Thème clair
@@ -636,6 +648,10 @@ export default function MonProfil() {
    */
   const [onglet, setOnglet] = useState(() => {
     const parametres = new URLSearchParams(window.location.search);
+
+    // « Donner mon avis », depuis un courriel : la page publique fait
+    // connecter le parent, puis l'amène ici, sur le bon onglet.
+    if (parametres.get('onglet') === 'avis') return 'avis';
 
     return parametres.get('paiement') === 'ok' || parametres.has('formule')
       ? 'forfait'
