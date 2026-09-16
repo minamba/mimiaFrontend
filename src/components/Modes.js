@@ -775,6 +775,9 @@ export default function Modes() {
     blueSky: false,
     modeDeveloppeur: false,
 
+    // Le coupe-circuit du temps réel, allumé par défaut comme sur le serveur.
+    fluxSse: true,
+
     // L'offre de lancement : trois valeurs qui n'ont de sens qu'ensemble.
     offreLancement: false,
     offreLancementTexte: '',
@@ -828,6 +831,11 @@ export default function Modes() {
           // vaut pour toutes les séances, celles des vrais élèves comprises.
           modeDeveloppeur: Boolean(data?.modeDeveloppeur),
 
+          // Allumé par défaut : `!== false` et non `Boolean(...)`, pour qu'une
+          // API antérieure à ce drapeau n'affiche pas le temps réel comme
+          // éteint alors qu'il fonctionne.
+          fluxSse: data?.fluxSse !== false,
+
           offreLancement: Boolean(data?.offreLancement),
           offreLancementTexte: data?.offreLancementTexte ?? '',
           offreLancementFin: data?.offreLancementFin ?? '',
@@ -878,9 +886,13 @@ export default function Modes() {
       // jusqu'au rechargement. Vrai pour les deux réglages publics, pas
       // seulement le mode test — l'essai en fait partie depuis qu'il pilote
       // le bouton de l'accueil.
+      // `FLUX_SSE` en fait partie, et pas seulement pour l'affichage : c'est
+      // cette relecture qui referme ou rouvre l'écoute de VOTRE onglet. Sans
+      // elle, l'administrateur qui éteint le temps réel garderait la seule
+      // connexion ouverte du site — celle qu'il vient de couper aux autres.
       if (cle === 'MODE_TEST' || cle === 'ESSAIS_OUVERTS' || cle === 'MAINTENANCE_ACTIVE'
           || cle === 'OFFRE_LANCEMENT' || cle === 'OFFRE_LANCEMENT_BANDEAU'
-          || cle === 'BLUE_SKY') {
+          || cle === 'BLUE_SKY' || cle === 'FLUX_SSE') {
         oublierReglages();
       }
     } catch {
@@ -981,6 +993,28 @@ export default function Modes() {
             'Les élèves déjà en cours voient la page d’attente à leur prochaine navigation.',
           ]}
           note="C’EST UN RIDEAU, PAS UN VERROU. L’API continue de répondre derrière — sans quoi vous ne pourriez plus rien faire, pas même relever le rideau. Pour fermer vraiment le service, il faut arrêter l’API : c’est un autre geste. Ne comptez donc pas là-dessus pour protéger quoi que ce soit."
+        />
+
+        {/* LE COUPE-CIRCUIT DU TEMPS RÉEL — voulu par Camara le 16/09/2026,
+            avant le lancement : pouvoir écarter cette piste d'un clic si le
+            serveur souffre. Haut dans la liste pour la même raison que la
+            maintenance : c'est un interrupteur qu'on cherche sous la pression,
+            pas un réglage de confort. */}
+        <Interrupteur
+          titre="Temps réel — propagation instantanée"
+          actif={reglages.fluxSse}
+          connu={lus}
+          occupe={envoi === 'FLUX_SSE'}
+          onBasculer={() => basculer('FLUX_SSE', 'fluxSse')}
+          description="Chaque onglet ouvert garde une connexion d’écoute vers le serveur : un réglage basculé ici — Blue Sky, la maintenance, le bandeau — change sur tous les ordinateurs et téléphones en même temps, sans rechargement. Éteint, les réglages se propagent en une minute au lieu d’être instantanés."
+          effets={[
+            'Éteint, les écoutes en cours sont fermées immédiatement : le serveur ne garde plus une seule connexion ouverte.',
+            'Rien ne cesse de fonctionner : les navigateurs continuent de relire les réglages chaque minute. Le site devient seulement moins prompt à changer d’allure.',
+            'Rallumé, les onglets déjà ouverts reprennent le temps réel à leur prochaine relecture — pas besoin de faire recharger qui que ce soit.',
+            'Une écoute au repos ne consomme ni calcul ni base de données : c’est une connexion silencieuse, douze octets toutes les vingt-cinq secondes.',
+            'Le plafond est de 2 000 écoutes simultanées. Au-delà, les navigateurs sont refusés proprement et relisent périodiquement.',
+          ]}
+          note="LE COUPE-CIRCUIT DU LANCEMENT. À éteindre si le serveur souffre et que vous voulez écarter cette piste d’un clic : aucune fonction ne disparaît, seule l’instantanéité. L’état est relu au démarrage, il survit donc à un redémarrage du conteneur. Laissez-le allumé tant que rien ne va mal — c’est l’état normal du produit."
         />
 
         {/* LE STYLE DU SITE — voulu par Camara le 15/09/2026, pour faire

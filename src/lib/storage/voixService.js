@@ -1489,7 +1489,7 @@ class Lecteur {
 
       // Le rééchantillonnage a-t-il vraiment été évité ? Le navigateur peut
       // accepter le constructeur et servir une autre fréquence.
-      if (this.contexte.sampleRate !== FREQUENCE_PCM) {
+      if (this.contexte.sampleRate !== FREQUENCE_PCM && process.env.NODE_ENV !== 'production') {
         // eslint-disable-next-line no-console
         console.warn(
           '[voix] contexte à', this.contexte.sampleRate,

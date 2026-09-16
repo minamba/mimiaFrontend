@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getReglagesPublics } from '../api/reglagesApi';
 import { appliquerBlueSky, blueSkyEnregistre } from './styleSite';
+import { demarrerFluxReglages } from './fluxReglages';
 
 /**
  * Les drapeaux publics du service, lus une fois et partagés.
@@ -27,6 +28,11 @@ const PAR_DEFAUT = {
   // que `public/index.html` a déjà posé sur la page. Partir de « éteint »
   // ferait afficher l'ancienne page d'attente un instant avant la nouvelle.
   blueSky: blueSkyEnregistre(),
+
+  // ÉTEINT TANT QU'ON N'A RIEN LU : on n'ouvre pas une connexion qui peut
+  // durer des heures sur une valeur qu'on n'a pas encore reçue. La première
+  // lecture réussie la remplace aussitôt.
+  fluxSse: false,
 
   // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
   // de lecture promet un cadeau que le serveur ne donnera pas — et le
@@ -78,6 +84,11 @@ function interroger() {
           // Appliqué juste en dessous, avant de prévenir les abonnés.
           blueSky: Boolean(data?.blueSky),
 
+          // LE COUPE-CIRCUIT DU TEMPS RÉEL. `?? true` et non `Boolean(...)` :
+          // une API antérieure à ce drapeau ne l'envoie pas, et le lire comme
+          // éteint couperait le temps réel partout le temps d'un déploiement.
+          fluxSse: data?.fluxSse ?? true,
+
           // Le serveur n'envoie le texte que si le bandeau est allumé :
           // ici il n’y a rien à décider, juste à recopier. Une chaîne
           // vide vaut absence — un bandeau vide est un bandeau cassé.
@@ -121,6 +132,13 @@ function interroger() {
         // compris la page d'attente qui remplace tous les composants.
         appliquerBlueSky(valeurs.blueSky);
 
+        // L'ÉCOUTE S'OUVRE APRÈS LA PREMIÈRE LECTURE, et non avant : c'est
+        // cette lecture qui dit si le temps réel est allumé. Ici et pas dans un
+        // composant — c'est le seul endroit que TOUS les écrans traversent,
+        // page d'attente comprise. Rappelé à chaque relecture, il suit le
+        // coupe-circuit dans les deux sens, sans rechargement.
+        demarrerFluxReglages(oublierReglages, valeurs.fluxSse);
+
         abonnes.forEach((notifier) => notifier(valeurs));
         return valeurs;
       })
@@ -128,6 +146,13 @@ function interroger() {
         // Réglages illisibles : on laisse le produit ouvert. Le serveur, lui,
         // refusera ce qu'il doit refuser — c'est là qu'est la vraie garde,
         // pas dans l'affichage.
+        //
+        // ON INSTALLE QUAND MÊME LA RELECTURE PÉRIODIQUE, sans ouvrir de
+        // connexion longue. Sans elle, un onglet ouvert pendant une panne
+        // passagère resterait sur ses valeurs par défaut jusqu'au
+        // rechargement, et ne verrait plus jamais un changement de style.
+        demarrerFluxReglages(oublierReglages, false);
+
         return PAR_DEFAUT;
       });
   }

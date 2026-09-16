@@ -1029,11 +1029,13 @@ export default function Chat() {
 
     adieuxRefusesRef.current.add(indexDernierProf);
 
-    console.warn(
-      '[seance] Au revoir ignore : le professeur conclut de lui-meme alors que '
-        + "l'eleve n'a rien demande et que le temps n'est pas ecoule. "
-        + `Restant : ${restant} s.`,
-    );
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        '[seance] Au revoir ignore : le professeur conclut de lui-meme alors que '
+          + "l'eleve n'a rien demande et que le temps n'est pas ecoule. "
+          + `Restant : ${restant} s.`,
+      );
+    }
   }, [messages, indexDernierProf, indexAdieu, restant]);
 
   // Le temps est écoulé : l'élève ne peut plus rien envoyer. Le professeur, lui,
