@@ -117,7 +117,7 @@ import Controle from './Controle';
  * reconnaissance dès le premier ajout, et l'enfant retrouvait tout le pavé
  * technique dans sa propre bulle.
  */
-const POINTAGE = /^\[L'élève montre un endroit de la figure.*POINTAGE:[a-z0-9-]+@\d+,\d+\]/s;
+const POINTAGE = /^\[L'élève montre un endroit de la figure.*POINTAGE:[a-z0-9-]+(?:\/muette)?@\d+,\d+\]/s;
 
 function Contenu({ texte, onRappelerTableau }) {
   const segments = useMemo(
@@ -2705,7 +2705,9 @@ export default function Chat() {
    * taper — ce qui est tout l'intérêt pour un enfant de CE2.
    */
   const montrerSurLeTableau = useCallback(
-    ({ x, y, position, titre, cle, mot }) => {
+    ({
+      x, y, position, titre, cle, variante, mot,
+    }) => {
       const pct = (v) => Math.round(v * 100);
       const figure = titre ? ` « ${titre} »` : '';
 
@@ -2750,9 +2752,18 @@ export default function Chat() {
       //
       // Reste le strict nécessaire : le geste, la zone en un mot — seul repli
       // quand la figure ne peut pas être jointe — et le jeton technique.
+      // LA VARIANTE VOYAGE AVEC LA CLÉ.
+      //
+      // Sans elle, le serveur joindrait au professeur la planche LÉGENDÉE
+      // alors que l'enfant regarde la muette : il verrait les mots que
+      // l'enfant cherche, et lui répondrait en lisant au lieu de le faire
+      // deviner. La correction, elle, se lit sur la carte de la légendée dans
+      // les deux cas — même fond, même cadrage.
+      const suffixe = variante === 'muette' ? '/muette' : '';
+
       envoyerTexte(
         `[L'élève montre un endroit de la figure${figure} : ${position}. `
-        + `POINTAGE:${cle}@${pct(x)},${pct(y)}]${nomme}`,
+        + `POINTAGE:${cle}${suffixe}@${pct(x)},${pct(y)}]${nomme}`,
       );
     },
     [envoyerTexte],

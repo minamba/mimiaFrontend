@@ -16,7 +16,21 @@ import { Link } from 'react-router-dom';
 export default function QuotaEnfants({ capacite, enPage = false }) {
   if (!capacite) return null;
 
-  const { offreLibelle, maximum, actuels } = capacite;
+  const { offreLibelle, maximum, actuels, droitRetire } = capacite;
+
+  // DEUX REFUS, DEUX MESSAGES. Renvoyer le parent vers les formules alors que
+  // c'est son DROIT qui a été retiré lui ferait changer d'offre pour rien — et
+  // il reviendrait bloqué, en ayant payé plus cher.
+  if (droitRetire) {
+    return (
+      <div className={`quota__avertissement ${enPage ? 'quota__avertissement--page' : ''}`}>
+        <p>
+          L’ajout d’un enfant n’est pas autorisé sur ce compte.{' '}
+          Écrivez-nous si vous pensez que c’est une erreur.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={`quota__avertissement ${enPage ? 'quota__avertissement--page' : ''}`}>

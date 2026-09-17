@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import {
   getSignalements,
   creerSignalement,
@@ -38,7 +39,16 @@ const tronquer = (texte, longueur) => {
 function Formulaire({ signalement, onEnregistre, onAnnule }) {
   const edition = Boolean(signalement);
 
-  const [parentMail, setParentMail] = useState('');
+  // PRÉ-REMPLI AVEC LE COMPTE CONNECTÉ — Camara, le 17/09/2026. La plupart
+  // des signalements saisis depuis l'administration portent sur son propre
+  // compte, et retaper son adresse à chaque fois est un obstacle inutile.
+  //
+  // LE CHAMP RESTE MODIFIABLE : c'est une valeur de départ, pas une
+  // contrainte. Un signalement remonté par téléphone concerne le compte de
+  // quelqu'un d'autre, et il faut pouvoir l'écrire.
+  const { utilisateur } = useSelector((etat) => etat.auth);
+
+  const [parentMail, setParentMail] = useState(utilisateur?.email ?? '');
   const [categorie, setCategorie] = useState(signalement?.categorie ?? 'TECHNIQUE');
   const [description, setDescription] = useState(signalement?.description ?? '');
   const [etat, setEtat] = useState(signalement?.etat ?? 'nouveau');

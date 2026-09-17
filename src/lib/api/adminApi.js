@@ -195,6 +195,42 @@ export const definirAdministrateur = (id, actif) =>
   httpClient.put(`/admin/parents/${id}/administrateur`, { actif });
 
 /**
+ * Les sections du tableau de bord ouvertes à un administrateur, ET la liste
+ * complète de celles qui existent.
+ *
+ * LES DEUX DANS LE MÊME APPEL, et c'est voulu : l'écran n'a pas à tenir sa
+ * propre copie de la liste des sections. Une section ajoutée au produit
+ * apparaît dans la fenêtre des droits sans quʼon y touche, décochée pour tout
+ * le monde.
+ *
+ * Réservé au super-administrateur.
+ */
+export const getOngletsAdmin = (id) => httpClient.get(`/admin/parents/${id}/onglets`);
+
+/** Remplace les sections ouvertes à un administrateur. Super-administrateur seul. */
+export const definirOngletsAdmin = (id, onglets) =>
+  httpClient.put(`/admin/parents/${id}/onglets`, { onglets });
+
+/**
+ * Les sections que LA PERSONNE CONNECTÉE a le droit de voir.
+ *
+ * POURQUOI UN APPEL ET NON UN CLAIM DU JETON. Un claim se fige à la connexion :
+ * le super-administrateur cocherait une section, et l'intéressé ne la verrait
+ * qu'après s'être déconnecté et reconnecté — sans savoir pourquoi.
+ */
+export const getMesOnglets = () => httpClient.get('/admin/mes-onglets');
+
+/**
+ * Autorise ou interdit à un parent d'enregistrer un enfant de plus.
+ *
+ * ACCESSIBLE À TOUT ADMINISTRATEUR, contrairement au droit d'administration
+ * juste au-dessus qui est réservé au super-administrateur : celui-ci donne les
+ * clés du site, celui-là règle un compte client.
+ */
+export const definirAjoutEnfant = (id, autorise) =>
+  httpClient.put(`/admin/parents/${id}/ajout-enfant`, { autorise });
+
+/**
  * La fiche d'un parent dont l'identité vient d'être créée — voir
  * `creerIdentite` dans profilApi.js, qui rend l'`identityUserId` attendu ici.
  */
@@ -368,10 +404,23 @@ export const getPlanches = () => httpClient.get('/planches');
  * reconstruit à partir de la clé. « appareil_respiratoire_v2.svg » devient
  * « svt-respiratoire.svg », et on retrouve toujours une planche à son nom.
  */
-export const importerPlanche = ({ cle, matiereCode, fichier, auteur, source, licence, maison }) => {
+export const importerPlanche = ({
+  cle, matiereCode, niveau, fichier, auteur, source, licence, maison, variante,
+}) => {
   const corps = new FormData();
   corps.append('cle', cle);
   corps.append('matiereCode', matiereCode);
+
+  // `muette` dépose la version sans légendes SOUS la planche, sans toucher à
+  // celle-ci. Absent, c'est la légendée — le cas de tout ce qui existait
+  // avant le 17/09/2026.
+  if (variante) corps.append('variante', variante);
+
+  // LE NIVEAU MONTE ENFIN JUSQU'AU SERVEUR. Le catalogue le porte depuis le
+  // début, mais il ne servait qu'à l'affichage : le professeur ne savait donc
+  // pas si « droite-graduee » était du CP ou de la 6e, et il a servi celle du
+  // CP à un élève de 6e (Camara, le 17/09/2026).
+  if (niveau) corps.append('niveau', niveau);
   corps.append('fichier', fichier, fichier.name);
   if (auteur) corps.append('auteur', auteur);
   if (source) corps.append('source', source);
@@ -387,7 +436,17 @@ export const importerPlanche = ({ cle, matiereCode, fichier, auteur, source, lic
 };
 
 /** Retire une planche : le professeur redessine à la main. */
-export const supprimerPlanche = (cle) => httpClient.delete(`/planches/${cle}`);
+/**
+ * Retire une planche.
+ *
+ * SANS VARIANTE, LA LÉGENDÉE PART AVEC SA MUETTE — le serveur en décide, et
+ * il le faut : la muette n'a pas de carte de repères à elle, seule elle
+ * deviendrait une image sur laquelle l'élève clique sans qu'on puisse dire ce
+ * qu'il a montré.
+ */
+export const supprimerPlanche = (cle, variante) => httpClient.delete(
+  variante ? `/planches/${cle}/${variante}` : `/planches/${cle}`,
+);
 
 /**
  * Ce qui reste à traiter, par file : à décrire, à cartographier, à créditer.

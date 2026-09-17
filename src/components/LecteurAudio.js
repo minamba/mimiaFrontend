@@ -1,4 +1,7 @@
 import { useRef, useState } from 'react';
+import hautParleurPng from '../assets/haut_parleur.webp';
+import lecturePng from '../assets/lecture.webp';
+import pausePng from '../assets/pause.webp';
 
 /**
  * UN LECTEUR AUDIO AUX COULEURS DU SITE.
@@ -108,7 +111,16 @@ export default function LecteurAudio({ src, libelle }) {
         onClick={basculer}
         aria-label={joue ? 'Mettre en pause' : `Écouter ${libelle}`}
       >
-        <span aria-hidden="true">{joue ? '❚❚' : '▶'}</span>
+        {/* LES DESSINS SONT DES PASTILLES ENTIÈRES, pas des symboles posés sur
+            un fond : c'est le bouton qui a perdu le sien, sinon on verrait un
+            disque sur un disque. L'image ne dit rien d'elle-même — c'est le
+            bouton qui porte « Écouter » ou « Mettre en pause ». */}
+        <img
+          className="lecteur__icone-lecture"
+          src={joue ? pausePng : lecturePng}
+          alt=""
+          aria-hidden="true"
+        />
       </button>
 
       {/* La part déjà écoutée est peinte par le CSS à partir de cette
@@ -134,11 +146,18 @@ export default function LecteurAudio({ src, libelle }) {
       <span className="lecteur__son">
         <button
           type="button"
-          className="lecteur__muet"
+          className={`lecteur__muet ${muet || volume === 0 ? 'lecteur__muet--coupe' : ''}`}
           onClick={basculerMuet}
           aria-label={muet ? 'Rétablir le son' : 'Couper le son'}
         >
-          <span aria-hidden="true">{muet || volume === 0 ? '🔇' : '🔊'}</span>
+          {/* LE MÊME DESSIN QUE DANS LE COURS, et le silence tracé par la
+              feuille de style : il n'existe qu'une image. L'émoji d'avant était
+              dessiné par le système — différent sur Windows, sur Mac et sur
+              Android — et ne suivait aucune direction artistique.
+
+              L'image ne dit rien d'elle-même : c'est le bouton qui porte
+              « Couper le son » / « Rétablir le son ». */}
+          <img className="lecteur__icone" src={hautParleurPng} alt="" aria-hidden="true" />
         </button>
 
         <input

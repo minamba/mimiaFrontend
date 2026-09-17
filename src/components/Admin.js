@@ -16,7 +16,9 @@ import {
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 // La création d'un parent commence par son identité, sur le serveur
 // d'identité — l'inverse de la suppression, qui finit par elle.
-import { creerIdentite } from '../lib/api/profilApi';
+import { creerIdentite, reinitialiserMotDePasseDe } from '../lib/api/profilApi';
+import { lireMotDePasse, sansMotDePasse } from '../lib/utils/motDePasseAdmin';
+import { trier, inverser } from '../lib/utils/tri';
 // LES MÊMES BRIQUES QUE LE FORMULAIRE PARENT — Camara, le 16/09/2026 : « je
 // suis admin, je dois tout contrôler ». La modale d'administration ne
 // proposait ni la classe ni les spécialités ; on reprend les règles du parent
@@ -35,13 +37,16 @@ import {
   getCout,
   getHistoriqueHeures,
   definirAdministrateur,
+  definirAjoutEnfant,
   creerParent,
   getRepartitionParents,
   bannirParent,
   getRapportEleve,
   getCopieEleve,
   getDicteeEleve,
+  getMesOnglets,
 } from '../lib/api/adminApi';
+import DroitsAdmin from './DroitsAdmin';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
 import Graphique from './Graphique';
@@ -58,6 +63,7 @@ import PromosAdmin from './PromosAdmin';
 import PeriodesVacancesAdmin from './PeriodesVacancesAdmin';
 import ProgrammeScolaireAdmin from './ProgrammeScolaireAdmin';
 import SignalementsAdmin from './SignalementsAdmin';
+import IdeesAdmin from './IdeesAdmin';
 import FournisseursIA from './FournisseursIA';
 import Onglets from './Onglets';
 import Bannis from './Bannis';
@@ -804,6 +810,21 @@ export default function Admin() {
   const { estSuperAdmin } = useSelector((state) => state.auth);
   const { niveaux, academies } = useSelector((state) => state.referentiel);
 
+  /**
+   * LES SECTIONS QUE CE COMPTE A LE DROIT DE VOIR — Camara, le 17/09/2026.
+   *
+   * `null` tant que le serveur n'a pas répondu : la barre reste vide pendant
+   * ce temps-là, et c'est le bon défaut. Afficher tout puis retirer aurait
+   * montré, une fraction de seconde, des sections auxquelles la personne n'a
+   * pas droit — et sur une connexion lente, bien plus longtemps.
+   *
+   * CACHER N'EST PAS AUTORISER, et ça vaut d'être écrit : ces droits règlent
+   * ce qui s'affiche. Les routes de l'API restent ouvertes à tout
+   * administrateur. Segmenter l'API section par section est un autre
+   * chantier — voir la note remise à Camara le 17/09/2026.
+   */
+  const [ongletsAutorises, setOngletsAutorises] = useState(null);
+
   const [onglet, setOnglet] = useState('stats');
 
   // La messagerie d'abord : c'est celle qu'on ouvre tous les jours, alors
@@ -821,6 +842,23 @@ export default function Admin() {
   // composants : le tableau n’a pas à connaître la liste, il annonce
   // seulement qu’elle a changé.
   const [aBannir, setABannir] = useState(null);
+
+  /** Le compte dont le super-administrateur règle les droits, ou null. */
+  const [droitsDe, setDroitsDe] = useState(null);
+
+  /**
+   * LE TRI DU TABLEAU DES PARENTS — Camara, le 17/09/2026.
+   *
+   * `inscription` en décroissant est le défaut, c'est-à-dire l'ordre que
+   * l'API rend déjà : le tableau ne bouge pas tant qu'on n'a rien demandé.
+   *
+   * ICI ET NON SUR LE SERVEUR. Les parents sont tous chargés — c'est ce même
+   * tableau qui affiche leur consommation et leur coût —, et un aller-retour
+   * par changement de tri rendrait lent un classement qui doit être immédiat.
+   * Le jour où la liste comptera des milliers de lignes, elle sera paginée,
+   * et le tri suivra la pagination côté serveur.
+   */
+  const [triParents, setTriParents] = useState({ cle: 'inscription', sens: 'desc' });
   const [versionBannis, setVersionBannis] = useState(0);
 
   // Son propre message d'erreur, et non celui de l'écran : `error` vient du
@@ -835,6 +873,32 @@ export default function Admin() {
    * sur la ligne cliquée, et pas sur toutes.
    */
   const [roleEnCours, setRoleEnCours] = useState(null);
+
+  /**
+   * Autorise ou interdit l'ajout d'un enfant, pour CE parent.
+   *
+   * LE MÊME VERROU PAR LIGNE que le droit d'administration : sans lui, un
+   * double clic sur deux lignes voisines laisserait croire que la seconde
+   * n'a pas répondu.
+   */
+  const [ajoutEnfantEnCours, setAjoutEnfantEnCours] = useState(null);
+
+  const basculerAjoutEnfant = async (parent) => {
+    setAjoutEnfantEnCours(parent.id);
+
+    try {
+      await definirAjoutEnfant(parent.id, parent.peutAjouterEnfant === false);
+
+      // On recharge plutôt que de retoucher la ligne : même raison que pour
+      // le droit d'administration juste en dessous.
+      dispatch(chargerAdmin());
+    } catch {
+      // Silencieux à dessein : un droit non accordé se voit à la ligne qui
+      // n'a pas changé.
+    } finally {
+      setAjoutEnfantEnCours(null);
+    }
+  };
 
   const basculerAdministrateur = async (parent) => {
     setRoleEnCours(parent.id);
@@ -880,6 +944,105 @@ export default function Admin() {
   const [saisieEleves, setSaisieEleves] = useSaisieDifferee(
     (terme) => dispatch(rechercherEleve(terme)), 350, rechercheEleve,
   );
+
+  /**
+   * CE QUE CE COMPTE A LE DROIT DE VOIR.
+   *
+   * Demandé au serveur À CHAQUE VISITE, et non lu dans le jeton : un claim se
+   * fige à la connexion, et le super-administrateur qui coche une section
+   * verrait l'intéressé sans elle jusqu'à sa prochaine reconnexion — sans
+   * savoir pourquoi, ni que c'est ce qu'il faut faire.
+   *
+   * UN ÉCHEC NE DONNE RIEN. Une liste vide vaut mieux qu'une liste complète
+   * par défaut : on ne montre pas des sections parce qu'une requête a raté.
+   */
+  /**
+   * LA BARRE D’ONGLETS, RÉDUITE À CE QUE CE COMPTE A LE DROIT DE VOIR.
+   *
+   * L'ORDRE EST CELUI DE LA LISTE, PAS CELUI DES DROITS. Un administrateur
+   * qui reçoit « Idées » et « Parents » les voit dans le même ordre que tout
+   * le monde : deux personnes qui se parlent décrivent alors la même barre.
+   *
+   * LES MODES RESTENT AU SUPER-ADMINISTRATEUR et ne passent pas par les
+   * droits : ils ferment ou ouvrent le site pour tout le monde, et ça ne se
+   * délègue pas. C'est pour ça qu'ils ne figurent pas dans la fenêtre des
+   * cases à cocher.
+   */
+  const sections = useMemo(() => {
+    const toutes = [
+      { cle: 'stats', libelle: 'Statistiques' },
+      { cle: 'frequentation', libelle: 'Fréquentation' },
+      { cle: 'parents', libelle: `Parents (${parents.length})` },
+      { cle: 'mails', libelle: 'Mails' },
+
+      // JUSTE APRÈS LES MAILS, parce que c'est de là qu'il vient : ce fut un
+      // sous-onglet du courrier, et c'est là que la main va le chercher
+      // pendant quelques semaines. Un onglet déplacé à l'autre bout de la
+      // barre se perd, même quand la nouvelle place est plus juste.
+      { cle: 'promos', libelle: 'Promos' },
+      { cle: 'eleves', libelle: `Élèves (${eleves.length})` },
+      { cle: 'avis', libelle: 'Avis' },
+      ...(estSuperAdmin ? [{ cle: 'modes', libelle: 'Modes' }] : []),
+      { cle: 'schemas', libelle: 'Schémas' },
+
+      // JUSTE AVANT LES PÉRIODES SCOLAIRES — voulu par Camara le 13/09/2026,
+      // les deux se lisent ensemble : l'un dit QUAND l'année scolaire se
+      // déroule, l'autre QUEL programme y est enseigné.
+      { cle: 'programme', libelle: 'Programme scolaire' },
+      { cle: 'periodes', libelle: 'Périodes scolaires' },
+      { cle: 'signalements', libelle: 'Signalements' },
+
+      // APRÈS LES SIGNALEMENTS, AVANT LA SURVEILLANCE DES FOURNISSEURS : les
+      // deux premiers disent ce qui ne va pas aujourd'hui, le carnet dit ce
+      // qu'on voudrait demain. Le dernier onglet, lui, ne se lit qu'en cas de
+      // panne.
+      { cle: 'idees', libelle: 'Idées' },
+      { cle: 'fournisseurs', libelle: 'Anthropic / OpenAI' },
+    ];
+
+    // LE SUPER-ADMINISTRATEUR VOIT TOUT, ET SANS PASSER PAR LA LISTE DES
+    // DROITS — Camara, le 17/09/2026 : « le compte super admin a accès à tous
+    // les onglets d'office, actuels et futurs, et personne ne peut lui enlever
+    // quoi que ce soit ».
+    //
+    // LE RACCOURCI EST LE POINT. On pourrait se fier à ce que le serveur lui
+    // renvoie — il lui rend bien la liste complète — mais alors une section
+    // ajoutée demain à cette barre et oubliée dans `OngletsAdmin.Toutes`
+    // disparaîtrait de SON écran à lui, silencieusement. Ici, rien à tenir
+    // à jour : il ne passe pas par le filtre, donc il ne peut pas en sortir.
+    if (estSuperAdmin) return toutes;
+
+    // Rien tant que le serveur n’a pas répondu : montrer puis retirer aurait
+    // laissé voir, le temps d'une requête, des sections auxquelles cette
+    // personne n'a pas droit.
+    if (ongletsAutorises === null) return [];
+
+    return toutes.filter((s) => s.cle === 'modes' || ongletsAutorises.includes(s.cle));
+  }, [ongletsAutorises, estSuperAdmin, parents.length, eleves.length]);
+
+  /**
+   * LA SECTION OUVERTE DOIT ÊTRE UNE SECTION AUTORISÉE.
+   *
+   * `stats` est le défaut de toujours, et il ne vaut plus rien pour qui n’y a
+   * pas droit : la barre s'afficherait sans onglet actif, et la page en
+   * dessous serait vide. On se replie donc sur la première section ouverte.
+   */
+  useEffect(() => {
+    if (sections.length === 0) return;
+    if (sections.some((s) => s.cle === onglet)) return;
+
+    setOnglet(sections[0].cle);
+  }, [sections, onglet]);
+
+  useEffect(() => {
+    let vivant = true;
+
+    getMesOnglets()
+      .then(({ data }) => { if (vivant) setOngletsAutorises(data.onglets ?? []); })
+      .catch(() => { if (vivant) setOngletsAutorises([]); });
+
+    return () => { vivant = false; };
+  }, []);
 
   useEffect(() => {
     dispatch(chargerAdmin());
@@ -931,6 +1094,30 @@ export default function Admin() {
   // Ce que la classe choisie dans la modale autorise : la case LVB n'existe
   // que dans les classes à LVB, les spécialités que dans la voie générale.
   // Mêmes règles que `LigneEnfant` côté parent, sur les mêmes helpers.
+  /**
+   * CE QU’ON LIT SUR CHAQUE LIGNE POUR LA CLASSER.
+   *
+   * Le rôle se trie sur TROIS NIVEAUX et non sur un booléen : le
+   * super-administrateur, les administrateurs, puis tout le monde. Décroissant,
+   * les rôles remontent — c'est ce qu'on attend en demandant « type
+   * d'utilisateur », puisque c'est la minorité qu'on cherche. Un simple
+   * « administrateur ou non » aurait mélangé le compte au-dessus de tous les
+   * autres avec ceux à qui on vient d'ouvrir deux onglets.
+   */
+  const VALEUR_TRI = {
+    inscription: (p) => p.dateCreation,
+    role: (p) => (p.estSuperAdministrateur ? 2 : p.estAdministrateur ? 1 : 0),
+    connexion: (p) => p.derniereConnexion,
+    activite: (p) => p.derniereActivite,
+    cout: (p) => p.coutDollars,
+  };
+
+  const parentsTries = useMemo(
+    () => trier(parents, VALEUR_TRI[triParents.cle] ?? VALEUR_TRI.inscription, triParents.sens),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- VALEUR_TRI est une table de fonctions pures, recréée à chaque rendu mais toujours identique ; la citer relancerait le tri à chaque frappe dans la recherche.
+    [parents, triParents],
+  );
+
   const classeEdition = edition?.operation === 'modifierEleve' ? edition.niveauScolaireId : '';
   const lv2PossibleEdition = Boolean(
     niveaux.find((n) => String(n.id) === String(classeEdition))?.lv2Possible,
@@ -949,11 +1136,31 @@ export default function Admin() {
    */
   const [creation, setCreation] = useState({ enCours: false, erreur: null });
 
-  const creerCompteParent = async ({ prenom, nom, mail, administrateur }) => {
+  const creerCompteParent = async ({
+    prenom, nom, mail, administrateur, motDePasse, confirmation,
+  }) => {
+    // LES DEUX SAISIES SE COMPARENT AVANT TOUT APPEL. Un compte créé avec un
+    // mot de passe mal tapé n'est rattrapable que par « mot de passe oublié »,
+    // alors que l'administrateur croit l'avoir donné de vive voix.
+    const mdp = lireMotDePasse({ motDePasse, confirmation });
+
+    if (mdp.erreur) {
+      setCreation({ enCours: false, erreur: mdp.erreur });
+      return;
+    }
+
     setCreation({ enCours: true, erreur: null });
 
     try {
-      const propre = { email: mail.trim(), prenom: prenom.trim(), nom: nom.trim() };
+      // `valeur` vaut `undefined` quand les champs sont vides : le serveur
+      // retombe alors sur le courriel de choix du mot de passe.
+      const propre = {
+        email: mail.trim(),
+        prenom: prenom.trim(),
+        nom: nom.trim(),
+        motDePasse: mdp.valeur,
+      };
+
       const { data: identite } = await creerIdentite(propre);
       const { data: parent } = await creerParent({
         identityUserId: identite.id, mail: propre.email, prenom: propre.prenom, nom: propre.nom,
@@ -975,12 +1182,66 @@ export default function Admin() {
     }
   };
 
+  /**
+   * RÉINITIALISE LE MOT DE PASSE D'UN PARENT — Camara, le 17/09/2026.
+   *
+   * FAIT AVANT la modification de la fiche, et séparément : ce sont deux
+   * bases. Si celle-ci échoue — politique de mot de passe, compte protégé —,
+   * la fenêtre reste ouverte avec la raison, et la fiche n'a pas bougé. Dans
+   * l'autre sens, on aurait enregistré la fiche puis annoncé un échec, en
+   * laissant l'administrateur se demander ce qui est passé.
+   *
+   * VIDE VEUT DIRE « ON NE TOUCHE À RIEN ». La fenêtre de modification sert
+   * d'abord à corriger un nom : elle ne doit pas exiger un mot de passe à
+   * chaque passage.
+   */
+  const [reinit, setReinit] = useState({ enCours: false, erreur: null });
+
+  // L’ERREUR NE SURVIT PAS À LA FENÊTRE. Sans ça, un refus sur un parent —
+  // « le mot de passe doit contenir un chiffre » — se raffichait à
+  // l’ouverture de la fiche du suivant, qui n’y était pour rien.
+  useEffect(() => {
+    setReinit({ enCours: false, erreur: null });
+  }, [edition?.operation, edition?.id]);
+
+  const reinitialiserPuisEnregistrer = async (donnees, operation, id) => {
+    const mdp = lireMotDePasse(donnees);
+    const fiche = sansMotDePasse(donnees);
+
+    if (mdp.erreur) {
+      setReinit({ enCours: false, erreur: mdp.erreur });
+      return;
+    }
+
+    setReinit({ enCours: true, erreur: null });
+
+    try {
+      await reinitialiserMotDePasseDe(fiche.mail, mdp.valeur);
+    } catch (e) {
+      setReinit({
+        enCours: false,
+        erreur: e?.response?.data?.message
+          ?? "Le mot de passe n’a pas pu être changé.",
+      });
+      return;
+    }
+
+    setReinit({ enCours: false, erreur: null });
+    dispatch(muter(operation, id, fiche));
+    setEdition(null);
+  };
+
   const enregistrer = (evenement) => {
     evenement.preventDefault();
     const { operation, id, ...donnees } = edition;
 
     if (operation === 'creerParent') {
       creerCompteParent(donnees);
+      return;
+    }
+
+    if (operation === 'modifierParent' && donnees.motDePasse?.trim()) {
+      reinitialiserPuisEnregistrer(donnees, operation, id);
       return;
     }
 
@@ -994,7 +1255,13 @@ export default function Admin() {
         lv2Espagnol: lv2PossibleEdition && Boolean(donnees.lv2Espagnol),
         specialites: specialitesAEnvoyer(donnees.specialites ?? [], specialitesEdition),
       }
-      : donnees;
+      : operation === 'modifierParent'
+        // LES DEUX CHAMPS DE MOT DE PASSE NE SONT PAS DES CHAMPS DE FICHE.
+        // Laissés dans la charge, ils partiraient à l'API métier, qui les
+        // ignorerait — mais on aurait envoyé un mot de passe en clair à une
+        // route qui n’a rien à en faire, et il serait dans ses journaux.
+        ? sansMotDePasse(donnees)
+        : donnees;
 
     dispatch(muter(operation, id, charge));
     setEdition(null);
@@ -1067,32 +1334,20 @@ export default function Admin() {
         etiquette="Sections"
         actif={onglet}
         onChoisir={setOnglet}
-        items={[
-          { cle: 'stats', libelle: 'Statistiques' },
-          { cle: 'frequentation', libelle: 'Fréquentation' },
-          { cle: 'parents', libelle: `Parents (${parents.length})` },
-          { cle: 'mails', libelle: 'Mails' },
-
-          // JUSTE APRÈS LES MAILS, parce que c'est de là qu'il vient : ce
-          // fut un sous-onglet du courrier, et c'est là que la main va le
-          // chercher pendant quelques semaines. Un onglet déplacé à l'autre
-          // bout de la barre se perd, même quand la nouvelle place est plus
-          // juste.
-          { cle: 'promos', libelle: 'Promos' },
-          { cle: 'eleves', libelle: `Élèves (${eleves.length})` },
-          { cle: 'avis', libelle: 'Avis' },
-          ...(estSuperAdmin ? [{ cle: 'modes', libelle: 'Modes' }] : []),
-          { cle: 'schemas', libelle: 'Schémas' },
-
-          // JUSTE AVANT LES PÉRIODES SCOLAIRES — voulu par Camara le
-          // 13/09/2026, les deux se lisent ensemble : l'un dit QUAND l'année
-          // scolaire se déroule, l'autre QUEL programme y est enseigné.
-          { cle: 'programme', libelle: 'Programme scolaire' },
-          { cle: 'periodes', libelle: 'Périodes scolaires' },
-          { cle: 'signalements', libelle: 'Signalements' },
-          { cle: 'fournisseurs', libelle: 'Anthropic / OpenAI' },
-        ]}
+        items={sections}
       />
+
+      {/* UN TABLEAU DE BORD SANS AUCUNE SECTION SE DIT — Camara, le
+          17/09/2026 : « de base quand le super admin passe un utilisateur en
+          admin, tout est décoché ». Sans ce message, l'intéressé tomberait sur
+          une page nue et croirait à une panne. La phrase dit à qui
+          demander. */}
+      {ongletsAutorises !== null && sections.length === 0 && (
+        <p className="admin__sans-droit">
+          Aucune section ne vous est ouverte pour l’instant. Demandez vos accès
+          à l’administrateur principal.
+        </p>
+      )}
 
       {/* ------------------------------------------------------ statistiques */}
       {onglet === 'stats' && (
@@ -1225,6 +1480,8 @@ export default function Admin() {
           pour l'autre. */}
       {onglet === 'frequentation' && <Frequentation />}
 
+      {onglet === 'idees' && <IdeesAdmin />}
+
       {/* ------------------------------------------------------------- avis */}
       {onglet === 'avis' && <RelectureAvis />}
 
@@ -1282,9 +1539,12 @@ export default function Admin() {
           <Bannis version={versionBannis} />
 
           {/* CRÉER UN PARENT — Camara, le 16/09/2026 : « je peux tout faire
-              sauf créer un parent et lui donner un rôle ». Le compte naît
-              sans mot de passe connu de personne : le parent le choisit par
-              le courriel qu'il reçoit. */}
+              sauf créer un parent et lui donner un rôle ».
+
+              DEUX FAÇONS DE NAÎTRE depuis le 17/09/2026. Avec un mot de passe
+              saisi ici, le compte est utilisable dans la seconde et aucun
+              courriel ne part. Champs laissés vides, le comportement d’avant
+              est conservé : le parent reçoit le lien pour choisir le sien. */}
           <div className="admin__creation">
             <button
               type="button"
@@ -1295,6 +1555,8 @@ export default function Admin() {
                   prenom: '',
                   nom: '',
                   mail: '',
+                  motDePasse: '',
+                  confirmation: '',
                   administrateur: false,
                 })
               }
@@ -1311,6 +1573,37 @@ export default function Admin() {
               value={saisieParents}
               onChange={(e) => setSaisieParents(e.target.value)}
             />
+
+            {/* LE CRITÈRE ET LE SENS SONT DEUX COMMANDES SÉPARÉES.
+
+                Doubler les entrées de la liste — « du plus récent », « du plus
+                ancien » — aurait donné dix lignes à lire pour cinq critères,
+                et il aurait fallu rouvrir la liste pour inverser. Un bouton à
+                côté suffit, et il dit dans quel sens on est. */}
+            <label className="filtres__tri">
+              <span>Trier par</span>
+              <select
+                value={triParents.cle}
+                onChange={(e) => setTriParents({ cle: e.target.value, sens: 'desc' })}
+              >
+                <option value="inscription">Date d’inscription</option>
+                <option value="role">Type d’utilisateur</option>
+                <option value="connexion">Dernière connexion</option>
+                <option value="activite">Dernière activité</option>
+                <option value="cout">Ce qu’il a coûté</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className="btn-ghost btn-ghost--mini filtres__sens"
+              onClick={() => setTriParents((t) => ({ ...t, sens: inverser(t.sens) }))}
+              title={triParents.sens === 'desc'
+                ? 'Du plus grand au plus petit — cliquez pour inverser'
+                : 'Du plus petit au plus grand — cliquez pour inverser'}
+            >
+              {triParents.sens === 'desc' ? '↓ Décroissant' : '↑ Croissant'}
+            </button>
           </div>
 
           <div className="tableau">
@@ -1324,6 +1617,11 @@ export default function Admin() {
                   <th scope="col">Email</th>
                   <th scope="col">Nom</th>
                   <th scope="col">Élèves</th>
+                  {/* JUSTE APRÈS LE NOMBRE D'ÉLÈVES : les deux colonnes parlent
+                      des enfants, l'une de ceux qui sont là, l'autre du droit
+                      d'en ajouter. Séparées, on lirait le droit sans savoir
+                      combien il y en a déjà. */}
+                  <th scope="col">Peut ajouter</th>
                   {/* Entre les élèves et les requêtes : c'est le chiffre qui
                       dit si une formule gagne ou perd de l'argent, il mérite
                       d'être lu avant le volume brut de messages. */}
@@ -1346,7 +1644,7 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {parents.map((p) => (
+                {parentsTries.map((p) => (
                   <tr key={p.id}>
                     <td>
                       {p.formule
@@ -1356,6 +1654,34 @@ export default function Admin() {
                     <td>{p.mail}</td>
                     <td>{[p.prenom, p.nom].filter(Boolean).join(' ') || '—'}</td>
                     <td className="num">{p.nombreEleves}</td>
+
+                    {/* UN INTERRUPTEUR QUI DIT SON ÉTAT, pas une case à cocher.
+                        « Oui » ou « Non » se lit sans survoler et sans deviner ce
+                        que coché veut dire — voulu par Camara le 17/09/2026. */}
+                    <td>
+                      <button
+                        type="button"
+                        className={`bascule-droit ${
+                          p.peutAjouterEnfant === false ? 'bascule-droit--non' : 'bascule-droit--oui'
+                        }`}
+                        disabled={ajoutEnfantEnCours === p.id}
+                        aria-pressed={p.peutAjouterEnfant !== false}
+                        onClick={() => basculerAjoutEnfant(p)}
+                        title={
+                          p.peutAjouterEnfant === false
+                            ? "Rendre le droit d'ajouter un enfant"
+                            : "Retirer le droit d'ajouter un enfant"
+                        }
+                      >
+                        {/* UN CHAMP ABSENT VAUT « OUI », PAS « NON ». Tant que l'API n'a pas
+                            redémarré, le champ est absent de la réponse : le lire comme
+                            un refus afficherait TOUS les parents en rouge, et on
+                            croirait le droit retiré à tout le monde. */}
+                        {ajoutEnfantEnCours === p.id
+                          ? '…'
+                          : p.peutAjouterEnfant === false ? 'Non' : 'Oui'}
+                      </button>
+                    </td>
                     <td><Consommation parent={p} /></td>
                     <td className="num"><Restant parent={p} /></td>
                     <td><Cout parent={p} /></td>
@@ -1412,6 +1738,26 @@ export default function Admin() {
                             : p.estAdministrateur
                               ? 'Administrateur'
                               : 'Utilisateur'}
+                        </button>
+                      )}
+
+                      {/* LES DROITS NE S'AFFICHENT QUE SUR UN ADMINISTRATEUR.
+
+                          Sur un compte ordinaire, cocher des sections ne
+                          produirait rien : il n'a pas accès au tableau de bord.
+                          Le bouton apparaît donc AVEC le rôle et disparaît avec
+                          lui — et le serveur efface les droits quand on retire
+                          le rôle, pour qu’une repromotion reparte de zéro.
+
+                          Camara, le 17/09/2026. */}
+                      {estSuperAdmin && !p.estSuperAdministrateur && p.estAdministrateur && (
+                        <button
+                          type="button"
+                          className="btn-ghost btn-ghost--mini"
+                          onClick={() => setDroitsDe(p)}
+                          title="Choisir les sections visibles dans son tableau de bord"
+                        >
+                          Droits
                         </button>
                       )}
                       <button
@@ -1670,6 +2016,14 @@ export default function Admin() {
           Cette dernière est déjà une chaîne de ternaires sur trois
           opérations ; y greffer une quatrième branche aurait rendu les
           quatre illisibles pour économiser un composant. */}
+      {droitsDe && (
+        <DroitsAdmin
+          parent={droitsDe}
+          onFermer={() => setDroitsDe(null)}
+          onEnregistre={() => dispatch(chargerAdmin())}
+        />
+      )}
+
       {aBannir && (
         <div className="modale" role="dialog" aria-modal="true">
           <form
@@ -1865,13 +2219,46 @@ export default function Admin() {
                     value={edition.mail}
                     onChange={(e) => setEdition({ ...edition, mail: e.target.value })}
                   />
-                  {edition.operation === 'creerParent' && (
-                    <span className="champ__aide">
-                      Le parent recevra un courriel pour choisir son mot de passe.
-                      Aucun mot de passe ne passe par vous.
-                    </span>
-                  )}
                 </div>
+
+                {/* LE MOT DE PASSE EST POSÉ ICI — Camara, le 17/09/2026 : « je
+                    dois créer aussi le mot de passe… et quand je crée le compte,
+                    il doit être directement actif ». Le compte est utilisable
+                    dans la seconde, et aucun courriel ne part.
+
+                    DEUX CHAMPS ET NON UN. Une faute de frappe dans un mot de
+                    passe qu'on donne de vive voix ne se découvre qu'au moment où
+                    le parent n'arrive pas à se connecter — et personne ne pense
+                    d'abord à ça. */}
+                {edition.operation === 'creerParent' && (
+                  <>
+                    <div className="champ">
+                      <label htmlFor="ed-mdp">Mot de passe</label>
+                      <input
+                        id="ed-mdp"
+                        type="password"
+                        autoComplete="new-password"
+                        value={edition.motDePasse ?? ''}
+                        onChange={(e) => setEdition({ ...edition, motDePasse: e.target.value })}
+                      />
+                      <span className="champ__aide">
+                        Dix caractères au moins, avec une majuscule et un chiffre.
+                        Laissez vide pour que le parent le choisisse par courriel.
+                      </span>
+                    </div>
+
+                    <div className="champ">
+                      <label htmlFor="ed-mdp2">Confirmer le mot de passe</label>
+                      <input
+                        id="ed-mdp2"
+                        type="password"
+                        autoComplete="new-password"
+                        value={edition.confirmation ?? ''}
+                        onChange={(e) => setEdition({ ...edition, confirmation: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Le rôle ne se distribue que par le super-administrateur —
                     l'API le revérifie. Les autres ne voient pas la case. */}
@@ -1884,6 +2271,55 @@ export default function Admin() {
                     />
                     Administrateur — peut ouvrir l’administration
                   </label>
+                )}
+
+                {/* RÉINITIALISER LE MOT DE PASSE D'UN PARENT — Camara, le
+                    17/09/2026 : « je peux réinitialiser le mot de passe du
+                    parent directement quand je vais dans les modifications ».
+
+                    VIDE VEUT DIRE « ON N’Y TOUCHE PAS ». Cette fenêtre sert
+                    d’abord à corriger un nom mal saisi : exiger un mot de passe
+                    à chaque passage serait absurde, et en poser un par
+                    inadvertance couperait les sessions du parent.
+
+                    AUCUN COURRIEL NE PART. C’est un dépannage demandé de vive
+                    voix, et c’est l’administrateur qui redonne le mot de
+                    passe. */}
+                {edition.operation === 'modifierParent' && (
+                  <>
+                    <div className="champ">
+                      <label htmlFor="ed-mdp-reinit">Nouveau mot de passe</label>
+                      <input
+                        id="ed-mdp-reinit"
+                        type="password"
+                        autoComplete="new-password"
+                        value={edition.motDePasse ?? ''}
+                        onChange={(e) => setEdition({ ...edition, motDePasse: e.target.value })}
+                      />
+                      <span className="champ__aide">
+                        Laissez vide pour ne pas y toucher. Dix caractères au moins,
+                        avec une majuscule et un chiffre. Le parent n’est pas
+                        prévenu, et ses sessions en cours sont coupées.
+                      </span>
+                    </div>
+
+                    {edition.motDePasse?.trim() && (
+                      <div className="champ">
+                        <label htmlFor="ed-mdp-reinit2">Confirmer le mot de passe</label>
+                        <input
+                          id="ed-mdp-reinit2"
+                          type="password"
+                          autoComplete="new-password"
+                          value={edition.confirmation ?? ''}
+                          onChange={(e) => setEdition({ ...edition, confirmation: e.target.value })}
+                        />
+                      </div>
+                    )}
+
+                    {reinit.erreur && (
+                      <p className="champ__erreur" role="alert">{reinit.erreur}</p>
+                    )}
+                  </>
                 )}
 
                 {edition.operation === 'creerParent' && creation.erreur && (
@@ -2019,6 +2455,7 @@ export default function Admin() {
                 className="btn btn--compact"
                 disabled={
                   creation.enCours
+                  || reinit.enCours
                   || muting
                   || (edition.operation === 'ajusterHeures'
                       && (!edition.motif.trim() || !edition.minutes))
@@ -2026,7 +2463,9 @@ export default function Admin() {
               >
                 {edition.operation === 'creerParent'
                   ? (creation.enCours ? 'Création…' : 'Créer le compte')
-                  : 'Enregistrer'}
+                  : reinit.enCours
+                    ? 'Changement du mot de passe…'
+                    : 'Enregistrer'}
               </button>
             </div>
           </form>

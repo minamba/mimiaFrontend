@@ -32,6 +32,32 @@
  */
 export const PREFIXE = 'SCHEMA:';
 
+/**
+ * La variante sans légendes, celle qui sert à interroger.
+ *
+ * Elle s'écrit en suffixe de la clé — `SCHEMA:hg-france-regions/muette` —
+ * parce que c'est LA MÊME FIGURE : une clé à part aurait doublé le
+ * catalogue et obligé le professeur à connaître deux noms pour un seul
+ * document.
+ */
+export const MUETTE = 'muette';
+
+/**
+ * La clé et la variante d'un contenu d'ardoise, séparées.
+ *
+ * Tout ce qui a été écrit avant le 17/09/2026 n'a pas de suffixe et rend
+ * `legende` : c'est ce qui rend le changement invisible pour l'existant.
+ */
+export function separerVariante(brut) {
+  const coupe = String(brut ?? '').indexOf('/');
+  if (coupe < 0) return { cle: brut, variante: 'legende' };
+
+  return {
+    cle: brut.slice(0, coupe),
+    variante: brut.slice(coupe + 1) === MUETTE ? MUETTE : 'legende',
+  };
+}
+
 const SCHEMAS = {
   // ------------------------------------------------------------------ 5e
   // Le diaphragme passe SOUS les poumons, il ne les traverse pas. La première
@@ -935,10 +961,18 @@ export function plancheRecommandee(cle) {
  * préalable pour savoir s'il faut appeler serait un aller-retour de plus à
  * chaque affichage, pour une information que la requête donne déjà.
  */
-export function urlPlanche(cle, version) {
+export function urlPlanche(cle, version, variante) {
   if (!cle) return null;
 
-  const base = `${process.env.REACT_APP_API_URL ?? ''}/planches/${cle}`;
+  // LA MUETTE A SA PROPRE ADRESSE, ET NON UN PARAMÈTRE DE REQUÊTE.
+  //
+  // Ce sont deux images différentes : chacune mérite son entrée de cache.
+  // Une chaîne `?variante=` aurait marché aussi, mais un cache qui la
+  // laisserait tomber servirait la version légendée au milieu d'un
+  // exercice — c'est-à-dire la réponse.
+  const suffixe = variante === MUETTE ? `/${MUETTE}` : '';
+
+  const base = `${process.env.REACT_APP_API_URL ?? ''}/planches/${cle}${suffixe}`;
   if (!version) return base;
 
   // POURQUOI UNE VERSION DANS L'ADRESSE ALORS QUE LE SERVEUR RÉVALIDE DÉJÀ.
@@ -965,9 +999,14 @@ export function urlPlanche(cle, version) {
  * Séparée de l'image parce qu'une balise `img` ne donne accès à aucun en-tête
  * de sa réponse. Le crédit ne pèse rien et se cache comme l'image.
  */
-export function urlCreditPlanche(cle) {
+export function urlCreditPlanche(cle, variante) {
   if (!cle) return null;
-  return `${process.env.REACT_APP_API_URL ?? ''}/planches/${cle}/credit`;
+
+  // Le crédit de la muette est le sien : c'est un autre fichier, avec son
+  // auteur et sa licence, et la mention est due sous l'image affichée.
+  const suffixe = variante === MUETTE ? `/${MUETTE}` : '';
+
+  return `${process.env.REACT_APP_API_URL ?? ''}/planches/${cle}${suffixe}/credit`;
 }
 
 /** La clé d'un schéma si le contenu de l'ardoise en désigne un, sinon null. */
@@ -977,7 +1016,7 @@ export function cleSchema(contenu) {
   const propre = contenu.trim();
   if (!propre.startsWith(PREFIXE)) return null;
 
-  const cle = propre.slice(PREFIXE.length).trim().toLowerCase();
+  const { cle } = separerVariante(propre.slice(PREFIXE.length).trim().toLowerCase());
   return Object.prototype.hasOwnProperty.call(SCHEMAS, cle) ? cle : null;
 }
 

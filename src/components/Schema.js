@@ -2,7 +2,9 @@ import {
   createElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState,
 } from 'react';
 import { analyserSchema } from '../lib/storage/schemaSvg';
-import { cleSchema, titreFigure, urlCreditPlanche, urlPlanche } from '../lib/storage/schemas';
+import {
+  cleSchema, titreFigure, urlCreditPlanche, urlPlanche, varianteSchema,
+} from '../lib/storage/schemas';
 
 /**
  * Le schéma tracé au tableau.
@@ -117,7 +119,16 @@ export default function Schema({ contenu, onMontrer, point: pointImpose, onPoint
   // L'échec fait revenir au tracé : un fichier pas encore déposé, ou mal
   // nommé, ne doit jamais laisser un tableau vide devant un élève.
   const cle = useMemo(() => cleSchema(contenu), [contenu]);
-  const planche = useMemo(() => urlPlanche(cle), [cle]);
+
+  // `legende` ou `muette` : la même figure, avec ou sans ses mots. Le
+  // professeur choisit en écrivant `SCHEMA:la-cle/muette`, et c'est la seule
+  // différence entre enseigner et interroger.
+  const variante = useMemo(() => varianteSchema(contenu), [contenu]);
+
+  const planche = useMemo(
+    () => urlPlanche(cle, undefined, variante),
+    [cle, variante],
+  );
   const [plancheKo, setPlancheKo] = useState(false);
 
   useLayoutEffect(() => setPlancheKo(false), [contenu]);
@@ -241,7 +252,9 @@ export default function Schema({ contenu, onMontrer, point: pointImpose, onPoint
     if (x < 0 || x > 1 || y < 0 || y > 1) return;
 
     noter({ x, y });
-    onMontrer({ x, y, position: situer(x, y), titre: titreFigure(cle), cle });
+    onMontrer({
+      x, y, position: situer(x, y), titre: titreFigure(cle), cle, variante,
+    });
   };
 
   useEffect(() => {
@@ -250,13 +263,13 @@ export default function Schema({ contenu, onMontrer, point: pointImpose, onPoint
 
     const abandon = new AbortController();
 
-    fetch(urlCreditPlanche(cle), { signal: abandon.signal })
+    fetch(urlCreditPlanche(cle, variante), { signal: abandon.signal })
       .then((r) => (r.ok && r.status !== 204 ? r.json() : null))
       .then((c) => { if (c?.auteur || c?.licence || c?.maison) setCredit(c); })
       .catch(() => {});
 
     return () => abandon.abort();
-  }, [cle]);
+  }, [cle, variante]);
 
   /**
    * LE DESSIN DOIT REMPLIR LE TABLEAU.
@@ -425,6 +438,7 @@ export default function Schema({ contenu, onMontrer, point: pointImpose, onPoint
       position: situer(x, y),
       titre: titreFigure(cle),
       cle,
+      variante,
 
       // SUR UN DESSIN, LE NOM SE CALCULE ICI — ET IL EST EXACT.
       //

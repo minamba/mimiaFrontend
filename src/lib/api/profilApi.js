@@ -72,8 +72,31 @@ export const supprimerIdentiteDe = (mail) =>
  *
  * PREMIER des trois appels de la création (identité, fiche, rôle) — l'inverse
  * de la suppression, et pour la même raison : c'est le `sub` rendu ici qui
- * relie la fiche au compte. Le parent reçoit un courriel pour choisir son mot
- * de passe ; aucun mot de passe ne passe par l'administration.
+ * relie la fiche au compte.
+ *
+ * `motDePasse` DÉCIDE DU RESTE — Camara, le 17/09/2026. Renseigné, le compte
+ * est utilisable dans la seconde et aucun courriel ne part. Absent, le parent
+ * reçoit le lien pour choisir le sien, comme avant.
  */
-export const creerIdentite = ({ email, prenom, nom }) =>
-  clientIdentite.post('/api/admin/comptes', { email, prenom, nom });
+export const creerIdentite = ({ email, prenom, nom, motDePasse }) =>
+  clientIdentite.post('/api/admin/comptes', { email, prenom, nom, motDePasse });
+
+/**
+ * Réinitialise le mot de passe d'un parent, à la demande d'un administrateur —
+ * Camara, le 17/09/2026.
+ *
+ * LE PARENT N'EST PAS PRÉVENU. Aucun courriel ne part : c'est un dépannage
+ * demandé de vive voix, et l'administrateur redonne le mot de passe lui-même.
+ *
+ * SES SESSIONS EN COURS TOMBENT. Identity renouvelle le tampon de sécurité à
+ * chaque réinitialisation — c'est ce qu'on attend quand le mot de passe change
+ * sans que le titulaire ait rien fait.
+ *
+ * L'ADRESSE ET NON L'IDENTIFIANT, comme la suppression : le `sub` est
+ * délibérément absent des réponses de l'API métier.
+ */
+export const reinitialiserMotDePasseDe = (mail, motDePasse) =>
+  clientIdentite.put(
+    `/api/admin/comptes/${encodeURIComponent(mail)}/mot-de-passe`,
+    { motDePasse },
+  );

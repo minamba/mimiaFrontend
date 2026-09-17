@@ -76,7 +76,17 @@ const MATIERES = {
 const matiereDeLaCle = (cle) => MATIERES[cle.split('-')[0]] ?? { code: 'AUTRE', libelle: 'Autre' };
 
 /** Formulaire d'import, ouvert sur une ligne précise. */
-function Import({ figure, matiere, onFait, onAnnuler }) {
+/**
+ * Le dépôt d'un fichier pour une figure.
+ *
+ * `variante` vaut `legende` (la planche telle qu'on l'importe depuis
+ * toujours) ou `muette` (la même figure sans ses mots, celle qui sert à
+ * interroger). Le formulaire est le MÊME dans les deux cas, et c'est
+ * volontaire : une muette est un fichier de Wikimedia comme un autre, avec
+ * son auteur et sa licence, affiché devant un enfant.
+ */
+function Import({ figure, matiere, variante = 'legende', onFait, onAnnuler }) {
+  const muette = variante === 'muette';
   const [fichier, setFichier] = useState(null);
   const [auteur, setAuteur] = useState('');
   const [source, setSource] = useState('');
@@ -108,6 +118,14 @@ function Import({ figure, matiere, onFait, onAnnuler }) {
       const { data } = await importerPlanche({
         cle: figure.cle,
         matiereCode: matiere.code,
+        variante,
+
+        // LE NIVEAU DU CATALOGUE PART AVEC LA PLANCHE. Il était affiché ici
+        // depuis le début, mais il ne quittait jamais l'écran : le professeur
+        // ignorait donc qu'une planche était faite pour le CP, et il a servi la
+        // droite graduée du CP à un élève de 6e (Camara, le 17/09/2026).
+        niveau: figure.niveau,
+
         fichier,
         auteur,
         source,
@@ -118,7 +136,7 @@ function Import({ figure, matiere, onFait, onAnnuler }) {
       // La planche RELUE après lecture par le modèle : c'est elle qui porte
       // la description, et donc la seule information qui vaille la peine
       // d'être annoncée.
-      onFait({ figure, planche: data });
+      onFait({ figure, planche: data, variante });
     } catch (e) {
       setErreur(e?.response?.data?.message ?? "L'import a échoué.");
     } finally {
@@ -142,8 +160,20 @@ function Import({ figure, matiere, onFait, onAnnuler }) {
       </label>
 
       <p className="planche-import__nom">
-        Sera enregistré sous <code>{figure.cle}{extension}</code>
+        Sera enregistré sous <code>{figure.cle}{muette ? '-muette' : ''}{extension}</code>
       </p>
+
+      {/* LE CADRAGE EST LA SEULE CONDITION, et elle ne se vérifie pas toute
+          seule : les repères de la légendée sont transposés tels quels sur la
+          muette. Deux images recadrées différemment feraient tomber un clic
+          dans la région voisine, sans que rien ne le signale. */}
+      {muette && (
+        <p className="planche-import__muette">
+          <strong>Le même cadrage que la planche légendée.</strong> La correction
+          des clics réutilise les positions relevées sur celle-ci : la muette doit
+          être la même image, aux mêmes dimensions, dont on a effacé les mots.
+        </p>
+      )}
 
       <label className="planche-import__maison">
         <input
@@ -205,6 +235,12 @@ function Import({ figure, matiere, onFait, onAnnuler }) {
 export default function Planches() {
   const [importees, setImportees] = useState(null);
   const [erreur, setErreur] = useState(null);
+  /**
+   * Le dépôt ouvert : `{ cle, variante }`, ou null.
+   *
+   * La clé seule ne suffit plus depuis qu'une figure a deux fichiers : deux
+   * formulaires se seraient ouverts ensemble sur la même ligne.
+   */
   const [ouverte, setOuverte] = useState(null);
 
   /**
@@ -295,7 +331,22 @@ export default function Planches() {
    * faire — aujourd'hui, six matières sur sept.
    */
   const groupes = useMemo(() => {
-    const parCle = new Map((importees ?? []).map((p) => [p.cle, p]));
+    // DEUX LIGNES EN BASE POUR UNE FIGURE À L'ÉCRAN.
+    //
+    // La légendée et sa muette portent la MÊME clé — c'est le même document,
+    // le même titre, le même niveau. Les indexer ensemble écraserait l'une
+    // par l'autre selon l'ordre de lecture, et la ligne afficherait tantôt
+    // l'une tantôt l'autre sans qu'on comprenne pourquoi.
+    const toutes = importees ?? [];
+
+    const parCle = new Map(
+      toutes.filter((p) => (p.variante ?? 'legende') !== 'muette')
+        .map((p) => [p.cle, p]),
+    );
+
+    const muetteParCle = new Map(
+      toutes.filter((p) => p.variante === 'muette').map((p) => [p.cle, p]),
+    );
 
     const parMatiere = new Map(
       Object.values(MATIERES).map((matiere) => [matiere.code, { matiere, figures: [] }]),
@@ -308,6 +359,7 @@ export default function Planches() {
       parMatiere.get(matiere.code).figures.push({
         ...figure,
         planche: parCle.get(figure.cle) ?? null,
+        muette: muetteParCle.get(figure.cle) ?? null,
         recommandee: plancheRecommandee(figure.cle),
       });
     }
@@ -353,9 +405,21 @@ export default function Planches() {
     }
   };
 
-  const retirer = async (cle) => {
-    if (!window.confirm('Retirer cette planche ? Le professeur redessinera à la main.')) return;
-    await supprimerPlanche(cle);
+  const retirer = async (cle, variante = 'legende') => {
+    const muette = variante === 'muette';
+
+    // RETIRER LA LÉGENDÉE EMPORTE SA MUETTE, et il faut le dire AVANT : le
+    // serveur les supprime ensemble parce que la muette n'a pas de repères à
+    // elle. Découvrir après coup que l'exercice a disparu avec la leçon
+    // serait une mauvaise surprise.
+    const question = muette
+      ? 'Retirer la version muette ? La planche légendée reste en place.'
+      : 'Retirer cette planche ? Sa version muette part avec elle, et le '
+        + 'professeur redessinera à la main.';
+
+    if (!window.confirm(question)) return;
+
+    await supprimerPlanche(cle, muette ? 'muette' : undefined);
     charger();
   };
 
@@ -368,7 +432,10 @@ export default function Planches() {
    * l'ancien crédit. On le retrouve donc par sa clé à chaque rendu.
    */
   const plancheApercu = apercu
-    ? (importees ?? []).find((p) => p.cle === apercu.cle) ?? apercu.planche
+    ? (importees ?? []).find(
+      (p) => p.cle === apercu.cle
+        && (p.variante ?? 'legende') === (apercu.variante ?? 'legende'),
+    ) ?? (apercu.variante === 'muette' ? apercu.muette : apercu.planche)
     : null;
 
   if (importees === null) return <Loader texte="Chargement des schémas…" />;
@@ -538,7 +605,7 @@ export default function Planches() {
                         <span className="planches__licence">{figure.planche.licence}</span>
                       )}
                       <button type="button" className="btn btn--fantome btn--compact"
-                        onClick={() => setOuverte(figure.cle)}>
+                        onClick={() => setOuverte({ cle: figure.cle, variante: 'legende' })}>
                         Remplacer
                       </button>
                       <button type="button" className="btn btn--fantome btn--compact"
@@ -566,7 +633,7 @@ export default function Planches() {
                           : 'à importer'}
                       </span>
                       <button type="button" className="btn btn--compact"
-                        onClick={() => setOuverte(figure.cle)}>
+                        onClick={() => setOuverte({ cle: figure.cle, variante: 'legende' })}>
                         Ajouter
                       </button>
                     </>
@@ -620,10 +687,84 @@ export default function Planches() {
                   );
                 })()}
 
-                {ouverte === figure.cle && (
+                {/*
+                  LA VERSION MUETTE, SOUS SA LÉGENDÉE.
+
+                  Imbriquée et non côte à côte : ce n'est pas une deuxième
+                  planche, c'est la même figure sans ses mots. Une ligne à part
+                  aurait doublé le catalogue et laissé croire qu'il y a deux
+                  documents à choisir.
+
+                  ELLE N'APPARAÎT QUE SOUS UNE PLANCHE IMPORTÉE, parce qu'elle
+                  n'a de sens qu'avec elle : sa correction lit les repères de sa
+                  parente. Le serveur refuse d'ailleurs l'import dans l'autre
+                  ordre.
+                */}
+                {figure.planche && (
+                  <div
+                    className="planches__muette"
+                    role="group"
+                    aria-label="Version muette"
+                  >
+                    {figure.muette && (
+                      <button
+                        type="button"
+                        className="planches__vignette planches__vignette--muette"
+                        onClick={() => setApercu({ ...figure, variante: 'muette' })}
+                        title="Voir la version muette en grand"
+                      >
+                        <img
+                          src={urlPlanche(
+                            figure.cle,
+                            figure.muette.dateModification ?? figure.muette.dateCreation,
+                            'muette',
+                          )}
+                          alt=""
+                          loading="lazy"
+                        />
+                      </button>
+                    )}
+
+                    <span className="planches__muette-titre">
+                      <strong>Version muette</strong>
+                      <span>pour interroger — la même figure sans ses mots</span>
+                    </span>
+
+                    <div className="planches__etat">
+                      {figure.muette ? (
+                        <>
+                          <span className="planches__badge planches__badge--ok">
+                            {figure.muette.maison ? 'maison' : 'importée'}
+                          </span>
+                          <button type="button" className="btn btn--fantome btn--compact"
+                            onClick={() => setOuverte({ cle: figure.cle, variante: 'muette' })}>
+                            Remplacer
+                          </button>
+                          <button type="button" className="btn btn--fantome btn--compact"
+                            onClick={() => retirer(figure.cle, 'muette')}>
+                            Retirer
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="planches__badge planches__badge--vide">
+                            à importer
+                          </span>
+                          <button type="button" className="btn btn--fantome btn--compact"
+                            onClick={() => setOuverte({ cle: figure.cle, variante: 'muette' })}>
+                            Ajouter
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {ouverte?.cle === figure.cle && (
                   <Import
                     figure={figure}
                     matiere={groupeOuvert.matiere}
+                    variante={ouverte.variante}
                     onAnnuler={() => setOuverte(null)}
                     // LA LISTE EST RECHARGÉE AVANT D'OUVRIR LE COMPTE RENDU,
                     // et l'ordre compte : la fenêtre lit la liste, pas la
@@ -665,6 +806,7 @@ export default function Planches() {
               src={urlPlanche(
                 apercu.cle,
                 plancheApercu?.dateModification ?? plancheApercu?.dateCreation,
+                apercu.variante,
               )}
               alt={apercu.titre}
             />

@@ -34,6 +34,10 @@ export default function ListeEleves() {
   const navigate = useNavigate();
   const { liste, loading, error } = useSelector((state) => state.eleves);
 
+  // Sert UNIQUEMENT à montrer la porte : l API refuse ses routes de son côté,
+  // et la route /admin est déjà protégée par RouteProtegee.
+  const { estAdmin } = useSelector((state) => state.auth);
+
   // Ce que la formule autorise. Null tant qu'on ne sait pas : on n'affiche
   // alors aucun blocage, pour ne pas interdire à tort le temps d'un chargement.
   const [capacite, setCapacite] = useState(null);
@@ -117,6 +121,26 @@ export default function ListeEleves() {
               connexion : il doit pouvoir laisser son avis sans passer par la
               page d'un enfant. */}
           <BoutonAvis />
+
+          {/* L'ENTRÉE DE L'ADMINISTRATION EST ICI — Camara, le 17/09/2026.
+
+              C'est la première page qu'un administrateur voit après s'être
+              connecté, et jusqu'ici il n'y avait aucun chemin visible vers son
+              tableau de bord : il fallait connaître /admin et le taper. Un
+              accès qu'on ouvre à quelqu'un doit se voir, sinon on le lui
+              explique à chaque fois.
+
+              LE MÊME BOUTON QUE « MON COMPTE » — Camara, le 17/09/2026. Je
+              l'avais fait en fantôme pour qu'il reste discret ; à l'écran, un
+              contour sur fond sombre ne se lit pas comme un bouton mais comme
+              un champ désactivé. Les deux accès sont posés côte à côte et se
+              valent : celui-ci mène au tableau de bord, celui-là au compte. */}
+          {estAdmin && (
+            <Link to="/admin" className="btn page__bouton-admin">
+              Administration
+            </Link>
+          )}
+
           <Link to="/profil" className="btn page__bouton-compte">
             Mon compte
           </Link>
@@ -127,7 +151,21 @@ export default function ListeEleves() {
 
       {complet && <QuotaEnfants capacite={capacite} enPage />}
 
-      {liste.length === 0 ? (
+      {/* LE COMPTE VIDE ET BLOQUÉ N’A RIEN À PROPOSER — Camara, le
+          18/09/2026 : « j’ai créé un compte, je lui ai empêché de pouvoir
+          ajouter un enfant, mais la fenêtre d’ajout est toujours là ».
+
+          LE DÉFAUT NE SE VOYAIT QUE SUR UN COMPTE NEUF, et c’est ce qui l’a
+          fait passer : la tuile « + Ajouter un enfant » de la grille était
+          bien conditionnée, mais un compte sans aucun enfant ne voit jamais
+          la grille — il voit ce bloc d’accueil, qui ne demandait rien à
+          personne. Deux chemins vers le même geste, un seul gardé.
+
+          RIEN PLUTÔT QU’UN BLOC SANS BOUTON : « Créez le profil de votre
+          enfant… deux minutes et son professeur est prêt » au-dessus d’un
+          refus serait une invitation malhonnête. L’encadré de quota, juste
+          au-dessus, dit déjà ce qu’il y a à dire. */}
+      {liste.length === 0 && complet ? null : liste.length === 0 ? (
         <div className="accueil-vide">
           <span className="accueil-vide__illu" aria-hidden="true">
             👋

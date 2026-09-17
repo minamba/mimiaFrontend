@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import casquePng from '../assets/casque.webp';
+import enceintePng from '../assets/enceinte.webp';
 import { estIOS } from '../lib/storage/appareil';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -331,7 +333,9 @@ function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
             className="casque-option casque-option--oui"
             onClick={() => onRepondre(true)}
           >
-            <span className="casque-option__icone" aria-hidden="true">🎧</span>
+            <span className="casque-option__icone" aria-hidden="true">
+              <img src={casquePng} alt="" />
+            </span>
             <span className="casque-option__titre">Oui, j’ai un casque</span>
             <span className="casque-option__detail">
               Je peux interrompre le prof en parlant
@@ -343,7 +347,9 @@ function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
             className="casque-option"
             onClick={() => onRepondre(false)}
           >
-            <span className="casque-option__icone" aria-hidden="true">🔊</span>
+            <span className="casque-option__icone" aria-hidden="true">
+              <img src={enceintePng} alt="" />
+            </span>
             <span className="casque-option__titre">Non, haut-parleur</span>
             <span className="casque-option__detail">
               J’attends que le prof ait fini pour parler

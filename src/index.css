@@ -1,3 +1,26 @@
+/* RIEN NE DÉPASSE SUR LE CÔTÉ — Camara, le 17/09/2026 : « pourquoi sur
+   tablette les pages ne sont pas centrées ? ». Elles l'étaient : c'est la PAGE
+   qui était plus large que l'écran. Le décor de notes à la craie du héros
+   déborde volontairement de 12 % de chaque côté pour mordre les marges ; à
+   gauche cela ne fait rien, à droite cela ALLONGE le document. Le contenu,
+   centré dans un document devenu plus large que la fenêtre, se retrouvait
+   poussé vers la gauche avec du vide à droite. Mesuré : 87 px de décalage à
+   960 px, 114 px à 1200 px, et le défaut courait de 901 px à ~1500 px — donc
+   sur les portables autant que sur les tablettes.
+
+   CLIP ET SURTOUT PAS HIDDEN. Hidden ferait de l'élément un conteneur de
+   défilement : un bandeau collant — celui du cours — se calerait alors sur lui
+   et non sur la fenêtre. Clip coupe sans créer de conteneur, et le collant
+   continue de fonctionner. Vérifié aux deux, plus le bouton flottant.
+
+   SUR html ET body, PAS SUR body SEUL : mesuré, body seul ne retire rien du
+   tout, le document reste large. Il faut les deux.
+
+   Les navigateurs qui ne connaissent pas clip (Safari 15 et avant) l'ignorent :
+   ils gardent le comportement d'aujourd'hui, jamais pire. */
+html,
+body { overflow-x: clip; }
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

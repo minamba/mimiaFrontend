@@ -6,6 +6,8 @@ import { chargerReferentiel } from '../lib/actions/referentielActions';
 import Loader from './Loader';
 import { grouperClasses, specialitesDeLaClasse, specialitesAEnvoyer } from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
+import QuotaEnfants from './QuotaEnfants';
+import { getCapaciteEnfants } from '../lib/api/abonnementApi';
 
 /**
  * Onboarding d'un profil enfant.
@@ -46,6 +48,34 @@ export default function FormulaireEleve() {
     if (niveaux.length === 0) dispatch(chargerReferentiel());
   }, [dispatch, niveaux.length]);
 
+  /**
+   * LE FORMULAIRE SE GARDE LUI-MÊME — Camara, le 18/09/2026.
+   *
+   * Les écrans qui y mènent cachent déjà leur bouton quand le compte ne peut
+   * plus ajouter d'enfant. Ça ne suffit pas : cette page a une adresse, et
+   * une adresse se tape, se met en favori, et traîne dans un historique. Sans
+   * ce contrôle, on remplissait huit champs pour se voir refuser à l'envoi —
+   * et le refus se lit alors comme une panne plutôt que comme une limite.
+   *
+   * `null` VEUT DIRE « ON NE SAIT PAS ENCORE », et on attend : afficher le
+   * formulaire puis le remplacer par un refus serait pire que l'attente.
+   *
+   * UN ÉCHEC DE LA REQUÊTE LAISSE PASSER. Le serveur refusera de toute façon,
+   * avec un message précis ; bloquer sur une requête ratée interdirait à un
+   * parent parfaitement en droit de créer le profil de son enfant.
+   */
+  const [capacite, setCapacite] = useState(null);
+
+  useEffect(() => {
+    let vivant = true;
+
+    getCapaciteEnfants()
+      .then(({ data }) => { if (vivant) setCapacite(data); })
+      .catch(() => { if (vivant) setCapacite({ peutAjouter: true }); });
+
+    return () => { vivant = false; };
+  }, []);
+
   useEffect(() => {
     if (success) {
       dispatch(resetEleve());
@@ -69,8 +99,21 @@ export default function FormulaireEleve() {
     );
   };
 
-  if (chargementReferentiel && niveaux.length === 0) {
+  if ((chargementReferentiel && niveaux.length === 0) || capacite === null) {
     return <Loader texte="Chargement des niveaux…" />;
+  }
+
+  // L'ENCADRÉ DIT LEQUEL DES DEUX REFUS s'applique — la formule pleine, ou le
+  // droit retiré par l'administration. Le même composant que sur « Vos
+  // enfants » et dans le compte : un texte recopié aurait dérivé au premier
+  // changement de formulation.
+  if (!capacite.peutAjouter) {
+    return (
+      <section className="page page--etroite">
+        <h1>Ajouter un enfant</h1>
+        <QuotaEnfants capacite={capacite} enPage />
+      </section>
+    );
   }
 
   // Regroupées par voie et par série : voir `grouperClasses`.

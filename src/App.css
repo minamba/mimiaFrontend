@@ -2876,6 +2876,71 @@ button.prof:focus-visible {
    flex-start` posé sur `.page__entete` pour le bloc de titre. */
 .page__bouton-compte { white-space: nowrap; }
 
+/* L'ENTRÉE DE L'ADMINISTRATION, à gauche de « Mon compte » — Camara, le
+   17/09/2026.
+
+   LE MÊME BOUTON QUE « MON COMPTE », `btn` et pas `btn-ghost`. Le fantôme
+   était mon idée — garder le tableau de bord discret — et elle ne tient pas à
+   l'écran : sur le fond sombre, un simple contour se lit comme un champ
+   désactivé, pas comme un bouton. Les deux accès se valent de toute façon,
+   l'un mène au tableau de bord et l'autre au compte. */
+.page__bouton-admin { white-space: nowrap; }
+
+/* UN TABLEAU DE BORD SANS AUCUNE SECTION. Ce n'est pas une erreur : c'est
+   l’état normal d’un administrateur qu’on vient de nommer, tant que le
+   super-administrateur ne lui a rien coché. Le ton est donc celui d’une
+   explication, pas d’une alerte. */
+.admin__sans-droit {
+  max-width: 52ch;
+  margin: 40px auto;
+  text-align: center;
+  color: var(--encre-douce);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------- les droits d’un administrateur */
+
+.droits__aide {
+  margin: 0 0 16px;
+  color: var(--encre-douce);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.droits__attente { color: var(--encre-douce); font-size: 14px; }
+
+/* DEUX COLONNES DÈS QU’IL Y A LA PLACE : treize cases en une seule colonne
+   font défiler une fenêtre qui devrait se lire d’un coup d’œil. */
+.droits__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 18px;
+}
+
+.droits__case {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.droits__case:hover { background: var(--surface-2, transparent); }
+
+.droits__case input { width: 16px; height: 16px; accent-color: var(--corail); }
+
+/* Dit ce qu’on s’apprête à laisser, sans crier : un compte sans section est
+   exactement ce que Camara veut à la nomination. */
+.droits__vide {
+  margin: 16px 0 0;
+  color: var(--encre-douce);
+  font-size: 13px;
+  font-style: italic;
+}
+
 /* Le bouton de thème partage la ligne du bouton de compte, comme il partage
    déjà celle du « Bonjour » sur « Mes matières » (`.grille-matieres__entete`,
    voir plus bas) : un réglage, pas une seconde action séparée. */
@@ -4562,7 +4627,6 @@ button.eleve-bandeau {
 /* LA QUESTION DU CASQUE                                               */
 /* ------------------------------------------------------------------ */
 
-.modale__boite--casque { max-width: 540px; }
 
 /* Deux choix de POIDS ÉGAL, et c’est le point.
 
@@ -4577,21 +4641,43 @@ button.eleve-bandeau {
   margin: 22px 0 18px;
 }
 
+/* LES DEUX CARTES SONT DES OBJETS, PAS DES LIGNES. Le dessin en haut, centré,
+   puis ce qu'il est, puis ce qu'il implique : on reconnaît son matériel avant
+   de lire, et c'est le seul cas où reconnaître vaut mieux que lire — l'enfant
+   a l'objet sous les yeux au moment où on le lui demande.
+
+   LES DEUX SONT TRAITÉES À L'IDENTIQUE, et cela reste le point : même halo,
+   même taille, même survol. Rien ne doit suggérer laquelle est la bonne
+   réponse — il n'y en a pas, il y a la vraie. */
 .casque-option {
   display: grid;
-  gap: 4px;
-  padding: 18px 16px;
-  border: 1px solid var(--trait);
-  border-radius: 14px;
-  background: var(--surface);
-  text-align: left;
+  justify-items: center;
+  gap: 5px;
+  padding: 22px 18px 20px;
+  /* SARCELLE PARTOUT, ET LA MÊME POUR LES DEUX — Camara, le 17/09/2026 :
+     « cette popup est trop ton sur ton, c'est trop monochrome ». Elle l'était :
+     une boîte bleu marine sur une page bleu marine, deux cartes bleu marine
+     dessus, et des liserés gris qu'on devinait. Rien ne séparait les couches.
+
+     UNE SEULE TEINTE, PAS UNE PAR CARTE. Donner le corail à l'une et la
+     sarcelle à l'autre aurait été plus coloré encore, mais le corail est la
+     couleur d'action de Mimia : « Non » aurait attiré l'œil plus que « Oui ».
+     Ces deux cartes doivent rester interchangeables à l'œil — c'est un fait à
+     constater, pas une préférence à influencer. */
+  border: 1px solid color-mix(in srgb, var(--sarcelle) 32%, var(--trait));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--sarcelle) 8%, var(--surface));
+  text-align: center;
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.1s;
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
+/* Le survol reste dans la même teinte : le corail n'a plus rien à faire ici. */
 .casque-option:hover {
-  border-color: var(--corail);
+  border-color: var(--sarcelle);
+  background: color-mix(in srgb, var(--sarcelle) 15%, var(--surface));
   transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.18);
 }
 
 .casque-option:focus-visible {
@@ -4600,20 +4686,64 @@ button.eleve-bandeau {
 }
 
 
-:root:not([data-theme='light']) .casque-option { background: rgba(255, 255, 255, 0.04); }
+/* Ces deux surcharges reprenaient un blanc translucide, qui ANNULAIT la teinte :
+   sur le bleu marine elle doit au contraire être un peu plus appuyée qu'en
+   clair pour se voir — même règle que pour les décors de matière. */
+:root:not([data-theme='light']) .casque-option {
+  background: color-mix(in srgb, var(--sarcelle) 13%, var(--surface));
+}
+
+:root:not([data-theme='light']) .casque-option:hover {
+  background: color-mix(in srgb, var(--sarcelle) 22%, var(--surface));
+}
 
 
-:root[data-theme='dark'] .casque-option { background: rgba(255, 255, 255, 0.04); }
+:root[data-theme='dark'] .casque-option {
+  background: color-mix(in srgb, var(--sarcelle) 13%, var(--surface));
+}
 
-.casque-option__icone { font-size: 26px; line-height: 1; }
+:root[data-theme='dark'] .casque-option:hover {
+  background: color-mix(in srgb, var(--sarcelle) 22%, var(--surface));
+}
+
+/* LE HALO POSE LE DESSIN. Sans lui, une illustration détaillée flotte au-dessus
+   d'une carte vide ; le disque lui donne un sol, et sa teinte sarcelle est
+   celle du site — c'est ce qui rattache ces deux objets achetés ailleurs à
+   Mimia. */
+.casque-option__icone {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      color-mix(in srgb, var(--sarcelle) 42%, transparent),
+      color-mix(in srgb, var(--sarcelle) 12%, transparent) 72%
+    );
+}
+
+.casque-option__icone img {
+  display: block;
+  width: 58px;
+  height: auto;
+}
 
 .casque-option__titre {
-  font-size: 15px;
+  font-family: var(--display);
+  font-size: 16.5px;
   font-weight: 600;
   color: var(--encre);
 }
 
-.casque-option__detail { font-size: 12.5px; color: var(--encre-douce); }
+.casque-option__detail {
+  max-width: 22ch;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
 
 /* Le rappel pendant le cours : présent, jamais encombrant. Il énonce une
    règle du jeu, il ne signale pas une panne — d’où le ton neutre et non
@@ -5544,6 +5674,39 @@ button.eleve-bandeau {
   gap: 14px;
   margin-bottom: 22px;
 }
+
+/* LE TRI DU TABLEAU DES PARENTS — Camara, le 17/09/2026.
+
+   EN LIGNE ET NON EMPILÉ, contrairement aux filtres du carnet d’idées : cette
+   rangée-ci est centrée verticalement sur un champ de recherche, et une
+   étiquette posée au-dessus du menu aurait décalé les deux. */
+.filtres__tri {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+  white-space: nowrap;
+}
+
+.filtres__tri select {
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+/* Le sens se lit sans survoler : la flèche seule se confond avec un bouton de
+   navigation, et le mot seul ne dit pas de quel côté on va. */
+.filtres__sens,
+.idees__sens { white-space: nowrap; }
 
 /* LE BOUTON « NOUVEAU PARENT », SUR SA PROPRE LIGNE — Camara, le 16/09/2026 :
    « trop collé au filtre ». Un geste de création n'est pas un filtre : il se
@@ -6738,6 +6901,70 @@ html.defilement-bloque body {
 /* Assez large pour les sept colonnes de la grille sans les tasser, pas plus :
    voir `CalendrierEleveModale.js`. */
 .modale__boite--calendrier { max-width: 680px; }
+
+/* ASSEZ LARGE POUR DEUX COLONNES DE CASES, et posé ICI et pas ailleurs.
+
+   `.modale__boite` fixe 420 px un peu plus haut dans ce fichier. À
+   spécificité égale, c'est l'ordre qui tranche : la même règle écrite avant
+   la sienne n'aurait rien fait — le défaut qu'avait la fenêtre du casque,
+   large de 420 px pendant des semaines sans que personne comprenne pourquoi
+   ses deux cartes se superposaient.
+
+   Treize sections en une seule colonne font défiler une fenêtre qui devrait
+   se lire d'un coup d'œil. */
+.modale__boite--droits { max-width: 620px; }
+
+/* ICI, ET PAS AVEC LE RESTE DE LA QUESTION DU CASQUE — c'est une CORRECTION du
+   17/09/2026. Cette largeur était écrite quinze cents lignes plus haut, donc
+   AVANT `.modale__boite` et son `max-width: 420px`. À spécificité égale c'est
+   l'ordre du fichier qui tranche : la règle n'a jamais rien fait, et la fenêtre
+   du casque est restée étroite depuis toujours — ses deux cartes empilées au
+   lieu d'être côte à côte. Les autres variantes, elles, sont toutes écrites
+   après la règle de base ; celle-ci était la seule exilée. */
+.modale__boite--casque { max-width: 560px; }
+
+/* TOUT EST CENTRÉ — Camara, le 17/09/2026. La question est posée à un enfant
+   qui vient de cliquer sur sa matière : c'est un moment d'arrêt, pas une page
+   à parcourir. Un titre à gauche, un texte à gauche et deux cartes à gauche
+   donnaient à ce moment l'allure d'un formulaire. */
+/* LE TITRE PORTE LA FENÊTRE. Il n'y a rien d'autre à lire ici : une question,
+   deux réponses. Un titre de fenêtre ordinaire — 19 px, aligné à gauche, perdu
+   au-dessus d'un paragraphe de la même taille — laissait ce moment ressembler à
+   un réglage qu'on expédie. C'en est un que l'enfant doit vraiment lire : une
+   réponse fausse lui rend le cours inutilisable.
+
+   TROIS CHOSES, ET AUCUNE N'EST UN ORNEMENT. La taille, qui le sépare du
+   paragraphe au lieu de s'y fondre. L'interlignage resserré, sans quoi un titre
+   de cette taille qui passe à la ligne sur un téléphone se lit comme deux
+   phrases. Et le filet sarcelle, qui n'est pas une décoration mais la seule
+   couleur de la fenêtre : il signe Mimia sous la question, là où le regard
+   s'arrête avant de descendre vers les deux cartes.
+
+   `clamp` PLUTÔT QU'UNE RÈGLE PAR PALIER : entre 21 et 27 px, la taille suit la
+   largeur sans que personne ait à tenir un palier de plus. */
+.modale__boite--casque h2 {
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: clamp(21px, 5.2vw, 27px);
+  line-height: 1.22;
+  letter-spacing: -0.012em;
+}
+
+.modale__boite--casque h2::after {
+  content: '';
+  display: block;
+  width: 46px;
+  height: 3px;
+  margin: 14px auto 0;
+  border-radius: 3px;
+  background: var(--sarcelle);
+}
+
+.modale__boite--casque .modale__texte {
+  max-width: 42ch;
+  margin-inline: auto;
+  text-align: center;
+}
 
 /* TITRE, ÉTAT ET FORMULAIRE AU CENTRE, TANT QU'IL N'Y A QU'EUX.
    `.avis__etat`/`.avis__invite` sont pensés pour la page d'accueil, où ils
@@ -12378,6 +12605,56 @@ html.defilement-bloque body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* LA VERSION MUETTE, IMBRIQUÉE SOUS SA LÉGENDÉE.
+
+   Décalée et sur toute la largeur de la ligne : c'est une dépendance, pas une
+   voisine. Une deuxième ligne de même niveau se serait lue comme une autre
+   planche, alors que c'est la même figure sans ses mots — même titre, même
+   clé, même niveau. */
+.planches__muette {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 4px 0 0 18px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--trait);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--encre) 4%, transparent);
+}
+
+/* Les boutons vont à droite, alignés sur ceux de la planche du dessus. */
+.planches__muette .planches__etat { margin-left: auto; }
+
+.planches__muette-titre {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.planches__muette-titre span { color: var(--encre-douce); font-size: 12px; }
+
+/* Plus petite que celle de la planche : elle en dépend, elle ne lui dispute
+   pas le regard. */
+.planches__vignette--muette { width: 48px; height: 48px; }
+
+/* LE CADRAGE EST LA SEULE CONDITION, et rien ne le vérifie à notre place :
+   les repères de la légendée sont transposés tels quels sur la muette. Deux
+   images recadrées différemment feraient tomber un clic dans la région
+   voisine, sans qu'aucune erreur ne se produise nulle part. */
+.planche-import__muette {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--serie-1) 12%, var(--surface));
+  color: var(--encre);
+  font-size: 12.5px;
+  line-height: 1.45;
 }
 
 .planche-apercu {
@@ -21492,6 +21769,13 @@ html.defilement-bloque body {
   background: var(--papier);
 }
 
+/* LE BOUTON N'A PLUS DE FOND, et ce n'est pas un oubli : depuis le 17/09/2026,
+   les dessins de Camara SONT des pastilles entières. Laisser le disque corail
+   dessous aurait donné un disque sur un disque, avec un liseré de couleur qui
+   dépasse d'un côté. Le bouton ne garde que sa taille, son geste et son nom.
+
+   LE SURVOL PASSE DONC PAR LA LUMIÈRE, plus par la couleur : on ne peut plus
+   changer le fond d'une image. */
 .lecteur__bouton {
   flex: 0 0 auto;
   display: grid;
@@ -21501,20 +21785,20 @@ html.defilement-bloque body {
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--corail-btn);
-  font-size: 15px;
+  background: none;
   line-height: 1;
-  color: #fff;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: filter 0.15s ease, transform 0.15s ease;
 }
 
-.lecteur__bouton:hover { background: var(--corail-btn-survol); transform: scale(1.05); }
+.lecteur__icone-lecture {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
-/* Le triangle de lecture est optiquement décentré dans son disque ; les deux
-   barres de pause, elles, sont symétriques et n'ont rien à rattraper. */
-.lecteur__bouton span { margin-left: 3px; }
-.lecteur__bouton.est-en-lecture span { margin-left: 0; letter-spacing: 1px; }
+.lecteur__bouton:hover { filter: brightness(1.12); transform: scale(1.05); }
 
 /* La barre : un champ `range` déshabillé, donc pilotable au clavier. Le
    remplissage est un dégradé qui s'arrête à `--avancement`, posé par le
@@ -21592,21 +21876,49 @@ html.defilement-bloque body {
 .lecteur__son { display: flex; align-items: center; gap: 6px; }
 
 .lecteur__muet {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
   border-radius: 50%;
   background: transparent;
-  font-size: 14px;
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
+/* La largeur commande : le dessin est un rectangle couché, c'est sa largeur
+   qu'on lit, pas sa hauteur. */
+.lecteur__icone { display: block; width: 24px; height: auto; }
+
 .lecteur__muet:hover { background: color-mix(in srgb, var(--encre) 12%, transparent); }
+
+/* LA BARRE DU SON COUPÉ. L'émoji changeait de dessin tout seul — le
+   haut-parleur barré est le signe universel du silence. Avec une seule image,
+   la barre se trace ici, sinon « coupé » ne se lirait plus que par une nuance
+   d'opacité que personne ne remarque sans point de comparaison.
+
+   Son liseré reprend le fond DU LECTEUR (`--papier`) et non celui du site : le
+   lecteur est une pilule posée sur des cartes, et c'est sa propre surface qu'il
+   faut rappeler autour de la barre pour qu'elle se détache du dessin. */
+.lecteur__muet--coupe .lecteur__icone { opacity: 0.75; }
+
+.lecteur__muet--coupe::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--corail);
+  box-shadow: 0 0 0 1.5px var(--papier);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
+}
 
 /* Plus court que la barre de lecture, et surtout plus mince : le volume est
    un réglage d'appoint, il ne doit pas se disputer la place avec la position
@@ -22514,4 +22826,731 @@ html.defilement-bloque body {
 :root:not([data-theme='light']) .controle-form .champ--manquant :is(input, select):focus {
   border-color: var(--danger);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* LE CARNET D'IDÉES D'ÉVOLUTION — Camara, le 17/09/2026               */
+/* ------------------------------------------------------------------ */
+
+.idees__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.idees__titre {
+  margin: 0;
+  font-size: 20px;
+}
+
+.idees__sous-titre {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.idees__vide {
+  max-width: 46ch;
+  margin: 26px 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+}
+
+/* LES PIÈCES JOINTES D’UNE IDÉE — Camara, le 17/09/2026.
+
+   Elles sont SOUS le champ, après les vignettes d'images, et visiblement
+   d'une autre nature : une image vit dans le texte à l'endroit de son
+   marqueur, un audio et un document se posent à la fin comme dans un
+   courriel. Les mélanger aurait laissé croire qu’un PDF s’insère dans une
+   phrase. */
+.idee-form__jointes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.idee-form__jointes-titre {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.idee-jointe {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 8px 6px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: var(--surface-2, var(--surface));
+  font-size: 13px;
+}
+
+.idee-jointe__icone { font-size: 15px; line-height: 1; }
+
+/* Le nom se tronque plutôt que de pousser la croix hors de la pastille :
+   « enregistrement-du-17-09-2026-seance-de-maths.m4a » est un nom courant. */
+.idee-jointe__nom {
+  overflow: hidden;
+  max-width: 26ch;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.idee-jointe__poids { color: var(--encre-douce); font-size: 12px; white-space: nowrap; }
+
+/* ---------------------------------------------- les pièces dans l’aperçu */
+
+.idee-apercu__jointes {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--trait);
+}
+
+.idee-apercu__jointes h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.idee-apercu__jointe + .idee-apercu__jointe {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--trait);
+}
+
+.idee-apercu__jointe-nom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+/* Le lecteur prend la largeur : les commandes natives d'un `audio` étroit
+   se serrent au point que le curseur de position devient invisible. */
+.idee-apercu__jointe audio { width: 100%; }
+
+.idees__cellule-titre { font-weight: 600; }
+
+/* LES TROIS BOUTONS RESTENT SUR UNE LIGNE, QUOI QUE PÈSE LE TITRE.
+
+   `flex-wrap: wrap` les laissait passer à la ligne, et pas au hasard : la
+   largeur minimale d'une cellule qui s'enroule vaut celle de son plus gros
+   enfant — 32 px, un bouton. Le navigateur était donc libre de réduire cette
+   colonne à un bouton de large, et il le faisait dès que le titre réclamait
+   de la place. La corbeille tombait seule sur une deuxième ligne, la ligne
+   grandissait, et le tableau semblait cassé sur certains titres seulement.
+
+   En `nowrap`, cette largeur minimale devient celle des trois boutons et de
+   leurs écarts — 108 px —, et la mise en page automatique du tableau la
+   respecte : la colonne ne descend plus en dessous, et le titre prend ce qui
+   reste. Rien ne peut déborder de la page pour autant, `.tableau` défile
+   horizontalement.
+
+   Camara, le 17/09/2026 : « pourquoi quand le titre est à une certaine
+   taille le design des boutons tout à droite est cassé ? ». */
+.idees__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* LES TROIS URGENCES, ET POURQUOI CES COULEURS-LÀ.
+   Le vert, l'ambre et le rouge sont le code universel des priorités : personne
+   n'a besoin de la légende. On ne réutilise PAS le corail de la marque — il
+   dit « action » partout ailleurs dans le site, et une pastille corail sur
+   « Bas » se lirait comme un bouton. */
+.idee-urgence {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.idee-urgence--basse {
+  border-color: color-mix(in srgb, var(--sarcelle) 45%, var(--trait));
+  background: color-mix(in srgb, var(--sarcelle) 13%, transparent);
+  color: var(--sarcelle);
+}
+
+.idee-urgence--moyenne {
+  border-color: color-mix(in srgb, #d97706 45%, var(--trait));
+  background: color-mix(in srgb, #d97706 13%, transparent);
+  color: #d97706;
+}
+
+.idee-urgence--haute {
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--trait));
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+
+/* En thème sombre, l'ambre de l'urgence moyenne tombe sous le seuil de
+   lisibilité : il s'éclaircit, comme les teintes de matière. */
+:root:not([data-theme='light']) .idee-urgence--moyenne {
+  border-color: color-mix(in srgb, #fbbf24 45%, var(--trait));
+  background: color-mix(in srgb, #fbbf24 15%, transparent);
+  color: #fbbf24;
+}
+
+/* LE STATUT EST UNE LISTE DÉROULANTE, PAS UNE PASTILLE, et c'est délibéré :
+   c'est la valeur qui change le plus souvent, et l'ouvrir depuis le tableau
+   évite d'ouvrir le formulaire pour avancer une idée d'un cran. */
+.idee-statut {
+  max-width: 100%;
+  padding: 4px 8px;
+  border: 1px solid var(--trait);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.idee-statut-pastille {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* HUIT STATUTS, HUIT COULEURS, ÉCRITES EN CLAIR — Camara, le 17/09/2026.
+
+   POURQUOI PAS UNE VARIABLE ET UN `color-mix`, qui aurait tenu en trois
+   lignes : parce que ça ne marchait pas. La teinte se calculait bien — mesurée
+   dans le navigateur, chaque statut portait la sienne — mais le fond et
+   l'encre du `<select>` retombaient obstinément sur la règle de base. Une
+   heure de recherche pour un résultat toujours faux ; seize couleurs écrites
+   à la main sont plus longues à lire et se voient à coup sûr.
+
+   DEUX JEUX, PAS UN AVEC UNE OPACITÉ. Sur du papier il faut un fond pâle et
+   une encre soutenue ; sur du bleu marine, l'inverse exactement. Une seule
+   série modulée par une transparence donne du délavé dans un thème et du
+   criard dans l'autre.
+
+   LE GRIS EST RÉSERVÉ À L'ABANDON. C'est la seule couleur qui dit quelque
+   chose par son absence : une idée qu'on ne poursuit pas s'éteint. Une idée
+   neuve, elle, doit sauter aux yeux — c'est celle qui attend une décision. */
+.idee-statut.idee-statut--nouvelle,
+.idee-statut-pastille.idee-statut--nouvelle {
+  background-color: #fce7f3;
+  color: #be185d;
+}
+
+.idee-statut.idee-statut--en-cours-d-analyse,
+.idee-statut-pastille.idee-statut--en-cours-d-analyse {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.idee-statut.idee-statut--validee,
+.idee-statut-pastille.idee-statut--validee {
+  background-color: #ede9fe;
+  color: #6d28d9;
+}
+
+.idee-statut.idee-statut--en-cours-d-implementation,
+.idee-statut-pastille.idee-statut--en-cours-d-implementation {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.idee-statut.idee-statut--implementee,
+.idee-statut-pastille.idee-statut--implementee {
+  background-color: #fef9c3;
+  color: #a16207;
+}
+
+.idee-statut.idee-statut--en-test,
+.idee-statut-pastille.idee-statut--en-test {
+  background-color: #cffafe;
+  color: #0e7490;
+}
+
+.idee-statut.idee-statut--en-production,
+.idee-statut-pastille.idee-statut--en-production {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.idee-statut.idee-statut--abandonnee,
+.idee-statut-pastille.idee-statut--abandonnee {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+:root:not([data-theme='light']) {
+  .idee-statut.idee-statut--nouvelle,
+  .idee-statut-pastille.idee-statut--nouvelle {
+    background-color: #4a1d35;
+    color: #f9a8d4;
+  }
+
+  .idee-statut.idee-statut--en-cours-d-analyse,
+  .idee-statut-pastille.idee-statut--en-cours-d-analyse {
+    background-color: #123a52;
+    color: #7dd3fc;
+  }
+
+  .idee-statut.idee-statut--validee,
+  .idee-statut-pastille.idee-statut--validee {
+    background-color: #2e2352;
+    color: #c4b5fd;
+  }
+
+  .idee-statut.idee-statut--en-cours-d-implementation,
+  .idee-statut-pastille.idee-statut--en-cours-d-implementation {
+    background-color: #4a2c14;
+    color: #fdba74;
+  }
+
+  .idee-statut.idee-statut--implementee,
+  .idee-statut-pastille.idee-statut--implementee {
+    background-color: #443a11;
+    color: #fde047;
+  }
+
+  .idee-statut.idee-statut--en-test,
+  .idee-statut-pastille.idee-statut--en-test {
+    background-color: #10404a;
+    color: #67e8f9;
+  }
+
+  .idee-statut.idee-statut--en-production,
+  .idee-statut-pastille.idee-statut--en-production {
+    background-color: #14401f;
+    color: #86efac;
+  }
+
+  .idee-statut.idee-statut--abandonnee,
+  .idee-statut-pastille.idee-statut--abandonnee {
+    background-color: #2a3345;
+    color: #9aa8bd;
+  }
+}
+
+/* ABANDONNÉE SORT DU PARCOURS : ce n'est pas une étape, c'est une fin. Elle
+   est la seule barrée. */
+.idee-statut.idee-statut--abandonnee,
+.idee-statut-pastille.idee-statut--abandonnee { text-decoration: line-through; }
+
+/* L'APPARENCE SYSTÈME EST RETIRÉE, ET C'EST INDISPENSABLE. Un `select` est
+   repeint par le navigateur avec son propre thème, et le fond qu'on lui donne
+   reste dessous. La flèche est alors à redessiner — elle appartenait au thème
+   retiré. En gris neutre : elle doit rester lisible sur les huit fonds, du
+   rose au vert, en clair comme en sombre. */
+.idee-statut {
+  appearance: none;
+  -webkit-appearance: none;
+
+  padding-right: 28px;
+  border-color: currentColor;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 11px 7px;
+}
+
+.idee-statut-pastille { border: 1px solid currentColor; }
+
+/* LA LISTE OUVERTE RESTE NEUTRE. Sans cette règle, les navigateurs donnent aux
+   options le fond du select : les huit lignes se coloraient toutes de la teinte
+   du statut COURANT, et on choisissait « En production » sur un fond rose. */
+.idee-statut option {
+  background: var(--surface);
+  color: var(--encre);
+}
+
+/* --------------------------------------------- les trois actions du tableau
+   Chacune sa teinte : trois boutons gris côte à côte se lisent comme un
+   bloc, et on clique « Supprimer » en visant « Modifier ». */
+.idee-action { border-color: color-mix(in srgb, var(--teinte-action) 40%, var(--trait)); }
+.idee-action { color: var(--teinte-action); }
+
+.idee-action:hover {
+  background: color-mix(in srgb, var(--teinte-action) 12%, transparent);
+  border-color: var(--teinte-action);
+}
+
+.idee-action--apercu { --teinte-action: var(--sarcelle); }
+.idee-action--modifier { --teinte-action: var(--action-code); }
+.idee-action--supprimer { --teinte-action: var(--danger); }
+
+/* DES BOUTONS CARRÉS POUR DES DESSINS SEULS. Ils ne portent plus de texte :
+   leur largeur ne dépend plus de la langue, et les trois tiennent sur une
+   ligne dans une colonne étroite — ce que trois libellés ne faisaient pas. */
+.idee-action {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--teinte-action) 40%, var(--trait));
+  border-radius: 9px;
+  background: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+/* LES DEUX FILTRES, AU-DESSUS DU TABLEAU. Ils gardent la même forme que les
+   autres filtres du site — libellé au-dessus, champ en dessous — pour qu on les
+   reconnaisse sans les lire. */
+/* L'INTERRUPTEUR « Oui / Non » DE LA LISTE DES PARENTS — Camara, le 17/09/2026.
+   Il DIT son état plutôt que de le montrer : une case à cocher oblige à
+   deviner ce que « cochée » signifie — le droit accordé, ou l'interdiction
+   posée ? Deux mots ne se devinent pas. */
+.bascule-droit {
+  min-width: 52px;
+  padding: 4px 12px;
+  border: 1px solid;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.bascule-droit:disabled { opacity: 0.5; cursor: wait; }
+
+.bascule-droit--oui {
+  border-color: color-mix(in srgb, var(--sarcelle) 45%, var(--trait));
+  background: color-mix(in srgb, var(--sarcelle) 12%, transparent);
+  color: var(--sarcelle);
+}
+
+/* Le refus est SOULIGNÉ, pas seulement écrit : c'est l'exception, et une
+   exception qui a la même discrétion que la règle ne se repère pas dans une
+   liste de trente lignes. */
+.bascule-droit--non {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--trait));
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+}
+
+.idees__filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.idees__filtres label {
+  display: grid;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.idees__filtres select {
+  min-width: 170px;
+  padding: 8px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--surface);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.idees__date-modif,
+.idees__auteur { color: var(--encre-douce); }
+
+.idees__auteur { white-space: nowrap; }
+
+/* ------------------------------------------------ l'image, vue tout de suite
+   Camara, le 17/09/2026 : « je veux voir l'image directement ». Un nom de
+   fichier ne dit pas ce qu'on vient de coller, surtout quand trois captures
+   se suivent et s'appellent toutes « image.png ». */
+.idee-vignette__apercu {
+  width: 44px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--papier);
+}
+
+/* La place de la vignette est réservée pendant le téléchargement : sans
+   elle, la rangée sautait de trente pixels quand les images arrivaient. */
+.idee-vignette__attente {
+  width: 44px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--papier);
+}
+
+/* UN MARQUEUR SANS IMAGE SE VOIT. Rendu invisible, il donnait un aperçu
+   amputé sans rien dire — et on cherchait l'erreur ailleurs. */
+.texte-riche__manque {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px dashed color-mix(in srgb, var(--danger) 50%, var(--trait));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  font-size: 12.5px;
+  color: var(--danger);
+}
+
+/* --------------------------------------------------------- le formulaire */
+
+.idee-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.idee-form__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.idee-form__champ {
+  display: grid;
+  gap: 6px;
+  min-width: 160px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+/* Le titre prend toute la place qui reste : c'est le champ qu'on remplit
+   vraiment, les deux listes à côté font huit caractères. */
+.idee-form__champ--large { flex: 1 1 260px; }
+
+.idee-form__champ input,
+.idee-form__champ select,
+.idee-form__champ textarea {
+  padding: 9px 11px;
+  border: 1px solid var(--trait);
+  border-radius: 9px;
+  background: var(--papier);
+  font: inherit;
+  font-weight: 400;
+  color: var(--encre);
+}
+
+.idee-form__champ textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.idee-form__etiquette {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.idee-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* --------------------------------------------------- la barre de mise en forme */
+
+.idee-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--trait);
+  border-bottom: none;
+  border-radius: 9px 9px 0 0;
+  background: var(--surface-2);
+}
+
+.idee-outils + textarea { border-radius: 0 0 9px 9px; }
+
+.idee-outils button {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: none;
+  font-size: 14px;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.idee-outils button:hover:not(:disabled) {
+  border-color: var(--trait);
+  background: var(--papier);
+}
+
+.idee-outils button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* L'aperçu depuis la barre : on écrit et on vérifie sans enregistrer ni
+   retourner au tableau. Il porte le `margin-left: auto`, et lui seul — deux
+   éléments qui le portent se partagent l'espace libre au lieu de le pousser. */
+.idee-outils__apercu {
+  margin-left: auto;
+  padding: 0 12px;
+  border-color: var(--trait);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.idee-outils__aide {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--encre-douce);
+}
+
+.idee-form__images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.idee-vignette {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 10px;
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+}
+
+.idee-vignette__rang {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--sarcelle);
+}
+
+.idee-vignette__nom {
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--encre-douce);
+}
+
+.idee-vignette__croix {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--papier);
+  font-size: 14px;
+  line-height: 1;
+  color: var(--encre-douce);
+  cursor: pointer;
+}
+
+.idee-vignette__croix:hover { color: var(--danger); }
+
+/* -------------------------------------------------------------- l'aperçu */
+
+.idee-apercu__tete {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.idee-apercu__tete h3 {
+  margin: 0 0 10px;
+  font-family: var(--display);
+  font-size: 21px;
+  line-height: 1.25;
+}
+
+.idee-apercu__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.idee-apercu__date {
+  font-size: 12.5px;
+  color: var(--encre-douce);
+}
+
+.idee-apercu__sans {
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+/* LE TEXTE RENDU. Les lignes vides comptent : elles séparent les paragraphes
+   tels qu'ils ont été écrits, et une idée se relit à sa mise en page. */
+.texte-riche {
+  padding-top: 16px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.texte-riche__ligne { margin: 0 0 4px; }
+
+.texte-riche__image {
+  display: block;
+  max-width: 100%;
+  margin: 12px 0;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+}
+
+/* ------------------------------------------------------------ à l'impression
+   « imprimerSous » masque tout ce qui n'est pas la feuille. Il reste à effacer
+   le décor de l'écran : sur du papier, un cadre et une ombre coûtent de
+   l'encre sans rien apporter. */
+@media print {
+  .idee-apercu,
+  .idee-apercu * {
+    background: none !important;
+    color: #000 !important;
+  }
+
+  .idee-urgence,
+  .idee-statut-pastille { border: 1px solid #666 !important; }
+
+  .texte-riche__image {
+    border-color: #999 !important;
+
+    /* Une capture d'écran pleine page pousserait le reste du texte sur une
+       seconde feuille. Bornée, elle reste avec ce qu'elle illustre. */
+    max-height: 11cm;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 620px) {
+  .idees__actions { justify-content: flex-start; }
+  .idee-outils__aide { display: none; }
 }

@@ -35,7 +35,12 @@ let mockAppelsCode;
 const mockDispatch = () => {};
 
 jest.mock('react-redux', () => ({
-  useSelector: (selecteur) => selecteur({ eleves: { liste: mockEleves, loading: false, error: null } }),
+  useSelector: (selecteur) => selecteur({
+    eleves: { liste: mockEleves, loading: false, error: null },
+    // Depuis le 17/09/2026, la page lit aussi `auth` pour décider si elle
+    // montre le bouton « Administration ».
+    auth: { estAdmin: false },
+  }),
   useDispatch: () => mockDispatch,
 }));
 

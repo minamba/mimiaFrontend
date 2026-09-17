@@ -1,8 +1,10 @@
 import {
+  MUETTE,
   PREFIXE,
   catalogue as catalogueSvt,
   plancheRecommandee as plancheRecommandeeSvt,
   schemaDeLaBibliotheque,
+  separerVariante,
   urlCreditPlanche,
   urlPlanche,
 } from './schemasSvt';
@@ -41,7 +43,9 @@ const CLES = new Set([
   ...EMPLACEMENTS.map((f) => f.cle),
 ]);
 
-export { PREFIXE, schemaDeLaBibliotheque, urlCreditPlanche, urlPlanche };
+export {
+  MUETTE, PREFIXE, schemaDeLaBibliotheque, urlCreditPlanche, urlPlanche,
+};
 
 /**
  * Le catalogue complet, chaque figure sachant si elle a un dessin.
@@ -85,8 +89,31 @@ export function cleSchema(contenu) {
   const propre = contenu.trim();
   if (!propre.startsWith(PREFIXE)) return null;
 
-  const cle = propre.slice(PREFIXE.length).trim().toLowerCase();
+  // LE SUFFIXE DE VARIANTE EST RETIRÉ ICI, et c'est volontaire : la clé
+  // reste celle du catalogue. Une figure et sa version muette sont le même
+  // document — même titre, même niveau, même ligne d'administration.
+  const { cle } = separerVariante(propre.slice(PREFIXE.length).trim().toLowerCase());
   return CLES.has(cle) ? cle : null;
+}
+
+/**
+ * La variante demandée par l'ardoise : `muette` ou `legende`.
+ *
+ * Séparée de `cleSchema` parce que les deux ne servent pas au même moment :
+ * la clé dit QUOI afficher et vaut pour le catalogue, la variante dit
+ * LAQUELLE DES DEUX images et ne quitte jamais l'affichage.
+ *
+ * Rend `legende` pour tout ce qui n'est pas une figure : un appelant qui
+ * teste la variante sans tester la clé ne doit pas se retrouver avec null.
+ */
+export function varianteSchema(contenu) {
+  if (cleSchema(contenu) === null) return 'legende';
+
+  const { variante } = separerVariante(
+    contenu.trim().slice(PREFIXE.length).trim().toLowerCase(),
+  );
+
+  return variante;
 }
 
 /**
