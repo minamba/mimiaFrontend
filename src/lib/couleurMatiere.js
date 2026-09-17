@@ -243,4 +243,117 @@ export function styleMatiere(matiere) {
   return { '--matiere': clair, '--matiere-claire': sombre };
 }
 
+/**
+ * Le code de la matière, quelle que soit la forme reçue.
+ *
+ * Même tolérance que `teintes` — chaîne nue, `matiereCode` ou `matiereLibelle` —
+ * mais elle rend le CODE et non la couleur : c'est lui qui désigne un motif.
+ */
+function codeMatiere(matiere) {
+  if (matiere == null) return null;
+
+  if (typeof matiere === 'string') {
+    return MATIERES[matiere] ? matiere : PAR_LIBELLE[normaliser(matiere)] ?? null;
+  }
+
+  const parCode = matiere.matiereCode ?? matiere.code;
+  if (parCode && MATIERES[parCode]) return parCode;
+
+  return PAR_LIBELLE[normaliser(matiere.matiereLibelle ?? matiere.libelle)] ?? null;
+}
+
+/**
+ * LE MOTIF DE FOND D'UNE MATIÈRE — Camara, le 17/09/2026 : « je veux des
+ * motifs aussi en fonction de la matière ».
+ *
+ * SEPT FAMILLES POUR TRENTE-CINQ MATIÈRES, et c'est délibéré. Un dessin par
+ * matière ferait trente-cinq motifs à tenir, à vérifier sur deux thèmes, pour
+ * une différence que personne ne peut voir : un élève n'a jamais deux bandeaux
+ * côte à côte. Ce qu'il doit lire, c'est « je suis en maths » — le quadrillage
+ * du cahier le dit, et il le dit tout de suite.
+ *
+ * Chaque famille tient de l'objet, pas du symbole : la réglure d'un cahier
+ * pour les textes, les hachures d'une carte pour l'histoire-géographie, la
+ * trame d'un papier millimétré pour les sciences exactes.
+ */
+const MURS = {
+  // Le bureau devant la fenêtre, les formules au mur.
+  MATHS: 'math',
+
+  // L'écran et le code : ce qui se programme.
+  NSI: 'informatique',
+  SI: 'informatique',
+
+  // La table d'écriture, Hugo, Camus, Zola.
+  FRANCAIS: 'francais',
+
+  // L'Antiquité : le buste, les colonnes, le soir qui tombe. Le latin et le
+  // grec y sont chez eux plus que dans une salle de français — c'est de là
+  // qu'ils viennent —, et les humanités tiennent des deux.
+  PHILOSOPHIE: 'philosophie',
+  HLP: 'philosophie',
+  LLCA_LATIN: 'philosophie',
+  LLCA_GREC: 'philosophie',
+
+  // Londres et la Tamise.
+  ANGLAIS: 'anglais',
+  LLCER_ANGLAIS: 'anglais',
+  AMC: 'anglais',
+
+  // Séville et le drapeau.
+  ESPAGNOL: 'espagnol',
+  LLCER_ESPAGNOL: 'espagnol',
+
+  // Le globe, les cartes, la boussole.
+  HISTOIRE_GEO: 'histoire_geo',
+  HGGSP: 'histoire_geo',
+
+  // La paillasse : fioles, prisme, tableau noir.
+  SCIENCES: 'physique_chimie',
+  PHYSIQUE_CHIMIE: 'physique_chimie',
+  SPCL: 'physique_chimie',
+
+  // Le vivant : l'hélice, le fossile, la grenouille. Les biotechnologies y
+  // vont plutôt qu'au soin — c'est un travail de laboratoire sur le vivant,
+  // pas un travail auprès des gens.
+  SVT: 'svt',
+  BIOTECHNOLOGIES: 'svt',
+
+  // La balance, le marteau, la courbe : ce qui se règle et ce qui se compte.
+  SES: 'droit_economie',
+  MANAGEMENT: 'droit_economie',
+  DROIT_ECONOMIE: 'droit_economie',
+  SCIENCES_GESTION: 'droit_economie',
+
+  // Le soin et le lien. La biologie humaine y va plutôt qu'au laboratoire :
+  // ce qu'elle étudie, c'est le corps de quelqu'un.
+  SANITAIRE_SOCIAL: 'sante',
+  BIOLOGIE_HUMAINE: 'sante',
+
+  // L'atelier, le chevalet, les pinceaux : les sept matières artistiques.
+  ARTS_PLASTIQUES: 'arts',
+  HISTOIRE_ARTS: 'arts',
+  CINEMA_AUDIOVISUEL: 'arts',
+  MUSIQUE: 'arts',
+  THEATRE: 'arts',
+  DANSE: 'arts',
+  ARTS_CIRQUE: 'arts',
+
+  // La piste et le terrain.
+  EPPCS: 'sport',
+};
+
+/**
+ * Le nom du décor à poser en `data-mur`. La feuille de style fait le reste :
+ * c'est elle qui tient les chemins des images.
+ *
+ * REPLI SUR LE FRANÇAIS : la table d'écriture est le lieu le plus neutre des
+ * treize — tout cours se lit et s'écrit. Une matière inconnue ne doit pas
+ * hériter de la paillasse de chimie et faire croire à un cours de sciences
+ * qu'elle n'est pas.
+ */
+export function murMatiere(matiere) {
+  return MURS[codeMatiere(matiere)] ?? 'francais';
+}
+
 export default couleurMatiere;

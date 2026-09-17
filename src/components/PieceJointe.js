@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import pjPng from '../assets/pj.png';
 import { chargerPieceJointe } from '../lib/api/chatApi';
 
 /**
@@ -12,6 +13,16 @@ export const TYPES_ACCEPTES = 'image/png,image/jpeg,image/gif,image/webp,applica
 
 /** Le même plafond que le serveur, pour refuser AVANT de faire monter le fichier. */
 export const TAILLE_MAX = 5 * 1024 * 1024;
+
+/**
+ * Combien de documents au plus dans un même message — Camara, le 16/09/2026 :
+ * « plusieurs photos ou documents, envoyés en une seule fois ». Six, comme
+ * côté serveur (`EnvoyerMessageRequest.PiecesMax`) : un exercice sur
+ * plusieurs pages, une copie recto-verso, l'énoncé à côté. Chaque photo repart
+ * au professeur à chaque tour tant qu'elle est dans l'historique — au-delà, la
+ * séance devient chère.
+ */
+export const PIECES_MAX = 6;
 
 /**
  * Côté le plus long d'une image, après réduction.
@@ -105,17 +116,22 @@ export function BoutonPieceJointe({ onFichier, disabled, libelle, enSurbrillance
         ref={champRef}
         type="file"
         accept={TYPES_ACCEPTES}
+        multiple
         className="piece-jointe__champ"
         tabIndex={-1}
         onChange={(evenement) => {
-          const fichier = evenement.target.files?.[0];
+          // PLUSIEURS FICHIERS D'UN COUP — Camara, le 16/09/2026. Chacun
+          // passe par le même `onFichier` qu'avant : les appelants qui n'en
+          // attendaient qu'un continuent de marcher, et la liste se remplit
+          // fichier par fichier, dans l'ordre du choix.
+          const fichiers = Array.from(evenement.target.files ?? []);
 
-          // On vide TOUJOURS l'input, même quand le fichier est refusé plus
+          // On vide TOUJOURS l'input, même quand un fichier est refusé plus
           // loin : sans ça, rechoisir le même fichier ne déclenche aucun
           // `change`, et l'élève clique sans que rien ne se passe.
           evenement.target.value = '';
 
-          if (fichier) onFichier(fichier);
+          fichiers.forEach((fichier) => onFichier(fichier));
         }}
       />
 
@@ -131,7 +147,9 @@ export function BoutonPieceJointe({ onFichier, disabled, libelle, enSurbrillance
         title={libelle ?? 'Envoyer une photo ou un PDF'}
         aria-label={libelle ?? 'Envoyer une photo de ton exercice ou un PDF'}
       >
-        <span aria-hidden="true">{libelle ? '📷' : '📎'}</span>
+        {libelle
+          ? <span aria-hidden="true">📷</span>
+          : <img src={pjPng} alt="" className="icone-png" />}
         {libelle && <span className="piece-jointe__libelle">{libelle}</span>}
       </button>
     </>

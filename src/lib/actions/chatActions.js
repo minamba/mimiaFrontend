@@ -57,18 +57,19 @@ export const ouvrirConversation = (
  * @param secondesRestantes temps restant dans la séance, tenu par le
  *   navigateur. Le serveur ne le connaît pas : il ignore la durée choisie et
  *   l'heure de départ.
- * @param pieceJointe un aperçu minimal ({ id, estImage, nomFichier }) de la
- *   pièce déjà envoyée, pour que la bulle de l'élève l'affiche tout de suite
+ * @param piecesJointes les aperçus minimaux ({ id, estImage, nomFichier }) des
+ *   pièces déjà déposées, dans l'ordre, pour que la bulle de l'élève les
+ *   affiche tout de suite — toutes, pas seulement la première
  *   — sans lui, elle restait vide jusqu'au rechargement de la page, seul
  *   moment où le serveur redonne le vrai message avec sa pièce jointe.
  */
 export const envoyerMessage = (
-  conversationId, contenu, secondesRestantes = null, pieceJointeId = null, pieceJointe = null,
+  conversationId, contenu, secondesRestantes = null, pieceJointeIds = null, piecesJointes = null,
   vitesseEcoute = null,
 ) => ({
   type: MESSAGE_SEND_REQUEST,
   payload: {
-    conversationId, contenu, secondesRestantes, pieceJointeId, pieceJointe, vitesseEcoute,
+    conversationId, contenu, secondesRestantes, pieceJointeIds, piecesJointes, vitesseEcoute,
   },
 });
 

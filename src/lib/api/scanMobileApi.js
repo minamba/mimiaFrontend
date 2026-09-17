@@ -23,3 +23,11 @@ export const envoyerScanMobile = (jeton, fichier, opts = {}) => {
     onUploadProgress: opts.onProgression,
   });
 };
+
+/**
+ * LE TÉLÉPHONE A FINI — Camara, le 16/09/2026 : les photos montent une par
+ * une, et c'est cet appel qui dit à l'ordinateur que tout est là. Sans lui,
+ * l'ordinateur enverrait au professeur dès la première photo.
+ */
+export const terminerScanMobile = (jeton) =>
+  httpClient.post(`/scan-mobile/${encodeURIComponent(jeton)}/terminer`, null, options());

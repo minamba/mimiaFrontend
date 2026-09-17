@@ -126,11 +126,31 @@ export default function MonAvis({ surEnvoi }) {
       <div className="avis__etat">
         {mien ? (
           <>
-            {mien.publie && <span className="avis__coche" aria-hidden="true">✓</span>}
             <Etoiles note={mien.note} />
-            <span>
-              Votre avis {mien.publie ? 'est publié.' : 'sera publié après relecture.'}
+
+            {/* LA COCHE ET LA PHRASE NE FONT QU'UN. Séparées, la coche tombait
+                seule sur sa ligne dans la fenêtre — un rond vert au milieu de
+                rien, qui ne disait plus ce qu'il validait. */}
+            <span className={`avis__badge ${mien.publie ? '' : 'avis__badge--attente'}`}>
+              {mien.publie && <span className="avis__coche" aria-hidden="true">✓</span>}
+              <span>
+                Votre avis {mien.publie ? 'est publié.' : 'sera publié après relecture.'}
+              </span>
             </span>
+
+            {/* ET ON LUI REMONTRE CE QU'IL A ÉCRIT. Sans cela, la fenêtre
+                annonçait un avis sans jamais le montrer : on ne pouvait pas
+                relire avant de choisir entre « Modifier » et « Retirer », et il
+                restait beaucoup de vide autour de trois lignes. Masqué sur la
+                page d'accueil, où l'état tient volontairement sur une ligne. */}
+            {(mien.titre || mien.commentaire) && (
+              <div className="avis__rappel">
+                {mien.titre && <p className="avis__rappel-titre">{mien.titre}</p>}
+                {mien.commentaire && (
+                  <p className="avis__rappel-texte">{mien.commentaire}</p>
+                )}
+              </div>
+            )}
             {/* LES DEUX BOUTONS ENSEMBLE, PAS CHACUN LIBRE DE SON CÔTÉ.
                 Sans ce regroupement, une ligne trop étroite pour tout tenir
                 (la fenêtre d'avis sur `AvisModale.js`, par exemple) faisait

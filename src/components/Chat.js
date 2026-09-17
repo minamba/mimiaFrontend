@@ -41,7 +41,12 @@ import {
   etatCopieControle, lireDemandeCopie, marquerPieceControle, retirerMarqueurCopieControle,
 } from '../lib/storage/copieControle';
 import CopieControle from './CopieControle';
-import ScanMobileModale, { IconeScanner } from './ScanMobileModale';
+import ScanMobileModale from './ScanMobileModale';
+import { styleMatiere, murMatiere } from '../lib/couleurMatiere';
+import scannerPng from '../assets/scanner.png';
+import micFermePng from '../assets/mic_b.png';
+import micOuvertPng from '../assets/mic_o.png';
+import hautParleurPng from '../assets/haut_parleur.webp';
 import { camera } from '../lib/storage/camera';
 import { delaiAssemblage, doitAttendreAvantEnvoi } from '../lib/storage/tourEleve';
 import { estUnSchema } from '../lib/storage/schemaSvg';
@@ -82,7 +87,7 @@ import HorlogeReelle from './HorlogeReelle';
 import Schema from './Schema';
 import ZoomSchema from './ZoomSchema';
 import {
-  BoutonPieceJointe, VignetteEnAttente, PieceJointeBulle, TAILLE_MAX, reduire,
+  BoutonPieceJointe, VignetteEnAttente, PieceJointeBulle, TAILLE_MAX, PIECES_MAX, reduire,
 } from './PieceJointe';
 import CameraVoix from './CameraVoix';
 import Loader from './Loader';
@@ -753,7 +758,11 @@ export default function Chat() {
   // Le document en attente d'envoi. Trois choses à retenir en même temps : le
   // fichier local (pour le nom, la taille et l'aperçu immédiat), son identifiant
   // une fois monté (c'est lui qui partira avec le message), et l'état du dépôt.
-  const [pieceEnAttente, setPieceEnAttente] = useState(null);
+  // LES DOCUMENTS EN ATTENTE, dans l'ordre où l'élève les a ajoutés — Camara,
+  // le 16/09/2026 : plusieurs photos ou fichiers, une liste, un seul envoi,
+  // et le professeur a tout en tête d'un coup. Chaque entrée :
+  // { cle, fichier, apercu, enCours, id, erreur }.
+  const [piecesEnAttente, setPiecesEnAttente] = useState([]);
 
   // Image agrandie, ou null. Une visionneuse plutôt qu'un nouvel onglet : le
   // blob a une URL locale, et l'ouvrir ailleurs sortirait l'élève du cours.
@@ -1058,8 +1067,8 @@ export default function Chat() {
   // la reconnaissance vocale, dont les rappels sont posés une fois pour toutes.
   // Le mettre dans les dépendances recréerait la fonction à chaque frappe, et
   // le micro enverrait son texte à une version périmée.
-  const pieceRef = useRef(null);
-  pieceRef.current = pieceEnAttente;
+  const piecesRef = useRef([]);
+  piecesRef.current = piecesEnAttente;
 
   // La caméra pilotée à la voix : capturer() prend la frame courante, et le
   // drapeau dit à l'effet plus bas d'envoyer le tour dès que la photo est
@@ -2563,11 +2572,14 @@ export default function Chat() {
    * Défini AVANT `envoyerTexte`, qui l'appelle : un `const` n'est pas hissé,
    * et l'ordre inverse produirait une référence morte au premier envoi.
    */
-  const retirerDocument = useCallback(() => {
-    setPieceEnAttente((actuel) => {
-      if (actuel?.apercu) URL.revokeObjectURL(actuel.apercu);
-      return null;
-    });
+  const retirerDocument = useCallback((cle) => {
+    // Sans clé, on vide tout — c'est l'envoi qui l'appelle ainsi. Avec une
+    // clé, c'est la croix d'une vignette : les autres restent.
+    setPiecesEnAttente((actuelles) => actuelles.filter((p) => {
+      if (cle !== undefined && p.cle !== cle) return true;
+      if (p.apercu) URL.revokeObjectURL(p.apercu);
+      return false;
+    }));
   }, []);
 
   const envoyerTexte = useCallback(
@@ -2583,7 +2595,10 @@ export default function Chat() {
       // Un document SANS texte est un tour valide : l'élève montre sa feuille.
       // On l'encourage à dire ce qui le bloque — le texte d'invite change quand
       // un document est accroché — mais on ne le lui impose pas.
-      const documentPret = pieceRef.current?.id ?? null;
+      const documentsPrets = piecesRef.current
+        .filter((p) => p.id && !p.enCours)
+        .map((p) => p.id);
+      const documentPret = documentsPrets[0] ?? null;
       if ((!propre && !documentPret) || !conversation) return;
 
       // CE QUE L'ÉCRAN SAIT, LE PROFESSEUR DOIT LE SAVOIR AUSSI.
@@ -2635,15 +2650,17 @@ export default function Chat() {
       // Un aperçu minimal de la pièce déjà envoyée, pour que sa bulle
       // l'affiche tout de suite. `chargerPieceJointe` sait aller la chercher
       // dès maintenant : le dépôt a déjà réussi, c'est ce que dit `documentPret`.
-      const pieceJointeApercu = documentPret
-        ? {
-          id: documentPret,
-          estImage: pieceRef.current?.fichier?.type !== 'application/pdf',
+      // La bulle se dessine tout de suite, avec TOUTES les pièces : n'en
+      // montrer qu'une ferait croire que les autres ne sont pas parties.
+      const piecesJointesApercu = piecesRef.current
+        .filter((p) => p.id && !p.enCours)
+        .map((p) => ({
+          id: p.id,
+          estImage: p.fichier?.type !== 'application/pdf',
           consultable: true,
-          nomFichier: pieceRef.current?.fichier?.name ?? null,
+          nomFichier: p.fichier?.name ?? null,
           nombrePages: 0,
-        }
-        : null;
+        }));
 
       // LA PIÈCE PART ÉTIQUETÉE quand elle vient de la carte de copie : c'est
       // ce qui dit au professeur — et au serveur — si c'est l'énoncé ou la
@@ -2656,7 +2673,7 @@ export default function Chat() {
         : charge;
 
       dispatch(envoyerMessage(
-        conversation.id, aEnvoyer, restantRef.current, documentPret, pieceJointeApercu,
+        conversation.id, aEnvoyer, restantRef.current, documentsPrets, piecesJointesApercu,
         vitesseEcouteRef.current,
       ));
       viderSaisie();
@@ -2664,7 +2681,7 @@ export default function Chat() {
       // Le document part avec le message : il ne doit pas repartir avec le
       // suivant. L'aperçu local est relâché ici — la conversation affichera
       // désormais celui que le serveur rend.
-      if (documentPret) retirerDocument();
+      if (documentsPrets.length > 0) retirerDocument();
     },
     [dispatch, conversation, retirerDocument],
   );
@@ -2874,12 +2891,29 @@ export default function Chat() {
     async (fichier) => {
       if (!conversation || !fichier) return;
 
+      const cle = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      // LE PLAFOND SE VOIT DANS LA LISTE, comme un fichier refusé : c'est là
+      // que l'élève regarde. Il retire la bande d'une croix et continue.
+      if (piecesRef.current.filter((p) => !p.erreur).length >= PIECES_MAX) {
+        setPiecesEnAttente((actuelles) => [
+          ...actuelles,
+          { cle, erreur: `Au plus ${PIECES_MAX} documents par message. Retires-en un pour en ajouter.` },
+        ]);
+        return;
+      }
+
       // L'aperçu est posé à partir du fichier D'ORIGINE, avant la réduction :
       // il doit apparaître à l'instant du choix. La réduction, elle, prend
       // quelques centaines de millisecondes sur une photo de douze mégapixels.
       const apercu = fichier.type.startsWith('image/') ? URL.createObjectURL(fichier) : null;
 
-      setPieceEnAttente({ fichier, apercu, enCours: true, id: null });
+      const poser = (changement) => setPiecesEnAttente((actuelles) =>
+        actuelles.map((p) => (p.cle === cle ? { ...p, ...changement } : p)));
+
+      setPiecesEnAttente((actuelles) => [
+        ...actuelles, { cle, fichier, apercu, enCours: true, id: null },
+      ]);
 
       try {
         const aEnvoyer = await reduire(fichier);
@@ -2890,23 +2924,23 @@ export default function Chat() {
         // le plus courant — un téléphone récent tenu à bout de bras.
         if (aEnvoyer.size > TAILLE_MAX) {
           if (apercu) URL.revokeObjectURL(apercu);
-          setPieceEnAttente({
+          poser({
+            fichier: null, apercu: null, enCours: false,
             erreur: 'Ce fichier est trop lourd. Essaie une photo un peu moins grande.',
           });
           return;
         }
 
         const { data } = await deposerPieceJointe(conversation.id, aEnvoyer);
-        setPieceEnAttente((actuel) =>
-          actuel?.fichier === fichier ? { ...actuel, enCours: false, id: data.id } : actuel,
-        );
+        poser({ enCours: false, id: data.id });
       } catch (erreur) {
         if (apercu) URL.revokeObjectURL(apercu);
 
         // Le motif vient du serveur et il est écrit pour l'élève — « ce PDF
         // fait 40 pages » — donc on l'affiche tel quel. Un message générique
         // ne lui dirait pas quoi faire.
-        setPieceEnAttente({
+        poser({
+          fichier: null, apercu: null, enCours: false,
           erreur:
             erreur?.response?.data?.message
             ?? "Je n'ai pas réussi à recevoir ce fichier. Tu peux réessayer ?",
@@ -2934,23 +2968,26 @@ export default function Chat() {
 
   // LE TOUR PART DÈS QUE LA PHOTO EST MONTÉE, SANS CLIC.
   //
-  // `deposer` met à jour `pieceEnAttente` en deux temps — l'aperçu tout de
+  // `deposer` met à jour `piecesEnAttente` en deux temps — l'aperçu tout de
   // suite, l'identifiant une fois l'envoi terminé — et c'est ce SECOND
   // instant qu'on attend ici plutôt que d'enchaîner à la suite de
-  // `prendrePhoto` : lire `pieceRef.current` juste après l'avoir déposée
+  // `prendrePhoto` : lire `piecesRef.current` juste après l'avoir déposée
   // risquerait de retomber sur le rendu d'avant, avant que React n'ait posé
   // le nouvel état. Réagir au changement d'état lui-même ne peut pas se
   // tromper de rendu.
   useEffect(() => {
     if (!autoEnvoiPhotoRef.current) return;
 
-    if (pieceEnAttente?.erreur) {
+    if (piecesEnAttente.some((p) => p.erreur)) {
       autoEnvoiPhotoRef.current = false;
       rolePieceRef.current = null;
       return;
     }
 
-    if (pieceEnAttente?.id && !pieceEnAttente.enCours) {
+    // TOUTES déposées, aucune en cours : c'est le moment. Une seule qui monte
+    // encore, et le professeur recevrait un message incomplet.
+    const pretes = piecesEnAttente.filter((p) => !p.erreur);
+    if (pretes.length > 0 && pretes.every((p) => p.id && !p.enCours)) {
       autoEnvoiPhotoRef.current = false;
 
       // La carte de copie coche elle-même ce qui est arrivé : la pastille
@@ -2968,7 +3005,7 @@ export default function Chat() {
       // photo peut toujours rallumer la caméra d'un clic.
       cameraRef.current?.fermer();
     }
-  }, [pieceEnAttente, envoyerTexte]);
+  }, [piecesEnAttente, envoyerTexte]);
 
   // La confirmation se referme TOUTE SEULE : l'élève vient de parler et de
   // capturer sans toucher l'écran, lui demander un clic de plus pour fermer
@@ -3096,17 +3133,33 @@ export default function Chat() {
   const recevoirScan = useCallback((piece) => {
     if (!piece?.id) return;
 
+    // ELLE REJOINT LA LISTE, ET N'ENVOIE RIEN. Le téléphone peut en avoir
+    // plusieurs à donner ; c'est son « terminé » (`terminerScan`) qui fait
+    // partir le tout — Camara, le 16/09/2026.
+    setPiecesEnAttente((actuelles) => (actuelles.some((p) => p.id === piece.id)
+      ? actuelles
+      : [...actuelles, {
+        cle: `scan-${piece.id}`,
+        fichier: {
+          name: piece.nomFichier ?? 'photo.jpg',
+          type: piece.typeMime ?? 'image/jpeg',
+          size: piece.taille ?? 0,
+        },
+        apercu: null,
+        enCours: false,
+        id: piece.id,
+      }]));
+  }, []);
+
+  /**
+   * LE TÉLÉPHONE A APPUYÉ SUR « ENVOYER » : tout ce qu'il a donné part au
+   * professeur d'un coup, par le même envoi automatique que la photo dite à
+   * la voix. La copie de liste force l'effet à repasser, même si la dernière
+   * photo était déjà arrivée avant le signal.
+   */
+  const terminerScan = useCallback(() => {
     autoEnvoiPhotoRef.current = true;
-    setPieceEnAttente({
-      fichier: {
-        name: piece.nomFichier ?? 'photo.jpg',
-        type: piece.typeMime ?? 'image/jpeg',
-        size: piece.taille ?? 0,
-      },
-      apercu: null,
-      enCours: false,
-      id: piece.id,
-    });
+    setPiecesEnAttente((actuelles) => [...actuelles]);
   }, []);
 
   // « SCANNER MA COPIE » SUR ORDINATEUR = LE QR CODE DU TÉLÉPHONE. La photo
@@ -3601,6 +3654,23 @@ export default function Chat() {
           'Le micro fonctionne mais rien n’a été transcrit. Parle un peu plus fort, ou écris ton message.',
         );
       },
+      // LE MICRO EST OUVERT MAIS N'ENTEND RIEN — Camara, le 16/09/2026 : trois
+      // familles sur PC, « comme si leur micro était en mute », casque ou
+      // haut-parleur, et rien à reproduire chez lui. Le moteur du navigateur
+      // savait le dire (voir `onFin` plus haut) ; celui-ci ne mesurait rien.
+      //
+      // ÉCRIT, JAMAIS PRONONCÉ, ET SANS COUPER L'ÉCOUTE : si la mesure se
+      // trompe, l'élève continue comme si de rien. Le message dit quoi faire
+      // sur Windows, parce que c'est là que ça arrive.
+      onMuet: (diagnostic) => {
+        setErreurMicro(
+          diagnostic?.pisteMuette
+            ? "Ton micro est coupé par l'ordinateur, pas par le site. Sur Windows : Paramètres › Confidentialité › Microphone, autorise le navigateur ; vérifie aussi la touche « muet » du casque. Ou écris ton message."
+            : diagnostic?.peripherique
+              ? `Aucun son ne sort de « ${diagnostic.peripherique} ». Un autre micro est peut-être sélectionné : change-le via l'icône 🎤 dans la barre d'adresse, vérifie qu'il n'est pas coupé, ou écris ton message.`
+              : "Aucun son n'a été capté. Vérifie le micro dans les réglages du navigateur, ou écris ton message.",
+        );
+      },
       onErreur: (message) => {
         setEcoute(false);
 
@@ -3802,6 +3872,70 @@ export default function Chat() {
 
   if (loading) return <Loader texte="Le professeur arrive…" />;
 
+  /**
+   * LE DÉCOMPTE, DANS LA BULLE DU PROFESSEUR — Camara, le 17/09/2026 : « au
+   * final, sur PC aussi, mets le chrono dans la même bulle que le professeur ».
+   *
+   * Il n'a plus qu'une seule place, à toutes les largeurs. Il en a eu deux le
+   * temps d'une étape — une pour le téléphone, une pour l'ordinateur, le CSS
+   * masquant celle qui ne servait pas — parce qu'aucune feuille de style ne
+   * déplace un élément d'un parent à l'autre. La bulle valant pour les deux,
+   * cette copie n'a plus lieu d'être : un seul décompte dans la page, donc un
+   * seul dans l'arbre d'accessibilité.
+   *
+   * DÉCOMPTE ET NON TEMPS ÉCOULÉ : ce qui compte pour l'élève, c'est le temps
+   * qu'il lui RESTE. La couleur change aux paliers plutôt que progressivement
+   * — un dégradé continu ne se remarque jamais.
+   */
+  const decompte = (
+    <span
+      className={`chrono chrono--${
+        quota
+          ? 'suspendu'
+          : depassement
+            ? 'depassement'
+            : restant === 0
+              ? 'fini'
+              : restant <= 60
+                ? 'urgence'
+                : restant <= PREAVIS
+                  ? 'bientot'
+                  : 'normal'
+      }`}
+      title={
+        quota
+          ? "Le forfait ne permet pas de suivre de cours"
+          : depassement
+            ? 'Le temps est écoulé, mais le contrôle se termine'
+            : `Séance de ${dureeSeance} minutes`
+      }
+      aria-label={
+        quota
+          ? 'Séance suspendue, le forfait ne le permet pas'
+          : depassement
+            ? 'Temps dépassé, le contrôle se termine'
+            : restant === 0
+              ? 'Séance terminée'
+              : `Il reste ${Math.ceil(restant / 60)} minutes de séance`
+      }
+    >
+      {/* Pas de jauge quand la séance est suspendue : une barre à moitié
+          pleine laisserait croire qu'un temps a été consommé. */}
+      {!quota && (
+        <span className="chrono__jauge" aria-hidden="true">
+          <span style={{ width: `${(restant / (dureeSeance * 60)) * 100}%` }} />
+        </span>
+      )}
+      {quota
+        ? 'Suspendu'
+        : depassement
+          ? 'Contrôle en cours'
+          : restant === 0
+            ? 'Terminé'
+            : formaterDuree(restant)}
+    </span>
+  );
+
   return (
     <div className="chat-espace">
     {copie && <Controle copie={copie} onFermer={() => setCopie(null)} />}
@@ -3826,7 +3960,19 @@ export default function Chat() {
           Les réunir évite de calculer un décalage qui dépendrait de la
           hauteur du bandeau, laquelle change avec la taille de l'écran et
           avec l'état de la séance. Un seul bloc, un seul point de collage. */}
-      <div className="chat__tete">
+      {/* LA COULEUR DE LA MATIÈRE SUR LE BANDEAU — Camara, le 17/09/2026 :
+          « améliore le background derrière les éléments, peut-être en fonction
+          de la matière ». Les deux teintes sont posées ici et c'est la feuille
+          de style qui tranche selon le thème : choisir en React ne suivrait
+          pas un changement de thème système. Voir `styleMatiere`.
+
+          `conversation` peut être nulle au premier rendu — `styleMatiere` rend
+          alors la teinte de repli, et le bandeau ne clignote pas. */}
+      <div
+        className="chat__tete"
+        data-mur={murMatiere(conversation)}
+        style={styleMatiere(conversation)}
+      >
 
       {/* LE TEMPS, SEUL ET EN GRAND, SOUS LA BARRE DE NAVIGATION.
 
@@ -3855,136 +4001,141 @@ export default function Chat() {
       </div>
 
       <header className="chat__entete">
-        <button type="button" className="btn-quitter" onClick={quitter}>
-          Quitter le cours
-        </button>
+        {/* LE PROFESSEUR DANS SA BULLE, SOUS L'HORLOGE — Camara, le 17/09/2026 :
+            « fais en sorte que la bulle soit centrée bien en dessous de
+            l'horloge ».
 
-        {/* Une séance finie laisse deux issues, et une seule est mise en avant :
-            repartir. « Quitter » reste en retrait plutôt que de rivaliser —
-            deux boutons pleins côte à côte ne hiérarchisent plus rien. */}
-        {/* Le contrôle reste téléchargeable quand tout le reste est verrouillé :
-            c'est le document de l'élève, la fin de séance ne le lui retire pas. */}
-        {copieId && (
-          <button
-            type="button"
-            className="btn-copie"
-            onClick={ouvrirCopie}
-            disabled={copieEnCours}
-          >
-            <span aria-hidden="true">▤</span>{' '}
-            {copieEnCours ? 'Ouverture…' : 'Mon contrôle'}
-          </button>
-        )}
+            SUR SA PROPRE LIGNE, et c'est ce qui la centre vraiment. Laissée dans
+            la rangée des boutons, elle ne pouvait pas l'être : « Quitter » et
+            « Relancer » pèsent à gauche bien plus que le décompte à droite, et
+            l'espace libre se répartissant autour d'elle, elle tombait une
+            centaine de pixels à droite du milieu — sous rien du tout.
 
-        {/* Pas de relance quand le forfait est refusé : elle se heurterait au
-            même mur, et proposer un bouton qui ne peut pas marcher est pire
-            que de ne rien proposer. C'est « Voir le forfait » qui débloque. */}
-        {seanceTerminee && !quota && (
-          // Inactif tant que le professeur conclut : sa parole ne se coupe pas,
-          // et la saga d'annonce ignore une demande pendant qu'elle en traite
-          // une autre — la nouvelle séance démarrerait sans un mot.
-          <button
-            type="button"
-            className="btn-relancer"
-            onClick={relancer}
-            disabled={streaming}
-            title={streaming ? 'Laisse le professeur terminer' : undefined}
-          >
-            <span aria-hidden="true">↻</span> Relancer {dureeSeance} min
-          </button>
-        )}
+            La bulle réunit avatar, prénom et matière parce que c'est une seule
+            information : qui fait cours, et en quoi. Le prénom de l'ÉLÈVE en a
+            été retiré — on le lui affichait au milieu de SA séance, sur SON
+            écran. */}
+        <div className="chat__prof-ligne">
+          <span className="chat__prof">
+            <Avatar
+              nom={conversation?.profAvatar}
+              couleur={conversation?.profCouleur}
+              taille={38}
+              parle={streaming && !muet}
+            />
 
-        <Avatar
-          nom={conversation?.profAvatar}
-          couleur={conversation?.profCouleur}
-          taille={38}
-          parle={streaming && !muet}
-        />
+            <span className="chat__titre">
+              {conversation?.profPrenom ?? conversation?.matiereLibelle}
+              <span className="chat__eleve">{conversation?.matiereLibelle}</span>
+            </span>
 
-        <span className="chat__titre">
-          {conversation?.profPrenom ?? conversation?.matiereLibelle}
-          <span className="chat__eleve">
-            {conversation?.matiereLibelle}
-            {eleve && ` · ${eleve.prenom}`}
+            {/* Il n'apparaît que sur téléphone — voir `.chat__prof-chrono`. La
+                matière lui cède la place : elle est déjà écrite en toutes
+                lettres dans le premier message du professeur. */}
+            <span className="chat__prof-chrono">{decompte}</span>
           </span>
+        </div>
+
+        <span className="chat__gestes">
+          {/* « QUITTER » SUFFIT — Camara, le 17/09/2026. Le libellé complet
+              prenait la moitié de la rangée pour dire ce que le bouton dit déjà
+              par sa place et sa couleur.
+
+              LE NOM ACCESSIBLE GARDE LA PHRASE : un lecteur d'écran annonce
+              « Quitter le cours », et la commande vocale accepte les deux — le
+              nom contient le texte visible, c'est ce qu'exige la règle. */}
+          <button
+            type="button"
+            className="btn-quitter"
+            onClick={quitter}
+            title="Quitter le cours"
+            aria-label="Quitter le cours"
+          >
+            Quitter
+          </button>
+
+          {/* Une séance finie laisse deux issues, et une seule est mise en avant :
+              repartir. « Quitter » reste en retrait plutôt que de rivaliser —
+              deux boutons pleins côte à côte ne hiérarchisent plus rien. */}
+          {/* Le contrôle reste téléchargeable quand tout le reste est verrouillé :
+              c'est le document de l'élève, la fin de séance ne le lui retire pas. */}
+          {copieId && (
+            <button
+              type="button"
+              className="btn-copie"
+              onClick={ouvrirCopie}
+              disabled={copieEnCours}
+            >
+              <span aria-hidden="true">▤</span>{' '}
+              {copieEnCours ? 'Ouverture…' : 'Mon contrôle'}
+            </button>
+          )}
+
         </span>
 
-
-        {/* Décompte et non temps écoulé : ce qui compte pour l'élève, c'est le
-            temps qu'il lui reste. La couleur change aux paliers plutôt que
-            progressivement — un dégradé continu ne se remarque jamais. */}
-        <span
-          className={`chrono chrono--${
-            quota
-              ? 'suspendu'
-              : depassement
-                ? 'depassement'
-                : restant === 0
-                  ? 'fini'
-                  : restant <= 60
-                    ? 'urgence'
-                    : restant <= PREAVIS
-                      ? 'bientot'
-                      : 'normal'
-          }`}
-          title={
-            quota
-              ? "Le forfait ne permet pas de suivre de cours"
-              : depassement
-                ? 'Le temps est écoulé, mais le contrôle se termine'
-                : `Séance de ${dureeSeance} minutes`
-          }
-          aria-label={
-            quota
-              ? 'Séance suspendue, le forfait ne le permet pas'
-              : depassement
-                ? 'Temps dépassé, le contrôle se termine'
-                : restant === 0
-                  ? 'Séance terminée'
-                  : `Il reste ${Math.ceil(restant / 60)} minutes de séance`
-          }
-        >
-          {/* Pas de jauge quand la séance est suspendue : une barre à moitié
-              pleine laisserait croire qu'un temps a été consommé. */}
-          {!quota && (
-            <span className="chrono__jauge" aria-hidden="true">
-              <span style={{ width: `${(restant / (dureeSeance * 60)) * 100}%` }} />
+        <span className="chat__etat">
+          {/* Le rappel du contrôle vit ICI, dans l'en-tête, et non au-dessus de
+              la saisie où il repoussait le champ et le micro. Il reste sous les
+              yeux — un enfant qui revient après deux minutes doit voir qu'il est
+              en évaluation — mais il ne mange plus la place de ce qui sert à
+              répondre. Le détail est dans l'infobulle : la consigne complète a
+              déjà été dite à l'oral. */}
+          {evaluationEnCours && !depassement && (
+            <span
+              className="chip-controle"
+              title={`${conversation?.profPrenom ?? 'Ton professeur'} ne t'aide plus pendant l'évaluation. Prends ton temps, et réponds du mieux que tu peux.`}
+            >
+              <span className="chip-controle__pastille" aria-hidden="true" />
+              Contrôle
             </span>
           )}
-          {quota
-            ? 'Suspendu'
-            : depassement
-              ? 'Contrôle en cours'
-              : restant === 0
-                ? 'Terminé'
-                : formaterDuree(restant)}
+
+          <button
+            type="button"
+            className={`chat__son ${muet ? 'chat__son--coupe' : ''}`}
+            onClick={basculerSon}
+            title={muet ? 'Réactiver la voix' : 'Couper la voix'}
+            aria-label={muet ? 'Réactiver la voix' : 'Couper la voix'}
+          >
+            {/* LE DESSIN NE DIT RIEN, ET C'EST VOULU : `alt` vide et
+                `aria-hidden`. C'est le bouton qui porte le sens, dans son
+                `aria-label` — sans quoi un lecteur d'écran annoncerait deux
+                fois la même chose. La barre du son coupé est tracée par la
+                feuille de style : il n'existe qu'un seul dessin. */}
+            <img
+              className="chat__son-icone"
+              src={hautParleurPng}
+              alt=""
+              aria-hidden="true"
+            />
+          </button>
         </span>
 
-        {/* Le rappel du contrôle vit ICI, dans l'en-tête, et non au-dessus de
-            la saisie où il repoussait le champ et le micro. Il reste sous les
-            yeux — un enfant qui revient après deux minutes doit voir qu'il est
-            en évaluation — mais il ne mange plus la place de ce qui sert à
-            répondre. Le détail est dans l'infobulle : la consigne complète a
-            déjà été dite à l'oral. */}
-        {evaluationEnCours && !depassement && (
-          <span
-            className="chip-controle"
-            title={`${conversation?.profPrenom ?? 'Ton professeur'} ne t'aide plus pendant l'évaluation. Prends ton temps, et réponds du mieux que tu peux.`}
-          >
-            <span className="chip-controle__pastille" aria-hidden="true" />
-            Contrôle
+        {/* SA PROPRE RANGÉE, SOUS LES TROIS AUTRES — Camara, le 17/09/2026 :
+            « sur mobile, mets le bouton relancer en dessous de la ligne où on a
+            Quitter, la bulle du professeur et le haut-parleur ».
+
+            IL A FALLU LA SORTIR DU GROUPE DE GAUCHE. Restée dedans, elle ne
+            pouvait occuper que le tiers gauche de la rangée — une boîte flex ne
+            laisse pas sortir ses enfants —, et c'est ce qui lui faisait pousser
+            la bulle et le son à mi-hauteur. */}
+        {seanceTerminee && !quota && (
+          // Inactif tant que le professeur conclut : sa parole ne se coupe pas,
+          // et la saga d'annonce ignore une demande pendant qu'elle en traite une
+          // autre — la nouvelle séance démarrerait sans un mot.
+          <span className="chat__relance">
+            <button
+              type="button"
+              className="btn-relancer"
+              onClick={relancer}
+              disabled={streaming}
+              title={streaming ? 'Laisse le professeur terminer' : undefined}
+            >
+              <span aria-hidden="true">↻</span> Relancer {dureeSeance} min
+            </button>
           </span>
         )}
 
-        <button
-          type="button"
-          className={`chat__son ${muet ? 'chat__son--coupe' : ''}`}
-          onClick={basculerSon}
-          title={muet ? 'Réactiver la voix' : 'Couper la voix'}
-          aria-label={muet ? 'Réactiver la voix' : 'Couper la voix'}
-        >
-          {muet ? '🔇' : '🔊'}
-        </button>
       </header>
       </div>
 
@@ -4051,13 +4202,15 @@ export default function Chat() {
               key={message.id}
               className={`bulle bulle--${message.role === 'user' ? 'eleve' : 'agent'}`}
             >
-              {message.pieceJointe && (
-                <PieceJointeBulle
-                  conversationId={conversation?.id}
-                  piece={message.pieceJointe}
-                  onAgrandir={(url, nom) => setAgrandie({ url, nom })}
-                />
-              )}
+              {(message.piecesJointes ?? (message.pieceJointe ? [message.pieceJointe] : []))
+                .map((piece) => (
+                  <PieceJointeBulle
+                    key={piece.id}
+                    conversationId={conversation?.id}
+                    piece={piece}
+                    onAgrandir={(url, nom) => setAgrandie({ url, nom })}
+                  />
+                ))}
               <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} />
             </div>
           ))}
@@ -4068,7 +4221,7 @@ export default function Chat() {
         {etatCopie && !streaming && !seanceTerminee && (
           <CopieControle
             etat={etatCopie}
-            disabled={streaming || seanceTerminee || Boolean(pieceEnAttente?.fichier)}
+            disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX}
             onChoisir={choisirCopie}
             onFichier={envoyerPieceCopie}
             onScanner={scannerNatif ? undefined : scannerCopie}
@@ -4279,7 +4432,7 @@ export default function Chat() {
             <div className="copie-dictee__boutons">
               <BoutonPieceJointe
                 onFichier={deposer}
-                disabled={streaming || seanceTerminee || Boolean(pieceEnAttente?.fichier)}
+                disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX}
                 libelle="Envoyer ma copie"
               />
 
@@ -4386,12 +4539,13 @@ export default function Chat() {
           conversationId={conversation.id}
           profPrenom={conversation.profPrenom}
           onRecu={recevoirScan}
+          onTermine={terminerScan}
           onFermer={() => {
             setScanOuvert(false);
 
             // Fermée sans photo : l'étiquette « copie » ne doit pas coller au
             // prochain document envoyé par un autre chemin.
-            if (!pieceRef.current?.id) rolePieceRef.current = null;
+            if (!piecesRef.current.some((p) => p.id)) rolePieceRef.current = null;
           }}
         />
       )}
@@ -4484,13 +4638,20 @@ export default function Chat() {
 
       {/* Le document attend AU-DESSUS de la saisie, accroché au message en
           cours d'écriture. Tant qu'il est là, l'élève n'a rien envoyé. */}
-      <VignetteEnAttente
-        fichier={pieceEnAttente?.fichier}
-        apercu={pieceEnAttente?.apercu}
-        enCours={pieceEnAttente?.enCours}
-        erreur={pieceEnAttente?.erreur}
-        onRetirer={retirerDocument}
-      />
+      {piecesEnAttente.length > 0 && (
+        <div className="pieces-en-attente">
+          {piecesEnAttente.map((p) => (
+            <VignetteEnAttente
+              key={p.cle}
+              fichier={p.fichier}
+              apercu={p.apercu}
+              enCours={p.enCours}
+              erreur={p.erreur}
+              onRetirer={() => retirerDocument(p.cle)}
+            />
+          ))}
+        </div>
+      )}
 
       <form
         className={`chat__saisie ${seanceTerminee ? 'chat__saisie--close' : ''}`}
@@ -4500,8 +4661,8 @@ export default function Chat() {
       >
         <BoutonPieceJointe
           onFichier={deposer}
-          disabled={streaming || seanceTerminee || Boolean(pieceEnAttente?.fichier) || copieBloquante}
-          enSurbrillance={docDemande && !pieceEnAttente?.fichier}
+          disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX || copieBloquante}
+          enSurbrillance={docDemande && piecesEnAttente.length === 0}
         />
 
         {/* La caméra pilotée à la voix : une fois allumée, dire « Photo »
@@ -4511,7 +4672,11 @@ export default function Chat() {
           ref={cameraRef}
           onErreur={setErreurMicro}
           enSurbrillance={docDemande}
-          desactive={copieBloquante}
+          // LE MEME ETAT QUE LES TROIS AUTRES — Camara, le 16/09/2026 : en
+          // entrant dans un cours, la caméra restait allumée pendant que le
+          // trombone, le scanner et le micro étaient estompés. Tous se
+          // coupent et se rallument ensemble.
+          desactive={streaming || seanceTerminee || copieBloquante}
         />
 
         {/* LE SCANNER — voulu par Camara le 13/09/2026. Sur ordinateur, un QR
@@ -4521,18 +4686,18 @@ export default function Chat() {
         {scannerNatif ? (
           <label
             className={`piece-jointe__bouton scanner-mobile__bouton${
-              streaming || seanceTerminee || pieceEnAttente?.fichier || copieBloquante ? ' est-desactive' : ''
-            }${docDemande && !pieceEnAttente?.fichier ? ' piece-jointe__bouton--surbrillance' : ''}`}
+              streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX || copieBloquante ? ' est-desactive' : ''
+            }${docDemande && piecesEnAttente.length === 0 ? ' piece-jointe__bouton--surbrillance' : ''}`}
             title="Scanner un document"
             aria-label="Scanner un document"
           >
-            <IconeScanner />
+            <img src={scannerPng} alt="" className="icone-png" />
             <input
               type="file"
               hidden
               accept="image/*"
               capture="environment"
-              disabled={streaming || seanceTerminee || Boolean(pieceEnAttente?.fichier) || copieBloquante}
+              disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX || copieBloquante}
               onChange={(evenement) => {
                 const fichier = evenement.target.files?.[0];
                 evenement.target.value = '';
@@ -4544,14 +4709,14 @@ export default function Chat() {
           <button
             type="button"
             className={`piece-jointe__bouton scanner-mobile__bouton${
-              docDemande && !pieceEnAttente?.fichier ? ' piece-jointe__bouton--surbrillance' : ''
+              docDemande && piecesEnAttente.length === 0 ? ' piece-jointe__bouton--surbrillance' : ''
             }`}
             onClick={() => setScanOuvert(true)}
-            disabled={streaming || seanceTerminee || Boolean(pieceEnAttente?.fichier) || copieBloquante}
+            disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX || copieBloquante}
             title="Scanner un document avec ton téléphone"
             aria-label="Scanner un document avec ton téléphone"
           >
-            <IconeScanner />
+            <img src={scannerPng} alt="" className="icone-png" />
           </button>
         )}
 
@@ -4570,7 +4735,10 @@ export default function Chat() {
                   : 'Parler au professeur'
             }
           >
-            <span className="micro__icone" />
+            {/* Deux images et non une teinte : celle du micro ouvert est
+                orange, celle du micro fermé bleue — c'est ce qu'un enfant
+                lit d'un coup d'œil, avant même le halo. */}
+            <img src={ecoute ? micOuvertPng : micFermePng} alt="" className="micro__icone" />
           </button>
         )}
 
@@ -4596,7 +4764,7 @@ export default function Chat() {
                 // Un document joint change l'invite : c'est une incitation à
                 // dire ce qui bloque, pas une obligation. L'envoi reste
                 // possible sans un mot.
-                : pieceEnAttente?.id
+                : piecesEnAttente.some((p) => p.id)
                   ? 'Dis-lui ce qui te bloque'
                   : copieDictee
                     ? 'Écris la phrase, puis Entrée'
@@ -4629,8 +4797,8 @@ export default function Chat() {
           disabled={
             streaming
             || seanceTerminee
-            || pieceEnAttente?.enCours
-            || (!saisie.trim() && !pieceEnAttente?.id)
+            || piecesEnAttente.some((p) => p.enCours)
+            || (!saisie.trim() && !piecesEnAttente.some((p) => p.id))
           }
         >
           Envoyer

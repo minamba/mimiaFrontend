@@ -51,7 +51,7 @@ export function IconeScanner() {
  * alors une autre page : une copie en fait souvent plusieurs.
  */
 export default function ScanMobileModale({
-  conversationId, profPrenom, onRecu, onFermer, intervalle = 2000,
+  conversationId, profPrenom, onRecu, onTermine, onFermer, intervalle = 2000,
 }) {
   const [jeton, setJeton] = useState(null);
   const [expireLe, setExpireLe] = useState(null);
@@ -97,6 +97,8 @@ export default function ScanMobileModale({
       setJeton(data.jeton);
       setExpireLe(data.expireLe);
       setQr(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+      termineRef.current = false;
+      setRecues(0);
       setEtat('attente');
     } catch {
       setErreur('Le QR code n’a pas pu être créé. Tu peux réessayer ?');
@@ -106,7 +108,17 @@ export default function ScanMobileModale({
 
   useEffect(() => { nouveauQr(); }, [nouveauQr]);
 
-  // LE RELEVÉ, tant que le QR code attend.
+  // Combien de photos sont déjà là : l'écran le dit pendant l'attente.
+  const [recues, setRecues] = useState(0);
+
+  // « TERMINÉ » NE SE DIT QU'UNE FOIS. Le relevé attend une réponse à chaque
+  // tick : un tick de plus peut partir entre le signal et le démontage de
+  // l'effet, et sans cette garde la séance recevrait l'ordre d'envoyer deux
+  // fois — deux messages au professeur pour une seule copie.
+  const termineRef = useRef(false);
+
+  // LE RELEVÉ, tant que le QR code attend — et il attend jusqu'à « terminé »,
+  // pas jusqu'à la première photo.
   useEffect(() => {
     if (etat !== 'attente' || !jeton) return undefined;
 
@@ -117,12 +129,32 @@ export default function ScanMobileModale({
         const { data } = await etatScanMobile(conversationId, jeton);
         if (!vivant) return;
 
-        if (data?.etat === 'recu' && data.piece && !livreesRef.current.has(data.piece.id)) {
-          livreesRef.current.add(data.piece.id);
-          setEtat('recu');
-          onRecu?.(data.piece);
-        } else if (data?.etat === 'expire') {
+        if (data?.etat === 'expire') {
           setEtat('expire');
+          return;
+        }
+
+        // TOUTES LES PHOTOS REÇUES JUSQU'ICI, chacune remise à la séance UNE
+        // fois : elles apparaissent sur l'ordinateur au fur et à mesure, et
+        // l'enfant voit que ça marche pendant qu'il prend la suivante.
+        const pieces = data?.pieces ?? (data?.piece ? [data.piece] : []);
+
+        for (const piece of pieces) {
+          if (piece?.id && !livreesRef.current.has(piece.id)) {
+            livreesRef.current.add(piece.id);
+            onRecu?.(piece);
+          }
+        }
+
+        setRecues(livreesRef.current.size);
+
+        // C'EST « TERMINÉ » QUI CLÔT, PAS LA PREMIÈRE PHOTO — Camara, le
+        // 16/09/2026 : l'enfant en prend plusieurs et les envoie d'un coup.
+        // Le professeur reçoit tout ensemble, jamais une page puis l'autre.
+        if (data?.termine && livreesRef.current.size > 0 && !termineRef.current) {
+          termineRef.current = true;
+          setEtat('recu');
+          onTermine?.();
         }
       } catch {
         // Un relevé manqué n'est pas une panne : le suivant réessaie.
@@ -133,7 +165,7 @@ export default function ScanMobileModale({
       vivant = false;
       clearInterval(minuteur);
     };
-  }, [etat, jeton, conversationId, intervalle, onRecu]);
+  }, [etat, jeton, conversationId, intervalle, onRecu, onTermine]);
 
   // Le compte à rebours se redessine chaque seconde.
   useEffect(() => {
@@ -165,7 +197,10 @@ export default function ScanMobileModale({
         {etat === 'recu' ? (
           <div className="scan-mobile__recu" role="status">
             <p className="scan-mobile__coche" aria-hidden="true">✓</p>
-            <p><strong>C’est arrivé !</strong> {prof} a reçu ta photo.</p>
+            <p>
+              <strong>C’est arrivé !</strong>{' '}
+              {prof} a reçu {recues > 1 ? `tes ${recues} photos` : 'ta photo'}.
+            </p>
 
             <div className="scan-mobile__actions">
               <button type="button" className="btn btn--compact" onClick={nouveauQr}>
@@ -203,7 +238,7 @@ export default function ScanMobileModale({
             <ol className="scan-mobile__etapes">
               <li>Ouvre l’appareil photo de ton téléphone.</li>
               <li>Vise ce QR code, puis touche le lien qui apparaît.</li>
-              <li>Prends ta copie en photo et envoie-la à {prof}.</li>
+              <li>Prends ta copie en photo — plusieurs pages si tu veux — puis envoie-les à {prof}.</li>
             </ol>
 
             {MODE_DEV && (
@@ -215,7 +250,10 @@ export default function ScanMobileModale({
             {expireLe && etat === 'attente' && (
               <p className="scan-mobile__attente">
                 <span className="scan-mobile__pulsation" aria-hidden="true" />
-                J’attends ta photo… (encore {tempsRestant(expireLe)})
+                {recues > 0
+                  ? `${recues} photo${recues > 1 ? 's' : ''} reçue${recues > 1 ? 's' : ''}, j’attends la suite…`
+                  : 'J’attends ta photo…'}
+                {' '}(encore {tempsRestant(expireLe)})
               </p>
             )}
           </>

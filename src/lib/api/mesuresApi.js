@@ -83,3 +83,48 @@ export function mesurerVoix({
     // Rien. Voir l'en-tête : une mesure ne gêne jamais une séance.
   }
 }
+
+/**
+ * CE QUE LE MICRO A RÉELLEMENT DONNÉ — Camara, le 16/09/2026 : trois familles,
+ * trois PC, « comme si leur micro était en mute », casque ou haut-parleur, et
+ * rien à reproduire sur son Mac, son PC ni son téléphone.
+ *
+ * QUAND ON NE PEUT PAS REPRODUIRE, ON FAIT REMONTER. Ce relevé part une fois
+ * par écoute, quelques secondes après l'ouverture du micro : le navigateur, le
+ * périphérique choisi, si la piste est muette aux yeux du système, les
+ * fréquences, le niveau maximal capté, la liste des entrées audio. Un relevé
+ * SAIN part aussi : c'est en comparant les machines qui marchent à celles qui
+ * ne marchent pas qu'on trouve ce qu'elles ont de différent.
+ *
+ * Côté serveur, il n'est QUE journalisé — pas de table, pas de migration à la
+ * veille du lancement : on lit les logs du conteneur.
+ *
+ * AUCUNE DONNÉE PERSONNELLE : ni identifiant d'élève, ni son. Le nom d'un micro
+ * (« Realtek High Definition Audio ») décrit une machine, pas une personne.
+ */
+export function mesurerMicro(diagnostic = {}) {
+  const texte = (valeur, max) => (typeof valeur === 'string' && valeur ? valeur.slice(0, max) : null);
+  const nombre = (valeur) => (typeof valeur === 'number' && Number.isFinite(valeur) ? valeur : null);
+
+  try {
+    httpClient
+      .post('/mesures/micro', {
+        seance: identifiantDeSeance(),
+        moteur: texte(diagnostic.moteur, 20) ?? 'temps-reel',
+        muet: Boolean(diagnostic.muet),
+        pisteMuette: Boolean(diagnostic.pisteMuette),
+        erreur: texte(diagnostic.erreur, 60),
+        peripherique: texte(diagnostic.peripherique, 120),
+        entrees: texte(diagnostic.entrees, 400),
+        etatPiste: texte(diagnostic.etatPiste, 20),
+        frequencePiste: nombre(diagnostic.frequencePiste),
+        frequenceContexte: nombre(diagnostic.frequenceContexte),
+        niveauMax: nombre(diagnostic.niveauMax),
+        secondes: nombre(diagnostic.secondes),
+        navigateur: texte(typeof navigator !== 'undefined' ? navigator.userAgent : null, 300),
+      })
+      .catch(() => {});
+  } catch {
+    // Rien. Voir l'en-tête : une mesure ne gêne jamais une séance.
+  }
+}

@@ -61,7 +61,7 @@ export const quitterCours = (conversationId) =>
  * @param signal   AbortSignal pour interrompre la génération
  */
 export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
-  const { secondesRestantes, pieceJointeId, vitesseEcoute, ...flux } = options;
+  const { secondesRestantes, pieceJointeIds, vitesseEcoute, ...flux } = options;
 
   // Le chronomètre est tenu ici, dans le navigateur : le serveur ne sait pas
   // quelle durée l'élève a choisie ni quand il a commencé. Sans cette valeur,
@@ -72,7 +72,7 @@ export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
   // « plus lent », ni qu'il n'y en a plus en dessous.
   return consommerFlux(
     `/conversations/${conversationId}/messages`,
-    { contenu, secondesRestantes, pieceJointeId, vitesseEcoute },
+    { contenu, secondesRestantes, pieceJointeIds, vitesseEcoute },
     flux,
   );
 };

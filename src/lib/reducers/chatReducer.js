@@ -61,7 +61,9 @@ export default function chatReducer(state = initialState, action) {
             // Sans lui, une photo tout juste envoyée restait invisible dans
             // sa propre bulle jusqu'au prochain rechargement de la page —
             // seul moment où le serveur redonne le message avec sa pièce.
-            pieceJointe: action.payload.pieceJointe ?? null,
+            piecesJointes: action.payload.piecesJointes ?? null,
+            // Le singulier garde la première, pour ce qui ne connaît que lui.
+            pieceJointe: action.payload.piecesJointes?.[0] ?? null,
           },
         ],
       };

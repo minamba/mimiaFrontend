@@ -2,6 +2,7 @@ import {
   forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState,
 } from 'react';
 import { camera } from '../lib/storage/camera';
+import cameraPng from '../assets/camera.png';
 
 /**
  * LA CAMÉRA QU'ON DÉCLENCHE EN DISANT « PHOTO ».
@@ -150,7 +151,7 @@ const CameraVoix = forwardRef(function CameraVoix({ onErreur, enSurbrillance, de
         aria-pressed={actif}
         title={actif ? 'Éteindre la caméra' : 'Activer la caméra pour prendre une photo en disant « Photo »'}
       >
-        <span aria-hidden="true">📸</span>
+        <img src={cameraPng} alt="" className="icone-png" />
       </button>
 
       {actif && (

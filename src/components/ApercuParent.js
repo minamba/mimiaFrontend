@@ -335,6 +335,12 @@ export default function ApercuParent() {
           <span aria-hidden="true">›</span>
         </button>
 
+        {/* LE TITRE DE LA CARTE, ET NON UNE ÉTIQUETTE DANS LA BARRE D'ONGLETS.
+            Relevé par Camara le 16/09/2026 : rangé à droite des onglets, il
+            repassait à la ligne sur téléphone et se lisait comme un bouton de
+            plus. Il annonce la carte entière — sa place est au-dessus. */}
+        <p className="apercu__titre">Exemple de suivi</p>
+
         {/* De vrais boutons, pas des pastilles : on doit pouvoir y arriver au
             clavier et savoir lequel est actif sans voir la couleur. */}
         <div className="apercu__onglets" role="tablist" aria-label="Le suivi parent">
@@ -350,8 +356,6 @@ export default function ApercuParent() {
               {v.onglet}
             </button>
           ))}
-
-          <span className="apercu__jeton">Exemple de suivi</span>
         </div>
 
         {/* LES TROIS ÉCRANS SONT MONTÉS EN PERMANENCE, SUPERPOSÉS.

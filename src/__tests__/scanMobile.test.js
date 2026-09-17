@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 import ScanMobileModale from '../components/ScanMobileModale';
 import ScanMobile from '../components/ScanMobile';
 import { creerScanMobile, etatScanMobile } from '../lib/api/chatApi';
-import { envoyerScanMobile, lireScanMobile } from '../lib/api/scanMobileApi';
+import { envoyerScanMobile, lireScanMobile, terminerScanMobile } from '../lib/api/scanMobileApi';
 import {
   adresseScan, baseApiScan, origineScan, tempsRestant,
 } from '../lib/storage/scanMobile';
@@ -26,6 +26,7 @@ jest.mock('../lib/api/chatApi', () => ({
 jest.mock('../lib/api/scanMobileApi', () => ({
   lireScanMobile: jest.fn(),
   envoyerScanMobile: jest.fn(),
+  terminerScanMobile: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => ({
@@ -93,26 +94,44 @@ test('le compte à rebours s’écrit en minutes et secondes, sans descendre sou
 });
 
 describe('sur l’ordinateur', () => {
-  test('le QR code s’affiche, puis la photo arrivée est remise à la séance UNE fois', async () => {
+  test('les photos arrivent une à une, chacune remise UNE fois — et c’est « terminé » qui clôt', async () => {
     creerScanMobile.mockResolvedValue({ data: { jeton: 'abc123', expireLe: '2099-01-01T00:00:00Z' } });
 
-    const piece = { id: 77, nomFichier: 'photo.jpg', typeMime: 'image/jpeg', taille: 1000 };
+    const une = { id: 77, nomFichier: 'page1.jpg', typeMime: 'image/jpeg', taille: 1000 };
+    const deux = { id: 78, nomFichier: 'page2.jpg', typeMime: 'image/jpeg', taille: 1000 };
     etatScanMobile
-      .mockResolvedValueOnce({ data: { etat: 'attente', piece: null } })
-      .mockResolvedValue({ data: { etat: 'recu', piece } });
+      .mockResolvedValueOnce({ data: { etat: 'attente', pieces: [], termine: false } })
+      .mockResolvedValueOnce({ data: { etat: 'recu', pieces: [une], termine: false } })
+      .mockResolvedValueOnce({ data: { etat: 'recu', pieces: [une, deux], termine: false } })
+      .mockResolvedValue({ data: { etat: 'recu', pieces: [une, deux], termine: true } });
 
     const onRecu = jest.fn();
+    const onTermine = jest.fn();
 
     render(
-      <ScanMobileModale conversationId={5} profPrenom="Nora" onRecu={onRecu} onFermer={jest.fn()} intervalle={10} />,
+      <ScanMobileModale
+        conversationId={5}
+        profPrenom="Nora"
+        onRecu={onRecu}
+        onTermine={onTermine}
+        onFermer={jest.fn()}
+        intervalle={10}
+      />,
     );
 
     expect(await screen.findByAltText(/QR code/)).toBeInTheDocument();
-    expect(screen.getByText(/Prends ta copie en photo et envoie-la à Nora/)).toBeInTheDocument();
+    expect(screen.getByText(/Prends ta copie en photo — plusieurs pages si tu veux/)).toBeInTheDocument();
 
-    expect(await screen.findByText(/C’est arrivé !/)).toBeInTheDocument();
-    expect(onRecu).toHaveBeenCalledTimes(1);
-    expect(onRecu).toHaveBeenCalledWith(piece);
+    // La première photo est là : elle est remise à la séance, mais RIEN ne
+    // part encore — le téléphone n'a pas dit « terminé ».
+    await waitFor(() => expect(onRecu).toHaveBeenCalledWith(une));
+    expect(onTermine).not.toHaveBeenCalled();
+    expect(screen.queryByText(/C’est arrivé !/)).not.toBeInTheDocument();
+
+    expect(await screen.findByText(/Nora a reçu tes 2 photos/)).toBeInTheDocument();
+    expect(onRecu).toHaveBeenCalledTimes(2);
+    expect(onRecu).toHaveBeenCalledWith(deux);
+    expect(onTermine).toHaveBeenCalledTimes(1);
 
     expect(screen.getByRole('button', { name: 'Scanner une autre page' })).toBeInTheDocument();
   });
@@ -132,18 +151,86 @@ describe('sur le téléphone', () => {
   test('la photo choisie part au professeur, et la page le confirme', async () => {
     lireScanMobile.mockResolvedValue({ data: { profPrenom: 'Nora', matiere: 'Mathématiques', dejaEnvoye: false } });
     envoyerScanMobile.mockResolvedValue({ data: { recu: true } });
+    terminerScanMobile.mockResolvedValue({ data: { termine: true } });
 
     render(<ScanMobile />);
 
-    expect(await screen.findByText('Envoie ta copie à Nora')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Envoie ta copie à Nora' })).toBeInTheDocument();
 
     const photo = new File(['x'], 'copie.pdf', { type: 'application/pdf' });
-    await userEvent.upload(screen.getByLabelText(/Choisir dans la galerie/), photo);
+    await userEvent.upload(screen.getByLabelText(/Importer un document/), photo);
 
     await userEvent.click(screen.getByRole('button', { name: 'Envoyer à Nora' }));
 
     expect(await screen.findByText('C’est envoyé !')).toBeInTheDocument();
     expect(envoyerScanMobile).toHaveBeenCalledWith('abc123', photo, expect.any(Object));
+
+    // Et le téléphone dit « terminé » : c'est ça qui fait partir le message.
+    expect(terminerScanMobile).toHaveBeenCalledWith('abc123');
+  });
+
+  test('plusieurs photos partent ensemble, dans l’ordre, et une croix retire celle qu’on ne veut plus', async () => {
+    lireScanMobile.mockResolvedValue({ data: { profPrenom: 'Nora', matiere: 'Mathématiques', dejaEnvoye: false } });
+    envoyerScanMobile.mockResolvedValue({ data: { recu: true } });
+    terminerScanMobile.mockResolvedValue({ data: { termine: true } });
+
+    render(<ScanMobile />);
+    await screen.findByRole('heading', { name: 'Envoie ta copie à Nora' });
+
+    const page1 = new File(['1'], 'page1.pdf', { type: 'application/pdf' });
+    const page2 = new File(['2'], 'page2.pdf', { type: 'application/pdf' });
+    const brouillon = new File(['3'], 'brouillon.pdf', { type: 'application/pdf' });
+    await userEvent.upload(screen.getByLabelText(/Importer un document/), [page1, page2, brouillon]);
+
+    // Les trois sont listées ; le brouillon s'en va d'une croix.
+    expect(screen.getByText('page1.pdf')).toBeInTheDocument();
+    expect(screen.getByText('brouillon.pdf')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Retirer brouillon.pdf' }));
+    expect(screen.queryByText('brouillon.pdf')).not.toBeInTheDocument();
+
+    // Les boutons pour en ajouter sont toujours là : la liste n'est pas close.
+    expect(screen.getByLabelText(/Ajouter une photo/)).toBeInTheDocument();
+    expect(screen.getByText('Les 2 documents partiront ensemble.')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Envoyer à Nora' }));
+
+    expect(await screen.findByText('C’est envoyé !')).toBeInTheDocument();
+
+    // Dans l'ordre, puis « terminé » — jamais avant la dernière.
+    expect(envoyerScanMobile).toHaveBeenCalledTimes(2);
+    expect(envoyerScanMobile.mock.calls[0][1]).toBe(page1);
+    expect(envoyerScanMobile.mock.calls[1][1]).toBe(page2);
+    expect(terminerScanMobile).toHaveBeenCalledTimes(1);
+    expect(terminerScanMobile.mock.invocationCallOrder[0])
+      .toBeGreaterThan(envoyerScanMobile.mock.invocationCallOrder[1]);
+  });
+
+  test('le téléphone prend le style du site, qu’il ne peut connaître que par le serveur', async () => {
+    lireScanMobile.mockResolvedValue({
+      data: { profPrenom: 'Nora', matiere: 'Mathématiques', dejaEnvoye: false, blueSky: true },
+    });
+
+    render(<ScanMobile />);
+    await screen.findByRole('heading', { name: 'Envoie ta copie à Nora' });
+
+    // L'appareil n'a ni compte ni rien en mémoire : sans cette réponse, la
+    // page resterait au style d'origine pendant que le reste du site bascule.
+    expect(document.documentElement.getAttribute('data-da')).toBe('blue-sky');
+
+    // Et on ne laisse pas le style sur le document des tests suivants.
+    document.documentElement.removeAttribute('data-da');
+    window.localStorage.removeItem('mimia_style');
+  });
+
+  test('sans Blue Sky, la page garde le style d’origine', async () => {
+    lireScanMobile.mockResolvedValue({
+      data: { profPrenom: 'Nora', matiere: 'Mathématiques', dejaEnvoye: false, blueSky: false },
+    });
+
+    render(<ScanMobile />);
+    await screen.findByRole('heading', { name: 'Envoie ta copie à Nora' });
+
+    expect(document.documentElement.getAttribute('data-da')).toBeNull();
   });
 
   test('un QR code expiré le dit, sans rien proposer d’envoyer', async () => {
@@ -160,7 +247,7 @@ describe('sur le téléphone', () => {
 
     render(<ScanMobile />);
 
-    expect(await screen.findByText('Ta photo est déjà partie')).toBeInTheDocument();
+    expect(await screen.findByText('Tes documents sont déjà partis')).toBeInTheDocument();
     expect(screen.queryByText(/Prendre la photo/)).not.toBeInTheDocument();
   });
 });

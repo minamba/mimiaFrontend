@@ -1,4 +1,5 @@
 import { API_BASE_URL, enTeteAuth } from '../api/httpClient';
+import { mesurerMicro } from '../api/mesuresApi';
 
 /**
  * Écoute en flux : le micro part vers notre serveur, les transcriptions
@@ -23,6 +24,26 @@ const FREQUENCE = 24000;
  * une demi-seconde de souffle.
  */
 const SEUIL_VOIX = 0.006;
+
+/**
+ * LE MICRO EST-IL MORT ? — Camara, le 16/09/2026 : trois familles, trois PC,
+ * « comme si leur micro était en mute », casque ou haut-parleur, et rien à
+ * reproduire sur son Mac, son PC ni son téléphone.
+ *
+ * Un micro vivant a TOUJOURS un bruit de fond : avec le contrôle de gain
+ * demandé au navigateur, il dépasse largement ce seuil même dans une pièce
+ * silencieuse. Un micro coupé par le système, un mauvais périphérique par
+ * défaut ou un casque Bluetooth sur le mauvais profil donnent zéro, ou
+ * presque. Dix fois sous le seuil de voix : on ne conclut que sur le certain.
+ */
+const SEUIL_MUET = 0.0005;
+
+/**
+ * Combien de temps observer avant de conclure. Assez long pour qu'un enfant
+ * qui cherche ses mots ne soit pas déclaré muet ; assez court pour qu'un
+ * parent ne reste pas une minute devant une icône allumée qui n'entend rien.
+ */
+const DELAI_MUET_MS = 8000;
 
 /**
  * Seuil pour COUPER LA PAROLE au professeur, nettement plus haut.
@@ -550,7 +571,7 @@ export const ecouteTempsReel = {
    */
   ecouter({
     conversationId, chemin, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
-    onFermeture, onOuverture, onOreilleMorte,
+    onFermeture, onOuverture, onOreilleMorte, onMuet,
   }) {
     // LE MÊME MICRO HORS D'UNE SÉANCE — `chemin` remplace l'identifiant de
     // conversation dans l'adresse (« dictee/12 » pour la dictée d'un contrôle,
@@ -561,6 +582,15 @@ export const ecouteTempsReel = {
     let contexte = null;
     let flux = null;
     let arrete = false;
+
+    // Le diagnostic du micro — voir SEUIL_MUET. Le niveau maximal est mesuré
+    // sur TOUT ce qui arrive, pause sourde comprise : le système livre des
+    // échantillons que le micro soit écouté ou non, et c'est ce qui dit s'il
+    // est vivant.
+    let niveauMax = 0;
+    let gardeMuet = null;
+    let pisteMuette = false;
+    let diagnosticFait = false;
 
     /**
      * LE CRÉDIT DE SON : ce qui a été réellement transmis, et qui peut encore
@@ -844,6 +874,9 @@ export const ecouteTempsReel = {
       desarmer();
       if (minuteurReconnexion) clearTimeout(minuteurReconnexion);
       minuteurReconnexion = null;
+
+      if (gardeMuet) clearTimeout(gardeMuet);
+      gardeMuet = null;
 
       flux?.getTracks().forEach((piste) => piste.stop());
       contexte?.close().catch(() => {});
@@ -1295,6 +1328,64 @@ export const ecouteTempsReel = {
 
         if (arrete) return;
 
+        // CE QUE LE SYSTÈME A VRAIMENT DONNÉ. Obtenir le micro ne veut pas
+        // dire l'entendre : Windows peut livrer une piste MUETTE — accès
+        // refusé au navigateur dans les réglages de confidentialité, antivirus,
+        // touche « muet » du casque — sans lever la moindre erreur. C'est la
+        // seule information que le navigateur a sur ce cas, et elle n'était
+        // pas lue.
+        const piste = flux.getAudioTracks?.()?.[0] ?? null;
+        pisteMuette = Boolean(piste?.muted);
+
+        if (piste) {
+          piste.onmute = () => { pisteMuette = true; };
+          piste.onunmute = () => { pisteMuette = false; };
+        }
+
+        // LE CHIEN DE GARDE DU MICRO MORT. Une seule conclusion par écoute,
+        // écrite et jamais prononcée, et qui ne coupe rien : si la mesure se
+        // trompe, l'élève continue. Le relevé part au serveur dans TOUS les
+        // cas — les micros sains servent de point de comparaison.
+        const debutObservation = performance.now();
+
+        gardeMuet = setTimeout(() => {
+          gardeMuet = null;
+          if (arrete || diagnosticFait) return;
+          diagnosticFait = true;
+
+          const muet = pisteMuette || niveauMax < SEUIL_MUET;
+          const diagnostic = {
+            muet,
+            pisteMuette,
+            peripherique: piste?.label || null,
+            etatPiste: piste?.readyState ?? null,
+            frequencePiste: piste?.getSettings?.()?.sampleRate ?? null,
+            frequenceContexte: contexte?.sampleRate ?? null,
+            niveauMax,
+            secondes: (performance.now() - debutObservation) / 1000,
+          };
+
+          const envoyer = (entrees) => mesurerMicro({ ...diagnostic, entrees });
+
+          // Les entrées audio, avec leurs noms : la permission vient d'être
+          // accordée, ils sont lisibles. C'est là qu'on voit « Hands-Free AG
+          // Audio » (Bluetooth sur le mauvais profil) ou « Stereo Mix » choisi
+          // par défaut à la place du vrai micro.
+          const lister = navigator.mediaDevices?.enumerateDevices?.();
+
+          if (lister?.then) {
+            lister
+              .then((liste) => envoyer(
+                liste.filter((d) => d.kind === 'audioinput').map((d) => d.label || '?').join(' | '),
+              ))
+              .catch(() => envoyer(null));
+          } else {
+            envoyer(null);
+          }
+
+          if (muet) onMuet?.(diagnostic);
+        }, DELAI_MUET_MS);
+
         const Contexte = window.AudioContext || window.webkitAudioContext;
         contexte = new Contexte({ sampleRate: FREQUENCE });
 
@@ -1328,6 +1419,11 @@ export const ecouteTempsReel = {
 
           const bloc = reechantillonner(data, contexte.sampleRate, FREQUENCE);
 
+          // Mesuré AVANT la pause sourde : le micro livre des échantillons
+          // qu'on l'écoute ou non, et c'est ce qui dit s'il est vivant.
+          const amplitude = niveau(bloc);
+          if (amplitude > niveauMax) niveauMax = amplitude;
+
           // EN PAUSE, SOURD D'ABORD — avant toute question de liaison.
           //
           // Pendant que le professeur parle sans casque, ou que l'élève tape,
@@ -1342,7 +1438,6 @@ export const ecouteTempsReel = {
             return;
           }
 
-          const amplitude = niveau(bloc);
           const parle = amplitude > SEUIL_VOIX;
           const maintenant = performance.now();
 
@@ -1434,6 +1529,10 @@ export const ecouteTempsReel = {
         await contexte.resume().catch(() => {});
       } catch (erreur) {
         if (arrete) return;
+
+        // Le refus se fait remonter aussi : « NotAllowedError » chez trois
+        // familles et jamais chez nous, c'est déjà une réponse.
+        mesurerMicro({ erreur: erreur?.name || 'inconnue' });
 
         onErreur?.(
           erreur?.name === 'NotAllowedError'

@@ -1137,50 +1137,301 @@ h1, h2, h3 {
   gap: 8px;
 }
 
-/* LA PAGE DU TÉLÉPHONE — gros boutons, une main libre. */
+/* LA PAGE DU TÉLÉPHONE — gros boutons, une main libre, l'autre tenant la
+   feuille. Refaite le 17/09/2026 : « améliore le style pour que ce soit plus
+   stylé ». Elle s'ouvre sans compte, souvent sur un téléphone d'enfant, et
+   c'est la première chose que voit quelqu'un qui vient de viser un QR code —
+   elle doit avoir l'air d'une application, pas d'un formulaire. */
 .scan-page {
   max-width: 460px;
   margin: 0 auto;
-  padding-block: 28px;
-  text-align: center;
+  padding: 22px 18px 40px;
 }
+
+/* LE BANDEAU D'EN-TÊTE — refait le 17/09/2026 : « le titre n'est pas mis en
+   valeur, c'est pas joli ». Il était posé à plat sur le fond, au-dessus de deux
+   cartes dessinées : la page semblait commencer aux boutons, alors que c'est
+   lui qui dit à qui l'enfant écrit.
+
+   UNE CARTE, UNE LUMIÈRE, UN BORD FRANC. Le halo part du coin de l'emblème et
+   s'éteint vers la droite, pour que l'œil entre par l'image ; le liseré corail
+   en haut donne au bloc une arête nette et le rattache au geste principal,
+   juste en dessous. */
+.scan-page__entete {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--trait);
+  border-radius: 24px;
+  background:
+    radial-gradient(135% 130% at 0% 0%,
+      color-mix(in srgb, var(--corail) 20%, transparent), transparent 60%),
+    var(--surface-2);
+  box-shadow: var(--ombre, 0 14px 34px rgba(0, 0, 0, 0.2));
+  overflow: hidden;
+}
+
+.scan-page__entete::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--corail),
+    color-mix(in srgb, var(--corail) 15%, transparent));
+}
+
+/* L'emblème sur sa propre tuile, et plus foncée que le bandeau : les
+   illustrations sont détourées, sans fond à elles, et flottaient dans le vide.
+   L'ombre la décolle de la carte au lieu de l'y coller. */
+.scan-page__embleme {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  padding: 9px;
+  object-fit: contain;
+  border: 1px solid var(--trait);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.scan-page__entete-texte { min-width: 0; }
 
 .scan-page__titre,
 .scan-page__message h1 {
-  margin: 0 0 6px;
+  margin: 0;
   font-family: var(--display);
   font-size: 22px;
+  line-height: 1.22;
   color: var(--encre);
 }
 
+/* LE PRÉNOM EN CORAIL : d'un QR code à l'autre, c'est la seule chose qui
+   change, et la seule que l'enfant ait besoin de reconnaître. `--corail-texte`
+   et non `--corail` : la variante prévue pour être LUE, définie dans les trois
+   thèmes — clair, sombre et Blue Sky. */
+.scan-page__titre strong {
+  font-weight: inherit;
+  color: var(--corail-texte);
+}
+
+/* La matière en pastille : posée en gris sous le titre, elle se lisait comme
+   la suite de la phrase. */
 .scan-page__matiere {
-  margin: 0 0 20px;
+  display: inline-block;
+  margin: 9px 0 0;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre) 11%, transparent);
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--encre-douce);
 }
+
+/* ------------------------------------------------------------ les messages
+   Expiré, envoyé, déjà parti : ceux-là se lisent d'un bloc, centrés. */
+.scan-page__message {
+  padding-top: 32px;
+  text-align: center;
+}
+
+.scan-page__message h1 { margin-bottom: 8px; }
 
 .scan-page__message p { color: var(--encre-douce); line-height: 1.6; }
 
 .scan-page__grand { font-size: 48px; margin: 0 0 8px; }
 
-.scan-page__boutons {
-  display: flex;
-  flex-direction: column;
+/* -------------------------------------------------------------- les gestes
+   Deux cartes, pas deux boutons : une icône qui dit quoi, un nom, et une
+   ligne qui lève le doute — « une photo ou un PDF déjà enregistré ». */
+.scan-page__actions {
+  display: grid;
   gap: 12px;
-  margin-top: 16px;
 }
 
-.scan-page__bouton {
+.scan-page__action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait-bouton);
+  border-radius: 18px;
+  background: var(--surface-2);
+  color: var(--encre);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.scan-page__action:hover { border-color: var(--corail); }
+
+/* Le doigt doit sentir qu'il a touché : sur un téléphone il n'y a pas de
+   survol pour le dire. */
+.scan-page__action:active { transform: scale(0.985); }
+
+/* LE CHEVRON, SUR LES DEUX CARTES. Il dit « ça s'ouvre » — la seule chose
+   vraie avant que l'enfant ait choisi quoi que ce soit. L'ordre suffit à
+   désigner le geste attendu : la photo est la première. */
+.scan-page__action-fleche {
+  flex: none;
+  margin-left: auto;
+  padding-left: 6px;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--encre-douce);
+}
+
+.scan-page__action-icones {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 64px;
+}
+
+.scan-page__action-icones img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+/* DEUX ICÔNES POUR UN SEUL GESTE : le trombone et le cadre photo se
+   chevauchent légèrement pour se lire comme un objet, pas comme deux
+   boutons collés. Un peu plus petites, sinon la paire écrase la caméra
+   voisine. */
+.scan-page__action-icones img + img {
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+}
+
+.scan-page__action-texte {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  text-align: left;
+}
+
+.scan-page__action-texte strong {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.scan-page__action-texte small {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--encre-douce);
+}
+
+/* --------------------------------------------------------------- la liste
+   Camara, le 16/09/2026 : plusieurs documents, une croix sur chacun, un seul
+   envoi. Gros, parce que c'est un téléphone tenu d'une main. */
+.scan-page__liste {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.scan-page__vignette {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--trait);
+  border-radius: 16px;
+  background: var(--surface-2);
+}
+
+/* Le rang, parce que l'ordre compte : c'est celui dans lequel le professeur
+   recevra les pages. */
+.scan-page__rang {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--encre) 12%, transparent);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.scan-page__vignette img {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex: none;
+}
+
+.scan-page__doc { font-size: 30px; width: 58px; text-align: center; flex: none; }
+
+.scan-page__nom {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-page__nom strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+.scan-page__nom small { font-size: 12px; color: var(--action-ajouter, var(--encre-douce)); }
+
+.scan-page__vignette--envoyee { opacity: 0.62; }
+
+.scan-page__vignette--en-cours {
+  border-color: var(--corail);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--corail) 22%, transparent);
+}
+
+.scan-page__retirer {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--trait-bouton);
+  border-radius: 50%;
+  background: var(--surface);
+  font: inherit;
+  font-size: 21px;
+  line-height: 1;
+  color: var(--encre-douce);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.scan-page__retirer:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ----------------------------------------------------------------- l'envoi */
+.scan-page__pied { margin-top: 18px; }
+
+.scan-page__envoi {
   width: 100%;
   padding-block: 16px;
+  border-radius: 16px;
   font-size: 17px;
   cursor: pointer;
 }
 
-.scan-page__apercu img {
-  max-width: 100%;
-  max-height: 55vh;
-  border: 1px solid var(--trait);
-  border-radius: 12px;
+.scan-page__compte {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--encre-douce);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4580,6 +4831,7 @@ button.eleve-bandeau {
 }
 
 .avis__moi .avis__etat .etoiles { display: none; }
+.avis__moi .avis__rappel { display: none; }
 .avis__moi .avis__etat-actions { gap: 0; }
 
 .avis__moi .avis__etat-actions .btn-ghost {
@@ -4731,6 +4983,51 @@ button.eleve-bandeau {
 /* « Modifier » et « Retirer » comme un seul bloc : la ligne qui les contient
    peut retomber à la ligne suivante sans les séparer l'un de l'autre. */
 .avis__etat-actions { display: flex; gap: 8px; }
+
+/* La coche et la phrase voyagent ensemble : une validation sans son objet ne
+   veut rien dire. */
+.avis__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* L'avis tel qu'il a été écrit. Masqué sur la page d'accueil (voir
+   `.avis__moi` plus haut) : là-bas, l'état tient sur une ligne, à côté du
+   carrousel qui montre déjà les avis. */
+.avis__rappel {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--trait);
+  border-left: 3px solid color-mix(in srgb, var(--sarcelle) 55%, var(--trait));
+  border-radius: 12px;
+  background: var(--surface-2);
+  text-align: left;
+}
+
+.avis__rappel-titre {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.avis__rappel-titre + .avis__rappel-texte { margin-top: 6px; }
+
+.avis__rappel-texte {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+
+  /* Un avis peut faire deux mille caractères : la fenêtre en montre le début
+     et laisse « Modifier » ouvrir le reste, plutôt que de devenir un mur. */
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .avis__formulaire {
   display: grid;
@@ -6453,15 +6750,59 @@ html.defilement-bloque body {
    quelle que soit la largeur disponible. Le formulaire ouvert, lui, garde
    ses champs alignés à gauche — un label et un champ de texte centrés se
    liraient mal. */
+.modale__boite--avis { max-width: 460px; }
+
 .modale__boite--avis h2 { text-align: center; }
 
 .modale__boite--avis .avis__etat {
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .modale__boite--avis .avis__invite { text-align: center; }
+
+/* LES ÉTOILES SONT LE SUJET DE CETTE FENÊTRE. À treize pixels, au milieu du
+   vide, elles passaient pour une décoration ; c'est pourtant la seule chose
+   que le parent y a vraiment décidée. */
+.modale__boite--avis .avis__etat .etoile { font-size: 26px; }
+
+/* LA PASTILLE DIT L'ÉTAT, ET SE VOIT. Une phrase grise sous un rond vert ne
+   se lisait pas comme une confirmation. Le vert la porte, la coche la signe.
+   Le second cas — « sera publié après relecture » — n'a pas de coche : c'est
+   une attente, pas une validation, et elle garde donc le ton du texte. */
+.modale__boite--avis .avis__badge {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sarcelle) 14%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sarcelle);
+}
+
+.modale__boite--avis .avis__coche {
+  width: 20px;
+  height: 20px;
+  background: var(--sarcelle);
+  color: var(--surface);
+}
+
+/* EN ATTENTE, LA PASTILLE NE SE RÉJOUIT PAS. Le vert est la couleur de ce qui
+   est acquis ; « sera publié après relecture » ne l'est pas encore, et le
+   parent qui lirait du vert croirait son avis déjà en ligne. */
+.modale__boite--avis .avis__badge--attente {
+  background: var(--surface-2);
+  color: var(--encre-douce);
+  font-weight: 500;
+}
+
+/* DES BOUTONS DE TAILLE NORMALE. Les « mini » viennent de l'accueil, où ils
+   s'effacent au bout d'une ligne de texte. Seuls au milieu d'une fenêtre, ils
+   avaient juste l'air rachitiques. */
+.modale__boite--avis .avis__etat-actions .btn-ghost--mini {
+  padding: 8px 16px;
+  font-size: 13.5px;
+}
 
 /* LES TABLEAUX DE LA FICHE NE SE LAISSENT PAS ÉCRASER.
    ----------------------------------------------------
@@ -7008,14 +7349,178 @@ html.defilement-bloque body {
    Sous 1040 px, tout change : une seule colonne, la page défile pour de bon, et
    c'est là que le collage sert — l'élève qui remonte dans le fil garde le nom
    de son professeur et son décompte sous les yeux. */
+/* LE BANDEAU PREND LA COULEUR DE SA MATIÈRE — Camara, le 17/09/2026 :
+   « améliore le background derrière les éléments, peut-être en fonction de la
+   matière ». Un VOILE, pas un aplat : le cours d'espagnol de Lucía se
+   reconnaît avant qu'on ait lu le mot, comme on reconnaît un classeur à sa
+   tranche, et « Quitter », « Relancer » et le décompte gardent leur lisibilité
+   — ce sont eux qu'on vient chercher ici, pas la décoration.
+
+   La lumière part du haut à gauche et s'éteint avant le centre : le décompte
+   est centré, et un dégradé qui passerait dessous le ferait vibrer.
+
+   MÊME LANGAGE QUE L'EN-TÊTE DES FICHES (voir `.fiches-entete`) : la teinte
+   de la matière, et le paraphe qui s'éteint vers la droite. Un second langage
+   pour dire la même chose aurait fait deux produits. */
 .chat__tete {
-  background: var(--papier);
+  /* LA TEINTE EST UNIFORME — Camara, le 17/09/2026 : « y'a un dégradé vers le
+     bleu, j'en veux plus du bleu, y'en a déjà trop ». Le dégradé d'avant
+     s'éteignait dans le fond de la page : passé le milieu, le bandeau
+     redevenait bleu marine, et c'est ce bleu-là qu'il voyait. Un aplat ne le
+     laisse nulle part. */
+  position: relative;
+
+  background-color: color-mix(in srgb, var(--matiere, var(--corail)) 14%, var(--papier));
 }
 
+/* LE DÉCOR DE LA MATIÈRE — Camara, le 17/09/2026 : « au final, pour le
+   background, j'ai généré des images ». Elles remplacent les motifs dessinés
+   qui les précédaient : un vrai lieu de travail par matière, pas un signe
+   répété.
+
+   IL EST POSÉ EN CALQUE, ET NON SUR LE FOND, pour une raison qui décide de
+   tout : la teinte de la matière reste DESSOUS, et c'est elle qui donne au
+   décor sa couleur de thème. En clair il s'éclaircit sur le papier, en sombre
+   il s'assombrit sur le bleu marine — une seule image par matière au lieu
+   d'une par matière ET par thème.
+
+   `cover` ET NON `contain` : le bandeau est une bande large et basse, l'image
+   un paysage 16/9. Cadrée en hauteur, elle disparaîtrait ; recadrée, on en
+   voit la tranche médiane, celle où l'illustration est la plus calme. */
+.chat__tete::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: none;
+  pointer-events: none;
+
+  background-image: var(--mur);
+  background-position: center;
+  background-size: cover;
+
+  /* LE DÉCOR S'EFFACE DERRIÈRE CE QUI COMPTE. À pleine force, il mange le nom
+     du professeur et le décompte ; le bandeau doit rester un bandeau, pas une
+     affiche. La valeur est plus haute en clair : sur du papier, la même image
+     paraît plus pâle que sur du bleu marine. */
+  opacity: 0.52;
+}
+
+/* Le contenu repasse devant le calque. */
+.chrono-bandeau,
+.chat__entete { position: relative; z-index: 1; }
+
+/* ------------------------------------------------- les décors par matière
+   Treize décors pour trente-cinq matières — voir `murMatiere`. Les matières
+   voisines partagent le leur : l'anglais et l'anglais monde contemporain se
+   passent du même Londres, les sept matières artistiques du même atelier. Un
+   décor par matière aurait demandé trente-cinq images à générer, à tenir et à
+   télécharger, pour une différence qu'aucun élève ne verrait — il n'a jamais
+   deux bandeaux côte à côte.
+
+   EN WEBP, ET C'EST TOUT SAUF UN DÉTAIL. Les originaux pesaient 2,2 Mo pièce,
+   29 Mo pour les treize. Un enfant en 4G aurait téléchargé deux mégaoctets pour
+   la décoration d'une bande de cent cinquante pixels de haut. Réencodés à
+   1400 px de large, ils font environ 150 Ko — la même image à l'œil, quinze
+   fois plus légère. Une seule se charge par cours : le navigateur ne va
+   chercher que le décor de l'élément affiché. */
+
+.chat__tete[data-mur='math'] {
+  /* Maths. */
+  --mur: url('./assets/walls/w_math.webp');
+}
+
+.chat__tete[data-mur='informatique'] {
+  /* NSI et sciences de l'ingénieur : le poste de travail, les écrans, le code. */
+  --mur: url('./assets/walls/w_informatique.webp');
+}
+
+.chat__tete[data-mur='francais'] {
+  /* Français : Hugo, Camus, Zola, et la grammaire ouverte sur la table. */
+  --mur: url('./assets/walls/w_francais.webp');
+}
+
+.chat__tete[data-mur='philosophie'] {
+  /* Philosophie, humanités, latin et grec : le buste, les colonnes, l'Antiquité d'où tout vient. */
+  --mur: url('./assets/walls/w_philosophie.webp');
+}
+
+.chat__tete[data-mur='anglais'] {
+  /* Anglais et anglais monde contemporain : Londres et la Tamise. */
+  --mur: url('./assets/walls/w_anglais.webp');
+}
+
+.chat__tete[data-mur='espagnol'] {
+  /* Espagnol : Séville et le drapeau. */
+  --mur: url('./assets/walls/w_espagnol.webp');
+}
+
+.chat__tete[data-mur='histoire_geo'] {
+  /* Histoire-géographie : le globe, les cartes, la boussole. */
+  --mur: url('./assets/walls/w_histoire_geo.webp');
+}
+
+.chat__tete[data-mur='physique_chimie'] {
+  /* Physique-chimie et sciences : les fioles et le tableau noir. */
+  --mur: url('./assets/walls/w_phisique_chimie.webp');
+}
+
+.chat__tete[data-mur='svt'] {
+  /* SVT et biotechnologies : le vivant, l'hélice et le fossile. */
+  --mur: url('./assets/walls/w_svt.webp');
+}
+
+.chat__tete[data-mur='droit_economie'] {
+  /* SES, droit, économie, gestion : la balance, le marteau, la courbe. */
+  --mur: url('./assets/walls/w_droit_economie.webp');
+}
+
+.chat__tete[data-mur='sante'] {
+  /* Sanitaire et social, biologie humaine : le soin et le lien. */
+  --mur: url('./assets/walls/w_sante.webp');
+}
+
+.chat__tete[data-mur='arts'] {
+  /* Les sept matières artistiques : l'atelier, le chevalet, les pinceaux. */
+  --mur: url('./assets/walls/w_artd.webp');
+}
+
+.chat__tete[data-mur='sport'] {
+  /* EPPCS : la piste et le terrain. */
+  --mur: url('./assets/walls/w_sport.webp');
+}
+
+/* Toutes les matières allument le calque. Sans cette règle, une matière dont le
+   décor serait inconnu peindrait un aplat plein à la place de l'image. */
+.chat__tete[data-mur='math']::before,
+.chat__tete[data-mur='informatique']::before,
+.chat__tete[data-mur='francais']::before,
+.chat__tete[data-mur='philosophie']::before,
+.chat__tete[data-mur='anglais']::before,
+.chat__tete[data-mur='espagnol']::before,
+.chat__tete[data-mur='histoire_geo']::before,
+.chat__tete[data-mur='physique_chimie']::before,
+.chat__tete[data-mur='svt']::before,
+.chat__tete[data-mur='droit_economie']::before,
+.chat__tete[data-mur='sante']::before,
+.chat__tete[data-mur='arts']::before,
+.chat__tete[data-mur='sport']::before { display: block; }
+
 @media (max-width: 1040px) {
+  /* `top: 0` ET NON 62 PX, ET C'EST UNE CORRECTION — Camara, le 17/09/2026 :
+     « remonte le bloc juste sous la navbar, ça fera gagner de l'affichage ».
+
+     Les 62 px étaient censés dégager la hauteur de la barre de navigation. Ils
+     ne dégageaient rien : `.chat` porte `overflow: hidden`, ce qui en fait le
+     conteneur de référence de ce collage. Le décalage se mesurait donc depuis
+     le haut de `.chat`, pas depuis l'écran — 62 pixels de vide, tout en haut de
+     la conversation, sur le support où la place manque le plus.
+
+     Mesuré avant/après sur un écran de 430 px : l'écart entre la barre et le
+     bandeau passe de 68 px à 6 px. */
   .chat__tete {
     position: sticky;
-    top: 62px;
+    top: 0;
     z-index: 12;
   }
 }
@@ -7088,7 +7593,7 @@ html.defilement-bloque body {
   height: 3.3em;
   border: 2px solid color-mix(in srgb, var(--sarcelle) 55%, var(--trait));
   border-radius: 50%;
-  background: color-mix(in srgb, var(--sarcelle) 6%, transparent);
+  background: color-mix(in srgb, var(--sarcelle) 6%, var(--papier));
   font-family: var(--display), Georgia, serif;
   font-size: 26px;
   font-weight: 600;
@@ -7122,8 +7627,9 @@ html.defilement-bloque body {
 }
 
 @media (max-width: 620px) {
-  .chrono-bandeau { padding: 8px 0 10px; }
+  .chrono-bandeau { padding: 2px 0 8px; }
   .horloge { font-size: 21px; }
+
 }
 
 .chrono {
@@ -7196,23 +7702,40 @@ html.defilement-bloque body {
   .chrono--urgence { animation: none; }
 }
 
-/* ---------------------------------------------------- quitter le cours */
+/* ---------------------------------------------------- quitter le cours
+
+   IL DOIT SE DÉTACHER D'UNE PHOTO — Camara, le 17/09/2026 : « le bouton
+   quitter n'est pas assez visible ». Il ne l'était plus depuis que le bandeau
+   porte un décor : une plaque sombre posée sur une scène sombre, et un liseré
+   dilué de moitié dans le gris du trait. Sur un aplat cela suffisait ; sur une
+   image, plus rien ne le découpait.
+
+   RENFORCÉ, MAIS TOUJOURS EN CONTOUR. C'est « Relancer » qui est plein, et
+   c'est voulu : en fin de séance, continuer est l'action mise en avant, quitter
+   ne l'est pas. Un « Quitter » plein en corail aurait inversé les deux. Ce qui
+   change est donc ce qui le DÉCOUPE — le liseré passe au corail franc, et
+   l'ombre le décolle du décor — et non ce qui l'attire.
+
+   L'OMBRE EST NOIRE ET FIXE, et surtout pas tirée de l'encre : l'encre
+   s'inverse avec le thème, et une ombre claire en thème sombre dessinerait un
+   halo autour du bouton au lieu de le poser. */
 .btn-quitter {
   padding: 8px 16px;
-  border: 1px solid color-mix(in srgb, var(--corail) 50%, var(--trait));
+  border: 1.5px solid var(--corail);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--corail) 12%, transparent);
+  background: color-mix(in srgb, var(--corail) 20%, var(--papier));
   color: var(--corail-sombre);
   font-family: inherit;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.3);
   transition: background 0.15s, border-color 0.15s;
 }
 
 .btn-quitter:hover {
-  background: color-mix(in srgb, var(--corail) 22%, transparent);
+  background: color-mix(in srgb, var(--corail) 34%, var(--papier));
   border-color: var(--corail);
 }
 
@@ -7327,7 +7850,9 @@ html.defilement-bloque body {
 
 :root:not([data-theme='light']) {
 
-  .btn-quitter { color: color-mix(in srgb, var(--corail) 70%, white); }
+  /* Presque blanc : sur la plaque renforcée, le corail à 70 % perdait le
+     contraste qu'il avait sur le fond d'avant. */
+  .btn-quitter { color: color-mix(in srgb, var(--corail) 35%, white); }
 
 
   /* La sarcelle claire du thème sombre porte de l'encre, pas du blanc :
@@ -7822,56 +8347,46 @@ html.defilement-bloque body {
      croisent quand la conversation est courte, et c'est l'en-tête qui doit
      rester lisible.
 
-     DEUX RANGÉES, ET CHACUNE A UN SENS.
+     UNE SEULE RANGÉE, ET ELLE NE PORTE QUE DES GESTES (17/09/2026).
 
-     Rangée 1 — QUI ME PARLE : le professeur et la matière. Le temps, lui, a
-     désormais son propre bandeau au-dessus.
+     Quitter, relancer, le temps qu'il reste, le son. Qui fait cours vit
+     maintenant au-dessus, dans sa bulle centrée sous l'horloge.
 
-     Rangée 2 — CE QUE JE PEUX FAIRE : quitter, relancer, couper le son. Ce
-     sont des gestes, on les touche. Le son se range à droite, seul de son
-     côté : il ne concerne pas la séance mais le confort d'écoute.
-
-     Pourquoi ce découpage plutôt qu'un simple retour à la ligne : la version
-     précédente laissait flex répartir six éléments au fil de la place, et le
-     dessin changeait avec le libellé des boutons. On a vu « Terminé » atterrir
-     seul sur une troisième ligne et le haut-parleur perdu à l'autre bout.
-     Ranger par NATURE donne la même mise en page quel que soit l'état de la
-     séance — en cours, terminée, ou avec un contrôle à télécharger.
-
-     La coupure est forcée par un pseudo-élément large de toute la ligne. Il
-     est premier dans le DOM, donc premier parmi les éléments d'ordre zéro :
-     la rangée du haut ne contient que ce qu'on y place explicitement. */
+     Elle en portait deux jusque-là — « qui me parle » puis « ce que je peux
+     faire » — séparées par une coupure forcée en pseudo-élément. Le professeur
+     parti, la première ne contenait plus que le décompte, SEUL sur toute une
+     ligne d'un écran de téléphone. La coupure et les ordres qui la servaient
+     ont donc été retirés : les quatre gestes tiennent sur une rangée, et le
+     décompte reste poussé à droite par sa propre marge. */
   .chat__entete {
     flex-wrap: wrap;
     gap: 8px 10px;
     padding: 10px 0;
-    background: var(--papier);
+
+    /* TRANSPARENT, POUR LAISSER PASSER LA TEINTE DE LA MATIÈRE (17/09/2026).
+       Ce fond opaque coupait le voile net au bas de la bande du chronomètre :
+       seule l'heure était colorée, le nom et les boutons restaient sur le fond
+       nu. Il ne protégeait rien — c'est `.chat__tete`, la boîte collante juste
+       au-dessus, qui porte le `--papier` opaque et masque la conversation qui
+       défile dessous. */
+    background: transparent;
   }
 
-  .chat__entete > .avatar { order: -3; }
+  /* La bulle ne tient plus dans cette rangée — elle a sa ligne, au-dessus.
+     Elle se tronque quand même plutôt que de déborder : « min-width: 0 » est ce
+     qui l'autorise, sans lui un élément flex refuse de descendre sous la
+     largeur de son contenu. */
+  .chat__prof { max-width: 100%; min-width: 0; }
 
-  /* Le titre pousse le chronomètre à droite, et se tronque plutôt que de le
-     comprimer. "min-width: 0" est ce qui autorise la troncature : sans lui, un
-     élément flex refuse de descendre sous la largeur de son contenu. */
+
   .chat__titre {
-    order: -2;
-    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Le chronomètre revient sur la rangée du haut, à droite du nom : c'est un
-     ÉTAT, comme le professeur et la matière, pas un geste. */
-  .chrono { order: -1; flex: 0 0 auto; }
-
-  .chat__entete::before { content: ""; width: 100%; height: 0; }
-
-  /* Sur la même ligne que le nom : deux lignes de titre mangeraient la hauteur
-     qu'on vient de gagner. */
-  .chat__eleve { display: inline; }
-  .chat__eleve::before { content: " — "; }
+  .chrono { flex: 0 0 auto; }
 
   .btn-quitter { padding: 7px 12px; font-size: 12.5px; }
 
@@ -7889,7 +8404,12 @@ html.defilement-bloque body {
       0 0 0 5px rgba(0, 0, 0, 0.35),
       inset 0 -30px 50px rgba(0, 0, 0, 0.2);
   }
-  .chat { height: calc(100vh - 118px); }
+  /* LE BANDEAU REMONTE SOUS LA BARRE — Camara, le 17/09/2026 : « remonte le
+     bloc juste sous la navbar, ça fera gagner de l'affichage pour le chat ».
+     Les vingt pixels d'air au-dessus étaient réglés pour un écran large ; sur
+     un téléphone, ils coûtent une ligne et demie de conversation, et le
+     bandeau est de toute façon collé sous la barre dès qu'on fait défiler. */
+  .chat { height: calc(100vh - 118px); padding-top: 6px; }
 }
 
 .chat__entete {
@@ -7906,17 +8426,159 @@ html.defilement-bloque body {
   align-items: center;
   gap: 10px 14px;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--trait);
+
+  /* Le trait de séparation prend lui aussi la teinte : il ferme le bandeau au
+     lieu de le laisser flotter au-dessus de la conversation. Mélangé au trait
+     habituel plutôt que posé pur — une ligne de couleur franche en travers de
+     l'écran attirerait l'œil autant que le professeur. */
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--matiere, var(--corail)) 38%, var(--trait));
+}
+
+/* Les teintes sombres sont CHOISIES, pas calculées : sur le bleu marine, la
+   valeur claire de certaines matières tombe sous le seuil de lisibilité —
+   c'est la leçon du petrol de NSI, invisible sur fond sombre. */
+:root:not([data-theme='light']) {
+
+  .chat__tete {
+    background-color: color-mix(in srgb, var(--matiere-claire, var(--corail)) 13%, var(--papier));
+  }
+
+  /* Sur le bleu marine, une illustration claire ressort beaucoup plus qu'elle
+     ne le ferait sur du papier : elle doit s'effacer d'autant. */
+  .chat__tete::before { opacity: 0.34; }
+
+
+  .chat__entete {
+    border-bottom-color:
+      color-mix(in srgb, var(--matiere-claire, var(--corail)) 34%, var(--trait));
+  }
+
+
+  .chat__prof {
+    border-color: color-mix(in srgb, var(--matiere-claire, var(--corail)) 30%, var(--trait));
+  }
 }
 
 /* ET LE NOM SE RÉTRÉCIT AVANT QUE QUOI QUE CE SOIT NE SORTE.
    « min-width: 0 » est ce qui l autorise : sans lui, un élément flex refuse de
    descendre sous la largeur de son contenu, et c est le voisin qui déborde. Un
    nom tronqué se relit ; un bouton invisible ne se clique pas. */
+/* TROIS GROUPES, ET LE DÉCOMPTE AU MILIEU — Camara, le 17/09/2026 : « le
+   timer n'est pas centré ». Il ne pouvait pas l'être : posé entre les boutons
+   et le haut-parleur, il se plaçait dans l'espace QUI RESTAIT, et cet espace
+   n'est pas symétrique — « Quitter » et « Relancer » pèsent bien plus lourd
+   que le son. Il tombait donc à droite du milieu, sous rien.
+
+   LES DEUX CÔTÉS PRENNENT LA MÊME PART. `flex: 1 1 0` leur donne une base
+   nulle : ils reçoivent exactement la moitié de l'espace libre chacun, quoi
+   qu'ils contiennent, et le décompte se retrouve sur l'axe de l'horloge et de
+   la bulle. C'est ce qu'un simple `margin: auto` ne sait pas faire — il centre
+   dans le reste, pas dans la rangée.
+
+   `min-width: min-content` est leur plancher, et il n'est pas décoratif :
+   quand la séance est finie, un même côté porte « Quitter » ET « Relancer
+   25 min ». Sans plancher, le groupe se laissait écraser jusqu'à zéro et son
+   texte passait PAR-DESSUS la bulle du professeur. Il se replie sur deux
+   lignes à la place. */
+.chat__gestes,
+.chat__etat {
+  display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: min-content;
+}
+
+/* Le son et la pastille se rangent au bord, pas au centre de leur moitié. */
+.chat__etat { justify-content: flex-end; }
+
+/* Les gestes passent devant la bulle : Quitter, le professeur, puis le son. */
+.chat__gestes { order: -1; }
+
+/* LA RELANCE PREND SA PROPRE RANGÉE — Camara, le 17/09/2026 : « sur mobile,
+   mets le bouton relancer en dessous de la ligne où on a le bouton quitter, la
+   bulle du professeur et le haut-parleur ». Entassée avec « Quitter » dans le
+   groupe de gauche, elle poussait tout le reste : la rangée devenait double, et
+   la bulle comme le son flottaient à mi-hauteur.
+
+   ET C'EST VRAI À TOUTES LES LARGEURS, alors que la demande visait le
+   téléphone. Ce n'est pas de la gourmandise : le centrage de la bulle repose
+   sur DEUX groupes de poids égal de part et d'autre, et un quatrième élément
+   dans la même rangée le casse. Sur grand écran, la relance retombait de toute
+   façon sur une deuxième ligne, collée à gauche — elle y gagne d'être centrée.
+
+   `order: 10` la met après tout le monde quels que soient les ordres des
+   autres ; `flex-basis: 100%` lui donne la rangée entière. */
+.chat__relance {
+  order: 10;
+  flex: 0 0 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* LE DÉCOMPTE VIT DANS LA BULLE — Camara, le 17/09/2026 : « au final, sur PC
+   aussi, tu peux mettre le chrono dans la même bulle que le professeur, tu le
+   cales à droite ». Le téléphone le faisait déjà ; les deux largeurs se
+   rejoignent, et il n'existe plus qu'UN seul décompte sur la page, au bout de
+   la bulle. Il y gagne son sujet — c'est le temps de CE cours, avec CE
+   professeur — et la rangée récupère la place qu'il tenait au milieu.
+
+   Il se cale à droite tout seul : dernier de la bulle, c'est le nom qui le
+   pousse au bout. `margin-left: 0` annule la marge que le chronomètre porte
+   ailleurs sur le site — ici, c'est le `gap` de la bulle qui l'écarte. */
+.chat__prof-chrono {
+  display: flex;
+  align-items: center;
+}
+
+.chat__prof-chrono .chrono { margin-left: 0; }
+
 .chat__entete .chat__titre {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* LA BULLE DU PROFESSEUR — Camara, le 17/09/2026 : « mets les profs avec leur
+   prénom plus matière dans une bulle ». Sur le bandeau teinté et sa trame,
+   l'avatar et le nom flottaient sans support. La bulle les réunit : c'est une
+   seule information — qui fait cours, et en quoi.
+
+   Le liseré prend la teinte de la matière, comme le trait du bas : la bulle
+   appartient au bandeau, elle n'y est pas posée. */
+/* LA BULLE SUR LA LIGNE DES BOUTONS — Camara, le 17/09/2026 : « tu alignes la
+   bulle sur la même ligne que le bouton quitter et haut-parleur ». Elle
+   occupait une rangée entière à elle seule sur grand écran ; le téléphone, lui,
+   la faisait déjà descendre. Les deux se rejoignent : UNE disposition à toutes
+   les largeurs — Quitter, le professeur, le son — et une ligne de gagnée pour
+   la conversation.
+
+   ET ELLE EST CENTRÉE SANS QU'ON LA CENTRE : ses deux voisins prennent la même
+   part de l'espace libre (`flex: 1 1 0` plus haut), donc ce qui reste au
+   milieu tombe sur l'axe de l'horloge. C'est ce qu'un `margin: auto` ne sait
+   pas faire — il centre dans le RESTE, et le reste n'est pas symétrique.
+
+   ELLE CÈDE AVANT LES BOUTONS. Quand tout ne tient pas, il faut bien que
+   quelque chose rétrécisse : les deux groupes ont leur plancher — un bouton ne
+   se comprime pas —, donc ce sera elle, et c'est le prénom qui se tronque en
+   tout dernier recours. */
+.chat__prof-ligne {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.chat__prof {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 5px 15px 5px 6px;
+  border: 1px solid color-mix(in srgb, var(--matiere, var(--corail)) 30%, var(--trait));
+  border-radius: 999px;
+  background: var(--papier);
 }
 
 .chat__titre {
@@ -7933,6 +8595,59 @@ html.defilement-bloque body {
   font-size: 12.5px;
   font-weight: 400;
   color: var(--encre-douce);
+}
+
+/* ------------------------------------------ le bandeau du cours, sur téléphone
+
+   POSÉ ICI, ET SURTOUT PAS PLUS HAUT. Tout ce bloc surcharge des règles
+   écrites juste au-dessus — `.chat__prof-ligne`, `.chat__gestes`,
+   `.chat__eleve`, `.chat__prof-chrono` — avec la MÊME spécificité. C'est donc
+   l'ordre du fichier qui tranche, et non la requête média : écrit plus haut,
+   il ne s'appliquait tout simplement jamais. L'erreur a été commise deux fois
+   le 17/09/2026, une fois pour le décompte et une fois pour la bulle. */
+@media (max-width: 620px) {
+  /* LA MATIÈRE CÈDE LA PLACE. Elle ne se perd pas : le professeur la nomme dans
+     son premier message, et l'en-tête de la page la porte déjà. C'est le seul
+     écart qui reste entre le téléphone et l'écran d'ordinateur : la rangée,
+     elle, est la même partout. */
+  .chat__eleve { display: none; }
+
+  /* ET LA BULLE SE FAIT PLUS COMPACTE. Chaque pixel gagné ici est un pixel qui
+     n'oblige pas à tronquer : l'avatar garde sa taille — elle lui vient d'un
+     attribut, pas de la feuille de style — mais l'air autour se resserre. */
+  .chat__prof { gap: 7px; padding: 4px 6px 4px 4px; }
+  .chat__titre { font-size: 15.5px; }
+  .chat__prof-chrono .chrono { padding: 5px 10px; font-size: 15px; }
+}
+
+/* ------------------------------------------------ les téléphones étroits
+   À 320 px — le plus petit écran encore en circulation — il manquait une
+   quinzaine de pixels pour tenir « Quitter », la bulle et le son sur une seule
+   ligne, et c'est le son qui tombait dessous. Tout se resserre d'un cran.
+
+   400 PX ET NON 380, ET C'EST UNE CORRECTION du 17/09/2026. Le palier
+   s'arrêtait vingt pixels trop tôt, et la bande 381-397 px retombait sur les
+   tailles pleines sans avoir la largeur pour les porter : le son passait à la
+   ligne. Ce n'est pas une bande vide — c'est l'iPhone 12, 13, 14, 15 (390 px)
+   et le 15 Pro (393 px). Une correction mesurée largeur par largeur, pas
+   devinée : en dessous de 400, le compact ; au-dessus, la place ne manque
+   plus.
+
+   CE BLOC NE CONTIENT QUE DES TAILLES. Tout ce qui décide de la DISPOSITION —
+   ce qu'on masque, l'ordre, les planchers — appartient au bloc 620 px
+   au-dessus. Les avoir mélangés une fois a suffi : l'insertion de ce palier
+   avait refermé le bloc précédent trop tôt, et cinq règles s'étaient retrouvées
+   enfermées ici. Résultat sur un téléphone ordinaire, plus large que le palier :
+   l'heure affichée DEUX fois et la rangée désalignée. */
+@media (max-width: 400px) {
+  .chat__entete { gap: 8px 6px; }
+
+  .btn-quitter { padding: 6px 10px; font-size: 12px; }
+
+  .chat__prof { gap: 6px; padding: 3px 4px 3px 3px; }
+  .chat__titre { font-size: 14.5px; }
+  .chat__prof-chrono .chrono { padding: 4px 8px; font-size: 14px; }
+
 }
 
 .chat__fil {
@@ -8050,18 +8765,72 @@ html.defilement-bloque body {
 }
 
 /* ---------------------------------------------------- vocal : son, micro */
+/* Le dessin de Camara a remplacé l'émoji le 17/09/2026. Un émoji n'est pas
+   une image : il est dessiné par le système, donc différent sur Windows, sur
+   Mac et sur Android, et il ne suit aucune direction artistique. */
 .chat__son {
+  position: relative;
   margin-left: auto;
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
   border: 1px solid var(--trait);
   border-radius: 9px;
   background: var(--surface);
-  font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
 
-.chat__son--coupe { opacity: 0.5; }
+/* LA LARGEUR COMMANDE, PAS LA HAUTEUR. Le dessin est un rectangle couché :
+   à hauteur égale avec une icône carrée, il paraîtrait deux fois plus petit
+   qu'elle. C'est sa largeur qu'on lit. */
+.chat__son-icone {
+  display: block;
+  width: 32px;
+  height: auto;
+}
+
+/* LA BARRE DU SON COUPÉ, ET NON LA SEULE TRANSPARENCE. Avec l'émoji, le
+   dessin changeait lui-même — le haut-parleur barré est le signe universel
+   du silence. Il n'y a plus qu'un dessin, donc la barre est tracée ici,
+   sinon « coupé » ne se lirait plus qu'à une différence d'opacité que
+   personne ne remarque sans point de comparaison.
+
+   ELLE PORTE SON PROPRE LISERÉ : posée sur un dessin sombre et détaillé, une
+   barre d'une seule couleur s'y perdrait. Le halo clair la détache, comme le
+   liseré du bouton Quitter le détache du décor. */
+.chat__son--coupe { opacity: 0.75; }
+
+.chat__son--coupe::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--corail);
+  box-shadow: 0 0 0 1.5px var(--surface);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
+}
+
+/* LE HAUT-PARLEUR REND HUIT PIXELS SUR LES ÉCRANS ÉTROITS. Agrandi le
+   17/09/2026 à la demande de Camara, il coûtait à 360 px les trois pixels qui
+   faisaient tenir « Quitter », la bulle et lui sur une seule ligne. Il reste
+   plus grand qu'avant partout ; il l'est seulement un peu moins là où chaque
+   pixel se dispute.
+
+   ET CE BLOC EST ICI, APRÈS les règles qu'il surcharge, jamais avant. Posé
+   dans le palier compact plus haut dans le fichier, il n'a rien fait du tout :
+   à spécificité égale, c'est l'ordre du fichier qui tranche, et la requête
+   média ne change rien à cela. */
+@media (max-width: 400px) {
+  .chat__son { padding: 4px 6px; }
+  .chat__son-icone { width: 28px; }
+  .chat__son--coupe::after { width: 30px; }
+}
 
 .micro {
   position: relative;
@@ -8070,46 +8839,58 @@ html.defilement-bloque body {
   place-items: center;
   width: 46px;
   height: 46px;
-  border: 1px solid var(--trait);
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: var(--surface);
+  background: transparent;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.micro:hover:not(:disabled) { border-color: var(--corail); }
+.micro:hover:not(:disabled) { transform: scale(1.06); filter: brightness(1.12); }
 .micro:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Icône dessinée en CSS : capsule + pied, pas de dépendance externe. */
+/* L'IMAGE FOURNIE PAR CAMARA (16/09/2026) : un disque bleu au repos, orange
+   quand le professeur écoute. Fond, bordure et lueur sont DANS l'image — le
+   bouton ne dessine plus rien et l'image remplit ses 46 px. */
 .micro__icone {
-  position: relative;
-  width: 11px;
-  height: 17px;
-  border-radius: 6px;
-  background: var(--encre-douce);
+  display: block;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
-.micro__icone::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -9px;
-  width: 17px;
-  height: 9px;
-  border: 2px solid var(--encre-douce);
-  border-top: 0;
-  border-radius: 0 0 10px 10px;
-  transform: translateX(-50%);
-}
-
+/* LE HALO DU MICRO OUVERT — Camara, le 16/09/2026 : « un effet halo pour
+   dire que le micro est actif ». Pas de fond derrière l'image, elle a le
+   sien ; l'anneau respire dans l'orange de l'icône, et c'est lui seul qui
+   dit « il t'écoute ». La couleur est celle de mic_o.png, pas le corail des
+   boutons : le halo doit prolonger l'image, pas la contredire. */
 .micro--actif {
-  background: var(--corail);
-  border-color: var(--corail);
-  animation: pulsation 1.4s ease-in-out infinite;
+  animation: halo-micro 1.6s ease-in-out infinite;
 }
 
-.micro--actif .micro__icone,
-.micro--actif .micro__icone::after { background: #fff; border-color: #fff; }
+@keyframes halo-micro {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, #ffa726 45%, transparent),
+      0 0 14px 4px color-mix(in srgb, #ffa726 40%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px color-mix(in srgb, #ffa726 22%, transparent),
+      0 0 28px 8px color-mix(in srgb, #ffa726 65%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .micro--actif {
+    animation: none;
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, #ffa726 40%, transparent),
+      0 0 18px 6px color-mix(in srgb, #ffa726 50%, transparent);
+  }
+}
 
 @keyframes pulsation {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--corail) 45%, transparent); }
@@ -10865,21 +11646,32 @@ html.defilement-bloque body {
   place-items: center;
   width: 46px;
   height: 46px;
-  border: 1px solid var(--trait);
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: var(--surface);
+  background: transparent;
   font-size: 19px;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
-.piece-jointe__bouton:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: var(--contour);
-}
+.piece-jointe__bouton:hover:not(:disabled) { transform: scale(1.06); filter: brightness(1.12); }
 
 .piece-jointe__bouton:disabled { opacity: 0.45; cursor: default; }
+
+/* LES ICÔNES DE LA BARRE SONT DES DISQUES COMPLETS — fournies par Camara le
+   16/09/2026 (pj, camera, scanner, mic_b, mic_o) : fond, bordure et lueur
+   sont DANS l'image. Les boutons ne dessinent donc plus rien, et l'image
+   remplit leurs 46 px. Réduites à 128 px : cinq fois l'affichage, pour
+   25 Ko au lieu de 1,2 Mo chacune. */
+.icone-png {
+  display: block;
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  pointer-events: none;
+}
 
 /* La bande d'attente, au-dessus de la saisie. */
 .piece-jointe {
@@ -10894,6 +11686,21 @@ html.defilement-bloque body {
 }
 
 .piece-jointe--envoi { opacity: 0.7; }
+
+/* PLUSIEURS DOCUMENTS EN ATTENTE — Camara, le 16/09/2026. Les vignettes se
+   rangent en ligne et passent à la ligne quand il le faut ; chacune garde sa
+   croix. La marge du haut vit sur le conteneur, plus sur chaque vignette. */
+.pieces-en-attente {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.pieces-en-attente .piece-jointe {
+  margin-top: 0;
+  max-width: 100%;
+}
 
 /* Le refus emprunte la couleur d'alerte, mais reste une bande de la même
    forme : c'est le même objet, dans un autre état. */
@@ -10955,19 +11762,29 @@ html.defilement-bloque body {
   place-items: center;
   width: 46px;
   height: 46px;
-  border: 1px solid var(--trait);
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: var(--surface);
+  background: transparent;
   font-size: 18px;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
 }
 
-.camera-voix__bouton:hover { border-color: var(--corail); }
+.camera-voix__bouton:hover:not(:disabled) { transform: scale(1.06); filter: brightness(1.12); }
 
+/* Estompée comme les trois autres quand elle est désactivée — Camara, le
+   16/09/2026. Sans cette règle, une caméra désactivée gardait tout son
+   éclat et semblait seule allumée dans la barre. */
+.camera-voix__bouton:disabled { opacity: 0.45; cursor: default; }
+
+/* Allumée : un anneau corail fixe. L'image n'a pas de version « active »,
+   c'est l'anneau qui le dit — et il ne respire pas, pour ne pas se confondre
+   avec le micro qui écoute. */
 .camera-voix__bouton--actif {
-  background: var(--corail);
-  border-color: var(--corail);
+  box-shadow:
+    0 0 0 3px var(--corail),
+    0 0 14px 2px color-mix(in srgb, var(--corail) 55%, transparent);
 }
 
 /* LE PROFESSEUR VIENT DE DEMANDER UN DOCUMENT.
@@ -10977,8 +11794,8 @@ html.defilement-bloque body {
    pulsé que le micro en écoute, pour rester dans le même langage visuel. */
 .piece-jointe__bouton--surbrillance,
 .camera-voix__bouton--surbrillance {
-  border-color: var(--corail);
-  background: color-mix(in srgb, var(--corail) 14%, var(--surface));
+  /* Plus de fond ni de trait, l'image a les siens : seul l'anneau pulsé
+     reste, et il suffit — il tourne autour du disque. */
   animation: pulsation 1.4s ease-in-out infinite;
 }
 
@@ -19719,19 +20536,26 @@ html.defilement-bloque body {
   color: var(--encre);
 }
 
-/* Poussé à droite : il qualifie la carte entière, pas l'onglet d'à côté. */
-.apercu__onglets .apercu__jeton { margin-left: auto; }
+/* LE TITRE DE LA CARTE — Camara, le 16/09/2026. Rangé à droite des onglets avec
+   un `margin-left: auto`, il repassait à la ligne sur téléphone et atterrissait
+   à côté du dernier onglet, où il se lisait comme un quatrième bouton raté.
 
-/* Dit en toutes lettres que les chiffres sont un exemple : un parent ne doit
-   pas croire qu'il regarde le dossier d'un vrai enfant. */
-.apercu__jeton {
-  padding: 5px 10px;
-  border: 1px solid var(--trait);
-  border-radius: 999px;
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
+   Au-dessus et à gauche, il annonce la carte au lieu de s'y perdre. Il sort
+   aussi du `role="tablist"`, qui ne doit contenir que des onglets.
+
+   IL RESTE UN AVERTISSEMENT AVANT D'ÊTRE UN ORNEMENT : il dit en toutes lettres
+   que les notes affichées sont un exemple, pour qu'aucun parent ne croie
+   regarder le dossier d'un vrai enfant.
+
+   `--corail-texte` et non `--corail` : c'est la variante prévue pour être LUE,
+   définie dans les trois thèmes — clair, sombre et Blue Sky. */
+.apercu__titre {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--encre-douce);
+  color: var(--corail-texte);
 }
 
 .apercu__chiffres {
@@ -20899,12 +21723,14 @@ html.defilement-bloque body {
 .apercu__fleche--avant { left: -21px; }
 .apercu__fleche--apres { right: -21px; }
 
-/* Sur petit écran la carte touche déjà les bords : les flèches rentrent à
-   l'intérieur plutôt que de déborder de la page. */
+/* À CHEVAL SUR LE BORD ICI AUSSI — Camara, le 16/09/2026 : posées à l'intérieur,
+   elles mangeaient le texte des cartes. La page garde 20 px de gouttière sous 560 px :
+   18 px de débordement y tiennent, et le contenu commence à 22 px de padding — donc
+   plus aucun chevauchement, et le même dessin qu'en grand écran. */
 @media (max-width: 760px) {
   .apercu__fleche { width: 36px; height: 36px; margin-top: -18px; font-size: 22px; }
-  .apercu__fleche--avant { left: 6px; }
-  .apercu__fleche--apres { right: 6px; }
+  .apercu__fleche--avant { left: -18px; }
+  .apercu__fleche--apres { right: -18px; }
 }
 
 /* ------------------------------------------------------------------
@@ -21298,6 +22124,30 @@ html.defilement-bloque body {
     border: 1px solid rgba(122, 184, 255, 0.24);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
     backdrop-filter: blur(18px) saturate(1.2);
+  }
+
+  /* ------------------------------------------ la page de scan du téléphone
+     Elle suit Blue Sky depuis le 17/09/2026 — Camara : « un mode normal et un
+     mode Blue Sky qui s'adaptera ». Les jetons font presque tout : le bandeau,
+     les cartes et les vignettes lisent `--surface-2`, `--trait` et `--corail`,
+     et changent donc seuls.
+
+     IL RESTE LE VERRE. Sur le bleu de marque, `--surface-2` seul n'est qu'un
+     voile blanc, qui paraît sale au lieu de paraître translucide : c'est le
+     flou d'arrière-plan qui fait le verre dépoli, comme sur les fenêtres de
+     l'application (`.modale__boite`). */
+  :root[data-da='blue-sky'] :is(.scan-page__entete, .scan-page__action,
+    .scan-page__vignette, .scan-page__embleme) {
+    border-color: rgba(122, 184, 255, 0.24);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+    backdrop-filter: blur(14px) saturate(1.15);
+  }
+
+  /* Le bouton de retrait est posé SUR une carte de verre : `--surface` y est
+     presque opaque et ferait une pastille sombre. Il prend le même verre. */
+  :root[data-da='blue-sky'] .scan-page__retirer {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(169, 189, 219, 0.45);
   }
 
   /* Sur téléphone, `fixed` est ignoré ou saccadé, et l'image étirée sur toute
