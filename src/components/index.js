@@ -20,6 +20,7 @@ export { default as Fiche } from './Fiche';
 export { default as Dictees } from './Dictees';
 export { default as ComprehensionsOrales } from './ComprehensionsOrales';
 export { default as ExpressionsOrales } from './ExpressionsOrales';
+export { default as ExpressionsEcrites } from './ExpressionsEcrites';
 export { default as Avatar } from './Avatar';
 export { default as Graphique } from './Graphique';
 export { default as RouteProtegee } from './RouteProtegee';

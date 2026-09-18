@@ -86,7 +86,7 @@ describe('Tous les blocs connus', () => {
     'EVALUATION', 'RAPPORT', 'FICHE', 'CONTROLE_PROGRAMME', 'CONTROLE_NOTIONS',
     'CONTROLE_PRET', 'EXAMEN_PRET', 'EVALUATION_CORRIGEE', 'CONTROLE_RESULTAT',
     'COPIE_CONTROLE', 'EVALUATION_PREVUE', 'DICTEE_CORRIGEE',
-    'COMPREHENSION_ORALE', 'EXPRESSION_ORALE',
+    'COMPREHENSION_ORALE', 'EXPRESSION_ORALE', 'EXPRESSION_ECRITE',
   ];
 
   test.each(BLOCS)('[%s] ne sort ni à l’écran ni à la voix', (nom) => {
@@ -95,5 +95,15 @@ describe('Tous les blocs connus', () => {
     expect(affiche(texte)).not.toContain('contenu secret');
     expect(texteParle(texte)).not.toContain('contenu secret');
     expect(texteParle(texte)).toContain('Avant');
+  });
+});
+
+describe('Le support d’un texte à rédiger', () => {
+  test('[SUPPORT_ECRIT] ne se voit ni ne s’entend', () => {
+    const texte = 'On écrit un petit texte ? [SUPPORT_ECRIT]';
+
+    expect(affiche(texte)).not.toContain('SUPPORT_ECRIT');
+    expect(texteParle(texte)).not.toContain('SUPPORT_ECRIT');
+    expect(texteParle(texte)).toContain('On écrit un petit texte');
   });
 });

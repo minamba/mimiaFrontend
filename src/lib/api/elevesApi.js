@@ -141,6 +141,54 @@ export const getNombreExpressionsOrales = (eleveId) =>
 export const marquerExpressionOraleVue = (eleveId, expressionOraleId) =>
   httpClient.post(`/eleves/${eleveId}/expressions-orales/${expressionOraleId}/vue`);
 
+/**
+ * LES TEXTES D'EXPRESSION ÉCRITE — Camara, le 18/09/2026.
+ *
+ * LE TROISIÈME DE LA FAMILLE, et le seul où son ORTHOGRAPHE se voit : la
+ * compréhension orale garde ce qu'il a ENTENDU, l'expression orale ce qu'il a
+ * DIT, celle-ci ce qu'il a ÉCRIT.
+ *
+ * CE QU'ON EN RAPPORTE, C'EST LA PAIRE : son texte fautes comprises, et la
+ * correction à côté. Le texte seul ne vaut rien à relire.
+ */
+export const getExpressionsEcrites = (eleveId, matiereId) =>
+  httpClient.get(`/eleves/${eleveId}/expressions-ecrites?matiereId=${matiereId}`);
+
+/** Un texte complet, avec sa correction. */
+export const getExpressionEcrite = (eleveId, expressionEcriteId) =>
+  httpClient.get(`/eleves/${eleveId}/expressions-ecrites/${expressionEcriteId}`);
+
+/** Combien de textes par matière, et combien jamais ouverts. */
+export const getNombreExpressionsEcrites = (eleveId) =>
+  httpClient.get(`/eleves/${eleveId}/expressions-ecrites`);
+
+/** L'élève vient de l'ouvrir : la pastille s'éteint. */
+export const marquerExpressionEcriteVue = (eleveId, expressionEcriteId) =>
+  httpClient.post(`/eleves/${eleveId}/expressions-ecrites/${expressionEcriteId}/vue`);
+
+/**
+ * La photo de son cahier, tant qu'elle n'a pas été recopiée.
+ *
+ * MÊME RAISON QUE POUR L'AUDIO D'UNE COMPRÉHENSION ORALE : la route exige le
+ * jeton, un `<img src>` nu ne suffit pas. L'appelant DOIT appeler
+ * `URL.revokeObjectURL` quand il a fini.
+ *
+ * NULL QUAND ELLE A ÉTÉ PURGÉE, et c'est le cas normal d'un texte déjà
+ * transcrit : on ne garde pas indéfiniment l'écriture manuscrite d'un enfant.
+ */
+export const chargerPhotoExpressionEcrite = async (eleveId, expressionEcriteId) => {
+  try {
+    const reponse = await httpClient.get(
+      `/eleves/${eleveId}/expressions-ecrites/${expressionEcriteId}/photo`,
+      { responseType: 'blob' },
+    );
+
+    return URL.createObjectURL(reponse.data);
+  } catch {
+    return null;
+  }
+};
+
 /** Une compréhension orale complète : le passage, ce qui a été compris, la remarque. */
 export const getComprehensionOrale = (eleveId, comprehensionOraleId) =>
   httpClient.get(`/eleves/${eleveId}/comprehensions-orales/${comprehensionOraleId}`);

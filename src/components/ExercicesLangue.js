@@ -126,9 +126,21 @@ export default function ExercicesLangue() {
 
           {/* SEULEMENT LES LANGUES ENSEIGNÉES — Camara, le 15/09/2026 : l'allemand,
               l'italien et le chinois ne sont pas encore dans l'application.
-              Les annoncer ici promettait un cours qu'aucun parent ne trouverait. */}
+              Les annoncer ici promettait un cours qu'aucun parent ne trouverait.
+
+              LE FRANÇAIS MANQUAIT — Camara, le 18/09/2026 : « j'ai oublié de te
+              dire de mettre le français ». Il a bien sa compréhension orale :
+              « comprendre et s'exprimer à l'oral » est au programme du CP à la
+              troisième, et le professeur a sa balise [FR] comme les autres.
+
+              MAIS LA PHRASE NE POUVAIT PAS SEULEMENT S'ALLONGER. « Lu par un
+              locuteur natif, jamais avec l'accent français » n'a aucun sens
+              pour le français lui-même : la promesse ne vaut que pour les
+              langues étrangères. Deux phrases, donc — l'une qui dit où l'écoute
+              existe, l'autre ce qu'elle garantit en anglais et en espagnol. */}
           <p className="exercices__note">
-            Anglais, espagnol&nbsp;: le passage est lu par un locuteur natif,
+            Français, anglais, espagnol&nbsp;: l’écoute existe dans les trois.
+            En anglais et en espagnol, le passage est lu par un locuteur natif,
             jamais avec l’accent français.
           </p>
         </article>

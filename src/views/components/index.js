@@ -21,6 +21,7 @@ import {
   Dictees,
   ComprehensionsOrales,
   ExpressionsOrales,
+  ExpressionsEcrites,
   PageEleve,
   Admin,
   MonProfil,
@@ -287,6 +288,18 @@ export const BaseApp = () => {
             element={
               <RouteProtegee>
                 <ExpressionsOrales />
+              </RouteProtegee>
+            }
+          />
+
+          {/* Les textes d'expression écrite — Camara, le 18/09/2026 :
+              « faut archiver comme les autres ». Le troisième de la
+              famille, et le seul où l'orthographe de l'enfant se voit. */}
+          <Route
+            path="/eleves/:eleveId/matieres/:matiereId/expressions-ecrites"
+            element={
+              <RouteProtegee>
+                <ExpressionsEcrites />
               </RouteProtegee>
             }
           />

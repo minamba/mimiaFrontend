@@ -23,17 +23,39 @@
  * le déduit pas de ce que l'élève a tapé.
  */
 
+import { ouvreAutreChose as ouvreAutreExercice } from './fenetreExercice';
+
 /** Le professeur ouvre une conversation : elle commence au tour suivant. */
 const DEBUT = /\[CONVERSATION\]/i;
 
+
 /**
- * Elle se referme quand le professeur archive l'échange.
+ * LA CONVERSATION SE REFERME DÈS QU’AUTRE CHOSE S’OUVRE.
  *
- * MÊME BALISE QUE L'ARCHIVAGE, volontairement : une conversation se termine
- * quand on la range, pas à une seconde balise que le professeur aurait à
- * penser. Une balise de moins à oublier.
+ * LE DÉFAUT QUE CETTE RÈGLE REMPLACE — Camara, en séance le 18/09/2026 :
+ * « j’avais demandé une expression orale que j’ai pas faite, je viens de
+ * demander un exercice d’expression écrite mais la fenêtre du choix de
+ * vitesse pour l’expression orale est toujours là et ne part pas. »
+ *
+ * JE NE FERMAIS LA CONVERSATION QU’À SON ARCHIVAGE. C’était juste pour une
+ * conversation qu’on FAIT — mais une conversation qu’on abandonne ne
+ * s’archive jamais. Elle restait « en cours » pour le reste de la séance, et
+ * les quatre vitesses s’empilaient sous la consigne de l’exercice suivant.
+ *
+ * UNE LISTE BLANCHE PLUTÔT QU’UNE LISTE NOIRE, et c’est le point : je ne
+ * peux pas énumérer tout ce qui n’est pas une conversation, mais je peux
+ * énumérer ce qui EN FAIT PARTIE — c’est court, et ça ne bouge pas. Un
+ * exercice ajouté l’an prochain refermera la conversation sans que personne
+ * ait à y penser. C’est la leçon du bloc [EXPRESSION_ORALE] qui s’est
+ * affiché et prononcé en séance : ce qui dépend d’une liste à tenir à jour
+ * finit par ne pas l’être.
+ *
+ * L’ARCHIVAGE LA REFERME TOUJOURS, du même coup : [EXPRESSION_ORALE] n’est
+ * pas dans la liste blanche. Une balise de moins à penser pour le professeur.
  */
-const FIN = /\[EXPRESSION_ORALE\]/i;
+function ouvreAutreChose(texte) {
+  return ouvreAutreExercice(texte, ['CONVERSATION']);
+}
 
 export function ouvreUneConversation(texte) {
   return DEBUT.test(texte ?? '');
@@ -47,7 +69,7 @@ export function ouvreUneConversation(texte) {
  * distinctes, et la seconde repose la question de la vitesse.
  */
 export function conversationEnCours(messages, reponseEnCours = '') {
-  if (FIN.test(reponseEnCours)) return false;
+  if (ouvreAutreChose(reponseEnCours)) return false;
   if (ouvreUneConversation(reponseEnCours)) return true;
 
   const liste = messages ?? [];
@@ -57,7 +79,7 @@ export function conversationEnCours(messages, reponseEnCours = '') {
 
     const contenu = liste[i].contenu ?? '';
 
-    if (FIN.test(contenu)) return false;
+    if (ouvreAutreChose(contenu)) return false;
     if (DEBUT.test(contenu)) return true;
   }
 

@@ -181,3 +181,67 @@ describe('Le clic sur la vitesse parle au professeur', () => {
       .toBe('C’est bon pour moi.');
   });
 });
+
+/**
+ * UNE CONVERSATION ABANDONNÉE NE LAISSE PAS SA FENÊTRE DERRIÈRE ELLE.
+ *
+ * LE DÉFAUT, RELEVÉ PAR CAMARA EN SÉANCE LE 18/09/2026 : « j'avais demandé une
+ * expression orale que j'ai pas faite, je viens de demander un exercice
+ * d'expression écrite mais la fenêtre du choix de vitesse pour l'expression
+ * orale est toujours là et ne part pas. »
+ *
+ * CE QUI SE PASSAIT. La conversation ne se refermait qu'à SON archivage — or
+ * une conversation qu'on ne fait pas ne s'archive jamais. Elle restait donc
+ * « en cours » pour le reste de la séance, et les quatre vitesses s'empilaient
+ * sous la consigne de l'exercice suivant.
+ *
+ * LA RÈGLE QUI LA REMPLACE, et elle vaut pour ce qu'on ajoutera : pendant une
+ * conversation, le professeur n'écrit QUE ses répliques, le tableau et une
+ * image. Toute autre balise — n'importe quel autre exercice — signifie qu'on
+ * est passé à autre chose. Un exercice ajouté l'an prochain refermera la
+ * conversation sans que personne ait à y penser.
+ */
+describe('Une conversation qu’on abandonne', () => {
+  test('un autre exercice la referme — le cas de Camara', () => {
+    const fil = [
+      prof('On parle un peu en anglais ? [CONVERSATION]'),
+      eleve('Je voudrais faire un exercice d’expression écrite.'),
+      prof('Très bien ! Avant qu’on commence… [SUPPORT_ECRIT]'),
+    ];
+
+    expect(conversationEnCours(fil)).toBe(false);
+    expect(rangConversation(fil)).toBeNull();
+  });
+
+  test('une dictée, une évaluation, une écoute la referment aussi', () => {
+    ['[SUPPORT_EVALUATION]', '[DICTEE_AU_TABLEAU]x[/DICTEE_AU_TABLEAU]',
+      '[COMPREHENSION_ORALE]x[/COMPREHENSION_ORALE]', '[RAPPORT]x[/RAPPORT]',
+      '[EXPRESSION_ECRITE]x[/EXPRESSION_ECRITE]'].forEach((balise) => {
+      const fil = [prof('[CONVERSATION]'), prof(`Alors… ${balise}`)];
+
+      expect(conversationEnCours(fil)).toBe(false);
+    });
+  });
+
+  test('le tableau et une image, eux, ne la referment pas', () => {
+    // Montrer un mot au tableau pendant qu'on parle est exactement ce qu'un
+    // professeur doit faire : ce n'est pas passer à autre chose.
+    const fil = [
+      prof('[CONVERSATION] [EN]Ready?[/EN]'),
+      eleve('Yes!'),
+      prof('[EN]Look at this word.[/EN] [ARDOISE]seaside[/ARDOISE]'),
+      prof('[SCHEMA:carte-royaume-uni/legende]'),
+      prof('[TABLEAU_EFFACE]'),
+    ];
+
+    expect(conversationEnCours(fil)).toBe(true);
+  });
+
+  test('l’élève, lui, peut écrire ce qu’il veut', () => {
+    // Seul le professeur ouvre et referme : un enfant qui tape « [DICTEE] »
+    // pour rire ne doit pas éteindre sa propre conversation.
+    const fil = [prof('[CONVERSATION]'), eleve('[SUPPORT_ECRIT] hihi')];
+
+    expect(conversationEnCours(fil)).toBe(true);
+  });
+});

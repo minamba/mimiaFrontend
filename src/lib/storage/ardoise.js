@@ -342,6 +342,18 @@ const EXPRESSION_ORALE_OUVERTURE = '[EXPRESSION_ORALE]';
 const EXPRESSION_ORALE_FERMETURE = '[/EXPRESSION_ORALE]';
 
 /**
+ * Le bloc d'archivage d'un TEXTE ÉCRIT : sa consigne, la copie de l'élève
+ * fautes comprises, et chaque reprise du professeur.
+ *
+ * AJOUTÉ ICI AVANT D'EXISTER AILLEURS, et c'est délibéré. Le bloc précédent
+ * de cette même famille a été livré sans y figurer : il s'est affiché en
+ * entier dans la bulle du professeur et s'est fait PRONONCER. Celui-ci est
+ * plus gros encore — une rédaction entière suivie de sa correction.
+ */
+const EXPRESSION_ECRITE_OUVERTURE = '[EXPRESSION_ECRITE]';
+const EXPRESSION_ECRITE_FERMETURE = '[/EXPRESSION_ECRITE]';
+
+/**
  * Les deux marqueurs isolés de l'expression orale : celui qui ouvre la
  * conversation, et celui qui demande à l’élève sur quoi il compose son
  * évaluation.
@@ -352,6 +364,9 @@ const EXPRESSION_ORALE_FERMETURE = '[/EXPRESSION_ORALE]';
  */
 const CONVERSATION = '[CONVERSATION]';
 const SUPPORT_EVALUATION = '[SUPPORT_EVALUATION]';
+
+/** Le support d'un texte à rédiger : cahier ou clavier. */
+const SUPPORT_ECRIT = '[SUPPORT_ECRIT]';
 
 /** Marqueur posé par le professeur au moment où le contrôle commence. */
 export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
@@ -782,6 +797,7 @@ function retirerMarqueurs(texte) {
     .split(VITESSE_CHOIX).join('')
     .split(CONVERSATION).join('')
     .split(SUPPORT_EVALUATION).join('')
+    .split(SUPPORT_ECRIT).join('')
     // La forme à cible porte un paramètre : elle se retire par motif, sinon
     // l'élève lirait « :lent] » au milieu de la phrase et l'entendrait.
     .replace(VITESSE_CIBLE, '');
@@ -801,6 +817,7 @@ function retirerMarqueurs(texte) {
     [DICTEE_CORRIGEE_OUVERTURE, DICTEE_CORRIGEE_FERMETURE],
     [COMPREHENSION_ORALE_OUVERTURE, COMPREHENSION_ORALE_FERMETURE],
     [EXPRESSION_ORALE_OUVERTURE, EXPRESSION_ORALE_FERMETURE],
+    [EXPRESSION_ECRITE_OUVERTURE, EXPRESSION_ECRITE_FERMETURE],
     [DICTEE_SUPPRIMEE_OUVERTURE, DICTEE_SUPPRIMEE_FERMETURE],
     [COMPREHENSION_SUPPRIMEE_OUVERTURE, COMPREHENSION_SUPPRIMEE_FERMETURE],
     [DICTEE_AU_TABLEAU_OUVERTURE, DICTEE_AU_TABLEAU_FERMETURE],

@@ -35,6 +35,8 @@
  * découle, au moment où ça compte.
  */
 
+import { reponseEnAttente } from './fenetreExercice';
+
 /** La balise que le professeur écrit pour déclencher la question. */
 const BALISE = /\[SUPPORT_EVALUATION\]/i;
 
@@ -116,20 +118,21 @@ export function retirerMarqueurSupport(texte) {
  * c'est elle qu'on rencontre en premier, et c'est elle qui vaut.
  */
 export function supportChoisi(messages) {
-  const liste = messages ?? [];
-
-  for (let i = liste.length - 1; i >= 0; i -= 1) {
-    const contenu = liste[i]?.contenu ?? '';
-
-    if (liste[i]?.role === 'user') {
+  return reponseEnAttente(messages, {
+    lireReponse: (contenu) => {
       if (contenu.includes('[ÉVALUATION AU CAHIER')) return CAHIER;
       if (contenu.includes('[ÉVALUATION À L’ORDINATEUR')) return ORDINATEUR;
-    }
+      return undefined;
+    },
+    pose: demandeSupport,
 
-    if (liste[i]?.role === 'assistant' && demandeSupport(contenu)) return null;
-  }
-
-  return undefined;
+    // TOUTES LES BALISES DE L’ÉVALUATION, ET PAS SEULEMENT CELLE QUI POSE
+    // LA QUESTION : le sujet, la copie et le verdict appartiennent au même
+    // exercice. Les oublier ici ferait tomber la carte au moment précis où
+    // le professeur commence à composer.
+    propres: ['SUPPORT_EVALUATION', 'DEBUT_EVALUATION', 'EVALUATION',
+      'EVALUATION_CORRIGEE', 'COPIE_CONTROLE', 'CONTROLE_RESULTAT'],
+  });
 }
 
 /**

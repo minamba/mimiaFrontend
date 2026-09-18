@@ -49,6 +49,11 @@ import {
   copieRendue as copieEvaluationRendue,
 } from '../lib/storage/supportEvaluation';
 import SupportEvaluation from './SupportEvaluation';
+import {
+  supportEcritChoisi, marquerSupportEcrit, retirerMarqueurSupportEcrit,
+  QUESTION_SUPPORT_ECRIT, CAHIER as ECRIT_CAHIER, CLAVIER as ECRIT_CLAVIER,
+  rangSupportEcrit,
+} from '../lib/storage/supportEcrit';
 import ScanMobileModale from './ScanMobileModale';
 import { styleMatiere, murMatiere } from '../lib/couleurMatiere';
 import scannerPng from '../assets/scanner.png';
@@ -83,6 +88,16 @@ import {
 } from '../lib/storage/ardoise';
 import { getEvaluations, getCopieEvaluation, getDictee } from '../lib/api/elevesApi';
 import Avatar from './Avatar';
+
+/* LES DEUX DESSINS DU CHOIX DE SUPPORT — Camara, le 18/09/2026.
+
+   EN WEBP ET NON EN PNG : les originaux pesaient 1,41 et 1,31 Mo, pour
+   deux dessins montrés à 72 px. Réencodés à 240 px de côté, ils font 21 et
+   20 Ko — 2,79 Mo devenus 41. Même traitement que les treize décors de
+   matière, et pour la même raison : un enfant en 4G ne télécharge pas
+   trois mégaoctets pour deux icônes. */
+import iconeCahier from '../assets/cahier.webp';
+import iconeClavier from '../assets/clavier.webp';
 import LignesCopie from './LignesCopie';
 import { ContenuTableau, tableauDeDictee } from './ComparaisonDictee';
 import { copieDeReference } from '../lib/storage/diffDictee';
@@ -131,11 +146,25 @@ import Controle from './Controle';
  */
 const POINTAGE = /^\[L'élève montre un endroit de la figure.*POINTAGE:[a-z0-9-]+(?:\/muette)?@\d+,\d+\]/s;
 
+/**
+ * L'heure d'un message, sous sa bulle — « 05:52 ».
+ *
+ * SANS LA DATE : dans une séance, tout s'est passé aujourd'hui. « 18/09 05:52 »
+ * sous chaque bulle répéterait trente fois une information qu'on connaît.
+ */
+const heureCourte = (iso) => {
+  const date = new Date(iso);
+
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+};
+
 function Contenu({ texte, onRappelerTableau }) {
   const segments = useMemo(
-    () => decouper(retirerMarqueurConversation(
+    () => decouper(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
       retirerMarqueurSupport(retirerMarqueurCopieControle(retirerMarqueurCahier(texte))),
-    )),
+    ))),
     [texte],
   );
 
@@ -953,6 +982,18 @@ export default function Chat() {
   const support = useMemo(() => supportChoisi(messages), [messages]);
 
   /**
+   * SUR QUOI IL ÉCRIT SON TEXTE — Camara, le 18/09/2026, « comme pour la
+   * dictée ».
+   *
+   * TROISIÈME SUPPORT DE CE FICHIER, et ils ne se confondent pas : `support`
+   * juste au-dessus est celui d'une ÉVALUATION (cahier ou ordinateur),
+   * `modeDictee` plus bas celui d’une DICTÉE, et celui-ci celui d’un TEXTE à
+   * rédiger. Trois exercices, trois questions, trois faits différents envoyés
+   * au professeur.
+   */
+  const supportEcrit = useMemo(() => supportEcritChoisi(messages), [messages]);
+
+  /**
    * LA CARTE ATTEND : LES AUTRES CHEMINS D'ENVOI SONT FERMÉS.
    *
    * Voulu par Camara le 13/09/2026 : « tout ce qui est envoi de copie et
@@ -1357,6 +1398,67 @@ export default function Chat() {
    * quand l'élève rend sa copie.
    */
   const [copieDictee, setCopieDictee] = useState(null);
+
+  /**
+   * LE TEXTE D’EXPRESSION ÉCRITE EN COURS, quand il se tape au clavier.
+   *
+   * VOULU PAR CAMARA LE 18/09/2026 : « j’ai dit que je voulais écrire au
+   * clavier, mais j’ai pas de copie comme avec la dictée. Je veux exactement
+   * le même système de copie avec possibilité de modifier une ligne, d’en
+   * ajouter une ou supprimer. »
+   *
+   * IL N’AVAIT QUE LE CHAMP DE SAISIE ORDINAIRE. Donc : chaque phrase envoyée
+   * faisait répondre le professeur au milieu de sa rédaction, rien ne se
+   * relisait d’un bloc, et une phrase oubliée ne pouvait plus se glisser à sa
+   * place. Exactement les trois défauts que la dictée avait déjà réglés.
+   *
+   * MÊME PANNEAU, MÊME COMPOSANT, MÊME RAISON DE FOND que `copieDictee` :
+   * rien ne part avant la fin, parce que le seul moyen sûr de faire taire le
+   * professeur pendant qu’on écrit n’est pas de le lui demander, c’est de ne
+   * rien lui envoyer.
+   */
+  const [copieEcrite, setCopieEcrite] = useState(null);
+
+  /**
+   * Le rang du dernier texte RENDU. Zéro tant qu’aucun ne l’a été.
+   *
+   * SANS LUI, LE PANNEAU SE ROUVRIRAIT AUSSITÔT : `supportEcritChoisi` vaut
+   * toujours `clavier` après l’envoi — c’est un fait de la séance, pas un
+   * état d’écran. On compare donc le rang rendu au rang de la question en
+   * cours. Même remède que pour la carte des vitesses, et pour la même
+   * raison.
+   */
+  const [rangEcritRendu, setRangEcritRendu] = useState(0);
+
+  /**
+   * LE MÊME ÉTAT, LU DEPUIS LE MICRO — qui ne doit pas changer d'identité à
+   * chaque frappe : la fonction d'écoute est reconstruite avec ses
+   * dépendances, et la rebâtir couperait le micro en pleine phrase. Même
+   * raison que `cahierRef`.
+   */
+  const copieEcriteRef = useRef(false);
+
+  /** Combien de fois la question du support a été posée dans la séance. */
+  const rangEcrit = useMemo(() => rangSupportEcrit(messages), [messages]);
+
+  /**
+   * LE PANNEAU S'OUVRE SUR LE CHOIX DU CLAVIER, et se referme sur l'envoi.
+   *
+   * UNE DICTÉE EN COURS PASSE AVANT, ET CE N’EST PAS UN DÉTAIL : les deux
+   * panneaux se ressemblent trait pour trait, et deux « Ta copie » ouverts en
+   * même temps feraient taper la dictée dans le texte à rédiger. Si une
+   * dictée au clavier est ouverte, celui-ci attend son tour.
+   */
+  useEffect(() => {
+    if (supportEcrit !== ECRIT_CLAVIER || rangEcrit <= rangEcritRendu || copieDictee) {
+      setCopieEcrite(null);
+      return;
+    }
+
+    setCopieEcrite((actuelle) => actuelle ?? []);
+  }, [supportEcrit, rangEcrit, rangEcritRendu, copieDictee]);
+
+  useEffect(() => { copieEcriteRef.current = copieEcrite !== null; }, [copieEcrite]);
 
   /**
    * Une dictée est en cours SUR LE CAHIER, et sa photo n'est pas arrivée.
@@ -3180,6 +3282,20 @@ export default function Chat() {
     [envoyerTexte],
   );
 
+  /**
+   * Le support du TEXTE à rédiger — cahier ou clavier.
+   *
+   * POSÉE ICI ET NON PRÈS DE SON `useMemo`, et ce n'est pas du rangement :
+   * une dépendance de `useCallback` est évaluée AU RENDU. Déclarée avant
+   * `envoyerTexte`, elle lève « Cannot access before initialization » et
+   * l’écran reste blanc. Le lint l’a vu ; l’essai en séance l’aurait vu
+   * aussi, plus tard et plus mal.
+   */
+  const choisirSupportEcrit = useCallback(
+    (choix) => envoyerTexte(marquerSupportEcrit('', choix)),
+    [envoyerTexte],
+  );
+
   const choisirCopie = useCallback(
     async (separee) => {
       if (!etatCopie || !conversation) return;
@@ -3303,6 +3419,23 @@ export default function Chat() {
 
   const soumettre = (evenement) => {
     evenement.preventDefault();
+
+    // LE BOUTON « ENVOYER » FAIT LA MÊME CHOSE QU'ENTRÉE quand la feuille est
+    // ouverte : il ajoute la ligne, il n'envoie rien.
+    //
+    // SANS ÇA, LE MÊME GESTE AURAIT DEUX SENS. L'élève qui tape sa phrase puis
+    // clique sur le bouton — le geste le plus naturel de tout l'écran — aurait
+    // envoyé sa première phrase au professeur, qui aurait répondu au milieu de
+    // sa rédaction. C'est exactement ce que la feuille existe pour empêcher.
+    if (copieEcrite) {
+      const ligne = saisie.trim();
+      if (!ligne) return;
+
+      setCopieEcrite((lignes) => [...(lignes ?? []), ligne]);
+      viderSaisie();
+      return;
+    }
+
     envoyerTexte(saisie);
   };
 
@@ -3335,7 +3468,40 @@ export default function Chat() {
       return;
     }
 
+    // MÊME GESTE POUR UN TEXTE À RÉDIGER, sans la pause : il n’y a rien à
+    // dicter ici, donc rien à interrompre. Entrée passe à la ligne suivante,
+    // elle n’envoie pas — sinon le professeur répondrait entre chaque phrase
+    // de sa rédaction.
+    if (copieEcrite) {
+      const ligne = saisie.trim();
+      if (!ligne) return;
+
+      setCopieEcrite((lignes) => [...(lignes ?? []), ligne]);
+      viderSaisie();
+      return;
+    }
+
     envoyerTexte(saisie);
+  };
+
+  /**
+   * L'élève envoie son texte : tout part en un seul message.
+   *
+   * La dernière ligne est prise même sans Entrée — personne n'y pense avant
+   * de cliquer sur le bouton. Même règle que « Rendre ma copie ».
+   */
+  const rendreMonTexte = () => {
+    const lignes = (copieEcrite ?? []).map((l) => l.trim()).filter(Boolean);
+    const derniere = saisie.trim();
+    if (derniere) lignes.push(derniere);
+
+    // LE RANG EST NOTÉ AVANT L’ENVOI : sans lui, l’effet d’ouverture
+    // rouvrirait le panneau au tour suivant, vide, sur un texte déjà parti.
+    setRangEcritRendu(rangEcrit);
+    setCopieEcrite(null);
+    viderSaisie();
+
+    if (lignes.length > 0) envoyerTexte(lignes.join("\n"));
   };
 
   /**
@@ -3685,6 +3851,23 @@ export default function Chat() {
               "Attends, je crois que je m'entends parler dans ton micro. Mets un casque, ou coupe le micro quand je parle : sinon je confonds ta voix et la mienne.",
               'Le micro a capté la voix du professeur. Un casque règle le problème ; le mode mains libres a été coupé.',
             );
+            return;
+          }
+
+          // SA VOIX REMPLIT LE CHAMP, ELLE NE L’ENVOIE PAS, tant que le panneau
+          // d’écriture est ouvert.
+          //
+          // LE DÉFAUT, VU PAR CAMARA LE 18/09/2026 dans une séance d’expression
+          // écrite : pendant qu’il rédigeait, le micro a attrapé « Je » et l’a
+          // envoyé tout seul. Le professeur a répondu « je ne vois pas encore
+          // ton texte » — au milieu d’une rédaction qui n’était pas finie.
+          //
+          // ICI ET PAS POUR LA DICTÉE : là-bas, le professeur parle pendant
+          // qu’on écrit et le micro est déjà tenu autrement ; cette mécanique
+          // est éprouvée, on n’y touche pas. Un texte à rédiger, lui, se tape
+          // en silence — une parole qui part toute seule n’y est jamais voulue.
+          if (copieEcriteRef.current) {
+            setSaisie(texte);
             return;
           }
 
@@ -4345,23 +4528,45 @@ export default function Chat() {
             && i === liste.length - 1
             && contientDictee(m.contenu)
           ))
-          .map((message) => (
-            <div
-              key={message.id}
-              className={`bulle bulle--${message.role === 'user' ? 'eleve' : 'agent'}`}
-            >
-              {(message.piecesJointes ?? (message.pieceJointe ? [message.pieceJointe] : []))
-                .map((piece) => (
-                  <PieceJointeBulle
-                    key={piece.id}
-                    conversationId={conversation?.id}
-                    piece={piece}
-                    onAgrandir={(url, nom) => setAgrandie({ url, nom })}
-                  />
-                ))}
-              <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} />
-            </div>
-          ))}
+          .map((message) => {
+            const duProf = message.role !== 'user';
+
+            return (
+              /* LE TOUR DE PAROLE : la bulle et son heure.
+                 -----------------------------------------------------------
+                 SANS AVATAR — Camara, le 18/09/2026 : « c'est redondant avec
+                 le prof qui est déjà dans le header ». Je l'avais ajouté en
+                 me disant que rien ne disait QUI parlait ; c'est faux, son
+                 visage et son prénom sont en haut de l'écran en permanence, et
+                 il n'y a jamais deux professeurs dans une séance.
+
+                 L'HEURE EST SOUS LA BULLE, PAS DEDANS : dedans, elle se lisait
+                 comme la fin du message. */
+              <div key={message.id} className={`tour tour--${duProf ? 'prof' : 'eleve'}`}>
+                <div className="tour__corps">
+                  <div className={`bulle bulle--${duProf ? 'agent' : 'eleve'}`}>
+                    {(message.piecesJointes ?? (message.pieceJointe ? [message.pieceJointe] : []))
+                      .map((piece) => (
+                        <PieceJointeBulle
+                          key={piece.id}
+                          conversationId={conversation?.id}
+                          piece={piece}
+                          onAgrandir={(url, nom) => setAgrandie({ url, nom })}
+                        />
+                      ))}
+                    <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} />
+                  </div>
+
+                  {/* Pas d'heure sur le message en cours d'écriture : il n'en a
+                      pas encore, et un « --:-- » clignotant sous chaque phrase
+                      serait pire que rien. */}
+                  {message.dateCreation && (
+                    <span className="tour__heure">{heureCourte(message.dateCreation)}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
 
         {/* LE SUPPORT DE L'ÉVALUATION, À LA SUITE DU MESSAGE QUI LE DEMANDE.
 
@@ -4376,6 +4581,38 @@ export default function Chat() {
             disabled={streaming || seanceTerminee}
             onChoisir={choisirSupport}
           />
+        )}
+
+        {/* LE SUPPORT DU TEXTE À RÉDIGER — Camara, le 18/09/2026 : « comme
+            pour la dictée ». Volontairement la MÊME carte que celle de la
+            dictée, au mot près : un enfant qui a déjà répondu à cette
+            question-là n'a pas à en apprendre une nouvelle. */}
+        {supportEcrit === null && !streaming && !seanceTerminee && (
+          <div className="choix-dictee">
+            <p className="choix-dictee__question">{QUESTION_SUPPORT_ECRIT}</p>
+
+            <div className="choix-dictee__boutons">
+              <button
+                type="button"
+                className="btn btn--fantome"
+                onClick={() => choisirSupportEcrit(ECRIT_CAHIER)}
+              >
+                <img className="choix-dictee__image" src={iconeCahier} alt="" />
+                Sur mon cahier
+                <small>Tu m’enverras une photo à la fin</small>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn--fantome"
+                onClick={() => choisirSupportEcrit(ECRIT_CLAVIER)}
+              >
+                <img className="choix-dictee__image" src={iconeClavier} alt="" />
+                Au clavier
+                <small>Tu écris ici, puis tu envoies</small>
+              </button>
+            </div>
+          </div>
         )}
 
         {/* LA COPIE DU CONTRÔLE, À LA SUITE DU MESSAGE QUI LA PROPOSE.
@@ -4496,7 +4733,7 @@ export default function Chat() {
                 className="btn btn--fantome"
                 onClick={() => choisirModeDictee('cahier')}
               >
-                <span aria-hidden="true">📓</span>
+                <img className="choix-dictee__image" src={iconeCahier} alt="" />
                 Sur mon cahier
                 <small>Tu m’enverras une photo à la fin</small>
               </button>
@@ -4506,7 +4743,7 @@ export default function Chat() {
                 className="btn btn--fantome"
                 onClick={() => choisirModeDictee('clavier')}
               >
-                <span aria-hidden="true">⌨️</span>
+                <img className="choix-dictee__image" src={iconeClavier} alt="" />
                 Au clavier
                 <small>Une phrase, puis Entrée</small>
               </button>
@@ -4568,6 +4805,63 @@ export default function Chat() {
                   type="button"
                   className="btn btn--fantome btn--compact"
                   onClick={() => setCopieDictee(null)}
+                >
+                  Annuler
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* LE TEXTE À RÉDIGER, AU CLAVIER — Camara, le 18/09/2026 : « je veux
+            exactement le même système de copie ».
+
+            VOLONTAIREMENT LES MÊMES CLASSES QUE LA DICTÉE, au pixel près :
+            un enfant qui a déjà écrit une dictée ici sait déjà s’en servir.
+            Seuls les mots changent — « Ton texte » et non « Ta copie », parce
+            que ce n’est pas une copie de quelque chose. */}
+        {copieEcrite && (
+          <div className="copie-dictee">
+            <div className="copie-dictee__entete">
+              <span className="copie-dictee__titre">Ton texte</span>
+            </div>
+
+            {copieEcrite.length === 0 ? (
+              <p className="copie-dictee__vide">
+                Écris ta première phrase dans le champ en bas.
+              </p>
+            ) : (
+              <LignesCopie lignes={copieEcrite} onLignes={setCopieEcrite} />
+            )}
+
+            {copieEcrite.length > 0 && (
+              <p className="copie-dictee__astuces">
+                <span aria-hidden="true">✏️</span> Clique sur une ligne pour la corriger
+                <span className="copie-dictee__astuces-sep" aria-hidden="true">·</span>
+                <span className="copie-dictee__astuces-plus" aria-hidden="true">＋</span> ajoute une ligne en dessous
+              </p>
+            )}
+
+            <div className="copie-dictee__actions">
+              <button
+                type="button"
+                className="btn btn--compact copie-dictee__rendre"
+                onClick={rendreMonTexte}
+                disabled={streaming || (copieEcrite.length === 0 && !saisie.trim())}
+              >
+                Envoyer mon texte
+              </button>
+
+              {/* LA MÊME SORTIE QUE POUR LA DICTÉE, et pour la même panne :
+                  le bouton d’envoi est désactivé tant que rien n’est écrit —
+                  c’est juste — mais sans cette porte, un élève qui change
+                  d’avis garderait le panneau ouvert pour le reste de la
+                  séance. */}
+              {copieEcrite.length === 0 && !saisie.trim() && (
+                <button
+                  type="button"
+                  className="btn btn--fantome btn--compact"
+                  onClick={() => { setRangEcritRendu(rangEcrit); setCopieEcrite(null); }}
                 >
                   Annuler
                 </button>
@@ -4727,6 +5021,20 @@ export default function Chat() {
         </div>
       )}
 
+      {/* ------------------------------------------------------------------
+          LE BLOC DU BAS, D'UN SEUL TENANT — Camara, le 18/09/2026 : « intègre
+          dans le bloc la partie détection automatique de voix ».
+
+          L'INTERRUPTEUR FLOTTAIT ENTRE LES DEUX PANNEAUX, posé sur le fond de
+          la page, alors qu'il commande le micro qui est juste en dessous. Ce
+          qui commande une chose se range avec elle.
+
+          TOUT CE QUI EST ENTRE LES DEUX Y ENTRE AUSSI — l'avertissement de
+          dépassement, le forfait épuisé, la fin de séance, les documents en
+          attente. Ce sont tous des états de la BARRE : ils disent pourquoi
+          elle est grisée, ou ce qui partira avec le prochain envoi.
+          ------------------------------------------------------------------ */}
+      <div className="chat__bas">
       {/* Interrupteur placé juste au-dessus du micro, pas dans l'en-tête :
           c'est ici que l'élève regarde quand il se demande comment parler. */}
       {vocalDispo && !seanceTerminee && (
@@ -4920,9 +5228,16 @@ export default function Chat() {
           // 11/09/2026 : « souvrirent » souligné en rouge sous les yeux de
           // l'élève — le navigateur lui montrait sa faute avant qu'il rende
           // sa copie, et la dictée ne mesurait plus rien.
-          spellCheck={copieDictee === null}
-          autoCorrect={copieDictee === null ? 'on' : 'off'}
-          autoCapitalize={copieDictee === null ? 'sentences' : 'off'}
+          // ET PAS DAVANTAGE PENDANT UN TEXTE À RÉDIGER : c’est SON
+          // orthographe qu’on archive et qu’on corrige. Le navigateur qui la
+          // souligne en rouge la lui fait réparer avant l’envoi, et la
+          // correction du professeur parlerait ensuite de fautes devenues
+          // invisibles — exactement ce que la dictée a appris le 11/09/2026.
+          spellCheck={copieDictee === null && copieEcrite === null}
+          autoCorrect={copieDictee === null && copieEcrite === null ? 'on' : 'off'}
+          autoCapitalize={
+            copieDictee === null && copieEcrite === null ? 'sentences' : 'off'
+          }
           placeholder={
             quota
               ? 'Séance suspendue — voir le forfait'
@@ -4935,7 +5250,7 @@ export default function Chat() {
                 // possible sans un mot.
                 : piecesEnAttente.some((p) => p.id)
                   ? 'Dis-lui ce qui te bloque'
-                  : copieDictee
+                  : copieDictee || copieEcrite
                     ? 'Écris la phrase, puis Entrée'
                     : micEnPause
                       ? 'Le professeur parle…'
@@ -4970,6 +5285,10 @@ export default function Chat() {
             || (!saisie.trim() && !piecesEnAttente.some((p) => p.id))
           }
         >
+          {/* L'AVION DE PAPIER, REPRIS DE LA MAQUETTE DE CAMARA (18/09/2026).
+              `aria-hidden` : le bouton dit déjà « Envoyer », et un lecteur
+              d'écran qui annoncerait le pictogramme le dirait deux fois. */}
+          <span aria-hidden="true">➤</span>
           Envoyer
         </button>
       </form>
@@ -4980,6 +5299,7 @@ export default function Chat() {
           pour parler au professeur.
         </p>
       )}
+      </div>
     </section>
 
       <Ardoise

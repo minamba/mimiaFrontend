@@ -6090,6 +6090,16 @@ button.eleve-bandeau {
   color: var(--serie-2);
 }
 
+/* LES TEXTES ÉCRITS, troisième de la famille — `--serie-3`, le violet, pour
+   qu'aucune des trois cartes de langue ne se confonde avec ses voisines.
+   L'enfant les voit l'une sous l'autre : ce qu'il a écouté, ce qu'il a dit,
+   ce qu'il a écrit. */
+.matiere-fiches--expressions-ecrites {
+  border-color: color-mix(in srgb, var(--serie-3) 32%, var(--trait));
+  background: color-mix(in srgb, var(--serie-3) 10%, transparent);
+  color: var(--serie-3);
+}
+
 /* LES FICHES DE RÉVISION, AU MÊME STYLE QUE LEURS VOISINES — Camara, le
    15/09/2026, dans TOUS les modes (d'abord demandé en Blue Sky seulement).
    L'aplat ambre plein tranchait au milieu de bandeaux en teinte légère : il
@@ -6098,7 +6108,8 @@ button.eleve-bandeau {
    l'ambre qui tient en TEXTE dans les deux thèmes (#e8a33e sur le sombre,
    #b26a08 sur le clair). Blue Sky garde sa propre version, opaque. */
 .matiere-fiches:not(.matiere-fiches--notes, .matiere-fiches--dictees,
-  .matiere-fiches--comprehensions-orales, .matiere-fiches--expressions-orales) {
+  .matiere-fiches--comprehensions-orales, .matiere-fiches--expressions-orales,
+  .matiere-fiches--expressions-ecrites) {
   border-color: color-mix(in srgb, var(--duree-3) 32%, var(--trait));
   background: color-mix(in srgb, var(--duree-3) 12%, transparent);
   color: var(--duree-3);
@@ -15681,9 +15692,14 @@ html.defilement-bloque body {
 
 /* TOUT EST CENTRÉ DANS LA CARTE — Camara, le 16/09/2026. Le dessin occupe
    toute la largeur de la carte : un libellé calé à gauche sous une image
-   centrée déséquilibrait chaque case. Les deux autres questions (le mode de
-   dictée) gardent leur texte à gauche : elles n'ont pas d'image. */
-.choix-dictee--vitesse .choix-dictee__boutons .btn {
+   centrée déséquilibrait chaque case.
+
+   DEPUIS LE 18/09/2026, LES TROIS CARTES ONT UN DESSIN : le choix du support
+   — cahier ou clavier — en a reçu deux. La règle ne peut donc plus tenir au
+   nom de la carte de vitesse ; elle tient à la PRÉSENCE DE L’IMAGE, et une
+   carte à dessin qu’on ajouterait demain sera centrée sans qu’on y pense. */
+.choix-dictee--vitesse .choix-dictee__boutons .btn,
+.choix-dictee__boutons .btn:has(.choix-dictee__image) {
   align-items: center;
   text-align: center;
 }
@@ -15698,8 +15714,22 @@ html.defilement-bloque body {
      qui porte la vitesse, le mot ne fait que la nommer. Puis ramené de 104 à
      72 px le même jour — « ça ne rentre pas dans la fenêtre » : la carte
      mangeait toute la hauteur de la séance, message du professeur compris. */
-  width: 72px;
+
+  /* LA HAUTEUR COMMANDE, PAS UN CARRÉ — Camara, le 18/09/2026 : « agrandis un
+     peu plus l'icône du clavier ».
+
+     IL N'ÉTAIT PAS PLUS PETIT PAR HASARD. Le dessin du clavier est large
+     (240x154), celui du cahier presque carré (240x228) : dans une boîte carrée
+     de 72 px, `object-fit: contain` rendait le premier à 72x46 et le second à
+     72x68. Deux images à la même « taille », et pourtant l'une une fois et
+     demie plus basse que l'autre.
+
+     En fixant la HAUTEUR et en laissant la largeur suivre le rapport, les
+     dessins pèsent optiquement pareil quel que soit leur cadrage — et un
+     dessin ajouté demain n'aura pas à être recadré pour entrer. */
+  width: auto;
   height: 72px;
+  max-width: 100%;
   margin-bottom: 4px;
   object-fit: contain;
 }
@@ -23802,4 +23832,384 @@ html.defilement-bloque body {
 
   .expr-ligne { flex-wrap: wrap; }
   .expr-ligne__titre { flex: 1 0 100%; order: -1; }
+}
+
+/* ------------------------------------------------------------------
+   UN TEXTE ÉCRIT ET SA CORRECTION — Camara, le 18/09/2026.
+
+   LA COPIE D'ABORD, LES REPRISES ENSUITE, et la copie ne ressemble à
+   rien d'autre de l'écran : encadrée, sur un fond papier, avec ses
+   retours à la ligne. C'est ce que l'enfant a écrit de sa main — la
+   distinguer visuellement de la correction est ce qui rend la
+   comparaison possible.
+   ------------------------------------------------------------------ */
+
+.ecrit__etiquette {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.ecrit__consigne {
+  margin: 0 0 16px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--encre);
+}
+
+.ecrit__copie {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--duree-3) 8%, var(--surface));
+}
+
+/* `pre-wrap` : un texte reformaté n’est plus tout à fait le sien. */
+.ecrit__texte {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: var(--encre);
+}
+
+.ecrit__bloc { margin-bottom: 18px; }
+
+.ecrit__bloc-titre {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--encre);
+}
+
+.ecrit__reprises {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ecrit__reprise {
+  padding: 11px 14px;
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--encre);
+}
+
+/* LA TEINTE DES RÉUSSITES TIENT SUR TOUTE LA CARTE, pas seulement sur une
+   étiquette : la consigne impose au professeur de commencer par ce qui
+   est réussi, et l’écran ne doit pas défaire ça en le noyant. */
+.ecrit__bloc--reussi .ecrit__reprise {
+  border-color: color-mix(in srgb, var(--serie-2) 34%, var(--trait));
+  background: color-mix(in srgb, var(--serie-2) 9%, var(--surface));
+}
+
+.ecrit__genre {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--serie-3) 14%, var(--surface));
+  color: var(--serie-3);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Une couleur par genre : c’est en la voyant revenir que l’enfant repère
+   ce qui coince chez lui — et ce sont les mots de la grille d’examen. */
+.ecrit__genre--orthographe {
+  background: color-mix(in srgb, var(--serie-1) 14%, var(--surface));
+  color: var(--serie-1);
+}
+
+.ecrit__genre--grammaire {
+  background: color-mix(in srgb, var(--serie-4) 14%, var(--surface));
+  color: var(--serie-4);
+}
+
+.ecrit__genre--vocabulaire {
+  background: color-mix(in srgb, var(--duree-3) 16%, var(--surface));
+  color: var(--duree-3);
+}
+
+.ecrit__sans-correction {
+  margin: 0 0 18px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+.ecrit__remarque {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--trait);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+
+/* LA PHOTO DE SA PAGE, tant que le professeur ne l'a pas recopiée. Bornée en
+   hauteur : une page de cahier en portrait remplirait sinon trois écrans, et
+   le message qui l'accompagne tomberait hors de vue. */
+.ecrit__photo {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  margin: 4px 0 12px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: var(--surface);
+}
+
+.ecrit__texte--absent { font-style: italic; color: var(--encre-douce); }
+
+.ecrit__attente {
+  margin: 0;
+  font-size: 13.5px;
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+/* ------------------------------------------------------------------
+   --- LE PANNEAU DE LA SÉANCE — Camara, le 18/09/2026 : « y'a pas de
+   délimitation avec le background de la page », et « la partie contrôle en
+   bas avec caméra, scanner, champ de texte aussi dans une sorte de
+   rectangle ».
+
+   DEUX PANNEAUX ET NON UN SEUL CADRE AUTOUR DES DEUX. Le fil se fait
+   défiler, le bloc du bas ne bouge pas : les enfermer ensemble ferait
+   flotter la barre au milieu du vide dès que la conversation est courte.
+
+   QUATRE ESSAIS POUR LA COULEUR, ET LES TROIS PREMIERS AVAIENT LE MÊME TORT :
+   une couleur écrite à la main.
+
+   1. crème très pâle — « c'est beaucoup trop clair ». Panneau #fdfaf1, bulles
+      #ffffff : trois points d'écart, donc plus de bulles du tout ;
+   2. crème franc, puis gris clair — la séparation y était, mais un grand
+      aplat clair au milieu d'une application sombre éblouit ;
+   3. gris foncé nuancé de bleu, #26313f — « les couleurs ça va pas ». Et
+      c'était vrai : un gris désaturé au milieu d'une palette entièrement
+      bleue, ça se voit tout de suite et ça ne s'explique pas.
+   4. RETENU : AUCUNE COULEUR NEUVE. Le panneau prend `--surface`, la couleur
+      que les bulles avaient déjà, et ce sont les BULLES qui montent d'un cran.
+      La palette ne bouge pas, les trois niveaux y sont quand même, et les
+      trois thèmes suivent sans une ligne de plus.
+
+   CE QUI COMPTE N'EST PAS LA TEINTE, C'EST D'AVOIR TROIS NIVEAUX : la page,
+   le panneau, la bulle. Chacun un cran plus clair que le précédent.
+
+   ON NE TOUCHE NI À `--encre` NI À `color` : le texte garde l'encre de son
+   thème, claire sur le sombre, sombre sur le clair. C'est ce qui rendait la
+   version crème compliquée — il avait fallu reposer `color`, parce qu'une
+   propriété héritée descend avec sa valeur CALCULÉE et ne relit pas le jeton.
+   Rester dans les jetons du thème supprime le problème.
+
+   EN FIN DE FICHIER, comme les autres : à spécificité égale, c'est l'ORDRE
+   qui tranche.
+   ------------------------------------------------------------------ */
+/* UN SEUL CADRE POUR TOUT, ET NON DEUX PANNEAUX — Camara, le 18/09/2026, en
+   montrant une maquette : « tout est dans une bulle, c'est mieux que ce qu'on
+   a ».
+
+   IL A RAISON, ET C'EST STRUCTUREL PLUS QUE DÉCORATIF. Le bandeau de la
+   matière, le fil, l'interrupteur et la barre de saisie sont UNE séance : les
+   poser en trois boîtes qui flottent sur la page les faisait lire comme trois
+   outils sans rapport. Un cadre unique dit qu'on est quelque part.
+
+   LE DÉBORDEMENT EST CACHÉ, donc le bandeau de la matière suit l'arrondi du
+   cadre au lieu de sortir aux angles — c'est ce qui fait que ça se lit comme
+   une carte, et pas comme un rectangle posé sur un autre. */
+.chat {
+  background: var(--surface);
+  border: 1px solid var(--trait);
+  border-radius: 20px;
+  padding: 0;
+
+  /* L'OMBRE FAIT LA MOITIÉ DU TRAVAIL — Camara, le 18/09/2026, en comparant
+     avec sa maquette : « pourquoi y'a pas d'ombre autour ? »
+     -----------------------------------------------------------------------
+     Une bordure seule dessine un contour ; une ombre POSE la carte au-dessus
+     de la page. C'est ce qui manquait pour que le cadre cesse de ressembler à
+     un rectangle tracé sur le fond.
+
+     `--ombre-l` ET NON UNE OMBRE ÉCRITE ICI : le jeton existe depuis
+     longtemps et il a ses deux versions — noire et profonde sur le thème
+     sombre, bleutée et discrète sur le clair. Une ombre en dur aurait été
+     juste dans un thème et lourde dans l'autre. */
+  box-shadow: var(--ombre-l);
+}
+
+.chat__fil { padding: 18px 16px 12px; }
+
+.chat__bas { padding: 4px 16px 14px; }
+
+/* Le seul filet qui reste à l'intérieur du cadre : celui qui sépare ce qu'on
+   lit de ce avec quoi on répond. */
+.chat__bas .chat__saisie {
+  padding-top: 12px;
+  border-top: 1px solid var(--trait);
+}
+
+/* L'interrupteur du micro est maintenant DANS le bloc : il perd sa marge de
+   flottement et se cale sur le même retrait que le reste. */
+.chat__bas .barre-vocale {
+  margin: 0;
+  padding: 10px 0 2px;
+  background: transparent;
+  border: 0;
+}
+
+/* LES BULLES MONTENT D'UN CRAN : le panneau a pris `--surface`, qui était leur
+   couleur, et sans ce relèvement elles disparaîtraient dedans.
+
+   `color-mix` AVEC L'ENCRE, ET NON UNE COULEUR EN DUR — l'idiome déjà employé
+   pour les champs de formulaire : il monte sur fond sombre et descend sur fond
+   clair, tout seul, parce que l'encre change de côté avec le thème. */
+.chat__fil .bulle--agent {
+  background: color-mix(in srgb, var(--encre) 13%, var(--surface));
+  border-color: color-mix(in srgb, var(--encre) 18%, var(--surface));
+}
+
+
+/* Le champ de saisie se détache du crème : blanc sur crème, comme une bulle
+   sur le fil. */
+.chat__saisie textarea { background: var(--surface); }
+
+/* Le bouton d’envoi porte son avion, comme sur la maquette : l’icône et le
+   mot se lisent ensemble, pas l’un sous l’autre. */
+.chat__saisie button[type='submit'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* ------------------------------------------------------------------
+   LE TOUR DE PAROLE : la bulle et son heure.
+
+   L'ALIGNEMENT MONTE DE LA BULLE VERS LE TOUR. C'était `.bulle` qui portait
+   `align-self` et `max-width` ; c'est la RANGÉE qui se range désormais à
+   droite ou à gauche — il le faut pour que l'heure suive la bulle au lieu de
+   rester collée au bord gauche du fil.
+   ------------------------------------------------------------------ */
+.tour {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 88%;
+}
+
+.tour--prof { align-self: flex-start; }
+
+/* L'élève n'a pas d'avatar : c'est lui qui regarde l'écran, et son propre
+   visage répété trente fois ne lui apprendrait rien. Sa rangée se range donc
+   à droite, et l'heure avec elle. */
+.tour--eleve { align-self: flex-end; }
+.tour--eleve .tour__corps { align-items: flex-end; }
+
+
+.tour__corps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* La bulle ne porte plus son alignement : le tour s'en charge. */
+.tour .bulle { align-self: stretch; max-width: none; }
+
+.tour__heure {
+  margin: 5px 4px 0;
+  font-size: 12px;
+  color: var(--encre-douce);
+}
+
+/* ------------------------------------------------------------------
+   UN HALO QUI RESPIRE SUR « AGRANDIR LE SCHÉMA » — Camara, le 18/09/2026 :
+   « pour que les enfants voient que ce bouton est cliquable ».
+
+   LE BOUTON ÉTAIT UN CONTOUR BLANC À 40 % SUR UN TABLEAU NOIR. Lisible,
+   mesuré, conforme — et invisible en tant que BOUTON : rien ne bougeait,
+   rien n'appelait. Un enfant de huit ans ne lit pas un contour, il regarde
+   ce qui attire l'œil.
+
+   LE MOUVEMENT PLUTÔT QU'UN APLAT DE COULEUR : un bouton plein de plus au
+   bord du tableau aurait concurrencé le schéma, qui est ce qu'on doit
+   regarder. Un halo qui pulse lentement se remarque sans rien prendre.
+
+   MÊME MÉCANIQUE QUE LE HALO DU MICRO, quelques milliers de lignes plus
+   haut — deux ombres, une proche et une diffuse, qui respirent ensemble.
+   La sarcelle, elle, est déjà la couleur du filet sous « Le tableau ».
+   ------------------------------------------------------------------ */
+.ardoise__agrandir {
+  animation: halo-agrandir 2.6s ease-in-out infinite;
+}
+
+@keyframes halo-agrandir {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--sarcelle) 32%, transparent),
+      0 0 10px 2px color-mix(in srgb, var(--sarcelle) 26%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--sarcelle) 16%, transparent),
+      0 0 22px 6px color-mix(in srgb, var(--sarcelle) 52%, transparent);
+  }
+}
+
+/* LE HALO S'ARRÊTE DÈS QU'ON Y TOUCHE : il est là pour dire « clique »,
+   pas pour continuer à s'agiter pendant qu'on clique. */
+.ardoise__agrandir:hover,
+.ardoise__agrandir:focus-visible {
+  animation: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sarcelle) 38%, transparent);
+}
+
+/* MOUVEMENT RÉDUIT : le halo RESTE, il cesse seulement de respirer. Le
+   supprimer rendrait au bouton l'invisibilité qu'on vient de lui enlever —
+   et c'est justement l'enfant qui en a le plus besoin. */
+@media (prefers-reduced-motion: reduce) {
+  .ardoise__agrandir {
+    animation: none;
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--sarcelle) 34%, transparent),
+      0 0 16px 4px color-mix(in srgb, var(--sarcelle) 40%, transparent);
+  }
+}
+
+/* EN THÈME CLAIR, LA CRAIE DEVIENT INVISIBLE — Camara, le 18/09/2026 : « sur
+   le thème clair on voit plus le texte pour agrandir le tableau ».
+
+   LE BOUTON EST AU-DESSUS DU TABLEAU, PAS DESSUS. Il est posé sur la PAGE,
+   et la page change de couleur avec le thème — le tableau, lui, reste noir
+   dans les deux. La craie avait été mesurée contre le fond sombre (16,24:1),
+   et ce chiffre ne veut plus rien dire sur du papier.
+
+   LE HALO A RENDU LE DÉFAUT VISIBLE SANS LE CRÉER : le bouton était déjà
+   blanc sur crème avant lui. On voyait l’anneau, et rien dedans.
+
+   color-mix AVEC L’ENCRE plutôt qu’un gris écrit ici : le contour garde le
+   même rapport à son fond que la version sombre garde au sien.
+
+   LES DEUX CHIFFRES SONT MESURÉS, PAS ESTIMÉS. Le libellé passe de invisible
+   à 14,71:1 contre le papier. Le contour, lui, était à 3,01:1 au premier
+   réglage — pile sur le seuil des éléments d’interface, donc faux : à 50 %
+   d’encre il est à 3,92:1, au-dessus comme son homologue sombre (3,43:1). */
+:root[data-theme='light'] .ardoise__agrandir {
+  border-color: color-mix(in srgb, var(--encre) 50%, transparent);
+  color: var(--encre);
+}
+
+:root[data-theme='light'] .ardoise__agrandir:hover {
+  background: color-mix(in srgb, var(--encre) 7%, transparent);
+  border-color: color-mix(in srgb, var(--encre) 58%, transparent);
 }

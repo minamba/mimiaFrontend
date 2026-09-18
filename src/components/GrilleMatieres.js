@@ -11,7 +11,7 @@ import { sessionEleve } from '../lib/storage/sessionEleve';
 import {
   getNombreFiches, getEvaluations, getMatieresEleve, getNombreDictees,
   getNombreComprehensionsOrales,
-  getNombreExpressionsOrales, getControles, getExamen,
+  getNombreExpressionsOrales, getNombreExpressionsEcrites, getControles, getExamen,
 } from '../lib/api/elevesApi';
 import { estMatiereLangue } from '../lib/matieresLangues';
 import Avatar from './Avatar';
@@ -120,7 +120,7 @@ const DUREES_TEST = [
  */
 function CarteMatiere({
   matiere, onOuvrir, fiches, evaluations, dictees, comprehensionsOrales,
-  expressionsOrales, eleveId,
+  expressionsOrales, expressionsEcrites, eleveId,
 }) {
   const total = fiches?.total ?? 0;
   const nouveautes = fiches?.nouveautes ?? 0;
@@ -133,6 +133,9 @@ function CarteMatiere({
   // Les conversations d'expression orale — Camara, le 18/09/2026.
   const eoTotal = expressionsOrales?.total ?? 0;
   const eoNouveautes = expressionsOrales?.nouveautes ?? 0;
+
+  const eeTotal = expressionsEcrites?.total ?? 0;
+  const eeNouveautes = expressionsEcrites?.nouveautes ?? 0;
 
   const contenu = (
     <>
@@ -266,6 +269,28 @@ function CarteMatiere({
             : 'Mes conversations'}
           <span className="matiere-fiches__compte">
             {eoNouveautes > 0 ? eoNouveautes : eoTotal}
+          </span>
+          <span className="matiere-fiches__fleche" aria-hidden="true">→</span>
+        </Link>
+      )}
+
+      {/* LES TEXTES ÉCRITS, juste sous les conversations : troisième et
+          dernier de la famille, même restriction aux matières de langue.
+
+          LES TROIS SE SUIVENT PARCE QU'ILS SE DISTINGUENT MAL DE LOIN, et
+          les tenir côte à côte est ce qui les sépare : ce qu’il a ÉCOUTÉ,
+          ce qu’il a DIT, ce qu’il a ÉCRIT. */}
+      {estMatiereLangue(matiere.code) && eeTotal > 0 && (
+        <Link
+          to={`/eleves/${eleveId}/matieres/${matiere.id}/expressions-ecrites`}
+          className={`matiere-fiches matiere-fiches--expressions-ecrites ${eeNouveautes > 0 ? 'matiere-fiches--nouveautes' : ''}`}
+        >
+          <span className="matiere-fiches__emoji" aria-hidden="true">✍️</span>
+          {eeNouveautes > 0
+            ? `${eeNouveautes} texte${eeNouveautes > 1 ? 's' : ''} à relire`
+            : 'Expressions écrites'}
+          <span className="matiere-fiches__compte">
+            {eeNouveautes > 0 ? eeNouveautes : eeTotal}
           </span>
           <span className="matiere-fiches__fleche" aria-hidden="true">→</span>
         </Link>
@@ -505,6 +530,7 @@ export default function GrilleMatieres() {
   // Compteurs de conversations d'expression orale, même forme et même
   // restriction que les deux du dessus.
   const [expressionsOrales, setExpressionsOrales] = useState({});
+  const [expressionsEcrites, setExpressionsEcrites] = useState({});
 
   // Les contrôles à venir, avec leur préparation. `null` tant que rien n'est
   // revenu : la section ne s'affiche pas plutôt que d'annoncer « aucun
@@ -587,6 +613,10 @@ export default function GrilleMatieres() {
 
       getNombreExpressionsOrales(eleveId)
         .then(({ data }) => { if (vivant) setExpressionsOrales(data ?? {}); })
+        .catch(() => {});
+
+      getNombreExpressionsEcrites(eleveId)
+        .then(({ data }) => { if (vivant) setExpressionsEcrites(data ?? {}); })
         .catch(() => {});
 
       // Un seul appel pour toutes les matières, puis un regroupement ici. Le
@@ -887,6 +917,7 @@ export default function GrilleMatieres() {
               dictees={dictees[matiere.id]}
               comprehensionsOrales={comprehensionsOrales[matiere.id]}
               expressionsOrales={expressionsOrales[matiere.id]}
+              expressionsEcrites={expressionsEcrites[matiere.id]}
               eleveId={eleveId}
             />
           </li>
