@@ -41,6 +41,14 @@ import {
   etatCopieControle, lireDemandeCopie, marquerPieceControle, retirerMarqueurCopieControle,
 } from '../lib/storage/copieControle';
 import CopieControle from './CopieControle';
+import {
+  supportChoisi, marquerSupport, retirerMarqueurSupport, CAHIER,
+  // RENOMMÉ À L'IMPORT : `copieRendue` existe déjà dans ce fichier, et c'est un
+  // BOOLÉEN — « le professeur vient de rendre la note ». Sans cet alias, l'appel
+  // plus bas tombait sur lui et levait « copieRendue is not a function ».
+  copieRendue as copieEvaluationRendue,
+} from '../lib/storage/supportEvaluation';
+import SupportEvaluation from './SupportEvaluation';
 import ScanMobileModale from './ScanMobileModale';
 import { styleMatiere, murMatiere } from '../lib/couleurMatiere';
 import scannerPng from '../assets/scanner.png';
@@ -83,6 +91,10 @@ import {
   VITESSES, VITESSE_PAR_DEFAUT, carteVitesseVisible, estVitesseConnue,
 } from '../lib/storage/vitesseEcoute';
 import { demandeChoixVitesse, vitesseDemandee } from '../lib/storage/ardoise';
+import {
+  conversationEnCours, marquerVitesseChoisie, rangConversation,
+  retirerMarqueurConversation,
+} from '../lib/storage/conversationLangue';
 import HorlogeReelle from './HorlogeReelle';
 import Schema from './Schema';
 import ZoomSchema from './ZoomSchema';
@@ -121,7 +133,9 @@ const POINTAGE = /^\[L'élève montre un endroit de la figure.*POINTAGE:[a-z0-9-
 
 function Contenu({ texte, onRappelerTableau }) {
   const segments = useMemo(
-    () => decouper(retirerMarqueurCopieControle(retirerMarqueurCahier(texte))),
+    () => decouper(retirerMarqueurConversation(
+      retirerMarqueurSupport(retirerMarqueurCopieControle(retirerMarqueurCahier(texte))),
+    )),
     [texte],
   );
 
@@ -227,6 +241,19 @@ const FIN_TOLEREE = 60;
  */
 const RAB_AVERTISSEMENT = 10 * 60;
 const RAB_MAXIMUM = 12 * 60;
+
+/**
+ * Deux minutes avant la fin de la séance, on rappelle la copie — Camara, le
+ * 18/09/2026.
+ *
+ * DEUX MINUTES ET PAS CINQ : le rappel doit laisser le temps de photographier
+ * une page, pas celui de finir l'exercice. Trop tôt, il presse un élève qui
+ * travaille encore ; trop tard, il arrive après la fin.
+ *
+ * UNE SEULE FOIS, jamais répété : « il ne fera qu'une fois ce rappel, c'est
+ * tout ». Un contrôle n'est pas un endroit où l'on se fait harceler.
+ */
+const RAPPEL_COPIE = 2 * 60;
 
 /** mm:ss, et hh:mm:ss au-delà de l'heure. */
 function formaterDuree(secondes) {
@@ -914,6 +941,18 @@ export default function Chat() {
   );
 
   /**
+   * SUR QUOI IL COMPOSE SON ÉVALUATION — Camara, le 18/09/2026.
+   *
+   * `null` veut dire « la question est posée, sans réponse » : c'est le
+   * moment où la carte s'affiche. `undefined`, elle n'a jamais été posée.
+   *
+   * À NE PAS CONFONDRE AVEC `etatCopie` juste au-dessus, qui parle du
+   * contrôle passé à l'ÉCOLE et dont on regarde la copie après coup. Ici,
+   * c'est l'évaluation que le professeur fait passer MAINTENANT.
+   */
+  const support = useMemo(() => supportChoisi(messages), [messages]);
+
+  /**
    * LA CARTE ATTEND : LES AUTRES CHEMINS D'ENVOI SONT FERMÉS.
    *
    * Voulu par Camara le 13/09/2026 : « tout ce qui est envoi de copie et
@@ -1128,6 +1167,10 @@ export default function Chat() {
       preavisFinal: dejaFinie,
       fin: dejaFinie,
       clotureProche: dejaFinie,
+
+      // Le rappel des deux minutes ne se rejoue pas sur une séance qu'on
+      // rouvre : elle est déjà finie, la copie ne partira plus.
+      copieAttendue: dejaFinie,
       clotureForcee: dejaFinie,
     };
   }
@@ -1605,18 +1648,68 @@ export default function Chat() {
       : '';
   }, [reponseEnCours, messages, indexDernierProf]);
 
-  const vitesseEnAttente = carteVitesseVisible({
-    passageEcoute,
-    passageChoisi: passageEcouteChoisiRef.current,
-    tourDuChoix: tourVitesseRef.current,
-    tourEleve,
-  });
+  /**
+   * LA VITESSE, EN CONVERSATION — Camara, le 18/09/2026 : « elle me demande
+   * la vitesse, mais j’ai pas la fenêtre ».
+   *
+   * DEUX DÉFAUTS OPPOSÉS, ET IL FALLAIT LES RÉGLER ENSEMBLE.
+   *
+   * `carteVitesseVisible` attend un PASSAGE dans la langue pour s'afficher,
+   * et repose la question dès qu'il est inédit. En compréhension orale c'est
+   * exactement ce qu'il faut. En conversation, les deux moitiés tombent à
+   * côté :
+   *
+   *   - au moment où le professeur DEMANDE la vitesse, il n'a encore rien dit
+   *     dans la langue — pas de passage, donc pas de fenêtre. C'est ce que
+   *     Camara a vu ;
+   *   - et une fois la conversation lancée, chaque réplique est un texte
+   *     inédit — la fenêtre serait revenue à chaque tour de parole.
+   *
+   * Ici, c'est donc l'OUVERTURE de la conversation qui pose la question, une
+   * fois, sans attendre de passage ; et plus rien ensuite.
+   */
+  const enConversation = useMemo(
+    () => conversationEnCours(messages, reponseEnCours),
+    [messages, reponseEnCours],
+  );
+
+  // L'identité de la conversation en cours — voir `rangConversation`, où le
+  // choix du RANG plutôt que de l'index est expliqué et vérifié.
+  const ouvertureConversation = useMemo(
+    () => rangConversation(messages, reponseEnCours),
+    [messages, reponseEnCours],
+  );
+
+  // L’ouverture pour laquelle l’élève a déjà choisi. `undefined` tant qu’il
+  // n’a rien choisi — jamais `null`, qui est une valeur possible ci-dessus.
+  const vitesseConversationRef = useRef(undefined);
+
+  const vitesseEnAttente = enConversation
+    ? vitesseConversationRef.current !== ouvertureConversation
+    : carteVitesseVisible({
+      passageEcoute,
+      passageChoisi: passageEcouteChoisiRef.current,
+      tourDuChoix: tourVitesseRef.current,
+      tourEleve,
+    });
 
   /** Enregistre la vitesse choisie, pour cet exercice-ci. */
   const choisirVitesseEcoute = (cle) => {
     setVitesseEcoute(cle);
     tourVitesseRef.current = tourEleve;
     passageEcouteChoisiRef.current = passageEcoute;
+
+    // EN CONVERSATION, LE CHOIX VAUT POUR TOUT L’ÉCHANGE : on retient
+    // laquelle, pour ne plus reposer la question jusqu'à l'archivage.
+    if (!enConversation) return;
+
+    vitesseConversationRef.current = ouvertureConversation;
+
+    // ET IL PART AU PROFESSEUR, sinon il attend un signal qui ne vient
+    // jamais — voir `marquerVitesseChoisie`. En compréhension orale le clic
+    // ne produit aucun tour, et c’est correct : le passage est déjà écrit.
+    // Ici, rien ne se passait.
+    envoyerTexte(marquerVitesseChoisie());
   };
 
   /**
@@ -2495,6 +2588,7 @@ export default function Chat() {
       preavisFinal: false,
       fin: false,
       clotureProche: false,
+      copieAttendue: false,
       clotureForcee: false,
     };
 
@@ -3073,6 +3167,19 @@ export default function Chat() {
    * La carte avance tout de suite ; si l'enregistrement échoue, elle revient à
    * la question et le dit.
    */
+  /**
+   * L'élève choisit son support, et le fait part avec son message.
+   *
+   * UN TOUR NORMAL, comme le clic sur le tableau : le professeur enchaîne
+   * tout de suite — il affiche le sujet, ou il pose sa première question.
+   * Un choix enregistré à part aurait laissé l'élève devant une carte
+   * refermée, sans rien qui se passe.
+   */
+  const choisirSupport = useCallback(
+    (choix) => envoyerTexte(marquerSupport('', choix)),
+    [envoyerTexte],
+  );
+
   const choisirCopie = useCallback(
     async (separee) => {
       if (!etatCopie || !conversation) return;
@@ -3779,6 +3886,36 @@ export default function Chat() {
     // prévient, passé douze on clôture — sinon un contrôle abandonné en cours
     // laisserait la séance et le micro ouverts sans fin.
     if (evaluationEnCours && !rabEpuise) {
+      /**
+       * DEUX MINUTES AVANT LA FIN, ET SA COPIE N’EST PAS ARRIVÉE.
+       *
+       * Camara, le 18/09/2026 : « il préviendra l’élève en lui disant de
+       * commencer à conclure et d’essayer d’envoyer sa copie… il ne fera
+       * qu’une fois ce rappel, c’est tout, pas de répétition ».
+       *
+       * AU CAHIER SEULEMENT. À l’ordinateur, chaque réponse arrive au fil
+       * des questions : il n’y a pas de copie qui pourrait rester sur la
+       * table, et prévenir n’aurait aucun sens.
+       *
+       * ET SEULEMENT SI RIEN N’EST ENCORE ARRIVÉ. Presser celui qui vient
+       * d’envoyer sa photo serait le pire des deux mondes : il croirait
+       * que son envoi a échoué.
+       *
+       * LE RAB NE LE REJOUE PAS. Le drapeau est posé une fois pour la
+       * séance ; passé l’heure, ce sont les deux annonces de clôture qui
+       * prennent le relais, et elles disent déjà ce qu’il faut.
+       */
+      if (
+        support === CAHIER
+        && restant <= RAPPEL_COPIE
+        && !annoncesRef.current.copieAttendue
+        && !copieEvaluationRendue(messages)
+      ) {
+        annoncesRef.current.copieAttendue = true;
+        dispatch(annoncer(conversation.id, 'copie-attendue'));
+        return;
+      }
+
       if (depasse >= RAB_MAXIMUM && !annoncesRef.current.clotureForcee) {
         annoncesRef.current.clotureForcee = true;
 
@@ -3837,7 +3974,7 @@ export default function Chat() {
     // qu'on attendait de cette annonce.
   }, [
     restant, depasse, conversation, streaming, evaluationEnCours, rabEpuise, adieuFait,
-    messages, indexDernierProf, dispatch,
+    messages, indexDernierProf, support, dispatch,
   ]);
 
   /**
@@ -4226,6 +4363,21 @@ export default function Chat() {
             </div>
           ))}
 
+        {/* LE SUPPORT DE L'ÉVALUATION, À LA SUITE DU MESSAGE QUI LE DEMANDE.
+
+            Masquée pendant que le professeur parle, comme les deux autres
+            cartes : sa préconisation arrive en flux, et la question se
+            serait posée avant qu'il ait fini de dire laquelle il conseille.
+
+            Masquée aussi quand la séance est finie : un choix de support
+            sur un contrôle qui ne commencera jamais. */}
+        {support === null && !streaming && !seanceTerminee && (
+          <SupportEvaluation
+            disabled={streaming || seanceTerminee}
+            onChoisir={choisirSupport}
+          />
+        )}
+
         {/* LA COPIE DU CONTRÔLE, À LA SUITE DU MESSAGE QUI LA PROPOSE.
             Masquée pendant que le professeur parle : elle apparaît quand il a
             fini sa phrase, comme la question du choix de dictée. */}
@@ -4301,8 +4453,14 @@ export default function Chat() {
             l'exercice qui commence sans l'élève. */}
         {vitesseEnAttente && (
           <div className="choix-dictee choix-dictee--vitesse">
+            {/* « QUE JE PARLE » EN CONVERSATION, « que je lise » ailleurs.
+                Le professeur ne lit pas un passage, il discute : lui demander
+                à quelle vitesse il va LIRE annoncerait un exercice qui ne
+                vient pas. */}
             <p className="choix-dictee__question">
-              À quelle vitesse veux-tu que je lise&nbsp;?
+              À quelle vitesse veux-tu que je
+              {enConversation ? " parle" : " lise"}
+              &nbsp;?
             </p>
 
             <div className="choix-dictee__boutons">

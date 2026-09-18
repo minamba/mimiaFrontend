@@ -964,6 +964,73 @@ h1, h2, h3 {
   background: var(--surface);
 }
 
+/* LE SUPPORT DE L’ÉVALUATION — Camara, le 18/09/2026.
+
+   MÊME CADRE QUE LA CARTE DE COPIE, au liseré près : ce sont deux questions
+   posées au même endroit du fil, et l’élève doit les reconnaître comme une
+   même sorte de chose — « l’écran me demande quelque chose avant qu’on
+   continue ». */
+.support-eval {
+  align-self: stretch;
+  margin: 4px 0 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--trait);
+  border-left: 3px solid var(--sarcelle);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+.support-eval__question {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--encre);
+}
+
+/* DEUX COLONNES ÉGALES, ET UNE SEULE SOUS 520 px. Les deux supports pèsent le
+   même poids : le professeur vient de dire lequel il conseille, l’écran n’a
+   pas à le redire par sa mise en forme. */
+.support-eval__choix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.support-eval__bouton {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 2px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-m, 12px);
+  background: var(--surface-2, transparent);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.support-eval__bouton:hover:not(:disabled) {
+  border-color: var(--sarcelle);
+  background: color-mix(in srgb, var(--sarcelle) 10%, var(--surface));
+}
+
+.support-eval__bouton:disabled { opacity: 0.55; cursor: default; }
+
+.support-eval__icone { grid-row: 1 / 3; font-size: 26px; line-height: 1; }
+
+.support-eval__nom { font-size: 15px; font-weight: 700; color: var(--encre); }
+
+/* Ce que le support IMPLIQUE, pas ce qu’il est. « Le sujet s’affiche au
+   tableau, tu m’envoies la photo » dit à un enfant de huit ans ce qui va se
+   passer — « cahier » ne le lui dit pas. */
+.support-eval__detail {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--encre-douce);
+}
+
 .copie-controle__question {
   margin: 0 0 10px;
   font-size: 15px;
@@ -6014,6 +6081,15 @@ button.eleve-bandeau {
   color: var(--serie-4);
 }
 
+/* LES CONVERSATIONS — Camara, le 18/09/2026. Cinquième teinte de la
+   famille : elle doit se distinguer des compréhensions orales d'un coup
+   d'œil, puisque c'est précisément avec elles qu'on la confond. */
+.matiere-fiches--expressions-orales {
+  border-color: color-mix(in srgb, var(--serie-2) 32%, var(--trait));
+  background: color-mix(in srgb, var(--serie-2) 10%, transparent);
+  color: var(--serie-2);
+}
+
 /* LES FICHES DE RÉVISION, AU MÊME STYLE QUE LEURS VOISINES — Camara, le
    15/09/2026, dans TOUS les modes (d'abord demandé en Blue Sky seulement).
    L'aplat ambre plein tranchait au milieu de bandeaux en teinte légère : il
@@ -6022,7 +6098,7 @@ button.eleve-bandeau {
    l'ambre qui tient en TEXTE dans les deux thèmes (#e8a33e sur le sombre,
    #b26a08 sur le clair). Blue Sky garde sa propre version, opaque. */
 .matiere-fiches:not(.matiere-fiches--notes, .matiere-fiches--dictees,
-  .matiere-fiches--comprehensions-orales) {
+  .matiere-fiches--comprehensions-orales, .matiere-fiches--expressions-orales) {
   border-color: color-mix(in srgb, var(--duree-3) 32%, var(--trait));
   background: color-mix(in srgb, var(--duree-3) 12%, transparent);
   color: var(--duree-3);
@@ -10400,6 +10476,17 @@ html.defilement-bloque body {
 }
 
 /* Bouton d'accès à la copie, dans le chat comme dans la fiche. */
+/* « MON CONTRÔLE » A UN FOND, IL N’EST PAS TRANSPARENT — Camara, le
+   18/09/2026.
+
+   Il était mélangé à `transparent` : 10 % de sarcelle et 90 % de rien. Ça
+   tenait tant que l’en-tête du cours était uni. Depuis que chaque matière y
+   pose son décor, l’image passe au travers du bouton — le texte se lit sur
+   un mur de briques ou un tableau noir, et le bouton cesse d’en être un.
+
+   Mélangé à `--surface`, la teinte est la même à l’œil mais le fond est
+   OPAQUE : rien ne passe derrière, quel que soit le décor. C’est déjà ce que
+   font les autres pastilles teintées du site (voir `.planches__alerte`). */
 .btn-copie {
   display: inline-flex;
   align-items: center;
@@ -10407,7 +10494,7 @@ html.defilement-bloque body {
   padding: 7px 14px;
   border: 1px solid color-mix(in srgb, var(--sarcelle) 45%, var(--trait));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--sarcelle) 10%, transparent);
+  background: color-mix(in srgb, var(--sarcelle) 14%, var(--surface));
   color: var(--sarcelle);
   font-family: inherit;
   font-size: 13.5px;
@@ -10418,7 +10505,7 @@ html.defilement-bloque body {
 }
 
 .btn-copie:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--sarcelle) 20%, transparent);
+  background: color-mix(in srgb, var(--sarcelle) 26%, var(--surface));
   border-color: var(--sarcelle);
 }
 
@@ -23553,4 +23640,166 @@ html.defilement-bloque body {
 @media (max-width: 620px) {
   .idees__actions { justify-content: flex-start; }
   .idee-outils__aide { display: none; }
+}
+
+/* ==========================================================================
+   L'EXPRESSION ORALE — Camara, le 18/09/2026.
+
+   Deux écrans : la liste des conversations rangées par jour, et la
+   conversation elle-même, relue comme une messagerie.
+   ========================================================================== */
+
+.expr-jour { margin-top: 26px; }
+
+/* Le jour est un intertitre, pas un en-tête de section : il sépare sans
+   peser, comme la barre de date dans une messagerie. */
+.expr-jour__titre {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--encre-douce);
+  text-transform: capitalize;
+}
+
+.expr-liste { list-style: none; margin: 0; padding: 0; }
+
+.expr-ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.expr-ligne:hover:not(:disabled) {
+  border-color: var(--teinte, var(--sarcelle));
+  background: color-mix(in srgb, var(--teinte, var(--sarcelle)) 7%, var(--surface));
+}
+
+.expr-ligne:disabled { opacity: 0.6; cursor: default; }
+
+/* Le liseré à gauche dit « pas encore ouverte » sans pastille de plus : la
+   ligne en porte déjà une, et deux marques pour une information se lisent
+   comme deux informations. */
+.expr-ligne--nouvelle { border-left: 3px solid var(--teinte, var(--sarcelle)); }
+
+.expr-ligne__pastille {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teinte, var(--sarcelle));
+}
+
+.expr-ligne__titre {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.expr-ligne__detail {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+  white-space: nowrap;
+}
+
+.expr-ligne__fleche { flex: 0 0 auto; color: var(--encre-douce); }
+
+/* ------------------------------------------------------- la conversation */
+
+.expr-detail__vide { color: var(--encre-douce); font-size: 14px; }
+
+.expr-fil {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.expr-tour { display: flex; flex-direction: column; max-width: 78%; }
+
+/* L'ÉLÈVE À DROITE, comme dans toutes les messageries : c'est lui qui relit,
+   et ses propres messages sont là où il a l'habitude de les trouver. */
+.expr-tour--eleve { align-self: flex-end; align-items: flex-end; }
+.expr-tour--prof { align-self: flex-start; align-items: flex-start; }
+
+/* Un écart plus franc au CHANGEMENT de voix : les tours d’une même personne
+   se suivent serrés, l'alternance se voit. */
+.expr-tour__nom + .expr-tour__bulle { margin-top: 0; }
+.expr-tour:has(.expr-tour__nom) { margin-top: 12px; }
+.expr-fil > .expr-tour:first-child { margin-top: 0; }
+
+.expr-tour__nom {
+  margin-bottom: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--teinte, var(--sarcelle)) 16%, var(--surface));
+  color: var(--teinte, var(--sarcelle));
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.expr-tour__bulle {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Deux fonds nettement différents : c'est le premier repère, avant même le
+   côté et le nom. */
+.expr-tour--prof .expr-tour__bulle {
+  border: 1px solid var(--trait);
+  border-bottom-left-radius: 5px;
+  background: var(--surface);
+  color: var(--encre);
+}
+
+.expr-tour--eleve .expr-tour__bulle {
+  border: 1px solid color-mix(in srgb, var(--sarcelle) 40%, var(--trait));
+  border-bottom-right-radius: 5px;
+  background: color-mix(in srgb, var(--sarcelle) 14%, var(--surface));
+  color: var(--encre);
+}
+
+/* Le retour du professeur est HORS du fil : il n'a pas été dit pendant
+   l'échange, il a été écrit après. */
+.expr-detail__remarque {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--trait);
+}
+
+.expr-detail__remarque h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.expr-detail__remarque p { margin: 0; font-size: 14.5px; line-height: 1.55; }
+
+@media (max-width: 520px) {
+  /* Les bulles prennent presque toute la largeur : à 400 px, 78 % laissent
+     trois mots par ligne. */
+  .expr-tour { max-width: 92%; }
+
+  .expr-ligne { flex-wrap: wrap; }
+  .expr-ligne__titre { flex: 1 0 100%; order: -1; }
 }

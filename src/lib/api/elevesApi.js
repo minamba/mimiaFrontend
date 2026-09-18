@@ -115,6 +115,32 @@ export const getNombreComprehensionsOrales = (eleveId) =>
 export const getComprehensionsOrales = (eleveId, matiereId) =>
   httpClient.get(`/eleves/${eleveId}/comprehensions-orales?matiereId=${matiereId}`);
 
+/**
+ * LES CONVERSATIONS D'EXPRESSION ORALE — Camara, le 18/09/2026.
+ *
+ * CE N'EST PAS LA COMPRÉHENSION ORALE juste au-dessus, et les deux se
+ * ressemblent assez pour valoir la précision :
+ *
+ *   - compréhension orale : le professeur LIT, l'élève ÉCOUTE et explique EN
+ *     FRANÇAIS ce qu'il a compris. On garde l'audio, pour réécouter.
+ *   - expression orale : les DEUX parlent, dans la langue du cours. On garde
+ *     la CONVERSATION, qu'on relit comme une messagerie. Aucun audio.
+ */
+export const getExpressionsOrales = (eleveId, matiereId) =>
+  httpClient.get(`/eleves/${eleveId}/expressions-orales?matiereId=${matiereId}`);
+
+/** Une conversation complète, avec tous ses tours de parole. */
+export const getExpressionOrale = (eleveId, expressionOraleId) =>
+  httpClient.get(`/eleves/${eleveId}/expressions-orales/${expressionOraleId}`);
+
+/** Combien de conversations par matière, et combien jamais ouvertes. */
+export const getNombreExpressionsOrales = (eleveId) =>
+  httpClient.get(`/eleves/${eleveId}/expressions-orales`);
+
+/** L'élève vient de l'ouvrir : la pastille « à consulter » s'éteint. */
+export const marquerExpressionOraleVue = (eleveId, expressionOraleId) =>
+  httpClient.post(`/eleves/${eleveId}/expressions-orales/${expressionOraleId}/vue`);
+
 /** Une compréhension orale complète : le passage, ce qui a été compris, la remarque. */
 export const getComprehensionOrale = (eleveId, comprehensionOraleId) =>
   httpClient.get(`/eleves/${eleveId}/comprehensions-orales/${comprehensionOraleId}`);

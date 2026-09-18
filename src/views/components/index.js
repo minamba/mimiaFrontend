@@ -20,6 +20,7 @@ import {
   Evaluations,
   Dictees,
   ComprehensionsOrales,
+  ExpressionsOrales,
   PageEleve,
   Admin,
   MonProfil,
@@ -273,6 +274,19 @@ export const BaseApp = () => {
             element={
               <RouteProtegee>
                 <ComprehensionsOrales />
+              </RouteProtegee>
+            }
+          />
+
+          {/* Les conversations d'expression orale — Camara, le 18/09/2026.
+              Même famille que les trois du dessus, et même restriction aux
+              matières de langue. À ne pas confondre avec la compréhension
+              orale juste au-dessus : là-bas l'élève ÉCOUTE, ici il PARLE. */}
+          <Route
+            path="/eleves/:eleveId/matieres/:matiereId/expressions-orales"
+            element={
+              <RouteProtegee>
+                <ExpressionsOrales />
               </RouteProtegee>
             }
           />

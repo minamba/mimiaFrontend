@@ -10,7 +10,8 @@ import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { sessionEleve } from '../lib/storage/sessionEleve';
 import {
   getNombreFiches, getEvaluations, getMatieresEleve, getNombreDictees,
-  getNombreComprehensionsOrales, getControles, getExamen,
+  getNombreComprehensionsOrales,
+  getNombreExpressionsOrales, getControles, getExamen,
 } from '../lib/api/elevesApi';
 import { estMatiereLangue } from '../lib/matieresLangues';
 import Avatar from './Avatar';
@@ -118,7 +119,8 @@ const DUREES_TEST = [
  * cours ne dit rien à personne.
  */
 function CarteMatiere({
-  matiere, onOuvrir, fiches, evaluations, dictees, comprehensionsOrales, eleveId,
+  matiere, onOuvrir, fiches, evaluations, dictees, comprehensionsOrales,
+  expressionsOrales, eleveId,
 }) {
   const total = fiches?.total ?? 0;
   const nouveautes = fiches?.nouveautes ?? 0;
@@ -127,6 +129,10 @@ function CarteMatiere({
   const dictNouveautes = dictees?.nouveautes ?? 0;
   const coTotal = comprehensionsOrales?.total ?? 0;
   const coNouveautes = comprehensionsOrales?.nouveautes ?? 0;
+
+  // Les conversations d'expression orale — Camara, le 18/09/2026.
+  const eoTotal = expressionsOrales?.total ?? 0;
+  const eoNouveautes = expressionsOrales?.nouveautes ?? 0;
 
   const contenu = (
     <>
@@ -236,6 +242,30 @@ function CarteMatiere({
             : 'Mes compréhensions orales'}
           <span className="matiere-fiches__compte">
             {coNouveautes > 0 ? coNouveautes : coTotal}
+          </span>
+          <span className="matiere-fiches__fleche" aria-hidden="true">→</span>
+        </Link>
+      )}
+
+      {/* LES CONVERSATIONS, juste sous les compréhensions orales : même
+          famille, même restriction aux matières de langue, cinquième teinte.
+
+          LES DEUX SE SUIVENT PARCE QU'ON LES CONFOND, et les tenir côte à
+          côte est justement ce qui les distingue : au-dessus, ce qu'il a
+          ÉCOUTÉ ; ici, ce qu'il a DIT. Camara a dû me le préciser deux fois
+          pour que je ne les mélange pas dans le code — un enfant n'aura pas
+          cette chance, alors les libellés le disent. */}
+      {estMatiereLangue(matiere.code) && eoTotal > 0 && (
+        <Link
+          to={`/eleves/${eleveId}/matieres/${matiere.id}/expressions-orales`}
+          className={`matiere-fiches matiere-fiches--expressions-orales ${eoNouveautes > 0 ? 'matiere-fiches--nouveautes' : ''}`}
+        >
+          <span className="matiere-fiches__emoji" aria-hidden="true">💬</span>
+          {eoNouveautes > 0
+            ? `${eoNouveautes} conversation${eoNouveautes > 1 ? 's' : ''} à relire`
+            : 'Mes conversations'}
+          <span className="matiere-fiches__compte">
+            {eoNouveautes > 0 ? eoNouveautes : eoTotal}
           </span>
           <span className="matiere-fiches__fleche" aria-hidden="true">→</span>
         </Link>
@@ -472,6 +502,10 @@ export default function GrilleMatieres() {
   // restriction que `dictees`.
   const [comprehensionsOrales, setComprehensionsOrales] = useState({});
 
+  // Compteurs de conversations d'expression orale, même forme et même
+  // restriction que les deux du dessus.
+  const [expressionsOrales, setExpressionsOrales] = useState({});
+
   // Les contrôles à venir, avec leur préparation. `null` tant que rien n'est
   // revenu : la section ne s'affiche pas plutôt que d'annoncer « aucun
   // contrôle » le temps d'un aller-retour.
@@ -549,6 +583,10 @@ export default function GrilleMatieres() {
 
       getNombreComprehensionsOrales(eleveId)
         .then(({ data }) => { if (vivant) setComprehensionsOrales(data ?? {}); })
+        .catch(() => {});
+
+      getNombreExpressionsOrales(eleveId)
+        .then(({ data }) => { if (vivant) setExpressionsOrales(data ?? {}); })
         .catch(() => {});
 
       // Un seul appel pour toutes les matières, puis un regroupement ici. Le
@@ -848,6 +886,7 @@ export default function GrilleMatieres() {
               evaluations={notes[matiere.id]}
               dictees={dictees[matiere.id]}
               comprehensionsOrales={comprehensionsOrales[matiere.id]}
+              expressionsOrales={expressionsOrales[matiere.id]}
               eleveId={eleveId}
             />
           </li>

@@ -325,6 +325,34 @@ const DICTEE_CORRIGEE_FERMETURE = '[/DICTEE_CORRIGEE]';
 const COMPREHENSION_ORALE_OUVERTURE = '[COMPREHENSION_ORALE]';
 const COMPREHENSION_ORALE_FERMETURE = '[/COMPREHENSION_ORALE]';
 
+/**
+ * L'ARCHIVE D'UNE CONVERSATION D'EXPRESSION ORALE.
+ *
+ * OUBLIÉE DE CETTE LISTE À LA LIVRAISON, et Camara l'a vu en séance le
+ * 18/09/2026 : « je suis rentré en cours et j'ai vu ce gros bloc là ». Le
+ * bloc entier — titre, langue, chaque réplique, la remarque — s'affichait
+ * dans la bulle du professeur ET se faisait prononcer à voix haute. Un
+ * enfant de dix ans a entendu « titre deux points commander au restaurant ».
+ *
+ * LA LEÇON : un bloc technique n'est pas masqué parce qu'on a écrit dans la
+ * consigne qu'il ne doit pas l'être. Il est masqué parce qu'il est DANS
+ * cette liste.
+ */
+const EXPRESSION_ORALE_OUVERTURE = '[EXPRESSION_ORALE]';
+const EXPRESSION_ORALE_FERMETURE = '[/EXPRESSION_ORALE]';
+
+/**
+ * Les deux marqueurs isolés de l'expression orale : celui qui ouvre la
+ * conversation, et celui qui demande à l’élève sur quoi il compose son
+ * évaluation.
+ *
+ * ILS ÉTAIENT RETIRÉS À L'AFFICHAGE, PAS À LA VOIX. Chacun avait son propre
+ * nettoyage dans `Chat.js`, qui ne sert que la bulle — la synthèse vocale,
+ * elle, passe par ici. Le professeur les prononçait donc.
+ */
+const CONVERSATION = '[CONVERSATION]';
+const SUPPORT_EVALUATION = '[SUPPORT_EVALUATION]';
+
 /** Marqueur posé par le professeur au moment où le contrôle commence. */
 export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
 
@@ -752,6 +780,8 @@ function retirerMarqueurs(texte) {
     .split(TABLEAU_EFFACE).join('')
     .split(DEMANDE_DOCUMENT).join('')
     .split(VITESSE_CHOIX).join('')
+    .split(CONVERSATION).join('')
+    .split(SUPPORT_EVALUATION).join('')
     // La forme à cible porte un paramètre : elle se retire par motif, sinon
     // l'élève lirait « :lent] » au milieu de la phrase et l'entendrait.
     .replace(VITESSE_CIBLE, '');
@@ -770,6 +800,7 @@ function retirerMarqueurs(texte) {
     [EVALUATION_PREVUE_OUVERTURE, EVALUATION_PREVUE_FERMETURE],
     [DICTEE_CORRIGEE_OUVERTURE, DICTEE_CORRIGEE_FERMETURE],
     [COMPREHENSION_ORALE_OUVERTURE, COMPREHENSION_ORALE_FERMETURE],
+    [EXPRESSION_ORALE_OUVERTURE, EXPRESSION_ORALE_FERMETURE],
     [DICTEE_SUPPRIMEE_OUVERTURE, DICTEE_SUPPRIMEE_FERMETURE],
     [COMPREHENSION_SUPPRIMEE_OUVERTURE, COMPREHENSION_SUPPRIMEE_FERMETURE],
     [DICTEE_AU_TABLEAU_OUVERTURE, DICTEE_AU_TABLEAU_FERMETURE],
