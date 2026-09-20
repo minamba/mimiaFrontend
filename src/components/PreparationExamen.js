@@ -79,12 +79,15 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
 
   const nombre = examen.epreuves?.length ?? 0;
   const aRenseigner = Boolean(examen.specialitesARenseigner);
+  const manquantes = examen.specialitesManquantes ?? 0;
   const notes = examen.notesControleContinu ?? [];
 
   if (nombre === 0 && !aRenseigner && notes.length === 0) return null;
 
   return (
-    <section className="controles-section examen-section">
+    // Même destination que « Mes contrôles » : le détail d'une épreuve
+    // renvoie ici, et non en haut d'une page longue.
+    <section className="controles-section examen-section" id="preparation-examen">
       <div className="controles-section__entete">
         <div className="controles-section__titre">
           {/* LA MÊME ILLUSTRATION QUI DÉBORDE QUE « MES CONTRÔLES » — Camara,
@@ -108,13 +111,21 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
         </div>
       </div>
 
-      {/* LES SPÉCIALITÉS DÉCIDENT DES ÉPREUVES. Tant que la famille ne les a
-          pas cochées, la section le dit : sans cela, un élève de terminale
-          croirait que son bac se réduit à la philosophie. */}
+      {/* LES SPÉCIALITÉS DÉCIDENT DES ÉPREUVES. Tant qu'il en manque une, la
+          section le dit : sans cela, un élève de terminale croirait que son bac
+          se réduit à la philosophie.
+
+          UNE SEULE COCHÉE SUR DEUX SE TAISAIT — Camara, le 20/09/2026 : son
+          fils n'avait que NSI, l'écran n'alertait qu'à zéro, et le bac
+          paraissait amputé sans que rien ne l'explique. Le cas partiel est le
+          plus trompeur des deux : la section a l'air complète. */}
       {aRenseigner && (
         <p className="examen-section__alerte" role="note">
-          Tes spécialités ne sont pas encore renseignées. Demande à ton parent de
-          les cocher dans ton profil : leurs épreuves apparaîtront ici.
+          {manquantes === 1 && nombre > 0
+            ? 'Il manque une spécialité dans ton profil : son épreuve n’apparaît pas ici. '
+              + 'Demande à ton parent de la cocher.'
+            : 'Tes spécialités ne sont pas encore renseignées. Demande à ton parent de '
+              + 'les cocher dans ton profil : leurs épreuves apparaîtront ici.'}
         </p>
       )}
 

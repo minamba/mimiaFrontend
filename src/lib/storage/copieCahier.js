@@ -77,7 +77,9 @@ export function marquerCopieAuCahier(texte) {
 const MARQUEUR_CLAVIER =
   '[DICTÉE AU CLAVIER : cette copie est celle que l’élève vient de rendre, '
   + 'tapée au clavier — tu l’as sous les yeux. Ne lui demande JAMAIS de photo : '
-  + 'il n’a pas de cahier, il n’y a rien à photographier.]';
+  + 'il n’a pas de cahier, il n’y a rien à photographier. Une fois les deux textes '
+  + 'au tableau, tu reprends les erreurs DANS L’ORDRE DES NUMÉROS, en commençant '
+  + 'par le 1.]';
 
 /** Même ancrage, même garantie de retrait sûr. */
 const MOTIF_CLAVIER = /\n\[DICTÉE AU CLAVIER[^\]]*\]$/;

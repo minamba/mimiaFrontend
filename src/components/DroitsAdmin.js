@@ -35,7 +35,17 @@ const LIBELLES = {
   signalements: 'Signalements',
   idees: 'Idées',
   fournisseurs: 'Anthropic / OpenAI',
+  cout: 'Ce que le produit me coûte',
+  revenu: 'Ce que le produit me rapporte',
 };
+
+/**
+ * LES DROITS QUI NE SONT PAS DES ONGLETS : deux blocs de l'onglet Parents —
+ * voulus par Camara le 19/09/2026. Même liste côté serveur, mais rangés à
+ * part ici, sous leur propre titre : mêlés aux onglets, on aurait cru qu'ils
+ * ajoutaient une section à la barre.
+ */
+const BLOCS = ['cout', 'revenu'];
 
 export default function DroitsAdmin({ parent, onFermer, onEnregistre }) {
   const [toutes, setToutes] = useState([]);
@@ -117,7 +127,7 @@ export default function DroitsAdmin({ parent, onFermer, onEnregistre }) {
         ) : (
           <>
             <div className="droits__liste">
-              {toutes.map((cle) => (
+              {toutes.filter((cle) => !BLOCS.includes(cle)).map((cle) => (
                 <label key={cle} className="droits__case">
                   <input
                     type="checkbox"
@@ -128,6 +138,24 @@ export default function DroitsAdmin({ parent, onFermer, onEnregistre }) {
                 </label>
               ))}
             </div>
+
+            {toutes.some((cle) => BLOCS.includes(cle)) && (
+              <>
+                <h4 className="droits__sous-titre">Blocs de l’onglet Parents</h4>
+                <div className="droits__liste">
+                  {toutes.filter((cle) => BLOCS.includes(cle)).map((cle) => (
+                    <label key={cle} className="droits__case">
+                      <input
+                        type="checkbox"
+                        checked={cochees.includes(cle)}
+                        onChange={() => basculer(cle)}
+                      />
+                      <span>{LIBELLES[cle] ?? cle}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
 
             {/* LE COMPTE VIDE SE DIT. Un administrateur sans aucune section
                 voit un tableau de bord vide, et c'est exactement ce que veut

@@ -552,6 +552,14 @@ export function effaceLeTableau(texte) {
  */
 export const DEMANDE_DOCUMENT = '[DEMANDE_DOCUMENT]';
 
+/**
+ * L'ÉNONCÉ SEUL — Camara, le 20/09/2026. Le professeur l'écrit quand l'enfant
+ * veut lui envoyer un sujet pour se le faire expliquer : l'écran pose alors
+ * la carte à deux boutons. Même famille que les autres : retirée de
+ * l'affichage, jamais prononcée. Voir `enonceExercice.js`.
+ */
+export const ENONCE_EXERCICE = '[ENONCE_EXERCICE]';
+
 /** Le professeur vient-il de demander un document ? */
 export function demandeDocument(texte) {
   return (texte ?? '').includes(DEMANDE_DOCUMENT);
@@ -794,6 +802,7 @@ function retirerMarqueurs(texte) {
     .split(FIN_SEANCE).join('')
     .split(TABLEAU_EFFACE).join('')
     .split(DEMANDE_DOCUMENT).join('')
+    .split(ENONCE_EXERCICE).join('')
     .split(VITESSE_CHOIX).join('')
     .split(CONVERSATION).join('')
     .split(SUPPORT_EVALUATION).join('')

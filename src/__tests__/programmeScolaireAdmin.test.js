@@ -194,3 +194,68 @@ test('« Marquer traitée » appelle l’API puis recharge', async () => {
   // Le rechargement suit l'appel, de façon asynchrone : on l'attend.
   await waitFor(() => expect(getProgrammeScolaire).toHaveBeenCalledTimes(2));
 });
+
+/**
+ * LE FILTRE PAR MATIÈRE — Camara, le 18/09/2026 : « si je cherche les notions
+ * d'une matière, c'est pas évident ». Une classe de lycée empile une quinzaine
+ * de matières ; il fallait toutes les faire défiler.
+ */
+describe('Le filtre par matière', () => {
+  const PROGRAMME_DEUX_CLASSES = {
+    ...PROGRAMME,
+    classes: [
+      PROGRAMME.classes[1],
+      {
+        code: 'TROISIEME',
+        libelle: '3e',
+        ordre: 9,
+        matieres: [
+          { ...PROGRAMME.classes[1].matieres[0], notions: [NOTION(10, 'Théorème de Thalès')] },
+        ],
+      },
+    ],
+  };
+
+  test('une matière choisie masque les autres', async () => {
+    render(<ProgrammeScolaireAdmin />);
+    await userEvent.click(await screen.findByRole('tab', { name: '4e' }));
+
+    const filtre = await screen.findByLabelText('Matière');
+    await userEvent.selectOptions(filtre, '2');
+
+    expect(screen.getByRole('heading', { name: 'Histoire-Géographie' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Mathématiques' })).not.toBeInTheDocument();
+  });
+
+  test('le compte du menu est celui des notions ACTIVES, comme l’en-tête', async () => {
+    // Mathématiques a quatre notions dont une retirée : l'en-tête dit 3.
+    render(<ProgrammeScolaireAdmin />);
+    await userEvent.click(await screen.findByRole('tab', { name: '4e' }));
+
+    expect(await screen.findByRole('option', { name: 'Mathématiques (3)' })).toBeInTheDocument();
+  });
+
+  test('le filtre survit au changement de classe', async () => {
+    // Comparer les maths de 4e et de 3e est justement l'usage : on ne doit pas
+    // avoir à rechoisir la matière à chaque classe.
+    getProgrammeScolaire.mockResolvedValue({ data: PROGRAMME_DEUX_CLASSES });
+    render(<ProgrammeScolaireAdmin />);
+
+    await userEvent.selectOptions(await screen.findByLabelText('Matière'), '1');
+    await userEvent.click(screen.getByRole('tab', { name: '3e' }));
+
+    expect(await screen.findByText('Théorème de Thalès')).toBeInTheDocument();
+  });
+
+  test('une matière absente de la nouvelle classe ramène à toutes', async () => {
+    // L'histoire n'existe pas dans cette 3e : la garder choisie donnerait une
+    // page vide, qu'on prendrait pour une panne.
+    getProgrammeScolaire.mockResolvedValue({ data: PROGRAMME_DEUX_CLASSES });
+    render(<ProgrammeScolaireAdmin />);
+
+    await userEvent.selectOptions(await screen.findByLabelText('Matière'), '2');
+    await userEvent.click(screen.getByRole('tab', { name: '3e' }));
+
+    expect(await screen.findByRole('heading', { name: 'Mathématiques' })).toBeInTheDocument();
+  });
+});

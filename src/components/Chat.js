@@ -35,12 +35,18 @@ import { ecouteService } from '../lib/storage/ecouteService';
 import { langueTranscription } from '../lib/storage/langueTranscription';
 import { ecouteTempsReel, estUnTourDeParole } from '../lib/storage/ecouteTempsReel';
 import { estUnEcho } from '../lib/storage/echo';
+import { estUneRedite } from '../lib/storage/redite';
 import { estIOS } from '../lib/storage/appareil';
 import { estCommandePhoto } from '../lib/storage/commandePhoto';
 import {
   etatCopieControle, lireDemandeCopie, marquerPieceControle, retirerMarqueurCopieControle,
 } from '../lib/storage/copieControle';
 import CopieControle from './CopieControle';
+import EnonceExercice from './EnonceExercice';
+import {
+  choixAvecCopieActif, etatEnonce, marquerAvecCopie, marquerEnonce,
+  marquerRetourChoix, retirerMarqueurAvecCopie, retirerMarqueurEnonce,
+} from '../lib/storage/enonceExercice';
 import {
   supportChoisi, marquerSupport, retirerMarqueurSupport, CAHIER,
   // RENOMMÉ À L'IMPORT : `copieRendue` existe déjà dans ce fichier, et c'est un
@@ -52,8 +58,9 @@ import SupportEvaluation from './SupportEvaluation';
 import {
   supportEcritChoisi, marquerSupportEcrit, retirerMarqueurSupportEcrit,
   QUESTION_SUPPORT_ECRIT, CAHIER as ECRIT_CAHIER, CLAVIER as ECRIT_CLAVIER,
-  rangSupportEcrit,
+  rangSupportEcrit, marquerTexteRendu, lireReponseSupportEcrit,
 } from '../lib/storage/supportEcrit';
+import { figerTableauDeCorrection } from '../lib/storage/tableauFige';
 import ScanMobileModale from './ScanMobileModale';
 import { styleMatiere, murMatiere } from '../lib/couleurMatiere';
 import scannerPng from '../assets/scanner.png';
@@ -61,7 +68,7 @@ import micFermePng from '../assets/mic_b.png';
 import micOuvertPng from '../assets/mic_o.png';
 import hautParleurPng from '../assets/haut_parleur.webp';
 import { camera } from '../lib/storage/camera';
-import { delaiAssemblage, doitAttendreAvantEnvoi } from '../lib/storage/tourEleve';
+import { delaiAssemblage, doitAttendreAvantEnvoi, amorceSeule } from '../lib/storage/tourEleve';
 import { estUnSchema } from '../lib/storage/schemaSvg';
 import {
   decouper,
@@ -163,7 +170,9 @@ const heureCourte = (iso) => {
 function Contenu({ texte, onRappelerTableau }) {
   const segments = useMemo(
     () => decouper(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
-      retirerMarqueurSupport(retirerMarqueurCopieControle(retirerMarqueurCahier(texte))),
+      retirerMarqueurSupport(retirerMarqueurCopieControle(
+        retirerMarqueurCahier(retirerMarqueurEnonce(retirerMarqueurAvecCopie(texte))),
+      )),
     ))),
     [texte],
   );
@@ -469,7 +478,7 @@ function MessageQuota({ motif, prof }) {
  * tableaux de données de l'administration, et le panneau en héritait leur
  * bordure et leur fond — d'où son allure de simple carte.
  */
-function Ardoise({ contenu, prof, onMontrer, copieReference = null }) {
+function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrecedents = [] }) {
   // Le tableau en grand. Une planche d'anatomie porte une douzaine de
   // légendes dans un panneau large comme un téléphone : lisible pour situer,
   // pas pour lire. L'agrandissement n'est donc pas un confort, c'est ce qui
@@ -490,6 +499,36 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null }) {
    */
   const [pointMontre, setPointMontre] = useState(null);
   useEffect(() => setPointMontre(null), [contenu]);
+
+  /**
+   * LA RAINURE À CRAIE DISPARAÎT DÈS QUE LE TABLEAU DÉFILE — Camara, le
+   * 19/09/2026 : « quand il y a un scroll sur le tableau, cette barre ne doit
+   * jamais apparaître, même si le contenu fait la taille de cent tableaux ».
+   *
+   * Elle est dessinée DANS la surface qui défile : dès que le texte dépasse,
+   * elle remontait avec lui et coupait le tableau en deux, comme la fin d'un
+   * tableau et le début d'un autre. On mesure donc le débordement — au
+   * changement de contenu ET quand la surface change de taille — et la classe
+   * `ardoise__surface--defile` la retire.
+   */
+  const surfaceRef = useRef(null);
+  const [defile, setDefile] = useState(false);
+
+  useEffect(() => {
+    const surface = surfaceRef.current;
+    if (!surface) return undefined;
+
+    const mesurer = () => setDefile(surface.scrollHeight > surface.clientHeight + 1);
+    mesurer();
+
+    if (typeof ResizeObserver === 'undefined') return undefined;
+
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(surface);
+    if (surface.firstElementChild) observateur.observe(surface.firstElementChild);
+
+    return () => observateur.disconnect();
+  }, [contenu]);
 
   // Échap referme, comme partout ailleurs. Sans ça, un élève au clavier reste
   // coincé dans la vue plein écran.
@@ -615,7 +654,11 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null }) {
                 )}
               </ZoomSchema>
             ) : (
-              <ContenuTableau contenu={contenu} copieReference={copieReference} />
+              <ContenuTableau
+                contenu={contenu}
+                copieReference={copieReference}
+                tableauxPrecedents={tableauxPrecedents}
+              />
             )}
           </div>
 
@@ -639,9 +682,13 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null }) {
           craie se lit mal collé au cadre ; une planche d'anatomie, elle, ne
           demande qu'à être grande — chaque pixel rendu à la marge est un mot de
           légende en moins. Le modificateur ne sert qu'à ça. */}
-      <div className={contenu && estUnSchema(contenu)
-        ? 'ardoise__surface ardoise__surface--figure'
-        : 'ardoise__surface'}
+      <div
+        ref={surfaceRef}
+        className={[
+          'ardoise__surface',
+          contenu && estUnSchema(contenu) ? 'ardoise__surface--figure' : '',
+          defile ? 'ardoise__surface--defile' : '',
+        ].filter(Boolean).join(' ')}
       >
         {/* Une clé qui change avec le contenu : React remonte le bloc, et
             l'animation d'écriture rejoue à chaque fois que le professeur
@@ -661,7 +708,12 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null }) {
         ) : contenu ? (
           // Une correction de dictée s'y affiche avec ses erreurs numérotées,
           // au même endroit des deux textes — voir `ComparaisonDictee`.
-          <ContenuTableau contenu={contenu} copieReference={copieReference} key={contenu} />
+          <ContenuTableau
+            contenu={contenu}
+            copieReference={copieReference}
+            tableauxPrecedents={tableauxPrecedents}
+            key={contenu}
+          />
         ) : (
           <p className="ardoise__vide">
             <span className="ardoise__craie" aria-hidden="true" />
@@ -970,6 +1022,33 @@ export default function Chat() {
   );
 
   /**
+   * L'ÉNONCÉ SEUL, POUR SE FAIRE EXPLIQUER UN EXERCICE — Camara, le
+   * 20/09/2026. Relu dans le fil comme la copie : un F5 retrouve la carte.
+   * Voir `enonceExercice.js` pour ce qui la referme.
+   */
+  const etatEnonceSeul = useMemo(() => etatEnonce(messages), [messages]);
+  const enonceDemande = Boolean(etatEnonceSeul);
+
+  /**
+   * LE CHOIX « JUSTE L'ÉNONCÉ », PAR OUVERTURE DE FENÊTRE.
+   *
+   * Il ne part PAS au professeur : l'écran sait déjà quoi afficher, et un
+   * aller-retour au modèle pour une question déjà répondue se paie en jetons
+   * comme en secondes d'attente. Même motif que `choixCopie`.
+   */
+  const [choixEnonce, setChoixEnonce] = useState({});
+
+  /**
+   * L'ÉTIQUETTE DE L'ÉNONCÉ, posée au clic et consommée par l'envoi.
+   *
+   * Séparée de `rolePieceRef`, qui appartient à la copie d'un contrôle et
+   * porte un numéro de contrôle : les deux fenêtres ne peuvent pas être
+   * ouvertes en même temps, mais partager la même référence les aurait liées
+   * pour rien — et un énoncé serait parti étiqueté « copie du contrôle n° 0 ».
+   */
+  const enonceEnAttenteRef = useRef(false);
+
+  /**
    * SUR QUOI IL COMPOSE SON ÉVALUATION — Camara, le 18/09/2026.
    *
    * `null` veut dire « la question est posée, sans réponse » : c'est le
@@ -991,7 +1070,16 @@ export default function Chat() {
    * rédiger. Trois exercices, trois questions, trois faits différents envoyés
    * au professeur.
    */
+// LUS DANS `envoyerTexte`, HORS DU CYCLE DE RENDU : une réponse dite à voix
+  // haute à une carte de choix doit valoir un clic — voir plus bas. Des refs,
+  // parce que `envoyerTexte` est mémorisé et ne voit pas l'état du rendu.
+  const dicteeEnAttenteRef = useRef(false);
+  const choisirModeDicteeRef = useRef(null);
+  const supportEcritEnAttenteRef = useRef(false);
+
   const supportEcrit = useMemo(() => supportEcritChoisi(messages), [messages]);
+
+  supportEcritEnAttenteRef.current = supportEcrit === null;
 
   /**
    * LA CARTE ATTEND : LES AUTRES CHEMINS D'ENVOI SONT FERMÉS.
@@ -1461,6 +1549,31 @@ export default function Chat() {
   useEffect(() => { copieEcriteRef.current = copieEcrite !== null; }, [copieEcrite]);
 
   /**
+   * LE TEXTE VIENT D'ÊTRE RENDU : le prochain envoi porte le fait qui dit au
+   * professeur de le mettre au tableau, surligné. Voir `marquerTexteRendu`.
+   *
+   * DES REFS ET NON DE L’ÉTAT, lues dans `envoyerTexte` : cette fonction ne
+   * doit pas changer d’identité, elle est en dépendance de l’écoute, et la
+   * rebâtir couperait le micro en pleine phrase. Même raison que `cahierRef`.
+   */
+  const texteRenduRef = useRef(false);
+
+  /**
+   * Une copie de CAHIER est attendue : la prochaine photo EST le texte.
+   *
+   * BORNÉE PAR LE RANG, comme la feuille du clavier : sans cette borne, une
+   * photo envoyée une heure plus tard pour tout autre chose partirait avec
+   * « voici son texte, recopie-le au tableau ».
+   */
+  const ecritCahierRef = useRef(false);
+  const rangEcritRef = useRef(0);
+
+  useEffect(() => {
+    ecritCahierRef.current = supportEcrit === ECRIT_CAHIER && rangEcrit > rangEcritRendu;
+    rangEcritRef.current = rangEcrit;
+  }, [supportEcrit, rangEcrit, rangEcritRendu]);
+
+  /**
    * Une dictée est en cours SUR LE CAHIER, et sa photo n'est pas arrivée.
    *
    * Le pendant exact de `copieDictee` pour l'autre support. Le clavier avait
@@ -1729,6 +1842,9 @@ export default function Chat() {
     // La relecture de la dictée précédente ne dit rien de celle-ci.
     setRelectureDictee(null);
   };
+
+  dicteeEnAttenteRef.current = dicteeEnAttente;
+  choisirModeDicteeRef.current = choisirModeDictee;
 
   // La voix doit savoir sur quoi l'élève écrit : c'est ce qui décide de la
   // consigne dite après la relecture — la photo, ou « Rendre ma copie ».
@@ -2067,6 +2183,29 @@ export default function Chat() {
   // ------------------------------------------------------------- tableau
   // Le dernier contenu écrit, qu'il vienne du flux en cours ou du dernier
   // message reçu. C'est ce qui reste affiché à côté de la conversation.
+  /**
+   * LES TABLEAUX DE LA SÉANCE, dans l'ordre — depuis le dernier coup de gomme
+   * ([TABLEAU_EFFACE], posé à chaque arrivée). Ils servent à deux choses :
+   * figer le tableau de correction d'une expression écrite (voir
+   * `tableauFige`), et garder aux badges leur numéro (voir
+   * `surlignesTableau.numerosStables`). Bornés à la séance : la consigne
+   * d'une séance passée ne doit pas figer celle d'aujourd'hui.
+   */
+  const tousLesTableaux = useMemo(() => {
+    let debut = 0;
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === 'assistant' && effaceLeTableau(messages[i].contenu)) {
+        debut = i;
+        break;
+      }
+    }
+
+    return messages
+      .slice(debut)
+      .filter((m) => m.role === 'assistant')
+      .flatMap((m) => extraireArdoises(m.contenu));
+  }, [messages]);
+
   const tableauAuto = useMemo(() => {
     // ON REMONTE JUSQU'AU PREMIER GESTE, ÉCRITURE OU EFFACEMENT.
     //
@@ -2081,22 +2220,39 @@ export default function Chat() {
       if (archivee) return { valeur: `${REPERE_DICTEE_ARCHIVEE}${archivee}` };
 
       const trouves = extraireArdoises(texte);
-      if (trouves.length > 0) return { valeur: trouves[trouves.length - 1] };
+      if (trouves.length > 0) {
+        // LE TABLEAU DE COMPARAISON D'UNE DICTÉE, C'EST CELUI DE L'APPLICATION.
+        // Depuis le 19/09/2026 le serveur l'écrit lui-même, en tête du message,
+        // avant la réponse du professeur. Si celui-ci en a réécrit un derrière,
+        // c'est le premier qui compte : le serveur retire le second de
+        // l'historique, l'écran l'ignore dès le flux.
+        const comparaison = trouves.find(
+          (t) => /^[ \t]*La dictée[ \t]*$/im.test(t) && /^[ \t]*Ta copie[ \t]*$/im.test(t),
+        );
+        return { valeur: comparaison ?? trouves[trouves.length - 1] };
+      }
       if (effaceLeTableau(texte)) return { valeur: null };
       return null;
     };
 
-    const enCours = lire(reponseEnCours);
-    if (enCours) return enCours.valeur;
+    const dernier = () => {
+      const enCours = lire(reponseEnCours);
+      if (enCours) return enCours.valeur;
 
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i].role !== 'assistant') continue;
-      const geste = lire(messages[i].contenu);
-      if (geste) return geste.valeur;
-    }
+      for (let i = messages.length - 1; i >= 0; i -= 1) {
+        if (messages[i].role !== 'assistant') continue;
+        const geste = lire(messages[i].contenu);
+        if (geste) return geste.valeur;
+      }
 
-    return null;
-  }, [messages, reponseEnCours]);
+      return null;
+    };
+
+    // LE TABLEAU DE CORRECTION D'UNE EXPRESSION ÉCRITE RESTE LE PREMIER — voir
+    // `tableauFige` : une réécriture, même en cours de flux, ne remplace pas
+    // le tableau qui porte les badges.
+    return figerTableauDeCorrection(dernier(), tousLesTableaux);
+  }, [messages, reponseEnCours, tousLesTableaux]);
 
   // Le professeur vient d'écrire : ce qu'il montre l'emporte sur ce que
   // l'élève avait rappelé d'un message plus ancien.
@@ -2168,6 +2324,21 @@ export default function Chat() {
       : copieDeReference(messages, contenuTableau, { retirerMarqueur: retirerMarqueurCahier })),
     [messages, contenuTableau, idDicteeAuTableau],
   );
+
+  /**
+   * LES TABLEAUX QUI ONT PRÉCÉDÉ CELUI QUI EST AFFICHÉ, dans l'ordre — pour
+   * que les badges d'une correction gardent leur numéro quand le professeur
+   * réécrit le texte sans les fautes déjà corrigées. Voir
+   * `surlignesTableau.numerosStables`.
+   *
+   * Coupés au DERNIER passage du tableau affiché : un tableau rappelé d'un
+   * message ancien se numérote avec ce qui le précédait alors, pas avec ce
+   * qui est venu après.
+   */
+  const tableauxPrecedents = useMemo(() => {
+    const i = tousLesTableaux.lastIndexOf(contenuTableau);
+    return i < 0 ? tousLesTableaux : tousLesTableaux.slice(0, i);
+  }, [tousLesTableaux, contenuTableau]);
 
   // -------------------------------------------------------- mains libres
   useEffect(() => {
@@ -2761,6 +2932,20 @@ export default function Chat() {
       .join(' ');
   }, [messages]);
 
+  // LE DERNIER MESSAGE DE L'ÉLÈVE, ET QUAND — pour ne pas renvoyer une phrase
+  // que le micro rend une seconde fois. Voir `redite.js`.
+  const dernierEnvoiRef = useRef(null);
+  useEffect(() => {
+    const dernier = [...messages].reverse().find((m) => m.role === 'user');
+    if (!dernier) return;
+    if (dernierEnvoiRef.current?.texte === dernier.contenu) return;
+
+    dernierEnvoiRef.current = {
+      texte: dernier.contenu ?? '',
+      le: Date.parse(dernier.dateCreation ?? '') || Date.now(),
+    };
+  }, [messages]);
+
   // ------------------------------------------------------------- envoi
   /**
    * Retire le document en attente et relâche son aperçu local.
@@ -2797,6 +2982,22 @@ export default function Chat() {
       const documentPret = documentsPrets[0] ?? null;
       if ((!propre && !documentPret) || !conversation) return;
 
+      // UNE RÉPONSE DITE À VOIX HAUTE À UNE CARTE DE CHOIX VAUT UN CLIC —
+      // Camara, le 19/09/2026 : « quand une fenêtre de choix s'affiche,
+      // l'élève peut le signaler à voix haute et ça sera pris en compte ».
+      // Relevé le jour même : « Au clavier. » dit devant la carte de la
+      // dictée est parti au professeur, qui a relancé la dictée, et la carte
+      // est réapparue. Pour la dictée, le clic n'envoie rien : la réponse
+      // orale n'envoie rien non plus. Pour l'expression écrite, le clic part
+      // avec son marqueur : la réponse orale part avec le même.
+      const supportDit = documentPret ? undefined : lireReponseSupportEcrit(propre);
+
+      if (supportDit && dicteeEnAttenteRef.current) {
+        choisirModeDicteeRef.current?.(supportDit === ECRIT_CAHIER ? 'cahier' : 'clavier');
+        viderSaisie();
+        return;
+      }
+
       // CE QUE L'ÉCRAN SAIT, LE PROFESSEUR DOIT LE SAVOIR AUSSI.
       //
       // Tant que la photo du cahier n'est pas là, il n'a RIEN à corriger — et
@@ -2816,11 +3017,27 @@ export default function Chat() {
       const copieAuClavier = copieAuClavierRef.current;
       copieAuClavierRef.current = false;
 
+      // ET LE TEXTE D’UNE EXPRESSION ÉCRITE, sous ses deux formes : la
+      // feuille du clavier qu’on vient d’envoyer, ou la photo du cahier
+      // qu’on attendait. Dans les deux cas c’est LE moment où le professeur
+      // doit l’écrire au tableau et le surligner — voir `marquerTexteRendu`.
+      const texteAuCahier = ecritCahierRef.current && Boolean(documentPret);
+      const texteRendu = texteRenduRef.current || texteAuCahier;
+      texteRenduRef.current = false;
+
+      // La photo REND le texte du cahier, exactement comme « Envoyer mon
+      // texte » rend celui du clavier : la question est close.
+      if (texteAuCahier) setRangEcritRendu(rangEcritRef.current);
+
       const charge = enAttenteDeCopie
         ? marquerCopieAuCahier(propre)
         : copieAuClavier
           ? marquerCopieAuClavier(propre)
-          : propre;
+          : texteRendu
+            ? marquerTexteRendu(propre)
+            : supportDit && supportEcritEnAttenteRef.current
+              ? marquerSupportEcrit(propre, supportDit)
+              : propre;
 
       // Une transcription peut arriver après l'échéance : le micro était encore
       // ouvert quand le temps est tombé. Elle ne part pas.
@@ -2864,9 +3081,17 @@ export default function Chat() {
       const rolePiece = documentPret ? rolePieceRef.current : null;
       if (documentPret) rolePieceRef.current = null;
 
+      // L'ÉNONCÉ SEUL A SON PROPRE MARQUEUR : il dit au professeur qu'il n'y a
+      // pas de copie à attendre, et qu'il doit demander SUR QUEL EXERCICE
+      // l'enfant bloque avant d'expliquer. L'étiquette ne sert qu'une fois.
+      const enonceSeul = documentPret && enonceEnAttenteRef.current;
+      if (documentPret) enonceEnAttenteRef.current = false;
+
       const aEnvoyer = rolePiece
         ? marquerPieceControle(charge, rolePiece.role, rolePiece.controleId)
-        : charge;
+        : enonceSeul
+          ? marquerEnonce(charge)
+          : charge;
 
       dispatch(envoyerMessage(
         conversation.id, aEnvoyer, restantRef.current, documentsPrets, piecesJointesApercu,
@@ -3015,6 +3240,16 @@ export default function Chat() {
         }
 
         const complet = assemblageRef.current.texte;
+
+        // UNE AMORCE SEULE NE PART PAS — « je », « euh », « je suis » : un tour
+        // complet du professeur pour un mot attrapé avant une hésitation. Le
+        // texte reste dans le champ, le morceau suivant s'y recollera, et le
+        // prochain silence relancera l'envoi. Voir `amorceSeule` dans tourEleve.
+        if (amorceSeule(complet)) {
+          assemblageRef.current = { texte: complet, minuteur: null };
+          return;
+        }
+
         assemblageRef.current = { texte: '', minuteur: null };
         if (complet.trim()) envoyerTexte(complet);
       };
@@ -3056,6 +3291,16 @@ export default function Chat() {
       if (saisieTapeeRef.current) return;
 
       const encours = assemblageRef.current;
+
+      // LA MÊME PHRASE, RENDUE UNE SECONDE FOIS PAR LE MICRO : elle n'entre
+      // pas. Ni dans le champ, ni dans l'envoi — voir `redite.js`. Le
+      // minuteur n'est pas touché : ce qui attend part comme prévu.
+      if (estUneRedite(fragment, {
+        assemble: encours.texte,
+        dernierEnvoi: dernierEnvoiRef.current,
+        demandeProf: demandeProfRef.current,
+      })) return;
+
       if (encours.minuteur) clearTimeout(encours.minuteur);
 
       const texte = encours.texte ? `${encours.texte} ${fragment.trim()}` : fragment.trim();
@@ -3199,7 +3444,7 @@ export default function Chat() {
 
       // La carte de copie coche elle-même ce qui est arrivé : la pastille
       // « la photo est envoyée » ferait doublon — et mentirait pour un PDF.
-      const depuisCarteCopie = Boolean(rolePieceRef.current);
+      const depuisCarteCopie = Boolean(rolePieceRef.current) || enonceEnAttenteRef.current;
 
       envoyerTexte('');
       if (!depuisCarteCopie) setConfirmationPhoto(true);
@@ -3396,6 +3641,84 @@ export default function Chat() {
     setPiecesEnAttente((actuelles) => [...actuelles]);
   }, []);
 
+  /**
+   * L'ÉNONCÉ CHOISI DANS LES FICHIERS, ou photographié par l'appareil natif
+   * du téléphone : le fichier part tout seul, l'enfant a déjà fait son geste.
+   */
+  const envoyerEnonce = useCallback(
+    (fichier) => {
+      if (!fichier) return;
+
+      enonceEnAttenteRef.current = true;
+      autoEnvoiPhotoRef.current = true;
+      deposer(fichier);
+    },
+    [deposer],
+  );
+
+  /**
+   * L'ENFANT A RÉPONDU À « QU'EST-CE QUE TU VEUX M'ENVOYER ? »
+   *
+   * « Juste l'énoncé » reste ici : l'écran enchaîne sur les trois boutons,
+   * sans déranger le professeur.
+   *
+   * « La copie et l'énoncé » doit, lui, lui parvenir — c'est le professeur,
+   * et lui seul, qui ouvre le workflow de la copie avec [COPIE_CONTROLE]. Le
+   * clic part donc comme une phrase d'élève, avec le fait qui garantit la
+   * balise. Voir `marquerAvecCopie`.
+   */
+  const choisirEnonce = useCallback(
+    (avecCopie) => {
+      if (!etatEnonceSeul) return;
+
+      // `null` = « ce n'est pas ce que je voulais » : on repose la question.
+      // Gratuit, puisque ce choix-là n'a jamais quitté le navigateur.
+      if (avecCopie === null) {
+        setChoixEnonce((actuels) => ({ ...actuels, [etatEnonceSeul.cle]: null }));
+        return;
+      }
+
+      if (!avecCopie) {
+        setChoixEnonce((actuels) => ({ ...actuels, [etatEnonceSeul.cle]: 'seul' }));
+        return;
+      }
+
+      envoyerTexte(marquerAvecCopie(etatEnonceSeul.controleId));
+    },
+    [etatEnonceSeul, envoyerTexte],
+  );
+
+  /**
+   * IL S'EST TROMPÉ ET VEUT REVENIR DEPUIS LA FENÊTRE DE LA COPIE.
+   *
+   * Celui-ci coûte un tour, et c'est inévitable : le professeur a déjà ouvert
+   * la fenêtre de la copie, et lui seul peut la refermer. Proposé uniquement
+   * quand l'enfant est arrivé là par un choix — jamais dans un bilan
+   * ordinaire, où il n'y a rien sur quoi revenir.
+   */
+  const venuDuChoixEnonce = useMemo(() => choixAvecCopieActif(messages), [messages]);
+
+  const revenirAuChoix = useCallback(() => {
+    envoyerTexte(marquerRetourChoix());
+  }, [envoyerTexte]);
+
+  /** Sur ordinateur, « Scanner l'énoncé » passe par le QR code du téléphone. */
+  const scannerEnonce = useCallback(() => {
+    enonceEnAttenteRef.current = true;
+    setScanOuvert(true);
+  }, []);
+
+  /**
+   * « PRENDRE EN PHOTO » ouvre la caméra de la séance — celle qui sert déjà à
+   * montrer un cahier. L'étiquette est posée maintenant et consommée par
+   * l'envoi : la photo prise partira avec le marqueur de l'énoncé, quel que
+   * soit le chemin qu'elle emprunte ensuite (clic ou « photo » dit à la voix).
+   */
+  const photographierEnonce = useCallback(() => {
+    enonceEnAttenteRef.current = true;
+    cameraRef.current?.ouvrir();
+  }, []);
+
   // « SCANNER MA COPIE » SUR ORDINATEUR = LE QR CODE DU TÉLÉPHONE. La photo
   // qui arrive part étiquetée « copie » : `recevoirScan` la remet en attente,
   // et `envoyerTexte` consomme l'étiquette posée ici.
@@ -3500,6 +3823,10 @@ export default function Chat() {
     setRangEcritRendu(rangEcrit);
     setCopieEcrite(null);
     viderSaisie();
+
+    // Le fait part avec CE message-là, et lui seul : `envoyerTexte` lit le
+    // drapeau et le remet à zéro dans le même tour.
+    texteRenduRef.current = true;
 
     if (lignes.length > 0) envoyerTexte(lignes.join("\n"));
   };
@@ -4618,13 +4945,30 @@ export default function Chat() {
         {/* LA COPIE DU CONTRÔLE, À LA SUITE DU MESSAGE QUI LA PROPOSE.
             Masquée pendant que le professeur parle : elle apparaît quand il a
             fini sa phrase, comme la question du choix de dictée. */}
-        {etatCopie && !streaming && !seanceTerminee && (
+        {etatCopie && !enonceDemande && !streaming && !seanceTerminee && (
           <CopieControle
             etat={etatCopie}
             disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX}
             onChoisir={choisirCopie}
             onFichier={envoyerPieceCopie}
             onScanner={scannerNatif ? undefined : scannerCopie}
+            onRevenir={venuDuChoixEnonce ? revenirAuChoix : null}
+          />
+        )}
+
+        {/* L'ÉNONCÉ SEUL — Camara, le 20/09/2026. Même place et même règle que
+            la carte de copie : elle attend que le professeur ait fini de
+            parler. Les deux ne s'affichent jamais ensemble, puisque la balise
+            de l'une referme la fenêtre de l'autre. */}
+        {enonceDemande && !streaming && !seanceTerminee && (
+          <EnonceExercice
+            choix={choixEnonce[etatEnonceSeul.cle] ?? null}
+            disabled={streaming || seanceTerminee || piecesEnAttente.length >= PIECES_MAX}
+            cameraDispo={cameraDispo}
+            onChoisir={choisirEnonce}
+            onFichier={envoyerEnonce}
+            onPhoto={photographierEnonce}
+            onScanner={scannerNatif ? undefined : scannerEnonce}
           />
         )}
 
@@ -5305,6 +5649,7 @@ export default function Chat() {
       <Ardoise
         contenu={contenuTableau}
         copieReference={copieReference}
+        tableauxPrecedents={tableauxPrecedents}
         prof={conversation?.profPrenom}
         onMontrer={montrerSurLeTableau}
       />

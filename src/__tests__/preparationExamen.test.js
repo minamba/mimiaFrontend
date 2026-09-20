@@ -127,6 +127,37 @@ test('la section s’affiche pour le rappel même si aucune épreuve n’est enc
   expect(screen.queryByText(/La moyenne de tes/)).not.toBeInTheDocument();
 });
 
+// LE CAS DE CAMARA, LE 20/09/2026 : son fils en terminale n'avait que NSI de
+// cochée, l'alerte ne partait qu'à zéro spécialité, et la section montrait un
+// bac réduit à la philosophie et à NSI sans dire pourquoi.
+test('une seule spécialité sur deux : la section dit celle qui manque', () => {
+  const bac = {
+    ...EXAMEN,
+    titreSection: 'Préparation au bac général',
+    specialitesARenseigner: true,
+    specialitesManquantes: 1,
+    epreuves: [
+      {
+        code: 'BAC_GENERAL_2027_PHILOSOPHIE',
+        libelle: 'Philosophie',
+        pourcent: 0,
+        matieres: [matiere(8, 'Philosophie', 'Camille', { pourcent: 0 })],
+      },
+      {
+        code: 'BAC_GENERAL_2027_NSI',
+        libelle: 'Numérique et sciences informatiques',
+        pourcent: 0,
+        matieres: [matiere(9, 'Numérique et sciences informatiques', 'Minamba', { pourcent: 0 })],
+      },
+    ],
+  };
+
+  render(<PreparationExamen eleveId="9" examen={bac} onPreparer={jest.fn()} />);
+
+  expect(screen.getByRole('note')).toHaveTextContent(/Il manque une spécialité/);
+  expect(screen.queryByText(/ne sont pas encore renseignées/)).not.toBeInTheDocument();
+});
+
 test('les langues vivantes sont dites en contrôle continu, sans carte d’épreuve', () => {
   const note = 'Tes langues vivantes, ta LVA et ta LVB (l\'anglais comme l\'espagnol), n\'ont pas d\'épreuve '
     + 'finale au bac : elles comptent en contrôle continu, avec tes moyennes de première et de terminale.';

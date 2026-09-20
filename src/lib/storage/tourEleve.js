@@ -169,6 +169,41 @@ const CHARNIERES = new RegExp(
   + 'a cause|grace|vu que|puisque|tandis que|alors que|alors qu|alors quon)\\s*$',
 );
 
+/**
+ * UNE AMORCE SEULE : un début de phrase qui ne peut pas être une réponse.
+ *
+ * LE COÛT QU'ELLE ÉVITE — Camara, le 19/09/2026. Chaque tour du professeur a
+ * un coût fixe (~0,04 $ : tout le prompt relu, une réponse, sa voix), quel
+ * que soit ce que l'élève a dit. Relevé du 16 au 18/09 : « je », « je suis »,
+ * envoyés seuls parce que le micro avait attrapé le premier mot avant une
+ * hésitation — et le professeur a répondu à « je » comme à une phrase.
+ *
+ * LA RÈGLE EST ÉTROITE, ET C'EST VOULU. Seul un tour qui n'est RIEN D'AUTRE
+ * qu'un pronom sujet, un article, une conjonction ou un « euh » est retenu.
+ * « oui », « non », « 12 », « allez », « hello », « photo » partent : ce sont
+ * des réponses. « je suis » et « j'ai » sont retenus : personne ne répond
+ * ça. En cas de doute, ça part — un tour de trop coûte quatre centimes, une
+ * réponse jamais envoyée coûte la confiance de l'enfant.
+ *
+ * RETENU N'EST PAS EFFACÉ : le texte reste dans le champ, et le morceau
+ * suivant s'y recolle. C'est la règle du 13/09 — ce qui est affiché ne
+ * s'efface jamais avant d'être parti.
+ */
+const AMORCES = new Set([
+  'je', 'j', 'tu', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles',
+  'c est', 'ce', 'ca', 'ça', 'le', 'la', 'les', 'l', 'un', 'une', 'de', 'du', 'des',
+  'et', 'mais', 'ou', 'donc', 'alors', 'que', 'qui', 'parce que', 'parce',
+  'euh', 'heu', 'hum', 'hmm', 'mmm', 'bah', 'ben', 'bon', 'en fait', 'du coup',
+  'je suis', 'j ai', 'je vais', 'il y a', 'c etait', 'je pense', 'je crois', 'il faut',
+]);
+
+export function amorceSeule(texte) {
+  const propre = normaliser(texte).replace(/[.!?…,;:]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!propre) return false;
+
+  return AMORCES.has(propre);
+}
+
 export function fragmentInacheve(texte) {
   const propre = normaliser(texte).replace(/[.!?…]+\s*$/, '').trim();
   if (!propre) return false;

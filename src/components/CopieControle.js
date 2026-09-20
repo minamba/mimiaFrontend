@@ -1,3 +1,5 @@
+import feuillePng from '../assets/feuille.webp';
+import scanPng from '../assets/scan.png';
 import { boutonsCopie, QUESTION_COPIE } from '../lib/storage/copieControle';
 
 /**
@@ -14,6 +16,26 @@ import { boutonsCopie, QUESTION_COPIE } from '../lib/storage/copieControle';
 const LIBELLE_ENONCE = 'L’énoncé';
 const LIBELLE_COPIE = 'Ta copie';
 
+/**
+ * LES DESSINS DE L'APPLICATION À LA PLACE DES ÉMOJIS — Camara, le 20/09/2026.
+ *
+ * Un émoji est dessiné par le système : il change de style d'un appareil à
+ * l'autre, et n'appartient à aucune charte. Ces deux-là sont les nôtres, et
+ * les mêmes que ceux du scan par téléphone.
+ *
+ * DÉCORATIFS : le libellé du bouton dit déjà tout, d'où l'`alt` vide.
+ */
+export function Icone({ scan = false }) {
+  return (
+    <img
+      src={scan ? scanPng : feuillePng}
+      alt=""
+      aria-hidden="true"
+      className="copie-controle__icone"
+    />
+  );
+}
+
 function Etat({ libelle, recu }) {
   return (
     <li className={`copie-controle__etat${recu ? ' est-recu' : ''}`}>
@@ -26,7 +48,9 @@ function Etat({ libelle, recu }) {
   );
 }
 
-export default function CopieControle({ etat, disabled, onChoisir, onFichier, onScanner }) {
+export default function CopieControle({
+  etat, disabled, onChoisir, onFichier, onScanner, onRevenir = null,
+}) {
   if (!etat) return null;
 
   const boutons = boutonsCopie(etat);
@@ -73,6 +97,22 @@ export default function CopieControle({ etat, disabled, onChoisir, onFichier, on
         <Etat libelle={LIBELLE_COPIE} recu={etat.copieRecue} />
       </ul>
 
+      {/* N'EXISTE QUE SI L'ENFANT EST ARRIVÉ ICI PAR UN CHOIX — Camara, le
+          20/09/2026 : s'être trompé de bouton doit se rattraper. Dans un bilan
+          ordinaire, où le professeur propose lui-même de regarder la copie,
+          `onRevenir` est absent et rien ne s'affiche : il n'y a pas de choix
+          sur lequel revenir. */}
+      {onRevenir && !etat.copieRecue && !etat.enonceRecu && (
+        <button
+          type="button"
+          className="copie-controle__retour"
+          disabled={disabled}
+          onClick={onRevenir}
+        >
+          ← Finalement je n’ai pas de copie
+        </button>
+      )}
+
       {boutons.length > 0 && (
         <div className="copie-controle__boutons">
           {boutons.map((b) => (
@@ -84,14 +124,14 @@ export default function CopieControle({ etat, disabled, onChoisir, onFichier, on
                 disabled={disabled}
                 onClick={onScanner}
               >
-                <span aria-hidden="true">📷</span> {b.libelle}
+                <Icone scan /> {b.libelle}
               </button>
             ) : (
               <label
                 key={b.cle}
                 className={`btn btn--compact copie-controle__bouton${disabled ? ' est-desactive' : ''}`}
               >
-                <span aria-hidden="true">{b.scanner ? '📷' : '📄'}</span> {b.libelle}
+                <Icone scan={b.scanner} /> {b.libelle}
                 <input
                   type="file"
                   hidden

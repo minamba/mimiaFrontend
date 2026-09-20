@@ -19,6 +19,7 @@ import { chargerReferentiel } from '../lib/actions/referentielActions';
 import { creerIdentite, reinitialiserMotDePasseDe } from '../lib/api/profilApi';
 import { lireMotDePasse, sansMotDePasse } from '../lib/utils/motDePasseAdmin';
 import { trier, inverser } from '../lib/utils/tri';
+import { aLaSeconde } from '../lib/utils/duree';
 // LES MÊMES BRIQUES QUE LE FORMULAIRE PARENT — Camara, le 16/09/2026 : « je
 // suis admin, je dois tout contrôler ». La modale d'administration ne
 // proposait ni la classe ni les spécialités ; on reprend les règles du parent
@@ -68,6 +69,7 @@ import FournisseursIA from './FournisseursIA';
 import Onglets from './Onglets';
 import Bannis from './Bannis';
 import Planches from './Planches';
+import RevenuTotal from './RevenuTotal';
 import { ranger, suivant, annoncerTri } from '../lib/triTableau';
 
 const GRANULARITES = [
@@ -335,6 +337,34 @@ function Cout({ parent }) {
 }
 
 /**
+ * Le temps RÉELLEMENT passé en cours, sur la période du filtre, à la seconde.
+ *
+ * PAS LE FORFAIT CONSOMMÉ, qui est global et ignore le filtre. Celui-ci est
+ * recalculé depuis les échanges, sur la MÊME fenêtre et les MÊMES tours que
+ * « Ce qu’il a coûté » : les deux se lisent ensemble. Un enfant qui prend
+ * quinze minutes et part au bout de cinq compte cinq minutes ici.
+ *
+ * UN CHAMP ABSENT S’ÉCRIT « — », pas « 0 s » : c’est une API pas encore
+ * redémarrée, et zéro affirmerait que personne n’a travaillé.
+ */
+function TempsReel({ parent }) {
+  const { secondesReellesPeriode: secondes } = parent;
+
+  if (secondes === null || secondes === undefined) {
+    return <span className="conso__vide">—</span>;
+  }
+
+  return (
+    <span
+      className={`temps-reel ${secondes === 0 ? 'temps-reel--nul' : ''}`}
+      title="Temps réellement passé en cours sur la période choisie — même fenêtre que le coût"
+    >
+      {aLaSeconde(secondes)}
+    </span>
+  );
+}
+
+/**
  * Ce que toutes les familles coûtent sur la période courante.
  *
  * COURANTE, ET NON GLISSANTE. « Mois » veut dire depuis le 1er, pas les trente
@@ -414,6 +444,7 @@ const LIBELLES_POSTES = {
   'description-planche': 'descriptions de planches',
   'observation-competences': 'observations de séances',
   'transcription-document': 'transcriptions de documents',
+  'rechauffeur-cache': 'réchauffage du cache (noyau gardé chaud)',
 };
 
 /**
@@ -513,7 +544,20 @@ function FichierClients() {
   );
 }
 
-function CoutTotal() {
+/**
+ * LES DEUX BLOCS D'ARGENT, VISIBLES SELON LES DROITS — voulu par Camara le
+ * 19/09/2026. Le super-administrateur les voit toujours ; un administrateur
+ * seulement s'il a « cout » ou « revenu » coché dans ses droits.
+ *
+ * MASQUÉS, JAMAIS DÉMONTÉS. La période choisie ici pilote aussi le tableau des
+ * parents : retirer le composant l'aurait laissé sans période. L'attribut
+ * `hidden` les cache et laisse tout le reste en place.
+ *
+ * LE CHOIX DE LA PÉRIODE SUIT LE BLOC VISIBLE : dans le coût quand on le
+ * voit, sinon dans le revenu. Un administrateur qui n'a que le revenu doit
+ * pouvoir changer de mois.
+ */
+function CoutTotal({ voirCout = true, voirRevenu = true }) {
   // LA FENÊTRE VIT DANS L'ÉTAT PARTAGÉ, pas ici. Le tableau du dessous en
   // dépend autant que ce bandeau : la garder locale afficherait un total de
   // juillet au-dessus de lignes d'août, sans que rien ne le signale.
@@ -553,8 +597,7 @@ function CoutTotal() {
 
   const postes = cout?.postes ?? [];
 
-  return (
-    <div className="cout-total">
+  const entete = (
       <div className="cout-total__entete">
         <div className="cout-total__periodes">
           {PERIODES.map((p) => (
@@ -601,6 +644,12 @@ function CoutTotal() {
           </button>
         </div>
       </div>
+  );
+
+  return (
+    <>
+    <div className="cout-total" hidden={!voirCout}>
+      {voirCout && entete}
 
       {erreur && <div className="alert">{erreur}</div>}
 
@@ -714,6 +763,18 @@ function CoutTotal() {
         </>
       )}
     </div>
+
+    {/* SOUS LE COÛT, SUR LA MÊME PÉRIODE : le revenu, puis le bénéfice ou la
+        perte. Le coût lui est passé en euros tant qu'il est connu. */}
+    <RevenuTotal
+      periode={periode}
+      decalage={decalage}
+      coutEuros={cout ? dollars * EURO_PAR_DOLLAR : null}
+      visible={voirRevenu}
+      entete={voirCout ? null : entete}
+      afficherResultat={voirCout}
+    />
+    </>
   );
 }
 
@@ -1110,6 +1171,8 @@ export default function Admin() {
     connexion: (p) => p.derniereConnexion,
     activite: (p) => p.derniereActivite,
     cout: (p) => p.coutDollars,
+    tempsReel: (p) => p.secondesReellesPeriode,
+    echanges: (p) => p.toursPeriode,
   };
 
   const parentsTries = useMemo(
@@ -1532,7 +1595,10 @@ export default function Admin() {
       {/* ---------------------------------------------------------- parents */}
       {onglet === 'parents' && (
         <>
-          <CoutTotal />
+          <CoutTotal
+            voirCout={estSuperAdmin || (ongletsAutorises ?? []).includes('cout')}
+            voirRevenu={estSuperAdmin || (ongletsAutorises ?? []).includes('revenu')}
+          />
 
           <FichierClients />
 
@@ -1591,6 +1657,8 @@ export default function Admin() {
                 <option value="connexion">Dernière connexion</option>
                 <option value="activite">Dernière activité</option>
                 <option value="cout">Ce qu’il a coûté</option>
+                <option value="tempsReel">Temps réel en cours</option>
+                <option value="echanges">Échanges facturés</option>
               </select>
             </label>
 
@@ -1606,7 +1674,10 @@ export default function Admin() {
             </button>
           </div>
 
-          <div className="tableau">
+          {/* EN PLEINE LARGEUR SUR ORDINATEUR, ET SEULEMENT LUI — voulu par
+              Camara le 19/09/2026 : treize colonnes ne tiennent pas dans
+              les 1 180 pixels de la page, et on défilait de côté. */}
+          <div className="tableau tableau--parents">
             <table>
               <thead>
                 <tr>
@@ -1630,6 +1701,20 @@ export default function Admin() {
                       ensemble, et l'un est le complément de l'autre. */}
                   <th scope="col">Restantes</th>
                   <th scope="col">Ce qu'il a coûté</th>
+                  {/* JUSTE APRÈS LE COÛT, et sur la même période : « 6,69 $
+                      pour combien de cours ? » se lit d’un coup d’œil. */}
+                  <th scope="col" className="temps-reel__entete">
+                    Temps réel en cours
+                    <span className="temps-reel__precision">sur la période choisie</span>
+                  </th>
+                  {/* LES ÉCHANGES FACTURÉS, SUR LA MÊME PÉRIODE — voulu par Camara le
+                      19/09/2026. Chaque réponse du professeur est un appel payé :
+                      c'est l'unité de « Ce qu'il a coûté ». « Requêtes », plus
+                      loin, compte depuis l'inscription. */}
+                  <th scope="col" className="temps-reel__entete">
+                    Échanges facturés
+                    <span className="temps-reel__precision">sur la période choisie</span>
+                  </th>
                   <th scope="col">Requêtes</th>
                   <th scope="col">Inscrit le</th>
                   {/* DEUX COLONNES VOISINES QUI NE DISENT PAS LA MÊME CHOSE.
@@ -1685,6 +1770,12 @@ export default function Admin() {
                     <td><Consommation parent={p} /></td>
                     <td className="num"><Restant parent={p} /></td>
                     <td><Cout parent={p} /></td>
+                    <td className="num"><TempsReel parent={p} /></td>
+                    <td className="num">
+                      {p.toursPeriode === null || p.toursPeriode === undefined
+                        ? <span className="conso__vide">—</span>
+                        : p.toursPeriode.toLocaleString('fr-FR')}
+                    </td>
                     <td className="num">{p.nombreRequetes.toLocaleString('fr-FR')}</td>
                     <td>{new Date(p.dateCreation).toLocaleDateString('fr-FR')}</td>
                     <td>
@@ -1893,7 +1984,9 @@ export default function Admin() {
             )}
           </div>
 
-          <div className="tableau">
+          {/* Même exception que le tableau des parents : pleine largeur sur
+              ordinateur — voulu par Camara le 19/09/2026. */}
+          <div className="tableau tableau--pleine-largeur">
           <table>
             <thead>
               <tr>

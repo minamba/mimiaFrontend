@@ -73,7 +73,9 @@ export const QUESTION_SUPPORT_ECRIT = 'Comment veux-tu écrire ton texte ?';
  * reste affiché pendant toute la correction.
  */
 const MARQUEUR_CAHIER =
-  '[TEXTE AU CAHIER : il écrit sur son cahier. Sa copie ne peut te parvenir '
+  '[TEXTE AU CAHIER : il écrit sur son cahier. ÉCRIS LA CONSIGNE AU TABLEAU '
+  + 'DANS CE MESSAGE, sous le titre « La consigne », si elle n’y est pas déjà : '
+  + 'il va l’écrire en la regardant. Sa copie ne peut te parvenir '
   + 'qu’en PHOTO — tant qu’elle n’est pas arrivée, tu n’as rien à corriger et tu '
   + 'ne lui demandes pas de te dire son texte à l’oral. QUAND ELLE ARRIVE, ET '
   + 'AVANT DE CORRIGER QUOI QUE CE SOIT, retranscris son texte AU TABLEAU sous '
@@ -88,25 +90,106 @@ const MARQUEUR_CAHIER =
  * venait de tout taper sous ses yeux.
  */
 const MARQUEUR_CLAVIER =
-  '[TEXTE AU CLAVIER : une feuille s’ouvre devant lui, il écrit ligne par ligne et clique sur « Envoyer mon texte » quand il a fini. TU NE RECEVRAS RIEN AVANT : son silence veut dire qu’il écrit, pas qu’il est bloqué. Ne le relance pas, ne lui redemande pas son texte, n’écris rien tant qu’il n’a pas envoyé. Ne lui demande JAMAIS de photo non plus : il n’a pas de cahier. Quand son texte arrive, remets-le AU TABLEAU sous « Ton texte », à l’identique, AVANT de corriger : dans le fil il sera remonté hors de vue, au tableau il reste affiché pendant toute la correction.]';
+  '[TEXTE AU CLAVIER : une feuille s’ouvre devant lui, il écrit ligne par ligne et clique sur « Envoyer mon texte » quand il a fini. ÉCRIS LA CONSIGNE AU TABLEAU DANS CE MESSAGE, sous le titre « La consigne », si elle n’y est pas déjà : il l’écrit en la regardant. TU NE RECEVRAS RIEN AVANT : son silence veut dire qu’il écrit, pas qu’il est bloqué. Ne le relance pas, ne lui redemande pas son texte, n’écris rien tant qu’il n’a pas envoyé. Ne lui demande JAMAIS de photo non plus : il n’a pas de cahier. Quand son texte arrive, remets-le AU TABLEAU sous « Ton texte », à l’identique, AVANT de corriger : dans le fil il sera remonté hors de vue, au tableau il reste affiché pendant toute la correction.]';
 
-const MOTIF = /\n\[TEXTE (?:AU CAHIER|AU CLAVIER)[^\]]*\]/g;
+/**
+ * LE FAIT DU TEXTE RENDU — accroché au message qui l'apporte, au clavier comme
+ * en photo.
+ *
+ * LE DÉFAUT QU'IL CORRIGE — Camara, le 18/09/2026, en pleine correction :
+ * « j'ai toujours rien, j'ai pas les badges comme sur la dictée ». Le
+ * professeur corrigeait point par point, à l'oral, sans jamais surligner.
+ *
+ * DEUX CAUSES, ET LA PREMIÈRE ÉTAIT DE MOI : la consigne disait de ne rien
+ * marquer au premier tableau et de surligner sur le SUIVANT. Or il n'y a pas
+ * de suivant — le professeur reprend les points un par un sans refaire le
+ * tableau. La seconde est la leçon de toujours : c'était une consigne, et une
+ * consigne écrite à trois mille lignes de là ne pèse rien au moment où il
+ * reçoit la copie.
+ *
+ * LA DICTÉE, ELLE, N'A PAS CE PROBLÈME : ses badges sont calculés, et le fait
+ * de la copie part avec le message de l'enfant. On fait pareil — la consigne
+ * arrive AU MOMENT où elle sert, collée au texte qu'elle concerne.
+ *
+ * LE MOT « DICTÉE » N'Y FIGURE PLUS — corrigé le 19/09/2026. Ce rappel reste
+ * dans l'historique, et le serveur y cherche quels exercices charger : « comme
+ * une dictée corrigée » faisait charger les consignes complètes de la dictée,
+ * ~11 600 jetons relus à chaque tour, pendant toute une expression écrite.
+ */
+const MARQUEUR_RENDU =
+  '[TEXTE RENDU : voici son texte. AVANT TOUT AUTRE MOT, écris-le AU TABLEAU '
+  + 'sous « La consigne » puis « Ton texte », mot pour mot, fautes comprises — '
+  + 'et encadre de deux signes égal chaque mot que tu vas reprendre : ==frend==. '
+  + 'Trois ou quatre mots, pas davantage. L’écran les surligne et les numérote ; '
+  + 'tu les reprends ensuite un par un, dans l’ordre, À L’ORAL — « regarde le mot 1 » — '
+  + 'sans réécrire ce tableau pendant la correction.]';
+
+/** Joint le fait du texte rendu au message qui l'apporte. */
+export function marquerTexteRendu(texte) {
+  return `${(texte ?? '').trim()}\n${MARQUEUR_RENDU}`;
+}
+
+const MOTIF = /\n\[TEXTE (?:AU CAHIER|AU CLAVIER|RENDU)[^\]]*\]/g;
 
 /** Vrai si le professeur demande à l'élève de choisir son support. */
 export function demandeSupportEcrit(texte) {
-  const message = texte ?? '';
+  return BALISE.test(texte ?? '');
+}
 
-  if (BALISE.test(message)) return true;
-
+/**
+ * LA CONSIGNE D'UN TEXTE EST AU TABLEAU — « La consigne », sans « Ton texte ».
+ *
+ * ELLE SUPPOSE LA QUESTION, ELLE NE LA POSE PAS. Distinction payée le
+ * 18/09/2026 : la faire compter comme une question posée rouvrait la fenêtre
+ * devant un élève qui venait de cliquer, puisque dans le déroulé normal la
+ * consigne vient APRÈS le choix. Voir `reponseEnAttente`, qui ne la retient
+ * que si rien d'autre ne répond plus haut.
+ */
+export function consigneAuTableau(texte) {
   // `matchAll` sur un motif global : on le relit à chaque appel, donc pas de
   // `lastIndex` qui traîne d'un message à l'autre.
-  for (const tableau of message.matchAll(ARDOISE)) {
+  for (const tableau of (texte ?? '').matchAll(ARDOISE)) {
     const contenu = tableau[1] ?? '';
 
     if (TITRE_CONSIGNE.test(contenu) && !TITRE_TON_TEXTE.test(contenu)) return true;
   }
 
   return false;
+}
+
+/**
+ * LA RÉPONSE DITE À VOIX HAUTE, ou tapée au lieu d'être cliquée.
+ *
+ * `undefined` DÈS QUE ÇA NE TRANCHE PAS — ni l'un ni l'autre, les deux à la
+ * fois, ou un message trop long pour être une simple réponse. La fenêtre reste
+ * alors ouverte : c'est elle, le filet, et on ne devine pas à la place de
+ * l'enfant. « Pas le cahier, plutôt le clavier » contient les deux mots ; on ne
+ * va pas se mettre à analyser sa syntaxe.
+ *
+ * `cachier` EST ACCEPTÉ, et ce n'est pas une faute de ma part : c'est une
+ * orthographe qu'un enfant tape, et la reconnaissance vocale la produit aussi.
+ *
+ * PAS DE `\b`, ET C'EST UN PIÈGE QUI A FAILLI PASSER. En JavaScript, `\b` ne
+ * connaît que [A-Za-z0-9_] : une lettre accentuée n'est pas une lettre pour
+ * lui. Mesuré avant de corriger, trois défauts d'un coup — « à la main » et
+ * « écran » ne correspondaient JAMAIS, et « une étape » correspondait à
+ * « tape », donc au clavier. Les bornes sont donc des lettres Unicode
+ * (`\p{L}`), qui comptent le « é » comme une lettre.
+ */
+const ORAL_CAHIER = /(?<!\p{L})(cahier|cachier|papier|feuille|à la main|a la main)(?!\p{L})/iu;
+const ORAL_CLAVIER = /(?<!\p{L})(clavier|ordi|ordinateur|taper|tape|écran|ecran)(?!\p{L})/iu;
+const REPONSE_COURTE = 120;
+
+export function lireReponseSupportEcrit(texte) {
+  const dit = (texte ?? '').trim();
+  if (!dit || dit.length > REPONSE_COURTE) return undefined;
+
+  const cahier = ORAL_CAHIER.test(dit);
+  const clavier = ORAL_CLAVIER.test(dit);
+
+  if (cahier === clavier) return undefined;
+
+  return cahier ? CAHIER : CLAVIER;
 }
 
 /** Joint le fait du support au message de l'élève. */
@@ -140,7 +223,9 @@ export function supportEcritChoisi(messages) {
       if (contenu.includes('[TEXTE AU CLAVIER')) return CLAVIER;
       return undefined;
     },
+    lireReponseOrale: lireReponseSupportEcrit,
     pose: demandeSupportEcrit,
+    poseeImplicitement: consigneAuTableau,
     propres: ['SUPPORT_ECRIT', 'EXPRESSION_ECRITE'],
   });
 }
@@ -162,7 +247,12 @@ export function supportEcritChoisi(messages) {
  * vaut pareil des deux côtés de ce passage.
  */
 export function rangSupportEcrit(messages) {
+  // LA BALISE ET LA CONSIGNE COMPTENT TOUTES LES DEUX : le rang n'a pas à
+  // valoir « un par exercice », il a seulement à MONTER quand un texte neuf
+  // commence. Une consigne donnée sans question doit ouvrir une feuille, donc
+  // elle doit faire monter le rang comme la balise.
   return (messages ?? []).filter(
-    (m) => m?.role === 'assistant' && demandeSupportEcrit(m.contenu ?? ''),
+    (m) => m?.role === 'assistant'
+      && (demandeSupportEcrit(m.contenu ?? '') || consigneAuTableau(m.contenu ?? '')),
   ).length;
 }

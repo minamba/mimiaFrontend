@@ -92,3 +92,26 @@ describe('La carte des vitesses d’une conversation', () => {
     expect(conversationEnCours(fil)).toBe(false);
   });
 });
+
+describe('La carte de l’évaluation, réponse dite à voix haute', () => {
+  test('« à l’ordinateur » dit au lieu de cliquer referme la carte', () => {
+    const fil = [
+      prof('Sur quoi tu composes ? [SUPPORT_EVALUATION]'),
+      eleve('À l’ordinateur.'),
+    ];
+
+    expect(supportChoisi(fil)).toBe('ordinateur');
+  });
+
+  test('« sur mon cahier » aussi', () => {
+    const fil = [prof('[SUPPORT_EVALUATION]'), eleve('Sur mon cahier')];
+
+    expect(supportChoisi(fil)).toBe('cahier');
+  });
+
+  test('une question en retour laisse la carte ouverte', () => {
+    const fil = [prof('[SUPPORT_EVALUATION]'), eleve('Tu me conseilles quoi ?')];
+
+    expect(supportChoisi(fil)).toBeNull();
+  });
+});

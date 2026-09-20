@@ -155,6 +155,13 @@ export const getCout = (periode, decalage = 0) =>
   httpClient.get('/admin/cout', { params: { periode, decalage } });
 
 /**
+ * Ce que le produit a rapporté sur la même fenêtre que getCout. Au mois et
+ * à l'année seulement : au jour et à la semaine, disponible vaut false.
+ */
+export const getRevenu = (periode, decalage = 0) =>
+  httpClient.get('/admin/revenu', { params: { periode, decalage } });
+
+/**
  * L'historique du pot d'heures supplémentaires d'un compte : achats payés et
  * ajustements manuels, chacun daté et motivé.
  *
@@ -660,3 +667,9 @@ export const getFournisseurs = () => httpClient.get('/admin/fournisseurs');
 
 /** Vérifie tout de suite, sans attendre le passage automatique. */
 export const verifierFournisseurs = () => httpClient.post('/admin/fournisseurs/verifier');
+
+/** La grille tarifaire des fournisseurs d'IA : prix officiel, prix appliqué, statut. */
+export const getTarifs = () => httpClient.get('/admin/tarifs');
+
+/** Corrige un prix à la main, en secours de la veille : appliqué aussitôt à nos calculs. */
+export const modifierTarif = (id, prix) => httpClient.put(`/admin/tarifs/${id}`, prix);

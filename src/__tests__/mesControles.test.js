@@ -69,6 +69,36 @@ test('mais il n’est pas doublé dans l’état vide, où la carte en porte dé
   expect(screen.getAllByRole('button', { name: /Ajouter un contrôle/ })).toHaveLength(1);
 });
 
+/**
+ * « VOIR LES CONTRÔLES PASSÉS » — Camara, le 20/09/2026 : le même bouton à
+ * côté de l'ajout, dans une autre couleur. Il mène à la page dédiée OUVERTE
+ * SUR SON ONGLET : arriver sur « À venir » laisserait l'enfant chercher.
+ */
+describe('le bouton des contrôles passés', () => {
+  const lien = () => screen.getByRole('link', { name: /Voir les contrôles passés/ });
+
+  test('accompagne l’ajout quand la liste est remplie', () => {
+    render(<MesControles eleveId="9" controles={[CONTROLE]} onAjouter={jest.fn()} />);
+
+    expect(lien()).toHaveAttribute('href', '/eleves/9/controles?onglet=passes');
+  });
+
+  // Il s'affiche MÊME SANS HISTORIQUE : un bouton qui apparaît et disparaît
+  // selon ce qu'il y a derrière ne se laisse jamais trouver, et la page
+  // dédiée explique l'absence en une phrase.
+  test('s’affiche aussi dans l’état vide', () => {
+    render(<MesControles eleveId="9" controles={[]} onAjouter={jest.fn()} />);
+
+    expect(lien()).toBeInTheDocument();
+  });
+
+  test('porte la même forme que l’ajout, avec sa propre teinte', () => {
+    render(<MesControles eleveId="9" controles={[CONTROLE]} onAjouter={jest.fn()} />);
+
+    expect(lien()).toHaveClass('btn-controle', 'btn-controle--passes');
+  });
+});
+
 test('une carte porte la matière, le délai et le pourcentage EN TEXTE', () => {
   render(<MesControles eleveId="9" controles={[CONTROLE]} />);
 

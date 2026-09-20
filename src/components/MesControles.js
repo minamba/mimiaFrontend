@@ -3,6 +3,7 @@ import iconeControle from '../assets/controle.png';
 import { styleMatiere } from '../lib/couleurMatiere';
 import BarrePreparation from './BarrePreparation';
 import BoutonAjoutControle from './BoutonAjoutControle';
+import BoutonControlesPasses from './BoutonControlesPasses';
 import PastillePret from './PastillePret';
 
 /**
@@ -160,7 +161,9 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
   if (controles === null || controles === undefined) return null;
 
   return (
-    <section className="controles-section">
+    // L'IDENTIFIANT EST UNE DESTINATION, pas une décoration : les pages de
+    // détail renvoient ici par `#mes-controles` plutôt qu'en haut de la page.
+    <section className="controles-section" id="mes-controles">
       <div className="controles-section__entete">
         <div className="controles-section__titre">
           {/* L'ILLUSTRATION QUI DÉBORDE — Camara, le 14/09/2026 : la
@@ -182,8 +185,19 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
             13/09/2026. Sans lui, en ajouter un second obligeait à passer par
             la page dédiée : le bouton n'existait que dans l'état vide, c'est
             à dire exactement quand on en a le moins besoin par la suite.
-            Il reste absent de l'état vide, où la carte en porte déjà un. */}
-        {controles.length > 0 && <BoutonAjoutControle onClick={onAjouter} />}
+            Il reste absent de l'état vide, où la carte en porte déjà un.
+
+            « VOIR LES CONTRÔLES PASSÉS » L'ACCOMPAGNE — Camara, le
+            20/09/2026. Il s'affiche même quand l'enfant n'en a encore aucun :
+            la page dédiée le lui dit en une phrase, alors qu'un bouton qui
+            apparaît et disparaît selon l'historique ne se laisse jamais
+            trouver. */}
+        {controles.length > 0 && (
+          <div className="controles-section__actions">
+            <BoutonControlesPasses eleveId={eleveId} />
+            <BoutonAjoutControle onClick={onAjouter} />
+          </div>
+        )}
       </div>
 
       {controles.length === 0 ? (
@@ -193,7 +207,10 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
             Ajoute ton prochain contrôle : ton professeur pourra te le rappeler
             et t’aider à le préparer, un peu à chaque cours.
           </p>
-          <BoutonAjoutControle onClick={onAjouter} />
+          <div className="fiches-vide__actions">
+            <BoutonAjoutControle onClick={onAjouter} />
+            <BoutonControlesPasses eleveId={eleveId} />
+          </div>
         </div>
       ) : (
         <>

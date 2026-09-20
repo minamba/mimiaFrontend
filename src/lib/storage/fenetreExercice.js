@@ -76,8 +76,18 @@ export function ouvreAutreChose(texte, propres = []) {
  * écrite fait foi. Deux textes dans une séance posent donc deux fois la
  * question, et le support du premier n'engage pas le second.
  */
-export function reponseEnAttente(messages, { lireReponse, pose, propres }) {
+export function reponseEnAttente(messages, {
+  lireReponse, lireReponseOrale, pose, poseeImplicitement, propres,
+}) {
   const liste = messages ?? [];
+
+  // Un message du professeur qui SUPPOSE la question sans la poser — une
+  // consigne au tableau. Il ne tranche rien à lui seul : voir plus bas.
+  let implicite = false;
+
+  // Le message de l'élève le plus proche de la question, en remontant : quand
+  // on atteint la question, c'est celui qui la SUIT immédiatement.
+  let premiereReponse = null;
 
   for (let i = liste.length - 1; i >= 0; i -= 1) {
     const contenu = liste[i]?.contenu ?? '';
@@ -88,6 +98,7 @@ export function reponseEnAttente(messages, { lireReponse, pose, propres }) {
 
       // L'ÉLÈVE, LUI, PEUT ÉCRIRE CE QU'IL VEUT. Un enfant qui tape
       // « [SUPPORT_ECRIT] » pour rire ne doit rien ouvrir ni rien fermer.
+      premiereReponse = contenu;
       continue;
     }
 
@@ -95,9 +106,39 @@ export function reponseEnAttente(messages, { lireReponse, pose, propres }) {
 
     // L'ORDRE COMPTE : on referme AVANT de reconnaître la question, sinon un
     // message qui porte les deux rouvrirait ce qu'il vient de clore.
-    if (ouvreAutreChose(contenu, propres)) return undefined;
-    if (pose(contenu)) return null;
+    if (ouvreAutreChose(contenu, propres)) return implicite ? null : undefined;
+
+    if (pose(contenu)) {
+      // LA RÉPONSE DITE À VOIX HAUTE — Camara, le 18/09/2026 : « au lieu de
+      // cliquer, je l'ai dit à l'oral, le prof a compris mais la fenêtre est
+      // toujours ouverte ». Seul le fait accroché au CLIC était lu.
+      //
+      // SEULE LA PREMIÈRE RÉPONSE COMPTE : plus loin dans la séance, « cahier »
+      // peut revenir dans n'importe quelle phrase sans rien vouloir dire du
+      // support. Et une réponse qui ne tranche pas laisse la fenêtre ouverte —
+      // elle est le filet, on ne devine pas à sa place.
+      const orale = premiereReponse && lireReponseOrale
+        ? lireReponseOrale(premiereReponse)
+        : undefined;
+
+      return orale !== undefined ? orale : null;
+    }
+
+    // LA CONSIGNE AU TABLEAU NE POSE PAS LA QUESTION — ELLE LA SUPPOSE.
+    //
+    // Le défaut du correctif précédent, relevé le même jour : je l'avais fait
+    // compter comme une question posée, pour rattraper le professeur qui
+    // oubliait la balise. Or dans le déroulé NORMAL, la consigne arrive
+    // TOUJOURS après le choix — et on la rencontre en premier en remontant.
+    // Elle refermait donc sur « question en attente » un choix déjà fait, et
+    // la fenêtre revenait devant un élève qui venait de cliquer.
+    //
+    // On la note et on continue : si plus haut on trouve le choix, c'est lui
+    // qui répond ; si on trouve la question, c'est elle ; si on ne trouve RIEN,
+    // alors oui, le professeur a donné la consigne sans demander — et là
+    // seulement, la question est en attente.
+    if (poseeImplicitement?.(contenu)) implicite = true;
   }
 
-  return undefined;
+  return implicite ? null : undefined;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import alerte from '../assets/alerte.webp';
 import { useSelector } from 'react-redux';
 import {
   getSignalements,
@@ -204,6 +205,30 @@ export default function SignalementsAdmin() {
 
   return (
     <div className="periodes-vacances">
+      {/* LE TITRE ET SON MÉGAPHONE — Camara, le 20/09/2026. L'onglet s'ouvrait
+          sur un filtre et un tableau, sans rien dire de ce qu'on regarde : les
+          autres onglets de l'administration portent tous leur nom.
+
+          Le sous-titre COMPTE, et dit ce que le filtre cache : « 2
+          signalements » sur une liste qui en porte douze se lit comme une
+          perte de données. Même règle que le carnet d'idées. */}
+      <div className="signalements__entete">
+        <span className="signalements__icone" aria-hidden="true">
+          <img src={alerte} alt="" />
+        </span>
+
+        <div>
+          <h2 className="signalements__titre">Signalements</h2>
+          <p className="signalements__sous-titre">
+            {signalements.length === 0
+              ? 'Aucun signalement pour le moment.'
+              : affiches.length === signalements.length
+                ? `${signalements.length} signalement${signalements.length > 1 ? 's' : ''} reçu${signalements.length > 1 ? 's' : ''}.`
+                : `${affiches.length} sur ${signalements.length} signalement${signalements.length > 1 ? 's' : ''}.`}
+          </p>
+        </div>
+      </div>
+
       {erreur && <div className="alert">{erreur}</div>}
 
       <div className="filtres">
@@ -223,7 +248,15 @@ export default function SignalementsAdmin() {
         <p className="etat-vide">Aucun signalement.</p>
       ) : (
         <div className="tableau">
-          <table>
+          {/* SUR TÉLÉPHONE, CHAQUE LIGNE DEVIENT UNE CARTE — Camara, le
+              20/09/2026 : « le tableau des signalements n'est pas responsive
+              sur mobile ». Six colonnes dans 360 pixels réduisaient la
+              description à une colonne de trois mots par ligne, et l'état, la
+              date et les actions restaient hors de l'écran.
+
+              Les classes ci-dessous ne servent QUE là : au-delà de 640 px, le
+              tableau reste un tableau. Même recette que le carnet d'idées. */}
+          <table className="signalements__tableau">
             <thead>
               <tr>
                 <th scope="col">Parent</th>
@@ -237,21 +270,25 @@ export default function SignalementsAdmin() {
             <tbody>
               {affiches.map((s) => (
                 <tr key={s.id}>
-                  <td>
+                  <td className="signalements__cellule-parent">
                     {s.parentMail}
                     {s.elevePrenom && (
                       <span className="signalement-admin__enfant"> (via {s.elevePrenom})</span>
                     )}
                   </td>
-                  <td>{libelleCategorie(s.categorie)}</td>
-                  <td>{tronquer(s.description, 80)}</td>
-                  <td>
+                  <td className="signalements__cellule-categorie">{libelleCategorie(s.categorie)}</td>
+                  <td className="signalements__cellule-description">
+                    {tronquer(s.description, 80)}
+                  </td>
+                  <td className="signalements__cellule-etat">
                     <span className={`signalement-etat signalement-etat--${s.etat}`}>
                       {libelleEtat(s.etat)}
                     </span>
                   </td>
-                  <td>{dateLisible(s.dateCreation)}</td>
-                  <td className="actions">
+                  <td className="signalements__cellule-date" data-libelle="Reçu le">
+                    {dateLisible(s.dateCreation)}
+                  </td>
+                  <td className="actions signalements__cellule-actions">
                     <button
                       type="button"
                       className="btn-ghost btn-ghost--mini"

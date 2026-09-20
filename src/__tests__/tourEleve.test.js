@@ -100,3 +100,29 @@ describe('une question à chercher laisse le temps de réfléchir', () => {
     })).toBe(DELAI_COURT);
   });
 });
+
+describe('amorceSeule — un début de phrase qui ne peut pas être une réponse', () => {
+  const { amorceSeule } = require('../lib/storage/tourEleve');
+
+  it('retient les amorces relevées en séance', () => {
+    for (const t of ['Je', 'je suis', "J'ai", 'Euh.', 'Et', 'Donc,', 'C’est', 'Parce que']) {
+      expect(amorceSeule(t)).toBe(true);
+    }
+  });
+
+  it('laisse partir les vraies réponses courtes', () => {
+    for (const t of ['oui.', 'Non', '12', 'allez.', 'vas-y, vas-y.', 'hello.', 'photo.', 'je sais pas', 'je voyais.', 'six cents']) {
+      expect(amorceSeule(t)).toBe(false);
+    }
+  });
+
+  it('laisse partir dès que la phrase continue', () => {
+    expect(amorceSeule('Je suis parti')).toBe(false);
+    expect(amorceSeule('Euh oui')).toBe(false);
+  });
+
+  it('ignore le vide', () => {
+    expect(amorceSeule('')).toBe(false);
+    expect(amorceSeule('   ')).toBe(false);
+  });
+});

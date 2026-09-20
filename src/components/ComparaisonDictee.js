@@ -1,5 +1,6 @@
 import { Fragment, useMemo } from 'react';
 import { comparerDictee, lireComparaison } from '../lib/storage/diffDictee';
+import { lireSurlignes } from '../lib/storage/surlignesTableau';
 
 /**
  * UN CÔTÉ DE LA COMPARAISON — le texte dicté ou la copie —, avec ses erreurs
@@ -159,7 +160,7 @@ export function LegendeErreurs({ trous = false, variante }) {
  * « Ta copie » — s'affiche avec ses erreurs numérotées ; tout le reste,
  * tel que le professeur l'a écrit.
  */
-export function ContenuTableau({ contenu, copieReference = null }) {
+export function ContenuTableau({ contenu, copieReference = null, tableauxPrecedents = [] }) {
   const lue = useMemo(() => lireComparaison(contenu), [contenu]);
 
   // LA VRAIE COPIE, SI ON LA CONNAÎT — voir `copieDeReference` : celle que
@@ -169,6 +170,29 @@ export function ContenuTableau({ contenu, copieReference = null }) {
     () => (lue ? comparerDictee(lue.dicte, copieReference ?? lue.copie) : null),
     [lue, copieReference],
   );
+
+  // LES MOTS DÉSIGNÉS PAR LE PROFESSEUR — voir `surlignesTableau`. Seulement
+  // quand ce n'est pas une dictée : là-bas, c'est la comparaison qui trouve
+  // les écarts, et deux sources de badges se contrediraient.
+  //
+  // CALCULÉ AVANT TOUT `return`, et ce n'est pas du rangement : un hook appelé
+  // après un retour anticipé change d'ordre d'un rendu à l'autre, et React
+  // plante au premier tableau qui passe de l'un à l'autre.
+  const surlignes = useMemo(
+    () => (lue && comparee?.comparable ? null : lireSurlignes(contenu, tableauxPrecedents)),
+    [lue, comparee, contenu, tableauxPrecedents],
+  );
+
+  if (surlignes) {
+    // LE MÊME DESSIN QUE LA COPIE D'UNE DICTÉE, à dessein : surligné corail,
+    // badge numéroté après le mot. Un enfant qui a déjà corrigé une dictée
+    // sait lire ce tableau sans qu'on le lui explique.
+    return (
+      <pre className="ardoise__contenu ardoise__contenu--dictee">
+        <TexteCompare segments={surlignes.segments} cote="copie" />
+      </pre>
+    );
+  }
 
   if (!lue || !comparee?.comparable) {
     return <pre className="ardoise__contenu">{contenu}</pre>;

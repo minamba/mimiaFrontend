@@ -20,10 +20,15 @@ jest.mock('../lib/api/elevesApi', () => ({
   getMatieresEleve: jest.fn(),
 }));
 
+// `useSearchParams` sert à ouvrir la page sur un onglet demandé par
+// l'mockAdresse (voir le test dédié plus bas) : sans paramètre, « À venir ».
+let mockAdresse = new URLSearchParams();
+
 jest.mock('react-router-dom', () => ({
   Link: ({ to, children, ...reste }) => <a href={to} {...reste}>{children}</a>,
   useParams: () => ({ eleveId: '9' }),
   useNavigate: () => jest.fn(),
+  useSearchParams: () => [mockAdresse, jest.fn()],
 }));
 
 const CONTROLE = (id, matiereId, matiereLibelle, joursRestants) => ({
@@ -39,6 +44,7 @@ const CONTROLE = (id, matiereId, matiereLibelle, joursRestants) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAdresse = new URLSearchParams();
   getMatieresEleve.mockResolvedValue({ data: [] });
 });
 
@@ -103,4 +109,43 @@ test('le groupe dont le prochain contrôle est le plus proche vient en premier',
   const titres = await screen.findAllByRole('heading', { level: 2 });
   expect(titres[0].textContent).toContain('Mathématiques');
   expect(titres[1].textContent).toContain('Histoire-Géographie');
+});
+
+/**
+ * L'ONGLET DEMANDÉ PAR L'ADRESSE — Camara, le 20/09/2026 : « Voir les
+ * contrôles passés », posé sur la page de cours, doit arriver SUR les passés.
+ * Ouvrir « À venir » puis laisser l'enfant trouver l'onglet lui-même vide le
+ * bouton de son sens.
+ */
+describe('l’onglet ouvert à l’arrivée', () => {
+  test('sans paramètre, la page s’ouvre sur « À venir »', async () => {
+    getControles.mockResolvedValue({ data: [CONTROLE(1, 1, 'Mathématiques', 2)] });
+
+    render(<ControlesEleve />);
+
+    await screen.findByText('Contrôle 1');
+    expect(getControles).toHaveBeenCalledWith('9', 'avenir', 50);
+  });
+
+  test('« ?onglet=passes » ouvre directement les contrôles passés', async () => {
+    mockAdresse = new URLSearchParams('onglet=passes');
+    getControles.mockResolvedValue({ data: [CONTROLE(1, 1, 'Mathématiques', -3)] });
+
+    render(<ControlesEleve />);
+
+    await screen.findByText('Contrôle 1');
+    expect(getControles).toHaveBeenCalledWith('9', 'passes', 50);
+  });
+
+  // L'mockAdresse ne décide pas de ce qui existe : un onglet inventé retombe sur
+  // « À venir » plutôt que de demander au serveur un statut inconnu.
+  test('un onglet inconnu retombe sur « À venir »', async () => {
+    mockAdresse = new URLSearchParams('onglet=nimportequoi');
+    getControles.mockResolvedValue({ data: [CONTROLE(1, 1, 'Mathématiques', 2)] });
+
+    render(<ControlesEleve />);
+
+    await screen.findByText('Contrôle 1');
+    expect(getControles).toHaveBeenCalledWith('9', 'avenir', 50);
+  });
 });

@@ -7,6 +7,10 @@ import { rendreTexteRiche, entourerSelection } from '../lib/utils/texteRiche';
 import { trier, inverser } from '../lib/utils/tri';
 import { imprimerSous } from '../lib/impression';
 
+// L'AMPOULE DU TITRE, EN WEBP — l'original pesait 963 Ko pour une icône de
+// 52 px. Réencodée à 180 px de côté : 12 Ko.
+import ampoule from '../assets/ampoule.webp';
+
 /**
  * LE CARNET D'IDÉES D'ÉVOLUTION — voulu par Camara le 17/09/2026.
  *
@@ -527,7 +531,16 @@ export default function IdeesAdmin() {
   return (
     <section className="idees">
       <div className="idees__tete">
-        <div>
+        {/* L'AMPOULE ET LE TITRE, D'UN BLOC — Camara, le 19/09/2026 : « rends-le
+            plus beau, mets l'ampoule ». Le halo chaud autour d'elle est ce qui
+            la fait lire comme ALLUMÉE, donc comme une idée : posée à plat sur
+            le fond bleu, ce n'était qu'un dessin d'objet. */}
+        <div className="idees__entete">
+          <span className="idees__ampoule" aria-hidden="true">
+            <img src={ampoule} alt="" />
+          </span>
+
+          <div>
           <h2 className="idees__titre">Idées d’évolution</h2>
           <p className="idees__sous-titre">
             {idees.length === 0
@@ -538,6 +551,7 @@ export default function IdeesAdmin() {
                 // porte douze se lit comme une perte de données.
                 : `${visibles.length} sur ${idees.length} idée${idees.length > 1 ? 's' : ''}.`}
           </p>
+          </div>
         </div>
 
         {!brouillon && (
@@ -846,12 +860,12 @@ Aperçu du brouillon
               {visibles.map((idee) => (
                 <tr key={idee.id}>
                   <td className="idees__cellule-titre">{idee.titre}</td>
-                  <td>
+                  <td className="idees__cellule-urgence">
                     <span className={`idee-urgence idee-urgence--${glissante(idee.urgence)}`}>
                       {URGENCES.find((u) => u.cle === idee.urgence)?.libelle ?? idee.urgence}
                     </span>
                   </td>
-                  <td>
+                  <td className="idees__cellule-statut">
                     <select
                       className={`idee-statut idee-statut--${glissante(idee.statut)}`}
                       value={idee.statut}
@@ -861,16 +875,16 @@ Aperçu du brouillon
                       {STATUTS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>
-                  <td className="idees__auteur">
+                  <td className="idees__auteur" data-libelle="Par">
                     {[idee.auteurPrenom, idee.auteurNom].filter(Boolean).join(' ') || '—'}
                   </td>
 
-                  <td>{dateCourte(idee.dateCreation)}</td>
+                  <td className="idees__date-creation" data-libelle="Créée le">{dateCourte(idee.dateCreation)}</td>
 
                   {/* JAMAIS MODIFIÉE : un tiret, et non la date de création
                       répétée. Répéter la même date des deux côtés donnerait à
                       croire qu'on y a retouché le jour même. */}
-                  <td className="idees__date-modif">
+                  <td className="idees__date-modif" data-libelle="Modifiée le">
                     {idee.dateModification
                       ? dateCourte(idee.dateModification)
                       : <span aria-label="jamais modifiée">—</span>}
@@ -883,7 +897,7 @@ Aperçu du brouillon
                       ne se peignait plus sous celle-ci. Sur un tableau à sept
                       colonnes, le trait courait donc jusqu'aux dates et
                       s'arrêtait net avant les boutons. */}
-                  <td>
+                  <td className="idees__cellule-actions">
                     <div className="idees__actions">
                       {/* TROIS ACTIONS, TROIS COULEURS — Camara, le 17/09/2026.
                           Trois boutons gris côte à côte se lisent comme un bloc :

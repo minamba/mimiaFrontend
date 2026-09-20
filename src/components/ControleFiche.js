@@ -82,7 +82,7 @@ export default function ControleFiche() {
   // n'importe qui peut réécrire, et un lien de retour fabriqué depuis du texte
   // libre enverrait l'enfant où le lien le veut.
   const retour = parametres.get('retour') === 'matieres'
-    ? { lien: `/eleves/${eleveId}/matieres`, libelle: 'Mes cours' }
+    ? { lien: `/eleves/${eleveId}/matieres#mes-controles`, libelle: 'Mes cours' }
     : { lien: `/eleves/${eleveId}/controles`, libelle: 'Mes contrôles' };
   const navigate = useNavigate();
 

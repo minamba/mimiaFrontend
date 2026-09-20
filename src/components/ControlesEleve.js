@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getControles, getMatieresEleve } from '../lib/api/elevesApi';
 import { styleMatiere } from '../lib/couleurMatiere';
 import BoutonAjoutControle from './BoutonAjoutControle';
@@ -60,7 +60,16 @@ export default function ControlesEleve() {
   const { eleveId } = useParams();
   const navigate = useNavigate();
 
-  const [onglet, setOnglet] = useState('avenir');
+  // L'ONGLET PEUT ÊTRE DEMANDÉ PAR L'ADRESSE — depuis le 20/09/2026, pour que
+  // « Voir les contrôles passés » arrive directement sur les passés plutôt que
+  // sur « À venir », laissant l'enfant chercher lui-même. Une valeur inconnue
+  // retombe sur « À venir » : l'adresse ne décide pas de ce qui existe.
+  const [parametres] = useSearchParams();
+  const demande = parametres.get('onglet');
+
+  const [onglet, setOnglet] = useState(
+    ONGLETS.some((o) => o.cle === demande) ? demande : 'avenir',
+  );
   const [controles, setControles] = useState(null);
   const [matieres, setMatieres] = useState([]);
   const [formulaire, setFormulaire] = useState(false);
@@ -102,7 +111,7 @@ export default function ControlesEleve() {
 
   return (
     <section className="page page--large">
-      <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour">← Retour</Link>
+      <Link to={`/eleves/${eleveId}/matieres#mes-controles`} className="lien-retour">← Retour</Link>
 
       <header className="controles-page__entete">
         <h1>Mes contrôles</h1>

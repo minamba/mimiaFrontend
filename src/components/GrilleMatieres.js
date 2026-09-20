@@ -23,6 +23,7 @@ import iconeCarte from '../assets/carte.png';
 import iconeCalendrier from '../assets/calendrier.png';
 import PreparationExamen from './PreparationExamen';
 import ControleForm from './ControleForm';
+import useAncreSection from '../lib/hooks/useAncreSection';
 
 /**
  * Ce qu'on promet à l'élève pour chaque matière, en une phrase.
@@ -490,6 +491,11 @@ export default function GrilleMatieres() {
   const { eleveId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Revenir d'une page de détail ramène à SA section, pas en haut de la page.
+  // L'ancre voyage dans l'adresse du lien de retour — voir le commentaire du
+  // crochet, qui explique pourquoi le retour du navigateur ne suffit pas.
+  useAncreSection();
 
   // La durée retenue entre les deux questions. `null` = on en est encore à
   // la première.

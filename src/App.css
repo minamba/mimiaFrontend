@@ -99,6 +99,14 @@
      se seraient confondus avec un sens déjà pris. */
   --controle-avenir: #f28c1e;
 
+  /* Les contrôles DÉJÀ PASSÉS — voulu par Camara le 20/09/2026, pour le bouton
+     posé à côté de « Ajouter un contrôle ». La sarcelle était la seule teinte
+     de la palette sans sens déjà pris : l'orange est le contrôle à venir, le
+     corail l'action principale, le violet les vacances, l'ambre les
+     évaluations passées. Complémentaire de l'orange, elle sépare les deux
+     boutons sans les mettre en concurrence. */
+  --controle-passe: #2aa39b;
+
   --danger: #ff8a7a;
   --danger-bg: #3a2320;
 
@@ -225,6 +233,10 @@
      évaluations déjà présent sur cette grille) ne pouvaient être repris sans
      ambiguïté pour un contrôle à venir. */
   --controle-avenir: #c96712;
+
+  /* Même rôle qu'en thème sombre, assombri comme l'orange l'est ici : sur
+     papier clair, le texte blanc du bouton doit tenir. */
+  --controle-passe: #0e7c7b;
 
   --danger: #c0392b;
   --danger-bg: #fdecea;
@@ -1037,6 +1049,50 @@ h1, h2, h3 {
   font-weight: 700;
   color: var(--encre);
 }
+
+/* La phrase sous la question, pour la carte de l'énoncé seul : elle annonce
+   ce qui va se passer ensuite — « ton professeur te demandera sur quel
+   exercice tu bloques ». Sans elle, l'enfant envoie son sujet et se demande
+   pourquoi on lui repose une question. */
+.copie-controle__aide {
+  margin: -4px 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+/* LE RETOUR SUR UN CHOIX — Camara, le 20/09/2026 : s'être trompé de bouton
+   doit se rattraper. Discret et posé sous la question : c'est une sortie de
+   secours, pas une troisième proposition — la mettre au même poids que les
+   boutons ferait hésiter un enfant qui n'a pas besoin d'elle. */
+/* LES DESSINS DANS LES BOUTONS D'ENVOI — Camara, le 20/09/2026 : la feuille
+   pour importer, le scanner pour scanner, à la place des émojis du système.
+   Une hauteur fixe et `object-fit` : les trois dessins n'ont pas le même
+   rapport, et sans ça la feuille, plus haute que large, décalait son bouton. */
+.copie-controle__icone {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+  vertical-align: -4px;
+}
+
+.copie-controle__retour {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.copie-controle__retour:hover:not(:disabled) { color: var(--encre); }
+.copie-controle__retour:disabled { opacity: 0.5; cursor: default; }
 
 .copie-controle__choix,
 .copie-controle__boutons {
@@ -17167,6 +17223,15 @@ html.defilement-bloque body {
     left: 0;
     right: 0;
     flex-direction: column;
+
+    /* PAS DE RETOUR À LA LIGNE EN COLONNE — corrigé le 19/09/2026. La rangée
+       d'ordinateur passe à la ligne (`flex-wrap: wrap`) ; héritée ici, avec
+       une hauteur plafonnée, elle ouvrait une DEUXIÈME COLONNE à droite dès
+       que les sections dépassaient 60 % de l'écran : le bas du menu partait
+       sur le côté et le panneau défilait en largeur. Une seule colonne, qui
+       défile vers le bas. */
+    flex-wrap: nowrap;
+    overflow-x: hidden;
     gap: 0;
     padding: 6px;
     border: 1px solid var(--contour);
@@ -19204,6 +19269,7 @@ html.defilement-bloque body {
   .controles-section__entete { display: flex; flex-direction: column; }
   .controles-section__titre { padding: 0 96px; }
   .controles-section__entete > .btn-controle { align-self: center; }
+  .controles-section__actions { align-self: center; justify-content: center; }
 }
 
 /* Sur téléphone, les marges latérales écraseraient le texte : il descend
@@ -19380,6 +19446,53 @@ html.defilement-bloque body {
 .btn-controle:focus-visible {
   outline: 2px solid var(--controle-avenir);
   outline-offset: 3px;
+}
+
+/* « VOIR LES CONTRÔLES PASSÉS » — Camara, le 20/09/2026 : le même bouton, une
+   autre couleur. Seule la teinte change ; la forme, la pastille de l'icône et
+   l'ombre restent celles de `.btn-controle`, parce que les deux gestes ont le
+   même poids. `text-decoration` et `color` sont réaffirmés : c'est un lien,
+   et les styles de lien de la page le rattraperaient sinon. */
+.btn-controle--passes {
+  background: linear-gradient(
+    135deg,
+    var(--controle-passe) 0%,
+    color-mix(in srgb, var(--controle-passe) 76%, #064a4c) 100%
+  );
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--controle-passe) 32%, transparent);
+}
+
+.btn-controle--passes:hover {
+  color: #fff;
+  box-shadow: 0 7px 20px color-mix(in srgb, var(--controle-passe) 42%, transparent);
+}
+
+.btn-controle--passes:focus-visible { outline-color: var(--controle-passe); }
+
+/* LES DEUX BOUTONS DANS LA MÊME CASE. L'en-tête est une grille de trois
+   colonnes et le bouton occupait la troisième ; à deux, ils s'y seraient
+   superposés. Le retour à la ligne est autorisé : sur une tablette étroite,
+   « Voir les contrôles passés » passe sous son voisin plutôt que de comprimer
+   les deux libellés. */
+.controles-section__actions {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Dans l'état vide, la paire est centrée sous le texte, comme l'était le
+   bouton seul. */
+.fiches-vide__actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -24212,4 +24325,526 @@ html.defilement-bloque body {
 :root[data-theme='light'] .ardoise__agrandir:hover {
   background: color-mix(in srgb, var(--encre) 7%, transparent);
   border-color: color-mix(in srgb, var(--encre) 58%, transparent);
+}
+
+/* LE FILTRE PAR MATIÈRE DU PROGRAMME SCOLAIRE — sous le choix de la classe,
+   collé à lui : c’est le second temps du même geste. Il reprend le style des
+   autres filtres de l’administration ; seule la marge change. */
+.programme-scolaire__filtre {
+  margin: 14px 0 18px;
+}
+
+.programme-scolaire__filtre label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.programme-scolaire__filtre select { min-width: 240px; }
+
+/* ------------------------------------------------------------------
+   LE TITRE DES IDÉES D’ÉVOLUTION — Camara, le 19/09/2026 : « rends-le plus
+   beau et mets l’ampoule ».
+
+   L’AMPOULE EST ALLUMÉE, PAS POSÉE : un halo ambre derrière elle, et c’est
+   ce qui la fait lire comme une idée plutôt que comme un objet. L’ambre est
+   --duree-3, déjà la couleur chaude de la palette dans les deux thèmes —
+   pas une couleur de plus.
+
+   LE TITRE PASSE À LA FONTE D’AFFICHAGE, comme les autres grands titres du
+   site, avec un filet court dessous — le même geste que « Le tableau ».
+   ------------------------------------------------------------------ */
+.idees__entete {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.idees__ampoule {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--duree-3) 38%, transparent) 0%,
+    color-mix(in srgb, var(--duree-3) 12%, transparent) 55%,
+    transparent 72%);
+}
+
+.idees__ampoule img {
+  width: 46px;
+  height: auto;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--duree-3) 55%, transparent));
+}
+
+.idees__entete .idees__titre {
+  position: relative;
+  padding-bottom: 8px;
+  font-family: var(--display);
+  font-size: 27px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.idees__entete .idees__titre::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 44px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--duree-3);
+}
+
+.idees__entete .idees__sous-titre { margin-top: 7px; }
+
+/* ------------------------- le temps réel en cours, colonne d'administration */
+/* À LA SECONDE, SUR LA PÉRIODE DU FILTRE. Même police chiffrée que les heures
+   restantes, pour que les colonnes s'alignent ; la précision sous l'en-tête
+   dit d'un mot ce qui le distingue du forfait consommé, qui est global. */
+.temps-reel {
+  font-family: var(--display);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--encre);
+}
+
+/* Zéro seconde : rien fait sur la période. Discret, pas alarmant. */
+.temps-reel--nul { color: var(--encre-douce); }
+
+.temps-reel__entete { white-space: nowrap; }
+
+.temps-reel__precision {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--encre-douce);
+}
+
+/* ------------------------------ ce que le produit rapporte, sous ce qu'il coûte */
+/* LE MÊME CADRE QUE LE COÛT, pour qu'on les lise comme une paire ; le vert
+   sarcelle du temps de cours pour ce qui ENTRE, face à l'ambre de ce qui sort. */
+.revenu-total__montant { color: #0f766e; }
+.revenu-bulle__somme { color: #0f766e; }
+
+:root:not([data-theme='light']) .revenu-total__montant,
+:root:not([data-theme='light']) .revenu-bulle__somme { color: #5eead4; }
+
+:root[data-theme='dark'] .revenu-total__montant,
+:root[data-theme='dark'] .revenu-bulle__somme { color: #5eead4; }
+
+.revenu-total__indisponible {
+  margin: 0;
+  font-size: 14px;
+  color: var(--encre-douce);
+}
+
+/* LA RÉPONSE : bénéfice ou perte, en grand, sous une ligne comme le temps de
+   cours au-dessus. Le signe et le mot disent le sens — jamais la couleur seule. */
+.revenu-total__resultat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--trait);
+}
+
+.revenu-total__resultat-libelle {
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.revenu-total__resultat-valeur {
+  font-family: var(--display);
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+.revenu-total__resultat--benefice .revenu-total__resultat-valeur { color: #0f766e; }
+.revenu-total__resultat--perte .revenu-total__resultat-valeur { color: var(--danger); }
+
+:root:not([data-theme='light']) .revenu-total__resultat--benefice .revenu-total__resultat-valeur { color: #5eead4; }
+:root[data-theme='dark'] .revenu-total__resultat--benefice .revenu-total__resultat-valeur { color: #5eead4; }
+
+.revenu-total__resultat-note {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--encre-douce);
+}
+
+/* Les montants des lignes suivent la même règle : ce qui entre est vert. */
+.revenu-total .cout-bulle__lignes strong { color: #0f766e; }
+:root:not([data-theme='light']) .revenu-total .cout-bulle__lignes strong { color: #5eead4; }
+:root[data-theme='dark'] .revenu-total .cout-bulle__lignes strong { color: #5eead4; }
+
+/* Les blocs de l'onglet Parents, sous les onglets dans la fenêtre des droits :
+   un titre discret suffit à dire qu'ils n'ajoutent rien à la barre. */
+.droits__sous-titre {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+/* Masqué par les droits, mais toujours monté : `hidden` doit l'emporter. */
+.cout-total[hidden] { display: none; }
+
+/* Le tableau déborde : plus de rainure à craie. Dessinée dans la surface qui
+   défile, elle remontait avec le texte et coupait le tableau en deux. */
+.ardoise__surface--defile::after { display: none; }
+
+/* LA BARRE DU HAUT EST COLLANTE, l'ancre doit s'arrêter avant elle — Camara,
+   le 20/09/2026, sur le retour depuis les contrôles passés et depuis le détail
+   d'une épreuve. Sans cette marge, la section visée se cale pile sous la barre
+   et son titre disparaît dessous : on croit être arrivé ailleurs.
+
+   L'illustration de ces deux sections déborde par le haut d'une vingtaine de
+   pixels (voir `.controles-section__icone`) ; la marge la couvre aussi, sinon
+   c'est elle qu'on tronque. */
+#mes-controles,
+#preparation-examen { scroll-margin-top: 96px; }
+
+/* ------------------------------ le carnet d'idées sur téléphone : des cartes */
+/* UNE CARTE PAR IDÉE, PLUS DE DÉFILEMENT DE CÔTÉ — Camara, le 19/09/2026 : « sur
+   mobile le tableau des idées n'est pas responsive, je dois scroller ». Sept
+   colonnes ne tiennent pas dans 360 pixels : le titre s'écrasait sur une
+   colonne de trois mots et la moitié du tableau restait hors de l'écran.
+
+   Le titre en tête, sur toute la largeur ; urgence et statut côte à côte ;
+   l'auteur et les dates en petit, avec leur libellé ; les actions en bas à
+   droite. Le tableau reste un tableau au-delà de 640 pixels. */
+@media (max-width: 640px) {
+  .idees .tableau { overflow-x: visible; }
+
+  .idees__tableau,
+  .idees__tableau tbody { display: block; width: 100%; }
+
+  .idees__tableau thead { display: none; }
+
+  .idees__tableau tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "titre   titre"
+      "urgence statut"
+      "auteur  auteur"
+      "creee   modif"
+      "actions actions";
+    gap: 8px 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--trait);
+  }
+
+  .idees__tableau td {
+    display: block;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .idees__cellule-titre {
+    grid-area: titre;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  .idees__cellule-urgence { grid-area: urgence; align-self: center; }
+  .idees__cellule-statut { grid-area: statut; align-self: center; }
+  .idees__cellule-statut .idee-statut { width: 100%; }
+
+  .idees__auteur { grid-area: auteur; white-space: normal; }
+  .idees__date-creation { grid-area: creee; }
+  .idees__date-modif { grid-area: modif; }
+
+  .idees__auteur,
+  .idees__date-creation,
+  .idees__date-modif { font-size: 12.5px; color: var(--encre-douce); }
+
+  /* Le libellé que l'en-tête caché ne donne plus. */
+  .idees__tableau td[data-libelle]::before {
+    content: attr(data-libelle) " · ";
+    font-weight: 600;
+  }
+
+  .idees__cellule-actions { grid-area: actions; justify-self: end; }
+}
+
+/* ------------------------------------ l'en-tête de l'onglet Signalements */
+/* LE TITRE ET SON MÉGAPHONE — Camara, le 20/09/2026. Même construction que le
+   carnet d'idées : un halo derrière le dessin, un filet de couleur sous le
+   titre. Le halo est ce qui fait lire le dessin comme un SIGNAL ; posé à plat
+   sur le fond bleu nuit, ce n'est qu'un objet.
+
+   LE CORAIL PLUTÔT QUE L'AMBRE des idées : deux onglets voisins qui portent la
+   même teinte se confondent au coin de l'œil, et le corail est déjà celui de
+   l'onglet actif juste au-dessus. */
+.signalements__entete {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.signalements__icone {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--corail) 34%, transparent) 0%,
+    color-mix(in srgb, var(--corail) 11%, transparent) 55%,
+    transparent 72%);
+}
+
+.signalements__icone img {
+  width: 46px;
+  height: auto;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--corail) 50%, transparent));
+}
+
+.signalements__titre {
+  position: relative;
+  margin: 0;
+  padding-bottom: 8px;
+  font-family: var(--display);
+  font-size: 27px;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.signalements__titre::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 44px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--corail);
+}
+
+.signalements__sous-titre {
+  margin: 7px 0 0;
+  font-size: 14px;
+  color: var(--encre-douce);
+}
+
+/* ----------------------------- les signalements sur téléphone : des cartes */
+/* MÊME DÉFAUT, MÊME REMÈDE — Camara, le 20/09/2026 : « le tableau des
+   signalements n'est pas responsive sur mobile ». Six colonnes dans 360
+   pixels réduisaient la description à trois mots par ligne, et l'état, la
+   date et les actions restaient hors champ.
+
+   LA DESCRIPTION PASSE EN TÊTE, et c'est le seul écart avec le carnet
+   d'idées : c'est elle qu'on lit pour savoir de quoi il s'agit, alors que le
+   tableau la range en troisième colonne. Viennent ensuite l'adresse du
+   parent, puis la catégorie et l'état côte à côte, la date, et les actions. */
+@media (max-width: 640px) {
+  .signalements__tableau { --trait-carte: 1px solid var(--trait); }
+
+  .signalements__tableau,
+  .signalements__tableau tbody { display: block; width: 100%; }
+
+  .signalements__tableau thead { display: none; }
+
+  .signalements__tableau tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "description description"
+      "parent      parent"
+      "categorie   etat"
+      "date        date"
+      "actions     actions";
+    gap: 8px 12px;
+    padding: 14px 16px;
+    border-bottom: var(--trait-carte);
+  }
+
+  /* Le cadre du tableau ferme déjà la dernière carte : son filet ferait
+     une double ligne au bas de la liste. */
+  .signalements__tableau tr:last-child { border-bottom: 0; }
+
+  .signalements__tableau td {
+    display: block;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .signalements__cellule-description {
+    grid-area: description;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  /* L'adresse d'un parent n'a pas d'espace où se couper : sans cette règle,
+     elle élargit la carte et ramène le défilement qu'on vient de retirer. */
+  .signalements__cellule-parent {
+    grid-area: parent;
+    font-size: 12.5px;
+    color: var(--encre-douce);
+    overflow-wrap: anywhere;
+  }
+
+  .signalements__cellule-categorie { grid-area: categorie; align-self: center; }
+  .signalements__cellule-etat { grid-area: etat; align-self: center; justify-self: end; }
+
+  .signalements__cellule-date {
+    grid-area: date;
+    font-size: 12.5px;
+    color: var(--encre-douce);
+  }
+
+  /* Le libellé que l'en-tête caché ne donne plus. */
+  .signalements__tableau td[data-libelle]::before {
+    content: attr(data-libelle) " · ";
+    font-weight: 600;
+  }
+
+  /* Les boutons restent sur une ligne et se serrent plutôt que de sortir. */
+  .signalements__cellule-actions {
+    grid-area: actions;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+}
+
+/* --------------------------------------- la grille tarifaire des fournisseurs */
+/* LES MÊMES CARTES QUE L'ÉTAT DES FOURNISSEURS, avec le même filet de couleur à
+   gauche : vert quand nos calculs utilisent le prix officiel, ambre quand ils en
+   utilisent un autre, neutre quand la ligne n'entre dans aucun calcul. */
+.grille-tarifs__aide {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.grille-tarifs__cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+
+.prix-ia {
+  --ton: var(--trait-bouton);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--trait);
+  border-left: 4px solid var(--ton);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  box-shadow: var(--ombre);
+}
+
+.prix-ia--ok { --ton: var(--serie-2); }
+/* L'ambre est posé ici en dur : la variable des cartes d'état n'existe
+   que dans leur bloc, et la carte « pas à jour » restait sans couleur. */
+.prix-ia--attention { --ton: #d97706; }
+
+.prix-ia__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prix-ia__modele {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--encre);
+  overflow-wrap: anywhere;
+}
+
+.prix-ia__statut {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ton) 16%, transparent);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--encre);
+  white-space: nowrap;
+}
+
+.prix-ia__usage {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--encre-douce);
+}
+
+.prix-ia__lignes {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.prix-ia__lignes div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.prix-ia__lignes dt { font-size: 13px; color: var(--encre-douce); }
+.prix-ia__lignes dd { margin: 0; text-align: right; }
+
+.prix-ia__prix { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--encre); }
+.prix-ia__prix small { font-weight: 400; color: var(--encre-douce); }
+.prix-ia__prix--vide { font-weight: 400; color: var(--encre-douce); }
+.prix-ia__unite { display: block; font-size: 11.5px; }
+
+.prix-ia__edition {
+  display: grid;
+  gap: 10px;
+}
+
+.prix-ia__edition label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--encre-douce);
+}
+
+.prix-ia__edition input {
+  padding: 8px 10px;
+  border: 1px solid var(--contour);
+  border-radius: 8px;
+  background: var(--papier);
+  color: var(--encre);
+  font: inherit;
+}
+
+.prix-ia__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* -------------------------- le tableau des parents, en pleine largeur */
+/* SUR ORDINATEUR SEULEMENT, POUR LES TABLEAUX DES PARENTS ET DES ÉLÈVES — voulu
+   par Camara le 19/09/2026. Il déborde du cadre de 1 180 pixels de la page par des marges
+   négatives calculées sur la fenêtre : il va jusqu'à 24 pixels des bords,
+   quelle que soit la largeur de l'écran. Le reste de la page ne bouge pas. */
+@media (min-width: 1240px) {
+  .tableau--parents,
+  .tableau--pleine-largeur {
+    margin-inline: calc(50% - 50vw + 24px);
+  }
 }

@@ -161,7 +161,7 @@ export default function EpreuveFiche() {
       className="page controle-page"
       style={styleMatiere({ matiereLibelle: epreuve.matieres[0]?.libelle })}
     >
-      <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour">← Mes cours</Link>
+      <Link to={`/eleves/${eleveId}/matieres#preparation-examen`} className="lien-retour">← Mes cours</Link>
 
       <article className="controle-fiche">
         <header className="controle-fiche__entete">

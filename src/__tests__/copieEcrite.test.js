@@ -1,5 +1,6 @@
 import {
-  CAHIER, CLAVIER, marquerSupportEcrit, rangSupportEcrit, supportEcritChoisi,
+  CAHIER, CLAVIER, lireReponseSupportEcrit, marquerSupportEcrit, marquerTexteRendu,
+  rangSupportEcrit, retirerMarqueurSupportEcrit, supportEcritChoisi,
 } from '../lib/storage/supportEcrit';
 import { insererLigneDans } from '../components/LignesCopie';
 
@@ -169,5 +170,144 @@ describe('Quand le professeur oublie la balise', () => {
     const dictee = [prof('[ARDOISE]\nLa dictée\nLes enfants sont partis.\n\nTa copie\nLes enfant son parti.\n[/ARDOISE]')];
 
     expect(supportEcritChoisi(dictee)).toBeUndefined();
+  });
+});
+
+/**
+ * LA RÉPONSE DITE À VOIX HAUTE — Camara, le 18/09/2026 : « au lieu de cliquer
+ * sur le bouton je l'ai dit à l'oral, le prof a compris mais la fenêtre de
+ * choix est toujours ouverte ».
+ *
+ * DEUX DÉFAUTS SE CUMULAIENT, et le second venait du correctif précédent :
+ *
+ * 1. La réponse orale n'était pas lue — seul le fait accroché au CLIC l'était.
+ * 2. La consigne au tableau avait été rendue capable de POSER la question, pour
+ *    rattraper le professeur qui oubliait la balise. Or, dans le déroulé
+ *    normal, la consigne arrive TOUJOURS après le choix : même un élève qui
+ *    avait cliqué voyait la fenêtre revenir aussitôt.
+ */
+describe('Le choix du support, quel que soit le chemin', () => {
+  const consigne = prof('Je te donne le sujet. [ARDOISE]\nLa consigne\nRaconte en 5 phrases.\n[/ARDOISE]');
+
+  test('après un CLIC, la consigne ne rouvre pas la question', () => {
+    // LA RÉGRESSION : c'est ce cas-là, le plus banal, qui était cassé.
+    const fil = [
+      prof('Cahier ou clavier ? [SUPPORT_ECRIT]'),
+      eleve(marquerSupportEcrit('', CAHIER)),
+      consigne,
+    ];
+
+    expect(supportEcritChoisi(fil)).toBe(CAHIER);
+  });
+
+  test('« Sur mon cahier » dit à voix haute vaut le clic', () => {
+    const fil = [
+      prof('Cahier ou clavier ? [SUPPORT_ECRIT]'),
+      eleve('Sur mon cahier.'),
+      consigne,
+    ];
+
+    expect(supportEcritChoisi(fil)).toBe(CAHIER);
+  });
+
+  test('« au clavier » aussi — et la feuille s’ouvre', () => {
+    const fil = [
+      prof('Cahier ou clavier ? [SUPPORT_ECRIT]'),
+      eleve('Au clavier, s’il te plaît.'),
+    ];
+
+    expect(supportEcritChoisi(fil)).toBe(CLAVIER);
+    expect(feuilleOuverte(fil, 0)).toBe(true);
+  });
+
+  test('une réponse qui ne tranche pas laisse la fenêtre ouverte', () => {
+    // La fenêtre est le filet : si on ne sait pas lire la réponse, on ne la
+    // devine pas.
+    const hesite = [prof('Cahier ou clavier ? [SUPPORT_ECRIT]'), eleve('C’est quoi la différence ?')];
+    const lesDeux = [prof('[SUPPORT_ECRIT]'), eleve('pas le cahier, plutôt le clavier')];
+
+    expect(supportEcritChoisi(hesite)).toBeNull();
+    expect(supportEcritChoisi(lesDeux)).toBeNull();
+  });
+
+  test('seule la PREMIÈRE réponse après la question compte', () => {
+    // Plus loin dans la séance, « cahier » peut revenir dans n'importe quelle
+    // phrase sans rien vouloir dire du support.
+    const fil = [
+      prof('[SUPPORT_ECRIT]'),
+      eleve('Hmm attends'),
+      eleve('en fait mon cahier est chez ma mère'),
+    ];
+
+    expect(supportEcritChoisi(fil)).toBeNull();
+  });
+});
+
+/**
+ * LES ACCENTS, QUE `\b` NE CONNAÎT PAS.
+ *
+ * En JavaScript, `\b` ne voit que [A-Za-z0-9_]. La première version des motifs
+ * s'en servait, et trois défauts passaient ensemble : « à la main » et
+ * « écran » ne correspondaient jamais, « une étape » correspondait à « tape ».
+ */
+describe('La réponse orale, accents compris', () => {
+  test.each([
+    ['À la main', CAHIER],
+    ['sur l’écran', CLAVIER],
+    ['Sur mon cachier', CAHIER],
+    ['Je vais taper', CLAVIER],
+  ])('« %s » se lit comme %s', (dit, attendu) => {
+    expect(lireReponseSupportEcrit(dit)).toBe(attendu);
+  });
+
+  test('« une étape » ne se lit PAS comme « tape »', () => {
+    expect(lireReponseSupportEcrit('C’est une étape importante')).toBeUndefined();
+  });
+
+  test('« ordinaire » ne se lit PAS comme « ordi »', () => {
+    expect(lireReponseSupportEcrit('un truc ordinaire')).toBeUndefined();
+  });
+});
+
+/**
+ * LE FAIT DU TEXTE RENDU — Camara, le 18/09/2026 : « j'ai toujours rien sur la
+ * correction, j'ai pas les badges comme sur la dictée ».
+ *
+ * La consigne disait de surligner sur un tableau SUIVANT, qui n'arrivait
+ * jamais : le professeur corrigeait à l'oral sans refaire le tableau. La
+ * dictée n'a pas ce problème — son fait part avec la copie. On fait pareil :
+ * la consigne arrive collée au texte qu'elle concerne.
+ */
+describe('Le texte rendu porte sa consigne', () => {
+  test('le fait dit au professeur de surligner, avec la notation', () => {
+    const envoye = marquerTexteRendu('Je vois des photos.');
+
+    expect(envoye).toContain('Je vois des photos.');
+    expect(envoye).toContain('[TEXTE RENDU');
+    expect(envoye).toContain('==frend==');
+  });
+
+  test('une photo sans un mot porte quand même le fait', () => {
+    // Au cahier, l'enfant envoie souvent la photo seule.
+    expect(marquerTexteRendu('')).toContain('[TEXTE RENDU');
+  });
+
+  test('l’enfant ne voit jamais le fait dans sa bulle', () => {
+    const affiche = retirerMarqueurSupportEcrit(marquerTexteRendu('Je vois des photos.'));
+
+    expect(affiche).toBe('Je vois des photos.');
+    expect(affiche).not.toContain('TEXTE RENDU');
+  });
+
+  test('le texte rendu n’est pas pris pour une réponse au support', () => {
+    // Il arrive APRÈS le choix : c'est le choix qui doit rester lisible.
+    const fil = [
+      prof('[SUPPORT_ECRIT]'),
+      eleve(marquerSupportEcrit('', CAHIER)),
+      prof('[ARDOISE]\nLa consigne\nRaconte.\n[/ARDOISE]'),
+      eleve(marquerTexteRendu('Photo.')),
+    ];
+
+    expect(supportEcritChoisi(fil)).toBe(CAHIER);
   });
 });

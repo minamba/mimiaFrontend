@@ -307,6 +307,21 @@ export default function ProgrammeScolaireAdmin() {
   const [occupe, setOccupe] = useState(null);
   const [classe, setClasse] = useState(null);
 
+  /**
+   * LA MATIÈRE AFFICHÉE — Camara, le 18/09/2026 : « si je cherche les notions
+   * d'une matière, c'est pas évident ». Une classe de lycée porte une quinzaine
+   * de matières empilées, et il fallait les faire défiler toutes pour trouver
+   * la bonne.
+   *
+   * L'IDENTIFIANT DE LA MATIÈRE, PAS SON RANG DANS LA LISTE : on garde le
+   * filtre en changeant de classe. Passer de la 3e à la 2de en regardant
+   * l'anglais, c'est justement comparer l'anglais d'une année à l'autre — le
+   * perdre à chaque clic obligerait à le rechoisir.
+   *
+   * Chaîne vide = toutes les matières.
+   */
+  const [matiere, setMatiere] = useState('');
+
   const charger = () => {
     setChargement(true);
 
@@ -337,6 +352,15 @@ export default function ProgrammeScolaireAdmin() {
   const classes = programme.classes ?? [];
   const sentinelles = programme.sentinelles ?? [];
   const courante = classes.find((c) => c.code === classe) ?? classes[0];
+  const matieresClasse = courante?.matieres ?? [];
+
+  // UNE MATIÈRE QUE CETTE CLASSE N'A PAS n'efface pas l'écran : on retombe sur
+  // toutes. La philosophie n'existe pas en 3e ; la garder choisie en y passant
+  // montrerait une page vide, qu'on prendrait pour une panne.
+  const filtreValable = matieresClasse.some((m) => String(m.matiereId) === matiere);
+  const affichees = filtreValable
+    ? matieresClasse.filter((m) => String(m.matiereId) === matiere)
+    : matieresClasse;
 
   return (
     <div className="programme-scolaire">
@@ -381,13 +405,36 @@ export default function ProgrammeScolaireAdmin() {
 
           <SelecteurClasses classes={classes} actif={courante?.code} onChoisir={setClasse} />
 
+          {matieresClasse.length > 1 && (
+            <div className="filtres programme-scolaire__filtre">
+              <label htmlFor="programme-matiere">Matière</label>
+              <select
+                id="programme-matiere"
+                value={filtreValable ? matiere : ''}
+                onChange={(e) => setMatiere(e.target.value)}
+              >
+                <option value="">Toutes les matières ({matieresClasse.length})</option>
+                {matieresClasse.map((m) => (
+                  <option key={m.matiereId} value={String(m.matiereId)}>
+                    {/* LE NOMBRE DE NOTIONS DANS LA LISTE : il dit, avant même
+                        d'ouvrir, où il y a du contenu et où il n'y en a pas.
+                        LES ACTIVES SEULEMENT, comme l'en-tête de la matière —
+                        « 22 » dans le menu et « 20 notions » sous les yeux, et
+                        on se demanderait laquelle des deux ment. */}
+                    {m.libelle} ({m.notions.filter((n) => n.actif).length})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {courante && (
-            courante.matieres.length === 0 ? (
+            affichees.length === 0 ? (
               <p className="etat-vide">
                 Aucune notion répertoriée pour cette classe.
               </p>
             ) : (
-              courante.matieres.map((m) => (
+              affichees.map((m) => (
                 <Matiere key={m.matiereId} matiere={m} occupe={occupe} onTraiter={marquerTraitee} />
               ))
             )

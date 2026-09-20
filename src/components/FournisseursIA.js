@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getFournisseurs, verifierFournisseurs } from '../lib/api/adminApi';
+import Onglets from './Onglets';
+import TarifsFournisseurs from './TarifsFournisseurs';
 
 /**
  * L'onglet « Anthropic / OpenAI » : les deux fournisseurs dont le produit
@@ -166,7 +168,32 @@ function resumer(etats) {
   return null;
 }
 
+/**
+ * L'ONGLET « ANTHROPIC / OPENAI », EN DEUX VUES — voulu par Camara le
+ * 19/09/2026 : l'état des fournisseurs, et leurs tarifs.
+ */
 export default function FournisseursIA() {
+  const [vue, setVue] = useState('etat');
+
+  return (
+    <>
+      <Onglets
+        mini
+        etiquette="Fournisseurs"
+        actif={vue}
+        onChoisir={setVue}
+        items={[
+          { cle: 'etat', libelle: 'État' },
+          { cle: 'tarifs', libelle: 'Tarifs' },
+        ]}
+      />
+
+      {vue === 'etat' ? <EtatFournisseurs /> : <TarifsFournisseurs />}
+    </>
+  );
+}
+
+function EtatFournisseurs() {
   const [etats, setEtats] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [verification, setVerification] = useState(false);

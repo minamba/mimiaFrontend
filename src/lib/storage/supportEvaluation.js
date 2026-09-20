@@ -72,7 +72,7 @@ const MARQUEUR_CAHIER =
  * photographier.
  */
 const MARQUEUR_ORDINATEUR =
-  '[ÉVALUATION À L’ORDINATEUR : il compose ici, dans la conversation. Tu poses '
+  '[ÉVALUATION À L’ORDINATEUR : il compose ici, à l’écran. Tu poses '
   + 'les questions une par une, comme d’habitude. Ne lui demande JAMAIS de '
   + 'photo de sa copie : il n’a pas de cahier. S’il joint quand même un '
   + 'document, lis-le et compte-le dans sa note avec ce qu’il t’a répondu à '
@@ -117,6 +117,31 @@ export function retirerMarqueurSupport(texte) {
  * n'engage pas la seconde. Si une réponse est passée après cette balise-là,
  * c'est elle qu'on rencontre en premier, et c'est elle qui vaut.
  */
+/**
+ * LA RÉPONSE DITE À VOIX HAUTE — même défaut que la carte du texte à rédiger,
+ * relevé par Camara le 18/09/2026 sur celle-ci : l'élève dit son choix au lieu
+ * de cliquer, le professeur le comprend, et la fenêtre reste ouverte parce
+ * qu'elle ne lisait que le fait accroché au clic.
+ *
+ * MÊMES RÈGLES : première réponse seulement, message court, et rien quand ça
+ * ne tranche pas. Mêmes bornes Unicode aussi — `\b` ignore les accents et
+ * aurait laissé passer « écran » sans le voir.
+ */
+const ORAL_CAHIER = /(?<!\p{L})(cahier|cachier|papier|feuille|à la main|a la main)(?!\p{L})/iu;
+const ORAL_ORDINATEUR = /(?<!\p{L})(ordinateur|ordi|clavier|écran|ecran|taper)(?!\p{L})/iu;
+
+export function lireReponseSupportEvaluation(texte) {
+  const dit = (texte ?? '').trim();
+  if (!dit || dit.length > 120) return undefined;
+
+  const cahier = ORAL_CAHIER.test(dit);
+  const ordinateur = ORAL_ORDINATEUR.test(dit);
+
+  if (cahier === ordinateur) return undefined;
+
+  return cahier ? CAHIER : ORDINATEUR;
+}
+
 export function supportChoisi(messages) {
   return reponseEnAttente(messages, {
     lireReponse: (contenu) => {
@@ -124,6 +149,7 @@ export function supportChoisi(messages) {
       if (contenu.includes('[ÉVALUATION À L’ORDINATEUR')) return ORDINATEUR;
       return undefined;
     },
+    lireReponseOrale: lireReponseSupportEvaluation,
     pose: demandeSupport,
 
     // TOUTES LES BALISES DE L’ÉVALUATION, ET PAS SEULEMENT CELLE QUI POSE

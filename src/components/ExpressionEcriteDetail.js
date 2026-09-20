@@ -1,3 +1,6 @@
+import { lireSurlignes } from '../lib/storage/surlignesTableau';
+import { TexteCompare } from './ComparaisonDictee';
+
 /**
  * UN TEXTE ÉCRIT ET SA CORRECTION, côte à côte.
  *
@@ -28,6 +31,25 @@ const GENRES = {
  * ne doit pas disparaître de l'écran sans un mot.
  */
 const genreDe = (genre) => GENRES[genre] ?? { libelle: genre, emoji: '•' };
+
+/**
+ * LE TEXTE AVEC SES BADGES, COMME EN SÉANCE — Camara, le 19/09/2026 : « je
+ * veux les badges dans l'archive aussi ». Le serveur garde la copie surlignée
+ * du premier tableau de correction ; on la rend avec le même composant que le
+ * tableau. Sans elle (archives d'avant, tableau et copie qui ne se recoupent
+ * pas), le texte nu.
+ */
+function TexteArchive({ texte }) {
+  const surlignes = lireSurlignes(texte?.texteSurligne);
+
+  if (!surlignes) return <p className="ecrit__texte">{texte?.texte}</p>;
+
+  return (
+    <p className="ecrit__texte ecrit__texte--surligne">
+      <TexteCompare segments={surlignes.segments} cote="copie" />
+    </p>
+  );
+}
 
 export default function ExpressionEcriteDetail({ texte, photo }) {
   const corrections = texte?.corrections ?? [];
@@ -78,7 +100,7 @@ export default function ExpressionEcriteDetail({ texte, photo }) {
             </p>
           </>
         ) : (
-          <p className="ecrit__texte">{texte?.texte}</p>
+          <TexteArchive texte={texte} />
         )}
       </div>
 
