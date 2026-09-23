@@ -764,6 +764,18 @@ function pourLeChamp(iso) {
        + `T${deux(date.getHours())}:${deux(date.getMinutes())}`;
 }
 
+/**
+ * LES TROIS CYCLES DES JEUX — Camara, le 20/09/2026.
+ *
+ * Les classes sont écrites en toutes lettres : « les collégiens » ne dit pas,
+ * à quelqu'un qui découvre l'écran, si la 6e en fait partie.
+ */
+const CYCLES_JEUX = [
+  { cle: 'JEUX_PRIMAIRE', champ: 'jeuxPrimaire', titre: 'Primaire', classes: 'élèves du CP au CM2' },
+  { cle: 'JEUX_COLLEGE', champ: 'jeuxCollege', titre: 'Collège', classes: 'collégiens, de la 6e à la 3e' },
+  { cle: 'JEUX_LYCEE', champ: 'jeuxLycee', titre: 'Lycée', classes: 'lycéens, de la 2de à la terminale' },
+];
+
 export default function Modes() {
   const [reglages, setReglages] = useState({
     modeTest: false,
@@ -774,6 +786,11 @@ export default function Modes() {
     voixDeSecours: false,
     blueSky: false,
     modeDeveloppeur: false,
+
+    // Les trois portes des jeux, éteintes par défaut : aucun jeu n existe.
+    jeuxPrimaire: false,
+    jeuxCollege: false,
+    jeuxLycee: false,
 
     // Le coupe-circuit du temps réel, allumé par défaut comme sur le serveur.
     fluxSse: true,
@@ -830,6 +847,10 @@ export default function Modes() {
           // Éteint par défaut, et il doit le rester hors essais : allumé, il
           // vaut pour toutes les séances, celles des vrais élèves comprises.
           modeDeveloppeur: Boolean(data?.modeDeveloppeur),
+
+          jeuxPrimaire: Boolean(data?.jeuxPrimaire),
+          jeuxCollege: Boolean(data?.jeuxCollege),
+          jeuxLycee: Boolean(data?.jeuxLycee),
 
           // Allumé par défaut : `!== false` et non `Boolean(...)`, pour qu'une
           // API antérieure à ce drapeau n'affiche pas le temps réel comme
@@ -892,7 +913,8 @@ export default function Modes() {
       // connexion ouverte du site — celle qu'il vient de couper aux autres.
       if (cle === 'MODE_TEST' || cle === 'ESSAIS_OUVERTS' || cle === 'MAINTENANCE_ACTIVE'
           || cle === 'OFFRE_LANCEMENT' || cle === 'OFFRE_LANCEMENT_BANDEAU'
-          || cle === 'BLUE_SKY' || cle === 'FLUX_SSE') {
+          || cle === 'BLUE_SKY' || cle === 'FLUX_SSE'
+          || cle.startsWith('JEUX_')) {
         oublierReglages();
       }
     } catch {
@@ -1039,6 +1061,64 @@ export default function Modes() {
             essais. Un interrupteur et NON une phrase tapée en séance : une
             phrase se répète, et le premier élève qui l'apprend obtient les
             réponses toutes faites. */}
+        {/* LES JEUX, CYCLE PAR CYCLE — Camara, le 20/09/2026.
+
+            TROIS INTERRUPTEURS ET NON UN. Les jeux du primaire — très visuels,
+            à manipuler, glisser-déposer — n’ont rien à voir avec ceux du
+            lycée, et n’arriveront pas en même temps. Un drapeau unique aurait
+            forcé à tout ouvrir ou tout fermer : on veut pouvoir livrer le
+            primaire seul et laisser les deux autres portes closes.
+
+            LE CYCLE DE L’ENFANT DÉCIDE, pas son âge ni sa classe écrite à la
+            main : c’est `NiveauScolaire.Cycle`, la même colonne qui pilote
+            déjà le ton du professeur. */}
+        <section className="mode">
+          <div className="mode__entete">
+            <div>
+              <h3 className="mode__titre">Les jeux</h3>
+              <p className="mode__description">
+                Le bouton « Mes jeux » s’affiche-t-il ? Chaque cycle décide pour
+                lui-même : un enfant ne voit que l’interrupteur du sien. Éteint,
+                la porte n’existe pas — ni sur son accueil, ni dans la vue de
+                son parent.
+              </p>
+            </div>
+          </div>
+
+          {CYCLES_JEUX.map(({ cle, champ, titre, classes }) => (
+            <div className="mode__sous-reglage" key={cle}>
+              <div className="mode__sous-texte">
+                <strong>{titre}</strong>
+                <span>
+                  {reglages[champ]
+                    ? `Les ${classes} voient le bouton « Mes jeux ».`
+                    : `Les ${classes} ne voient aucun bouton « Mes jeux ».`}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className={`bascule bascule--mini ${reglages[champ] ? 'bascule--active' : ''}`}
+                onClick={() => basculer(cle, champ)}
+                disabled={envoi === cle || !lus}
+                role="switch"
+                aria-checked={reglages[champ]}
+                aria-label={titre}
+              >
+                <span className="bascule__piste">
+                  <span className="bascule__bouton" />
+                </span>
+              </button>
+            </div>
+          ))}
+
+          <p className="mode__note">
+            Cacher le bouton n’est pas une garde : la page reste joignable par
+            son adresse. C’est un réglage d’affichage, pas une sécurité — il n’y
+            a rien à protéger derrière.
+          </p>
+        </section>
+
         <Interrupteur
           titre="Mode développeur"
           actif={reglages.modeDeveloppeur}

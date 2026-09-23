@@ -16,6 +16,7 @@ import Faq from './Faq';
 import ApercuParent from './ApercuParent';
 import Comparatif from './Comparatif';
 import ExercicesLangue from './ExercicesLangue';
+import JeuxApercu from './JeuxApercu';
 import BandeauPromo from './BandeauPromo';
 import CompteARebours from './CompteARebours';
 import iconeVoix from '../assets/voix.png';
@@ -595,6 +596,12 @@ export default function Accueil() {
           )}
         </section>
         )}
+
+        {/* LES JEUX, JUSTE APRÈS L'ÉQUIPE. On sait qui enseigne ; on découvre
+            ce que l'enfant fait entre deux séances, et que c'est le professeur
+            lui-même qui l'y envoie. Puis on revient au suivi. Voir l'en-tête
+            de `JeuxApercu` pour pourquoi elle est courte et sans bouton. */}
+        <JeuxApercu />
 
         {/* ------------------------------------------------------------ graphe */}
         <section className="graphe">

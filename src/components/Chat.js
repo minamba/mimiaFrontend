@@ -92,9 +92,11 @@ import {
   prendConge,
   demandeArret,
   demandeDocument,
+  jeuPropose,
 } from '../lib/storage/ardoise';
 import { getEvaluations, getCopieEvaluation, getDictee } from '../lib/api/elevesApi';
 import Avatar from './Avatar';
+import CarteJeuProposee from './jeux/CarteJeuProposee';
 
 /* LES DEUX DESSINS DU CHOIX DE SUPPORT — Camara, le 18/09/2026.
 
@@ -185,19 +187,30 @@ function Contenu({ texte, onRappelerTableau }) {
     );
   }
 
-  return segments.map((segment, index) =>
-    segment.type === 'ardoise' ? (
-      <button
-        key={index}
-        type="button"
-        className="rappel-tableau"
-        onClick={() => onRappelerTableau?.(nettoyerArdoise(segment.contenu))}
-      >
-        <span aria-hidden="true">▦</span> Revoir ce qui est au tableau
-      </button>
-    ) : (
-      <span key={index}>{segment.contenu}</span>
-    ),
+  // LE JEU PROPOSÉ, SOUS LE TEXTE — Camara, le 23/09/2026. La balise est
+  // retirée du texte par `decouper` ; c'est la carte qui la remplace, après
+  // la phrase du professeur qui l'annonce. Voir `CarteJeuProposee` pour ce
+  // qu'elle vérifie avant de se dessiner.
+  const jeu = jeuPropose(texte);
+
+  return (
+    <>
+      {segments.map((segment, index) =>
+        segment.type === 'ardoise' ? (
+          <button
+            key={index}
+            type="button"
+            className="rappel-tableau"
+            onClick={() => onRappelerTableau?.(nettoyerArdoise(segment.contenu))}
+          >
+            <span aria-hidden="true">▦</span> Revoir ce qui est au tableau
+          </button>
+        ) : (
+          <span key={index}>{segment.contenu}</span>
+        ),
+      )}
+      {jeu && <CarteJeuProposee classe={jeu.classe} cle={jeu.cle} />}
+    </>
   );
 }
 

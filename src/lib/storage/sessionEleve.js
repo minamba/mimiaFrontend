@@ -46,10 +46,53 @@ export function ouvrirSessionEleve({ jeton, eleve }) {
       eleveId: eleve?.id,
       prenom: eleve?.prenom ?? '',
       niveau: eleve?.niveauLibelle ?? '',
+
+      // LE CYCLE, ET PAS SEULEMENT LA CLASSE — depuis le 20/09/2026 : les jeux
+      // s'ouvrent cycle par cycle, et « 3e » ne dit pas « College » sans une
+      // table de correspondance que le serveur tient déjà.
+      cycle: eleve?.niveauCycle ?? '',
+
+      // ET LA CLASSE : le cycle ouvre la porte des jeux, la classe décide
+      // lesquels. Un CP et un CM2 ne jouent pas au même jeu.
+      niveauCode: eleve?.niveauCode ?? '',
     }));
   } catch {
     // Navigation privée : la session ne survivra pas à la fermeture de
     // l'onglet, mais le cours en cours fonctionne. On ne bloque rien.
+  }
+}
+
+/**
+ * COMPLÈTE UNE SESSION OUVERTE AVANT QU'ON SACHE TOUT D'ELLE.
+ *
+ * Camara, le 21/09/2026 : le bouton des jeux avait disparu alors que le
+ * réglage était bien allumé en base et bien renvoyé par l'API. La cause
+ * n'était ni l'un ni l'autre — c'était CETTE session-ci.
+ *
+ * Le cycle et la classe sont écrits ici AU MOMENT DE LA CONNEXION. Un enfant
+ * déjà connecté quand ces deux champs sont apparus garde une session qui ne
+ * les porte pas : la porte des jeux reste close, sans rien pour l'expliquer,
+ * jusqu'à ce qu'il se déconnecte — ce qu'il n'a aucune raison de faire.
+ *
+ * On complète donc à la volée, depuis le serveur qui sait. Écrit une fois,
+ * relu ensuite : aucun appel de plus aux visites suivantes.
+ */
+export function completerSessionEleve(infos) {
+  try {
+    const brut = window.localStorage.getItem(CLE);
+    if (!brut) return;
+
+    const session = JSON.parse(brut);
+
+    window.localStorage.setItem(CLE, JSON.stringify({
+      ...session,
+      cycle: session.cycle || infos?.niveauCycle || '',
+      niveauCode: session.niveauCode || infos?.niveauCode || '',
+      niveau: session.niveau || infos?.niveauLibelle || '',
+    }));
+  } catch {
+    // Navigation privée : la session vivra sans son cycle, et la porte des
+    // jeux restera fermée. Rien d'autre n'en dépend.
   }
 }
 

@@ -1379,7 +1379,10 @@ export default function Admin() {
   const totalArrets = serieAbonnements.reduce((n, p) => n + p.arrets, 0);
 
   return (
-    <section className="page page--large">
+    // `page--admin` ne sert qu'à DÉSIGNER cette page : en Blue Sky, elle y
+    // redéfinit le bleu des surfaces pour ses treize sections d'un coup —
+    // voir `.page--admin` dans App.css. Aucune règle d'allure ici.
+    <section className="page page--large page--admin">
       <div className="page__entete">
         <div>
           <h1>Administration</h1>

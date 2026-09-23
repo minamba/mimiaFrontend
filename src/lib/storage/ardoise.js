@@ -424,6 +424,37 @@ export function vitesseDemandee(texte) {
 }
 
 /**
+ * LE JEU QUE LE PROFESSEUR PROPOSE — Camara, le 23/09/2026 : à la fin du
+ * cours, le professeur peut renvoyer l'élève vers un jeu qui travaille la
+ * notion du jour, ou une notion fragile d'une classe d'avant.
+ *
+ * `[JEU]CE1/course-des-tables[/JEU]` : la classe fait partie de l'identifiant,
+ * parce que le jeu s'ouvre À CETTE classe — un CM2 renvoyé vers un jeu de CE1
+ * doit le retrouver tel qu'il était au CE1. Une paire de balises majuscules,
+ * comme [FICHE] : c'est la forme que le serveur archive.
+ *
+ * Ni lue ni affichée : c'est la carte, dessinée sous la bulle, qui la
+ * remplace. Le serveur a déjà vérifié que le jeu faisait partie de ce qu'on
+ * avait le droit de proposer ; le front revérifie qu'il existe et que la
+ * classe est ouverte avant de dessiner quoi que ce soit.
+ */
+const JEU_PROPOSE = /\[JEU\]\s*([A-Za-z0-9_]+)\/([a-z0-9-]+)\s*\[\/JEU\]/gi;
+
+/**
+ * `{ classe, cle }` du jeu proposé, ou null. La DERNIÈRE occurrence l'emporte,
+ * comme pour la vitesse.
+ */
+export function jeuPropose(texte) {
+  if (!texte) return null;
+
+  const trouvees = [...texte.matchAll(JEU_PROPOSE)];
+  if (trouvees.length === 0) return null;
+
+  const [, classe, cle] = trouvees[trouvees.length - 1];
+  return { classe: classe.toUpperCase(), cle: cle.toLowerCase() };
+}
+
+/**
  * Le contrôle a été abandonné : l'élève a quitté le cours en plein milieu.
  *
  * Posé par le serveur à la sortie, pas par le professeur. Il referme un
@@ -809,7 +840,10 @@ function retirerMarqueurs(texte) {
     .split(SUPPORT_ECRIT).join('')
     // La forme à cible porte un paramètre : elle se retire par motif, sinon
     // l'élève lirait « :lent] » au milieu de la phrase et l'entendrait.
-    .replace(VITESSE_CIBLE, '');
+    .replace(VITESSE_CIBLE, '')
+    // Même raison pour le jeu proposé : « CE1/course-des-tables » n'est ni à
+    // lire ni à dire, c'est la carte qui le porte.
+    .replace(JEU_PROPOSE, '');
 
   const blocs = [
     [EVAL_OUVERTURE, EVAL_FERMETURE],
@@ -830,6 +864,10 @@ function retirerMarqueurs(texte) {
     [DICTEE_SUPPRIMEE_OUVERTURE, DICTEE_SUPPRIMEE_FERMETURE],
     [COMPREHENSION_SUPPRIMEE_OUVERTURE, COMPREHENSION_SUPPRIMEE_FERMETURE],
     [DICTEE_AU_TABLEAU_OUVERTURE, DICTEE_AU_TABLEAU_FERMETURE],
+    // La balise du jeu proposé, comme un bloc : pendant le flux, « [JEU]CE1/cour »
+    // arrive sans sa fermeture, et c'est ce traitement-ci qui le masque en
+    // attendant la suite — le motif seul ne reconnaît que la balise entière.
+    ['[JEU]', '[/JEU]'],
   ];
 
   return blocs.reduce(

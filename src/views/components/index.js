@@ -11,6 +11,7 @@ import {
   GrilleMatieres,
   Progression,
   CalendrierEleve,
+  JeuxEleve,
   ControlesEleve,
   ControleFiche,
   EpreuveFiche,
@@ -167,6 +168,14 @@ export const BaseApp = () => {
             element={
               <RouteProtegee>
                 <CalendrierEleve />
+              </RouteProtegee>
+            }
+          />
+          <Route
+            path="/eleves/:eleveId/jeux"
+            element={
+              <RouteProtegee>
+                <JeuxEleve />
               </RouteProtegee>
             }
           />

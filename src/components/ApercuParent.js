@@ -98,11 +98,11 @@ function Courbe() {
   const points = NOTES.map((note, i) => `${i * pas},${y(note)}`).join(' ');
 
   return (
-    <svg className="progression__courbe" viewBox={`0 -6 ${largeur} ${hauteur + 12}`} aria-hidden="true">
-      <line x1="0" y1={y(10)} x2={largeur} y2={y(10)} className="progression__moyenne" />
-      <polyline points={points} className="progression__trace" />
+    <svg className="apercu-progression__courbe" viewBox={`0 -6 ${largeur} ${hauteur + 12}`} aria-hidden="true">
+      <line x1="0" y1={y(10)} x2={largeur} y2={y(10)} className="apercu-progression__moyenne" />
+      <polyline points={points} className="apercu-progression__trace" />
       {NOTES.map((note, i) => (
-        <circle key={i} cx={i * pas} cy={y(note)} r="4" className="progression__point" />
+        <circle key={i} cx={i * pas} cy={y(note)} r="4" className="apercu-progression__point" />
       ))}
     </svg>
   );
@@ -169,31 +169,31 @@ function VoletSemaine() {
 
 function VoletProgression() {
   return (
-    <div className="progression">
-      <div className="progression__notes">
-        <div className="progression__tete">
-          <span className="progression__matiere">Mathématiques <small>avec Nora</small></span>
-          <span className="progression__moyenne-valeur">13,2<small>/20 de moyenne</small></span>
+    <div className="apercu-progression">
+      <div className="apercu-progression__notes">
+        <div className="apercu-progression__tete">
+          <span className="apercu-progression__matiere">Mathématiques <small>avec Nora</small></span>
+          <span className="apercu-progression__moyenne-valeur">13,2<small>/20 de moyenne</small></span>
         </div>
 
         <Courbe />
 
-        <p className="progression__legende">
+        <p className="apercu-progression__legende">
           Ses évaluations, dans l’ordre où elles ont été passées.
           La ligne marque la moyenne.
         </p>
       </div>
 
-      <div className="progression__notions">
-        <span className="progression__titre">Où il en est, notion par notion</span>
+      <div className="apercu-progression__notions">
+        <span className="apercu-progression__titre">Où il en est, notion par notion</span>
 
         {NOTIONS.map((notion) => (
-          <div key={notion.nom} className="progression__notion">
-            <span className="progression__nom">{notion.nom}</span>
-            <span className={`progression__jauge progression__jauge--${tonDe(notion.part)}`}>
+          <div key={notion.nom} className="apercu-progression__notion">
+            <span className="apercu-progression__nom">{notion.nom}</span>
+            <span className={`apercu-progression__jauge apercu-progression__jauge--${tonDe(notion.part)}`}>
               <span style={{ width: `${notion.part}%` }} />
             </span>
-            <span className="progression__part">{notion.part} %</span>
+            <span className="apercu-progression__part">{notion.part} %</span>
           </div>
         ))}
       </div>
@@ -204,7 +204,7 @@ function VoletProgression() {
 function VoletSeances() {
   return (
     <>
-      <span className="progression__titre">
+      <span className="apercu-progression__titre">
         Chaque séance, avec le compte rendu de son professeur
       </span>
 

@@ -44,6 +44,19 @@ function CourbeNotes({ notes, couleur }) {
   const chemin = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x} ${p.y}`).join(' ');
   const detail = survole ?? points[points.length - 1];
 
+  // UNE DATE SUR N, CINQ AU PLUS. À huit évaluations, « 29 juil. 1 août 2 août
+  // 2 août… » se touchaient et la dernière sortait du cadre. Cinq repères
+  // suffisent à situer la période ; la date exacte d'un point se lit sous le
+  // graphique dès qu'on le survole. La première et la dernière sont toujours
+  // des repères : ce sont elles qui bornent la lecture.
+  const aDater = useMemo(() => {
+    const combien = Math.min(points.length, 5);
+    return new Set(
+      Array.from({ length: combien }, (unused, rang) =>
+        Math.round((rang * (points.length - 1)) / Math.max(combien - 1, 1))),
+    );
+  }, [points.length]);
+
   return (
     <div className="courbe">
       <svg
@@ -102,9 +115,18 @@ function CourbeNotes({ notes, couleur }) {
               </title>
             </circle>
 
-            <text className="courbe__date" x={point.x} y={L.hauteur - 7} textAnchor="middle">
-              {dateCourte(point.date)}
-            </text>
+            {aDater.has(index) && (
+              <text
+                className="courbe__date"
+                x={point.x}
+                y={L.hauteur - 7}
+                /* La dernière date se cale sur sa droite : centrée, elle
+                   débordait du cadre et se faisait rogner (« 18 sep »). */
+                textAnchor={index === points.length - 1 && points.length > 1 ? 'end' : 'middle'}
+              >
+                {dateCourte(point.date)}
+              </text>
+            )}
           </g>
         ))}
       </svg>

@@ -290,6 +290,39 @@ const MOTIFS = {
       <circle cx="86" cy="82" r="3" />
     </>
   ),
+
+  // Une manette : le corps, sa croix directionnelle, ses deux boutons. Comme
+  // CARTE et CALENDRIER, ce n'est pas une matière — c'est « Mes jeux ».
+  JEUX: (
+    <>
+      <path d="M40 44 h48 a26 26 0 0 1 24 34 l-6 18 a12 12 0 0 1 -21 3 l-9 -12 h-24 l-9 12 a12 12 0 0 1 -21 -3 l-6 -18 a26 26 0 0 1 24 -34 z" />
+      <path d="M40 66 h16 M48 58 v16" />
+      <circle cx="84" cy="62" r="4" fill="currentColor" />
+      <circle cx="94" cy="72" r="4" fill="currentColor" />
+    </>
+  ),
+
+  // Une console portable, à gauche de la carte des jeux — Camara, le
+  // 20/09/2026, à la place de la manette retournée.
+  //
+  // DESSINÉE GROSSE ET PEU DÉTAILLÉE : à l'écran elle ne fait qu'une
+  // cinquantaine de pixels de large, et derrière un aplat à 16 %
+  // d'opacité. L'écran, la croix et les deux boutons suffisent à la
+  // reconnaître ; des traits plus fins s'y seraient effacés.
+  // DANS LA MÊME BANDE QUE LA MANETTE, et pas plus haut : la carte est moins
+  // haute que ce dessin, et la première version se faisait couper le boîtier
+  // par le bord supérieur. Tous les motifs tiennent entre y=26 et y=104.
+  CONSOLE: (
+    <>
+      <rect x="45" y="27" width="40" height="77" rx="8" />
+      <rect x="52" y="34" width="26" height="20" rx="3" />
+      <path d="M50 73 h10 M55 68 v10" />
+      <circle cx="74" cy="69" r="3.2" fill="currentColor" />
+      <circle cx="68" cy="76" r="3.2" fill="currentColor" />
+      <path d="M52 88 h6 M64 88 h6" />
+      <path d="M63 99 l9 -5" />
+    </>
+  ),
 };
 
 // L'HGGSP et l'HLP prolongent la matière de leur professeur : le globe de
@@ -305,13 +338,18 @@ MOTIFS.LLCA_GREC = MOTIFS.FRANCAIS;
 ['ARTS_PLASTIQUES', 'HISTOIRE_ARTS', 'CINEMA_AUDIOVISUEL', 'MUSIQUE', 'THEATRE', 'DANSE', 'ARTS_CIRQUE']
   .forEach((code) => { MOTIFS[code] = MOTIFS.ARTS; });
 
-export default function MotifMatiere({ code }) {
+/**
+ * `cote` place le motif à droite (par défaut) ou à gauche. La carte des jeux
+ * en porte un de chaque côté — Camara, le 20/09/2026 : sur une carte large et
+ * au contenu centré, un seul motif déséquilibrait tout vers la droite.
+ */
+export default function MotifMatiere({ code, cote = 'droite' }) {
   const motif = MOTIFS[code];
   if (!motif) return null;
 
   return (
     <svg
-      className="motif-matiere"
+      className={`motif-matiere${cote === 'gauche' ? ' motif-matiere--gauche' : ''}`}
       viewBox="0 0 128 110"
       fill="none"
       stroke="currentColor"

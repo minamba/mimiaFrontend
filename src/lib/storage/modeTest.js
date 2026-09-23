@@ -34,6 +34,10 @@ const PAR_DEFAUT = {
   // lecture réussie la remplace aussitôt.
   fluxSse: false,
 
+  // LES JEUX, CYCLE PAR CYCLE. Éteints tant qu'on n'a rien lu : montrer une
+  // porte qui n'ouvre sur rien déçoit plus qu'elle ne sert.
+  jeux: { primaire: false, college: false, lycee: false },
+
   // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
   // de lecture promet un cadeau que le serveur ne donnera pas — et le
   // parent, lui, aura payé en la voyant.
@@ -88,6 +92,14 @@ function interroger() {
           // une API antérieure à ce drapeau ne l'envoie pas, et le lire comme
           // éteint couperait le temps réel partout le temps d'un déploiement.
           fluxSse: data?.fluxSse ?? true,
+
+          // Éteints par défaut : aucun jeu n'existe encore, et une lecture
+          // ratée ne doit pas ouvrir une page vide aux enfants.
+          jeux: {
+            primaire: Boolean(data?.jeuxPrimaire),
+            college: Boolean(data?.jeuxCollege),
+            lycee: Boolean(data?.jeuxLycee),
+          },
 
           // Le serveur n'envoie le texte que si le bandeau est allumé :
           // ici il n’y a rien à décider, juste à recopier. Une chaîne
@@ -153,7 +165,20 @@ function interroger() {
         // rechargement, et ne verrait plus jamais un changement de style.
         demarrerFluxReglages(oublierReglages, false);
 
-        return PAR_DEFAUT;
+        // ON GARDE CE QU'ON SAVAIT, plutôt que de tout remettre à zéro.
+        //
+        // Camara, le 21/09/2026 : « pourquoi le bouton des jeux disparaît tout
+        // le temps ? ». C'était ici. Une lecture ratée — un onglet qui revient
+        // de veille, une seconde de réseau — renvoyait les valeurs par défaut,
+        // et TOUS les abonnés en étaient notifiés : les jeux se refermaient,
+        // l'offre de lancement disparaissait, le style repartait à l'état
+        // d'origine. Le temps d'une requête, le produit changeait de visage.
+        //
+        // `valeurs` vaut PAR_DEFAUT tant que rien n'a jamais été lu : la
+        // garantie d'ouverture décrite ci-dessus tient toujours au premier
+        // chargement. Ce qui change, c'est qu'un échec PASSAGER ne fait plus
+        // oublier ce qui était vrai il y a deux minutes.
+        return valeurs;
       });
   }
 
@@ -251,6 +276,34 @@ export function useMaintenance() {
  */
 export function useBlueSky() {
   return useDrapeaux().blueSky;
+}
+
+/**
+ * LES JEUX SONT-ILS OUVERTS POUR CET ENFANT ?
+ *
+ * Voulu par Camara le 20/09/2026 : trois interrupteurs d'administration, un
+ * par cycle. Les jeux du primaire — très visuels, à manipuler — n'ont rien à
+ * voir avec ceux du lycée et n'arriveront pas en même temps ; un drapeau
+ * unique aurait forcé à tout ouvrir ou tout fermer.
+ *
+ * LE CYCLE VIENT DU SERVEUR, jamais du libellé de classe : « 3e » ne se
+ * traduit pas en « College » sans une table, et cette table existe déjà
+ * là-bas (NiveauScolaire.Cycle).
+ *
+ * Un cycle inconnu — profil incomplet, API plus ancienne — rend FAUX : mieux
+ * vaut une porte manquante qu'une porte qui n'ouvre sur rien.
+ */
+export function useJeuxOuverts(cycle) {
+  // Défensif : un jeu de valeurs venu d'une version antérieure du module
+  // n'aurait pas cette clé, et une porte fermée vaut mieux qu'un écran blanc.
+  const jeux = useDrapeaux().jeux ?? {};
+
+  switch ((cycle ?? '').toLowerCase()) {
+    case 'primaire': return Boolean(jeux.primaire);
+    case 'college': return Boolean(jeux.college);
+    case 'lycee': return Boolean(jeux.lycee);
+    default: return false;
+  }
 }
 
 /**

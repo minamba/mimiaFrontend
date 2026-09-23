@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Train</title>
+<link rel="stylesheet" href="file:///C:/Users/daryu/Documents/React-projects/school_ia/src/index.css">
+<link rel="stylesheet" href="file:///C:/Users/daryu/Documents/React-projects/school_ia/src/App.css">
+<style> body { margin: 0; padding: 20px; display: grid; gap: 20px; } </style></head>
+<body>
+<div class="jeu jeu--train">
+    <ol class="jeu__manches"><li class="jeu__manche est-faite"></li><li class="jeu__manche est-courante"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li></ol>
+    <p class="jeu__consigne">Où s’arrête le wagon ?</p>
+    <div class="train__wagon-attente"><svg class="wagon" viewBox="0 0 76 56">
+  <rect class="wagon__caisse" x="4" y="6" width="68" height="34" rx="6"/>
+  <rect class="wagon__plaque" x="14" y="12" width="48" height="22" rx="4"/>
+  <text class="wagon__nombre" x="38" y="30" text-anchor="middle">7</text>
+  <circle class="wagon__roue" cx="20" cy="46" r="8"/><circle class="wagon__roue" cx="56" cy="46" r="8"/></svg></div>
+    <div class="voie">
+      <span class="voie__locomotive"><svg class="locomotive" viewBox="0 0 84 60">
+  <rect class="locomotive__corps" x="6" y="18" width="54" height="26" rx="6"/>
+  <rect class="locomotive__cabine" x="44" y="6" width="30" height="38" rx="6"/>
+  <rect class="locomotive__vitre" x="52" y="13" width="15" height="13" rx="3"/>
+  <rect class="locomotive__cheminee" x="12" y="6" width="12" height="14" rx="3"/>
+  <circle class="locomotive__roue" cx="22" cy="50" r="9"/><circle class="locomotive__roue" cx="58" cy="50" r="9"/></svg></span>
+      <ul class="voie__arrets"><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">0</span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">5</span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">10</span>
+          </button></li></ul>
+      <span class="voie__rail"></span>
+    </div>
+    
+    
+    <button class="jeu__quitter">← Revenir aux jeux</button>
+  </div>
+<div class="jeu jeu--train">
+    <ol class="jeu__manches"><li class="jeu__manche est-faite"></li><li class="jeu__manche est-courante"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li></ol>
+    <p class="jeu__consigne">Où s’arrête le wagon ?</p>
+    <div class="train__wagon-attente"><svg class="wagon" viewBox="0 0 76 56">
+  <rect class="wagon__caisse" x="4" y="6" width="68" height="34" rx="6"/>
+  <rect class="wagon__plaque" x="14" y="12" width="48" height="22" rx="4"/>
+  <text class="wagon__nombre" x="38" y="30" text-anchor="middle">13</text>
+  <circle class="wagon__roue" cx="20" cy="46" r="8"/><circle class="wagon__roue" cx="56" cy="46" r="8"/></svg></div>
+    <div class="voie">
+      <span class="voie__locomotive"><svg class="locomotive" viewBox="0 0 84 60">
+  <rect class="locomotive__corps" x="6" y="18" width="54" height="26" rx="6"/>
+  <rect class="locomotive__cabine" x="44" y="6" width="30" height="38" rx="6"/>
+  <rect class="locomotive__vitre" x="52" y="13" width="15" height="13" rx="3"/>
+  <rect class="locomotive__cheminee" x="12" y="6" width="12" height="14" rx="3"/>
+  <circle class="locomotive__roue" cx="22" cy="50" r="9"/><circle class="locomotive__roue" cx="58" cy="50" r="9"/></svg></span>
+      <ul class="voie__arrets"><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">0</span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">10</span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-refusee">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">20</span>
+          </button></li></ul>
+      <span class="voie__rail"></span>
+    </div>
+    <p class="jeu__trop">C’est trop loin !</p>
+    
+    <button class="jeu__quitter">← Revenir aux jeux</button>
+  </div>
+<div class="jeu jeu--train">
+    <ol class="jeu__manches"><li class="jeu__manche est-faite"></li><li class="jeu__manche est-faite"></li><li class="jeu__manche est-faite"></li><li class="jeu__manche est-faite"></li><li class="jeu__manche est-courante"></li><li class="jeu__manche"></li><li class="jeu__manche"></li><li class="jeu__manche"></li></ol>
+    <p class="jeu__consigne">Où s’arrête le wagon ?</p>
+    
+    <div class="voie">
+      <span class="voie__locomotive"><svg class="locomotive" viewBox="0 0 84 60">
+  <rect class="locomotive__corps" x="6" y="18" width="54" height="26" rx="6"/>
+  <rect class="locomotive__cabine" x="44" y="6" width="30" height="38" rx="6"/>
+  <rect class="locomotive__vitre" x="52" y="13" width="15" height="13" rx="3"/>
+  <rect class="locomotive__cheminee" x="12" y="6" width="12" height="14" rx="3"/>
+  <circle class="locomotive__roue" cx="22" cy="50" r="9"/><circle class="locomotive__roue" cx="58" cy="50" r="9"/></svg></span>
+      <ul class="voie__arrets"><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">0</span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">50</span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          <span class="voie__wagon-pose"><svg class="wagon" viewBox="0 0 76 56">
+  <rect class="wagon__caisse" x="4" y="6" width="68" height="34" rx="6"/>
+  <rect class="wagon__plaque" x="14" y="12" width="48" height="22" rx="4"/>
+  <text class="wagon__nombre" x="38" y="30" text-anchor="middle">70</text>
+  <circle class="wagon__roue" cx="20" cy="46" r="8"/><circle class="wagon__roue" cx="56" cy="46" r="8"/></svg></span>
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse">
+            <span class="traverse__trait"></span><span class="traverse__nombre"></span>
+          </button></li><li class="voie__arret">
+          
+          <button class="traverse est-repere">
+            <span class="traverse__trait"></span><span class="traverse__nombre">100</span>
+          </button></li></ul>
+      <span class="voie__rail"></span>
+    </div>
+    
+    <div class="jeu__gagne"><p class="jeu__gagne-calcul">70</p><button class="btn btn--principal">Continuer</button></div>
+    <button class="jeu__quitter">← Revenir aux jeux</button>
+  </div>
+</body></html>

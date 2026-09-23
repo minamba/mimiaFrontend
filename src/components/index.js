@@ -43,6 +43,7 @@ export { default as BandeauPromo } from './BandeauPromo';
 export { default as CompteARebours } from './CompteARebours';
 export { default as Progression } from './Progression';
 export { default as CalendrierEleve } from './CalendrierEleve';
+export { default as JeuxEleve } from './JeuxEleve';
 export { default as ControlesEleve } from './ControlesEleve';
 export { default as ControleFiche } from './ControleFiche';
 export { default as EpreuveFiche } from './EpreuveFiche';

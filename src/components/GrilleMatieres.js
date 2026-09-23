@@ -8,6 +8,8 @@ import { chargerReferentiel } from '../lib/actions/referentielActions';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { sessionEleve } from '../lib/storage/sessionEleve';
+import { cycleDuNiveau } from '../lib/niveauCycle';
+import { useJeuxOuverts } from '../lib/storage/modeTest';
 import {
   getNombreFiches, getEvaluations, getMatieresEleve, getNombreDictees,
   getNombreComprehensionsOrales,
@@ -21,6 +23,7 @@ import BoutonAvis from './BoutonAvis';
 import MesControles from './MesControles';
 import iconeCarte from '../assets/carte.png';
 import iconeCalendrier from '../assets/calendrier.png';
+import iconeJeux from '../assets/games.webp';
 import PreparationExamen from './PreparationExamen';
 import ControleForm from './ControleForm';
 import useAncreSection from '../lib/hooks/useAncreSection';
@@ -583,10 +586,34 @@ export default function GrilleMatieres() {
   // retombant sur la teinte neutre — pas de plantage, juste une couleur par
   // défaut là où le parent, lui, voit celle de l'enfant.
   const identite = eleve
-    ? { id: eleve.id, prenom: eleve.prenom, niveauLibelle: eleve.niveauLibelle, sexe: eleve.sexe }
+    ? {
+      id: eleve.id,
+      prenom: eleve.prenom,
+      niveauLibelle: eleve.niveauLibelle,
+      sexe: eleve.sexe,
+      // Le cycle décide de la porte des jeux — voir `useJeuxOuverts`.
+      cycle: eleve.niveauCycle,
+    }
     : enfant
-      ? { id: enfant.eleveId, prenom: enfant.prenom, niveauLibelle: enfant.niveau }
+      ? {
+        id: enfant.eleveId,
+        prenom: enfant.prenom,
+        niveauLibelle: enfant.niveau,
+        cycle: enfant.cycle,
+      }
       : null;
+
+  // LES JEUX S'OUVRENT CYCLE PAR CYCLE — Camara, le 20/09/2026. Trois
+  // interrupteurs d'administration, et cet enfant n'est concerné que par
+  // celui de son cycle. Éteint, sa porte n'existe simplement pas : ni la
+  // carte de son accueil, ni la pastille de la vue de son parent.
+  //
+  // LE CYCLE VIENT DE LA SESSION, ou de son libellé de classe quand elle est
+  // trop ancienne pour le porter — voir `niveauCycle.js`, et surtout la note
+  // qui explique pourquoi ce filet n'appelle PAS le serveur.
+  const jeuxOuverts = useJeuxOuverts(
+    identite?.cycle || cycleDuNiveau(identite?.niveauLibelle),
+  );
 
   useEffect(() => {
     if (matieres.length === 0) dispatch(chargerReferentiel());
@@ -810,6 +837,19 @@ export default function GrilleMatieres() {
             <img className="lien-carte__badge" src={iconeCalendrier} alt="" />
             Mon calendrier
           </Link>
+
+          {jeuxOuverts && (
+          <>
+          {/* MES JEUX ICI AUSSI — Camara, le 20/09/2026. Le parent voit la même
+              chose que son enfant, en pastilles : trois portes, trois
+              pastilles. En laisser une de côté aurait fait croire que les jeux
+              lui sont cachés. */}
+          <Link to={`/eleves/${identite.id}/jeux`} className="lien-carte lien-carte--badge">
+            <img className="lien-carte__badge" src={iconeJeux} alt="" />
+            Mes jeux
+          </Link>
+          </>
+          )}
         </div>
       )}
 
@@ -900,6 +940,41 @@ export default function GrilleMatieres() {
             </span>
             <span className="carte-mienne__fleche" aria-hidden="true">→</span>
           </Link>
+
+          {jeuxOuverts && (
+          <>
+          {/* MES JEUX — Camara, le 20/09/2026. Sous les deux autres et sur
+              toute la largeur : c'est une troisième porte, pas une colonne de
+              plus. À deux par ligne, elle serait restée orpheline à côté d'un
+              vide, et la manette attire assez l'œil pour ne pas avoir besoin
+              d'être serrée contre sa voisine.
+
+              LA SEULE CARTE QUI N'EST PAS DU TRAVAIL : sa couleur le dit —
+              violet, quand les deux autres portent la sarcelle. */}
+          <Link
+            to={`/eleves/${identite.id}/jeux`}
+            className="carte-mienne carte-mienne--jeux"
+          >
+            {/* UN MOTIF DE CHAQUE CÔTÉ : le contenu étant centré, un seul
+                aurait tiré toute la carte vers la droite. Deux dessins
+                DIFFÉRENTS — une console à gauche, une manette à droite : le
+                même répété en miroir se lisait comme une erreur de copie. */}
+            <MotifMatiere code="CONSOLE" cote="gauche" />
+            <MotifMatiere code="JEUX" />
+            <span className="carte-mienne__icone-zone">
+              <span className="carte-mienne__halo" aria-hidden="true" />
+              <span className="carte-mienne__icone carte-mienne__icone--jeux" aria-hidden="true">
+                <img src={iconeJeux} alt="" />
+              </span>
+            </span>
+            <span className="carte-mienne__texte">
+              <strong>Mes jeux</strong>
+              <span>Réviser en jouant, quelques minutes suffisent</span>
+            </span>
+            <span className="carte-mienne__fleche" aria-hidden="true">→</span>
+          </Link>
+          </>
+          )}
         </div>
       )}
 
