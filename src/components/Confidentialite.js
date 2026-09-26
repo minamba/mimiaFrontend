@@ -19,7 +19,7 @@ export default function Confidentialite() {
       <header className="legal__entete">
         <p className="legal__surtitre">RGPD</p>
         <h1 className="legal__titre">Confidentialité</h1>
-        <p className="legal__maj">Dernière mise à jour&nbsp;: 6 août 2026</p>
+        <p className="legal__maj">Dernière mise à jour&nbsp;: 25 septembre 2026</p>
       </header>
 
       <section className="legal__section">
@@ -203,9 +203,18 @@ export default function Confidentialite() {
                 <td>Données de paiement du parent</td>
                 <td>UE et hors&nbsp;UE</td>
               </tr>
+              {/* GOOGLE PORTE DEUX RÔLES DEPUIS LE 25/09/2026 : la connexion,
+                  et l'hébergement de la sauvegarde de nuit. Celle-ci est chiffrée
+                  sur notre serveur AVANT d'être envoyée ; Google en détient donc
+                  les octets sans pouvoir les lire. À dire, plutôt qu'à taire :
+                  la liste vaut par ce qu'elle n'omet pas. */}
               <tr>
                 <td>Google</td>
-                <td>Identité, si vous choisissez la connexion Google</td>
+                <td>
+                  Identité, si vous choisissez la connexion Google&nbsp;; la
+                  sauvegarde de nuit de la base, chiffrée avant son envoi et
+                  illisible pour Google
+                </td>
                 <td>Hors&nbsp;UE</td>
               </tr>
               <tr>
@@ -217,6 +226,16 @@ export default function Confidentialite() {
                 <td>IONOS</td>
                 <td>Hébergement du serveur et de la base de données</td>
                 <td>France</td>
+              </tr>
+              {/* MICROSOFT EST ENTRÉ DANS LA LISTE LE 23/09/2026, en même temps
+                  que Microsoft Clarity. Une section qui énumère les tiers et
+                  qui en oublie un est pire qu'une section absente. */}
+              <tr>
+                <td>Microsoft (Clarity)</td>
+                <td>
+                  Mesure d'audience sur les pages publiques, si vous l'acceptez
+                </td>
+                <td>Hors&nbsp;UE</td>
               </tr>
             </tbody>
           </table>
@@ -361,6 +380,22 @@ export default function Confidentialite() {
             <strong>Le décompte anonyme du temps de cours consommé</strong>,
             nécessaire à notre comptabilité. Il n'est plus rattaché à aucun nom.
           </li>
+          {/* LES SAUVEGARDES SONT LE TROU DE TOUTE PROMESSE D'EFFACEMENT, et
+              celui qu'on oublie de déclarer. On ne retire pas une ligne d'une
+              sauvegarde déjà chiffrée sans la rendre inutilisable : une copie de
+              nuit expire, elle ne se retouche pas. Le dire vaut mieux que de
+              laisser croire à un effacement plus absolu qu'il ne l'est. */}
+          <li>
+            <strong>
+              Les sauvegardes chiffrées des quatre-vingt-dix derniers jours
+            </strong>
+            . Nous copions la base chaque nuit, chiffrée, pour pouvoir tout
+            rétablir en cas de panne. Une copie de nuit ne se modifie
+            pas&nbsp;: vos données y demeurent jusqu&apos;à son expiration, au
+            plus tard trois mois après la suppression, puis elle est détruite.
+            Elles ne sont ni consultées, ni exploitées&nbsp;; elles ne servent
+            qu&apos;à remettre le service en marche.
+          </li>
         </ul>
         <p>
           Si vous vous réinscrivez plus tard avec la même adresse, ce sera un
@@ -389,15 +424,66 @@ export default function Confidentialite() {
         </p>
       </section>
 
+      {/* RÉÉCRITE LE 23/09/2026, EN MÊME TEMPS QUE L'ARRIVÉE DE CLARITY.
+          Cette section affirmait « aucun cookie publicitaire ni de mesure
+          d'audience » et « aucune bannière ne vous barre la route » : deux
+          phrases devenues fausses le jour où l'outil de mesure se charge. Elle
+          niait au passage le compteur de visites, qui existe depuis bien plus
+          longtemps — décrit ici, au lieu d'être nié. Une page de confidentialité qui
+          se trompe sur son propre site vaut moins que pas de page du tout. */}
       <section className="legal__section">
-        <h2>Cookies</h2>
+        <h2>Cookies et mesure d'audience</h2>
+
+        <h3>Ce qui fait fonctionner le site</h3>
         <p>
-          Mimia n'utilise <strong>aucun cookie publicitaire ni de mesure
-          d'audience</strong>. Les seules informations déposées sur votre
-          appareil sont celles qui font fonctionner le site&nbsp;: votre session
-          de connexion, et vos préférences d'affichage. Elles sont exemptées de
-          consentement, et c'est pourquoi aucune bannière ne vous barre la route
-          à l'arrivée.
+          Votre session de connexion et vos préférences d'affichage (thème
+          clair ou sombre, choix déjà faits) sont rangées sur votre appareil.
+          Elles sont indispensables au service, ne partent vers aucun autre
+          site, et sont à ce titre exemptées de consentement.
+        </p>
+
+        <h3>Le comptage des visites</h3>
+        <p>
+          Nous comptons combien de personnes passent sur les pages publiques.
+          Pour cela, votre navigateur tire un numéro au sort et le garde&nbsp;;
+          il nous l'envoie au plus une fois par heure. <strong>Aucun cookie</strong>,
+          aucune page consultée, aucun référent, aucune adresse IP conservée. Ce
+          numéro ne va nulle part ailleurs et disparaît au premier nettoyage de
+          votre historique. Il nous dit «&nbsp;quarante personnes sont venues
+          cette semaine&nbsp;», jamais qui, ni d'où.
+        </p>
+
+        <h3>Microsoft Clarity, si vous l'acceptez</h3>
+        <p>
+          Pour comprendre où l'on hésite et où l'on s'arrête sur les pages
+          publiques, nous utilisons <strong>Microsoft Clarity</strong>. Il
+          enregistre les parcours&nbsp;: déplacements de la souris, clics,
+          défilement, pages vues. Il dépose deux cookies,{' '}
+          <code>_clck</code> (un an) et <code>_clsk</code> (un jour), qui
+          servent à relier les pages d'une même visite.
+        </p>
+        <p>
+          <strong>Il ne se charge qu'après votre accord</strong>, demandé par le
+          bandeau à votre arrivée, et jamais si vous refusez. Surtout&nbsp;: il
+          ne fonctionne que sur les pages publiques — accueil, tarifs, avis,
+          pages légales. <strong>Il est absent de l'espace connecté</strong>, et
+          donc de toutes les séances&nbsp;: ni le dialogue avec le professeur,
+          ni le tableau, ni les copies, ni les prénoms des enfants ne sont vus
+          par cet outil. Aucune séance n'est enregistrée.
+        </p>
+        <p>
+          Microsoft est établi hors de l'Union européenne&nbsp;; le transfert
+          s'appuie sur les clauses contractuelles types, comme pour nos autres
+          prestataires.
+        </p>
+
+        <h3>Revenir sur votre choix</h3>
+        <p>
+          À tout moment, le lien <strong>«&nbsp;Cookies&nbsp;»</strong> en bas de
+          chaque page rouvre le bandeau&nbsp;: accepter après avoir refusé, ou
+          refuser après avoir accepté. Un refus efface les cookies de mesure et
+          arrête l'outil. Effacer les données du site depuis votre navigateur
+          revient au même, à ceci près que la question vous sera reposée.
         </p>
       </section>
 

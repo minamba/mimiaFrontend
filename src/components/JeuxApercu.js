@@ -125,7 +125,7 @@ export default function JeuxApercu() {
             <img src={jeu.image} alt="" loading="lazy" />
             <span className="jeux-apercu__legende">
               <strong>{jeu.titre}</strong>
-              <span>
+              <span className="jeux-apercu__matiere">
                 {jeu.matiere}
                 <span className="jeux-apercu__classe">{jeu.classe}</span>
               </span>

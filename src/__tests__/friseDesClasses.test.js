@@ -106,14 +106,45 @@ describe('la piste à l’écran', () => {
     expect(screen.queryByText(/pas encore le niveau/i)).not.toBeInTheDocument();
   });
 
-  it('un clic sur un cadenas explique, et ne change pas de classe', () => {
+  it('un clic sur un cadenas ouvre la fenêtre, et ne change pas de classe', () => {
     const choisir = jest.fn();
     render(<FriseDesClasses etapes={etapes} choisie="CE2" onChoisir={choisir} />);
 
     fireEvent.click(screen.getByRole('button', { name: /CM2/ }));
 
     expect(choisir).not.toHaveBeenCalled();
+
+    // Une vraie fenêtre, pas une ligne de texte : c'est ce qui la rend
+    // impossible à manquer, et ce qui verrouille le défilement derrière.
+    const fenetre = screen.getByRole('dialog');
+    expect(fenetre).toHaveAttribute('aria-modal', 'true');
     expect(screen.getByText(/pas encore le niveau pour débloquer ces jeux/i)).toBeInTheDocument();
+
+    // Et elle nomme la classe visée : le refus est un rendez-vous, pas un mur.
+    expect(screen.getByText(/s’ouvriront quand tu y seras/i)).toBeInTheDocument();
+  });
+
+  it('la fenêtre prend le clavier et se referme', () => {
+    render(<FriseDesClasses etapes={etapes} choisie="CE2" onChoisir={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /CM2/ }));
+
+    // Le focus part sur le bouton : sans lui, la tabulation repartirait du
+    // haut de la page, derrière la fenêtre.
+    const compris = screen.getByRole('button', { name: /J’ai compris/ });
+    expect(compris).toHaveFocus();
+
+    fireEvent.click(compris);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('Échap referme la fenêtre, comme partout ailleurs', () => {
+    render(<FriseDesClasses etapes={etapes} choisie="CE2" onChoisir={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Tle/ }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('le cadenas reste un bouton : il répond au clic au lieu de se taire', () => {

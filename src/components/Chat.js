@@ -107,6 +107,7 @@ import CarteJeuProposee from './jeux/CarteJeuProposee';
    trois mégaoctets pour deux icônes. */
 import iconeCahier from '../assets/cahier.webp';
 import iconeClavier from '../assets/clavier.webp';
+import iconeAgrandir from '../assets/agrandir.webp';
 import LignesCopie from './LignesCopie';
 import { ContenuTableau, tableauDeDictee } from './ComparaisonDictee';
 import { copieDeReference } from '../lib/storage/diffDictee';
@@ -499,6 +500,40 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
   const [agrandi, setAgrandi] = useState(false);
 
   /**
+   * LE TABLEAU SE REPLIE SUR TÉLÉPHONE — Camara, le 23/09/2026 : « on perd
+   * pas mal de place ; un bouton en bas "Afficher le tableau", comme ça
+   * l'utilisateur l'affichera de lui-même quand il en a besoin ».
+   *
+   * IL PREND 42 % DE LA HAUTEUR, et la plupart du temps il est vide : ce
+   * qu'on montre alors, c'est la phrase qui dit qu'il n'y a rien à montrer.
+   *
+   * MAIS IL S'OUVRE TOUT SEUL QUAND LE PROFESSEUR Y ÉCRIT. Un repli purement
+   * manuel avait un défaut grave : le professeur écrit une fraction, dit
+   * « regarde le tableau », et l'enfant l'a caché. À sept ans, on ne se dit
+   * pas « il faut que j'appuie sur Afficher le tableau » — c'est le défaut,
+   * déjà corrigé deux fois ailleurs, du professeur qui renvoie à ce que
+   * l'enfant ne voit pas.
+   *
+   * ET IL NE SE ROUVRE PAS DANS LE DOS DE L'ENFANT. `contenuVu` retient ce
+   * qui a déclenché l'ouverture : refermé, le tableau reste fermé tant que le
+   * professeur n'écrit pas AUTRE CHOSE. Sans cette mémoire, le moindre rendu
+   * rouvrirait un panneau que l'enfant vient de fermer.
+   *
+   * L'état vit ici et non dans `Chat` : il ne dépend que de `contenu`, qui est
+   * la propriété de ce composant. Le hisser plus haut, c'est le faire voyager
+   * à travers un fichier de cinq mille lignes pour rien.
+   */
+  const [ouvert, setOuvert] = useState(false);
+  const contenuVu = useRef(null);
+
+  useEffect(() => {
+    if (!contenu || contenu === contenuVu.current) return;
+
+    contenuVu.current = contenu;
+    setOuvert(true);
+  }, [contenu]);
+
+  /**
    * L'endroit montré, tenu ICI et non dans la figure.
    *
    * Il y a DEUX vues de la même figure — le panneau et le plein écran — donc
@@ -570,7 +605,10 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
   }, [agrandi]);
 
   return (
-    <aside className="ardoise" aria-label="Le tableau du professeur">
+    <aside
+      className={`ardoise${ouvert ? '' : ' ardoise--repliee'}`}
+      aria-label="Le tableau du professeur"
+    >
       <header className="ardoise__entete">
         <span className="ardoise__titre">Le tableau</span>
         {prof && <span className="ardoise__prof">écrit par {prof}</span>}
@@ -585,28 +623,15 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
             n'a rien à gagner à l'agrandissement : le texte se lit déjà. Le
             proposer quand même apprendrait à l'élève que ce bouton ne sert à
             rien — et il ne l'essaierait plus le jour où une planche
-            d'anatomie arrive. */}
-        {contenu && estUnSchema(contenu) && (
-          <button
-            type="button"
-            className="ardoise__agrandir"
-            onClick={() => setAgrandi(true)}
-          >
-            {/* Une icône dessinée plutôt qu'un emoji : un emoji change de forme
-                d'un système à l'autre — loupe grise sur Windows, jaune sur
-                Android — et n'hérite pas de la couleur du texte. Ces quatre
-                angles-là suivent la craie et gardent le même trait partout. */}
-            <svg
-              className="ardoise__agrandir-icone"
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path d="M6 1.5H1.5v4.5M10 14.5h4.5v-4.5M1.5 10v4.5H6M14.5 6V1.5H10" />
-            </svg>
-            Agrandir le schéma
-          </button>
-        )}
+            d'anatomie arrive.
+
+            IL A QUITTÉ L'EN-TÊTE — Camara, le 23/09/2026 : sur téléphone,
+            l'en-tête du tableau disparaît (on vient d'appuyer sur « Afficher
+            le tableau », on sait ce qu'on regarde), mais « il faut quand même
+            montrer le bouton Agrandir le schéma ». Il est donc posé sur la
+            surface elle-même, où il survit à la disparition du bandeau — et
+            où il est de toute façon mieux : un bouton qui agrandit une figure
+            appartient à la figure, pas au titre au-dessus. */}
       </header>
 
       {/* Le même composant rendu en grand, et non une image à part : un
@@ -695,6 +720,43 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
           craie se lit mal collé au cadre ; une planche d'anatomie, elle, ne
           demande qu'à être grande — chaque pixel rendu à la marge est un mot de
           légende en moins. Le modificateur ne sert qu'à ça. */}
+
+      {/* AU-DESSUS DU TABLEAU, PAS DESSUS — Camara, le 23/09/2026 : « je
+          trouve que la position est sur le schéma, tu peux pas le mettre un
+          peu plus haut ? ». Posé en absolu dans un coin de la surface, il
+          masquait forcément un bout de la figure ; et une figure n'a pas de
+          coin libre — c'est une planche remplie jusqu'aux bords.
+
+          Sur sa propre ligne, il ne peut plus recouvrir quoi que ce soit,
+          quelle que soit l'image. Il ne coûte cette ligne que lorsqu'il
+          existe, c'est-à-dire quand le professeur a dessiné. */}
+      {contenu && estUnSchema(contenu) && (
+        <div className="ardoise__outils">
+          {/* UNE ICÔNE ILLUSTRÉE, ET SEULEMENT ELLE — Camara, le 23/09/2026 :
+              « mets l'icône agrandir.png dans le coin droit du tableau ».
+
+              LE LIBELLÉ AVAIT ÉTÉ CHOISI CONTRE UNE ICÔNE, et la note d'alors
+              disait vrai : une double flèche grise dans un coin ne dit rien à
+              un enfant, il ne l'essaie pas. Mais ce n'est pas de cela qu'il
+              s'agit ici — quatre flèches dorées qui écartent un cadre, dans le
+              langage des jeux qu'il connaît, se lisent sans qu'on les explique.
+              Le mot, lui, coûtait une ligne au-dessus du tableau ou un pavé
+              posé sur la figure : les deux ont été essayés, les deux gênaient.
+
+              `aria-label` REMPLACE LE MOT DISPARU : ce que l'œil comprend du
+              dessin, un lecteur d'écran ne l'a pas. */}
+          <button
+            type="button"
+            className="ardoise__agrandir"
+            aria-label="Agrandir le schéma"
+            title="Agrandir le schéma"
+            onClick={() => setAgrandi(true)}
+          >
+            <img src={iconeAgrandir} alt="" />
+          </button>
+        </div>
+      )}
+
       <div
         ref={surfaceRef}
         className={[
@@ -736,6 +798,31 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
           </p>
         )}
       </div>
+
+      {/* LE BOUTON D'AFFICHAGE, EN BAS — voulu là par Camara. Écrit en dernier
+          dans l'`aside`, qui est une colonne : il tombe donc sous le tableau,
+          et l'ardoise étant collée au bas de l'écran sur téléphone, il reste
+          atteignable sans rien dérouler.
+
+          LA PASTILLE DIT QU'IL Y A QUELQUE CHOSE À VOIR. Refermé par l'enfant
+          alors que le professeur avait écrit, le bandeau serait muet : rien ne
+          distinguerait un tableau vide d'un tableau plein qu'on a rangé.
+          `aria-expanded` porte la même information pour un lecteur d'écran.
+
+          Masqué au-dessus de 1040 px : en colonnes, le tableau est à côté de
+          la discussion et ne prend la place de rien. */}
+      <button
+        type="button"
+        className="ardoise__bascule"
+        aria-expanded={ouvert}
+        onClick={() => setOuvert((etait) => !etait)}
+      >
+        <span className="ardoise__bascule-fleche" aria-hidden="true" />
+        {ouvert ? 'Cacher le tableau' : 'Afficher le tableau'}
+        {!ouvert && contenu && (
+          <span className="ardoise__bascule-pastille" aria-hidden="true" />
+        )}
+      </button>
     </aside>
   );
 }
@@ -2113,6 +2200,42 @@ export default function Chat() {
   const luJusquaRef = useRef(0);
   const ecouteRef = useRef(null);
 
+  /**
+   * L'INDICE DE DÉFILEMENT DU FIL — Camara, le 23/09/2026 : « une flèche à
+   * deux têtes animée à droite de la discussion pour dire à l'enfant qu'il
+   * peut défiler en haut et en bas ».
+   *
+   * POURQUOI IL LE FAUT : sur un téléphone, le fil est une zone qui défile À
+   * L'INTÉRIEUR d'une page qui défile aussi. Rien ne distingue les deux, et un
+   * enfant qui veut relire ce que le professeur a dit plus haut fait glisser
+   * la page entière. La flèche dit que ce cadre-là a sa propre course.
+   *
+   * IL EST LÀ DÈS L'OUVERTURE, ET NON QUAND LE FIL DÉBORDE. Premier essai :
+   * ne le montrer que si le fil avait de quoi défiler. Camara : « justement
+   * je la vois pas » — et il avait raison, pour une raison que sa capture
+   * donne : au début d'une séance le fil tient en entier, c'est LA PAGE qui
+   * défile, pour aller de la discussion au tableau posé dessous. Le moment où
+   * l'enfant a le plus besoin du repère était exactement celui où il ne
+   * s'affichait pas.
+   *
+   * IL RESTE TOUTE LA SÉANCE — Camara, le 23/09/2026 : « sur mobile, je veux
+   * pas que la flèche animée disparaisse, je veux qu'elle soit tout le temps
+   * là ».
+   *
+   * La première version l'effaçait au premier défilement, en se disant qu'un
+   * repère permanent devient un meuble qu'on ne voit plus. Le raisonnement
+   * vaut pour un adulte qui apprend une interface une fois ; il ne vaut pas
+   * ici. Une séance dure vingt minutes, l'enfant fait dix allers-retours entre
+   * le fil et le tableau, et rien ne dit que celui qui a fait défiler UNE fois
+   * a compris que le cadre avait sa propre course. Le repère est peu
+   * encombrant — une pastille de 30 px dans la marge — et il ne recouvre
+   * jamais le texte : le coût de le laisser est bien moindre que celui de
+   * l'avoir retiré trop tôt.
+   *
+   * Il n'y a donc plus d'état du tout : la flèche est rendue tant que la
+   * séance est ouverte, et c'est le CSS seul qui décide de la montrer — sous
+   * 1040 px, là où le tableau passe sous la discussion.
+   */
   if (lecteurRef.current === null) lecteurRef.current = voixService.creerLecteur();
 
   // ------------------------------------------------------------------ cycle
@@ -4610,6 +4733,20 @@ export default function Chat() {
   return (
     <div className="chat-espace">
     {copie && <Controle copie={copie} onFermer={() => setCopie(null)} />}
+
+    {/* LA FLÈCHE DE DÉFILEMENT, EN MARGE DROITE DE L'ÉCRAN — Camara, le
+        23/09/2026 : « elle sera à droite en dehors de la discussion sur
+        mobile ». Posée en fixe dans la marge plutôt que dans le panneau :
+        dedans, elle passerait sur les bulles ou défilerait avec elles.
+        Décorative et inerte — elle signale une possibilité, elle ne s'actionne
+        pas ; le geste, c'est le fil qui le reçoit. Elle ne sort qu'en dessous
+        de 1040 px, là où le tableau passe sous la discussion. */}
+    <span className="chat-defilement" aria-hidden="true">
+      <svg viewBox="0 0 12 34">
+        <path d="M6 1.5 1.5 7h9zM6 32.5 1.5 27h9z" />
+        <path d="M6 9v16" />
+      </svg>
+    </span>
 
     <section className="chat">
       {/* LA CONFIRMATION DE LA PHOTO PRISE À LA VOIX.

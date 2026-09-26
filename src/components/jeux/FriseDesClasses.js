@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import NiveauVerrouille from './NiveauVerrouille';
 
 /**
  * LA CARTE DES NIVEAUX, en haut de « Mes jeux ».
@@ -16,8 +17,10 @@ import { useEffect, useRef, useState } from 'react';
  * LE CADENAS RÉPOND AU LIEU DE SE TAIRE. Un bouton `disabled` ne reçoit ni
  * clic ni focus : l'enfant appuie, rien ne bouge, et il ne sait pas pourquoi.
  * Ces portails restent des boutons ordinaires, marqués `aria-disabled`, et le
- * clic affiche la raison — la demande même de Camara : « si il clique dessus
- * il faudra mettre un message ».
+ * clic ouvre la fenêtre qui dit la raison — voir `NiveauVerrouille`. Le
+ * message vivait d'abord sur une ligne sous la frise ; Camara, le 23/09/2026 :
+ * « je voudrais que le message apparaisse dans une popup ». Un enfant qui
+ * vient d'appuyer sur un portail regarde le portail, pas le bas de la page.
  *
  * TROIS ÉTATS, ET NON DEUX. Verrouillé n'est pas la même chose que vide : une
  * classe ouverte dont les jeux ne sont pas encore écrits garde son portail
@@ -122,22 +125,7 @@ export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
         })}
       </ol>
 
-      {/* Le message vit sous la carte, jamais dans une fenêtre : sur un
-          téléphone, une alerte recouvre le portail qu'on vient de toucher.
-          `role="status"` le fait annoncer aux lecteurs d'écran sans voler le
-          focus à l'enfant. */}
-      <p className="frise__refus" role="status">
-        {refus && (
-          <>
-            <Cadenas classe="frise__refus-cadenas" />
-            Tu n’as pas encore le niveau pour débloquer ces jeux.
-            {' '}
-            <span className="frise__refus-suite">
-              Ceux de {refus.libelle} s’ouvriront quand tu y seras !
-            </span>
-          </>
-        )}
-      </p>
+      {refus && <NiveauVerrouille etape={refus} onFermer={() => setRefus(null)} />}
     </nav>
   );
 }

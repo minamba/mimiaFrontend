@@ -28,9 +28,15 @@ const CORRECTION = [
   'les feuilles tombait une à',
 ].join('\n');
 
-export default function ExercicesLangue() {
+/**
+ * `id` est fourni par l'accueil, et il n'est pas décoratif : depuis le
+ * 23/09/2026, cette section porte l'ancre `#methode` tant que « Trois choses
+ * qu'un chatbot ne fait pas » est masquée. Deux liens de la page y mènent, et
+ * ils doivent aboutir quelque part. Voir `MONTRER_METHODE` dans `Accueil.js`.
+ */
+export default function ExercicesLangue({ id }) {
   return (
-    <section className="exercices">
+    <section className="exercices" id={id}>
       <header className="section__entete">
         <span className="etiquette etiquette--sombre">Ce qu’un chatbot ne fait pas</span>
         <h2>Il entraîne votre enfant à l’écrit comme à l’oral</h2>

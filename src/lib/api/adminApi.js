@@ -321,13 +321,20 @@ export const supprimerSignalement = (id) =>
  * Dans l'autre sens, on aurait effacé la seule clé d'accès à des données
  * d'enfants que plus personne ne pourrait ni consulter ni réclamer.
  *
- * L'adresse arrive du tableau d'administration, seul endroit qui la connaisse.
- * Sans elle on ne supprime que les données, comme avant : mieux vaut une
+ * LE `sub` ET NON L'ADRESSE — changé le 23/09/2026. L'adresse semblait être le
+ * seul lien entre les deux bases ; elle était surtout le seul qui pouvait
+ * devenir faux. Sur un compte dont les deux bases avaient divergé, l'identité
+ * ne se trouvait pas sous cette adresse : les données partaient, l'accès
+ * restait, et le parent « supprimé » se reconnectait sur un compte vierge que
+ * l'API lui recréait. Le `sub` vient du tableau d'administration, qui le reçoit
+ * désormais de l'API métier.
+ *
+ * Sans `sub` on ne supprime que les données, comme avant : mieux vaut une
  * suppression incomplète qu'un écran d'erreur sur une opération à moitié faite.
  */
-export const supprimerParent = async (id, mail) => {
+export const supprimerParent = async (id, sub) => {
   await httpClient.delete(`/admin/parents/${id}`);
-  if (mail) await supprimerIdentiteDe(mail);
+  if (sub) await supprimerIdentiteDe(sub);
 };
 
 export const supprimerEleve = (id) => httpClient.delete(`/admin/eleves/${id}`);
@@ -368,6 +375,23 @@ export const getReglages = () => httpClient.get('/reglages');
 
 export const definirReglage = (cle, actif) =>
   httpClient.put(`/reglages/${cle}`, { actif });
+
+/**
+ * Le nombre de places de la salle d'attente.
+ *
+ * PAS `definirReglage` : celui-ci n'écrit que des booléens, et il s'agit ici
+ * d'un nombre. Route séparée aussi côté serveur, sous `affluence/`, pour que
+ * le plafond vive avec la mécanique qu'il commande plutôt qu'avec les
+ * interrupteurs.
+ *
+ * L'ÉTAT DE LA SALLE se lit par `getEtatAffluence` : combien sont entrés,
+ * combien attendent. Lire le plafond ne dit rien de ce qui se passe ;
+ * seul le second répond à « est-ce que ça tient ? ».
+ */
+export const definirPlacesAffluence = (places) =>
+  httpClient.put('/affluence/places', { places });
+
+export const getEtatAffluence = () => httpClient.get('/affluence/etat');
 
 /**
  * Le bandeau d'information : son texte et son affichage, en un seul appel.

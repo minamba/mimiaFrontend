@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { commun } from '../../lib/jeux/voix/repliques';
 import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
+import FinDePartie from './FinDePartie';
+import Coeurs from './Coeurs';
 
 /**
  * L'ÉCRAN COMMUN DES JEUX « UNE QUESTION, DES CHOIX » — a ou à, les types de
@@ -92,21 +94,13 @@ export default function JeuDeChoix({
 
   if (fini) {
     return (
-      <div className="jeu jeu--fini">
-        <p className="jeu__bilan-score">
-          {duPremierCoup} <span>sur {regle.MANCHES}</span>
-        </p>
-        <p className="jeu__bilan-mot">{regle.bilan(duPremierCoup)}</p>
-
-        <div className="jeu__actions">
-          <button type="button" className="btn btn--principal" onClick={rejouer}>
-            Rejouer
-          </button>
-          <button type="button" className="btn-ghost" onClick={onQuitter}>
-            Revenir aux jeux
-          </button>
-        </div>
-      </div>
+      <FinDePartie
+        score={duPremierCoup}
+        total={regle.MANCHES}
+        mot={regle.bilan(duPremierCoup)}
+        onRejouer={rejouer}
+        onQuitter={onQuitter}
+      />
     );
   }
 
@@ -118,6 +112,7 @@ export default function JeuDeChoix({
         ← Revenir aux jeux
       </button>
 
+      <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${regle.MANCHES}`}>
         {manches.map((m, i) => (
           <li

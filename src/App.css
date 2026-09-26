@@ -864,9 +864,16 @@ h1, h2, h3 {
 .landing {
   --ecart-section: 96px;
 
+  /* LA GOUTTIÈRE, NOMMÉE — posée le 23/09/2026. Elle était écrite en dur ici
+     et redéclarée sous 560 px ; une section qui veut aller jusqu'aux bords de
+     l'écran (la frise du CP à la Terminale) devait alors recopier les deux
+     valeurs et les tenir d'accord. Nommée, elle se compense d'une soustraction
+     et suit ses propres changements. */
+  --gouttiere: 28px;
+
   max-width: 1180px;
   margin: 0 auto;
-  padding: 0 28px 100px;
+  padding: 0 var(--gouttiere) 100px;
 }
 
 @media (max-width: 900px) {
@@ -7412,7 +7419,7 @@ html.defilement-bloque body {
 
 .fiche__colonnes {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 26px;
 }
 
@@ -9411,6 +9418,33 @@ html.defilement-bloque body {
    Six se divise aussi par deux — les rangées restent pleines. */
 @media (max-width: 620px) {
   .equipe__grille { grid-template-columns: repeat(2, 1fr); }
+
+  /* LA DERNIÈRE CARTE SE CENTRE AUSSI SUR TÉLÉPHONE — Camara, le 23/09/2026 :
+     « dans la landing page, il est possible de centrer le professeur Minamba
+     comme sur desktop ? »
+
+     Le commentaire de la règle sœur (min-width: 621px) disait « en deux
+     colonnes, la rangée suit son cours ». C'était un pari, pas un constat : à
+     treize professeurs, la dernière carte est seule sur sa rangée dans LES
+     DEUX dispositions, et calée à gauche elle se lit comme un oubli — la même
+     raison qui l'avait fait centrer sur PC.
+
+     POURQUOI PAS `justify-self: center` : la carte prendrait alors la largeur
+     de son contenu, plus étroite que ses voisines, et la différence se verrait
+     d'autant plus qu'elle est seule. On lui donne exactement UNE colonne —
+     la moitié de la grille, moins la moitié du gouttière de 16 px — et on la
+     pousse au milieu avec des marges automatiques. Elle reste identique aux
+     douze autres, simplement déplacée.
+
+     `2n + 1` PLUTÔT QUE `odd` DANS LE MÊME SÉLECTEUR QUE `:last-child` : les
+     deux sont équivalents, mais celui-ci se lit en regard du `3n + 1` de la
+     règle PC — on voit d'un coup d'œil que c'est le nombre de colonnes qui
+     change, et rien d'autre. */
+  .equipe__grille > li:last-child:nth-child(2n + 1) {
+    grid-column: 1 / -1;
+    width: calc(50% - 8px);
+    margin-inline: auto;
+  }
 }
 
 /* ==========================================================================
@@ -9961,7 +9995,19 @@ html.defilement-bloque body {
    de ce bloc masque tout sauf la feuille, et « Enregistrer au format PDF »
    du navigateur produit exactement ce que le parent a sous les yeux.
    ========================================================================== */
-.modale--controle, .modale--dictee { z-index: 60; }
+/* Les fenêtres qui portent un DOCUMENT passent au-dessus des autres : elles
+   s'ouvrent depuis une fiche déjà en fenêtre, et doivent la recouvrir.
+   « modale--expression » les a rejointes le 24/09/2026 avec les expressions
+   écrites et orales. */
+.modale--controle, .modale--dictee, .modale--expression { z-index: 60; }
+
+/* La feuille d'une expression est celle d'une copie de contrôle — voir
+   « ExpressionCopie.js ». Seul le corps change : le détail rendu à l'intérieur
+   vient des écrans de l'élève et porte déjà ses propres espacements, d'où le
+   simple retrait du haut pour le décoller de l'en-tête. */
+.expression-copie > :not(.controle__marque):not(.controle__entete) {
+  margin-top: 18px;
+}
 
 .modale__boite--controle {
   max-width: 760px;
@@ -11187,6 +11233,52 @@ html.defilement-bloque body {
 
   /* Ni marge de page, ni fond : la feuille occupe le papier. */
   body { background: none; }
+
+  /* ------------------------------------------------------------------
+     LE VERROU DE DÉFILEMENT NE DOIT PAS SUIVRE SUR LE PAPIER.
+
+     Le défaut, signalé par Camara le 24/09/2026 : sur la fiche d'un élève,
+     « Télécharger en PDF » sortait une page entièrement blanche — pour la
+     dictée comme pour la copie d'une évaluation.
+
+     LA CAUSE. Dès qu'une fenêtre s'ouvre, « verrouDefilement.js » fige la page
+     pour qu'elle ne défile plus derrière : « position: fixed » sur le corps,
+     décalé vers le haut de la hauteur déjà parcourue (« top: -1200px »). À
+     l'écran c'est invisible et c'est la seule parade fiable sur iPhone.
+
+     À l'impression, ce décalage devient une catastrophe : le contenu part
+     au-dessus de la feuille, et un élément en position fixe ne se pagine pas
+     — d'où UNE page, vide. Mesuré sur une reproduction : la copie se
+     retrouvait à 760 px au-dessus du bord, et le PDF tombait de 60 Ko à 1 Ko,
+     sans une seule police embarquée.
+
+     C'est aussi pourquoi le défaut passait inaperçu : depuis une page courte,
+     ou sans avoir défilé, le décalage vaut zéro et le PDF sort correctement.
+     Il fallait avoir fait défiler la fiche — donc être allé chercher une
+     séance — pour le déclencher.
+
+     POURQUOI « !important », QU'ON ÉVITE PARTOUT OÙ C'EST POSSIBLE : le
+     verrou écrit des styles EN LIGNE sur l'élément, et une déclaration en
+     ligne l'emporte sur toute feuille de style. Seul « !important » passe
+     devant. C'est le cas que la règle existe pour couvrir.
+
+     CORRIGÉ EN CSS ET NON EN JAVASCRIPT : « imprimerSous » aurait pu relâcher
+     le verrou puis le remettre, mais il aurait fallu y penser dans chacune
+     des trente fenêtres de l'application — et se souvenir d'y penser dans la
+     trente-et-unième. Ici, toute impression est couverte d'office.
+     ------------------------------------------------------------------ */
+  html.defilement-bloque,
+  html.defilement-bloque body {
+    overflow: visible !important;
+  }
+
+  body {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: auto !important;
+  }
   .conteneur { max-width: none; padding: 0; margin: 0; }
 
   .fiche {
@@ -11519,7 +11611,7 @@ html.defilement-bloque body {
 }
 
 @media (max-width: 560px) {
-  .landing { padding: 0 20px 72px; }
+  .landing { --gouttiere: 20px; padding: 0 var(--gouttiere) 72px; }
   .navbar { padding: 12px 20px; }
   .page, .chat { padding-left: 20px; padding-right: 20px; }
   .bulle, .demo__bulle { max-width: 90%; }
@@ -14359,6 +14451,86 @@ html.defilement-bloque body {
   .maintenance--blue-sky .maintenance__carte { padding: 34px 20px 22px; border-radius: 22px; }
   .maintenance--blue-sky .maintenance__medaillon { width: 84px; height: 84px; }
   .maintenance--blue-sky .maintenance__engrenages { width: 54px; height: 54px; }
+}
+
+/* ------------------------------------------- la salle d'attente d'affluence */
+/* Voulue par Camara le 25/09/2026. Le reste de l'écran emprunte les classes du
+   rideau de maintenance : seules les trois pièces qui lui sont propres — le
+   rang, sa légende et la barre — sont ici.
+
+   PRÉFIXE `.salle` ET NON `.file` : `.file__*` est déjà la file des travaux
+   de fond en administration, et App.css est une seule feuille globale pour
+   tout le site. Deux `.file__nombre` différents, ce sont deux écrans qui se
+   déforment l'un l'autre sans que personne comprenne pourquoi. */
+
+.salle__rang {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 18px 0 14px;
+}
+
+/* GROS, ET C'EST TOUT L'INTÉRÊT. C'est la seule chose qu'on cherche des yeux
+   dans une file d'attente ; tout le reste de la page est du contexte. */
+.salle__numero {
+  font-family: var(--display);
+  font-size: 56px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--corail);
+
+  /* Les chiffres gardent la même largeur d'un rang à l'autre : sans quoi le
+     nombre danserait à chaque mise à jour, ce qui se lit comme une erreur
+     plutôt que comme une progression. */
+  font-variant-numeric: tabular-nums;
+}
+
+.salle__legende {
+  font-size: 14px;
+  color: var(--encre-douce);
+}
+
+/* LA BARRE NE MESURE RIEN, et n'en a pas l'air : elle va et vient au lieu de
+   se remplir. Une barre qui se remplit promet une fin ; celle-ci dit
+   seulement « ça tourne », ce qui est exactement ce qu'on sait. */
+.salle__barre {
+  height: 4px;
+  width: min(280px, 100%);
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.salle__barre span {
+  display: block;
+  height: 100%;
+  width: 38%;
+  border-radius: inherit;
+  background: var(--corail);
+  animation: salle-va-et-vient 1.8s ease-in-out infinite;
+}
+
+@keyframes salle-va-et-vient {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+/* Une animation qui ne s'arrête jamais est précisément celle qui gêne le plus
+   les personnes sensibles au mouvement — et elle est ici devant quelqu'un qui
+   attend, donc longtemps. */
+@media (prefers-reduced-motion: reduce) {
+  .salle__barre span { animation: none; width: 100%; opacity: 0.45; }
+}
+
+.maintenance--blue-sky .salle__numero { color: #fff; }
+.maintenance--blue-sky .salle__legende { color: #c7d6ea; }
+.maintenance--blue-sky .salle__barre { background: rgba(255, 255, 255, 0.16); }
+.maintenance--blue-sky .salle__barre span { background: var(--corail); }
+
+@media (max-width: 480px) {
+  .salle__numero { font-size: 46px; }
 }
 
 /* ------------------------------------ l'historique du pot d'heures, en admin */
@@ -25580,6 +25752,651 @@ html.defilement-bloque body {
 .jeu__bilan-mot { margin: 0 0 18px; font-size: 18px; color: var(--encre); }
 .jeu__actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 
+/* ------------------------------------------ le mode Défi : le choix, les cœurs */
+/* Camara, le 25/09/2026. L'enfant choisit son mode à l'ouverture du jeu ; les
+   cœurs ne s'imposent à personne.
+
+   LES ILLUSTRATIONS SONT LES CARTES — il n'y a rien autour.
+   Camara, le 26/09 : « enlève les contours là, agrandis les cartes ». Il avait
+   raison, et pour une raison qui vaut d'être écrite : ses dessins portent DÉJÀ
+   leur cadre, doré et biseauté. Un second cadre en CSS par-dessus faisait deux
+   bordures concentriques — le défaut classique de la carte dans la carte, qui
+   rétrécit le dessin sans rien ajouter. On enlève la boîte, et l'illustration
+   respire. */
+
+/* LE DÉCOR DE L'ÉCRAN — Camara, le 26/09.
+
+   IL EST POSÉ SUR UN VOILE, ET NON À NU. Un décor illustré derrière du texte
+   et des cartes, c'est un contraste qu'on ne maîtrise plus : selon l'endroit
+   de l'image, le titre blanc tombe sur du clair ou du sombre. Le voile sombre
+   par-dessus ramène tout le fond dans une plage étroite, et le lettrage reste
+   lisible où qu'il tombe.
+
+   « background-size: cover » ET « center » : le décor est un décor. On préfère en
+   perdre les bords que le déformer ou le voir se répéter. */
+.jeu--choix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  /* LE DÉCOR VA D'UN BORD À L'AUTRE DU PANNEAU — Camara, le 26/09 :
+     « étends le background pour qu'il prenne toute la carte ».
+
+     C'est le padding hérité de « .jeu » qui l'en empêchait : 24 px de marge
+     tout autour, où le fond du panneau reparaissait. On reprend la main sur
+     les quatre côtés plutôt que d'ajouter une couche par-dessus. */
+  padding: 26px 20px 34px;
+
+  /* ET LE LISERÉ DISPARAÎT. Un trait d'un pixel autour d'un décor illustré ne
+     le cadre pas, il le découpe : l'œil lit une image collée dans une boîte
+     au lieu d'un fond. */
+  border: 0;
+
+  background-image:
+    linear-gradient(rgba(10, 34, 90, 0.4), rgba(6, 22, 60, 0.55)),
+    url('./assets/bg_game_choice.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* LE MÊME RAYON QUE LES AUTRES PANNEAUX DE JEU, et non une valeur à part :
+     deux arrondis voisins qui diffèrent de quelques pixels se voient, et ne
+     se justifient jamais. */
+  border-radius: var(--rayon-l);
+
+  /* Une hauteur de plancher : sur un grand écran, les deux cartes ne
+     remplissent pas le panneau, et un décor écrasé sur 300 px n'est plus un
+     décor. */
+  min-height: min(84vh, 880px);
+  justify-content: center;
+}
+
+/* Le retour ne se centre pas avec le reste : il est ailleurs, en haut à
+   gauche, là où on va le chercher dans tous les autres écrans de jeu. */
+.jeu--choix .jeu__quitter {
+  align-self: flex-start;
+
+  /* Le panneau centre son contenu verticalement ; le retour, lui, reste
+     accroché en haut, là où on va le chercher dans tous les autres écrans. */
+  position: absolute;
+  top: 18px;
+  left: 18px;
+}
+
+.jeu--choix { position: relative; }
+
+/* ------------------------------------------------------------- l'en-tête */
+/* LA MAQUETTE DE CAMARA, le 26/09 : manette en trait lumineux, pastille,
+   puis la question en grand entre deux étincelles jaunes. */
+.choix-mode__manette {
+  display: block;
+  width: 50px;
+  height: auto;
+  margin: 0 auto 4px;
+  fill: none;
+  stroke: #7cc4ff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(90, 170, 255, 0.85));
+}
+
+.choix-mode__manette circle { fill: #7cc4ff; stroke: none; }
+
+.choix-mode__etincelle {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: #ffd84d;
+  filter: drop-shadow(0 0 5px rgba(255, 210, 70, 0.8));
+}
+
+.choix-mode__etincelle--grande { width: 30px; height: 30px; }
+
+.choix-mode__pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 6px;
+}
+
+.choix-mode__pastille span {
+  padding: 4px 20px;
+  border: 1.5px solid #3f86e6;
+  border-radius: 999px;
+  background: rgba(8, 26, 72, 0.8);
+  box-shadow: 0 0 10px rgba(63, 134, 230, 0.35), inset 0 0 8px rgba(63, 134, 230, 0.25);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #a9d2ff;
+}
+
+/* RUBIK 900, LA POLICE DE LA MAQUETTE — Camara, le 26/09. Ronde et large,
+   là où Lilita One est étroite : c'est elle qui fait l'autocollant de jeu.
+
+   LE DOUBLE CERNE — marine au contact de la lettre, bleu vif autour, halo —
+   est fait d'ombres sans flou posées en couronne, pas de `-webkit-text-stroke`
+   qui se pose au milieu de la lettre et la ronge. En `em`, il suit la taille
+   du titre sur téléphone.
+
+   LE DÉGRADÉ BLANC → BLEU PÂLE est sur une seconde couche du même texte,
+   posée par-dessus : sur une seule couche, l'ombre recouvrirait le dégradé. */
+.choix-mode__titre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 0 0 24px;
+}
+
+.choix-mode__question {
+  position: relative;
+  display: inline-block;
+  font-family: 'Rubik', var(--display);
+  font-size: clamp(24px, 4.3vw, 42px);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.035em;
+  word-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.choix-mode__question-cerne {
+  position: absolute;
+  inset: 0;
+  color: #0b1d4a;
+  text-shadow:
+    0.085em 0.000em 0 #0b1d4a,
+    0.079em 0.033em 0 #0b1d4a,
+    0.060em 0.060em 0 #0b1d4a,
+    0.033em 0.079em 0 #0b1d4a,
+    0.000em 0.085em 0 #0b1d4a,
+    -0.033em 0.079em 0 #0b1d4a,
+    -0.060em 0.060em 0 #0b1d4a,
+    -0.079em 0.033em 0 #0b1d4a,
+    -0.085em 0.000em 0 #0b1d4a,
+    -0.079em -0.033em 0 #0b1d4a,
+    -0.060em -0.060em 0 #0b1d4a,
+    -0.033em -0.079em 0 #0b1d4a,
+    -0.000em -0.085em 0 #0b1d4a,
+    0.033em -0.079em 0 #0b1d4a,
+    0.060em -0.060em 0 #0b1d4a,
+    0.079em -0.033em 0 #0b1d4a,
+    0.150em 0.000em 0 #4f8ff0,
+    0.143em 0.046em 0 #4f8ff0,
+    0.121em 0.088em 0 #4f8ff0,
+    0.088em 0.121em 0 #4f8ff0,
+    0.046em 0.143em 0 #4f8ff0,
+    0.000em 0.150em 0 #4f8ff0,
+    -0.046em 0.143em 0 #4f8ff0,
+    -0.088em 0.121em 0 #4f8ff0,
+    -0.121em 0.088em 0 #4f8ff0,
+    -0.143em 0.046em 0 #4f8ff0,
+    -0.150em 0.000em 0 #4f8ff0,
+    -0.143em -0.046em 0 #4f8ff0,
+    -0.121em -0.088em 0 #4f8ff0,
+    -0.088em -0.121em 0 #4f8ff0,
+    -0.046em -0.143em 0 #4f8ff0,
+    -0.000em -0.150em 0 #4f8ff0,
+    0.046em -0.143em 0 #4f8ff0,
+    0.088em -0.121em 0 #4f8ff0,
+    0.121em -0.088em 0 #4f8ff0,
+    0.143em -0.046em 0 #4f8ff0,
+    0 0 0.45em rgba(70, 150, 255, 0.85);
+}
+
+.choix-mode__question-texte {
+  position: relative;
+  color: #fff;
+  background: linear-gradient(180deg, #ffffff 42%, #c6ddff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ------------------------------------------------------------- les deux portes */
+/* DE MÊME TAILLE. « Tranquille » n'est pas le choix des petits et « Défi »
+   celui des grands : ce sont deux façons de travailler, et rien dans la mise
+   en page ne doit en désigner une comme la bonne. Le défi brille davantage —
+   c'est sa nature — mais il n'est ni plus grand, ni premier. */
+.choix-mode__portes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  width: min(780px, 100%);
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+/* PLUS DE BOÎTE : ni fond, ni bordure, ni ombre de carte. Le dessin fait tout
+   le travail, et le bouton n'est plus que la zone qu'on touche. */
+.choix-mode__porte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 6px 4px 10px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s ease-out;
+}
+
+.choix-mode__porte:hover,
+.choix-mode__porte:focus-visible {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* Le contour du clavier reste, lui : il est la seule façon de savoir où l'on
+   est sans souris, et l'enlever au nom de l'esthétique ferme l'écran à qui
+   navigue au clavier. */
+.choix-mode__porte:focus-visible {
+  outline: 3px solid var(--corail);
+  outline-offset: 6px;
+  border-radius: 20px;
+}
+
+/* LA HAUTEUR EST FIXE, LA LARGEUR SUIT — et non l'inverse.
+   Les deux illustrations n'ont pas tout à fait le même format (744 et 797 de
+   haut pour 560 de large). À largeur égale, l'une descendait plus bas que
+   l'autre et les deux colonnes de texte ne s'alignaient plus. À hauteur
+   égale, elles tombent ensemble et la différence de largeur ne se voit pas.
+
+   ET LE RAYON N'EST PAS DÉCORATIF : « defi.png » a été livré SANS canal alpha,
+   son fond noir est cuit dans l'image. Le recadrage a enlevé les marges, les
+   angles arrondis de la carte laissent le reste — ce rayon-là les mange. */
+.choix-mode__image {
+  display: block;
+  height: 500px;
+  width: auto;
+  max-width: 100%;
+  border-radius: 18px;
+  transition: filter 0.25s ease-out;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
+}
+
+.choix-mode__porte:hover .choix-mode__image,
+.choix-mode__porte:focus-visible .choix-mode__image {
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.5));
+}
+
+/* LES NOMS ET LES DESCRIPTIONS ONT DISPARU le 26/09 : Camara a redessiné ses
+   cartes avec leur titre dedans. Leurs règles sont parties avec eux — du CSS
+   qui ne s'applique plus à rien est du CSS qu'on relit dix fois avant de
+   comprendre qu'il est mort. */
+
+/* ------------------------------------------------- la carte du défi, en plus */
+/* LE HALO REMPLACE LA BOÎTE. Il ne dessine pas de contour : il éclaire le
+   dessin par-dessous, comme une carte sous tension. C'est ce qui distingue le
+   défi maintenant qu'aucune des deux n'a de cadre. */
+.choix-mode__porte--defi .choix-mode__image {
+  filter:
+    drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 16px rgba(255, 125, 94, 0.45));
+}
+
+.choix-mode__porte--defi:hover .choix-mode__image,
+.choix-mode__porte--defi:focus-visible .choix-mode__image {
+  filter:
+    drop-shadow(0 16px 28px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 26px rgba(255, 125, 94, 0.75));
+}
+
+/* LE NOUNOURS ET LA RANGÉE DE CŒURS ont disparu le 26/09, à la demande de
+   Camara : les cartes redessinées se suffisent. Leurs règles partent avec eux
+   — du CSS qui ne s'applique plus à rien est du CSS qu'on relit dix fois
+   avant de comprendre qu'il est mort. */
+
+.choix-mode__record { margin: 0; font-size: 14.5px; color: var(--encre-douce); }
+.choix-mode__record strong { color: var(--encre); }
+
+/* -------------------------------------------- la barre de cœurs, en jeu */
+.coeurs {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 10px;
+  line-height: 1;
+}
+
+.coeurs__un {
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 0 6px rgba(255, 80, 120, 0.45));
+  transition: filter 0.2s, opacity 0.2s, transform 0.2s;
+}
+
+/* Un cœur perdu reste À SA PLACE, et devient NOIR (coeur_noir.webp, Camara
+   le 26/09). Le retirer ferait glisser les autres, et l'enfant ne verrait pas
+   ce qu'il vient de perdre — seulement qu'il y en a moins. Le pâlir ne se
+   remarquait pas assez.
+
+   IL TREMBLE UNE FOIS en noircissant : c'est le moment de la perte, et le
+   seul où le mouvement dit quelque chose. */
+.coeurs__un.est-perdu {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+  animation: coeur-perdu 0.5s ease-out;
+}
+
+@keyframes coeur-perdu {
+  0%   { transform: scale(1.3); }
+  25%  { transform: scale(1.1) rotate(-12deg); }
+  50%  { transform: scale(1.05) rotate(10deg); }
+  75%  { transform: rotate(-5deg); }
+  100% { transform: none; }
+}
+
+/* LE DERNIER CŒUR BAT, trois fois : c'est le moment où l'attention compte, et
+   le seul où une pulsation serait justifiée. Elle s'arrête ensuite — un
+   battement perpétuel devient du bruit, et devant un enfant qui cherche sa
+   réponse, du bruit qui gêne. */
+.coeurs--dernier .coeurs__un:not(.est-perdu) {
+  animation: coeur-bat 0.9s ease-in-out 3;
+}
+
+@keyframes coeur-bat {
+  0%, 100% { transform: scale(1); }
+  40%      { transform: scale(1.22); }
+}
+
+/* ------------------------------------------------------ la fin du défi */
+/* ELLE REMPLACE LE JEU, ELLE NE SE POSE PLUS DESSUS — Camara, le 26/09. Le
+   voile d'avant laissait voir le jeu à travers, qui passait à la question
+   suivante et la faisait lire. Le panneau reprend le décor de l'écran du
+   choix (`.jeu--choix`) : l'enfant revient là où il avait choisi le défi.
+
+   UNE LUEUR ROUGE EN HAUT, par-dessus le voile bleu : c'est la couleur de la
+   carte « Défi », et l'écran dit ainsi de quel mode il sort. */
+.defi-fin {
+  background-image:
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255, 96, 70, 0.28), transparent 70%),
+    linear-gradient(rgba(10, 34, 90, 0.5), rgba(6, 22, 60, 0.66)),
+    url('./assets/bg_game_choice.webp');
+  min-height: min(76vh, 760px);
+}
+
+/* Le titre reçoit le focus pour être annoncé ; il n'a pas à s'encadrer. */
+.defi-fin .choix-mode__titre:focus { outline: none; }
+
+/* LES CŒURS TOMBENT UN PAR UN, une seule fois : l'enfant voit la rangée
+   entière passer au noir, sans que l'écran insiste ensuite. */
+.defi-fin__coeurs {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 14px;
+}
+
+.defi-fin__coeurs img {
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 10px rgba(255, 90, 90, 0.35));
+  animation: defi-fin-tombe 0.5s ease-out both;
+}
+
+@keyframes defi-fin-tombe {
+  0%   { opacity: 0; transform: translateY(-22px) scale(1.25); }
+  70%  { opacity: 1; transform: translateY(3px) scale(0.96); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* LE SCORE, EN GRAND ET EN JAUNE : c'est ce que l'enfant a réussi, et c'est
+   la seule chose que l'écran met en avant. */
+.fin-jeu__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 28px 12px 22px;
+  border: 1.5px solid rgba(124, 196, 255, 0.55);
+  border-radius: 22px;
+  background: rgba(8, 26, 72, 0.78);
+  box-shadow: 0 0 18px rgba(63, 134, 230, 0.35), inset 0 0 12px rgba(63, 134, 230, 0.2);
+}
+
+.fin-jeu__score strong {
+  font-family: 'Rubik', var(--display);
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffd84d;
+  text-shadow:
+    3px 0 0 #0b1d4a, -3px 0 0 #0b1d4a, 0 3px 0 #0b1d4a, 0 -3px 0 #0b1d4a,
+    2px 2px 0 #0b1d4a, -2px 2px 0 #0b1d4a, 2px -2px 0 #0b1d4a, -2px -2px 0 #0b1d4a,
+    0 0 20px rgba(255, 210, 70, 0.55);
+}
+
+.fin-jeu__score span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: left;
+  color: #cfe6ff;
+}
+
+.fin-jeu__mot {
+  max-width: 36ch;
+  margin: 16px 0 24px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: #e6f1ff;
+}
+
+/* LES DEUX PORTES, DE MÊME TAILLE — comme sur l'écran du choix : redescendre
+   en tranquille n'est pas un aveu, c'est une autre façon de travailler. Le
+   défi garde son rouge, le tranquille son bleu. */
+.fin-jeu__portes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.fin-jeu__porte {
+  min-width: 230px;
+  padding: 15px 26px;
+  border: 2px solid #9fd0ff;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #4b97ff, #1f5fd4);
+  box-shadow: 0 6px 0 #0d3a8a, 0 0 18px rgba(80, 160, 255, 0.45);
+  font-family: 'Rubik', var(--display);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(8, 24, 54, 0.6);
+  cursor: pointer;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.fin-jeu__porte--rouge {
+  border-color: #ffc2a8;
+  background: linear-gradient(180deg, #ff7a52, #e0322b);
+  box-shadow: 0 6px 0 #8a1d14, 0 0 20px rgba(255, 110, 80, 0.55);
+}
+
+.fin-jeu__porte:hover { transform: translateY(-3px); }
+
+.fin-jeu__porte:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #0d3a8a, 0 0 12px rgba(80, 160, 255, 0.4);
+}
+
+.fin-jeu__porte--rouge:active {
+  box-shadow: 0 2px 0 #8a1d14, 0 0 14px rgba(255, 110, 80, 0.5);
+}
+
+.fin-jeu__porte:focus-visible {
+  outline: 3px solid #ffd84d;
+  outline-offset: 4px;
+}
+
+@media (max-width: 620px) {
+  .defi-fin__coeurs img { width: 38px; height: 38px; }
+  .fin-jeu__score strong { font-size: 48px; }
+  .fin-jeu__porte { width: 100%; min-width: 0; }
+}
+
+/* ------------------------------------------------------ la fin de partie */
+/* COMMUNE AUX VINGT-TROIS JEUX (`FinDePartie`) — Camara, le 26/09 : « trop
+   fade, ça fait pas gaming ». Même décor que le choix du mode, trois étoiles,
+   le titre autocollant, le score en jaune et deux grosses portes. */
+.partie-fin {
+  min-height: min(72vh, 720px);
+  gap: 0;
+}
+
+/* Le titre reçoit le focus pour être annoncé ; il n'a pas à s'encadrer. */
+.partie-fin .choix-mode__titre:focus { outline: none; }
+
+/* LES TROIS ÉTOILES, la plus grande au centre et plus haute : la forme
+   qu'un enfant connaît de tous ses jeux. Elles tombent l'une après l'autre. */
+.partie-fin__etoiles {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 10px;
+}
+
+.partie-fin__etoile {
+  width: 70px;
+  height: 70px;
+  stroke: #0b1d4a;
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  filter: drop-shadow(0 4px 0 rgba(8, 24, 54, 0.6));
+  animation: etoile-arrive 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.partie-fin__etoile--centre {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 18px;
+}
+
+.partie-fin__etoile.est-gagnee {
+  filter:
+    drop-shadow(0 4px 0 rgba(8, 24, 54, 0.6))
+    drop-shadow(0 0 14px rgba(255, 210, 70, 0.7));
+}
+
+/* Une étoile NON gagnée reste à sa place, en creux : l'enfant voit ce qu'il
+   peut encore aller chercher, sans que rien ne le lui reproche. */
+.partie-fin__etoile:not(.est-gagnee) {
+  stroke: rgba(124, 196, 255, 0.45);
+}
+
+@keyframes etoile-arrive {
+  0%   { opacity: 0; transform: translateY(-30px) scale(0.3) rotate(-30deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* TROIS ÉTOILES : le panneau s'éclaire d'or par le haut. C'est la seule
+   récompense en plus — elle reste donc rare. */
+.partie-fin--3 {
+  background-image:
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255, 210, 70, 0.3), transparent 70%),
+    linear-gradient(rgba(10, 34, 90, 0.4), rgba(6, 22, 60, 0.55)),
+    url('./assets/bg_game_choice.webp');
+}
+
+/* LE RECORD, SUR LE DÉCOR BLEU : clair pour la cible, doré quand il tombe. */
+.partie-fin .jeu__record {
+  margin: -8px 0 20px;
+  color: #cfe6ff;
+}
+
+.partie-fin .jeu__record strong { color: #fff; }
+
+.partie-fin .jeu__record--neuf {
+  padding: 8px 20px;
+  border: 1.5px solid rgba(255, 216, 77, 0.7);
+  background: rgba(255, 216, 77, 0.16);
+  box-shadow: 0 0 16px rgba(255, 210, 70, 0.4);
+  font-family: 'Rubik', var(--display);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #ffe27a;
+}
+
+@media (max-width: 620px) {
+  .partie-fin__etoile { width: 52px; height: 52px; }
+  .partie-fin__etoile--centre { width: 72px; height: 72px; margin-bottom: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coeurs--dernier .coeurs__un:not(.est-perdu),
+  .coeurs__un.est-perdu,
+  .defi-fin__coeurs img,
+  .partie-fin__etoile { animation: none; }
+  .fin-jeu__porte:hover { transform: none; }
+  .choix-mode__porte:hover,
+  .choix-mode__porte:focus-visible { transform: none; }
+}
+
+@media (max-width: 620px) {
+  .choix-mode__manette { width: 46px; }
+  .choix-mode__titre { gap: 10px; }
+  .choix-mode__etincelle--grande { width: 20px; height: 20px; }
+  .choix-mode__image { height: 300px; }
+  .choix-mode__portes { gap: 18px; }
+}
+
+/* ------------------------------------- le record personnel, en fin de partie */
+/* Voulu par Camara le 25/09/2026 : se battre soi-même fait rejouer, et marche
+   avec un seul enfant inscrit comme avec dix mille.
+
+   DISCRET QUAND CE N'EST PAS UN RECORD. La cible à battre est une information,
+   pas une récompense : lui donner la même force qu'au score la ferait lire
+   comme un reproche par l'enfant qui vient de faire moins bien. */
+.jeu__record {
+  margin: -8px 0 18px;
+  font-size: 15px;
+  color: var(--encre-douce);
+}
+
+.jeu__record strong { color: var(--encre); }
+
+/* LE RECORD BATTU, LUI, SE VOIT. C'est le seul moment où l'on félicite : trois
+   parties sur dix, pas dix sur dix, sinon le mot s'use. */
+.jeu__record--neuf {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: rgba(255, 125, 94, 0.16);
+  color: var(--corail);
+  font-weight: 600;
+}
+
+.jeu__record-medaille {
+  font-size: 17px;
+  line-height: 1;
+  animation: record-eclat 1.4s ease-out 2;
+}
+
+@keyframes record-eclat {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  30%      { transform: scale(1.35) rotate(-12deg); }
+  60%      { transform: scale(1.1) rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jeu__record-medaille { animation: none; }
+}
+
+
+
 @media (prefers-reduced-motion: reduce) {
   .jeu-carte:hover { transform: none; }
   .boite__jeton { transition: none; }
@@ -30930,30 +31747,6 @@ html.defilement-bloque body {
   color: #d5dbe6;
 }
 
-/* ------------------------------------------------------------- le refus */
-.frise__refus {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  /* La place est réservée en permanence : sans ça, la grille des jeux sautait
-     de vingt pixels chaque fois que l'enfant touchait un cadenas. */
-  min-height: 34px;
-  margin: 4px 0 0;
-  padding: 0 6px;
-  color: #ffd2a8;
-  font-size: 14px;
-}
-
-.frise__refus-cadenas {
-  flex: 0 0 auto;
-  width: 17px;
-  height: 17px;
-  fill: currentColor;
-  stroke: currentColor;
-  stroke-width: 1.8;
-}
-
-.frise__refus-suite { color: #b9cdea; }
 
 @media (prefers-reduced-motion: reduce) {
   .portail { transition: none; }
@@ -30991,7 +31784,6 @@ html.defilement-bloque body {
   .portail__gemme { width: 22px; height: 31px; }
   .portail__ecriteau { font-size: 13.5px; padding: 2px 9px; }
   .portail__cadenas { top: 13px; width: 22px; height: 22px; }
-  .frise__refus { font-size: 13px; }
 }
 
 /* LA ZONE DES JEUX — Camara, le 23/09/2026 : ouvrir un jeu doit y amener.
@@ -31394,9 +32186,20 @@ html.defilement-bloque body {
    ET C'EST ELLE QUI PORTE TOUT LE SENS DE CETTE RANGÉE. Ces quatre pastilles
    sont la seule chose qui dise « ces jeux ne s'arrêtent pas au CP » ; teintées
    de sarcelle à 16 %, elles se lisaient à peine sur le bleu de la page. */
+/* LA MATIÈRE ET SA PASTILLE, SUR UNE LIGNE QUI SAIT SE REPLIER. Posées en
+   texte courant, quand la carte se resserrait la pastille tombait seule sur
+   une troisième ligne, collée sans marge sous « Mathématiques ». En rangée
+   souple, elle passe à la ligne proprement et garde son écart. */
+.jeux-apercu__matiere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
 .jeux-apercu__classe {
   display: inline-block;
-  margin-left: 8px;
   padding: 2px 10px;
   border: 1px solid #ffd894;
   border-radius: 999px;
@@ -31420,9 +32223,24 @@ html.defilement-bloque body {
   }
 }
 
-/* Sous 900 px, le texte passe au-dessus et les cartes s'alignent : l'escalier
-   n'a plus de sens quand la rangée fait toute la largeur. */
-@media (max-width: 900px) {
+/* LE TEXTE PASSE AU-DESSUS SOUS 1180 px — Camara, le 23/09/2026 : « sur
+   tablette la présentation des jeux n'est pas propre sur le titre pour le
+   troisième ».
+
+   LA BASCULE ÉTAIT À 900 px, ET C'ÉTAIT TROP BAS. Côte à côte, les cartes
+   n'ont qu'un peu plus de la moitié de la largeur à se partager, à trois :
+   sur une tablette de 960 px, chacune tombait à 141 px. « Le partage des
+   bonbons » passait alors sur deux lignes, et la pastille de classe se
+   retrouvait seule sur une troisième — trois cartes, trois hauteurs de
+   légende différentes.
+
+   1180 px EST LA LARGEUR MAXIMALE DE LA PAGE (`.landing`), ce qui rend le
+   seuil stable : au-dessus, la carte mesure toujours 181 px, la largeur à
+   laquelle les titres tiennent sur une ligne. En dessous, la rangée prend
+   toute la largeur et les cartes sont plus grandes qu'elles ne l'étaient à
+   côté du texte. L'escalier disparaît : il n'a plus de sens sur une rangée
+   pleine largeur. */
+@media (max-width: 1180px) {
   .jeux-apercu {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -31432,7 +32250,7 @@ html.defilement-bloque body {
   .jeux-apercu__carte:nth-child(4) { margin-top: 0; }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 700px) {
   /* DEUX COLONNES, ET LA TROISIÈME CARTE PASSE DESSOUS — Camara, le
      23/09/2026 : « sur mobile la cover du CM2 n'apparaît pas ».
 
@@ -31447,7 +32265,11 @@ html.defilement-bloque body {
      DEUX COLONNES, ET LA QUATRIÈME CARTE REVIENT. Celle que le grand écran
      masque — le CM1 — reprend sa place ici : quatre cartes remplissent deux
      rangées pleines, là où trois en laissaient une bancale. La série se lit
-     alors dans l'ordre des classes, CP, CE2, CM1, CM2. */
+     alors dans l'ordre des classes, CP, CE2, CM1, CM2.
+
+     À 700 px ET NON 560 : entre les deux, trois cartes de front retombaient
+     sous 160 px et les titres se recassaient en deux. Deux cartes y tiennent
+     largement. */
   .jeux-apercu__grille { grid-template-columns: repeat(2, 1fr); }
   .jeux-apercu__carte:nth-child(3) { display: flex; }
 }
@@ -31468,4 +32290,1321 @@ html.defilement-bloque body {
    (.page.page--large), partagées avec « Mes jeux » et le reste. */
 @media screen {
   :root[data-da='blue-sky'] .tarifs { --surface: var(--bs-fond-carte); }
+}
+
+/* ================================================================
+   « TU N'AS PAS ENCORE LE NIVEAU » — la fenêtre du cadenas
+   ================================================================
+   Camara, le 23/09/2026 : « quand on clique sur un niveau auquel on n'a pas
+   accès, je voudrais que le message apparaisse dans une popup avec l'icône
+   nolevel.png ». Le message vivait sur une ligne sous la frise ; un enfant
+   qui vient d'appuyer sur un portail regarde le portail, pas le bas de la
+   page.
+
+   ELLE PARLE À UN ENFANT, PAS À UN UTILISATEUR. Le dessin d'abord et grand,
+   la phrase ensuite, un seul bouton qui acquiesce. Pas de croix de fermeture
+   en coin : il n'y a rien à annuler ici, et une croix invite à fuir la
+   fenêtre au lieu de lire ce qu'elle dit.
+
+   DES COULEURS FIXES, comme tout l'espace des jeux : cette fenêtre s'ouvre
+   au-dessus d'une carte de niveaux qui ne change pas avec le thème. */
+.verrou {
+  max-width: 420px;
+  padding: 26px 28px 24px;
+  text-align: center;
+  border: 1px solid rgba(150, 200, 255, 0.4);
+  background: linear-gradient(170deg, #1a3f74 0%, #133158 45%, #0d2545 100%);
+  color: #eaf4ff;
+}
+
+/* L'icône porte son propre cadenas dessiné : elle n'a pas besoin de cadre. */
+.verrou__icone {
+  display: block;
+  width: 148px;
+  height: auto;
+  margin: 0 auto 4px;
+  filter: drop-shadow(0 10px 20px rgba(0, 8, 30, 0.45));
+}
+
+.verrou__titre {
+  margin: 0 0 10px;
+  font-family: 'Lilita One', var(--display);
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: #ffd2a8;
+  text-shadow: 0 2px 4px rgba(0, 8, 30, 0.5);
+}
+
+.verrou__texte {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #c7d9f2;
+}
+
+/* La classe visée est ce qui reste en tête : c'est le rendez-vous. */
+.verrou__texte strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+.verrou__bouton { min-width: 160px; }
+
+@media (max-width: 520px) {
+  .verrou { padding: 22px 20px 20px; }
+  .verrou__icone { width: 118px; }
+  .verrou__titre { font-size: 20px; }
+  .verrou__texte { font-size: 14px; }
+}
+
+/* ================================================================
+   SUR TÉLÉPHONE, LE BOUTON NE CHEVAUCHE PLUS LA PISTE DES MANCHES
+   ================================================================
+   Camara, le 23/09/2026 : « sur mobile j'ai un souci sur le bouton revenir
+   aux jeux et la barre d'avancement ».
+
+   LES DEUX SE PARTAGEAIENT LA MÊME LIGNE, l'un posé en absolu à gauche,
+   l'autre calé à droite dans le flux. Ça tenait tant que le bouton était une
+   pastille discrète ; devenu une touche de manette en capitales le 23/09, il
+   mesure environ 230 px, la piste jusqu'à 190, et les deux ne tiennent plus
+   dans les 390 px d'un téléphone. Le bouton passait alors PAR-DESSUS les
+   manches, qui disparaissaient dessous.
+
+   PREMIER ESSAI, ÉCARTÉ : le remettre dans le flux. Le chevauchement partait,
+   mais le bouton occupait sa propre ligne en pleine largeur et devenait la
+   chose la plus voyante de l'écran — plus que le jeu. Camara, devant le
+   résultat : « tu trouves ça propre ? ». Non : un bouton pour SORTIR ne doit
+   jamais être ce qu'on voit en premier dans un jeu.
+
+   CE QUI EST FAIT : LES DEUX RÉTRÉCISSENT, et ils reprennent leur ligne
+   commune. Le bouton descend à 12 px, la piste à des pastilles de 8 px —
+   299 px à eux deux, sur les 358 disponibles d'un téléphone de 390. La
+   disposition redevient celle du grand écran, simplement à l'échelle : sortir
+   en haut à gauche, la progression en face.
+
+   600 px ET NON 390 : un téléphone en paysage fait 640 à 850 px et n'a jamais
+   eu le défaut ; en dessous de 600, la taille d'origine ne tient plus. */
+@media (max-width: 600px) {
+  .jeu .jeu__quitter {
+    padding: 6px 12px;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    gap: 5px;
+  }
+
+  /* LA PISTE RÉSERVE LA HAUTEUR DU BOUTON — Camara, le 23/09/2026 : « le
+     bouton revenir aux jeux déborde sur la question ».
+
+     LE BOUTON EST EN ABSOLU, la piste et la consigne sont dans le flux : rien
+     ne dit au texte de se placer sous un élément qui a quitté le flux. Tant
+     que le bouton était plus court que la piste, ça ne se voyait pas ; à
+     31 px contre 20, il retombait sur la bulle de la question.
+
+     `min-height` sur la piste rend la règle vraie pour les treize jeux, qui
+     posent leur bouton chacun à sa hauteur (12 ou 14 px du haut) : 36 px
+     couvrent le plus bas. Les pastilles se recentrent dedans. */
+  .jeu .jeu__manches {
+    gap: 6px;
+    padding: 5px 10px;
+    min-height: 36px;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .jeu .jeu__manche { width: 8px; height: 8px; }
+
+  /* QUATRE RÉPONSES SE RANGENT EN CARRÉ, PAS EN 3 + 1. Sur une rangée
+     souple, la quatrième carte tombait seule sous les trois autres — un
+     enfant y lit une réponse à part, alors que les quatre sont de même
+     nature. On ne vise QUE les listes de quatre : à trois, la rangée unique
+     reste la bonne réponse, et c'est un 2 + 1 qu'on créerait.
+
+     PAR LES ÉLÉMENTS ET NON PAR LA LISTE (`:has`) : la règle marche alors
+     partout, y compris sur les navigateurs qui ne savent pas encore compter
+     les enfants d'un conteneur. */
+  .scene__choix > li:first-child:nth-last-child(4),
+  .scene__choix > li:first-child:nth-last-child(4) ~ li {
+    flex: 0 0 calc(50% - 6px);
+  }
+
+  .scene__choix > li:first-child:nth-last-child(4) .scene__carte,
+  .scene__choix > li:first-child:nth-last-child(4) ~ li .scene__carte {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Les paniers du jeu des œufs suivent la même règle : ils ont leur propre
+     rangée (`jeu__paniers`) parce que ce jeu est antérieur à l'écran de choix
+     commun, mais un enfant y voit la même chose — quatre réponses. */
+  .jeu__paniers > .panier-choix:first-child:nth-last-child(4),
+  .jeu__paniers > .panier-choix:first-child:nth-last-child(4) ~ .panier-choix {
+    flex: 0 0 calc(50% - 5px);
+    min-width: 0;
+  }
+}
+
+/* ================================================================
+   LES CARTES DES DEUX FENÊTRES D'OUVERTURE, PLUS SOMBRES EN BLUE SKY
+   ================================================================
+   Camara, le 23/09/2026 : « tu peux foncer un peu le background des cards du
+   choix du temps », puis « pareil ici » pour le choix du casque.
+
+   LE MÊME DÉFAUT DANS LES DEUX. Ces cartes se composent à partir de
+   `--surface`, teintée de la couleur qui les distingue — celle de la durée
+   pour l'une, la sarcelle pour l'autre. Sur le bleu clair que `--surface`
+   portait, elles ressortaient PLUS CLAIRES que la fenêtre qui les contient,
+   alors qu'elles sont dedans : les cartes flottaient au-dessus de leur boîte
+   au lieu de s'y creuser.
+
+   ON REDÉFINIT LE JETON, PAS LA COULEUR. Chaque teinte garde exactement sa
+   proportion, et les états qui la remontent — survol, focus, carte choisie —
+   suivent sans qu'on y touche. Trois valeurs auraient été trois valeurs à
+   tenir cohérentes.
+
+   `--bs-fond-bloc` ET NON `--bs-fond-carte` : la fenêtre porte déjà le bleu
+   des cartes (voir `.modale__boite` plus haut). Les cartes qu'elle contient
+   descendent donc d'un cran de plus, sinon rien ne les distinguerait du fond
+   sur lequel elles sont posées. */
+@media screen {
+  :root[data-da='blue-sky'] .modale__boite--duree,
+  :root[data-da='blue-sky'] .modale__boite--casque {
+    --surface: var(--bs-fond-bloc);
+  }
+}
+
+/* ================================================================
+   LA SÉANCE SUR TÉLÉPHONE — Camara, le 23/09/2026
+   ================================================================
+   Trois réglages d'un même écran : le bandeau du tableau, la flèche qui dit
+   que la discussion défile, et le bouton « Signaler » qui tombait dessus.
+
+   TOUS SOUS 1040 px, la largeur où le tableau passe SOUS la discussion au
+   lieu d'être à côté. C'est cette bascule qui crée les trois situations : un
+   bandeau posé sur le fond de la page, un fil devenu court, et un bouton
+   flottant qui rencontre le tableau. Au-dessus, rien de tout ça n'existe. */
+@media (max-width: 1040px) {
+
+  /* --------------------------------------------- le bandeau du tableau
+     « Mets le header du tableau dans une autre couleur pour faire la
+     séparation avec le background, et aussi enlever la barre de séparation et
+     le "écrit par". »
+
+     EN BOIS, ET CE N'EST PAS UNE COULEUR PRISE AU HASARD : `--bois` est déjà
+     déclarée sur l'ardoise. Un bandeau de bois au-dessus d'une ardoise, c'est
+     son cadre — la séparation demandée, et l'objet rendu plus lisible du même
+     geste. En colonnes, le titre flotte au-dessus d'un tableau qu'on voit en
+     entier ; empilé, il fallait une arête.
+
+     LE TRAIT DE CRAIE PART AVEC. Il servait à poser le titre quand rien ne
+     l'entourait ; dans un bandeau, il redouble une séparation déjà faite.
+     « Écrit par Nora » part aussi : le professeur est nommé en haut de
+     l'écran, à deux centimètres de là. */
+  .ardoise__entete {
+    gap: 0;
+    padding: 9px 16px;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(180deg, #8a6647 0%, var(--bois) 100%);
+    color: var(--craie);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 3px 8px rgba(0, 0, 0, 0.28);
+  }
+
+  .ardoise__titre { font-size: 17px; }
+  .ardoise__titre::after { display: none; }
+  .ardoise__prof { display: none; }
+
+  /* ------------------------------------------- la flèche de défilement
+     « Une flèche à deux têtes animée à droite de la discussion pour dire à
+     l'enfant qu'il peut scroller en haut et en bas », « à droite en dehors de
+     la discussion ».
+
+     EN MARGE DE L'ÉCRAN, PAS DANS LE PANNEAU : dedans, elle passerait sur les
+     bulles, ou défilerait avec elles et sortirait du cadre au premier
+     message. Fixe, elle reste là où elle sert.
+
+     `pointer-events: none` : elle dit une possibilité, elle ne s'actionne pas.
+     Cliquable, un enfant taperait dessus en attendant qu'il se passe quelque
+     chose. Le geste, c'est le fil qui le reçoit — et c'est ce geste qui la
+     fait disparaître (voir `Chat.js`). */
+  /* ELLE DOIT SE TROUVER SANS ÊTRE CHERCHÉE — Camara, le 23/09/2026 :
+     « la flèche est où ? ». Premier essai : 12 px de sarcelle nue, posés dans
+     la marge. Elle y était, et personne ne la voyait — un repère qu'on ne
+     trouve pas ne sert à rien.
+
+     CE QUI MANQUAIT, C'ÉTAIT LE FOND. Un trait fin sur un décor bleu nuit se
+     confond avec lui, quelle que soit sa couleur. La pastille sombre lui
+     donne un contour net et la rend lisible sur n'importe quel arrière-plan ;
+     la flèche passe au blanc, qui tranche sur cette pastille mieux que la
+     sarcelle. */
+  .chat-defilement {
+    position: fixed;
+    right: 6px;
+    top: 50%;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 54px;
+    margin-top: -27px;
+    border: 1px solid rgba(126, 226, 161, 0.55);
+    border-radius: 999px;
+    background: rgba(6, 26, 58, 0.82);
+    box-shadow:
+      0 4px 14px rgba(0, 8, 30, 0.55),
+      0 0 14px rgba(126, 226, 161, 0.3);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    animation: defilement-invite 2.2s ease-in-out infinite;
+  }
+
+  .chat-defilement svg {
+    display: block;
+    width: 14px;
+    height: 38px;
+    fill: #fff;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+
+  /* Elle monte et descend : le mouvement DIT le geste attendu, là où une
+     pulsation ne dirait que « regarde-moi ». */
+  @keyframes defilement-invite {
+    0%, 100% { transform: translateY(-4px); opacity: 0.55; }
+    50% { transform: translateY(4px); opacity: 1; }
+  }
+
+  /* ----------------------------------------------- le bouton « Signaler »
+     « Sur mobile, quand on est en cours, tu peux le cacher car il va sur le
+     tableau. »
+
+     Il est posé en fixe en bas à droite, sur toute l'application. Tant que le
+     tableau était à côté de la discussion, il flottait sur du vide ; empilé,
+     le tableau arrive précisément sous lui et il masque ce que le professeur
+     écrit — au moment où l'enfant en a le plus besoin.
+
+     `:has` PLUTÔT QU'UNE CONDITION DANS LE CODE : le bouton est monté une
+     seule fois pour toute l'application, hors des routes (voir
+     `views/components/index.js`), et n'a aucun moyen de savoir quelle page
+     est affichée. La présence de `.chat-espace` dans le document, elle, ne
+     ment pas. Un navigateur qui ne connaît pas `:has` ignore la règle et
+     garde le bouton : le comportement d'avant, jamais une page cassée. */
+  body:has(.chat-espace) .bouton-signalement { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* La flèche cesse de bouger mais reste : c'est elle qui porte
+     l'information, pas son mouvement. */
+  .chat-defilement { animation: none; opacity: 0.9; }
+}
+
+/* ================================================================
+   LE TABLEAU SE REPLIE SUR TÉLÉPHONE — Camara, le 23/09/2026
+   ================================================================
+   « On perd pas mal de place ; un bouton en bas "Afficher le tableau", comme
+   ça l'utilisateur l'affichera de lui-même quand il en a besoin. »
+
+   Il occupait 42 % de la hauteur en permanence, et la plupart du temps pour
+   montrer la phrase qui dit qu'il n'y a rien à montrer. Replié, il ne reste
+   qu'un bandeau ; la discussion récupère l'écran. Ce qui le rend acceptable,
+   c'est qu'il S'OUVRE TOUT SEUL dès que le professeur y écrit — voir
+   `Ardoise` dans Chat.js, la règle est là-bas parce qu'elle dépend du
+   contenu, pas de la largeur.
+
+   RIEN DE TOUT ÇA AU-DESSUS DE 1040 px : en colonnes, le tableau est à côté
+   de la discussion et ne prend la place de personne. Le bouton n'existe pas,
+   le tableau est toujours ouvert. */
+
+/* Le bouton n'appartient qu'au téléphone. */
+.ardoise__bascule { display: none; }
+
+/* Sur la surface et non dans l'en-tête : il survit à la disparition du
+   bandeau, et il appartient à la figure qu'il agrandit.
+
+   IL LUI FALLAIT UN FOND — Camara, le 23/09/2026 : « le bouton agrandir le
+   schéma est où ? ». Il était là, et invisible. Son dessin avait été calculé
+   pour l'EN-TÊTE, un bandeau sombre : contour à 40 % d'opacité, texte à la
+   craie, fond transparent — 16:1 de contraste, mesuré à l'époque. Déplacé sur
+   la surface, il se retrouve sur ce que le professeur y met, et une planche
+   de multiplications est une image BLANCHE. De la craie sur du blanc ne se
+   voit pas.
+
+   Une pastille opaque règle le cas une fois pour toutes : elle ne dépend plus
+   de ce qu'il y a derrière. C'est la même leçon que pour la flèche de
+   défilement, le même jour — un élément posé par-dessus un contenu inconnu
+   doit porter son propre fond. */
+/* L'ICÔNE D'AGRANDISSEMENT, DANS LE COIN DU TABLEAU — Camara, le 23/09/2026 :
+   « mets l'icône agrandir.png dans le coin droit du tableau ; quand il n'y a
+   pas de schéma elle n'est pas visible, et quand l'enfant cache le tableau
+   non plus ».
+
+   QUATRE POSITIONS ESSAYÉES DANS LA JOURNÉE, et c'est la bonne :
+     1. dans l'en-tête — elle disparaissait avec lui sur téléphone ;
+     2. dans un coin de la figure, en bouton-pilule — il mangeait la planche ;
+     3. sur sa propre ligne au-dessus — un bandeau, et de la place volée à la
+        discussion ;
+     4. une icône seule, posée dans le coin : elle ne coûte ni ligne ni
+        libellé, et un dessin de 38 px ne recouvre rien d'utile.
+
+   LE CONTENEUR NE MESURE RIEN (`height: 0`) : c'est ce qui évite le bandeau.
+   L'icône se pose sur le cadre et la marge de la surface — le dessin ne
+   commence qu'à 30 px du bord.
+
+   PLUS DE PASTILLE NI DE HALO. Ils servaient à rendre visible un libellé
+   discret sur un fond variable ; l'illustration porte ses propres contours
+   sombres et se détache aussi bien sur la craie que sur une planche blanche.
+   Reste une respiration légère, pour qu'on la remarque la première fois. */
+.ardoise__outils {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: flex-end;
+  height: 0;
+  margin: 0;
+  padding-right: 12px;
+}
+
+.ardoise__agrandir,
+.ardoise__agrandir:hover,
+.ardoise__agrandir:focus-visible,
+:root[data-theme='light'] .ardoise__agrandir,
+:root[data-theme='light'] .ardoise__agrandir:hover {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  line-height: 0;
+}
+
+.ardoise__agrandir {
+  transform: translateY(-6px);
+  animation: agrandir-respire 2.8s ease-in-out infinite;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
+}
+
+.ardoise__agrandir img {
+  display: block;
+  width: 38px;
+  height: auto;
+}
+
+@keyframes agrandir-respire {
+  0%, 100% { transform: translateY(-6px) scale(1); }
+  50% { transform: translateY(-6px) scale(1.09); }
+}
+
+/* Enfoncée : elle rentre, sans quitter son coin. */
+.ardoise__agrandir:active {
+  animation: none;
+  transform: translateY(-6px) scale(0.93);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ardoise__agrandir { animation: none; }
+}
+
+@media (max-width: 1040px) {
+  /* L'EN-TÊTE DISPARAÎT — Camara : « en vrai sur mobile il sert à rien, on
+     sait déjà que c'est le tableau ». On vient d'appuyer sur « Afficher le
+     tableau » : un bandeau qui répète « Le tableau » ne fait que prendre de
+     la place sous le nez de l'enfant. */
+  .ardoise__entete { display: none; }
+
+  .ardoise__bascule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px 16px;
+    border: 1px solid rgba(150, 200, 255, 0.35);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #8a6647 0%, var(--bois) 100%);
+    color: var(--craie);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Un chevron qui se retourne : il dit le sens du geste — vers le haut pour
+     faire monter le tableau, vers le bas pour le ranger. */
+  .ardoise__bascule-fleche {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 7px solid currentColor;
+    transition: transform 0.2s ease;
+  }
+
+  .ardoise__bascule[aria-expanded='true'] .ardoise__bascule-fleche {
+    transform: rotate(180deg);
+  }
+
+  /* La pastille : refermé alors que le professeur a écrit, le bandeau serait
+     muet sans elle. */
+  .ardoise__bascule-pastille {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--corail);
+    box-shadow: 0 0 0 3px rgba(255, 122, 92, 0.28);
+    animation: bascule-appel 1.8s ease-in-out infinite;
+  }
+
+  @keyframes bascule-appel {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(255, 122, 92, 0.22); }
+    50% { box-shadow: 0 0 0 6px rgba(255, 122, 92, 0.1); }
+  }
+
+  /* REPLIÉ : il ne reste que le bandeau. `max-height` et le rembourrage de la
+     version dépliée s'effacent, sinon le tableau laisserait un trou à sa
+     place. */
+  .ardoise--repliee {
+    max-height: none;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .ardoise--repliee .ardoise__surface { display: none; }
+
+  /* Rien à agrandir quand le tableau est rangé. */
+  .ardoise--repliee .ardoise__outils { display: none; }
+  .ardoise--repliee .ardoise__bascule { margin-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ardoise__bascule-fleche { transition: none; }
+  .ardoise__bascule-pastille { animation: none; }
+}
+
+/* LES TROIS PASTILLES SUR UNE SEULE LIGNE — Camara, le 23/09/2026 : « sur la
+   vue parent, tu peux pas mettre l'icône Mes jeux sur la même ligne que
+   calendrier et ma carte ? ».
+
+   LA RANGÉE AVAIT ÉTÉ RÉGLÉE POUR DEUX. Sa note du 15/09 le dit : « elles
+   tiennent côte à côte sur un écran de 390 ». C'était vrai à deux. « Mes
+   jeux » est arrivé le 20/09, et le compte ne tombe plus qu'à cinq pixels
+   près : 339 px de pastilles pour 334 disponibles à 390. La troisième passait
+   donc à la ligne, et repoussait le « Bonjour » — exactement ce que le repli
+   devait éviter.
+
+   ON RESSERRE PLUTÔT QUE DE RACCOURCIR LES MOTS. « Calendrier » au lieu de
+   « Mon calendrier » aurait gagné la place d'un coup, mais les trois libellés
+   se répondent — ma carte, mon calendrier, mes jeux — et c'est cette forme
+   qui dit à l'enfant que ce sont ses affaires à lui.
+
+   LES BADGES RÉTRÉCISSENT AVEC. Ils débordent de onze pixels à droite de leur
+   pastille ; serrées, la vignette de l'une se posait sur le mot de la
+   suivante. */
+@media (max-width: 520px) {
+  .liens-carte { flex-wrap: wrap; gap: 6px; }
+
+  .liens-carte .lien-carte--badge {
+    padding: 7px 14px 7px 11px;
+    font-size: 13px;
+  }
+
+  .liens-carte .lien-carte__badge {
+    width: 26px;
+    height: 26px;
+    top: -11px;
+    right: -7px;
+  }
+}
+
+/* Sous 360 px — les plus petits téléphones encore en service — la troisième
+   passe à la ligne malgré tout. Mieux vaut un repli net qu'un libellé rogné. */
+@media (max-width: 360px) {
+  .liens-carte .lien-carte--badge { padding: 6px 12px 6px 10px; font-size: 12.5px; }
+}
+
+/* LE BLOC D'ACCUEIL RESPIRE — Camara, le 23/09/2026 : « cette partie-là est
+   trop serrée, ça respire pas assez ».
+
+   SES ESPACEMENTS ONT ÉTÉ ÉCRITS POUR LE GRAND ÉCRAN, où le titre tient sur
+   une ligne et où la page est large. Sur un téléphone, tout se resserre d'un
+   coup : le « Bonjour » passe sur deux lignes, la question sous la pastille
+   de classe en prend deux autres, et ces quatre lignes se retrouvent séparées
+   par les dix pixels prévus pour deux.
+
+   TROIS RESPIRATIONS, PAS UNE. Entre les pastilles et le salut, entre le
+   salut et la question, et à l'intérieur de la question elle-même — c'est
+   l'interligne qui manquait le plus, une phrase qui se casse en deux se lit
+   serrée même quand le bloc ne l'est pas. */
+@media (max-width: 700px) {
+  .liens-carte { margin-bottom: 28px; }
+
+  .salutation { margin-bottom: 30px; }
+
+  .salutation h1 {
+    gap: 10px;
+    line-height: 1.2;
+  }
+
+  .salutation__ligne {
+    margin-top: 16px;
+    gap: 12px;
+    line-height: 1.55;
+  }
+}
+
+/* « MON COMPTE » EN BLUE SKY — Camara, le 23/09/2026 : « dans mon compte,
+   mets les backgrounds de Mon forfait et des cards enfant dans un bleu plus
+   foncé ».
+
+   LE MÊME DÉFAUT QUE L'ADMINISTRATION ET LES TARIFS, et pour la même raison :
+   le panneau du forfait se peint sur `--surface`, et la carte d'un enfant sur
+   cette même surface éclaircie de 7 % d'encre — ce qui la pose juste au-dessus
+   de son panneau. Les deux suivaient donc le bleu clair, sur une page devenue
+   sombre autour d'eux.
+
+   UN SEUL JETON, ET L'ÉCART SE CONSERVE. En redéfinissant `--surface` pour la
+   page, la carte reste exactement 7 % plus claire que le panneau : le rapport
+   voulu entre les deux ne dépend pas de la valeur, seulement de l'écart. Les
+   peindre à la main aurait demandé de recalculer cet écart à chaque retouche.
+
+   SUR LA PAGE ET NON SUR `.quota` : le même panneau de forfait s'affiche
+   ailleurs (liste des enfants, formulaire d'ajout), où il n'y a aucune raison
+   de le repeindre. */
+@media screen {
+  :root[data-da='blue-sky'] .page--compte { --surface: var(--bs-fond-carte); }
+}
+
+/* ====================================================================== */
+/* LE BANDEAU DE CONSENTEMENT — Camara, le 23/09/2026 : « va falloir mettre
+   la petite fenêtre pour les cookies ».
+
+   UNE CARTE EN BAS À DROITE, PAS UNE BARRE PLEINE LARGEUR. Une barre qui
+   traverse l'écran coupe la page en deux et retient l'œil de force ; une
+   carte posée dans un coin se lit, puis se répond.
+
+   À DROITE, ET C'EST UNE CORRECTION. Elle était à gauche pour laisser le coin
+   droit au bouton « Signaler » ; la capture de l'accueil en 1280 × 900 a
+   montré qu'elle recouvrait « Commencer gratuitement » — le bouton qui fait
+   vivre le site. À droite elle ne mange que le bas de la démo de
+   conversation, et le « Signaler » s'efface le temps qu'on réponde (voir plus
+   bas) : il ne s'affiche que pour quelqu'un de déjà connecté, à qui le
+   bandeau n'a qu'une question brève à poser.
+
+   ELLE NE BLOQUE RIEN. Pas de voile, pas de `position: fixed` sur le corps :
+   le visiteur peut lire, faire défiler, cliquer ailleurs. Le bandeau attend.
+
+   SOUS LES FENÊTRES (z-index 50), AU-DESSUS DU RESTE. Une modale ouverte doit
+   le recouvrir, sinon il flotterait par-dessus le voile. */
+.cookies {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 45;
+  width: min(520px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+  color: var(--encre);
+  box-shadow: var(--ombre-l);
+
+  /* Elle arrive d'en bas, une fois. Sans ce mouvement, elle « apparaît » —
+     et ce qui apparaît sans prévenir au coin de l'œil se lit comme une
+     publicité. */
+  animation: cookies-entree 0.35s ease-out both;
+}
+
+@keyframes cookies-entree {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Le mouvement est un agrément, pas une information : qui demande moins
+   d'animation le voit posé, sans rien perdre. */
+@media (prefers-reduced-motion: reduce) {
+  .cookies { animation: none; }
+}
+
+.cookies__texte { display: flex; flex-direction: column; gap: 7px; }
+
+.cookies__titre {
+  font-family: var(--display);
+  font-size: 16.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.cookies__texte p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--encre-douce);
+}
+
+.cookies__lien {
+  color: var(--corail-texte, var(--corail));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+/* LES DEUX BOUTONS ONT LA MÊME TAILLE, ET C'EST LE POINT.
+   La CNIL demande que refuser soit aussi simple qu'accepter : un « Accepter »
+   large et coloré face à un « Refuser » minuscule n'est pas un choix, c'est
+   un entonnoir. `.btn-ghost` est nativement bien plus petit que `.btn`
+   (7px/13px contre 13px/24px) — ces deux règles les ramènent au même
+   gabarit, et `flex: 1 1 0` leur donne la même largeur. */
+.cookies__actions { display: flex; gap: 10px; }
+
+.cookies__bouton {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 11px 18px;
+  border-radius: 11px;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Le libellé du refus en encre pleine, et son trait au même niveau. Par
+   défaut un `.btn-ghost` parle en gris doux — à côté d'un bouton corail
+   plein, ça se lit comme « la vraie réponse est à droite ». */
+.cookies__bouton.btn-ghost {
+  border-color: var(--encre-douce);
+  color: var(--encre);
+}
+
+/* Sur un téléphone, la carte prend toute la largeur disponible : à 520px de
+   large elle déborderait, et rognée elle perdrait un bouton. */
+@media (max-width: 600px) {
+  .cookies {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    gap: 14px;
+    padding: 16px 18px;
+  }
+
+  .cookies__titre { font-size: 15.5px; }
+  .cookies__texte p { font-size: 13.5px; }
+  .cookies__bouton { padding: 12px 14px; font-size: 14px; }
+}
+
+/* LE BOUTON « SIGNALER » S'EFFACE QUAND LE BANDEAU EST LÀ — à toutes les
+   largeurs depuis que la carte a rejoint le coin droit, qui est le sien.
+
+   EFFACÉ, ET NON REMONTÉ. Une première version le poussait à `bottom: 188px`
+   sur téléphone ; la capture l'a montré caché DERRIÈRE la carte, parce que la
+   hauteur du bandeau dépend de la façon dont sa phrase se coupe — une valeur
+   en dur ne peut pas la suivre. Le bandeau est de passage, et le bouton n'est
+   visible que pour quelqu'un de déjà connecté : il revient dès que la
+   question est tranchée.
+
+   `:has()` plutôt qu'un état passé en React : le bandeau décide seul de son
+   affichage (identifiant absent, choix déjà fait, espace connecté), et
+   recopier cette décision dans un deuxième endroit, c'est se garantir qu'un
+   jour les deux ne diront plus la même chose. Sur un navigateur qui ignore
+   `:has()`, le bouton reste où il est, derrière la carte : rien ne casse, la
+   question reste lisible et cliquable. */
+body:has(.cookies) .bouton-signalement { display: none; }
+
+/* En Blue Sky, la carte suit le bleu foncé des autres cartes : sur ce fond,
+   `--surface` (#1d468f) ressort comme une plaque claire. */
+@media screen {
+  :root[data-da='blue-sky'] .cookies {
+    background: var(--bs-fond-carte);
+    background-image: var(--bs-degrade-carte);
+  }
+}
+
+/* ====================================================================== */
+/* LA PAGE D'UNE ADRESSE QUI N'EXISTE PAS.
+
+   Centrée et courte : il n'y a rien à lire ici, seulement une sortie à
+   prendre. Les deux boutons sont côte à côte parce qu'ils répondent à deux
+   situations différentes — je me suis trompé d'adresse (accueil), ou le lien
+   qu'on m'a donné est cassé (nous le dire). */
+.non-trouve {
+  padding-top: 72px;
+  padding-bottom: 96px;
+  text-align: center;
+}
+
+.non-trouve h1 { margin-bottom: 14px; }
+
+.non-trouve__texte {
+  margin: 0 auto;
+  max-width: 38ch;
+  color: var(--encre-douce);
+  line-height: 1.6;
+}
+
+.non-trouve__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+/* Le « Nous signaler le lien » est un `.btn-ghost`, donc beaucoup plus petit
+   que le bouton plein d'à côté. Ici ils sont sur la même ligne et se
+   comparent : on les aligne. */
+.non-trouve__actions .btn-ghost { padding: 13px 20px; font-size: 15px; }
+
+@media (max-width: 560px) {
+  .non-trouve { padding-top: 48px; padding-bottom: 64px; }
+  .non-trouve__actions { flex-direction: column; align-items: stretch; }
+}
+
+/* LA FLÈCHE DE DÉFILEMENT N'EXISTE QUE SOUS 1040 px — Camara, le 23/09/2026 :
+   « quand je lance un cours j'ai ce triangle qui apparaît en mode bureau ».
+
+   LE DÉFAUT. Tout son habillage vit dans `@media (max-width: 1040px)` : la
+   taille, la couleur, la pastille, le positionnement. Au-dessus de cette
+   largeur, AUCUNE règle ne s'appliquait — et un `<svg>` sans dimensions se
+   dessine à sa taille intrinsèque, en noir. D'où le grand triangle sur le fond
+   de la page, qui ne partait qu'au premier défilement (c'est le geste qui
+   retire la flèche, voir `Chat.js`).
+
+   C'EST LE PIÈGE DU STYLE ENTIÈREMENT CONDITIONNEL : un élément rendu sans
+   condition, habillé sous condition. Hors du média, il ne devient pas discret,
+   il devient nu — et le nu est plus voyant que l'habillé.
+
+   POURQUOI UNE SECONDE RÈGLE PLUTÔT QU'UN `display: none` DE BASE. Une règle
+   de base devrait être écrite AVANT le média pour se laisser écraser ; posée
+   ici, en fin de fichier, elle gagnerait partout et masquerait la flèche sur
+   téléphone aussi — exactement l'inverse du but. La borne miroir dit la même
+   chose sans dépendre de l'ordre des lignes.
+
+   1041 px ET NON 1040 : `min-width: 1041px` et `max-width: 1040px` ne se
+   recouvrent pas. À `min-width: 1040px`, les deux s'appliqueraient à 1040 px
+   pile, et la dernière écrite l'emporterait — un pixel où la flèche
+   disparaîtrait du téléphone sans raison lisible. */
+@media (min-width: 1041px) {
+  .chat-defilement { display: none; }
+}
+
+/* ======================================================================
+   « UN SEUL COMPAGNON, DU CP À LA TERMINALE » — Camara, le 23/09/2026.
+
+   PAS DE CARTE, PAS DE CADRE, PAS DE FOND. L'image est détourée : posée
+   directement sur le quadrillage bleu de la page, les personnages et la frise
+   ont l'air d'en faire partie. Lui donner un panneau la transformerait en
+   encart publicitaire au milieu de la page — exactement ce qu'on veut éviter
+   d'une image qui, elle, porte un message de fond.
+
+   DE L'AIR AUTOUR, ET BEAUCOUP. C'est ce qui remplace le cadre : une image
+   seule au milieu du vide se lit comme une respiration entre deux sections,
+   pas comme une annonce collée entre elles. */
+/* L'ÉCART DU HAUT EST CELUI DE TOUTES LES SECTIONS (`--ecart-section`), et
+   rien en bas : c'est la règle posée le 14/09/2026 après avoir mesuré des
+   espacements qui allaient de 39 à 192 px selon qu'ils s'additionnaient. */
+.accompagnement {
+  margin: 0 auto;
+  padding-top: var(--ecart-section);
+  max-width: 1250px;
+  text-align: center;
+}
+
+/* L'EN-TÊTE REPREND LES TAILLES DE `.section__entete` sans reprendre sa
+   classe : celle-ci est calée à gauche et bornée à 620 px, ce qui convient à
+   un texte qu'on lit et pas à un titre posé au-dessus d'une image centrée.
+   Seules la largeur et l'alignement changent — pas la typographie, sinon
+   cette section parlerait une autre langue que le reste de la page. */
+.accompagnement__entete {
+  max-width: 880px;
+  margin: 0 auto 36px;
+}
+
+/* PLUS GRAND QUE LES AUTRES TITRES DE LA PAGE — Camara, le 23/09/2026 :
+   « tu peux agrandir la taille du titre aussi ». Les sections courantes
+   plafonnent à 40 px ; celle-ci monte à 52. C'est assumé : elle n'explique
+   pas un détail du produit, elle énonce sa promesse la plus large — une
+   scolarité entière — et c'est la seule dont le titre porte l'image plutôt
+   que de l'annoncer. La borne basse monte aussi, pour que le rapport tienne
+   sur un téléphone. */
+.accompagnement__entete h2 {
+  margin-top: 14px;
+  font-size: clamp(32px, 4.6vw, 52px);
+  line-height: 1.12;
+}
+
+.accompagnement__entete p {
+  margin: 14px auto 0;
+  max-width: 560px;
+  color: var(--encre-douce);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* Le pronom suit le dessin : garçon sur grand écran, fille sur téléphone.
+   La bascule est faite plus bas, à la même borne que `<picture>`. */
+.accompagnement__pronom--mobile { display: none; }
+
+/* LE VISUEL ET SES LIBELLÉS NE FONT QU'UN BLOC. C'est lui qui porte la
+   largeur — l'image la remplit, et les mots se posent dessus en pourcentage
+   de CETTE largeur. Mettre la largeur sur l'image aurait laissé les libellés
+   se caler sur autre chose, et le moindre écart aurait désaligné les quatre
+   d'un coup. */
+.accompagnement__visuel {
+  position: relative;
+  max-width: 1250px;
+  margin: 0 auto;
+}
+
+.accompagnement__frise {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* LES QUATRE PROMESSES, SOUS LES ICÔNES DE L'IMAGE.
+
+   CHACUNE EST POSÉE SUR LE CENTRE MESURÉ DE SON ICÔNE (`--x`, écrit dans le
+   composant) et ramenée à mi-largeur par `translateX(-50%)` : c'est ce qui la
+   centre SUR le dessin, et non à côté.
+
+   LA LISTE EST HAUTE DE DEUX LIGNES, fixée. Sans hauteur, les libellés d'une
+   seule ligne et ceux de deux ne partiraient pas du même bord haut, et la
+   rangée onduleraient. Deux lignes, parce que « Exercices personnalisés » en
+   demande deux à toutes les largeurs utiles.
+
+   LE TEXTE EST CENTRÉ ET ÉTROIT, pour qu'il passe à la ligne au même endroit
+   qu'on le lit : un libellé large s'étalerait sous les icônes voisines. */
+.accompagnement__promesses {
+  position: relative;
+  height: 2.9em;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: clamp(11px, 1.15vw, 15px);
+  line-height: 1.35;
+}
+
+.accompagnement__promesses li {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  transform: translateX(-50%);
+  width: 15%;
+  min-width: 82px;
+  color: var(--encre-douce);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------- sur téléphone
+
+   PLEINE LARGEUR, jusqu'aux bords de l'écran : la page garde une gouttière de
+   chaque côté, et la rendre à l'image, c'est une dizaine de pour cent de plus
+   sur des visages qu'on vient précisément montrer — et sur des noms de classes
+   qui, à cette taille, en ont besoin.
+
+   La marge négative la compense — d'où `--gouttiere`, déclarée sur
+   `.landing` : écrite en dur, elle mentirait au premier changement de marge,
+   et l'image déborderait de l'écran ou laisserait une bande. */
+@media (max-width: 760px) {
+  /* SUR LE BLOC, ET NON SUR L'IMAGE SEULE : les libellés se placent en
+     pourcentage de ce bloc, et le laisser en arrière pendant que l'image
+     s'élargit les aurait tous décalés vers l'intérieur. */
+  .accompagnement__visuel {
+    width: calc(100% + 2 * var(--gouttiere));
+    max-width: none;
+    margin-inline: calc(-1 * var(--gouttiere));
+  }
+
+  /* L'AUTRE DESSIN N'A PAS LE MÊME FORMAT — 1672 × 941 contre 1556 × 816.
+     Les attributs `width` et `height` de la balise décrivent le premier ;
+     sans cette ligne, le navigateur réserverait la mauvaise hauteur et la
+     page sauterait au moment où l'image de téléphone arrive. `<picture>` ne
+     sait pas déclarer les dimensions de chaque source : c'est au CSS de le
+     dire, à la même borne. */
+  .accompagnement__frise { aspect-ratio: 1672 / 941; }
+
+  /* Les positions mesurées sur l'autre dessin (voir `Accueil.js`). */
+  .accompagnement__promesses li { left: var(--xm); }
+
+  /* Et son pronom. Les deux sont dans le document ; un seul se montre. */
+  .accompagnement__pronom--bureau { display: none; }
+  .accompagnement__pronom--mobile { display: inline; }
+}
+
+/* ---------------------------------------- l'effet sur « Un seul compagnon »
+   Camara, le 23/09/2026 : « tu peux mettre un petit effet sur le titre ».
+
+   UN REFLET QUI TRAVERSE LES MOTS CORAIL, ET RIEN D'AUTRE. La partie blanche
+   reste nette : un effet sur toute la phrase se lirait comme un défaut de
+   rendu, alors qu'une lumière qui passe sur trois mots se lit comme une
+   intention.
+
+   IL PASSE, PUIS IL ATTEND. Le cycle dure six secondes mais le reflet n'en
+   occupe qu'une et demie : le reste du temps, le titre est du corail plein,
+   exactement comme avant. C'est ce qui distingue un éclat d'un clignotement —
+   une animation qui bouge en permanence finit par retenir l'œil pendant qu'on
+   lit le paragraphe d'à côté, et on la coupe au bout d'une semaine.
+
+   PREMIÈRE VERSION ABANDONNÉE, et la leçon vaut d'être écrite : le reflet
+   était attaché au défilement (`animation-timeline: view()`), pour être vu à
+   coup sûr par quelqu'un qui arrive sur la section. Élégant sur le papier,
+   invisible en pratique — une fois la section dépassée, l'animation reste
+   figée à sa fin, et Firefox ne l'implémente pas du tout. Une animation qu'on
+   ne voit pas n'est pas une animation.
+
+   POURQUOI `@supports` AUTOUR DU DÉGRADÉ. `color: transparent` est ce qui
+   laisse voir le fond à travers les lettres ; là où `background-clip: text`
+   n'existe pas, il ne resterait qu'un vide. La garde évite ce titre invisible,
+   qui est le pire des cas et le plus difficile à remarquer. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .accompagnement__entete h2 .titre-accent {
+    /* EN BLOC EN LIGNE, ET C'EST CE QUI FAIT MARCHER LE REFLET.
+       Un élément en ligne coupé sur deux lignes donne DEUX fragments, et
+       chacun reçoit sa propre tranche du dégradé : la bande claire se
+       dédouble, et à cette taille elle ne se voyait tout simplement pas. En
+       bloc en ligne, la boîte de fond est unique et la lumière la traverse
+       d'un bord à l'autre. Effet de bord bienvenu : « du CP à la Terminale »
+       passe à la ligne d'un seul tenant au lieu de se couper en plein milieu. */
+    display: inline-block;
+
+    /* LE REFLET EST BLANC, ET ÉTROIT. Deux réglages trouvés à la capture,
+       chacun après un essai raté :
+
+         — un corail à peine éclairci (#ffe0d3) ne se voyait pas. Sur des
+           déliés de serif italique posés sur du bleu nuit, l'écart entre deux
+           tons de corail se perd ; il faut du blanc pour qu'une lumière se
+           lise comme une lumière ;
+         — la bande allait d'abord de 40 % à 60 % du dégradé — le fond faisant
+           trois fois la largeur des mots, cela en couvrait 60 % d'un coup. À
+           mi-course, la phrase entière changeait de couleur au lieu de
+           laisser passer un reflet. */
+    background-image: linear-gradient(
+      100deg,
+      var(--corail) 0%,
+      var(--corail) 46%,
+      #ffffff 50%,
+      var(--corail) 54%,
+      var(--corail) 100%
+    );
+    background-size: 300% 100%;
+    background-position: 100% 0;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+
+    animation: accompagnement-reflet 6s ease-in-out infinite;
+  }
+}
+
+/* PAS DE LUEUR AUTOUR DES LETTRES. Essayée d'abord en `drop-shadow`, elle
+   délavait le corail : sur un serif italique, les déliés sont fins, et un
+   halo de seize pixels les noie au lieu de les éclairer. La capture l'a
+   montrée tout de suite — le titre avait perdu sa couleur. C'est le reflet
+   qui porte l'effet, la couleur reste pleine. */
+
+/* LE REFLET PASSE EN UNE SECONDE ET DEMIE, PUIS LE TITRE SE REPOSE.
+   Le fond fait trois fois la largeur des mots : à 100 % comme à 0 %, on ne
+   voit que du corail plein, et c'est entre les deux que la bande claire
+   traverse. Le palier de 25 % à 100 % est ce repos — sans lui, la lumière
+   repartirait aussitôt et le titre scintillerait sans arrêt. */
+@keyframes accompagnement-reflet {
+  0%   { background-position: 100% 0; }
+  25%  { background-position: 0 0; }
+  100% { background-position: 0 0; }
+}
+
+/* Le dégradé reste, le mouvement part : c'est la lumière qu'on a voulue, pas
+   son déplacement. */
+@media (prefers-reduced-motion: reduce) {
+  .accompagnement__entete h2 .titre-accent { animation: none; }
+}
+
+/* ---------------------------------------- la bande de preuves, sur téléphone
+   Camara, le 23/09/2026 : « sur mobile tu peux cacher cette partie, elle reste
+   visible sur PC par contre ».
+
+   LA BORNE EST 860 px, ET CE N'EST PAS UN CHIFFRE PRIS AU HASARD : c'est
+   exactement la largeur où cette bande cesse d'être une rangée. Au-dessus,
+   quatre colonnes qui se lisent d'un coup d'œil ; en dessous, elle se replie
+   en deux sur deux, puis en une seule colonne sous 520 px — quatre pavés
+   empilés qui poussent tout le reste de la page vers le bas, juste après le
+   héros, au moment où le visiteur cherche encore à savoir ce qu'on lui vend.
+   Cacher la bande là où elle se replie, c'est la retirer là où elle nuit et la
+   garder là où elle sert.
+
+   `display: none` ET NON `visibility: hidden` : la seconde garde la place,
+   c'est-à-dire tout ce qu'on cherche à récupérer.
+
+   CE QUE ÇA COÛTE, ET IL FAUT LE SAVOIR : le texte reste dans le document —
+   il n'est pas supprimé, seulement masqué — mais Google explore d'abord en
+   version téléphone, et ce qui y est caché pèse moins. Ces quatre promesses
+   sont dites ailleurs dans la page, donc rien ne se perd ; c'est simplement à
+   garder en tête si un jour cette bande devient le seul endroit où figure un
+   argument.
+
+   LES DEUX RÈGLES DE GRILLE PLUS HAUT (deux colonnes à 860 px, une seule à
+   520) DORMENT tant que cette ligne existe. Elles ne sont pas supprimées :
+   elles sont ce qu'il faudra pour rouvrir la bande, et les réinventer coûterait
+   plus cher que de les laisser. */
+@media (max-width: 860px) {
+  .preuve { display: none; }
+}
+
+/* ------------------------------- les trois onglets du suivi, sur téléphone
+   Camara, le 23/09/2026 : « tu peux mettre les 3 boutons sur la même ligne ?
+   ou les empiler l'un au-dessus de l'autre et les centrer. Il faut que ce soit
+   esthétique. »
+
+   LE DÉFAUT. En rangée libre (`flex-wrap`), les trois pastilles prennent leur
+   largeur de texte : 123, 130 et 109 px, plus les espaces — 378 px pour 310
+   disponibles sur un téléphone de 390. La troisième passait donc seule à la
+   ligne, décalée à gauche, et se lisait comme un bouton oublié plutôt que
+   comme le troisième d'une série.
+
+   LA MÊME LIGNE, ET TROIS PARTS ÉGALES. C'est la première des deux options
+   proposées, choisie parce qu'elle garde le geste : trois onglets côte à côte
+   se comparent d'un coup d'œil et se touchent sans quitter la rangée. Empilés,
+   ils auraient occupé cent cinquante pixels de hauteur juste sous le titre de
+   la carte, et ressemblé à un menu plutôt qu'à un sélecteur.
+
+   `1fr` ET NON LA LARGEUR DU TEXTE : trois parts égales ne peuvent pas
+   déborder, quelle que soit la longueur des libellés. Le jour où l'un d'eux
+   s'allonge, il passe sur deux lignes dans sa part — et les trois pastilles
+   grandissent ensemble, puisque la grille les étire à la même hauteur. Rien
+   ne sort de l'écran, jamais.
+
+   LE CORPS SUIT LA LARGEUR (`clamp`), ET IL EST RÉGLÉ À LA CAPTURE. Premier
+   essai à 3,2 vw : les trois tenaient bien sur la rangée, mais « Sa
+   progression » se coupait en deux à l'intérieur de sa pastille — la grille
+   étirant les trois à la même hauteur, la rangée gagnait une ligne pour un
+   seul mot. À 2,95 vw et quatre pixels de marge latérale, les trois libellés
+   tiennent chacun sur une ligne sur un téléphone de 390 px. La borne haute
+   rejoint les 13,5 px d'origine dès qu'il y a la place. */
+@media (max-width: 520px) {
+  .apercu__onglets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .apercu__onglet {
+    padding: 9px 4px;
+    font-size: clamp(10.5px, 2.95vw, 13.5px);
+    text-align: center;
+
+    /* Les mots se coupent aux espaces, jamais au milieu : « Sa progression »
+       devient « Sa / progression » et reste lisible. */
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+}
+
+/* ==========================================================================
+   LES HISTORIQUES DE LA FICHE, EN CARTES SUR TÉLÉPHONE — Camara, le
+   24/09/2026 : « une autre présentation sans que l'utilisateur ait à
+   scroller ? »
+
+   CE QUE ÇA REMPLACE. Trois tableaux de sept colonnes. La colonne « Remarque »
+   enveloppait sur huit lignes et étirait la rangée entière : une évaluation
+   occupait un écran complet, et les trois dernières colonnes sortaient à
+   droite. Le parent devait donc défiler dans les deux sens pour lire une seule
+   note.
+
+   LA CARTE VIT DANS LE MÊME PANNEAU (`.tableau`), qui garde son cadre, son
+   fond et son arrondi : ce n'est pas une autre section, c'est le même contenu
+   autrement. Les cartes sont séparées par un filet plutôt qu'encadrées une à
+   une — six cadres empilés dans un cadre font une prison, un filet fait une
+   liste.
+
+   Le balisage est choisi en JavaScript (`useSurMobile`), pas ici : ces règles
+   n'ont donc pas besoin de média — elles ne s'appliquent qu'à ce que le
+   composant a décidé de rendre.
+   ========================================================================== */
+.cartes-histo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.carte-histo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+}
+
+.carte-histo + .carte-histo { border-top: 1px solid var(--trait); }
+
+/* LA NOTE ET LA MATIÈRE SUR LA MÊME LIGNE : c'est le couple qu'on cherche des
+   yeux en parcourant. `align-items: center` et non `baseline` — la pastille de
+   note est une boîte, pas du texte, et l'aligner sur sa ligne de base la fait
+   flotter au-dessus du nom de la matière. */
+.carte-histo__tete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carte-histo__qui {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+/* La matière porte sa couleur, comme dans le tableau : c'est ce qui permet de
+   repérer « les maths » sans lire, en parcourant une liste. */
+.carte-histo__matiere {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* Le professeur est un complément, pas une donnée qu'on compare : il passe en
+   encre douce et se sépare par un point médian plutôt que par un trait. */
+.carte-histo__prof {
+  color: var(--encre-douce);
+  font-size: 13.5px;
+}
+
+.carte-histo__prof::before { content: '· '; }
+
+/* Le sujet travaillé : la phrase qui dit de quoi il s'agit, donc le texte le
+   plus utile de la carte après la note. Deux lignes au plus — au-delà, on
+   retombe dans le défaut qu'on vient de corriger. */
+.carte-histo__sujet {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--encre);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* LES DEUX MESURES D'UNE SÉANCE, NOMMÉES ET ALIGNÉES.
+
+   Une grille à deux colonnes plutôt que deux lignes indépendantes : les
+   valeurs se retrouvent l'une sous l'autre, donc comparables d'un regard. En
+   lignes séparées, « 17/20 » et « Pas évalué dans le cours » commençaient à
+   des abscisses différentes et ne se lisaient plus comme deux mesures du même
+   objet.
+
+   « auto 1fr » : le libellé prend la largeur du plus long des deux
+   (« Compréhension »), la valeur reçoit le reste. Rien à mesurer à la main,
+   rien à reprendre si un libellé change. */
+.carte-histo__mesures {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--encre-douce);
+}
+
+.carte-histo__mesures dt { align-self: center; }
+
+/* La valeur porte une pastille de note, qui est une boîte : centrée sur sa
+   rangée, elle reste alignée avec son libellé quel que soit son contenu. */
+.carte-histo__mesures dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.carte-histo__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--encre-douce);
+}
+
+.carte-histo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.carte-histo__compte { white-space: nowrap; }
+
+/* LA DATE TIENT SUR UNE LIGNE ICI. Dans le tableau elle passe sur deux — jour
+   au-dessus, heure en dessous — parce qu'une colonne est étroite. Dans une
+   carte, la largeur ne manque pas, et deux lignes pour une date déséquilibrent
+   le pied. */
+.carte-histo .date-heure {
+  flex-direction: row;
+  gap: 6px;
+}
+
+/* LE REPLI DE LA REMARQUE, sans une ligne de JavaScript : `<details>` sait
+   faire, et il reste ouvrable au clavier comme au doigt. Le triangle par
+   défaut des navigateurs est remplacé par le nôtre, pour qu'il ait la même
+   forme partout — celui de Safari est un triangle plein, celui de Firefox un
+   chevron. */
+.carte-histo__repli {
+  font-size: 13px;
+  color: var(--encre-douce);
+}
+
+.carte-histo__repli > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  cursor: pointer;
+  list-style: none;
+  color: var(--sarcelle);
+  font-weight: 500;
+}
+
+.carte-histo__repli > summary::-webkit-details-marker { display: none; }
+
+.carte-histo__repli > summary::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s ease;
+}
+
+.carte-histo__repli[open] > summary::before { transform: rotate(90deg); }
+
+.carte-histo__repli > p {
+  margin: 6px 0 0;
+  line-height: 1.5;
+  color: var(--encre);
+}
+
+/* La ligne « à reprendre » garde son style d'origine mais passe en bloc :
+   dans un tableau elle suivait la remarque sur la même cellule, ici elle est
+   une consigne à part. */
+.carte-histo__repli .a-revoir {
+  display: block;
+  margin-top: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte-histo__repli > summary::before { transition: none; }
 }

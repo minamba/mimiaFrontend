@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { authService } from '../storage/authService';
 import { fermerSessionEleve, jetonEleve } from '../storage/sessionEleve';
+import { enTeteBillet, signalerAffluence } from '../affluence/salleDAttente';
 
 export const API_BASE_URL = process.env.REACT_APP_API_URL ?? '';
 
@@ -40,6 +41,13 @@ export async function enTeteAuth() {
 httpClient.interceptors.request.use(async (config) => {
   const entete = await enTeteAuth();
   if (entete) config.headers.Authorization = entete;
+
+  // LE BILLET DE LA SALLE D'ATTENTE, quand il y en a un. Il n'existe que si le
+  // serveur a déjà refusé une requête faute de place : hors jour d'affluence,
+  // cette ligne ne fait rien et n'envoie rien.
+  const billet = enTeteBillet();
+  if (billet) config.headers['X-Billet'] = billet;
+
   return config;
 });
 
@@ -62,10 +70,28 @@ httpClient.interceptors.request.use(async (config) => {
  */
 const BANNI = 'BANNI';
 
+/**
+ * LE SERVEUR EST PLEIN, ET CE N'EST PAS UNE PANNE.
+ *
+ * Un 503 ordinaire veut dire « quelque chose ne va pas ». Celui-ci veut dire
+ * « votre tour viendra », et le code le distingue : le premier mérite un
+ * message d'erreur, le second une file d'attente et un rang.
+ */
+const AFFLUENCE = 'AFFLUENCE';
+
 httpClient.interceptors.response.use(
   (reponse) => reponse,
   (erreur) => {
     const reponse = erreur?.response;
+
+    // TROP DE MONDE : on prend son rang et on laisse l'écran d'attente
+    // s'afficher. L'erreur continue d'être rejetée — l'appel qui l'a
+    // provoquée a bel et bien échoué, et l'écran qui l'attendait doit le
+    // savoir plutôt que de tourner indéfiniment.
+    if (reponse?.status === 503 && reponse?.data?.code === AFFLUENCE) {
+      signalerAffluence(reponse.data);
+      return Promise.reject(erreur);
+    }
 
     if (reponse?.status === 403 && reponse?.data?.code === BANNI) {
       // La session de l’enfant s’efface d’abord : sans ça, il retomberait sur

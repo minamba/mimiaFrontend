@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   getReglages,
   definirReglage,
+  definirPlacesAffluence,
   definirOffreLancement,
   synchroniserCatalogueStripe,
   getFilesPlanches,
@@ -29,6 +30,84 @@ import Loader from './Loader';
  */
 // Exporté : la programmation des courriels automatiques s'en sert aussi, et
 // une copie divergerait de celui-ci au premier changement.
+/**
+ * Le nombre de places de la salle d'attente.
+ *
+ * UN CHAMP À PART, ET NON UN RÉGLAGE DE PLUS SUR L'INTERRUPTEUR. Allumer la
+ * salle est un geste d'urgence ; choisir son plafond est une décision qui
+ * demande un chiffre qu'on n'a pas sous la main. Les séparer permet de
+ * préparer l'un à froid et de n'avoir que l'autre à trouver dans la panique.
+ *
+ * LE BOUTON RESTE ÉTEINT TANT QUE RIEN N'A CHANGÉ : un « Enregistrer »
+ * toujours cliquable laisse croire qu'on a oublié de valider.
+ */
+function PlafondAffluence({ places, onEnregistrer, occupe }) {
+  const [valeur, setValeur] = useState(String(places));
+
+  // Le champ suit la valeur du serveur quand elle arrive. Sans cet effet, la
+  // lecture initiale — qui arrive après le premier rendu — laisserait le
+  // champ sur sa valeur par défaut, et l'administrateur enregistrerait 300
+  // en croyant confirmer ce qui est déjà réglé.
+  useEffect(() => { setValeur(String(places)); }, [places]);
+
+  const nombre = Number.parseInt(valeur, 10);
+  const valide = Number.isFinite(nombre) && nombre >= 1 && nombre <= 100000;
+  const change = valide && nombre !== places;
+
+  return (
+    <div className="mode mode--reglable">
+      <div className="mode__texte">
+        <strong className="mode__titre">Places simultanées</strong>
+
+        <p className="mode__description">
+          Combien de visiteurs le site accepte en même temps quand la salle
+          d&apos;attente est allumée. Au-delà, les suivants prennent un rang et
+          entrent à mesure que des places se libèrent.
+        </p>
+
+        <p className="mode__note">
+          CE NOMBRE NE SE DEVINE PAS. Trop bas, il fait patienter des parents
+          que la machine aurait servis sans peine&nbsp;; trop haut, il ne
+          protège de rien. Seul un test de charge le donne — il n&apos;a pas
+          encore eu lieu, et 300 n&apos;est qu&apos;un point de départ prudent.
+        </p>
+
+        <div className="mode__champs">
+          <div className="champ">
+            <label htmlFor="affluence-places">Nombre de places</label>
+            <input
+              id="affluence-places"
+              type="number"
+              min="1"
+              max="100000"
+              inputMode="numeric"
+              value={valeur}
+              onChange={(e) => setValeur(e.target.value)}
+            />
+            <span className="champ__aide">
+              Entre 1 et 100 000. Baisser ce nombre ne met personne dehors&nbsp;:
+              le plafond se fait sentir à mesure que les visiteurs partent.
+            </span>
+          </div>
+        </div>
+
+        <div className="mode__actions">
+          {/* ÉTEINT TANT QUE RIEN N'A CHANGÉ. Un bouton toujours cliquable
+              laisse croire qu'on a oublié de valider, et on reclique. */}
+          <button
+            type="button"
+            className="btn btn--compact btn--fantome"
+            disabled={!change || occupe}
+            onClick={() => onEnregistrer(nombre)}
+          >
+            {occupe ? 'Enregistrement…' : 'Enregistrer le nombre de places'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Interrupteur({ titre, actif, connu, occupe, onBasculer, description, effets, note }) {
   return (
     <div className="mode">
@@ -795,6 +874,10 @@ export default function Modes() {
     // Le coupe-circuit du temps réel, allumé par défaut comme sur le serveur.
     fluxSse: true,
 
+    // La salle d'attente : éteinte, et son plafond de places.
+    affluence: false,
+    affluencePlaces: 300,
+
     // L'offre de lancement : trois valeurs qui n'ont de sens qu'ensemble.
     offreLancement: false,
     offreLancementTexte: '',
@@ -856,6 +939,8 @@ export default function Modes() {
           // API antérieure à ce drapeau n'affiche pas le temps réel comme
           // éteint alors qu'il fonctionne.
           fluxSse: data?.fluxSse !== false,
+          affluence: Boolean(data?.affluence),
+          affluencePlaces: Number(data?.affluencePlaces) || 300,
 
           offreLancement: Boolean(data?.offreLancement),
           offreLancementTexte: data?.offreLancementTexte ?? '',
@@ -891,6 +976,27 @@ export default function Modes() {
 
     return () => { vivant = false; };
   }, []);
+
+  /**
+   * Enregistre le plafond de la salle d'attente.
+   *
+   * IL S'ENREGISTRE MÊME SALLE ÉTEINTE, et c'est tout l'intérêt : on règle le
+   * nombre à froid, un jour calme, pour n'avoir qu'un interrupteur à trouver
+   * le jour où le serveur souffre.
+   */
+  const enregistrerPlaces = async (places) => {
+    setEnvoi('AFFLUENCE_PLACES');
+    setErreur('');
+
+    try {
+      await definirPlacesAffluence(places);
+      setReglages((etat) => ({ ...etat, affluencePlaces: places }));
+    } catch {
+      setErreur("Le nombre de places n'a pas pu être enregistré.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
 
   const basculer = async (cle, champ) => {
     const nouveau = !reglages[champ];
@@ -1037,6 +1143,37 @@ export default function Modes() {
             'Le plafond est de 2 000 écoutes simultanées. Au-delà, les navigateurs sont refusés proprement et relisent périodiquement.',
           ]}
           note="LE COUPE-CIRCUIT DU LANCEMENT. À éteindre si le serveur souffre et que vous voulez écarter cette piste d’un clic : aucune fonction ne disparaît, seule l’instantanéité. L’état est relu au démarrage, il survit donc à un redémarrage du conteneur. Laissez-le allumé tant que rien ne va mal — c’est l’état normal du produit."
+        />
+
+        {/* LA SALLE D'ATTENTE — voulue par Camara le 25/09/2026. Juste après
+            le coupe-circuit du temps réel, et pour la même raison : ce sont
+            les deux interrupteurs qu'on cherche quand le serveur souffre. */}
+        <Interrupteur
+          titre="Salle d'attente — limiter le nombre de visiteurs"
+          actif={reglages.affluence}
+          connu={lus}
+          occupe={envoi === 'AFFLUENCE_ACTIVE'}
+          onBasculer={() => basculer('AFFLUENCE_ACTIVE', 'affluence')}
+          description={`Le site n'admet plus que ${reglages.affluencePlaces} visiteurs à la fois. Les suivants voient une page qui leur donne leur rang dans la file, et entrent automatiquement à mesure que des places se libèrent.`}
+          effets={[
+            'Ceux qui sont déjà entrés ne sont pas dérangés : ils gardent leur place tant qu’ils naviguent.',
+            'Une place se libère quand son visiteur ferme l’onglet, ou au bout d’une minute et demie sans activité.',
+            'La file est servie dans l’ordre d’arrivée. Rafraîchir ne fait pas avancer, et ne fait pas non plus reculer.',
+            'Vous, administrateur, passez toujours au travers — c’est ce qui vous permet d’éteindre.',
+            'Les rappels de Stripe, les liens de désabonnement et le scan par téléphone ne sont jamais mis en file.',
+            'L’éteindre vide la salle immédiatement : tout le monde entre.',
+          ]}
+          note="À N’ALLUMER QUE QUAND LE SITE SOUFFRE, et à éteindre dès qu’il respire. C’est un robinet, pas un réglage qu’on pose une fois pour toutes : allumé un jour ordinaire, il ferait patienter des parents que la machine aurait servis sans peine. Le bon nombre de places ne se devine pas — il se mesure par un test de charge, qui n’a pas encore eu lieu."
+        />
+
+        {/* LE PLAFOND, SÉPARÉ DE L'INTERRUPTEUR. On le règle à froid, avant
+            d'en avoir besoin ; on allume dans l'urgence. Les mêler obligerait
+            à choisir un chiffre au moment précis où l'on n'a pas le temps d'y
+            réfléchir. */}
+        <PlafondAffluence
+          places={reglages.affluencePlaces}
+          onEnregistrer={enregistrerPlaces}
+          occupe={envoi === 'AFFLUENCE_PLACES'}
         />
 
         {/* LE STYLE DU SITE — voulu par Camara le 15/09/2026, pour faire

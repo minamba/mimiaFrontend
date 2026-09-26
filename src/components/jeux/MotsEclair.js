@@ -6,6 +6,8 @@ import { commun, repliquesEclair } from '../../lib/jeux/voix/repliques';
 import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import decor from '../../assets/Jeux/CP/mot_eclaire.webp';
+import FinDePartie from './FinDePartie';
+import Coeurs from './Coeurs';
 
 /**
  * LES MOTS ÉCLAIR, À L'ÉCRAN.
@@ -108,21 +110,13 @@ export default function MotsEclair({ onQuitter, matiereCode }) {
 
   if (fini) {
     return (
-      <div className="jeu jeu--fini">
-        <p className="jeu__bilan-score">
-          {duPremierCoup} <span>sur {MANCHES}</span>
-        </p>
-        <p className="jeu__bilan-mot">{bilan(duPremierCoup)}</p>
-
-        <div className="jeu__actions">
-          <button type="button" className="btn btn--principal" onClick={rejouer}>
-            Rejouer
-          </button>
-          <button type="button" className="btn-ghost" onClick={onQuitter}>
-            Revenir aux jeux
-          </button>
-        </div>
-      </div>
+      <FinDePartie
+        score={duPremierCoup}
+        total={MANCHES}
+        mot={bilan(duPremierCoup)}
+        onRejouer={rejouer}
+        onQuitter={onQuitter}
+      />
     );
   }
 
@@ -130,6 +124,7 @@ export default function MotsEclair({ onQuitter, matiereCode }) {
 
   return (
     <div className="jeu jeu--eclair" style={{ backgroundImage: `url(${decor})` }}>
+      <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
         {manches.map((m, i) => (
           <li

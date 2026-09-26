@@ -1,6 +1,14 @@
 import { Fragment, useEffect, useState } from 'react';
 import { getApercuBilan, envoyerBilan } from '../lib/api/adminApi';
-import { getCopieEvaluation, getRapport, getDictee } from '../lib/api/elevesApi';
+import {
+  getCopieEvaluation,
+  getRapport,
+  getDictee,
+  getExpressionEcrite,
+  getExpressionOrale,
+  getComprehensionOrale,
+  chargerPhotoExpressionEcrite,
+} from '../lib/api/elevesApi';
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { styleMatiere } from '../lib/couleurMatiere';
 import Avatar from './Avatar';
@@ -9,8 +17,17 @@ import ProgressionMatiere from './ProgressionMatiere';
 import Controle from './Controle';
 import Rapport from './Rapport';
 import DicteeCopie from './DicteeCopie';
+// Les trois documents ouverts depuis une séance, en plus de la dictée —
+// Camara, le 24/09/2026. Les expressions s'impriment, la compréhension orale
+// se consulte seulement : elle porte un enregistrement, qu'une feuille de
+// papier ne rejoue pas.
+import ExpressionCopie from './ExpressionCopie';
+import ComprehensionOraleDetail from './ComprehensionOraleDetail';
 import DeroulerListe from './DeroulerListe';
 import TriHistorique from './TriHistorique';
+// La fiche rend ses historiques en tableau sur ordinateur et en cartes sur
+// téléphone : sept colonnes ne se replient pas, elles se réécrivent.
+import useSurMobile from '../lib/hooks/useSurMobile';
 
 const SEXES = { 0: 'Non précisé', 1: 'Fille', 2: 'Garçon' };
 
@@ -22,6 +39,15 @@ const SEXES = { 0: 'Non précisé', 1: 'Fille', 2: 'Garçon' };
  * qui n'ajoute pas ce que le bouton d'à côté vient d'annoncer.
  */
 const PAS = 10;
+
+/**
+ * LA LARGEUR OÙ LES TABLEAUX DE LA FICHE DEVIENNENT DES CARTES. 860 px : en
+ * dessous, sept colonnes ne tiennent plus sans défilement latéral, et la
+ * colonne « Remarque » étire chaque rangée sur toute la hauteur de l'écran.
+ * La même borne que la bande de preuves de l'accueil, pour une raison
+ * voisine : c'est là que les mises en page à plusieurs colonnes cèdent.
+ */
+const SEUIL_CARTES = '(max-width: 860px)';
 
 /**
  * Un historique servi par tranches.
@@ -214,6 +240,229 @@ function Note({ valeur }) {
     </span>
   );
 }
+
+/* ==========================================================================
+   LES MÊMES DONNÉES, EN CARTES — Camara, le 24/09/2026 : « il y a possibilité
+   sur la fiche de l'enfant d'avoir une autre présentation sans que
+   l'utilisateur ait à scroller ? »
+
+   LE DÉFAUT. Ces trois historiques sont des tableaux de SEPT colonnes. Sur un
+   téléphone, aucun réglage ne les rend lisibles : la « Remarque » enveloppe
+   sur huit lignes, ce qui étire la rangée entière, et une seule évaluation
+   occupait un écran complet. Le reste sortait à droite, hors de vue.
+
+   POURQUOI UN AUTRE BALISAGE ET PAS DU CSS. Le CSS sait cacher et réarranger ;
+   il ne sait pas changer la structure. Un tableau où la note, la matière et le
+   professeur doivent tenir sur une même ligne, le sujet en dessous, et la
+   remarque derrière un repli, ce n'est plus un tableau replié — c'est une
+   carte. D'où `useSurMobile`, qui choisit l'un ou l'autre.
+
+   CE QUI EST VISIBLE D'EMBLÉE, ET CE QUI SE DÉPLIE. Visible : ce qui se
+   compare d'un coup d'œil — la note, la matière, le sujet, la date. Déplié :
+   la remarque du professeur, qui est un paragraphe, et qu'on lit quand on
+   s'arrête sur une ligne précise. Rien n'est perdu, et `<details>` s'ouvre
+   sans une ligne de JavaScript.
+   ========================================================================== */
+
+/** L'en-tête commun : la note à gauche, la matière et le professeur à droite. */
+function TeteDeCarte({ note, matiere, ligne, prof }) {
+  return (
+    <div className="carte-histo__tete">
+      {note}
+      <span className="carte-histo__qui">
+        <span className="carte-histo__matiere" style={ligne ? styleMatiere(ligne) : undefined}>
+          {matiere}
+        </span>
+        {prof && <span className="carte-histo__prof">{prof}</span>}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * La remarque, repliée. Absente quand il n'y a rien à lire : un replieur vide
+ * est une promesse qui déçoit, et le parent finit par ne plus en ouvrir aucun.
+ */
+function RemarqueRepliee({ remarque, aRevoir, libelleARevoir }) {
+  if (!remarque && !aRevoir) return null;
+
+  return (
+    <details className="carte-histo__repli">
+      <summary>Remarque du professeur</summary>
+      {remarque && <p>{remarque}</p>}
+      {aRevoir && <span className="a-revoir">{libelleARevoir} : {aRevoir}</span>}
+    </details>
+  );
+}
+
+function CarteEvaluation({ e, onCopie, chargement }) {
+  return (
+    <li className="carte-histo">
+      <TeteDeCarte
+        note={<Note valeur={e.note} />}
+        matiere={e.matiereLibelle}
+        ligne={e}
+        prof={e.profPrenom}
+      />
+
+      {e.notion && <p className="carte-histo__sujet">{e.notion}</p>}
+
+      <div className="carte-histo__pied">
+        <DateHeure valeur={e.dateCreation} />
+        <button
+          type="button"
+          className="btn-copie btn-copie--ligne"
+          onClick={onCopie}
+          disabled={chargement}
+        >
+          {chargement ? 'Ouverture…' : 'Voir la copie'}
+        </button>
+      </div>
+
+      <RemarqueRepliee remarque={e.remarque} aRevoir={e.aRevoir} libelleARevoir="À reprendre" />
+    </li>
+  );
+}
+
+/**
+ * Un bouton qui n'existe que si le document existe. Écrit une fois plutôt que
+ * trois : les trois ne diffèrent que par leur identifiant et leur libellé, et
+ * trois copies auraient divergé au premier ajustement.
+ */
+function BoutonDocument({ id, prefixe, libelle, onOuvrir, chargement }) {
+  if (!id) return null;
+
+  const cle = `${prefixe}${id}`;
+
+  return (
+    <button
+      type="button"
+      className="btn-copie btn-copie--ligne"
+      onClick={() => onOuvrir(id)}
+      disabled={chargement === cle}
+    >
+      {chargement === cle ? 'Ouverture…' : libelle}
+    </button>
+  );
+}
+
+function CarteSeance({
+  r, onRapport, onDictee, onExpressionEcrite, onExpressionOrale, onComprehension, chargement,
+}) {
+  const sansNote = r.noteComprehension === null || r.noteComprehension === undefined;
+
+  return (
+    <li className="carte-histo">
+      {/* PAS DE NOTE DANS L'EN-TÊTE ICI, contrairement à une évaluation —
+          Camara, le 24/09/2026 : « on ne sait pas que c'est lié à la
+          compréhension ».
+
+          Une séance porte DEUX mesures de même nature, la compréhension et la
+          révision. Dans le tableau, chacune avait sa colonne et son en-tête ;
+          en carte, l'en-tête disparaît, et une note posée seule à côté de la
+          matière ne dit plus de quoi elle est la note. Le parent lisait
+          « 17/20 » sans savoir ce qui avait été mesuré.
+
+          Les deux passent donc en liste de définitions, nommées et alignées.
+          C'est aussi le bon balisage : le terme porte ce qu'on mesure, la
+          définition la valeur, et un lecteur d'écran annonce la paire. */}
+      <TeteDeCarte matiere={r.matiereLibelle} ligne={r} />
+
+      <dl className="carte-histo__mesures">
+        <dt>Compréhension</dt>
+        <dd>
+          {sansNote
+            ? <span className="note-absente">—</span>
+            : <Note valeur={r.noteComprehension} />}
+        </dd>
+
+        {/* LA RÉVISION EST DITE EN TOUTES LETTRES, jamais par un tiret : « pas
+            évalué dans le cours » est une information, pas une note
+            manquante. */}
+        <dt>Révision</dt>
+        <dd>
+          {r.noteRevision === null || r.noteRevision === undefined ? (
+            <span className="note-absente">Pas évalué dans le cours</span>
+          ) : (
+            <Note valeur={r.noteRevision} />
+          )}
+        </dd>
+      </dl>
+
+      {r.travaille && <p className="carte-histo__sujet">{r.travaille}</p>}
+
+      <div className="carte-histo__pied">
+        <DateHeure valeur={r.dateCreation} />
+        <span className="carte-histo__actions">
+          <button
+            type="button"
+            className="btn-copie btn-copie--ligne"
+            onClick={onRapport}
+            disabled={chargement === `r${r.id}`}
+          >
+            {chargement === `r${r.id}` ? 'Ouverture…' : 'Voir le rapport'}
+          </button>
+          {r.dicteeId && (
+            <button
+              type="button"
+              className="btn-copie btn-copie--ligne"
+              onClick={onDictee}
+              disabled={chargement === `d${r.dicteeId}`}
+            >
+              {chargement === `d${r.dicteeId}` ? 'Ouverture…' : 'Voir la dictée'}
+            </button>
+          )}
+
+          {/* LES TROIS AUTRES DOCUMENTS DE LA SÉANCE, quand il y en a eu — et
+              c'est rare : un cours ordinaire n'en produit aucun. Le bouton
+              n'apparaît donc que lorsqu'il mène quelque part. */}
+          <BoutonDocument
+            id={r.expressionEcriteId}
+            prefixe="ee"
+            libelle="Voir le texte écrit"
+            onOuvrir={onExpressionEcrite}
+            chargement={chargement}
+          />
+          <BoutonDocument
+            id={r.expressionOraleId}
+            prefixe="eo"
+            libelle="Voir l’expression orale"
+            onOuvrir={onExpressionOrale}
+            chargement={chargement}
+          />
+          <BoutonDocument
+            id={r.comprehensionOraleId}
+            prefixe="co"
+            libelle="Voir la compréhension orale"
+            onOuvrir={onComprehension}
+            chargement={chargement}
+          />
+        </span>
+      </div>
+
+      <RemarqueRepliee remarque={r.remarque} aRevoir={r.aRevoir} libelleARevoir="À retravailler" />
+    </li>
+  );
+}
+
+/** Pas de note ni de bouton ici : c'est un journal, pas une évaluation. */
+function CarteCours({ s }) {
+  return (
+    <li className="carte-histo">
+      <TeteDeCarte matiere={s.matiereLibelle} ligne={s} prof={s.profPrenom} />
+
+      {s.titre && <p className="carte-histo__sujet">{s.titre}</p>}
+
+      <div className="carte-histo__pied">
+        <DateHeure valeur={s.dateDernierMessage ?? s.dateCreation} />
+        <span className="carte-histo__compte">
+          {s.nombreMessages} message{s.nombreMessages > 1 ? 's' : ''}
+        </span>
+      </div>
+    </li>
+  );
+}
+
 
 /**
  * Passé ce délai sans y revenir, la mesure ne garantit plus rien : la notion
@@ -428,10 +677,20 @@ export default function FicheEleve({
   // qu'un booléen : c'est ce qui permet de n'afficher « Ouverture… » que sur
   // la ligne cliquée, et pas sur toutes.
   const [copie, setCopie] = useState(null);
+  // Tableau ou cartes : décidé à la largeur, et suivi à la rotation.
+  const enCartes = useSurMobile(SEUIL_CARTES);
+
   const [copieChargement, setCopieChargement] = useState(null);
   const [copieErreur, setCopieErreur] = useState(null);
 
   const [rapport, setRapport] = useState(null);
+
+  // Les trois documents d'une séance. Chacun son état : deux peuvent être
+  // ouverts l'un après l'autre sans que la fermeture du premier efface le
+  // second.
+  const [expression, setExpression] = useState(null);
+  const [photoExpression, setPhotoExpression] = useState(null);
+  const [comprehension, setComprehension] = useState(null);
   const [dictee, setDictee] = useState(null);
 
   // Les deux historiques, chacun avec son curseur. Séparés : un parent
@@ -488,6 +747,74 @@ export default function FicheEleve({
     } finally {
       setCopieChargement(null);
     }
+  };
+
+  /**
+   * Les trois autres documents d'une séance, sur le modèle de la dictée : le
+   * parent voit EXACTEMENT ce que son enfant a sous les yeux dans son espace,
+   * jamais une version résumée pour parents.
+   *
+   * LA PHOTO NE SE CHARGE QUE QUAND ELLE SERT — même règle que dans « Mes
+   * textes » : une copie déjà recopiée a son texte, et la page de cahier pèse
+   * des mégaoctets.
+   */
+  const voirExpressionEcrite = async (expressionId) => {
+    setCopieChargement(`ee${expressionId}`);
+    setCopieErreur(null);
+
+    try {
+      const { data } = await getExpressionEcrite(fiche.id, expressionId);
+      setExpression({ type: 'ecrite', document: data });
+
+      if (data?.aPhoto && !data?.transcrit) {
+        const lien = await chargerPhotoExpressionEcrite(fiche.id, expressionId);
+        if (lien) setPhotoExpression(lien);
+      }
+    } catch {
+      setCopieErreur("Le texte n'a pas pu être chargé.");
+    } finally {
+      setCopieChargement(null);
+    }
+  };
+
+  const voirExpressionOrale = async (expressionId) => {
+    setCopieChargement(`eo${expressionId}`);
+    setCopieErreur(null);
+
+    try {
+      const { data } = await getExpressionOrale(fiche.id, expressionId);
+      setExpression({ type: 'orale', document: data });
+    } catch {
+      setCopieErreur("La conversation n'a pas pu être chargée.");
+    } finally {
+      setCopieChargement(null);
+    }
+  };
+
+  const voirComprehensionOrale = async (comprehensionId) => {
+    setCopieChargement(`co${comprehensionId}`);
+    setCopieErreur(null);
+
+    try {
+      const { data } = await getComprehensionOrale(fiche.id, comprehensionId);
+      setComprehension(data);
+    } catch {
+      setCopieErreur("La compréhension orale n'a pas pu être chargée.");
+    } finally {
+      setCopieChargement(null);
+    }
+  };
+
+  /**
+   * L'URL locale de la photo est révoquée à la fermeture : sans ça, chaque
+   * ouverture laisserait une page de cahier en mémoire jusqu'au rechargement.
+   */
+  const fermerExpression = () => {
+    setExpression(null);
+    setPhotoExpression((actuelle) => {
+      if (actuelle) URL.revokeObjectURL(actuelle);
+      return null;
+    });
   };
 
   /**
@@ -568,6 +895,24 @@ export default function FicheEleve({
       {copie && <Controle copie={copie} onFermer={() => setCopie(null)} />}
       {rapport && <Rapport rapport={rapport} onFermer={() => setRapport(null)} />}
       {dictee && <DicteeCopie copie={dictee} onFermer={() => setDictee(null)} />}
+
+      {expression && (
+        <ExpressionCopie
+          type={expression.type}
+          document={expression.document}
+          photo={photoExpression}
+          eleve={fiche}
+          onFermer={fermerExpression}
+        />
+      )}
+
+      {comprehension && (
+        <ComprehensionOraleDetail
+          eleveId={fiche.id}
+          fiche={comprehension}
+          onFermer={() => setComprehension(null)}
+        />
+      )}
 
       <div className={enPage ? 'fiche-eleve' : 'modale__boite modale__boite--large'}>
         {chargement && <Loader texte="Chargement de la fiche…" />}
@@ -909,6 +1254,18 @@ export default function FicheEleve({
               </p>
             ) : (
               <div className="tableau">
+                {enCartes ? (
+                  <ul className="cartes-histo">
+                    {evaluations.elements.map((e) => (
+                      <CarteEvaluation
+                        key={e.id}
+                        e={e}
+                        onCopie={() => voirLaCopie(e.id)}
+                        chargement={copieChargement === e.id}
+                      />
+                    ))}
+                  </ul>
+                ) : (
                 <table>
                   <thead>
                     <tr>
@@ -953,6 +1310,7 @@ export default function FicheEleve({
                     ))}
                   </tbody>
                 </table>
+                )}
 
                 <DeroulerListe
                   visibles={evaluations.elements.length}
@@ -989,6 +1347,22 @@ export default function FicheEleve({
               </p>
             ) : (
               <div className="tableau">
+                {enCartes ? (
+                  <ul className="cartes-histo">
+                    {seances.elements.map((r) => (
+                      <CarteSeance
+                        key={r.id}
+                        r={r}
+                        onRapport={() => voirLeRapport(r.id)}
+                        onDictee={() => voirLaDictee(r.dicteeId)}
+                        onExpressionEcrite={voirExpressionEcrite}
+                        onExpressionOrale={voirExpressionOrale}
+                        onComprehension={voirComprehensionOrale}
+                        chargement={copieChargement}
+                      />
+                    ))}
+                  </ul>
+                ) : (
                 <table>
                   <thead>
                     <tr>
@@ -1055,12 +1429,38 @@ export default function FicheEleve({
                                 {copieChargement === `d${r.dicteeId}` ? 'Ouverture…' : 'Voir la dictée'}
                               </button>
                             )}
+
+                            {/* Les mêmes trois documents qu'en carte : la
+                                colonne « Rapport » porte tout ce que la séance
+                                a produit. */}
+                            <BoutonDocument
+                              id={r.expressionEcriteId}
+                              prefixe="ee"
+                              libelle="Voir le texte écrit"
+                              onOuvrir={voirExpressionEcrite}
+                              chargement={copieChargement}
+                            />
+                            <BoutonDocument
+                              id={r.expressionOraleId}
+                              prefixe="eo"
+                              libelle="Voir l’expression orale"
+                              onOuvrir={voirExpressionOrale}
+                              chargement={copieChargement}
+                            />
+                            <BoutonDocument
+                              id={r.comprehensionOraleId}
+                              prefixe="co"
+                              libelle="Voir la compréhension orale"
+                              onOuvrir={voirComprehensionOrale}
+                              chargement={copieChargement}
+                            />
                           </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                )}
 
                 <DeroulerListe
                   visibles={seances.elements.length}
@@ -1081,6 +1481,13 @@ export default function FicheEleve({
               <p className="vide vide--compact">Aucun cours enregistré.</p>
             ) : (
               <div className="tableau">
+                {enCartes ? (
+                  <ul className="cartes-histo">
+                    {fiche.dernieresSeances.map((s) => (
+                      <CarteCours key={s.conversationId} s={s} />
+                    ))}
+                  </ul>
+                ) : (
                 <table>
                   <thead>
                     <tr>
@@ -1105,6 +1512,7 @@ export default function FicheEleve({
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             )}
 

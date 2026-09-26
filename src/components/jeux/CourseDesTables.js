@@ -6,6 +6,8 @@ import { commun, repliquesCourse } from '../../lib/jeux/voix/repliques';
 import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import CalculMental from './CalculMental';
+import FinDePartie from './FinDePartie';
+import Coeurs from './Coeurs';
 
 /**
  * LA COURSE DES TABLES, À L'ÉCRAN.
@@ -81,21 +83,13 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
 
   if (fini) {
     return (
-      <div className="jeu jeu--fini">
-        <p className="jeu__bilan-score">
-          {avance} <span>sur {MANCHES}</span>
-        </p>
-        <p className="jeu__bilan-mot">{bilan(avance)}</p>
-
-        <div className="jeu__actions">
-          <button type="button" className="btn btn--principal" onClick={rejouer}>
-            Rejouer
-          </button>
-          <button type="button" className="btn-ghost" onClick={onQuitter}>
-            Revenir aux jeux
-          </button>
-        </div>
-      </div>
+      <FinDePartie
+        score={avance}
+        total={MANCHES}
+        mot={bilan(avance)}
+        onRejouer={rejouer}
+        onQuitter={onQuitter}
+      />
     );
   }
 
@@ -104,6 +98,12 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+
+      {/* LA COURSE N'A PAS DE RANGÉE DE MANCHES : sa piste EST son avancement.
+          Les cœurs se posent donc au-dessus de la consigne, seul endroit
+          commun à tous les écrans de ce jeu. `avance` y joue le rôle de
+          `duPremierCoup` — c'est le même nombre sous un autre nom. */}
+      <Coeurs manche={manche} duPremierCoup={avance} />
 
       <p className="jeu__consigne">
         {PHRASES.consigne}

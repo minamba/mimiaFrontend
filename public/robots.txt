@@ -1,3 +1,32 @@
-# https://www.robotstxt.org/robotstxt.html
+# Mimia — https://mimia.fr
+#
+# CE QUI EST FERMÉ, ET POURQUOI. Trois familles d'adresses n'ont rien à faire
+# dans un index :
+#   — l'espace connecté : les pages d'un enfant, même protégées par un mot de
+#     passe, ne doivent pas apparaître dans une recherche ;
+#   — les pages de passage : elles ne veulent rien dire hors de leur flux, et
+#     /scan/ porte un jeton dans son adresse ;
+#   — les pages d'un lien de courriel : elles n'ont de sens que pour qui a
+#     reçu le courriel.
+#
+# CE FICHIER NE PROTÈGE RIEN. Il demande, il n'interdit pas : un robot peut
+# l'ignorer, et une adresse citée ici est une adresse publiée. La protection
+# des données, c'est l'authentification côté API, pas ce fichier.
+#
+# LA LISTE DOIT SUIVRE CELLE DE src/lib/seo/pages.js (NON_INDEXEES) : les deux
+# disent la même chose, l'une aux robots qui lisent ce fichier, l'autre à ceux
+# qui exécutent le JavaScript et lisent la balise « robots ».
+
 User-agent: *
-Disallow:
+
+Disallow: /eleves/
+Disallow: /profil
+Disallow: /admin
+Disallow: /code
+Disallow: /scan/
+Disallow: /callback
+Disallow: /silent-renew
+Disallow: /desabonnement
+Disallow: /donner-mon-avis
+
+Sitemap: https://mimia.fr/sitemap.xml

@@ -757,7 +757,10 @@ export default function MonProfil() {
       )}
 
 
-    <section className="page page--large">
+    {/* `page--compte` ne sert qu'à DÉSIGNER cette page : en Blue Sky, elle y
+        redéfinit le bleu des surfaces pour le forfait et les cartes d'enfant
+        d'un seul geste — voir `.page--compte` dans App.css. */}
+    <section className="page page--large page--compte">
       <div className="page__entete">
         <div>
           <h1>Mon compte</h1>

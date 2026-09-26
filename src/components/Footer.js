@@ -4,6 +4,7 @@ import { login } from '../lib/actions/authActions';
 import logoFondClair from '../assets/logo-fond-clair.png';
 import logoFondSombre from '../assets/logo-fond-sombre.png';
 import { useModeTest } from '../lib/storage/modeTest';
+import { useConsentement } from '../lib/storage/consentement';
 
 /**
  * Le pied de page.
@@ -21,6 +22,7 @@ export default function Footer() {
   const dispatch = useDispatch();
   const emplacement = useLocation();
   const modeTest = useModeTest();
+  const { choix: choixCookies, rouvrir: rouvrirCookies } = useConsentement();
   const annee = new Date().getFullYear();
 
   // Le cours occupe toute la hauteur de l'écran, tableau compris : un pied de
@@ -56,16 +58,27 @@ export default function Footer() {
 
         <nav className="pied__colonnes" aria-label="Pied de page">
           <div className="pied__colonne">
-            <h2 className="pied__titre">Le site</h2>
+            {/* DES ÉTIQUETTES DE COLONNE, PAS DES TITRES DE SECTION — changé
+                le 23/09/2026. En `h2`, ces trois mots s'ajoutaient à la
+                hiérarchie de CHAQUE page : sur une page mince comme
+                « Contact », le pied de page pesait plus lourd que le contenu.
+                Le `nav` et son `aria-label` portent déjà le rôle. */}
+            <p className="pied__titre">Le site</p>
             <ul className="pied__liste">
               <li><Link to="/">Accueil</Link></li>
               <li><a href="/#methode">La méthode</a></li>
               {!modeTest && <li><Link to="/tarifs">Tarifs</Link></li>}
+              {/* LES AVIS N'ÉTAIENT LIÉS DE NULLE PART DE FAÇON FIABLE : le
+                  seul lien vivait sur l'accueil, et n'apparaissait qu'au-delà
+                  d'un certain nombre d'avis. Une page qu'on ne peut pas
+                  atteindre se référence mal — et c'est celle qu'un parent
+                  cherche avant de payer. */}
+              <li><Link to="/avis">Avis des familles</Link></li>
             </ul>
           </div>
 
           <div className="pied__colonne">
-            <h2 className="pied__titre">Votre espace</h2>
+            <p className="pied__titre">Votre espace</p>
             <ul className="pied__liste">
               {authentifie ? (
                 <>
@@ -90,12 +103,29 @@ export default function Footer() {
           </div>
 
           <div className="pied__colonne">
-            <h2 className="pied__titre">Nous joindre</h2>
+            <p className="pied__titre">Nous joindre</p>
             <ul className="pied__liste">
               <li><Link to="/contact">Contact</Link></li>
               <li><Link to="/cgv">CGV</Link></li>
               <li><Link to="/confidentialite">RGPD &amp; Confidentialité</Link></li>
               <li><Link to="/mentions-legales">Mentions légales</Link></li>
+              {/* REVENIR SUR SON CHOIX — sans ce bouton, un visiteur qui a
+                  refusé la mesure d'audience n'aurait aucun moyen de changer
+                  d'avis, et celui qui a accepté aucun moyen de se rétracter.
+                  C'est exigé, et c'est la moindre des choses. Il n'apparaît
+                  qu'une fois la question tranchée : avant, le bandeau est
+                  déjà là. */}
+              {choixCookies && (
+                <li>
+                  <button
+                    type="button"
+                    className="pied__lien-bouton"
+                    onClick={rouvrirCookies}
+                  >
+                    Cookies
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </nav>

@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import iconeJeux from '../assets/games.webp';
 import { jeuxDeLaClasse, parMatiere } from '../lib/jeux/catalogue';
 import { FRISE, frisePourLaClasse, rangDeLaClasse } from '../lib/jeux/frise';
+import { FournirJeu } from '../lib/jeux/contexteJeu';
+import { DEFI, TRANQUILLE, coeursDeLaClasse } from '../lib/jeux/coeurs';
+import ChoixDuMode from './jeux/ChoixDuMode';
+import FinDuDefi from './jeux/FinDuDefi';
 import FriseDesClasses from './jeux/FriseDesClasses';
 import { sessionEleve } from '../lib/storage/sessionEleve';
 import { styleMatiere } from '../lib/couleurMatiere';
@@ -179,6 +183,35 @@ export default function JeuxEleve() {
 
   const [ouvert, setOuvert] = useState(null);
 
+  // LE MODE DE JEU, ET LE NUMÉRO DE PARTIE.
+  //
+  // `null` veut dire « pas encore choisi » : c'est ce qui fait apparaître
+  // l'écran du choix, plutôt qu'un troisième drapeau à tenir.
+  //
+  // Le numéro de partie sert de clé React au jeu. Le changer REMONTE l'écran à
+  // neuf — graine, manche, score — ce qu'aucun jeu ne sait faire de
+  // l'extérieur. C'est ainsi qu'on recommence après avoir perdu ses cœurs.
+  const [mode, setMode] = useState(null);
+  const [partie, setPartie] = useState(0);
+
+  // LE BILAN DU DÉFI PERDU — `null` tant que le jeu tourne. Quand il est posé,
+  // le jeu est DÉMONTÉ et la fin du défi prend sa place : c'est ce qui arrête
+  // sa question suivante et la voix qui la lisait (Camara, 26/09).
+  const [finDefi, setFinDefi] = useState(null);
+  const terminerDefi = useCallback((bilan) => setFinDefi(bilan), []);
+
+  // Changer de partie, de mode ou de jeu efface toujours le bilan.
+  const lancer = useCallback((choisi) => {
+    setFinDefi(null);
+    setMode(choisi);
+    setPartie((n) => n + 1);
+  }, []);
+  const fermer = useCallback(() => {
+    setFinDefi(null);
+    setOuvert(null);
+    setMode(null);
+  }, []);
+
   // La classe REGARDÉE, qui n'est pas forcément la sienne : `null` tant que
   // l'enfant n'a rien choisi, pour que la page s'ouvre toujours sur son année.
   const [regardee, setRegardee] = useState(null);
@@ -267,6 +300,8 @@ export default function JeuxEleve() {
 
     setRegardee(classeDemandee);
     setOuvert(jeuDemande);
+    setMode(null);
+    setFinDefi(null);
   }, [classeDemandee, jeuDemande, niveauCode]);
 
   return (
@@ -293,15 +328,56 @@ export default function JeuxEleve() {
           mais elle peut RECEVOIR le focus quand on le lui donne. C'est ce qui
           permet de poser l'enfant sur le jeu qu'il vient d'ouvrir. */}
       <div className="jeux-zone" ref={zone} tabIndex={-1}>
-        {Ecran ? (
+        {Ecran && !mode ? (
+          // LE CHOIX DU MODE PRÉCÈDE LE JEU — mais seulement là où le défi
+          // existe. Au CP, `ChoixDuMode` se choisit tout seul « tranquille » et
+          // ne s'affiche pas : un écran à une seule porte n'est pas un choix,
+          // c'est un obstacle.
+          <ChoixDuMode
+            titre={jeux.find((j) => j.cle === ouvert)?.titre}
+            classe={classe}
+            jeuCle={ouvert}
+            niveau={(classe ?? '').toUpperCase()}
+            onChoisir={lancer}
+            onQuitter={fermer}
+          />
+        ) : Ecran && finDefi ? (
+          <FinDuDefi
+            coeursMax={coeursDeLaClasse(classe)}
+            reussies={finDefi.reussies}
+            questions={finDefi.questions}
+            onRefaire={() => lancer(DEFI)}
+            onTranquille={() => lancer(TRANQUILLE)}
+            onQuitter={fermer}
+          />
+        ) : Ecran ? (
+          // CE QUE LE JEU SAIT DE LUI-MÊME : sa clé de catalogue, la classe
+          // pour laquelle il tourne, le mode et ses cœurs. L'écran de fin y
+          // puise le record personnel et la barre de cœurs, sans qu'aucun jeu
+          // ait à relayer quoi que ce soit.
+          <FournirJeu
+            value={{
+              jeuCle: ouvert,
+              niveau: (classe ?? '').toUpperCase(),
+              mode,
+              coeursMax: mode === DEFI ? coeursDeLaClasse(classe) : 0,
+              // RELANCER, C'EST REMONTER L'ÉCRAN. Changer la clé React suffit :
+              // le jeu repart avec une graine neuve, sans qu'il ait à savoir
+              // qu'on le recommence.
+              rejouerPartie: (suivant) => lancer(suivant ?? mode),
+              terminerDefi,
+            }}
+          >
           <Ecran
-            onQuitter={() => setOuvert(null)}
+            key={partie}
+            onQuitter={fermer}
             matiereCode={matiereCode}
             // LA CLASSE RÈGLE LA DIFFICULTÉ : l'horloge du CE1 a ses demies. Et
             // c'est bien la classe REGARDÉE : un CM2 qui rouvre un jeu de CE1 le
             // retrouve tel qu'il était au CE1, sinon le retour n'a aucun sens.
             niveau={(classe ?? '').toUpperCase()}
           />
+          </FournirJeu>
         ) : (
           <>
             <FriseDesClasses
@@ -340,7 +416,7 @@ export default function JeuxEleve() {
                     <ul className="jeux-liste">
                       {groupe.jeux.map((jeu) => (
                         <li key={jeu.cle}>
-                          <CarteJeu jeu={jeu} onOuvrir={setOuvert} />
+                          <CarteJeu jeu={jeu} onOuvrir={(cle) => { setOuvert(cle); setMode(null); setFinDefi(null); }} />
                         </li>
                       ))}
                     </ul>

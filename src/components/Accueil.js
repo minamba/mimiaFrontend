@@ -27,6 +27,41 @@ import iconeNoReponse from '../assets/noreponse.png';
 import iconeDonnees from '../assets/data.png';
 import iconeEnfants from '../assets/many.png';
 import iconeAge from '../assets/age.png';
+// LA FRISE DU CP À LA TERMINALE — deux illustrations, deux tailles chacune.
+//
+// DEUX ILLUSTRATIONS : un garçon sur grand écran, une fille sur téléphone
+// (Camara, le 23/09/2026). Ce n'est pas la même image redimensionnée, c'est un
+// autre dessin — d'où `<picture>` et non un simple `srcset`, qui ne sait
+// changer que la définition, jamais le sujet.
+//
+// DEUX TAILLES : servir les 1250 px à un téléphone qui en affiche 390
+// coûterait 170 Ko pour rien, sur la connexion la plus lente des deux.
+import friseAccompagnement from '../assets/accompagnement.webp';
+import friseAccompagnementPetite from '../assets/accompagnement-760.webp';
+import friseAccompagnementFille from '../assets/accompagnement_f.webp';
+import friseAccompagnementFillePetite from '../assets/accompagnement_f-760.webp';
+
+/**
+ * « TROIS CHOSES QU'UN CHATBOT NE FAIT PAS » EST MASQUÉE — Camara, le
+ * 23/09/2026 : « cette section ne sert plus pour l'instant ».
+ *
+ * UN INTERRUPTEUR PLUTÔT QU'UNE SUPPRESSION, parce que « pour l'instant »
+ * veut dire qu'elle peut revenir : repasser cette constante à `true` la
+ * remet en place, avec ses trois tuiles et son ancre, sans rien réécrire.
+ *
+ * UN INTERRUPTEUR PLUTÔT QU'UN BLOC EN COMMENTAIRE, parce que du JSX mis en
+ * commentaire sort du champ de tout ce qui relit le code — ni le lint ni le
+ * compilateur ne le voient, et il pourrit en silence jusqu'à ne plus
+ * fonctionner le jour où on le décommente.
+ *
+ * L'ANCRE `#methode` SUIT. Deux liens y mènent — « Voir la méthode » sous le
+ * héros, « La méthode » au pied de page — et un lien qui ne mène nulle part
+ * se remarque tout de suite. Tant que la section est masquée, l'ancre est
+ * portée par « Il entraîne votre enfant à l'écrit comme à l'oral », qui
+ * démontre la méthode au lieu de l'énoncer et porte d'ailleurs la même
+ * étiquette : « Ce qu'un chatbot ne fait pas ».
+ */
+const MONTRER_METHODE = false;
 
 /**
  * Les quatre mots qui disent le produit, sous la démonstration.
@@ -482,6 +517,9 @@ export default function Accueil() {
         </section>
 
         {/* ---------------------------------------------------------- méthode */}
+        {/* Masquée depuis le 23/09/2026 — voir `MONTRER_METHODE` en tête de
+            fichier pour la raison et la façon de la remettre. */}
+        {MONTRER_METHODE && (
         <section className="methode" id="methode">
           <header className="section__entete">
             <span className="etiquette etiquette--sombre">La méthode</span>
@@ -520,11 +558,137 @@ export default function Accueil() {
             </article>
           </div>
         </section>
+        )}
 
         {/* LA DICTÉE ET L'ÉCOUTE, MONTRÉES. C'est ce qu'aucun chatbot ne fait,
             et ça ne se raconte pas : la correction affichée ici est rendue par
-            le composant du produit lui-même. */}
-        <ExercicesLangue />
+            le composant du produit lui-même.
+
+            ELLE RECUEILLE L'ANCRE `#methode` tant que la section « Trois
+            choses qu'un chatbot ne fait pas » est masquée, pour que les deux
+            liens qui y mènent continuent d'aboutir. Voir `MONTRER_METHODE`. */}
+        <ExercicesLangue id={MONTRER_METHODE ? undefined : 'methode'} />
+
+        {/* ------------------------------- du CP à la Terminale, en une image */}
+        {/* PLACÉE ICI, ET PAS AILLEURS. À ce point de la page, le parent sait
+            ce qu'est Mimia et en quoi ce n'est pas un chatbot ; il vient de
+            voir comment on y travaille l'écrit et l'oral. L'image lui apporte
+            alors une idée neuve — ce n'est pas un dépannage de devoirs, c'est
+            un accompagnement qui dure — et elle enchaîne naturellement sur
+            « qui accompagne l'enfant », juste dessous. Plus haut, il ne sait
+            pas encore pourquoi il devrait s'y intéresser ; plus bas, après les
+            jeux, elle arriverait trop tard.
+
+            LE TITRE EST EN HTML, ET PLUS DANS L'IMAGE — Camara a redonné le
+            fichier sans son lettrage le 23/09/2026. C'est mieux ainsi, et pas
+            seulement par commodité : un titre dessiné n'est lu ni par Google
+            ni par un lecteur d'écran, il ne se recherche pas, il ne se
+            sélectionne pas, et il rétrécit avec l'image jusqu'à devenir
+            illisible sur un téléphone. En HTML, il reste net à toutes les
+            tailles et se plie au texte de la page.
+
+            CENTRÉ, contrairement aux autres sections : l'image l'est, et un
+            titre calé à gauche au-dessus d'une composition symétrique se lit
+            comme un décalage. */}
+        <section className="accompagnement" aria-labelledby="accompagnement-titre">
+          <header className="accompagnement__entete">
+            <span className="etiquette">Toute sa scolarité</span>
+            <h2 id="accompagnement-titre">
+              Un seul compagnon, <em className="titre-accent">du CP à la Terminale</em>
+            </h2>
+            {/* « IL » OU « ELLE », SELON LE DESSIN AFFICHÉ — Camara, le
+                23/09/2026. C'est un garçon sur grand écran, une fille sur
+                téléphone : une phrase qui dirait « il » sous une illustration
+                de fille se remarquerait aussitôt, et donnerait l'impression
+                d'un texte écrit pour une autre image.
+
+                DEUX MOTS DANS LE DOCUMENT, UN SEUL À L'ÉCRAN. Le pronom seul
+                est dédoublé, pas la phrase : c'est le CSS qui montre celui qui
+                va avec l'image, à la même borne que `<picture>`.
+
+                PAS DE `content` EN CSS pour écrire le mot : un texte généré
+                ainsi n'est pas sélectionnable, ne se traduit pas, et plusieurs
+                lecteurs d'écran l'ignorent. Ici les deux mots sont de vrais
+                mots, et celui qu'on cache l'est par `display: none`, que les
+                lecteurs d'écran sautent comme le fait l'œil. */}
+            <p>
+              <span className="accompagnement__pronom--bureau">Il</span>
+              <span className="accompagnement__pronom--mobile">Elle</span>
+              {' '}grandit, Mimia l’accompagne à chaque étape de sa scolarité.
+            </p>
+          </header>
+
+          <div className="accompagnement__visuel">
+            {/* `width` et `height` SONT CEUX DU FICHIER, et ils ne sont pas
+                décoratifs : sans eux le navigateur ne connaît la place à
+                réserver qu'une fois l'image arrivée, et toute la page saute au
+                moment où elle s'affiche. C'est ce que Google mesure sous le
+                nom de « décalage de mise en page ».
+
+                `loading="lazy"` parce qu'elle est sous la ligne de flottaison :
+                elle ne doit pas retarder ce que le visiteur voit en arrivant. */}
+            <picture>
+              {/* LA FILLE SUR TÉLÉPHONE, LE GARÇON SUR GRAND ÉCRAN. Le
+                  navigateur ne télécharge que celle qu'il retient : la
+                  seconde ne coûte rien à qui ne la voit pas.
+
+                  MÊME BORNE QUE LE CSS (760 px), et il faut qu'elles restent
+                  d'accord : c'est à cette largeur que le bloc passe pleine
+                  page et que les libellés changent de position. Deux bornes
+                  différentes donneraient une bande où les mots d'une image
+                  se placeraient sous les icônes de l'autre. */}
+              <source
+                media="(max-width: 760px)"
+                srcSet={`${friseAccompagnementFillePetite} 760w, ${friseAccompagnementFille} 1250w`}
+                sizes="100vw"
+              />
+              <img
+                className="accompagnement__frise"
+                src={friseAccompagnement}
+                srcSet={`${friseAccompagnementPetite} 760w, ${friseAccompagnement} 1250w`}
+                sizes="min(1250px, 92vw)"
+                width="1250"
+                height="656"
+                loading="lazy"
+                decoding="async"
+                alt="Le même élève dessiné à cinq âges le long d’une frise : CP, CM2, 6e, 3e, Terminale."
+              />
+            </picture>
+
+            {/* LES QUATRE LIBELLÉS, EN HTML SOUS LES ICÔNES DE L'IMAGE —
+                Camara, le 23/09/2026. Le fichier porte les pictogrammes mais
+                plus leurs mots ; seuls, ils n'énonçaient rien.
+
+                POURQUOI EN TEXTE PLUTÔT QUE REDESSINÉS DANS L'IMAGE : ils
+                restent nets à toutes les tailles — sur un téléphone, un
+                lettrage de cette hauteur tomberait sous six pixels —, ils se
+                lisent, se traduisent, s'indexent, et se corrigent sans
+                repasser par un outil de dessin.
+
+                LES POSITIONS SONT MESURÉES, PAS ESTIMÉES. Chaque valeur est
+                le centre réel d'une icône dans son fichier, relevé en comptant
+                les pixels opaques du bandeau du bas, colonne par colonne.
+                Elles ne sont pas régulières — l'illustration n'a pas espacé
+                les icônes également — et c'est pour ça qu'une simple grille de
+                quatre colonnes aurait décalé chaque mot de sa figure.
+
+                DEUX JEUX, PARCE QUE DEUX DESSINS. `--x` pour l'image du
+                garçon (grand écran), `--xm` pour celle de la fille
+                (téléphone) : le CSS bascule de l'un à l'autre à la même borne
+                que `<picture>`. Les icônes ne tombent pas aux mêmes endroits
+                d'un dessin à l'autre — jusqu'à cinq points d'écart sur la
+                quatrième, soit une cinquantaine de pixels.
+
+                SI UNE IMAGE CHANGE, SES QUATRE NOMBRES MENTENT. Ils sont à
+                remesurer, et le décalage se voit tout de suite à l'écran. */}
+            <ul className="accompagnement__promesses">
+              <li style={{ '--x': '13.27%', '--xm': '12.47%' }}>Cours expliqués</li>
+              <li style={{ '--x': '35.31%', '--xm': '32.81%' }}>Exercices personnalisés</li>
+              <li style={{ '--x': '58.77%', '--xm': '55.20%' }}>Suivi des progrès</li>
+              <li style={{ '--x': '84.64%', '--xm': '79.90%' }}>Aide à tout moment</li>
+            </ul>
+          </div>
+        </section>
 
         {/* ------------------------------------------------------------ équipe */}
         {/* La section entière disparaît tant qu'il n'y a personne à montrer.

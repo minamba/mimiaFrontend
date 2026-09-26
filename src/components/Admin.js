@@ -16,8 +16,12 @@ import {
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 // La création d'un parent commence par son identité, sur le serveur
 // d'identité — l'inverse de la suppression, qui finit par elle.
-import { creerIdentite, reinitialiserMotDePasseDe } from '../lib/api/profilApi';
+import { creerIdentite, reinitialiserMotDePasseDe, changerEmailDe } from '../lib/api/profilApi';
 import { lireMotDePasse, sansMotDePasse } from '../lib/utils/motDePasseAdmin';
+// L'ORDRE DES DEUX APPELS D'IDENTITÉ, tenu à part et testé : l'adresse avant
+// le mot de passe, parce que la seconde route désigne le compte par la
+// première. Voir `identiteAdmin.js`.
+import { etapesIdentite, sansSub, toucheAuxIdentifiants } from '../lib/utils/identiteAdmin';
 import { trier, inverser } from '../lib/utils/tri';
 import { aLaSeconde } from '../lib/utils/duree';
 // LES MÊMES BRIQUES QUE LE FORMULAIRE PARENT — Camara, le 16/09/2026 : « je
@@ -1141,9 +1145,12 @@ export default function Admin() {
     setOnglet('eleves');
   };
 
-  // `donnee` porte, pour un parent, son adresse : elle sert à effacer aussi son
-  // compte de connexion, qui vit dans l'autre base. Le tableau est le seul
-  // endroit à la connaître — l'API métier n'expose pas le `sub`.
+  // `donnee` porte, pour un parent, le `sub` de son compte de connexion, qui
+  // vit dans l'autre base : il sert à l'effacer aussi.
+  //
+  // L'ADRESSE LE FAISAIT AVANT, et c'était un piège — elle peut avoir divergé
+  // entre les deux bases, et l'identité n'était alors pas trouvée : les
+  // données partaient, l'accès restait. Le `sub`, lui, ne bouge jamais.
   const confirmerSuppression = (operation, id, libelle, donnee) => {
     // Une suppression de parent emporte ses enfants et toutes leurs
     // conversations : elle mérite une confirmation explicite.
@@ -1246,17 +1253,34 @@ export default function Admin() {
   };
 
   /**
-   * RÉINITIALISE LE MOT DE PASSE D'UN PARENT — Camara, le 17/09/2026.
+   * MODIFIER UN PARENT : LA BASE D'IDENTITÉ D'ABORD, LA FICHE ENSUITE.
    *
-   * FAIT AVANT la modification de la fiche, et séparément : ce sont deux
-   * bases. Si celle-ci échoue — politique de mot de passe, compte protégé —,
-   * la fenêtre reste ouverte avec la raison, et la fiche n'a pas bougé. Dans
-   * l'autre sens, on aurait enregistré la fiche puis annoncé un échec, en
-   * laissant l'administrateur se demander ce qui est passé.
+   * Un compte vit dans deux bases — les identifiants sur le serveur
+   * d'identité, la fiche de famille dans l'API métier — et cette fenêtre peut
+   * toucher aux deux. L'ordre n'est pas indifférent.
    *
-   * VIDE VEUT DIRE « ON NE TOUCHE À RIEN ». La fenêtre de modification sert
-   * d'abord à corriger un nom : elle ne doit pas exiger un mot de passe à
-   * chaque passage.
+   * 1. L'ADRESSE DE CONNEXION — ajouté le 23/09/2026, après le signalement de
+   *    Camara : « j'ai changé l'adresse mail d'un parent, mais elle ne peut
+   *    plus se connecter ». La fenêtre n'appelait QUE l'API métier, qui écrit
+   *    `Parents.Mail` — l'adresse d'affichage et d'envoi. L'identité gardait
+   *    l'ancienne : le parent recevait ses bilans ici et ne pouvait entrer que
+   *    par là. Aucune donnée perdue (la fiche tient au `sub`), mais un compte
+   *    injoignable pour qui ne devinait pas.
+   *
+   * 2. LE MOT DE PASSE — Camara, le 17/09/2026. APRÈS l'adresse, et c'est tout
+   *    l'intérêt de les avoir réunis : cette route désigne le compte PAR SON
+   *    ADRESSE. Dans l'autre sens, changer les deux d'un coup aurait cherché
+   *    le compte sous la nouvelle adresse, pas encore posée — un 404 pour une
+   *    saisie pourtant valable.
+   *
+   * 3. LA FICHE, en dernier. Si l'une des étapes d'identité échoue — adresse
+   *    déjà prise, compte protégé, politique de mot de passe —, la fenêtre
+   *    reste ouverte avec la raison et la fiche n'a pas bougé. Dans l'autre
+   *    sens, on aurait enregistré la fiche puis annoncé un échec, en laissant
+   *    les deux bases en désaccord : exactement le défaut qu'on répare.
+   *
+   * VIDE VEUT DIRE « ON N'Y TOUCHE PAS », pour les deux : cette fenêtre sert
+   * d'abord à corriger un nom mal saisi.
    */
   const [reinit, setReinit] = useState({ enCours: false, erreur: null });
 
@@ -1267,24 +1291,42 @@ export default function Admin() {
     setReinit({ enCours: false, erreur: null });
   }, [edition?.operation, edition?.id]);
 
-  const reinitialiserPuisEnregistrer = async (donnees, operation, id) => {
-    const mdp = lireMotDePasse(donnees);
-    const fiche = sansMotDePasse(donnees);
+  const enregistrerParent = async (donnees, operation, id) => {
+    const etapes = etapesIdentite(donnees);
+    const fiche = sansMotDePasse(sansSub(donnees));
 
-    if (mdp.erreur) {
-      setReinit({ enCours: false, erreur: mdp.erreur });
+    if (etapes.erreur) {
+      setReinit({ enCours: false, erreur: etapes.erreur });
       return;
     }
 
     setReinit({ enCours: true, erreur: null });
 
     try {
-      await reinitialiserMotDePasseDe(fiche.mail, mdp.valeur);
+      if (etapes.adresse) {
+        await changerEmailDe(etapes.adresse.sub, etapes.adresse.email);
+      }
     } catch (e) {
       setReinit({
         enCours: false,
         erreur: e?.response?.data?.message
-          ?? "Le mot de passe n’a pas pu être changé.",
+          ?? "L’adresse de connexion n’a pas pu être changée.",
+      });
+      return;
+    }
+
+    try {
+      if (etapes.motDePasse) {
+        await reinitialiserMotDePasseDe(etapes.motDePasse.sub, etapes.motDePasse.valeur);
+      }
+    } catch (e) {
+      setReinit({
+        enCours: false,
+        // L'ADRESSE, ELLE, A BIEN CHANGÉ. Le dire évite que l'administrateur
+        // réessaie tout depuis le début et se heurte à « aucun compte avec
+        // cette adresse » — puisque c'est désormais la nouvelle qui existe.
+        erreur: (e?.response?.data?.message ?? "Le mot de passe n’a pas pu être changé.")
+          + (etapes.adresse ? " L’adresse de connexion, elle, a bien été changée." : ''),
       });
       return;
     }
@@ -1299,12 +1341,15 @@ export default function Admin() {
     const { operation, id, ...donnees } = edition;
 
     if (operation === 'creerParent') {
-      creerCompteParent(donnees);
+      creerCompteParent(sansSub(donnees));
       return;
     }
 
-    if (operation === 'modifierParent' && donnees.motDePasse?.trim()) {
-      reinitialiserPuisEnregistrer(donnees, operation, id);
+    // L'ADRESSE OU LE MOT DE PASSE TOUCHENT À L'IDENTITÉ : on passe par
+    // l'enchaînement, qui sait dans quel ordre s'y prendre. Sinon — le cas le
+    // plus fréquent, un nom mal saisi —, la fiche part seule.
+    if (operation === 'modifierParent' && toucheAuxIdentifiants(donnees)) {
+      enregistrerParent(donnees, operation, id);
       return;
     }
 
@@ -1323,7 +1368,8 @@ export default function Admin() {
         // Laissés dans la charge, ils partiraient à l'API métier, qui les
         // ignorerait — mais on aurait envoyé un mot de passe en clair à une
         // route qui n’a rien à en faire, et il serait dans ses journaux.
-        ? sansMotDePasse(donnees)
+        // `sub` non plus : c'est la clé du compte sur l'AUTRE base.
+        ? sansMotDePasse(sansSub(donnees))
         : donnees;
 
     dispatch(muter(operation, id, charge));
@@ -1901,6 +1947,13 @@ export default function Admin() {
                             prenom: p.prenom ?? '',
                             nom: p.nom ?? '',
                             mail: p.mail ?? '',
+                            // LA CLÉ DU COMPTE SUR LE SERVEUR D'IDENTITÉ.
+                            // L'adresse ne peut pas servir de clé : c'est
+                            // justement elle qui peut avoir divergé entre les
+                            // deux bases, et un compte désynchronisé devenait
+                            // alors irréparable depuis cet écran. Le `sub`, lui,
+                            // ne bouge jamais.
+                            sub: p.identityUserId ?? '',
                           })
                         }
                       >
@@ -1942,7 +1995,7 @@ export default function Admin() {
                                 ? `, en résiliant son abonnement ${p.formule} chez Stripe`
                                 : ''
                             }`,
-                            p.mail,
+                            p.identityUserId,
                           )
                         }
                       >
@@ -2315,6 +2368,26 @@ export default function Admin() {
                     value={edition.mail}
                     onChange={(e) => setEdition({ ...edition, mail: e.target.value })}
                   />
+                  {/* DIT AVANT DE CLIQUER, ET SEULEMENT QUAND ÇA ARRIVE.
+                      Cette adresse n'est pas une ligne de fiche : c'est
+                      l'identifiant de connexion. Le changer déconnecte le
+                      parent et lui demande d'entrer par la nouvelle — s'il ne
+                      le sait pas, il appelle en disant que son compte ne
+                      marche plus. C'est exactement ce qui s'est passé le
+                      23/09/2026, quand les deux bases ne bougeaient pas
+                      ensemble. */}
+                  {edition.operation === 'modifierParent' && (
+                    <p className="champ__aide">
+                      {edition.sub
+                        ? 'C’est aussi son identifiant de connexion : le changer ferme ses sessions en cours, et il devra entrer avec la nouvelle adresse. Le mot de passe, lui, ne change pas.'
+                        // SANS `sub`, ON NE TOUCHE PAS À L'IDENTITÉ — et il
+                        // faut le dire, sinon l'administrateur croit avoir
+                        // changé la connexion alors qu'il n'a changé que
+                        // l'adresse d'envoi. C'est exactement le malentendu qui
+                        // a coûté une soirée le 23/09/2026.
+                        : 'Cette fiche n’est reliée à aucun compte de connexion : seule l’adresse d’envoi des courriels changera.'}
+                    </p>
+                  )}
                 </div>
 
                 {/* LE MOT DE PASSE EST POSÉ ICI — Camara, le 17/09/2026 : « je
@@ -2560,7 +2633,10 @@ export default function Admin() {
                 {edition.operation === 'creerParent'
                   ? (creation.enCours ? 'Création…' : 'Créer le compte')
                   : reinit.enCours
-                    ? 'Changement du mot de passe…'
+                    // « Identifiants » et non « mot de passe » : l'attente
+                    // couvre maintenant aussi le changement d'adresse de
+                    // connexion, qui peut être seul en jeu.
+                    ? 'Mise à jour des identifiants…'
                     : 'Enregistrer'}
               </button>
             </div>

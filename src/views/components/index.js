@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import {
   Navbar,
   BoutonSignalement,
+  BandeauCookies,
+  MetaDeLaPage,
+  NonTrouve,
   Accueil,
   Callback,
   ListeEleves,
@@ -38,6 +41,7 @@ import {
   RouteProtegee,
   VerrouEleve,
   VerrouMaintenance,
+  VerrouAffluence,
   EntreeEleve,
   ScanMobile,
   BandeauInfo,
@@ -81,6 +85,17 @@ export const BaseApp = () => {
           d'attente : un visiteur cliquerait « Tarifs » et retomberait sur la
           même page, ce qui se lit comme un site cassé plutôt qu'un site en
           travaux. */}
+      {/* LA FILE D'ATTENTE ENVELOPPE LE RIDEAU, ET NON L'INVERSE.
+
+          Un jour d'affluence, le serveur est la ressource rare ; la
+          maintenance, elle, est une décision. Celui qui est refoulé faute de
+          place doit voir sa file, pas une page de travaux qui lui ferait
+          croire à une panne et le ferait partir.
+
+          En pratique les deux ne se croisent presque jamais — on n'annonce pas
+          une maintenance un jour d'affluence — mais l'ordre devait être
+          choisi, et celui-ci dit la vérité au visiteur dans les deux cas. */}
+      <VerrouAffluence>
       <VerrouMaintenance>
       {/* AU-DESSUS DE LA BARRE, ET DANS LE FLUX.
 
@@ -89,6 +104,11 @@ export const BaseApp = () => {
           flux et non fixé, parce que la barre est déjà collante — deux
           bandeaux superposés en permanence, c'est un tiers d'écran de
           téléphone perdu pour une phrase déjà lue. */}
+      {/* LES MÉTADONNÉES DE LA PAGE COURANTE — titre, description, canonique.
+          Sous le routeur, parce qu'elles suivent la route ; sans rendu,
+          parce qu'elles n'écrivent que dans l'en-tête du document. Voir
+          `lib/seo/pages.js` pour ce que ça corrige. */}
+      <MetaDeLaPage />
       <BandeauInfo />
       <Navbar />
       {/* Le verrou enveloppe TOUTES les routes, y compris les publiques : un
@@ -331,7 +351,14 @@ export const BaseApp = () => {
             }
           />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* UNE VRAIE PAGE, ET NON UN RENVOI VERS L'ACCUEIL. Le renvoi
+              rendait le contenu complet de l'accueil en HTTP 200 pour
+              N'IMPORTE QUELLE adresse : Google pouvait indexer
+              `mimia.fr/n-importe-quoi` comme une page à part entière, en
+              doublon de celle qu'on veut voir remonter. Et le visiteur qui
+              avait mal recopié un lien ne comprenait pas où il venait
+              d'atterrir. Voir `NonTrouve`. */}
+          <Route path="*" element={<NonTrouve />} />
         </Routes>
       </main>
       </VerrouEleve>
@@ -340,8 +367,15 @@ export const BaseApp = () => {
           personne à qui écrire un signalement : le serveur ne saurait pas
           quel parent prévenir. */}
       {(authentifie || eleve) && <BoutonSignalement />}
+
+      {/* LE CONSENTEMENT, POUR TOUT LE MONDE — y compris un visiteur non
+          connecté, qui est justement celui que la mesure d'audience observe.
+          Le bandeau décide seul de se montrer : il se tait dans l'espace
+          connecté et quand la question est tranchée. */}
+      <BandeauCookies />
       <Footer />
       </VerrouMaintenance>
+      </VerrouAffluence>
     </BrowserRouter>
   );
 };
