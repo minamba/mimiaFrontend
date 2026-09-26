@@ -26066,6 +26066,124 @@ html.defilement-bloque body {
   line-height: 1;
 }
 
+/* LA RANGÉE DU HAUT — Camara, le 26/09 : les cœurs n'étaient pas au niveau de
+   la piste des manches, puis, une fois remontés, tombaient sur la question.
+
+   Sur écran large, le bouton de retour, les cœurs et la piste forment UNE
+   rangée fixe en haut du panneau : bouton à gauche (déjà en absolu dans les
+   treize jeux, à 12 px du haut), cœurs au centre, piste à droite. Tous trois
+   sont centrés sur la même ligne de 40 px — la hauteur du bouton.
+
+   LE JEU RESERVE CETTE RANGÉE : 68 px de marge en haut du panneau, et le
+   contenu commence dessous. Plus rien ne peut tomber sur la question.
+
+   Pareil en tranquille et en défi, pour que la scène ne saute pas d'un mode à
+   l'autre. Seulement sur écran large : sur téléphone, les trois ne tiennent
+   pas sur une ligne et gardent leur place dans le flux. La course des tables
+   n'a pas de piste : ses cœurs restent dans le flux. */
+@media (min-width: 621px) {
+  .jeu:has(> .jeu__manches) { padding-top: 68px; }
+
+  .jeu > .jeu__manches {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 2;
+    height: 36px;
+    box-sizing: border-box;
+    align-items: center;
+    margin: 0;
+  }
+
+  .coeurs--aligne:has(+ .jeu__manches) {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    z-index: 2;
+    height: 40px;
+    align-items: center;
+    margin: 0;
+    transform: translateX(-50%);
+  }
+
+  /* TOUS LES JEUX CENTRENT LEUR CONTENU dans la hauteur du décor — Camara,
+     le 26/09 : « il faut qu'ils soient tous centrés verticalement, certains
+     le sont et d'autres pas ». Consigne, question et réponses tombaient tout
+     en haut dans la plupart, avec la moitié basse du décor vide.
+
+     Le panneau de jeu se reconnaît à son bouton de retour — les écrans de fin
+     n'en ont pas. Ce qui est POSÉ SUR LA TABLE du décor (la boîte à œufs, le
+     comptoir de la marchande) y reste : sa marge automatique prend l'espace
+     libre avant le centrage. */
+  .jeu:has(> .jeu__quitter) { justify-content: center; }
+}
+
+/* SUR TÉLÉPHONE — Camara, le 26/09 : « sur mobile c'est cassé ». Les cœurs,
+   premiers dans le flux, passaient sous le bouton de retour, et la piste
+   élargie par « Question 1/8 » ne tenait plus à côté de lui.
+
+   Rangée 1, DANS LES DEUX MODES : le bouton à gauche (en absolu, compact — un
+   bouton pour sortir ne doit pas devenir ce qu'on voit en premier) et la
+   piste en face, à sa hauteur exacte, SANS « Question 1/8 » : à côté du
+   bouton l'étiquette ne tient pas, et les pastilles disent déjà l'avancée.
+
+   Rangée 2, EN DÉFI SEULEMENT : les cœurs, centrés. Camara a voulu cet ordre
+   — la piste avec le bouton, les cœurs dessous — plutôt que l'inverse.
+
+   Le jeu se centre dans ce qui reste. */
+@media (max-width: 620px) {
+  .jeu:has(> .jeu__quitter) { padding-top: 58px; justify-content: center; }
+
+  .jeu:has(> .jeu__quitter) > .jeu__manches {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 2;
+    height: 31px;
+    min-height: 0;
+    box-sizing: border-box;
+    margin: 0;
+  }
+
+  .jeu:has(> .jeu__quitter) > .jeu__manches::after { display: none; }
+
+  .jeu > .coeurs {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 2;
+    height: 32px;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+  }
+
+  .jeu > .coeurs .coeurs__un { width: 22px; height: 22px; }
+
+  /* Les cœurs descendent au centre de la rangée 2 quand la piste occupe la
+     droite du bouton. La course des tables, sans piste, les garde en face du
+     bouton, sur la rangée 1. */
+  .jeu:has(> .coeurs + .jeu__manches) { padding-top: 92px; }
+
+  .jeu > .coeurs:has(+ .jeu__manches) {
+    top: 50px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Les plus petits téléphones (320 px) : la piste touchait le bouton. */
+@media (max-width: 360px) {
+  .jeu:has(> .jeu__quitter) > .jeu__manches { gap: 4px; padding: 5px 7px; right: 10px; }
+}
+
+/* ENTRE 621 ET 900 PX, « QUESTION 3/8 » HEURTERAIT LES CŒURS au centre de la
+   rangée : en défi, la piste n'y garde que ses pastilles. */
+@media (min-width: 621px) and (max-width: 900px) {
+  .coeurs--aligne + .jeu__manches::after { display: none; }
+}
+
 .coeurs__un {
   width: 26px;
   height: 26px;
@@ -31346,16 +31464,49 @@ html.defilement-bloque body {
    COMME LUI, UNE SEULE RÈGLE POUR TOUS LES JEUX : écrite plus bas que les
    treize variantes, elle l'emporte à spécificité égale. `align-self` n'est pas
    touché, chaque jeu garde sa place dans la scène. */
+/* LE CONTOUR CORAIL (Camara, le 26/09) : la couleur de la manche en cours,
+   qui fait de la piste un objet de jeu plutôt qu'un creux dans le décor. */
 .jeu .jeu__manches {
+  align-items: center;
   gap: 9px;
-  padding: 7px 13px;
-  border: 1px solid rgba(150, 200, 255, 0.34);
+  padding: 4px 13px 4px 4px;
+  border: 2px solid #ff8a4c;
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(4, 16, 38, 0.86) 0%, rgba(3, 10, 26, 0.9) 100%);
   box-shadow:
     inset 0 2px 6px rgba(0, 0, 0, 0.55),
     inset 0 -1px 0 rgba(255, 255, 255, 0.07),
+    0 0 12px rgba(255, 122, 60, 0.55),
     0 6px 16px rgba(0, 0, 0, 0.35);
+
+  /* « QUESTION 3/8 », SANS UNE LIGNE DE JAVASCRIPT. Deux compteurs CSS :
+     `total` compte toutes les pastilles, `atteintes` celles qui sont faites
+     ou en cours — c'est-à-dire le numéro de la question. L'étiquette est le
+     `::after` de la piste, donc lue APRÈS toutes les pastilles, quand les deux
+     compteurs sont complets ; `order: -1` la replace au début à l'écran.
+     Aucun des vingt-deux jeux n'a eu à changer. */
+  counter-reset: total atteintes;
+}
+
+.jeu .jeu__manche { counter-increment: total; }
+
+.jeu .jeu__manche.est-faite,
+.jeu .jeu__manche.est-courante { counter-increment: total atteintes; }
+
+.jeu .jeu__manches::after {
+  content: 'Question ' counter(atteintes) '/' counter(total);
+  order: -1;
+  margin-right: 3px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1f4a9e 0%, #132f72 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-family: 'Lilita One', var(--display);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #fff;
 }
 
 .jeu .jeu__manche {

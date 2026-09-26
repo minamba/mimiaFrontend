@@ -49,11 +49,18 @@ export default function Coeurs({ manche, duPremierCoup }) {
     if (restants === 0) terminerDefi?.({ reussies: duPremierCoup ?? 0, questions: manche ?? 0 });
   }, [restants, terminerDefi, duPremierCoup, manche]);
 
-  if (!actif || restants === 0) return null;
+  // SUR LA LIGNE DE LA PISTE DES MANCHES — Camara, le 26/09. Le placement
+  // est tout entier dans le CSS (`.coeurs--aligne`) : une rangée fixe en haut
+  // de la scène, commune à tous les jeux. Une première version MESURAIT la
+  // piste pour s'aligner sur elle ; la mesure tombait avant que la piste ait
+  // quitté le flux, et posait les cœurs sur la question.
+  const visible = actif && restants > 0;
+
+  if (!visible) return null;
 
   return (
     <p
-      className={`coeurs${restants === 1 ? ' coeurs--dernier' : ''}`}
+      className={`coeurs coeurs--aligne${restants === 1 ? ' coeurs--dernier' : ''}`}
       // LE COMPTE EST ANNONCÉ, PAS SEULEMENT DESSINÉ : une rangée de cœurs ne
       // dit rien à qui ne voit pas l'écran. La zone est polie pour que la
       // perte se sache sans couper la question en cours.
