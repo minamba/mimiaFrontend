@@ -6,6 +6,7 @@ import BoutonAjoutControle from './BoutonAjoutControle';
 import ControleForm from './ControleForm';
 import Loader from './Loader';
 import Onglets from './Onglets';
+import OuvertureSeance from './OuvertureSeance';
 import { ControleCarte } from './MesControles';
 
 /**
@@ -72,6 +73,10 @@ export default function ControlesEleve() {
   );
   const [controles, setControles] = useState(null);
   const [matieres, setMatieres] = useState([]);
+
+  // Le contrôle et le mode de la séance qu'on s'apprête à ouvrir, le temps
+  // de la durée et du casque.
+  const [ouverture, setOuverture] = useState(null);
   const [formulaire, setFormulaire] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -95,23 +100,35 @@ export default function ControlesEleve() {
     return () => { vivant = false; };
   }, [eleveId]);
 
-  // Une préparation s'ouvre comme un cours ordinaire, sans passer par le
-  // choix de durée : l'élève a déjà dit ce qu'il venait faire. La durée par
-  // défaut du chat (25 min) s'applique.
-  //
   // LE MODE VOYAGE AVEC LE CONTRÔLE : c'est lui qui dit au professeur de quoi
   // parler — préparer ce contrôle, ou en faire le point une fois passé.
-  const preparer = (controle) =>
-    navigate(`/eleves/${eleveId}/matieres/${controle.matiereId}/chat?mode=controle&controleId=${controle.id}`);
+  //
+  // LES DEUX QUESTIONS D'AVANT COURS, COMME PARTOUT — Camara, le 26/09/2026 :
+  // « faire le point » ouvrait le cours sans demander le casque. Une séance de
+  // contrôle est une vraie séance, avec son minuteur et son micro : la durée,
+  // puis le casque, comme depuis l'accueil.
+  const preparer = (controle) => setOuverture({ controle, mode: 'controle' });
 
-  const faireLePoint = (controle) =>
-    navigate(`/eleves/${eleveId}/matieres/${controle.matiereId}/chat?mode=bilan&controleId=${controle.id}`);
+  const faireLePoint = (controle) => setOuverture({ controle, mode: 'bilan' });
 
   const groupes = controles !== null ? grouperParMatiere(controles) : [];
 
   return (
     <section className="page page--large">
       <Link to={`/eleves/${eleveId}/matieres#mes-controles`} className="lien-retour">← Retour</Link>
+
+      {ouverture && (
+        <OuvertureSeance
+          matiere={matieres.find((m) => m.id === ouverture.controle.matiereId)
+            ?? { id: ouverture.controle.matiereId, profPrenom: 'Ton professeur' }}
+          onAnnuler={() => setOuverture(null)}
+          onOuvrir={(duree, casque) => navigate(
+            `/eleves/${eleveId}/matieres/${ouverture.controle.matiereId}/chat`
+            + `?duree=${duree}&casque=${casque ? 1 : 0}`
+            + `&mode=${ouverture.mode}&controleId=${ouverture.controle.id}`,
+          )}
+        />
+      )}
 
       <header className="controles-page__entete">
         <h1>Mes contrôles</h1>

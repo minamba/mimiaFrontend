@@ -88,6 +88,7 @@ const LANGUES_ECOUTE = [
   ['[DE]', '[/DE]', '\u0007', 'de'],
   ['[IT]', '[/IT]', '\u000b', 'it'],
   ['[ZH]', '[/ZH]', '\u000e', 'zh'],
+  ['[AR]', '[/AR]', '\u000f', 'ar'],
 ];
 
 /** Caractère de début de la balise d'écoute d'une langue, par son code. */
@@ -441,6 +442,16 @@ export function vitesseDemandee(texte) {
 const JEU_PROPOSE = /\[JEU\]\s*([A-Za-z0-9_]+)\/([a-z0-9-]+)\s*\[\/JEU\]/gi;
 
 /**
+ * LA CORRECTION D'UNE COPIE, ERREUR PAR ERREUR — Camara, le 26/09/2026.
+ * « [ERREUR 2/4] » : le professeur passe à la 2e erreur (sur 4) ; la carte
+ * redemande alors « je t'aide / je corrige et t'explique ». « [CORRECTION_
+ * TERMINEE] » : il n'y en a plus. Ni à lire ni à dire — la carte les porte.
+ * Voir `copieControle.js`.
+ */
+export const ERREUR_CORRECTION = /\[ERREUR\s+(\d+)(?:\s*\/\s*(\d+))?\]/gi;
+export const CORRECTION_TERMINEE = '[CORRECTION_TERMINEE]';
+
+/**
  * `{ classe, cle }` du jeu proposé, ou null. La DERNIÈRE occurrence l'emporte,
  * comme pour la vitesse.
  */
@@ -516,6 +527,21 @@ export function dicteeSupprimee(texte) {
  */
 const DICTEE_AU_TABLEAU_OUVERTURE = '[DICTEE_AU_TABLEAU]';
 const DICTEE_AU_TABLEAU_FERMETURE = '[/DICTEE_AU_TABLEAU]';
+
+/**
+ * UNE NOTE DE L'APPLICATION RECOPIÉE PAR LE PROFESSEUR — Camara, le
+ * 04/10/2026 : le dépliage d'une dictée remise au tableau, soufflé au
+ * professeur dans son historique, est ressorti entier dans sa réponse,
+ * affiché et lu à voix haute en anglais. Le serveur ne le lui souffle plus de
+ * cette façon et le retire du texte persisté ; ici, c'est le flux en direct
+ * qu'on protège.
+ *
+ * PAR MOTIF, PAS PAR PAIRE DE BORNES : sa fermeture est un simple « ] », et le
+ * filet des balises orphelines de `retirerBloc` aurait coupé tout message
+ * contenant un crochet. Le motif accepte un bloc encore ouvert (`$`) : en
+ * plein flux, rien de ce qui suit l'ouverture ne sort.
+ */
+const NOTE_APPLICATION = /\[Ajouté par l'application[\s\S]*?(?:\]|$)/gi;
 
 /**
  * Ce que le tableau retient d'un tel geste : un repère, résolu ensuite par
@@ -838,12 +864,17 @@ function retirerMarqueurs(texte) {
     .split(CONVERSATION).join('')
     .split(SUPPORT_EVALUATION).join('')
     .split(SUPPORT_ECRIT).join('')
+    .split(CORRECTION_TERMINEE).join('')
+    .replace(ERREUR_CORRECTION, '')
     // La forme à cible porte un paramètre : elle se retire par motif, sinon
     // l'élève lirait « :lent] » au milieu de la phrase et l'entendrait.
     .replace(VITESSE_CIBLE, '')
     // Même raison pour le jeu proposé : « CE1/course-des-tables » n'est ni à
     // lire ni à dire, c'est la carte qui le porte.
-    .replace(JEU_PROPOSE, '');
+    .replace(JEU_PROPOSE, '')
+    // La note de l'application, si le professeur l'a recopiée — voir
+    // NOTE_APPLICATION : ni affichée, ni dite, même ouverte.
+    .replace(NOTE_APPLICATION, '');
 
   const blocs = [
     [EVAL_OUVERTURE, EVAL_FERMETURE],
@@ -968,6 +999,24 @@ export function extraireArdoises(texte) {
  * prononcer un contenu d'ardoise partiel donnerait « trois barre oblique
  * quatre plus un barre oblique... » en plein milieu.
  */
+/**
+ * Le professeur est-il en train d'écrire au tableau ?
+ *
+ * Vrai quand le flux porte une ardoise ouverte et pas encore refermée. Le
+ * temps qu'elle se remplisse, la voix retient tout ce qui suit — c'est voulu,
+ * voir `texteParle` — et l'élève n'entend rien. Camara, le 28/09/2026, avec
+ * le professeur d'informatique, qui pose des programmes entiers sur
+ * l'ardoise : « quinze secondes de silence, puis une minute », l'écran disant
+ * « Le professeur parle… ». Il n'en disait rien : il écrivait. L'écran doit
+ * le dire.
+ */
+export function ardoiseOuverte(texte) {
+  const dernier = (texte ?? '').lastIndexOf(OUVERTURE);
+  if (dernier === -1) return false;
+
+  return !texte.slice(dernier + OUVERTURE.length).includes(FERMETURE);
+}
+
 export function texteParle(texte, { bornes = false } = {}) {
   let sortie = '';
 

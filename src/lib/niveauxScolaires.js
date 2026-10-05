@@ -63,6 +63,29 @@ export function specialitesAEnvoyer(liste, { nombre, possibles }) {
   return (liste ?? []).filter((c) => codes.has(c)).slice(0, nombre);
 }
 
+/**
+ * LES AUTRES LANGUES VIVANTES B de la classe choisie — allemand, italien,
+ * chinois, arabe (04/10/2026). La liste VIENT DU SERVEUR : il ne propose que
+ * les langues allumées dans Admin › Modes, et seulement dans les classes où
+ * la LVB existe. Vide ailleurs — et alors rien ne s'affiche.
+ */
+export function languesDeLaClasse(niveaux, id) {
+  const niveau = (niveaux ?? []).find((n) => String(n.id) === String(id));
+  return niveau?.languesPossibles ?? [];
+}
+
+/** Coche ou décoche une langue. */
+export function basculerLangue(liste, code) {
+  const actuelles = liste ?? [];
+  return actuelles.includes(code) ? actuelles.filter((c) => c !== code) : [...actuelles, code];
+}
+
+/** Ce qu'on envoie au serveur : seulement des langues proposées dans cette classe. */
+export function languesAEnvoyer(liste, possibles) {
+  const codes = new Set((possibles ?? []).map((l) => l.code));
+  return (liste ?? []).filter((c) => codes.has(c));
+}
+
 /** Vrai quand la classe choisie est une classe qu'on ne peut plus choisir : la série manque. */
 export function serieAPreciser(niveaux, id) {
   const niveau = (niveaux ?? []).find((n) => String(n.id) === String(id));

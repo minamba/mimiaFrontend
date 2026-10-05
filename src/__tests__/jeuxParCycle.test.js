@@ -20,6 +20,8 @@ jest.mock('../lib/storage/fluxReglages', () => ({ demarrerFluxReglages: () => ()
 jest.mock('../lib/storage/styleSite', () => ({
   appliquerBlueSky: () => {},
   blueSkyEnregistre: () => false,
+  saisonEnregistree: () => null,
+  saisonValide: () => null,
 }));
 
 const repondre = (jeux) => getReglagesPublics.mockResolvedValue({

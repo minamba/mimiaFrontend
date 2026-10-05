@@ -83,6 +83,25 @@ const CONSIGNE_APRES_RELECTURE_PAR_DEFAUT = "C'est fini. Quand tu es prêt, rend
 
 const navigateurSupporte = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
+/**
+ * LE CHIEN DE GARDE DU REPLI NAVIGATEUR — Camara, le 28/09/2026 : « le message
+ * de bienvenue apparaît, je n'entends rien, et "Le professeur parle" reste
+ * plus d'une minute ». Le moteur du navigateur promet `end`, et il arrive
+ * qu'il ne le donne jamais — voix pas encore chargées, onglet en arrière-plan,
+ * ou le défaut connu de Chrome où la synthèse reste « en cours » à vide. Sans
+ * borne, la boucle attendait pour toujours et l'écran avec elle. On accorde le
+ * temps de dire le texte à huit caractères par seconde, plus quatre secondes.
+ */
+const GARDE_NAVIGATEUR_MS = 4000;
+const MS_PAR_CARACTERE_NAVIGATEUR = 125;
+
+/**
+ * Au bout de combien de temps un graphe audio encore endormi est déclaré
+ * bloqué. Chrome ne REFUSE pas `resume()` sans geste : il le laisse en
+ * suspens. Voir `obtenirContexte`.
+ */
+const BLOCAGE_CONSTATE_MS = 500;
+
 
 /** Longueur max d'un envoi ; au-delà le serveur tronque. */
 const LONGUEUR_MAX = 700;
@@ -132,6 +151,132 @@ const GROUPE = 260;
  * prononcer aucune.
  */
 const SILENCE_GROUPE = 400;
+
+/**
+ * LE FILET PATIENTE DEVANT UN GROUPE TROP COURT — même relevé du 28/09/2026.
+ *
+ * « 1. » (le numéro d'une étape), « Bien. », « i. » : un groupe de moins de
+ * GROUPE_MINIMUM caractères que le flux laisse seul pendant 400 ms partait
+ * tel quel, et le professeur prononçait « un. », puis se taisait le temps que
+ * la suite arrive et soit synthétisée. Quand le modèle écrit par à-coups —
+ * c'est le cas dès qu'il pense à du code —, ça faisait une bribe par à-coup.
+ *
+ * Devant un groupe aussi court, le filet se réarme une fois, quatre fois
+ * plus long. Si le silence persiste, c'est bien que le message est fini (ou
+ * bloqué), et la bribe part. `terminer()`, lui, n'attend jamais.
+ */
+const FILET_PATIENT = SILENCE_GROUPE * 4;
+
+/**
+ * UN « SALUT MINS ! » NE PART PAS SEUL — Camara, le 04/10/2026 : « dans le
+ * bonjour, quand il m'a dit salut Mins, il l'a répété plusieurs fois ».
+ *
+ * La voix Gemini relit parfois son texte deux fois, et la garde du serveur
+ * (`GardeRedite`) ne peut rien sur un texte de moins de cinq mots : il n'y a
+ * pas assez de mots pour distinguer une redite d'une fin de phrase. Or le
+ * bonjour arrivait seul — le flux marque une pause juste après —, et partait
+ * donc sans surveillance. Relevé au journal : 2,9 s de son pour ce texte,
+ * contre 1,3 s d'ordinaire.
+ *
+ * Un groupe de moins de cinq mots attend donc la phrase suivante, avec
+ * laquelle il part sous surveillance. Le délai n'est qu'un filet : si rien
+ * ne vient, c'est que le message s'arrêtait là, et il se dit quand même.
+ */
+const MOTS_SURVEILLES = 5;
+const FILET_PEU_DE_MOTS = 4000;
+
+/** Les mots que compte la garde du serveur : deux lettres ou chiffres au moins. */
+export function nombreDeMots(texte) {
+  return (texte ?? '')
+    .split(/\s+/)
+    .filter((mot) => mot.replace(/[^\p{L}\p{N}]/gu, '').length >= 2)
+    .length;
+}
+
+/**
+ * LA RÉSERVE DE SON EN DESSOUS DE LAQUELLE UN GROUPE PART SANS ATTENDRE.
+ *
+ * Camara, le 28/09/2026 : « pas de coupures ni de saccades dans la façon de
+ * parler des professeurs ». Le trou venait d'ici : la première phrase, courte
+ * (PREMIER_GROUPE), se dit en deux ou trois secondes ; la suivante n'était
+ * envoyée à la synthèse qu'à 260 caractères reçus, plus le temps de synthèse.
+ * Quand ça ne tenait pas dans la première phrase, le professeur se taisait au
+ * milieu de sa réponse pendant que le texte défilait, puis reprenait.
+ *
+ * Désormais, dès qu'il reste moins de deux secondes et demie de son programmé
+ * et rien d'autre en file, la première phrase complète en attente part, même
+ * courte. Deux secondes et demie : le temps que la synthèse rende son premier
+ * octet (une demi-seconde à une seconde) plus l'amorce, avec de la marge. Une
+ * phrase un peu moins bien intonée s'entend moins qu'un silence.
+ */
+const RESERVE_SON_S = 2.5;
+
+/** En dessous, on attend quand même : trop court pour poser une intonation. */
+const GROUPE_MINIMUM = 20;
+
+/**
+ * CE QU'IL RESTE À DIRE, ESTIMÉ D'APRÈS LE TEXTE — Camara, le 28/09/2026, en
+ * local : « après "sort en premier", un très long silence, puis tout ce qu'il
+ * a dit derrière était saccadé, avec de longs temps de pause ».
+ *
+ * La réserve de son (RESERVE_SON_S) se mesurait sur ce qui était PROGRAMMÉ
+ * dans la carte son. Or la boucle ne programme jamais plus d'un morceau
+ * d'avance — quatre dixièmes de seconde, exprès, pour pouvoir couper net.
+ * La réserve mesurée était donc toujours « presque vide », et chaque phrase
+ * partait seule à la synthèse dès vingt caractères : une requête par phrase,
+ * une intonation qui repart de zéro à chaque fois, et surtout une latence
+ * à chaque fois — mesurée ce jour-là entre 0,5 et 7 SECONDES pour le même
+ * fournisseur, la même voix, la même phrase de trente caractères.
+ *
+ * On compte maintenant tout ce qui est en route : le son programmé, les
+ * morceaux déjà reçus et pas encore programmés, et, pour ce qui n'est pas
+ * encore reçu, une estimation d'après la longueur du texte. Douze caractères
+ * par seconde : mesuré entre 11 et 14,6 sur cedar et coral.
+ */
+const CARACTERES_PAR_SECONDE = 12;
+
+/**
+ * COMBIEN DE PHRASES SE PRÉPARENT D'AVANCE. Une seule ne suffisait pas : une
+ * phrase courte de deux secondes ne couvre pas une synthèse qui met sept
+ * secondes à rendre son premier octet. Deux, c'est la longueur d'un groupe
+ * (GROUPE) devant soi. Préparer n'est pas programmer : ce qui est en
+ * téléchargement se coupe au jeton, sans rien laisser dans la carte son.
+ */
+const PRECHARGEMENTS_MAX = 2;
+
+/**
+ * LA REQUÊTE DOUBLÉE CONTRE LA LATENCE DE QUEUE — Camara, le 28/09/2026, en
+ * local : « à un moment donné, une pause plus longue que prévu ; sur tout le
+ * reste du cours c'était nickel ».
+ *
+ * Mesuré le même soir, même voix, même phrase de trente caractères, douze
+ * appels : onze premiers octets entre 0,46 et 1,24 s — et UN à 6,99 s. Le
+ * fournisseur a une queue de latence, et rien de ce qu'on met en réserve
+ * n'absorbe sept secondes sur la première phrase d'un tour.
+ *
+ * Passé ce délai sans amorce, on relance la MÊME requête à côté, et la
+ * première des deux à rendre du son gagne ; l'autre est coupée. Une
+ * requête sur douze est doublée, et une synthèse coûte moins d'un centime :
+ * c'est le prix d'une pause de sept secondes ramenée à deux.
+ */
+const DOUBLON_APRES_MS = 1500;
+
+/**
+ * CE QU'ON RÉ-ACCUMULE AVANT DE REPRENDRE APRÈS UN TROU, en secondes de son.
+ *
+ * Camara, le 28/09/2026, avec le professeur d'informatique : « il dit une
+ * lettre, ça coupe, puis un temps d'attente indéterminé — un mot toutes les
+ * minutes, une catastrophe ». Voilà d'où ça venait. L'amorce (AMORCE_OCTETS)
+ * ne vaut qu'au DÉMARRAGE d'un passage ; une fois lancé, chaque morceau reçu
+ * était programmé à l'instant, quelle que soit sa taille. Quand le flux de
+ * synthèse se met à arriver au compte-gouttes, on entend donc des bribes de
+ * cinquante millisecondes séparées de silences — des lettres.
+ *
+ * Après un trou, on retient les morceaux jusqu'à en avoir une seconde, puis on
+ * les joue d'un bloc. Le silence total est le même — il vient du réseau ou du
+ * fournisseur, pas d'ici — mais ce qui suit est une phrase, pas des lettres.
+ */
+const REPRISE_S = 1.0;
 
 /**
  * L avance minimale entre le calcul et le démarrage d un son.
@@ -195,19 +340,38 @@ const AMORCE_OCTETS = 12000;
 let serveurDispo = null;
 let sondeEnCours = null;
 
+/**
+ * UNE SONDE RATÉE NE CONDAMNE PAS LA SÉANCE — Camara, le 28/09/2026 : « j'ai
+ * redémarré l'API, je suis rentré en cours d'anglais, le message de bienvenue
+ * apparaît mais je n'entends rien ». La sonde avait frappé pendant que l'API
+ * redémarrait ; l'échec était gardé pour toute la page, et chaque phrase de la
+ * séance partait à la voix du navigateur — sans un mot dans la console.
+ * Un échec ne vaut que dix secondes : après, on redemande.
+ */
+const SONDE_REESSAI_MS = 10000;
+let sondeRateeLe = 0;
+
 async function serveurDisponible() {
   if (serveurDispo !== null) return serveurDispo;
+  if (sondeRateeLe && Date.now() - sondeRateeLe < SONDE_REESSAI_MS) return false;
 
   if (!sondeEnCours) {
     sondeEnCours = httpClient
       .get('/voix/disponible')
       .then(({ data }) => {
         serveurDispo = Boolean(data?.disponible);
+        sondeRateeLe = 0;
         return serveurDispo;
       })
       .catch(() => {
-        serveurDispo = false;
+        sondeRateeLe = Date.now();
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[voix] serveur de voix injoignable : voix du navigateur, nouvel essai dans 10 s.');
+        }
         return false;
+      })
+      .finally(() => {
+        sondeEnCours = null;
       });
   }
 
@@ -245,14 +409,45 @@ if (navigateurSupporte) {
  * On ne coupe qu'après une ponctuation forte suivie d'un espace : couper au
  * milieu d'un nombre décimal ou d'une abréviation donnerait un débit haché.
  */
+/**
+ * UN POINT N'EST PAS TOUJOURS UNE FIN DE PHRASE — Camara, le 28/09/2026, avec
+ * le professeur d'informatique : « il dit une lettre, ça coupe ». Toutes les
+ * coupures relevées étaient chez lui, et lui seul parle de « 0.2 + 0.1 »,
+ * de « liste.append(x) », de « version 3.12 ». Le découpage voyait une fin
+ * de phrase à chaque point : « 0. », « 2 + 0. », « 1 n'est pas égal à 0. »
+ * partaient à la synthèse comme trois phrases — des bribes de deux caractères,
+ * chacune un aller-retour, chacune un silence.
+ *
+ * Une ponctuation termine une phrase si un BLANC la suit. Sans blanc, elle
+ * est dans un nombre ou un nom, et la phrase continue.
+ *
+ * EN FIN DE TAMPON, où rien ne suit encore, on tranche par ce qui précède :
+ * après une lettre, c'est une fin (« Regarde ça. » devant une ardoise qui
+ * s'ouvre — elle se dit tout de suite) ; après un chiffre, on attend le
+ * fragment suivant (« à 0. » est presque toujours le début de « 0.3 »). Le
+ * cas manqué — un nombre qui clôt la phrase et le flux marque une pause —
+ * n'est pas perdu : le blanc suivant, ou `terminer()`, le libère.
+ */
 function decouperEnPhrases(texte) {
   const phrases = [];
   const regex = /[^.!?…]+[.!?…]+["'»)\]]*\s*/g;
   let match;
   let dernierIndex = 0;
+  let enCours = '';
 
   while ((match = regex.exec(texte)) !== null) {
-    phrases.push(match[0]);
+    const morceau = match[0];
+    enCours += morceau;
+
+    const suivieDUnBlanc = /\s$/.test(morceau);
+    const enFinDeTampon = regex.lastIndex === texte.length;
+    const avantLaPonctuation = morceau.replace(/[.!?…]+["'»)\]]*\s*$/, '').slice(-1);
+    const finDePhrase = suivieDUnBlanc || (enFinDeTampon && !/\d/.test(avantLaPonctuation));
+
+    if (!finDePhrase) continue;
+
+    phrases.push(enCours);
+    enCours = '';
     dernierIndex = regex.lastIndex;
   }
 
@@ -310,6 +505,9 @@ function sansTiretsMuets(texte) {
     .replace(new RegExp(`(^|\\n)[ \\t]*[${TIRETS}][ \\t]+`, 'g'), '$1')
     .replace(new RegExp(`\\s[${TIRETS}]\\s`, 'g'), ', ');
 }
+
+/** Deux voyelles en capitales qui ne nomment pas un segment. Voir plus bas. */
+const MOTS_DE_DEUX_VOYELLES = new Set(['OU', 'AU', 'II']);
 
 export function prononcable(texte, { langue = false } = {}) {
   // L ÉPELLATION DES CHOIX EN PREMIER : elle POSE des tirets, que la règle du
@@ -394,6 +592,35 @@ export function prononcable(texte, { langue = false } = {}) {
     .replace(/(\d)²/g, '$1 au carré')
     .replace(/(\d)³/g, '$1 au cube')
 
+    // DEUX VOYELLES COLLÉES NE SONT PLUS DEUX LETTRES — Camara, le
+    // 03/10/2026, en géométrie : « au lieu de dire AE elle a dit AY ».
+    //
+    // La phrase était « d'abord BA, puis AE », et BA comme BE sont sortis
+    // lettre par lettre. Seul AE a basculé : deux voyelles collées forment
+    // une graphie française — c'est la ligature « æ », qui se lit « é ».
+    // Le nom du segment devenait un son, et l'élève cherchait une longueur
+    // qui n'avait pas été nommée.
+    //
+    // CE N'EST PAS SYSTÉMATIQUE, ET C'EST BIEN LE PROBLÈME. Au banc du
+    // 03/10, la même phrase est ressortie correcte quatre fois sur quatre :
+    // le modèle y arrive presque toujours, et dérape parfois. C'est la règle
+    // de conduite de ce fichier — une lecture juste ne doit pas dépendre de
+    // ce qu'un modèle veut bien comprendre — et elle vaut doublement pour la
+    // voix de secours, qui lit ce qu'on lui donne.
+    //
+    // DEUX VOYELLES, PAS DEUX MAJUSCULES. La borne est étroite exprès :
+    // épeler toutes les paires de capitales abîmerait le reste du cours —
+    // « ET » et « OU » des tables de vérité, « IV » d'un roi, « OK », « TV ».
+    // Aucune de ces paires n'est faite de deux voyelles. Les segments à
+    // consonne — AB, BC, CD — ne risquaient rien et ne bougent pas.
+    //
+    // Trois exceptions quand même, où deux voyelles font autre chose qu'un
+    // segment : « OU » et « AU », qui sont des mots, et « II », qui est un
+    // chiffre romain.
+    .replace(/\b([AEIOUY])([AEIOUY])\b/g, (tout, a, b) => (
+      MOTS_DE_DEUX_VOYELLES.has(tout) ? tout : `${a} ${b}`
+    ))
+
     // UNE SUITE DE LETTRES ÉPELÉES SE LIT LETTRE PAR LETTRE.
     //
     // Le professeur de langue épelle ce qui distingue deux homophones :
@@ -445,6 +672,10 @@ class PassageDiffuse {
     this.fini = false;
     this.erreur = null;
 
+    // Secondes de son reçues en tout — ce qui reste à jouer se déduit de ce
+    // que la boucle a déjà programmé (voir `sonRestant`).
+    this.dureeRecue = 0;
+
     // Un seul consommateur — la boucle de lecture — donc une seule attente
     // à réveiller. Une file de réveils serait du décor.
     this.reveil = null;
@@ -465,6 +696,7 @@ class PassageDiffuse {
 
   pousser(tampon) {
     this.morceaux.push(tampon);
+    this.dureeRecue += tampon.duration;
     this.reveiller();
   }
 
@@ -520,11 +752,23 @@ class Lecteur {
     this.groupe = '';
     this.premierGroupe = true;
 
-    // Le filet qui les libère si le flux se tait sans dire qu'il a fini.
+    // Le filet qui les libère si le flux se tait sans dire qu'il a fini,
+    // et s'il a déjà patienté devant un groupe trop court (FILET_PATIENT).
     this.minuteurGroupe = null;
+    this.filetAPatiente = false;
+
+    // Le réveil posé à l'instant où la réserve de son passera sous le seuil
+    // (voir armerLaReserve) : la réserve ne se regarde pas qu'à l'arrivée
+    // d'une phrase.
+    this.minuteurReserve = null;
 
     this.file = [];
     this.actif = false;
+
+    // Les phrases en préparation, dans l'ordre de la file (PRECHARGEMENTS_MAX),
+    // et celle qui joue : c'est sur elles que se mesure la réserve de son.
+    this.prechargements = [];
+    this.enCours = null;
     this.enLecture = false;
     this.audio = null;
     this.avatar = null;
@@ -630,6 +874,12 @@ class Lecteur {
      */
     this.surCoupure = null;
 
+    /** Prévenu quand le son s'est épuisé en plein passage — avec la durée du trou. */
+    this.surTrou = null;
+
+    /** Appelé quand une synthèse a dû être doublée (DOUBLON_APRES_MS) : pour le relevé. */
+    this.surDoublon = null;
+
     /**
      * Prévenu quand un silence de dictée s'ouvre et quand il se referme.
      *
@@ -687,6 +937,20 @@ class Lecteur {
      */
     this.surRelectureDictee = null;
     this.relectureEnCours = false;
+
+    /**
+     * LE PASSAGE D'ÉCOUTE SE LIT D'UNE TRAITE — Camara, le 04/10/2026 : au
+     * casque, un bruit capté par le micro coupait le professeur en pleine
+     * compréhension orale, et le texte n'était jamais lu jusqu'au bout.
+     *
+     * Appelé avec `true` quand la lecture du passage commence, `false` quand
+     * son dernier son s'est éteint. L'écran rend alors le micro sourd, puis
+     * le rend à l'élève. Une dictée n'est pas concernée : l'élève doit
+     * pouvoir y demander de répéter.
+     */
+    this.surEcoute = null;
+    this.ecouteEnCours = false;
+    this.minuteurEcoute = null;
 
     // Incrémenté par arreter(). Une boucle dont le jeton a changé se sait
     // périmée et se retire — c'est ce qui garantit qu'un professeur interrompu
@@ -896,11 +1160,73 @@ class Lecteur {
       }
 
       const cible = this.premierGroupe ? PREMIER_GROUPE : GROUPE;
-      if (this.groupe.length >= cible) this.viderGroupe();
+      if (this.groupe.length >= cible || this.sonVaManquer()) this.viderGroupe();
     });
 
     // Le flux vient de parler : on repousse le filet d'autant.
     this.armerLeFilet();
+    this.armerLaReserve();
+  }
+
+  /**
+   * LA RÉSERVE SE SURVEILLE ENTRE DEUX PHRASES AUSSI.
+   *
+   * `sonVaManquer` n'est consulté qu'à l'arrivée d'une phrase complète. Quand
+   * le modèle écrit moins vite que le professeur ne parle, la réserve passe
+   * sous le seuil ENTRE deux phrases, et le groupe en attente n'était
+   * envoyé qu'à la suivante — trop tard : la synthèse a besoin de sa seconde
+   * d'avance. On pose donc un réveil à l'instant où la réserve atteindra le
+   * seuil ; s'il reste alors un groupe assez long, il part.
+   */
+  armerLaReserve() {
+    clearTimeout(this.minuteurReserve);
+    this.minuteurReserve = null;
+
+    if (!this.contexte || this.premierGroupe || this.dictee) return;
+    if (this.groupe.length < GROUPE_MINIMUM) return;
+
+    const delai = Math.max(0, (this.sonRestant() - RESERVE_SON_S) * 1000);
+    this.minuteurReserve = setTimeout(() => {
+      this.minuteurReserve = null;
+      if (this.sonVaManquer()) this.viderGroupe();
+    }, delai);
+  }
+
+  /**
+   * La voix est-elle sur le point de se taire faute de son programmé ? Voir
+   * RESERVE_SON_S. Seulement pendant qu'un passage joue ET que rien n'attend
+   * derrière lui : s'il y a un passage en file, il prendra la suite.
+   */
+  sonVaManquer() {
+    if (!this.contexte || this.premierGroupe) return false;
+    if (this.groupe.length < GROUPE_MINIMUM) return false;
+
+    return this.sonRestant() < RESERVE_SON_S;
+  }
+
+  /**
+   * Les secondes de parole qu'il reste avant que la voix ne se taise, tout
+   * compris : le son programmé, la phrase qui joue, celles qui se préparent
+   * et celles qui attendent en file. Voir CARACTERES_PAR_SECONDE.
+   */
+  sonRestant() {
+    const maintenant = this.contexte?.currentTime ?? 0;
+    let reste = Math.max(0, this.prochaineFin - maintenant);
+
+    [this.enCours, ...this.prechargements].forEach((entree) => {
+      if (!entree) return;
+      const { phrase, passage } = entree;
+      const estime = phrase.texte.length / CARACTERES_PAR_SECONDE;
+      const recu = passage?.dureeRecue ?? 0;
+      const total = passage?.fini ? recu : Math.max(estime, recu);
+      reste += Math.max(0, total - (phrase.programmeS ?? 0));
+    });
+
+    this.file.slice(this.prechargements.length).forEach((phrase) => {
+      reste += phrase.texte.length / CARACTERES_PAR_SECONDE;
+    });
+
+    return reste;
   }
 
   /**
@@ -930,6 +1256,24 @@ class Lecteur {
       // fini. `terminer()` agit sur un FAIT — le flux a annoncé sa fin. Seul
       // un fait autorise à prononcer une phrase inachevée ; une supposition
       // n'a le droit de toucher qu'aux phrases complètes.
+      //
+      // Et devant une phrase trop courte pour être dite seule, il patiente
+      // une fois : voir FILET_PATIENT.
+      //
+      // Trop peu de mots pour être surveillé contre la redite : il attend
+      // plus longtemps encore la phrase suivante. Voir MOTS_SURVEILLES.
+      const peuDeMots = nombreDeMots(this.groupe) < MOTS_SURVEILLES;
+      const court = this.groupe.trim().length < GROUPE_MINIMUM;
+
+      if ((court || peuDeMots) && !this.filetAPatiente) {
+        this.filetAPatiente = true;
+        this.minuteurGroupe = setTimeout(() => {
+          this.minuteurGroupe = null;
+          this.viderGroupe();
+        }, peuDeMots ? FILET_PEU_DE_MOTS : FILET_PATIENT - SILENCE_GROUPE);
+        return;
+      }
+
       this.viderGroupe();
     }, SILENCE_GROUPE);
   }
@@ -947,6 +1291,9 @@ class Lecteur {
   viderGroupe() {
     const passage = this.groupe.trim();
     this.groupe = '';
+    this.filetAPatiente = false;
+    clearTimeout(this.minuteurReserve);
+    this.minuteurReserve = null;
     if (!passage) return;
 
     this.premierGroupe = false;
@@ -1017,7 +1364,45 @@ class Lecteur {
       this.file[this.file.length - 1].relecture = 'fin';
     }
 
+    // LA SYNTHÈSE PART À L'INSTANT OÙ LA PHRASE EST EN FILE — Camara, le
+    // 28/09/2026. La boucle ne préparait la suivante qu'en tête d'itération :
+    // une phrase arrivée pendant que la courante jouait attendait la fin du
+    // son pour être seulement DEMANDÉE, et le professeur se taisait le temps
+    // de la synthèse. Voir `precharger`.
+    if (this.enLecture) this.precharger(this.jeton);
     this.demarrer();
+  }
+
+  /**
+   * PRÉPARE LA PHRASE EN TÊTE DE FILE, une seule à la fois — la longueur
+   * d'avance qu'on garde, pas plus : programmer tout ce qui est disponible
+   * empêcherait d'interrompre proprement. Appelée par la boucle après avoir
+   * pris une phrase, ET par `enfiler` quand une phrase arrive pendant qu'une
+   * autre joue : c'est ce second appel qui supprime le trou entre deux
+   * phrases.
+   */
+  precharger(jeton) {
+    if (jeton !== this.jeton) return;
+
+    // Les phrases préparées sont toujours les premières de la file, dans
+    // l'ordre : la suivante à préparer est celle qui vient juste après.
+    while (this.prechargements.length < PRECHARGEMENTS_MAX
+      && this.file.length > this.prechargements.length) {
+      const phrase = this.file[this.prechargements.length];
+      const entree = { phrase, promesse: this.charger(phrase, jeton), passage: null };
+
+      // Le passage résolu sert à mesurer la réserve ; l'échec, lui, est
+      // pour la boucle, qui attend la promesse elle-même.
+      entree.promesse.then((passage) => { entree.passage = passage; }, () => {});
+      this.prechargements.push(entree);
+    }
+  }
+
+  /** Le passage préparé pour CETTE phrase, s'il y en a un — et il ne sert qu'une fois. */
+  prendrePrechargement(phrase) {
+    if (this.prechargements[0]?.phrase !== phrase) return null;
+
+    return this.prechargements.shift().promesse;
   }
 
   /**
@@ -1108,8 +1493,6 @@ class Lecteur {
    * pendant que la courante joue.
    */
   async boucle(jeton) {
-    let prochain = null;
-
     for (;;) {
       if (jeton !== this.jeton) return;
 
@@ -1129,20 +1512,29 @@ class Lecteur {
       }
 
       const phrase = this.file.shift();
-      const source = prochain ?? this.charger(phrase, jeton);
+      const source = this.prendrePrechargement(phrase) ?? this.charger(phrase, jeton);
 
       // Lance le téléchargement de la suivante AVANT de jouer la courante.
       // Ses morceaux s'empilent dans son propre passage sans être programmés :
       // c'est la boucle qui décide quand ils passent à l'antenne, donc l'ordre
       // reste celui de la file même si le réseau rend la suite en avance.
-      prochain = this.file.length > 0 ? this.charger(this.file[0], jeton) : null;
+      this.precharger(jeton);
 
       const passage = await source;
       if (jeton !== this.jeton) return;
 
       this.actif = true;
+      phrase.programmeS = 0;
+      this.enCours = { phrase, passage };
 
       if (phrase.relecture === 'debut') this.signalerRelecture('en_cours');
+
+      // Le passage s'annonce tout de suite ; sa fin, elle, attend que le son
+      // DÉJÀ PROGRAMMÉ soit joué — la boucle a de l'avance sur l'oreille, et
+      // rendre le micro maintenant le rouvrirait sur la fin du texte.
+      const ecoute = Boolean(phrase.langue) && !phrase.dictee;
+      const resteS = this.prochaineFin - (this.contexte?.currentTime ?? 0);
+      this.signalerEcoute(ecoute, ecoute ? 0 : Math.max(0, resteS * 1000));
 
       // Repère pour mesurer la durée réelle de ce passage : la différence
       // entre l'horloge audio avant et après sa programmation.
@@ -1165,12 +1557,54 @@ class Lecteur {
       // morceau jusqu'à la fin du précédent rouvrirait le blanc qu'on cherche
       // à supprimer. Pendant cette attente, le téléchargement continue et le
       // matelas grandit — c'est ce qui rend l'enchaînement continu.
+      // Après un trou EN PLEIN PASSAGE, les morceaux sont retenus jusqu'à
+      // REPRISE_S, puis joués d'un bloc. Pas au démarrage du passage : là,
+      // l'amorce a déjà fait ce travail, et retenir davantage retarderait le
+      // premier mot pour rien.
+      let dejaJoue = false;
+      let retenus = [];
+      let retenuS = 0;
+
+      const programmerIci = (t) => {
+        this.programmer(t, jeton);
+        phrase.programmeS += t.duration;
+      };
+
+      const jouerRetenus = () => {
+        retenus.forEach(programmerIci);
+        retenus = [];
+        retenuS = 0;
+      };
+
       for (;;) {
         const tampon = await passage.suivant();
-        if (tampon === null) break;
+        if (tampon === null) {
+          if (retenus.length > 0) jouerRetenus();
+          break;
+        }
         if (jeton !== this.jeton) return;
 
-        this.programmer(tampon, jeton);
+        const maintenant = this.contexte?.currentTime ?? 0;
+        const trou = dejaJoue && retenus.length === 0 && this.prochaineFin < maintenant;
+
+        if (trou) {
+          const secondes = maintenant - this.prochaineFin;
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn(`[voix] son épuisé en plein passage depuis ${secondes.toFixed(1)} s : on ré-accumule.`);
+          }
+          this.surTrou?.(secondes);
+        }
+
+        if (trou || retenus.length > 0) {
+          retenus.push(tampon);
+          retenuS += tampon.duration;
+          if (retenuS < REPRISE_S) continue;
+          jouerRetenus();
+        } else {
+          programmerIci(tampon);
+        }
+
+        dejaJoue = true;
         await this.attendreJusqua(this.prochaineFin - AVANCE_PROGRAMMATION, jeton);
       }
 
@@ -1280,6 +1714,7 @@ class Lecteur {
       // testerait alors « occupé » et ne rouvrirait jamais le micro.
       this.actif = false;
       this.enLecture = false;
+      this.signalerEcoute(false);
       this.auSilence?.();
     }
   }
@@ -1293,7 +1728,12 @@ class Lecteur {
    * timbre instable et robotique. On réessaie donc avant d'abandonner.
    */
   async charger({ texte, avatar, age, dictee, langue, vitesse }, jeton) {
-    if (!(await serveurDisponible())) return null;
+    if (!(await serveurDisponible())) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[voix] repli navigateur — serveur de voix indisponible pour :', texte.slice(0, 60));
+      }
+      return null;
+    }
 
     for (let tentative = 0; tentative < 2; tentative += 1) {
       try {
@@ -1309,7 +1749,7 @@ class Lecteur {
         // les phrases, eux, fonctionnaient, et ils portaient à eux seuls tout
         // le rythme de l exercice. La lenteur d élocution, elle, manquait
         // simplement — et rien ne disait qu elle aurait dû être là.
-        return await this.diffuser({ texte, avatar, age, dictee, langue, vitesse }, jeton);
+        return await this.diffuserAvecDoublon({ texte, avatar, age, dictee, langue, vitesse }, jeton);
       } catch (erreur) {
         const code = erreur?.statut ?? erreur?.response?.status;
 
@@ -1332,6 +1772,54 @@ class Lecteur {
     }
 
     return null;
+  }
+
+  /**
+   * `diffuser`, doublé si l'amorce tarde. Voir DOUBLON_APRES_MS.
+   *
+   * Le perdant est coupé dès qu'il répond : `diffuser` ne rend son passage
+   * qu'avec l'amorce, et c'est le passage qui porte le contrôleur d'abandon.
+   * Un perdant qui échoue n'est pas une erreur ; les deux qui échouent, si.
+   */
+  diffuserAvecDoublon(reglages, jeton) {
+    return new Promise((resoudre, rejeter) => {
+      let regle = false;
+      let enVol = 0;
+      let minuteur = null;
+
+      const lancer = () => {
+        enVol += 1;
+        this.diffuser(reglages, jeton).then((passage) => {
+          enVol -= 1;
+          if (regle) {
+            passage.interrompre();
+            return;
+          }
+          regle = true;
+          clearTimeout(minuteur);
+          resoudre(passage);
+        }, (erreur) => {
+          enVol -= 1;
+          if (regle || enVol > 0) return;
+          regle = true;
+          clearTimeout(minuteur);
+          rejeter(erreur);
+        });
+      };
+
+      lancer();
+
+      minuteur = setTimeout(() => {
+        minuteur = null;
+        if (regle || jeton !== this.jeton) return;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.info(`[voix] synthèse sans son après ${DOUBLON_APRES_MS} ms : requête doublée.`);
+        }
+        this.surDoublon?.();
+        lancer();
+      }, DOUBLON_APRES_MS);
+    });
   }
 
   /**
@@ -1506,6 +1994,17 @@ class Lecteur {
       this.contexte.resume().catch(() => {
         if (!silencieux) this.surBlocage?.();
       });
+
+      // CHROME NE REFUSE PAS, IL ATTEND. Sans geste sur la page, `resume()`
+      // ne rejette rien : la promesse reste en suspens, et le graphe aussi,
+      // horloge figée. Le professeur « parlait » sans un son, et rien ne
+      // disait à l'élève de cliquer. Une demi-seconde plus tard, si le graphe
+      // dort encore, on le dit — le bandeau « clique n'importe où ».
+      if (!silencieux) {
+        setTimeout(() => {
+          if (this.contexte?.state === 'suspended') this.surBlocage?.();
+        }, BLOCAGE_CONSTATE_MS);
+      }
     }
 
     return this.contexte;
@@ -1711,6 +2210,22 @@ class Lecteur {
    * affiché après que l'élève a coupé la dictée, ou se rallumerait tout seul
    * une demi-minute plus tard.
    */
+  /** Tient l'écran au courant de la lecture d'un passage d'écoute. */
+  signalerEcoute(oui, dansMs = 0) {
+    clearTimeout(this.minuteurEcoute);
+    this.minuteurEcoute = null;
+    if (oui === this.ecouteEnCours) return;
+
+    const appliquer = () => {
+      this.minuteurEcoute = null;
+      this.ecouteEnCours = oui;
+      this.surEcoute?.(oui);
+    };
+
+    if (dansMs > 0) this.minuteurEcoute = setTimeout(appliquer, dansMs);
+    else appliquer();
+  }
+
   /** Tient l'écran au courant de la relecture complète. */
   signalerRelecture(etat) {
     this.relectureEnCours = etat === 'en_cours';
@@ -1727,6 +2242,34 @@ class Lecteur {
   attendreJusqua(instant, jeton) {
     const contexte = this.contexte;
     if (!contexte) return Promise.resolve();
+
+    // GRAPHE ENDORMI, HORLOGE FIGÉE — Camara, le 28/09/2026. Dormir « jusqu'à »
+    // un instant d'une horloge qui n'avance pas, morceau après morceau, c'est
+    // attendre de plus en plus longtemps à chaque tour : des minutes pour un
+    // message de dix secondes, « Le professeur parle » affiché tout du long,
+    // sans un son. On attend le réveil du graphe, pas l'heure ; au réveil,
+    // tout ce qui est programmé part dans l'ordre.
+    if (contexte.state === 'suspended' || contexte.state === 'interrupted') {
+      return new Promise((resoudre) => {
+        function finir() {
+          contexte.removeEventListener?.('statechange', reveil);
+          if (this.finirLecture === finir) this.finirLecture = null;
+          resoudre();
+        }
+
+        function reveil() {
+          if (contexte.state !== 'running' && contexte.state !== 'closed') return;
+          finir.call(this);
+        }
+
+        const surReveil = reveil.bind(this);
+        const surFin = finir.bind(this);
+        contexte.addEventListener?.('statechange', surReveil);
+        this.finirLecture = surFin;
+
+        if (jeton !== this.jeton) surFin();
+      });
+    }
 
     const reste = (instant - contexte.currentTime) * 1000;
     if (reste <= 0) return Promise.resolve();
@@ -1797,7 +2340,47 @@ class Lecteur {
 
     this.sortie.connect(premier).connect(second).connect(contexte.destination);
 
+    // L'INDICATEUR DE VOIX ÉCOUTE LA SORTIE, SANS LA TOUCHER — voir `niveau`.
+    // Une branche de plus sur le même point, qui ne va nulle part : rien de
+    // ce qui s'entend n'y passe.
+    if (typeof contexte.createAnalyser === 'function') {
+      this.analyseur = contexte.createAnalyser();
+      this.analyseur.fftSize = 256;
+      this.sortie.connect(this.analyseur);
+    }
+
     return this.sortie;
+  }
+
+  /**
+   * LE NIVEAU DE LA VOIX, À L'INSTANT — Camara, le 04/10/2026 : « une petite
+   * animation qui montre que le professeur parle, comme un indicateur de
+   * mouvement de voix ». Les ondes de l'avatar bougeaient en boucle, sans
+   * rapport avec ce qui se disait, et s'allumaient sur le TEXTE qui arrivait.
+   * Elles suivent maintenant le son réel : hautes sur une syllabe, à plat
+   * dans un silence.
+   *
+   * Entre 0 et 1. Null tant qu'aucun son n'est passé par le lecteur — la voix
+   * du navigateur, par exemple, ne traverse pas ce graphe : l'écran garde
+   * alors son animation d'avant.
+   */
+  niveau() {
+    if (!this.analyseur) return null;
+
+    const taille = this.analyseur.fftSize;
+    if (!this.echantillonsNiveau) this.echantillonsNiveau = new Uint8Array(taille);
+
+    this.analyseur.getByteTimeDomainData(this.echantillonsNiveau);
+
+    let somme = 0;
+    for (let i = 0; i < taille; i += 1) {
+      const e = (this.echantillonsNiveau[i] - 128) / 128;
+      somme += e * e;
+    }
+
+    // Une voix parlée tourne autour de 0,05 à 0,25 en valeur efficace : le
+    // facteur l'étale sur toute la hauteur des ondes.
+    return Math.min(1, Math.sqrt(somme / taille) * 4);
   }
   jouerAudio(url, jeton) {
     return new Promise((resoudre) => {
@@ -1858,9 +2441,11 @@ class Lecteur {
       }
 
       let fini = false;
+      let garde = null;
       const finir = () => {
         if (fini) return;
         fini = true;
+        clearTimeout(garde);
         if (this.finirLecture === finir) this.finirLecture = null;
         resoudre();
       };
@@ -1872,8 +2457,11 @@ class Lecteur {
       enonce.lang = voix?.lang ?? 'fr-FR';
       // La vitesse choisie s'applique aussi à la voix de repli : elle ne sait
       // pas lire une consigne, mais elle sait changer de débit.
-      const registre = this.age <= 8 ? 0.85 : this.age <= 11 ? 0.95 : 1.05;
-      enonce.rate = registre * facteurNavigateur(phrase?.vitesse);
+      //
+      // LE MÊME DÉBIT POUR TOUS LES ÂGES — Camara, le 28/09/2026 : la voix de
+      // repli ralentissait les moins de douze ans (0,85 puis 0,95). Plus
+      // maintenant : une conversation, à vitesse de conversation.
+      enonce.rate = 1.05 * facteurNavigateur(phrase?.vitesse);
 
       enonce.onend = finir;
       enonce.onerror = finir;
@@ -1887,6 +2475,17 @@ class Lecteur {
       // est censé émettre `end`, mais ne le fait pas de façon fiable selon
       // les navigateurs. On ne dépend pas de sa bonne volonté.
       this.finirLecture = finir;
+
+      // Et pas davantage de son `end` : voir GARDE_NAVIGATEUR_MS.
+      garde = setTimeout(() => {
+        if (fini) return;
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[voix] la voix du navigateur n’a jamais fini : on passe à la suite.');
+        }
+        try { window.speechSynthesis.cancel(); } catch { /* moteur déjà arrêté */ }
+        finir();
+      }, GARDE_NAVIGATEUR_MS + texte.length * MS_PAR_CARACTERE_NAVIGATEUR);
+
       window.speechSynthesis.speak(enonce);
     });
   }
@@ -1899,6 +2498,9 @@ class Lecteur {
     // quoi il annoncerait une relecture qui n'a plus lieu.
     if (this.relectureEnCours) this.signalerRelecture('interrompue');
 
+    // Un passage coupé ne se lit plus : le micro revient à l'élève.
+    this.signalerEcoute(false);
+
     // L'indicateur de dictée tombe avec le reste : il annonce une attente qui
     // n'aura pas lieu.
     this.viderPausesDictee();
@@ -1907,12 +2509,16 @@ class Lecteur {
     // l'interruption et prononcerait la fin de la phrase qu'on vient de couper.
     clearTimeout(this.minuteurGroupe);
     this.minuteurGroupe = null;
+    clearTimeout(this.minuteurReserve);
+    this.minuteurReserve = null;
 
     this.tampon = '';
     this.groupe = '';
     this.premierGroupe = true;
     this.file = [];
     this.actif = false;
+    this.prechargements = [];
+    this.enCours = null;
     this.debutAttente = null;
 
     // Tout ce qui est déjà programmé dans la carte son doit être coupé : sans

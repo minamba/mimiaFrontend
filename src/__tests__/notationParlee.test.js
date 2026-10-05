@@ -92,3 +92,53 @@ test('une date n’est pas une division', () => {
 test('une fraction, elle, est bien dite « sur »', () => {
   expect(preparer('Calcule 10/5 pour voir.')).toContain('10 sur 5');
 });
+
+// ------------------------------------- deux voyelles collées ne sont pas un son
+
+/**
+ * Camara, le 03/10/2026, en géométrie : « au lieu de dire AE elle a dit AY ».
+ * Dans la même phrase, BA et BE étaient justes : deux voyelles collées
+ * forment une graphie française — « æ » se lit « é » — et le nom du segment
+ * devenait un son.
+ *
+ * Le modèle y arrive presque toujours (quatre essais sur quatre au banc du
+ * 03/10) : c'est bien pour ça que la règle existe. Voir l'en-tête de ce
+ * fichier — une lecture juste ne dépend pas de la bonne volonté d'un modèle.
+ */
+test('« AE » se dit lettre par lettre', () => {
+  expect(preparer('Donc, quelle opération te donne AE ?')).toContain('A E');
+});
+
+test('les autres paires de voyelles aussi', () => {
+  expect(preparer('Trace les segments AI, OE et EU.')).toContain('A I');
+  expect(preparer('Trace les segments AI, OE et EU.')).toContain('O E');
+  expect(preparer('Trace les segments AI, OE et EU.')).toContain('E U');
+});
+
+test('un segment à consonne ne bouge pas : il était déjà bien lu', () => {
+  const dit = preparer("D'abord BA, puis BC, puis CD.");
+
+  expect(dit).toContain('BA');
+  expect(dit).toContain('BC');
+  expect(dit).toContain('CD');
+});
+
+test('« ET » et « OU » des tables de vérité restent des mots', () => {
+  const dit = preparer('La proposition A ET B est vraie, A OU B aussi.');
+
+  expect(dit).toContain(' ET ');
+  expect(dit).toContain(' OU ');
+});
+
+test('un chiffre romain reste un nombre', () => {
+  expect(preparer('Sous Louis II, puis Henri IV.')).toContain('Louis II');
+  expect(preparer('Sous Louis II, puis Henri IV.')).toContain('Henri IV');
+});
+
+test('une paire de voyelles DANS un mot n’est pas touchée', () => {
+  expect(preparer('Il est né à CAEN en 1960.')).toContain('CAEN');
+});
+
+test('les minuscules ne bougent pas', () => {
+  expect(preparer('Il a eu une idée au moment du cours.')).toContain('Il a eu une idée au moment');
+});

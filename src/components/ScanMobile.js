@@ -61,7 +61,7 @@ export default function ScanMobile() {
         //
         // `appliquerBlueSky` le retient aussi sur l'appareil : au prochain QR
         // code, le style est posé avant même le premier octet de CSS.
-        appliquerBlueSky(Boolean(data?.blueSky));
+        appliquerBlueSky(Boolean(data?.blueSky), data?.styleSaison ?? null);
 
         setInfo(data);
         setEtat(data?.dejaEnvoye ? 'deja' : 'pret');

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { ecouteService } from '../lib/storage/ecouteService';
 import { ecouteTempsReel } from '../lib/storage/ecouteTempsReel';
 import { lireEnonce } from '../lib/storage/enonceControle';
-import { creerControle, modifierControle } from '../lib/api/elevesApi';
+import { ajouterCoursControle, creerControle, modifierControle } from '../lib/api/elevesApi';
 import iconeVoix from '../assets/voix.png';
 import ChoixHeure from './ChoixHeure';
+import CoursDuControle from './CoursDuControle';
 
 /**
  * Le pictogramme de l'en-tête : une feuille de contrôle, dessinée au trait
@@ -71,6 +72,18 @@ export default function ControleForm({
   const [ecoute, setEcoute] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
+
+  // LE COURS DE L'ÉLÈVE — Camara, le 26/09/2026. À la création, les fichiers
+  // attendent ici et partent juste après le contrôle : il faut son numéro
+  // pour les y rattacher.
+  const [coursEnAttente, setCoursEnAttente] = useState([]);
+  const [coursOccupe, setCoursOccupe] = useState(false);
+
+  // Le contrôle CRÉÉ PENDANT QUE LA FENÊTRE RESTE OUVERTE : pour scanner son
+  // cours avec le téléphone (le QR code a besoin du contrôle), ou quand un
+  // document n'a pas pu partir. La fenêtre continue alors en modification.
+  const [cree, setCree] = useState(null);
+  const idControle = controle?.id ?? cree?.id ?? null;
 
   // Les champs obligatoires laissés vides, par nom de champ. Vidé dès que
   // l'enfant corrige : un message rouge qui reste après correction donne
@@ -222,23 +235,89 @@ export default function ControleForm({
     });
   };
 
-  const soumettre = async (evenement) => {
-    evenement.preventDefault();
+  /**
+   * Envoie les fichiers mis de côté pendant la création. Le motif du premier
+   * refus, ou null si tout est parti — un document refusé ne doit pas faire
+   * perdre le contrôle, qui est déjà créé.
+   */
+  const envoyerCoursEnAttente = async (id) => {
+    const restants = [];
+    let motif = null;
 
-    // LA MATIÈRE ET LA DATE SONT LES DEUX SEULES OBLIGATOIRES.
-    //
-    // Sans matière, aucun professeur ne peut le préparer ; sans date, le
-    // contrôle n'a aucun jour où s'accrocher dans le calendrier et rien ne
-    // peut décompter les jours restants. Le sujet et l'heure, eux, se
-    // complètent en parlant avec le professeur — les exiger ici ferait
-    // renoncer un enfant qui ne sait pas encore ce qu'il y aura dessus.
+    for (const fichier of coursEnAttente) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        await ajouterCoursControle(eleveId, id, fichier);
+      } catch (e) {
+        restants.push(fichier);
+        motif ??= e?.response?.data?.message ?? 'Un document n’a pas pu être envoyé.';
+      }
+    }
+
+    setCoursEnAttente(restants);
+    return motif;
+  };
+
+  /**
+   * LA MATIÈRE ET LA DATE SONT LES DEUX SEULES OBLIGATOIRES.
+   *
+   * Sans matière, aucun professeur ne peut le préparer ; sans date, le
+   * contrôle n'a aucun jour où s'accrocher dans le calendrier et rien ne peut
+   * décompter les jours restants. Le sujet et l'heure, eux, se complètent en
+   * parlant avec le professeur — les exiger ici ferait renoncer un enfant qui
+   * ne sait pas encore ce qu'il y aura dessus.
+   */
+  const verifierObligatoires = () => {
     const manques = {};
     if (!matiereId) manques.matiere = 'Choisis la matière du contrôle.';
     if (!date) manques.date = 'Indique la date du contrôle.';
 
     setManquants(manques);
+    return Object.keys(manques).length === 0;
+  };
 
-    if (Object.keys(manques).length > 0) {
+  const donneesDuFormulaire = () => ({
+    matiereId: Number(matiereId),
+    sujet: sujet.trim() || null,
+    dateControle: date,
+    // Toujours avec les secondes : un « 14:00 » seul suffit au navigateur,
+    // mais le format constant .NET attendu côté serveur (hh:mm:ss) ne les
+    // rend pas facultatives.
+    heureControle: heure ? `${heure}:00` : null,
+  });
+
+  /**
+   * « Scanner avec mon téléphone » AVANT d'avoir ajouté le contrôle : le QR
+   * code a besoin du contrôle. On le crée donc maintenant, sans fermer la
+   * fenêtre ; elle continue en modification. Renvoie son numéro, ou null.
+   */
+  const creerAvantScan = async () => {
+    if (idControle) return idControle;
+    if (!verifierObligatoires()) return null;
+
+    setEnvoi(true);
+    setErreur(null);
+
+    try {
+      const { data } = await creerControle(eleveId, donneesDuFormulaire());
+      setCree(data);
+
+      const motif = await envoyerCoursEnAttente(data.id);
+      if (motif) setErreur(motif);
+
+      return data.id;
+    } catch (e) {
+      setErreur(e?.response?.data?.message ?? "Le contrôle n'a pas pu être enregistré.");
+      return null;
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  const soumettre = async (evenement) => {
+    evenement.preventDefault();
+
+    if (!verifierObligatoires()) {
       setErreur(null);
       return;
     }
@@ -246,19 +325,27 @@ export default function ControleForm({
     setEnvoi(true);
     setErreur(null);
 
-    const donnees = {
-      matiereId: Number(matiereId),
-      sujet: sujet.trim() || null,
-      dateControle: date,
-      // Toujours avec les secondes : un « 14:00 » seul suffit au
-      // navigateur, mais le format constant .NET attendu côté serveur
-      // (hh:mm:ss) ne les rend pas facultatives.
-      heureControle: heure ? `${heure}:00` : null,
-    };
+    const donnees = donneesDuFormulaire();
 
     try {
-      if (edition) await modifierControle(eleveId, controle.id, donnees);
-      else await creerControle(eleveId, donnees);
+      if (idControle) {
+        await modifierControle(eleveId, idControle, donnees);
+      } else {
+        const { data } = await creerControle(eleveId, donnees);
+
+        // LE COURS PART APRÈS LE CONTRÔLE. Un refus garde la fenêtre ouverte,
+        // en modification : le contrôle est bien là, et l'enfant voit ce qui
+        // n'est pas passé au lieu de le découvrir en préparant.
+        if (coursEnAttente.length > 0) {
+          const motif = await envoyerCoursEnAttente(data.id);
+          if (motif) {
+            setCree(data);
+            setErreur(`Le contrôle est ajouté, mais un document n’est pas passé : ${motif}`);
+            setEnvoi(false);
+            return;
+          }
+        }
+      }
 
       onEnregistre();
     } catch (e) {
@@ -442,12 +529,22 @@ export default function ControleForm({
         </div>
       </>
 
+      <CoursDuControle
+        eleveId={eleveId}
+        controleId={idControle}
+        enAttente={coursEnAttente}
+        onEnAttente={setCoursEnAttente}
+        onBesoinDuControle={creerAvantScan}
+        onOccupe={setCoursOccupe}
+        disabled={envoi}
+      />
+
       <div className="modale__actions">
-        <button type="button" className="btn-ghost" onClick={onAnnule}>
+        <button type="button" className="btn-ghost" onClick={cree ? onEnregistre : onAnnule}>
           Annuler
         </button>
-        <button type="submit" className="btn btn--compact" disabled={envoi || matieres.length === 0}>
-          {envoi ? 'Enregistrement…' : edition ? 'Enregistrer les modifications' : 'Ajouter le contrôle'}
+        <button type="submit" className="btn btn--compact" disabled={envoi || coursOccupe || matieres.length === 0}>
+          {envoi ? 'Enregistrement…' : edition ? 'Enregistrer les modifications' : cree ? 'Terminer' : 'Ajouter le contrôle'}
         </button>
       </div>
     </form>

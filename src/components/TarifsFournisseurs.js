@@ -36,6 +36,15 @@ const FOURNISSEURS = [
     grille: 'https://developers.openai.com/api/docs/pricing',
     facture: 'https://platform.openai.com/usage',
   },
+  {
+    // La voix des professeurs depuis le 28/09/2026, quand l'interrupteur
+    // « Voix Gemini » est allumé. Les prix y sont DATÉS (6 $ jusqu'au
+    // 31/12/2026, 12 $ ensuite) : la veille retient celui du jour.
+    cle: 'gemini',
+    libelle: 'Google Gemini',
+    grille: 'https://ai.google.dev/gemini-api/docs/pricing',
+    facture: 'https://console.cloud.google.com/billing',
+  },
 ];
 
 /** « 2 $ », « 0,015 $ » : pas de zéros inutiles, la virgule française. */

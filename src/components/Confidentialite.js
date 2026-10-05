@@ -133,6 +133,15 @@ export default function Confidentialite() {
           vous nous le demandez.
         </p>
         <p>
+          <strong>Le cours importé avec un contrôle</strong> suit une règle
+          encore plus courte pour l'image. Il est transmis à Anthropic pour
+          être relevé en texte, et <strong>l'image est effacée dès que ce
+          relevé est fait</strong> — en général dans la minute. Le texte reste
+          attaché au contrôle, pour que le professeur prépare et corrige avec
+          la leçon de votre enfant, et il disparaît avec le contrôle quand vous
+          le supprimez.
+        </p>
+        <p>
           Les documents ne sont lisibles que depuis votre compte. Ils ne portent
           pas d'adresse publique&nbsp;: une image ne s'affiche qu'après
           vérification de votre session.

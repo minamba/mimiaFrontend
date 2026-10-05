@@ -4,7 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { submitEleve, resetEleve } from '../lib/actions/elevesActions';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 import Loader from './Loader';
-import { grouperClasses, specialitesDeLaClasse, specialitesAEnvoyer } from '../lib/niveauxScolaires';
+import {
+  grouperClasses, specialitesDeLaClasse, specialitesAEnvoyer,
+  languesDeLaClasse, languesAEnvoyer, basculerLangue,
+} from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
 import QuotaEnfants from './QuotaEnfants';
 import { getCapaciteEnfants } from '../lib/api/abonnementApi';
@@ -32,6 +35,7 @@ export default function FormulaireEleve() {
     academieId: '',
     lv2Espagnol: false,
     specialites: [],
+    langues: [],
   });
 
   // LA CASE LV2 N'EXISTE QUE DANS LES CLASSES QUI ONT UNE LV2 — le serveur le
@@ -40,6 +44,7 @@ export default function FormulaireEleve() {
   const niveauChoisi = niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId));
   const lv2Possible = Boolean(niveauChoisi?.lv2Possible);
   const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
+  const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
 
   const set = (nom) => (evenement) =>
     setChamps((precedent) => ({ ...precedent, [nom]: evenement.target.value }));
@@ -95,6 +100,7 @@ export default function FormulaireEleve() {
         academieId: champs.academieId ? Number(champs.academieId) : null,
         lv2Espagnol: lv2Possible && champs.lv2Espagnol,
         specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
+        langues: languesAEnvoyer(champs.langues, languesClasse),
       }),
     );
   };
@@ -198,6 +204,30 @@ export default function FormulaireEleve() {
               (souvent encore appelée LV2) : un professeur d’espagnol apparaîtra dans
               ses matières. La spécialité LLCER espagnol, elle, se coche avec les
               spécialités.
+            </span>
+          </div>
+        )}
+
+        {/* LES AUTRES LANGUES VIVANTES B — une case par langue allumée. Rien
+            ne s'affiche tant qu'aucune ne l'est. */}
+        {languesClasse.length > 0 && (
+          <div className="champ">
+            <span className="champ__libelle">Une autre langue en LVB ?</span>
+            {languesClasse.map((langue) => (
+              <label className="case" key={langue.code}>
+                <input
+                  type="checkbox"
+                  checked={champs.langues.includes(langue.code)}
+                  onChange={() => setChamps((p) => ({
+                    ...p, langues: basculerLangue(p.langues, langue.code),
+                  }))}
+                />
+                {langue.libelle}
+              </label>
+            ))}
+            <span className="champ__aide">
+              Coche la langue que ton enfant étudie en deuxième langue vivante :
+              son professeur apparaîtra dans ses matières.
             </span>
           </div>
         )}

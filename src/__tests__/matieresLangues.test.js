@@ -19,6 +19,7 @@ test('chaque langue étudiée porte les dictées, et a sa balise d\'écoute', ()
     ALLEMAND: 'de',
     ITALIEN: 'it',
     CHINOIS: 'zh',
+    ARABE: 'ar',
     LLCER_ANGLAIS: 'en',
     AMC: 'en',
     LLCER_ESPAGNOL: 'es',

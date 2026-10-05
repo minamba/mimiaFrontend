@@ -26,6 +26,9 @@ import {
   grouperClasses,
   serieAPreciser,
   specialitesDeLaClasse,
+  languesDeLaClasse,
+  languesAEnvoyer,
+  basculerLangue,
   specialitesAEnvoyer,
 } from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
@@ -286,6 +289,7 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
     academieId: eleve.academieId ?? '',
     lv2Espagnol: Boolean(eleve.lv2Espagnol),
     specialites: eleve.specialites ?? [],
+    langues: eleve.langues ?? [],
   });
 
   // Même règle qu'à l'inscription : la case LV2 n'existe que dans les classes
@@ -294,6 +298,7 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
     niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId))?.lv2Possible,
   );
   const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
+  const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
 
   const soumettre = (evenement) => {
     evenement.preventDefault();
@@ -307,6 +312,7 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
       academieId: champs.academieId ? Number(champs.academieId) : null,
       lv2Espagnol: lv2Possible && champs.lv2Espagnol,
       specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
+      langues: languesAEnvoyer(champs.langues, languesClasse),
     });
     setOuvert(false);
   };
@@ -457,6 +463,20 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
                   Espagnol en LVB
                 </label>
               )}
+
+              {/* Les autres langues vivantes B, une case par langue allumée. */}
+              {languesClasse.map((langue) => (
+                <label className="case" key={langue.code}>
+                  <input
+                    type="checkbox"
+                    checked={champs.langues.includes(langue.code)}
+                    onChange={() => setChamps({
+                      ...champs, langues: basculerLangue(champs.langues, langue.code),
+                    })}
+                  />
+                  {langue.libelle} en LVB
+                </label>
+              ))}
 
               <ChoixSpecialites
                 id={`e-specialites-${eleve.id}`}

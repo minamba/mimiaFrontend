@@ -18,13 +18,20 @@
       (function () {
         var theme = 'dark';
         var blueSky = false;
+        var saison = null;
         try {
           if (window.localStorage.getItem('mimia_theme') === 'light') theme = 'light';
           blueSky = window.localStorage.getItem('mimia_style') === 'blue-sky';
+          saison = window.localStorage.getItem('mimia_saison');
         } catch (e) {}
         if (blueSky) {
           document.documentElement.setAttribute('data-da', 'blue-sky');
           theme = 'dark';
+          // La déclinaison de Blue Sky (soldes, French Days, Black Friday),
+          // pour la même raison : pas d'éclair du bleu d'origine au chargement.
+          if (/^(soldes-ete|soldes-hiver|french-days|black-friday|back-to-school)$/.test(saison || '')) {
+            document.documentElement.setAttribute('data-saison', saison);
+          }
         }
         document.documentElement.setAttribute('data-theme', theme);
       })();

@@ -37,7 +37,7 @@
  * professeur doit faire.
  */
 const NEUTRES = new Set([
-  'EN', 'FR', 'ES', 'DE', 'IT', 'ZH',
+  'EN', 'FR', 'ES', 'DE', 'IT', 'ZH', 'AR',
   'ARDOISE', 'TABLEAU_EFFACE', 'SCHEMA', 'POINTAGE',
 ]);
 

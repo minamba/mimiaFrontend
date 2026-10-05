@@ -17,7 +17,9 @@ import cameraPng from '../assets/camera.png';
  * dire « Photo » déclenche une capture — sans lui, l'élève ne saurait ni que
  * la caméra tourne, ni comment la couper.
  */
-const CameraVoix = forwardRef(function CameraVoix({ onErreur, enSurbrillance, desactive = false }, ref) {
+const CameraVoix = forwardRef(function CameraVoix({
+  onErreur, enSurbrillance, desactive = false, onPrendre = null,
+}, ref) {
   const [actif, setActif] = useState(false);
   const [dispo, setDispo] = useState(false);
   const videoRef = useRef(null);
@@ -160,6 +162,15 @@ const CameraVoix = forwardRef(function CameraVoix({ onErreur, enSurbrillance, de
           <video ref={videoRef} muted playsInline className="camera-voix__video" />
           <span className="camera-voix__pastille" aria-hidden="true" />
           <span className="camera-voix__legende">Dis « Photo » pour prendre la page</span>
+
+          {/* UN BOUTON AUSSI, PAS SEULEMENT LA VOIX — Camara, le 26/09/2026 :
+              « Photographier ma copie » ouvre la caméra depuis la carte, et
+              l'enfant qui n'a pas le micro ouvert doit pouvoir déclencher. */}
+          {onPrendre && (
+            <button type="button" className="btn btn--compact camera-voix__prendre" onClick={onPrendre}>
+              Prendre la photo
+            </button>
+          )}
         </div>
       )}
     </div>

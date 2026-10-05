@@ -4,7 +4,7 @@ import Onglets from './Onglets';
 import TarifsFournisseurs from './TarifsFournisseurs';
 
 /**
- * L'onglet « Anthropic / OpenAI » : les deux fournisseurs dont le produit
+ * L'onglet « Anthropic / OpenAI / Gemini » : les fournisseurs dont le produit
  * dépend, et s'ils acceptent encore de travailler.
  *
  * NÉ DE LA PANNE DU 14/09/2026 : plus de voix ni de micro après un
@@ -32,6 +32,11 @@ const STATUTS = {
     ton: 'attention',
     libelle: 'Freiné',
     conseil: 'Trop de requêtes à la fois. Ça se règle seul en quelques minutes.',
+  },
+  quota_atteint: {
+    ton: 'attention',
+    libelle: 'Quota atteint',
+    conseil: "Google refuse de nouveaux appels jusqu'à la remise à zéro : la voix des professeurs passe par OpenAI d'ici là. Le quota du jour monte avec le niveau du compte (100 au Niveau 1, 10 000 au Niveau 2).",
   },
   indisponible: {
     ton: 'attention',
@@ -81,6 +86,87 @@ export function ilYA(iso, maintenant = Date.now()) {
   if (heures < 24) return `il y a ${heures} h`;
 
   return `le ${dateHeure(iso)}`;
+}
+
+/**
+ * LES JAUGES DE QUOTA — Camara, le 28/09/2026 : « une barre de progression de 0
+ * à 100 % pour voir où j'en suis dans ma consommation ». Google seulement : ses
+ * limites sont basses (100 requêtes par jour au Niveau 1), et les franchir fait
+ * repasser la voix par OpenAI sans que rien ne se voie.
+ *
+ * Vert jusqu'à 70 %, ambre jusqu'à 90 %, rouge au-delà : le rouge doit arriver
+ * AVANT le plafond, pas quand il est déjà touché.
+ */
+export function tonJauge(part) {
+  if (part >= 0.9) return 'rouge';
+  if (part >= 0.7) return 'ambre';
+  return 'vert';
+}
+
+const nombre = (n) => Number(n ?? 0).toLocaleString('fr-FR');
+
+function JaugesQuota({ jauges, refusDuJour, bloqueJusqua }) {
+  const heure = (iso) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="fournisseur__jauges">
+      {/* LE DISJONCTEUR, DIT EN CLAIR : tant qu'il tient, aucun élève n'entend
+          Gemini — c'est la première chose à savoir en ouvrant la carte. */}
+      {bloqueJusqua && (
+        <p className="fournisseur__jauges-bloque">
+          Quota atteint : la voix des professeurs passe par OpenAI jusqu'à {heure(bloqueJusqua)}.
+        </p>
+      )}
+
+      {jauges.map((jauge) => {
+        const part = jauge.limite > 0 ? Math.min(1, jauge.utilise / jauge.limite) : 0;
+        const pourcent = Math.round(part * 100);
+
+        return (
+          <div className="fournisseur__jauge" key={jauge.cle}>
+            <div className="fournisseur__jauge-titre">
+              <span>{jauge.libelle}</span>
+              <strong>
+                {nombre(jauge.utilise)} / {nombre(jauge.limite)}
+                <span className="fournisseur__jauge-part"> · {pourcent} %</span>
+              </strong>
+            </div>
+            <div
+              className="fournisseur__jauge-piste"
+              role="progressbar"
+              aria-label={jauge.libelle}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={pourcent}
+            >
+              <span
+                className={`fournisseur__jauge-barre fournisseur__jauge-barre--${tonJauge(part)}`}
+                style={{ width: `${part * 100}%` }}
+              />
+            </div>
+            {jauge.remiseLe && (
+              <small className="fournisseur__jauge-remise">
+                remise à zéro à{' '}
+                {new Date(jauge.remiseLe).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                {' '}(minuit en Californie)
+              </small>
+            )}
+          </div>
+        );
+      })}
+
+      {refusDuJour > 0 && (
+        <p className="fournisseur__jauges-refus">
+          {refusDuJour} refus aujourd'hui : le plafond a été touché, ces phrases sont reparties chez OpenAI.
+        </p>
+      )}
+
+      <p className="fournisseur__jauges-note">
+        Compté par ce serveur depuis son dernier démarrage. Un autre poste branché sur le même
+        projet Google n'y figure pas : la page « Rate limit » d'AI Studio fait foi.
+      </p>
+    </div>
+  );
 }
 
 function CarteFournisseur({ etat, maintenant }) {
@@ -136,6 +222,14 @@ function CarteFournisseur({ etat, maintenant }) {
         )}
       </dl>
 
+      {etat.jauges?.length > 0 && (
+        <JaugesQuota
+          jauges={etat.jauges}
+          refusDuJour={etat.refusDuJour ?? 0}
+          bloqueJusqua={etat.bloqueJusqua ?? null}
+        />
+      )}
+
       {(etat.codeErreur || etat.detail) && (
         <p className="fournisseur__technique">
           <code>{[etat.codeHttp, etat.codeErreur].filter(Boolean).join(' · ')}</code>
@@ -155,12 +249,27 @@ function CarteFournisseur({ etat, maintenant }) {
   );
 }
 
-function resumer(etats) {
-  if (etats.some((e) => statutDe(e.statut).ton === 'bloque')) {
-    return 'Un fournisseur refuse de travailler : une partie du produit est coupée.';
+const NOMBRES = ['aucun', 'un', 'deux', 'trois', 'quatre', 'cinq'];
+
+export function resumer(etats) {
+  // Un fournisseur sans clé n'est ni en panne ni en marche : il ne compte pas.
+  const suivis = etats.filter((e) => e.statut !== 'non_configure');
+  const bloques = suivis.filter((e) => statutDe(e.statut).ton === 'bloque');
+
+  if (bloques.length > 0) {
+    // GOOGLE EN PANNE NE COUPE RIEN : la voix repasse d'elle-même par OpenAI.
+    // Le dire, plutôt qu'annoncer une coupure qui n'a pas lieu.
+    return bloques.every((e) => e.code === 'gemini')
+      ? 'Google Gemini refuse de travailler : la voix des professeurs repasse par OpenAI.'
+      : 'Un fournisseur refuse de travailler : une partie du produit est coupée.';
   }
-  if (etats.length > 0 && etats.every((e) => e.statut === 'ok')) {
-    return 'Les deux fournisseurs fonctionnent.';
+  if (suivis.length > 0 && suivis.every((e) => e.statut === 'ok')) {
+    const nombre = NOMBRES[suivis.length] ?? String(suivis.length);
+    return suivis.length === 1 ? 'Le fournisseur fonctionne.' : `Les ${nombre} fournisseurs fonctionnent.`;
+  }
+  if (suivis.some((e) => e.code === 'gemini' && e.statut === 'quota_atteint')
+      && suivis.every((e) => e.code === 'gemini' || e.statut === 'ok')) {
+    return 'Google Gemini a atteint son quota : la voix des professeurs passe par OpenAI.';
   }
   if (etats.some((e) => statutDe(e.statut).ton === 'attention')) {
     return 'Un fournisseur répond mal en ce moment.';
@@ -263,7 +372,7 @@ function EtatFournisseurs() {
         5 minutes tant que l'un est en défaut). Un message part dans le groupe Telegram des
         signalements dès qu'un état passe au rouge ou à l'orange, et un autre quand ça repart ;
         un courriel s'y ajoute pour le crédit épuisé et la clé refusée. Le solde exact ne se lit
-        pas par l'API : il reste sur les sites d'Anthropic et d'OpenAI.
+        pas par l'API : il reste sur les sites d'Anthropic, d'OpenAI et de Google.
       </p>
     </div>
   );

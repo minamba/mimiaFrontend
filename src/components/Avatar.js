@@ -6,6 +6,8 @@
  * c'est ce visage qui fait qu'il retrouve « son » prof d'une séance à l'autre.
  */
 
+import { useEffect, useRef, useState } from 'react';
+
 import photoNora from '../assets/profs/p_math.png';
 import photoAdrien from '../assets/profs/p_français.png';
 import photoSalim from '../assets/profs/p_histoire_geo.png';
@@ -19,6 +21,28 @@ import photoElodie from '../assets/profs/p_sanitaires_sociales.png';
 import photoTheo from '../assets/profs/p_sport.png';
 import photoJeanne from '../assets/profs/p_arts.png';
 import photoMinamba from '../assets/profs/p_nsi.png';
+import photoJonas from '../assets/profs/p_allemand.png';
+import photoGiulia from '../assets/profs/p_italien.png';
+import photoLin from '../assets/profs/p_chinois.png';
+import photoYoussef from '../assets/profs/p_arabe.png';
+
+import animNora from '../assets/profs/anim/nora.mp4';
+import animAdrien from '../assets/profs/anim/adrien.mp4';
+import animSalim from '../assets/profs/anim/salim.mp4';
+import animMarine from '../assets/profs/anim/marine.mp4';
+import animYann from '../assets/profs/anim/yann.mp4';
+import animInes from '../assets/profs/anim/ines.mp4';
+import animCamille from '../assets/profs/anim/camille.mp4';
+import animLucia from '../assets/profs/anim/lucia.mp4';
+import animKarim from '../assets/profs/anim/karim.mp4';
+import animElodie from '../assets/profs/anim/elodie.mp4';
+import animTheo from '../assets/profs/anim/theo.mp4';
+import animJeanne from '../assets/profs/anim/jeanne.mp4';
+import animMinamba from '../assets/profs/anim/minamba.mp4';
+import animJonas from '../assets/profs/anim/jonas.mp4';
+import animGiulia from '../assets/profs/anim/giulia.mp4';
+import animLin from '../assets/profs/anim/lin.mp4';
+import animYoussef from '../assets/profs/anim/youssef.mp4';
 
 /**
  * LES VISAGES ILLUSTRÉS — voulus par Camara le 14/09/2026, d'abord pour Nora
@@ -47,6 +71,48 @@ const PHOTOS = {
   // veste, dans la partie visible du disque, ont été bouchés avec la couleur
   // de leurs voisins : on y aurait vu le fond de la page.
   minamba: photoMinamba,
+  // Les quatre professeurs de langue du 04/10/2026 — portraits fournis par
+  // Camara le jour même.
+  jonas: photoJonas,
+  giulia: photoGiulia,
+  lin: photoLin,
+  youssef: photoYoussef,
+};
+
+/**
+ * LE PROFESSEUR QUI PARLE — Camara, le 04/10/2026 : « quand c'est le
+ * professeur qui parle, mettre les gif en action ».
+ *
+ * Une boucle de trois secondes par professeur, fabriquée à partir de son
+ * portrait (Higgsfield, Kling 3.0, même image au début et à la fin pour
+ * qu'elle se referme sans à-coup), puis réduite à 192 px : 11 à 22 Ko pièce,
+ * en MP4 H.264 de base — lisible partout, cent fois plus léger qu'un GIF.
+ *
+ * ELLE N'EST PAS SYNCHRONISÉE SUR LES MOTS, et ne prétend pas l'être : elle
+ * tourne tant que le professeur parle. Ce qui suit le son réel, ce sont les
+ * ondes — voir `Ondes`.
+ *
+ * Régénérer une boucle : scratchpad `anim/convertir.mjs` garde la recette.
+ */
+
+const BOUCLES = {
+  nora: animNora,
+  adrien: animAdrien,
+  salim: animSalim,
+  marine: animMarine,
+  yann: animYann,
+  ines: animInes,
+  camille: animCamille,
+  lucia: animLucia,
+  karim: animKarim,
+  elodie: animElodie,
+  theo: animTheo,
+  jeanne: animJeanne,
+  minamba: animMinamba,
+  jonas: animJonas,
+  giulia: animGiulia,
+  lin: animLin,
+  youssef: animYoussef,
 };
 
 const PROFS = {
@@ -137,6 +203,37 @@ const PROFS = {
     vetement: '#BE123C',
     lunettes: false,
   },
+  // LES QUATRE PROFESSEURS DE LANGUE DU 04/10/2026 — allemand, italien,
+  // chinois, arabe. Le dessin n'est plus que le repli : Camara a fourni
+  // leurs portraits le jour même (voir PHOTOS).
+  jonas: {
+    peau: '#F1CFB0',
+    cheveux: '#C9A45C',
+    coupe: 'courte',
+    vetement: '#3730A3',
+    lunettes: true,
+  },
+  giulia: {
+    peau: '#E8B98F',
+    cheveux: '#3B2416',
+    coupe: 'queue',
+    vetement: '#0E7490',
+    lunettes: false,
+  },
+  lin: {
+    peau: '#F3D3B0',
+    cheveux: '#17120F',
+    coupe: 'carre',
+    vetement: '#A16207',
+    lunettes: false,
+  },
+  youssef: {
+    peau: '#C68E63',
+    cheveux: '#1C1714',
+    coupe: 'courte',
+    vetement: '#0F766E',
+    lunettes: false,
+  },
   // Sciences et techniques sanitaires et sociales.
   elodie: {
     peau: '#F1CFB0',
@@ -224,15 +321,106 @@ function Cheveux({ coupe, couleur }) {
   return <path d="M21 43c0-14 8-24 19-24s19 10 19 24c-4-10-10-14-19-14s-15 4-19 14z" fill={couleur} />;
 }
 
-export default function Avatar({ nom = 'nora', taille = 44, parle = false, couleur }) {
+/** L'élève a-t-il demandé moins de mouvement à son système ? */
+const mouvementReduit = () => typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+
+/** Hauteur de repos d'une onde, et ce que chacune prend du niveau. */
+const REPOS = 0.22;
+const GAINS = [0.85, 1.2, 1];
+
+/**
+ * LES ONDES SUIVENT LE SON RÉEL.
+ *
+ * `niveau` est une fonction rendue par le lecteur de voix : le volume de
+ * l'instant, entre 0 et 1, ou null quand le son ne passe pas par lui (la
+ * voix du navigateur). Lu à chaque image et écrit DIRECTEMENT dans le style
+ * des trois barres — soixante rendus React par seconde pour trois traits
+ * seraient du gâchis.
+ *
+ * Montée immédiate, descente amortie : une syllabe se voit, et la barre ne
+ * tremble pas entre deux. Sans `niveau`, ou tant qu'il rend null, l'ancienne
+ * animation en boucle reste en place.
+ */
+function Ondes({ niveau }) {
+  const racine = useRef(null);
+
+  useEffect(() => {
+    if (typeof niveau !== 'function' || typeof requestAnimationFrame !== 'function') return undefined;
+
+    const barres = racine.current ? [...racine.current.children] : [];
+    const hauteurs = barres.map(() => REPOS);
+    let image = 0;
+
+    const dessiner = () => {
+      const volume = niveau();
+
+      if (volume === null || volume === undefined) {
+        racine.current?.classList.remove('avatar__ondes--reelles');
+      } else {
+        racine.current?.classList.add('avatar__ondes--reelles');
+
+        barres.forEach((barre, i) => {
+          const cible = Math.min(1, REPOS + volume * GAINS[i % GAINS.length]);
+          hauteurs[i] = cible > hauteurs[i] ? cible : hauteurs[i] + (cible - hauteurs[i]) * 0.22;
+          barre.style.transform = `scaleY(${hauteurs[i].toFixed(3)})`;
+        });
+      }
+
+      image = requestAnimationFrame(dessiner);
+    };
+
+    image = requestAnimationFrame(dessiner);
+
+    return () => {
+      cancelAnimationFrame(image);
+      barres.forEach((barre) => { barre.style.transform = ''; });
+    };
+  }, [niveau]);
+
+  return (
+    <span className="avatar__ondes" ref={racine}>
+      <i /><i /><i />
+    </span>
+  );
+}
+
+export default function Avatar({ nom = 'nora', taille = 44, parle = false, couleur, niveau }) {
   const prof = PROFS[nom] ?? PROFS.nora;
   const accent = couleur ?? prof.vetement;
   const photo = PHOTOS[nom];
+  const boucle = BOUCLES[nom];
+
+  // LA BOUCLE N'EST CHARGÉE QU'À LA PREMIÈRE PAROLE : une liste de dictées ou
+  // un tableau de bord qui affiche treize avatars n'en télécharge aucune.
+  // Une fois montée, elle reste — elle se relance sans nouveau chargement.
+  const [boucleMontee, setBoucleMontee] = useState(false);
+  const video = useRef(null);
+
+  useEffect(() => {
+    if (parle && boucle && !mouvementReduit()) setBoucleMontee(true);
+  }, [parle, boucle]);
+
+  useEffect(() => {
+    const v = video.current;
+    if (!v) return;
+
+    try {
+      if (parle) {
+        // Refusée par le navigateur (économie d'énergie, onglet caché) : la
+        // photo reste, et c'est très bien ainsi.
+        v.play?.()?.catch?.(() => {});
+      } else {
+        v.pause?.();
+        v.currentTime = 0;
+      }
+    } catch { /* un lecteur absent ne doit pas emporter l'avatar */ }
+  }, [parle, boucleMontee]);
 
   return (
     <span
       className={`avatar ${parle ? 'avatar--parle' : ''}`}
-      style={{ width: taille, height: taille, '--avatar-accent': accent }}
+      style={{ width: taille, height: taille, '--avatar-accent': accent, '--avatar-taille': `${taille}px` }}
     >
       {photo ? (
         // LE CADRE ROGNE L'IMAGE UN PEU À L'INTÉRIEUR DE SON DISQUE BLEU. Huit
@@ -241,6 +429,23 @@ export default function Avatar({ nom = 'nora', taille = 44, parle = false, coule
         // le disque occupe au moins 46,3 % du côté, centré à 1 % près.
         <span className="avatar__cadre" style={{ width: taille, height: taille }} aria-hidden="true">
           <img className="avatar__photo" src={photo} alt="" />
+
+          {/* LA BOUCLE, PAR-DESSUS LA PHOTO, AVEC LE MÊME ROGNAGE : le fond
+              vert que le modèle a posé dans les coins tombe hors du cadre
+              exactement comme celui des portraits. Elle apparaît en fondu ;
+              au repos, c'est la photo qu'on voit. */}
+          {boucleMontee && (
+            <video
+              ref={video}
+              className={`avatar__photo avatar__boucle ${parle ? 'avatar__boucle--visible' : ''}`}
+              src={boucle}
+              loop
+              muted
+              playsInline
+              preload="auto"
+              tabIndex={-1}
+            />
+          )}
         </span>
       ) : (
       <svg viewBox="0 0 80 80" width={taille} height={taille} role="img" aria-hidden="true">
@@ -278,11 +483,7 @@ export default function Avatar({ nom = 'nora', taille = 44, parle = false, coule
       </svg>
       )}
 
-      {parle && (
-        <span className="avatar__ondes">
-          <i /><i /><i />
-        </span>
-      )}
+      {parle && <Ondes niveau={niveau} />}
     </span>
   );
 }

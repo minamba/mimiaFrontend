@@ -42,18 +42,26 @@ const { enLettres: centaines } = await import(
 
 const DOSSIER = path.join(racine, 'public', 'sons', 'jeux');
 const MANIFESTE = path.join(DOSSIER, 'manifeste.json');
-const MODELE = 'gpt-4o-mini-tts';
+/**
+ * GEMINI, COMME EN COURS — Camara, le 05/10/2026 : « pour les jeux, tu peux
+ * refaire les voix ? ». Les cours parlent avec Gemini Flash-Lite depuis le
+ * 28/09/2026 ; les jeux avaient été enregistrés avec OpenAI le 21 et le 22.
+ * L'enfant entendait donc deux Nora différentes, celle du cours et celle du
+ * jeu. `--openai` garde l'ancien chemin, pour refaire un son à l'identique.
+ */
+const PAR_OPENAI = process.argv.includes('--openai');
+const MODELE = PAR_OPENAI ? 'gpt-4o-mini-tts' : 'gemini-3.8-flash-lite-tts';
 
 /**
  * LA VOIX DE CHAQUE PROFESSEUR — la même qu'en cours, pour que l'enfant
  * reconnaisse Nora dans le jeu comme dans sa leçon. Recopiée de
- * `SyntheseVocaleService.Voix` côté API : si elle change là-bas, la changer
- * ici, et relancer le script (l'empreinte fera le reste).
+ * `SyntheseGemini.Voix` (et `SyntheseVocaleService.Voix` pour OpenAI) côté
+ * API : si elle change là-bas, la changer ici, et relancer le script
+ * (l'empreinte fera le reste).
  */
-const VOIX = {
-  nora: 'coral',
-  adrien: 'ash',
-};
+const VOIX = PAR_OPENAI
+  ? { nora: 'coral', adrien: 'ash' }
+  : { nora: 'Zephyr', adrien: 'Sadaltager' };
 
 /**
  * LA CONSIGNE DE DICTION — celle de l'API pour un enfant de sept ans :
@@ -134,12 +142,36 @@ l'autre — y compris sur une phrase brève, une exclamation ou un ordre.
 
 ${REGISTRE_CP(elle)}`;
 
-/** Les voix féminines. `coral` est celle de Nora. */
-const VOIX_FEMININES = new Set(['coral', 'sage', 'shimmer', 'nova', 'alloy']);
+/** Les voix féminines. `coral` (OpenAI) et `Zephyr` (Gemini) sont celles de Nora. */
+const VOIX_FEMININES = new Set(['coral', 'sage', 'shimmer', 'nova', 'alloy', 'Zephyr']);
+
+/**
+ * LA CONSIGNE DE GEMINI, À LA MANIÈRE DE GOOGLE — reprise de
+ * `SyntheseGemini.Habiller` côté API, pour un enfant de sept ans. Gemini ne
+ * prend pas de consigne séparée : elle voyage DANS le texte, et seule cette
+ * structure (profil, notes de mise en scène, transcription) est appliquée sans
+ * être lue à voix haute. La longue consigne en français d'OpenAI, glissée
+ * telle quelle, serait LUE.
+ */
+const notesGemini = (elle) => [
+  `# AUDIO PROFILE: ${elle ? 'Nora' : 'Adrien'}, a warm French private tutor talking one-on-one with a child.`,
+  "### DIRECTOR'S NOTES",
+  'Style: a friendly, encouraging schoolteacher talking to a child — clear, bright, cheerful and reassuring. Talking, not reading.',
+  'Voice quality: a clear, full speaking voice. Never breathy, whispery, husky, intimate, sultry or seductive — this is a lesson, not a confidence.',
+  'Pace: lively, the speed of a real conversation; no dragging, no exaggerated articulation, no long pauses.',
+  'Accent: native French from France. Every word, every number and every isolated word is French: « six » is the French word, never the English one.',
+  ...(elle ? ['Voice: a woman\'s voice from start to finish, even on a short exclamation or an order.'] : []),
+  'Say the transcript exactly once.',
+  '#### TRANSCRIPT',
+].join('\n');
 
 const CONSIGNES = {};
 const consignePour = (voix) => {
-  if (!CONSIGNES[voix]) CONSIGNES[voix] = consigneDe(VOIX_FEMININES.has(voix));
+  if (!CONSIGNES[voix]) {
+    CONSIGNES[voix] = PAR_OPENAI
+      ? consigneDe(VOIX_FEMININES.has(voix))
+      : notesGemini(VOIX_FEMININES.has(voix));
+  }
   return CONSIGNES[voix];
 };
 
@@ -440,6 +472,9 @@ function empreinte(professeur, texte, liste, syllabe = false) {
     .update([
       MODELE, VOIX[professeur], consignePour(VOIX[professeur]), TRAITEMENT, ...(liste ? [`liste-${DUREE_LISTE}`] : []), 'francais-ecoute-v2',
       ...(syllabe ? ['syllabe-v1'] : []),
+      // Le WAV de Gemini lu en entier, signature comprise (05/10/2026) : cette
+      // marque refait tous les sons enregistrés avant la correction.
+      ...(PAR_OPENAI ? [] : ['gemini-donnees-seules-v1']),
       // Les mots seuls passent par leur phrase porteuse depuis le 22/09/2026 :
       // cette marque les fait tous réenregistrer, et eux seuls.
       ...(unSeulMot(texteDit(texte, liste)) ? ['phrase-porteuse-v2'] : []),
@@ -449,17 +484,39 @@ function empreinte(professeur, texte, liste, syllabe = false) {
     .slice(0, 16);
 }
 
-function lireCle() {
-  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
-
+function lireConfig() {
   const fichier = process.env.MIMIA_APPSETTINGS
     ?? path.resolve(racine, '../../../source/repos/SchoolWebApp/SchoolWebApp/appsettings.Development.json');
 
-  const config = JSON.parse(fs.readFileSync(fichier, 'utf8').replace(/^﻿/, ''));
+  return { fichier, config: JSON.parse(fs.readFileSync(fichier, 'utf8').replace(/^﻿/, '')) };
+}
+
+/** La clé OpenAI : elle sert à la transcription de contrôle, et à la voix avec `--openai`. */
+function lireCle() {
+  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
+
+  const { fichier, config } = lireConfig();
   const cle = config?.Voix?.ApiKey;
   if (!cle) throw new Error(`Aucune clé Voix:ApiKey dans ${fichier}`);
   return cle;
 }
+
+/** La clé Gemini, jamais affichée. */
+function lireCleGemini() {
+  if (process.env.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+
+  const { fichier, config } = lireConfig();
+  const cle = config?.Voix?.GeminiApiKey;
+  if (!cle) throw new Error(`Aucune clé Voix:GeminiApiKey dans ${fichier}`);
+  return cle;
+}
+
+/**
+ * LE PLAFOND DU JOUR DE GOOGLE — un refus « par jour » ne se réessaie pas :
+ * il arrête tout, proprement, et le manifeste garde ce qui est fait. Relancer
+ * le lendemain reprend où on s'est arrêté.
+ */
+let jourPlein = false;
 
 function lireManifeste() {
   try {
@@ -485,7 +542,101 @@ async function appeler(url, options, essaiN) {
   }
 }
 
+/**
+ * Une prise Gemini : le PCM 24 kHz 16 bits que rend le modèle, le même format
+ * qu'OpenAI — tout le traitement qui suit est donc inchangé. Une redite (le
+ * texte dit deux fois, défaut connu de Flash-Lite) est écartée en aval : la
+ * transcription de contrôle ne retrouve plus le texte, et la prise la plus
+ * courte l'emporte de toute façon.
+ */
+/**
+ * LE SON SEUL, SANS L'EMBALLAGE — Camara, le 05/10/2026 : « un bruit sourd à
+ * la fin de chaque audio qui détruit les tympans ».
+ *
+ * En réponse NON diffusée (`generateContent`), Google ne rend pas du son brut
+ * mais un FICHIER WAV complet : un en-tête de 44 octets, les échantillons, puis
+ * un bloc « C2PA » d'environ 6 Ko — la signature d'origine du contenu. Le tout
+ * était lu comme des échantillons : l'en-tête faisait un clic au début, et les
+ * 6 Ko de signature ~125 ms de bruit plein volume à la fin, plus fort que la
+ * voix. La voix des cours n'est pas concernée : en réponse DIFFUSÉE, Google
+ * envoie du son brut (`audio/l16`), sans en-tête ni signature — vérifié.
+ *
+ * On ne garde donc que le bloc « data » d'un WAV ; un son brut passe tel quel.
+ */
+function donneesAudio(octets) {
+  if (octets.length < 12 || octets.toString('latin1', 0, 4) !== 'RIFF') return octets;
+
+  let position = 12;
+  while (position + 8 <= octets.length) {
+    const nom = octets.toString('latin1', position, position + 4);
+    const taille = octets.readUInt32LE(position + 4);
+    if (nom === 'data') {
+      return octets.subarray(position + 8, Math.min(octets.length, position + 8 + taille));
+    }
+    position += 8 + taille + (taille & 1);
+  }
+
+  throw new Error('WAV de Gemini sans bloc de données');
+}
+
+async function unePriseGemini(voix, texte) {
+  const cle = lireCleGemini();
+
+  for (let essaiN = 1; essaiN <= 5; essaiN += 1) {
+    if (jourPlein) throw new Error('quota du jour de Gemini atteint');
+
+    const reponse = await appeler(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'x-goog-api-key': cle, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: `${consignePour(voix)}\n${texte}` }] }],
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voix } } },
+          },
+        }),
+      },
+      essaiN,
+    );
+
+    if (reponse.ok) {
+      const corps = await reponse.json();
+      const morceaux = (corps?.candidates?.[0]?.content?.parts ?? [])
+        .filter((p) => p.inlineData?.data)
+        .map((p) => donneesAudio(Buffer.from(p.inlineData.data, 'base64')));
+      const brut = Buffer.concat(morceaux);
+      if (brut.length === 0) throw new Error('Gemini a répondu sans son');
+
+      const pcm = new Int16Array(brut.length >> 1);
+      for (let i = 0; i < pcm.length; i += 1) pcm[i] = brut.readInt16LE(i * 2);
+      return pcm;
+    }
+
+    // Jamais le message de Google en entier : seulement de quoi savoir quelle
+    // limite a été touchée.
+    let detail = '';
+    try { detail = JSON.stringify(await reponse.json()); } catch { /* illisible */ }
+
+    if (reponse.status === 429 && /per_?day|PerDay/i.test(detail)) {
+      jourPlein = true;
+      throw new Error('quota du jour de Gemini atteint');
+    }
+
+    if ((reponse.status === 429 || reponse.status >= 500) && essaiN < 5) {
+      await attendre(reponse.status === 429 ? 12000 * essaiN : 1500 * essaiN);
+      continue;
+    }
+
+    throw new Error(`Gemini a répondu ${reponse.status}`);
+  }
+  throw new Error('Gemini ne répond pas après cinq essais');
+}
+
 async function unePrise(cle, voix, texte) {
+  if (!PAR_OPENAI) return unePriseGemini(voix, texte);
+
   for (let essaiN = 1; essaiN <= 4; essaiN += 1) {
     const reponse = await appeler('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
@@ -624,6 +775,9 @@ const PRONONCIATION = {
   ton: 'thon',
   mon: 'mont',
   non: 'nom',
+  // « en » seul, Gemini le disait « un » ou « hein » (05/10/2026) : « an » se
+  // dit exactement /ɑ̃/, et c'est un mot plein.
+  en: 'an',
   a: 'à',
   i: 'y',
   la: 'là',
@@ -695,7 +849,18 @@ export function enFrancais(texte) {
  * sont bien ceux du texte. C'est la seule garantie qui ne dépende pas d'une
  * consigne que le modèle peut ignorer.
  */
-const normaliser = (t) => enFrancais(t)
+/**
+ * L'HEURE ÉCRITE EN CHIFFRES PAR LA TRANSCRIPTION — le 05/10/2026, « Mets
+ * l'horloge sur huit heures et demie » a été rejeté douze fois : la voix le
+ * disait juste, l'écoute écrivait « 8h30 », que rien ne reconnaissait comme
+ * « huit heures et demie ». On la remet en toutes lettres avant de comparer.
+ */
+const heuresEnLettres = (t) => t
+  .replace(/\b(\d{1,2})\s*h\s*30\b/gi, '$1 heures et demie')
+  .replace(/\b(\d{1,2})\s*h\s*15\b/gi, '$1 heures et quart')
+  .replace(/\b(\d{1,2})\s*h\b/gi, '$1 heures');
+
+const normaliser = (t) => enFrancais(heuresEnLettres(t))
   .toLowerCase()
   .normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/[^a-z ]+/g, ' ')

@@ -1101,6 +1101,127 @@ h1, h2, h3 {
 .copie-controle__retour:hover:not(:disabled) { color: var(--encre); }
 .copie-controle__retour:disabled { opacity: 0.5; cursor: default; }
 
+/* LA FILE DE LA COPIE — Camara, le 26/09/2026 : une pièce importée attend
+   l'autre ; elle se retire d'un « × » si l'enfant s'est trompé de photo. */
+.copie-controle__retirer {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--encre-douce);
+  cursor: pointer;
+}
+
+.copie-controle__retirer:hover:not(:disabled) { background: var(--trait); color: var(--encre); }
+.copie-controle__retirer:disabled { opacity: 0.5; cursor: default; }
+
+.copie-controle__erreur {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--corail);
+}
+
+/* « Je t'aide à te corriger » / « Je corrige et t'explique » — Camara, le
+   26/09/2026. Deux libellés longs : ils passent l'un sous l'autre plutôt que
+   de se tasser sur un téléphone. */
+.copie-controle__choix--style { flex-wrap: wrap; }
+
+/* ------------------------------------------------ le cours d'un contrôle */
+/* « TON COURS » — Camara, le 26/09/2026. Dans la fenêtre du contrôle et sur
+   sa fiche : le professeur prépare en suivant la leçon de l'élève. Même
+   vocabulaire visuel que la carte de copie — ce sont les mêmes feuilles. */
+.cours-controle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.cours-controle__titre {
+  margin: 0;
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.cours-controle__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cours-controle__document {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  font-size: 13.5px;
+}
+
+/* Le nom se coupe, l'état et la croix restent visibles. */
+.cours-controle__nom {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--encre);
+}
+
+.cours-controle__etat {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--encre-douce);
+}
+
+.cours-controle__etat.est-lu { color: var(--sarcelle); }
+
+.cours-controle__retirer {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--encre-douce);
+  cursor: pointer;
+}
+
+.cours-controle__retirer:hover:not(:disabled) { background: var(--trait); color: var(--encre); }
+.cours-controle__retirer:disabled { opacity: 0.5; cursor: default; }
+
+.cours-controle__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cours-controle__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cours-controle__bouton.est-desactive { opacity: 0.5; pointer-events: none; }
+
+/* Sur la fiche, la même séparation que la section des notions. */
+.controle-fiche__cours {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--trait);
+}
+
 .copie-controle__choix,
 .copie-controle__boutons {
   display: flex;
@@ -1109,6 +1230,21 @@ h1, h2, h3 {
 }
 
 .copie-controle__choix .btn { min-width: 84px; }
+
+/* « FINALEMENT, CORRIGE ET EXPLIQUE-MOI » — un vrai bouton sous la phrase
+   (Camara, le 26/09/2026) : c'est la sortie de l'enfant qui bloque, il doit la
+   voir sans la chercher. */
+.copie-controle__basculer { margin-top: 10px; }
+
+/* Les boutons rangés sous leur feuille : un petit titre quand il y en a deux. */
+.copie-controle__groupe + .copie-controle__groupe { margin-top: 10px; }
+
+.copie-controle__groupe-titre {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
 
 .copie-controle__etats {
   display: flex;
@@ -1979,6 +2115,53 @@ h1, h2, h3 {
 .avatar__ondes i:nth-child(2) { animation-delay: 0.14s; }
 .avatar__ondes i:nth-child(3) { animation-delay: 0.28s; }
 
+/* LES ONDES SUR LE SON RÉEL — Camara, le 04/10/2026. Quand le lecteur de voix
+   donne son niveau, la boucle d'animation s'efface et chaque barre prend la
+   hauteur que le script lui écrit (voir `Ondes` dans Avatar.js). */
+.avatar__ondes--reelles i {
+  animation: none;
+  transition: none;
+}
+
+/* Sur un grand avatar, le repère grandit avec lui — sans jamais dépasser ce
+   qu'un coin de cercle peut porter. */
+.avatar__ondes {
+  height: clamp(13px, calc(var(--avatar-taille, 44px) * 0.26), 22px);
+  gap: clamp(1.5px, calc(var(--avatar-taille, 44px) * 0.035), 3px);
+}
+
+.avatar__ondes i {
+  width: clamp(2px, calc(var(--avatar-taille, 44px) * 0.05), 3.5px);
+}
+
+/* LA BOUCLE DU PROFESSEUR QUI PARLE : posée sur la photo, même géométrie
+   (`.avatar__photo`), invisible au repos, en fondu quand la voix part. */
+.avatar__boucle {
+  opacity: 0;
+  object-fit: cover;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.avatar__boucle--visible { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar__boucle { display: none; }
+}
+
+/* L'AVATAR DE LA SÉANCE EST GRAND (64 px) pour qu'on voie le professeur
+   parler ; sur un téléphone, l'en-tête n'a pas cette place. La taille est
+   posée en style par le composant : il faut `!important` pour la reprendre. */
+@media (max-width: 640px) {
+  .chat__prof .avatar,
+  .chat__prof .avatar__cadre {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  .chat__prof .avatar { --avatar-taille: 46px !important; }
+}
+
 .demo__direct {
   display: flex;
   align-items: center;
@@ -2781,8 +2964,8 @@ button.prof:focus-visible {
 /* En Blue Sky, les questions passent en verre, comme les autres cartes. */
 @media screen {
   :root[data-da='blue-sky'] .landing .faq__item {
-    border-color: rgba(122, 184, 255, 0.24);
-    background: rgba(4, 20, 50, 0.55);
+    border-color: rgb(var(--bs-lueur) / 0.24);
+    background: rgb(var(--bs-nuit-2) / 0.55);
     -webkit-backdrop-filter: blur(14px) saturate(1.2);
     backdrop-filter: blur(14px) saturate(1.2);
   }
@@ -9094,6 +9277,133 @@ html.defilement-bloque body {
 
 @keyframes clignote { 50% { opacity: 0; } }
 
+/* « NORA RÉFLÉCHIT… » — Camara, le 26/09/2026 : tant que la professeure n'a
+   rien écrit, la bulle le dit au lieu de rester vide. Trois points qui
+   s'allument l'un après l'autre : quelque chose se passe. */
+.bulle__reflexion {
+  font-style: italic;
+  color: var(--encre-douce);
+}
+
+.bulle__points span {
+  animation: reflexion-point 1.2s ease-in-out infinite;
+  opacity: 0.2;
+}
+
+.bulle__points span:nth-child(2) { animation-delay: 0.2s; }
+.bulle__points span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes reflexion-point {
+  0%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+
+/* « NORA PRÉPARE LA CORRECTION DE TA COPIE… » — Camara, le 26/09/2026. Bien
+   visible, au centre, le temps que la professeure réfléchit sans rien écrire ;
+   elle se ferme seule au premier mot. Le fond ne bloque rien : le micro et la
+   séance continuent dessous. */
+.preparation-correction {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 10, 20, 0.45);
+  pointer-events: none;
+  animation: preparation-apparition 0.25s ease-out;
+}
+
+.preparation-correction__carte {
+  width: min(360px, 100%);
+  padding: 24px 22px 20px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.preparation-correction__titre {
+  margin: 14px 0 6px;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--encre);
+}
+
+.preparation-correction__texte {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--encre-douce);
+}
+
+/* La feuille qu'on corrige : quatre lignes, et un crayon qui descend de
+   l'une à l'autre en les cochant. */
+.preparation-correction__feuille {
+  position: relative;
+  width: 86px;
+  height: 104px;
+  margin: 0 auto;
+  padding: 16px 14px;
+  border-radius: 8px;
+  background: #fbf8f1;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.preparation-correction__ligne {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: #c9d3e0;
+  animation: preparation-ligne 3.2s ease-in-out infinite;
+}
+
+.preparation-correction__ligne:nth-child(2) { animation-delay: 0.8s; width: 80%; }
+.preparation-correction__ligne:nth-child(3) { animation-delay: 1.6s; }
+.preparation-correction__ligne:nth-child(4) { animation-delay: 2.4s; width: 60%; }
+
+.preparation-correction__crayon {
+  position: absolute;
+  right: -10px;
+  top: 12px;
+  width: 8px;
+  height: 30px;
+  border-radius: 2px 2px 4px 4px;
+  background: linear-gradient(180deg, var(--corail) 0 75%, #f3d7a8 75% 90%, #333 90%);
+  transform: rotate(35deg);
+  animation: preparation-crayon 3.2s ease-in-out infinite;
+}
+
+/* La ligne corrigée passe au corail, comme un trait de stylo. */
+@keyframes preparation-ligne {
+  0%, 15% { background: #c9d3e0; }
+  25%, 100% { background: var(--corail); }
+}
+
+@keyframes preparation-crayon {
+  0% { top: 8px; }
+  25% { top: 26px; }
+  50% { top: 44px; }
+  75% { top: 62px; }
+  100% { top: 8px; }
+}
+
+@keyframes preparation-apparition {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bulle__points span { animation: none; opacity: 1; }
+  .preparation-correction,
+  .preparation-correction__ligne,
+  .preparation-correction__crayon { animation: none; }
+}
+
 .alert--chat { margin: 0 0 10px; }
 
 .chat__saisie {
@@ -12336,6 +12646,10 @@ html.defilement-bloque body {
   line-height: 1.3;
 }
 
+/* LE BOUTON DE CAPTURE, sous la consigne : pour l'enfant qui n'a pas le micro
+   ouvert (Camara, le 26/09/2026). Toute la largeur de l'aperçu. */
+.camera-voix__prendre { width: 100%; justify-content: center; }
+
 /* LA CONFIRMATION DE LA PHOTO PRISE À LA VOIX : une pastille flottante,
    centrée en haut de l'écran, qui se referme toute seule. Le ton de
    réussite est celui de `.alert--succes` — on confirme, on ne signale
@@ -14281,13 +14595,13 @@ html.defilement-bloque body {
 .maintenance--blue-sky .maintenance__carte {
   max-width: 540px;
   padding: 42px 36px 28px;
-  border: 1px solid rgba(122, 184, 255, 0.24);
+  border: 1px solid rgb(var(--bs-lueur) / 0.24);
   border-radius: 28px;
-  background: rgba(4, 20, 50, 0.62);
+  background: rgb(var(--bs-nuit-2) / 0.62);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   backdrop-filter: blur(16px) saturate(1.2);
   box-shadow:
-    0 30px 80px rgba(0, 8, 30, 0.55),
+    0 30px 80px rgb(var(--bs-ombre-rgb) / 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: maintenance-arrivee 0.6s ease-out both;
 }
@@ -14305,18 +14619,18 @@ html.defilement-bloque body {
   width: 96px;
   height: 96px;
   margin: 26px auto 18px;
-  border: 1px solid rgba(122, 184, 255, 0.35);
+  border: 1px solid rgb(var(--bs-lueur) / 0.35);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, rgba(0, 88, 194, 0.7), rgba(1, 29, 67, 0.9));
-  box-shadow: 0 0 0 8px rgba(0, 88, 194, 0.12), 0 0 44px rgba(0, 88, 194, 0.55);
+  background: radial-gradient(circle at 50% 35%, rgb(var(--bs-halo-titre) / 0.7), rgb(var(--bs-barre) / 0.9));
+  box-shadow: 0 0 0 8px rgb(var(--bs-halo-titre) / 0.12), 0 0 44px rgb(var(--bs-halo-titre) / 0.55);
 }
 
 .maintenance--blue-sky .maintenance__engrenages { width: 62px; height: 62px; overflow: visible; }
 
 .maintenance--blue-sky .maintenance__engrenage { transform-box: fill-box; transform-origin: center; }
-.maintenance--blue-sky .maintenance__engrenage--grand { color: #dbe8ff; animation: maintenance-tourne 9s linear infinite; }
-.maintenance--blue-sky .maintenance__engrenage--petit { color: #ff7a5c; animation: maintenance-tourne 4.5s linear infinite reverse; }
-.maintenance--blue-sky .maintenance__moyeu { fill: #052a5e; }
+.maintenance--blue-sky .maintenance__engrenage--grand { color: var(--bs-encre-teintee); animation: maintenance-tourne 9s linear infinite; }
+.maintenance--blue-sky .maintenance__engrenage--petit { color: var(--bs-accent-plein); animation: maintenance-tourne 4.5s linear infinite reverse; }
+.maintenance--blue-sky .maintenance__moyeu { fill: var(--bs-encre-marine); }
 
 @keyframes maintenance-tourne { to { transform: rotate(360deg); } }
 
@@ -14326,10 +14640,10 @@ html.defilement-bloque body {
   gap: 8px;
   margin: 0 0 14px;
   padding: 5px 13px;
-  border: 1px solid rgba(255, 122, 92, 0.4);
+  border: 1px solid rgb(var(--bs-accent) / 0.4);
   border-radius: 999px;
-  background: rgba(255, 122, 92, 0.14);
-  color: #ffc2b3;
+  background: rgb(var(--bs-accent) / 0.14);
+  color: var(--bs-accent-clair);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -14342,7 +14656,7 @@ html.defilement-bloque body {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ff7a5c;
+  background: var(--bs-accent-plein);
   animation: maintenance-bs-respire 1.4s ease-in-out infinite;
 }
 
@@ -14355,16 +14669,16 @@ html.defilement-bloque body {
   font-size: clamp(28px, 6vw, 36px);
   line-height: 1.15;
   color: #fff;
-  text-shadow: 0 2px 24px rgba(0, 88, 194, 0.6);
+  text-shadow: 0 2px 24px rgb(var(--bs-halo-titre) / 0.6);
 }
 
 .maintenance--blue-sky .maintenance__texte {
   max-width: 34em;
   font-size: 15.5px;
-  color: rgba(235, 242, 255, 0.92);
+  color: rgb(var(--bs-encre-claire-rgb) / 0.92);
 }
 
-.maintenance--blue-sky .maintenance__texte--doux { margin-bottom: 0; color: #a9bddb; font-size: 14px; }
+.maintenance--blue-sky .maintenance__texte--doux { margin-bottom: 0; color: var(--bs-encre-douce-plein); font-size: 14px; }
 
 .maintenance--blue-sky .maintenance__garanties {
   display: flex;
@@ -14394,7 +14708,7 @@ html.defilement-bloque body {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #ff7a5c;
+  background: var(--bs-accent-plein);
   color: #1a0c08;
   font-size: 11px;
   font-weight: 800;
@@ -14418,8 +14732,8 @@ html.defilement-bloque body {
   inset: 0 auto 0 0;
   width: 40%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #ff7a5c, #ffb86b);
-  box-shadow: 0 0 12px rgba(255, 122, 92, 0.6);
+  background: linear-gradient(90deg, var(--bs-accent-plein), #ffb86b);
+  box-shadow: 0 0 12px rgb(var(--bs-accent) / 0.6);
   animation: maintenance-avance 1.8s ease-in-out infinite;
 }
 
@@ -14442,7 +14756,7 @@ html.defilement-bloque body {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.maintenance--blue-sky .maintenance__lien { color: #a9bddb; }
+.maintenance--blue-sky .maintenance__lien { color: var(--bs-encre-douce-plein); }
 
 .maintenance--blue-sky .maintenance__lien:hover,
 .maintenance--blue-sky .maintenance__lien:focus-visible { color: #fff; }
@@ -14525,7 +14839,7 @@ html.defilement-bloque body {
 }
 
 .maintenance--blue-sky .salle__numero { color: #fff; }
-.maintenance--blue-sky .salle__legende { color: #c7d6ea; }
+.maintenance--blue-sky .salle__legende { color: var(--bs-encre-teintee-3); }
 .maintenance--blue-sky .salle__barre { background: rgba(255, 255, 255, 0.16); }
 .maintenance--blue-sky .salle__barre span { background: var(--corail); }
 
@@ -21921,21 +22235,21 @@ html.defilement-bloque body {
    Le thème sombre ne bouge pas, ni Blue Sky (qui impose le sombre de toute
    façon — la garde `:not([data-da])` le dit explicitement). */
 :root[data-theme='light']:not([data-da='blue-sky']) :is(.preuve, .final) {
-  border: 1px solid rgba(0, 45, 97, 0.14);
+  border: 1px solid rgb(var(--bs-marine) / 0.14);
   background-color: #e6effb;
   background-image:
-    linear-gradient(rgba(0, 88, 194, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 88, 194, 0.06) 1px, transparent 1px),
+    linear-gradient(rgb(var(--bs-halo-titre) / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--bs-halo-titre) / 0.06) 1px, transparent 1px),
     radial-gradient(ellipse 70% 90% at 50% 0%, rgba(255, 255, 255, 0.85), transparent 70%),
     linear-gradient(180deg, #eef4fd 0%, #dfeafa 100%);
   background-size: 28px 28px, 28px 28px, auto, auto;
-  box-shadow: 0 18px 50px -28px rgba(0, 45, 97, 0.35);
+  box-shadow: 0 18px 50px -28px rgb(var(--bs-marine) / 0.35);
 }
 
 /* Marine sur le bleu pâle : 13:1 pour les titres, 6,4:1 pour les textes. */
 :root[data-theme='light']:not([data-da='blue-sky']) .preuve__item strong,
 :root[data-theme='light']:not([data-da='blue-sky']) .final h2 {
-  color: #0b2a55;
+  color: var(--bs-encre-marine-2);
 }
 
 :root[data-theme='light']:not([data-da='blue-sky']) .preuve__item span:last-child,
@@ -22835,6 +23149,74 @@ html.defilement-bloque body {
 .fournisseur__faits dt { font-size: 12.5px; color: var(--encre-douce); }
 .fournisseur__faits dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
 
+/* Les jauges de quota de Google — voir JaugesQuota (FournisseursIA.js). */
+.fournisseur__jauges {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding-top: 12px;
+  border-top: 1px solid var(--trait);
+}
+
+.fournisseur__jauge { display: flex; flex-direction: column; gap: 5px; }
+
+.fournisseur__jauge-titre {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+}
+
+.fournisseur__jauge-titre strong { color: var(--encre); font-weight: 600; white-space: nowrap; }
+.fournisseur__jauge-part { color: var(--encre-douce); font-weight: 500; }
+
+.fournisseur__jauge-piste {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.fournisseur__jauge-barre {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.fournisseur__jauge-barre--vert { background: var(--serie-2); }
+.fournisseur__jauge-barre--ambre { background: var(--fournisseur-ambre); }
+.fournisseur__jauge-barre--rouge { background: var(--danger); }
+
+.fournisseur__jauge-remise,
+.fournisseur__jauges-note { font-size: 11.5px; color: var(--encre-douce); }
+
+.fournisseur__jauges-note { margin: 0; }
+
+.fournisseur__jauges-bloque {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fournisseur__jauges-refus {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fournisseur__jauge-barre { transition: none; }
+}
+
 .fournisseur__technique {
   margin: 0;
   font-size: 12.5px;
@@ -22879,6 +23261,54 @@ html.defilement-bloque body {
 @media screen {
   :root[data-da='blue-sky'] {
     color-scheme: dark;
+
+    /* LA PALETTE DE BLUE SKY, EN VARIABLES — 29/09/2026. Les couleurs de ce
+       bloc étaient écrites en dur, règle par règle ; elles sont rassemblées
+       ici, avec EXACTEMENT leurs valeurs d'origine, pour que les déclinaisons
+       (soldes d'été, d'hiver, French Days, Black Friday) n'aient qu'à les
+       redéfinir. Les triplets s'emploient en rgb(var(--x) / alpha). */
+    --bs-lueur: 122 184 255;
+    --bs-lueur-2: 150 200 255;
+    --bs-lueur-3: 90 170 255;
+    --bs-halo: 0 136 255;
+    --bs-halo-titre: 0 88 194;
+    --bs-nuit: 4 20 48;
+    --bs-nuit-2: 4 20 50;
+    --bs-nuit-3: 5 22 54;
+    --bs-barre: 1 29 67;
+    --bs-pied: 1 20 48;
+    --bs-ombre-rgb: 0 8 30;
+    --bs-marine: 0 45 97;
+    --bs-accent: 255 122 92;
+    --bs-encre-douce-rgb: 169 189 219;
+    --bs-bandeau-base: #061a3d;
+    --bs-lisere: #1d3a66;
+    --bs-bleu-fonce: #0b2552;
+    --bs-encre-marine: #052a5e;
+    --bs-encre-marine-2: #0b2a55;
+    --bs-accent-plein: #ff7a5c;
+    --bs-accent-clair: #ffc2b3;
+    --bs-vert: #7ee2a1;
+    --bs-encre-teintee: #dbe8ff;
+    --bs-encre-teintee-2: #e8eef7;
+    --bs-encre-teintee-3: #c7d6ea;
+    /* Seconde passe : le verre de l'accueil, la démonstration, la séance de cours. */
+    --bs-verre-haut: 74 134 230;
+    --bs-verre-milieu: 28 64 140;
+    --bs-verre-bas: 14 38 92;
+    --bs-encre-claire-rgb: 235 242 255;
+    --bs-lueur-4: 160 205 255;
+    --bs-demo-haut: #2c5aa6;
+    --bs-demo-milieu: #1d468f;
+    --bs-demo-bas: #163a7c;
+    --bs-chat-fil: #06224f;
+    --bs-chat-haut: #1a3f74;
+    --bs-chat-milieu: #0d2750;
+    --bs-chat-bas: #0a2044;
+    --bs-chat-bulle: #17417e;
+    --bs-encre-douce-plein: #a9bddb;
+    --bs-encre-marine-3: #0b2146;
+    --bs-encre-teintee-4: #d5e3f8;
     --papier: #011d43;
 
     /* PRESQUE OPAQUE SUR L'APPLICATION. Menus déroulants, fenêtres, listes de
@@ -22954,11 +23384,11 @@ html.defilement-bloque body {
   }
 
   /* LA BARRE ET LE PIED, teintés du même bleu et non plus du bleu nuit. */
-  :root[data-da='blue-sky'] .navbar { background: rgba(1, 29, 67, 0.72); }
+  :root[data-da='blue-sky'] .navbar { background: rgb(var(--bs-barre) / 0.72); }
 
   :root[data-da='blue-sky'] .pied {
     --pied-fond: rgba(1, 20, 48, 0.88);
-    border-top: 1px solid rgba(122, 184, 255, 0.18);
+    border-top: 1px solid rgb(var(--bs-lueur) / 0.18);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
   }
@@ -22970,14 +23400,14 @@ html.defilement-bloque body {
 
   /* Les titres prennent le halo bleu du titre de la maintenance. */
   :root[data-da='blue-sky'] :is(h1, h2) {
-    text-shadow: 0 2px 24px rgba(0, 88, 194, 0.55);
+    text-shadow: 0 2px 24px rgb(var(--bs-halo-titre) / 0.55);
   }
 
   /* Les étiquettes deviennent la pastille « Mise à jour en cours ». */
   :root[data-da='blue-sky'] :is(.etiquette, .etiquette--sombre) {
-    border: 1px solid rgba(255, 122, 92, 0.4);
-    background: rgba(255, 122, 92, 0.14);
-    color: #ffc2b3;
+    border: 1px solid rgb(var(--bs-accent) / 0.4);
+    background: rgb(var(--bs-accent) / 0.14);
+    color: var(--bs-accent-clair);
   }
 
   /* LES BANDEAUX SOUS LES CARTES, OPAQUES — relevé par Camara le 15/09/2026.
@@ -22996,19 +23426,19 @@ html.defilement-bloque body {
   }
 
   :root[data-da='blue-sky'] :is(.matiere-fiches--notes, .eleve-bandeau--fiche) {
-    border-color: color-mix(in srgb, #7ee2a1 38%, #1d3a66);
-    background: color-mix(in srgb, #7ee2a1 16%, var(--bs-bandeau-fond));
-    color: #7ee2a1;
+    border-color: color-mix(in srgb, var(--bs-vert) 38%, var(--bs-lisere));
+    background: color-mix(in srgb, var(--bs-vert) 16%, var(--bs-bandeau-fond));
+    color: var(--bs-vert);
   }
 
   :root[data-da='blue-sky'] :is(.matiere-fiches--dictees, .eleve-bandeau--calendrier) {
-    border-color: color-mix(in srgb, #b9a6ff 38%, #1d3a66);
+    border-color: color-mix(in srgb, #b9a6ff 38%, var(--bs-lisere));
     background: color-mix(in srgb, #b9a6ff 16%, var(--bs-bandeau-fond));
     color: #c9baff;
   }
 
   :root[data-da='blue-sky'] :is(.matiere-fiches--comprehensions-orales, .eleve-bandeau--code) {
-    border-color: color-mix(in srgb, #7ab8f0 38%, #1d3a66);
+    border-color: color-mix(in srgb, #7ab8f0 38%, var(--bs-lisere));
     background: color-mix(in srgb, #7ab8f0 16%, var(--bs-bandeau-fond));
     color: #a9d2ff;
   }
@@ -23018,9 +23448,9 @@ html.defilement-bloque body {
      devenus sombres : il garde sa couleur, mais en teinte sur le même fond. */
   :root[data-da='blue-sky'] .matiere-fiches:not(.matiere-fiches--notes,
     .matiere-fiches--dictees, .matiere-fiches--comprehensions-orales) {
-    border: 1px solid color-mix(in srgb, #f0b44c 40%, #1d3a66);
+    border: 1px solid color-mix(in srgb, #f0b44c 40%, var(--bs-lisere));
     border-top: 0;
-    background: color-mix(in srgb, #f0b44c 16%, #061a3d);
+    background: color-mix(in srgb, #f0b44c 16%, var(--bs-bandeau-base));
     color: #ffc978;
   }
 
@@ -23038,7 +23468,7 @@ html.defilement-bloque body {
   /* La pastille de nouveauté se détachait par un liseré ambre ; sur le fond
      sombre, ce liseré devient un anneau de la couleur du fond. */
   :root[data-da='blue-sky'] .matiere-fiches--nouveautes .matiere-fiches__emoji::after {
-    box-shadow: 0 0 0 2px #0b2146;
+    box-shadow: 0 0 0 2px var(--bs-encre-marine-3);
   }
 
   /* Les fenêtres : un voile de verre sur ce qu'elles recouvrent. */
@@ -23050,7 +23480,7 @@ html.defilement-bloque body {
      fenêtre : elle recouvre du contenu, rien ne doit se lire au travers.
      Le flou d'arrière-plan reste, pour le halo autour de ses bords. */
   :root[data-da='blue-sky'] .modale__boite {
-    border: 1px solid rgba(122, 184, 255, 0.24);
+    border: 1px solid rgb(var(--bs-lueur) / 0.24);
     background: var(--bs-fond-carte);
     background-image: var(--bs-degrade-carte);
     -webkit-backdrop-filter: blur(18px) saturate(1.2);
@@ -23069,7 +23499,7 @@ html.defilement-bloque body {
      l'application (`.modale__boite`). */
   :root[data-da='blue-sky'] :is(.scan-page__entete, .scan-page__action,
     .scan-page__vignette, .scan-page__embleme) {
-    border-color: rgba(122, 184, 255, 0.24);
+    border-color: rgb(var(--bs-lueur) / 0.24);
     -webkit-backdrop-filter: blur(14px) saturate(1.15);
     backdrop-filter: blur(14px) saturate(1.15);
   }
@@ -23078,7 +23508,7 @@ html.defilement-bloque body {
      presque opaque et ferait une pastille sombre. Il prend le même verre. */
   :root[data-da='blue-sky'] .scan-page__retirer {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(169, 189, 219, 0.45);
+    border-color: rgb(var(--bs-encre-douce-rgb) / 0.45);
   }
 
   /* SUR TÉLÉPHONE, L'IMAGE AUSSI — Camara, le 22/09/2026 : « en Blue Sky,
@@ -23145,10 +23575,10 @@ html.defilement-bloque body {
     inset: -150px -180px;
     z-index: -1;
     background: radial-gradient(closest-side,
-      rgba(4, 20, 48, 0.8) 0%,
-      rgba(4, 20, 48, 0.6) 40%,
-      rgba(4, 20, 48, 0.22) 72%,
-      rgba(4, 20, 48, 0) 100%);
+      rgb(var(--bs-nuit) / 0.8) 0%,
+      rgb(var(--bs-nuit) / 0.6) 40%,
+      rgb(var(--bs-nuit) / 0.22) 72%,
+      rgb(var(--bs-nuit) / 0) 100%);
     pointer-events: none;
   }
 
@@ -23163,7 +23593,7 @@ html.defilement-bloque body {
   /* 2 et 3. Le paragraphe en blanc cassé, un peu plus appuyé. Le passage en
      gras corail (« lui parle en temps réel ») garde sa couleur. */
   :root[data-da='blue-sky'] .landing .heros__pitch {
-    color: #e8eef7;
+    color: var(--bs-encre-teintee-2);
     font-size: 18px;
     line-height: 1.6;
     font-weight: 500;
@@ -23195,10 +23625,10 @@ html.defilement-bloque body {
     inset: -110px -170px;
     z-index: -1;
     background: radial-gradient(closest-side,
-      rgba(4, 20, 48, 0.72) 0%,
-      rgba(4, 20, 48, 0.52) 40%,
-      rgba(4, 20, 48, 0.2) 72%,
-      rgba(4, 20, 48, 0) 100%);
+      rgb(var(--bs-nuit) / 0.72) 0%,
+      rgb(var(--bs-nuit) / 0.52) 40%,
+      rgb(var(--bs-nuit) / 0.2) 72%,
+      rgb(var(--bs-nuit) / 0) 100%);
     pointer-events: none;
   }
 
@@ -23211,7 +23641,7 @@ html.defilement-bloque body {
   /* Les paragraphes d'introduction, en blanc cassé comme celui du héros. La
      citation de la mémoire garde son italique, un ton en dessous. */
   :root[data-da='blue-sky'] .landing :is(.section__intro, .graphe__texte > p:not(.graphe__appui)) {
-    color: #e8eef7;
+    color: var(--bs-encre-teintee-2);
     font-weight: 500;
     line-height: 1.6;
   }
@@ -23234,10 +23664,10 @@ html.defilement-bloque body {
     inset: -90px -160px;
     z-index: -1;
     background: radial-gradient(closest-side,
-      rgba(4, 20, 48, 0.72) 0%,
-      rgba(4, 20, 48, 0.52) 40%,
-      rgba(4, 20, 48, 0.2) 72%,
-      rgba(4, 20, 48, 0) 100%);
+      rgb(var(--bs-nuit) / 0.72) 0%,
+      rgb(var(--bs-nuit) / 0.52) 40%,
+      rgb(var(--bs-nuit) / 0.2) 72%,
+      rgb(var(--bs-nuit) / 0) 100%);
     pointer-events: none;
   }
 
@@ -23256,7 +23686,7 @@ html.defilement-bloque body {
   }
 
   :root[data-da='blue-sky'] .page__sous-titre {
-    color: #e8eef7;
+    color: var(--bs-encre-teintee-2);
     font-weight: 500;
   }
 
@@ -23275,10 +23705,10 @@ html.defilement-bloque body {
     inset: -80px -160px;
     z-index: -1;
     background: radial-gradient(closest-side,
-      rgba(4, 20, 48, 0.72) 0%,
-      rgba(4, 20, 48, 0.52) 40%,
-      rgba(4, 20, 48, 0.2) 72%,
-      rgba(4, 20, 48, 0) 100%);
+      rgb(var(--bs-nuit) / 0.72) 0%,
+      rgb(var(--bs-nuit) / 0.52) 40%,
+      rgb(var(--bs-nuit) / 0.2) 72%,
+      rgb(var(--bs-nuit) / 0) 100%);
     pointer-events: none;
   }
 
@@ -23327,7 +23757,7 @@ html.defilement-bloque body {
     padding: 10px 20px 10px 16px;
     border: 1.5px solid color-mix(in srgb, var(--encre-douce) 50%, var(--trait));
     border-radius: 11px;
-    background: #061a3d;
+    background: var(--bs-bandeau-base);
     color: var(--encre);
     font-size: 14.5px;
     font-weight: 600;
@@ -23337,16 +23767,16 @@ html.defilement-bloque body {
   :root[data-da='blue-sky'] :is(.calendrier-eleve__retour, .parcours__retour):hover {
     transform: translateY(-1px);
     border-color: var(--encre-douce);
-    background: #0b2552;
+    background: var(--bs-bleu-fonce);
     color: var(--encre);
   }
 
   /* « Mes enfants » aussi, sur un fond plein et non plus la surface vitrée. */
-  :root[data-da='blue-sky'] .lien-retour { background: #061a3d; }
-  :root[data-da='blue-sky'] .lien-retour:hover { background: #0b2552; }
+  :root[data-da='blue-sky'] .lien-retour { background: var(--bs-bandeau-base); }
+  :root[data-da='blue-sky'] .lien-retour:hover { background: var(--bs-bleu-fonce); }
 
   :root[data-da='blue-sky'] .salutation__ligne > span:not(.badge) {
-    color: #e8eef7;
+    color: var(--bs-encre-teintee-2);
     font-weight: 500;
   }
 
@@ -23354,7 +23784,7 @@ html.defilement-bloque body {
     .tuile, .prof, .parents__grille, .exercices__carte, .avis__carte, .avis__resume,
     .prix-phare, .comparatif__cadre, .graphe__visuel, .heros__visuel, .compte-a-rebours
   ) {
-    border-color: rgba(122, 184, 255, 0.24);
+    border-color: rgb(var(--bs-lueur) / 0.24);
     -webkit-backdrop-filter: blur(14px) saturate(1.2);
     backdrop-filter: blur(14px) saturate(1.2);
   }
@@ -23362,19 +23792,19 @@ html.defilement-bloque body {
   /* La bande de preuves et le bandeau final portaient DÉJÀ le bleu de marque ;
      posés sur lui, ils disparaîtraient. Ils passent en verre, comme les cartes. */
   :root[data-da='blue-sky'] .landing :is(.preuve, .final) {
-    border: 1px solid rgba(122, 184, 255, 0.24);
-    background-color: rgba(4, 20, 50, 0.55);
+    border: 1px solid rgb(var(--bs-lueur) / 0.24);
+    background-color: rgb(var(--bs-nuit-2) / 0.55);
     background-image: none;
     -webkit-backdrop-filter: blur(14px) saturate(1.2);
     backdrop-filter: blur(14px) saturate(1.2);
-    box-shadow: 0 30px 80px rgba(0, 8, 30, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 80px rgb(var(--bs-ombre-rgb) / 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   :root[data-da='blue-sky'] .landing .final {
     box-shadow:
-      0 30px 80px rgba(0, 8, 30, 0.5),
-      0 0 0 1px rgba(255, 122, 92, 0.18),
-      0 0 60px rgba(255, 122, 92, 0.12);
+      0 30px 80px rgb(var(--bs-ombre-rgb) / 0.5),
+      0 0 0 1px rgb(var(--bs-accent) / 0.18),
+      0 0 60px rgb(var(--bs-accent) / 0.12);
   }
 
   /* DES CARTES QUI SE DÉTACHENT DU FOND — Camara, le 22/09/2026 : « change la
@@ -23390,10 +23820,10 @@ html.defilement-bloque body {
   ) {
     transition: box-shadow 0.25s ease, border-color 0.25s ease;
     background-color: transparent;
-    background-image: linear-gradient(165deg, rgba(74, 134, 230, 0.34) 0%, rgba(28, 64, 140, 0.5) 55%, rgba(14, 38, 92, 0.62) 100%);
-    border: 1px solid rgba(150, 200, 255, 0.4);
+    background-image: linear-gradient(165deg, rgb(var(--bs-verre-haut) / 0.34) 0%, rgb(var(--bs-verre-milieu) / 0.5) 55%, rgb(var(--bs-verre-bas) / 0.62) 100%);
+    border: 1px solid rgb(var(--bs-lueur-2) / 0.4);
     box-shadow:
-      0 24px 60px rgba(0, 8, 30, 0.45),
+      0 24px 60px rgb(var(--bs-ombre-rgb) / 0.45),
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   }
@@ -23406,11 +23836,11 @@ html.defilement-bloque body {
     .tuile, .prof, .exercices__carte, .avis__carte, .avis__resume, .prix-phare, .preuve,
     .parents__grille
   ):hover {
-    border-color: rgba(90, 170, 255, 0.75);
+    border-color: rgb(var(--bs-lueur-3) / 0.75);
     box-shadow:
-      0 24px 60px rgba(0, 8, 30, 0.45),
-      0 0 0 1px rgba(0, 136, 255, 0.35),
-      0 0 22px 2px rgba(0, 136, 255, 0.4),
+      0 24px 60px rgb(var(--bs-ombre-rgb) / 0.45),
+      0 0 0 1px rgb(var(--bs-halo) / 0.35),
+      0 0 22px 2px rgb(var(--bs-halo) / 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 
@@ -23433,11 +23863,11 @@ html.defilement-bloque body {
   :root[data-da='blue-sky'] .landing .parents__grille,
   :root[data-da='blue-sky'] .landing .parents__grille:hover {
     gap: 0;
-    border-color: rgba(90, 170, 255, 0.75);
+    border-color: rgb(var(--bs-lueur-3) / 0.75);
     box-shadow:
-      0 24px 60px rgba(0, 8, 30, 0.45),
-      0 0 0 1px rgba(0, 136, 255, 0.35),
-      0 0 22px 2px rgba(0, 136, 255, 0.4),
+      0 24px 60px rgb(var(--bs-ombre-rgb) / 0.45),
+      0 0 0 1px rgb(var(--bs-halo) / 0.35),
+      0 0 22px 2px rgb(var(--bs-halo) / 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 
@@ -23446,11 +23876,11 @@ html.defilement-bloque body {
   }
 
   :root[data-da='blue-sky'] .landing .parents__grille .point:nth-child(odd) {
-    border-right: 1px solid rgba(150, 200, 255, 0.22);
+    border-right: 1px solid rgb(var(--bs-lueur-2) / 0.22);
   }
 
   :root[data-da='blue-sky'] .landing .parents__grille .point:nth-child(-n + 2) {
-    border-bottom: 1px solid rgba(150, 200, 255, 0.22);
+    border-bottom: 1px solid rgb(var(--bs-lueur-2) / 0.22);
   }
 
   /* L'« EXEMPLE DE SUIVI » — Camara, le 22/09/2026 : un halo constant, « autour,
@@ -23459,11 +23889,11 @@ html.defilement-bloque body {
      Même halo, le même jour, sur le tableau « Pourquoi pas simplement
      ChatGPT ? » (`.comparatif__cadre`). */
   :root[data-da='blue-sky'] .landing :is(.apercu, .comparatif__cadre) {
-    border-color: rgba(90, 170, 255, 0.75);
+    border-color: rgb(var(--bs-lueur-3) / 0.75);
     box-shadow:
-      0 24px 60px rgba(0, 8, 30, 0.45),
-      0 0 0 1px rgba(0, 136, 255, 0.35),
-      0 0 22px 2px rgba(0, 136, 255, 0.4);
+      0 24px 60px rgb(var(--bs-ombre-rgb) / 0.45),
+      0 0 0 1px rgb(var(--bs-halo) / 0.35),
+      0 0 22px 2px rgb(var(--bs-halo) / 0.4);
   }
 
   /* LA SÉANCE DU HÉROS — Camara, le 22/09/2026 : l'en-tête (Nora, « en cours »)
@@ -23474,15 +23904,15 @@ html.defilement-bloque body {
      de la séance, le dégradé translucide virait au noir. Ces teintes sont
      celles que prennent les cartes À L'ÉCRAN, une fois sur le fond. */
   :root[data-da='blue-sky'] .landing :is(.demo__barre, .demo__pied) {
-    background: linear-gradient(165deg, #2c5aa6 0%, #1d468f 55%, #163a7c 100%);
-    border-color: rgba(150, 200, 255, 0.4);
+    background: linear-gradient(165deg, var(--bs-demo-haut) 0%, var(--bs-demo-milieu) 55%, var(--bs-demo-bas) 100%);
+    border-color: rgb(var(--bs-lueur-2) / 0.4);
   }
 
   /* Une seule colonne sur téléphone : un trait sous chaque case, sauf la dernière. */
   @media (max-width: 900px) {
     :root[data-da='blue-sky'] .landing .parents__grille .point {
       border-right: none;
-      border-bottom: 1px solid rgba(150, 200, 255, 0.22);
+      border-bottom: 1px solid rgb(var(--bs-lueur-2) / 0.22);
     }
 
     :root[data-da='blue-sky'] .landing .parents__grille .point:last-child {
@@ -23502,10 +23932,10 @@ html.defilement-bloque body {
     .bloc-profil, .recharge-carte, .relecture__carte, .planche-carte, .promos__carte,
     .donner-avis__carte, .scan-mobile__carte, .maintenance__carte, .legal__fiche
   ) {
-    border-color: rgba(150, 200, 255, 0.4);
+    border-color: rgb(var(--bs-lueur-2) / 0.4);
     background-color: var(--bs-fond-carte);
     background-image: var(--bs-degrade-carte);
-    box-shadow: 0 18px 44px rgba(0, 8, 30, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: 0 18px 44px rgb(var(--bs-ombre-rgb) / 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition: transform 0.18s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
@@ -23515,11 +23945,11 @@ html.defilement-bloque body {
     .bloc-profil, .recharge-carte, .relecture__carte, .planche-carte, .promos__carte,
     .donner-avis__carte, .scan-mobile__carte, .maintenance__carte, .legal__fiche
   ):hover {
-    border-color: rgba(90, 170, 255, 0.75);
+    border-color: rgb(var(--bs-lueur-3) / 0.75);
     box-shadow:
-      0 18px 44px rgba(0, 8, 30, 0.4),
-      0 0 0 1px rgba(0, 136, 255, 0.35),
-      0 0 22px 2px rgba(0, 136, 255, 0.4),
+      0 18px 44px rgb(var(--bs-ombre-rgb) / 0.4),
+      0 0 0 1px rgb(var(--bs-halo) / 0.35),
+      0 0 22px 2px rgb(var(--bs-halo) / 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
@@ -23569,11 +23999,11 @@ html.defilement-bloque body {
        d'un enfant, pas des cartes qu'on survole. Le liseré passe de l'orange
        au bleu ; l'identité de chaque section reste portée par le trait sous
        son titre. */
-    border-color: rgba(90, 170, 255, 0.6);
+    border-color: rgb(var(--bs-lueur-3) / 0.6);
     box-shadow:
-      0 24px 60px rgba(0, 8, 30, 0.45),
-      0 0 0 1px rgba(0, 136, 255, 0.35),
-      0 0 22px 2px rgba(0, 136, 255, 0.4),
+      0 24px 60px rgb(var(--bs-ombre-rgb) / 0.45),
+      0 0 0 1px rgb(var(--bs-halo) / 0.35),
+      0 0 22px 2px rgb(var(--bs-halo) / 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.12);
   }
 
@@ -23666,20 +24096,20 @@ html.defilement-bloque body {
 
   :root[data-da='blue-sky'] .eleve-carte__badges .badge--discret {
     background: transparent;
-    border-color: rgba(160, 205, 255, 0.3);
-    color: #d5e3f8;
+    border-color: rgb(var(--bs-lueur-4) / 0.3);
+    color: var(--bs-encre-teintee-4);
     font-weight: 500;
   }
 
   /* LA SÉANCE DE COURS, COMME CELLE DE L'ACCUEIL : le fil sombre, où se lisent
      les bulles, et l'en-tête et la barre de saisie dans le bleu des cartes. */
-  :root[data-da='blue-sky'] .chat { background: #06224f; }
+  :root[data-da='blue-sky'] .chat { background: var(--bs-chat-fil); }
 
   :root[data-da='blue-sky'] :is(.chat__entete, .chat__bas) {
-    border-color: rgba(150, 200, 255, 0.4);
+    border-color: rgb(var(--bs-lueur-2) / 0.4);
     /* Le même bleu que les cartes : quand elles foncent, ces deux barres
        foncent avec elles, sinon la séance redevient la pièce la plus claire. */
-    background: linear-gradient(165deg, #1a3f74 0%, #0d2750 55%, #0a2044 100%);
+    background: linear-gradient(165deg, var(--bs-chat-haut) 0%, var(--bs-chat-milieu) 55%, var(--bs-chat-bas) 100%);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -31986,8 +32416,8 @@ html.defilement-bloque body {
    Texte blanc dessus : contraste mesuré à 9:1. */
 @media screen {
   :root[data-da='blue-sky'] .chat__fil .bulle--agent {
-    background: #17417e;
-    border-color: rgba(150, 200, 255, 0.28);
+    background: var(--bs-chat-bulle);
+    border-color: rgb(var(--bs-lueur-2) / 0.28);
   }
 }
 
@@ -32806,10 +33236,10 @@ html.defilement-bloque body {
    L'icône se pose sur le cadre et la marge de la surface — le dessin ne
    commence qu'à 30 px du bord.
 
-   PLUS DE PASTILLE NI DE HALO. Ils servaient à rendre visible un libellé
-   discret sur un fond variable ; l'illustration porte ses propres contours
-   sombres et se détache aussi bien sur la craie que sur une planche blanche.
-   Reste une respiration légère, pour qu'on la remarque la première fois. */
+   PLUS DE PASTILLE. Elle servait à rendre visible un libellé discret sur un
+   fond variable ; l'illustration porte ses propres contours sombres. Le halo,
+   retiré en même temps, est revenu le 04/10/2026 à la demande de Camara :
+   voir `.ardoise__agrandir::before`. */
 .ardoise__outils {
   position: relative;
   z-index: 3;
@@ -32834,20 +33264,52 @@ html.defilement-bloque body {
 }
 
 .ardoise__agrandir {
+  position: relative;
   transform: translateY(-6px);
   animation: agrandir-respire 2.8s ease-in-out infinite;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
 }
 
+/* LE HALO REVIENT — Camara, le 04/10/2026 : « un effet un peu lumineux,
+   comme un halo, pour que le bouton soit plus visible ». L'icône seule se
+   perdait dans le coin du cadre, surtout au-dessus d'une planche chargée.
+   Une lueur bleue derrière elle, qui respire au même rythme : on la voit
+   sans qu'elle ne recouvre rien, puisqu'elle déborde sur le cadre. Le bleu
+   est celui du halo de ban2.png (#0058c2), éclairci au centre. */
+.ardoise__agrandir::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(140, 200, 255, 0.85) 0%,
+    rgba(0, 88, 194, 0.45) 45%,
+    rgba(0, 88, 194, 0) 70%
+  );
+  pointer-events: none;
+  animation: agrandir-halo 2.8s ease-in-out infinite;
+}
+
+/* L'ombre portée sur l'image seule : posée sur le bouton, elle salissait
+   le halo d'un voile noir. Une seconde lueur, serrée, détoure le dessin. */
 .ardoise__agrandir img {
   display: block;
   width: 38px;
   height: auto;
+  filter:
+    drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 6px rgba(120, 190, 255, 0.9));
 }
 
 @keyframes agrandir-respire {
   0%, 100% { transform: translateY(-6px) scale(1); }
   50% { transform: translateY(-6px) scale(1.09); }
+}
+
+@keyframes agrandir-halo {
+  0%, 100% { opacity: 0.55; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
 }
 
 /* Enfoncée : elle rentre, sans quitter son coin. */
@@ -32856,8 +33318,10 @@ html.defilement-bloque body {
   transform: translateY(-6px) scale(0.93);
 }
 
+/* Sans mouvement, le halo reste — fixe, à mi-intensité. */
 @media (prefers-reduced-motion: reduce) {
   .ardoise__agrandir { animation: none; }
+  .ardoise__agrandir::before { animation: none; opacity: 0.8; }
 }
 
 @media (max-width: 1040px) {
@@ -33758,4 +34222,622 @@ body:has(.cookies) .bouton-signalement { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .carte-histo__repli > summary::before { transition: none; }
+}
+
+/* Le choix de la déclinaison, dans la carte Blue Sky de l'administration
+   (Modes.js). Chaque bouton porte une pastille aux couleurs de son fond. */
+.mode__declinaisons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--trait);
+}
+
+.mode__declinaisons-titre {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.mode__declinaisons-choix { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.mode__declinaison {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--trait-bouton);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mode__declinaison:hover:not(:disabled) { border-color: var(--corail); }
+.mode__declinaison:disabled { opacity: 0.55; cursor: default; }
+
+.mode__declinaison--choisie {
+  border-color: var(--corail);
+  background: color-mix(in srgb, var(--corail) 16%, transparent);
+  font-weight: 600;
+}
+
+.mode__declinaison-pastille {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #1d468f, #002d61);
+}
+
+.mode__declinaison[data-saison-apercu='soldes-ete'] .mode__declinaison-pastille {
+  background: linear-gradient(135deg, #38bdf8 0 55%, #f6d27a 55% 100%);
+}
+.mode__declinaison[data-saison-apercu='soldes-hiver'] .mode__declinaison-pastille {
+  background: linear-gradient(135deg, #0a2350, #9fd8ff);
+}
+.mode__declinaison[data-saison-apercu='french-days'] .mode__declinaison-pastille {
+  background: linear-gradient(90deg, #1f4bd8 0 33.3%, #ffffff 33.3% 66.6%, #e3263b 66.6% 100%);
+}
+.mode__declinaison[data-saison-apercu='black-friday'] .mode__declinaison-pastille {
+  background: radial-gradient(circle at 35% 35%, #f5b301 0 35%, #111111 36% 100%);
+}
+
+.mode__declinaison[data-saison-apercu='back-to-school'] .mode__declinaison-pastille {
+  background: linear-gradient(135deg, #1a8a63 0 60%, #ffc83d 60% 80%, #d62839 80% 100%);
+}
+
+.mode__declinaisons-aide { margin: 0; font-size: 12.5px; color: var(--encre-douce); }
+
+/* ==========================================================================
+   LES DÉCLINAISONS DE BLUE SKY — soldes d'été, soldes d'hiver, French Days,
+   Black Friday
+   ==========================================================================
+   Camara, le 29/09/2026 : « plusieurs modes de design dans la même carte que
+   Blue Sky », chacun avec son fond (src/assets/saisons/*.webp), « et adapter
+   le thème partout dans l'application ».
+
+   POSÉES PAR `data-saison="…"` SUR <html>, ET SEULEMENT AVEC BLUE SKY
+   (src/lib/storage/styleSite.js). Elles gardent toute sa structure — verre,
+   cartes, halos, bandeaux — et ne changent QUE sa palette : les couleurs de
+   Blue Sky ont été rassemblées en variables le 29/09/2026 (voir le bloc des
+   jetons, « LA PALETTE DE BLUE SKY, EN VARIABLES »), avec leurs valeurs
+   d'origine — Blue Sky seul ne bouge pas d'un pixel (vérifié par capture).
+
+   LES QUATRE FONDS PARTAGENT UNE CHARPENTE — la grille fine, les pictos néon
+   (étiquette %, caddie, cadeau), la lumière qui tombe d'en haut — et chacun
+   sa couleur :
+     - ÉTÉ : ciel clair, sable, palmes, hibiscus ; néons orange. Le SEUL fond
+       clair : un voile bleu océan le fonce, et les titres portent une ombre
+       sombre, sinon le texte blanc posé dessus se perdrait dans le ciel.
+     - HIVER : nuit bleue, neige, givre ; néons bleu électrique. Accent glacier.
+     - FRENCH DAYS : marine à gauche, blanc au centre, rouge à droite ; bords
+       très sombres. Cartes marine, accent rouge, liseré tricolore sous la barre.
+     - BLACK FRIDAY : noir mat, projecteurs, néons OR. Cartes graphite,
+       boutons or à texte noir (le blanc sur l'or ne se lit pas).
+     - BACK TO SCHOOL (ajoutée le même jour) : tableau vert, bureau en bois,
+       crayons, pomme rouge. Fond clair au centre comme l'été : voile vert et
+       ombre sur les titres. Accents jaune crayon, boutons rouge pomme.
+
+   À L'ÉCRAN SEULEMENT, comme Blue Sky : l'impression garde son allure. */
+@media screen {
+  /* ------------------------------------------------------------ SOLDES D'ÉTÉ */
+  :root[data-da='blue-sky'][data-saison='soldes-ete'] {
+    --marque: #0a6fb8;
+    --papier: #06416f;
+    --surface: #0b5d96;
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --encre-douce: #d4ecfb;
+    --trait: rgba(186, 230, 253, 0.38);
+    --trait-bouton: rgba(212, 236, 251, 0.6);
+    --contour: rgba(212, 236, 251, 0.5);
+    --corail: #ff8a4c;
+    --corail-sombre: #ff7433;
+    --corail-texte: #ffb088;
+    --corail-btn: #d9480f;
+    --corail-btn-survol: #bf3f0c;
+    --sarcelle: #7cf0b0;
+    --ombre: 0 18px 50px rgba(2, 35, 70, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --ombre-l: 0 30px 80px rgba(2, 35, 70, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+    /* Le voile qui fonce le ciel : plus dense en haut, où se posent le titre
+       et la barre, plus léger vers la plage. */
+    --bs-voile-fond: linear-gradient(180deg, rgba(3, 55, 105, 0.5) 0%, rgba(3, 65, 115, 0.34) 55%, rgba(3, 50, 95, 0.4) 100%);
+    --bs-fond-bloc: #064a7e;
+    --bs-degrade-bloc: linear-gradient(170deg, #0a5f9c 0%, #07518a 55%, #053f70 100%);
+    --bs-fond-carte: #0a5b93;
+    --bs-degrade-carte: linear-gradient(170deg, #1b86c9 0%, #1170b0 38%, #0b5c96 72%, #07487a 100%);
+
+    --bs-lueur: 186 230 253;
+    --bs-lueur-2: 190 235 255;
+    --bs-lueur-3: 125 211 252;
+    --bs-halo: 255 196 61;
+    --bs-halo-titre: 2 45 90;
+    --bs-nuit: 4 55 100;
+    --bs-nuit-2: 4 58 104;
+    --bs-nuit-3: 5 60 106;
+    --bs-barre: 3 62 112;
+    --bs-pied: 2 45 85;
+    --bs-ombre-rgb: 2 35 70;
+    --bs-marine: 3 60 110;
+    --bs-accent: 255 138 76;
+    --bs-encre-douce-rgb: 212 236 251;
+    --bs-bandeau-base: #064a7e;
+    --bs-lisere: #2a7fb8;
+    --bs-bleu-fonce: #075a92;
+    --bs-encre-marine: #04406f;
+    --bs-encre-marine-2: #054a80;
+    --bs-accent-plein: #ff8a4c;
+    --bs-accent-clair: #ffd2b5;
+    --bs-vert: #7cf0b0;
+    --bs-encre-teintee: #e6f6ff;
+    --bs-encre-teintee-2: #eef8ff;
+    --bs-encre-teintee-3: #cfe9f8;
+    --bs-verre-haut: 70 170 230;
+    --bs-verre-milieu: 20 110 175;
+    --bs-verre-bas: 8 80 140;
+    --bs-encre-claire-rgb: 240 250 255;
+    --bs-lueur-4: 170 225 250;
+    --bs-demo-haut: #1b86c9;
+    --bs-demo-milieu: #1170b0;
+    --bs-demo-bas: #0b5c96;
+    --bs-chat-fil: #064a7e;
+    --bs-chat-haut: #1b86c9;
+    --bs-chat-milieu: #1170b0;
+    --bs-chat-bas: #0b5c96;
+    --bs-chat-bulle: #0f6aa8;
+    --bs-encre-douce-plein: #d4ecfb;
+    --bs-encre-marine-3: #06416f;
+    --bs-encre-teintee-4: #dff2fc;
+  }
+
+  /* ----------------------------------------------------------- SOLDES D'HIVER */
+  :root[data-da='blue-sky'][data-saison='soldes-hiver'] {
+    --marque: #0a2350;
+    --papier: #061a3a;
+    --surface: #183f78;
+    --encre-douce: #c3d8f2;
+    --trait: rgba(190, 225, 255, 0.34);
+    --trait-bouton: rgba(195, 216, 242, 0.55);
+    --contour: rgba(195, 216, 242, 0.45);
+    --corail: #6cc6ff;
+    --corail-sombre: #4fb3ff;
+    --corail-texte: #9ed8ff;
+    --corail-btn: #1f6fe0;
+    --corail-btn-survol: #1759bd;
+    --sarcelle: #8ff0c8;
+    --ombre: 0 18px 50px rgba(0, 10, 35, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --ombre-l: 0 30px 80px rgba(0, 10, 35, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    --bs-voile-fond: linear-gradient(rgba(2, 12, 35, 0.3), rgba(2, 12, 35, 0.3));
+    --bs-fond-bloc: #0b2550;
+    --bs-degrade-bloc: linear-gradient(170deg, #16386e 0%, #0e2a58 55%, #081e44 100%);
+    --bs-fond-carte: #12346a;
+    --bs-degrade-carte: linear-gradient(170deg, #2a5ea8 0%, #1d4a8c 38%, #153a73 72%, #0c2a58 100%);
+
+    --bs-lueur: 190 228 255;
+    --bs-lueur-2: 200 235 255;
+    --bs-lueur-3: 125 200 255;
+    --bs-halo: 90 190 255;
+    --bs-halo-titre: 60 150 255;
+    --bs-nuit: 6 24 58;
+    --bs-nuit-2: 6 26 60;
+    --bs-nuit-3: 7 28 64;
+    --bs-barre: 5 26 60;
+    --bs-pied: 4 20 48;
+    --bs-ombre-rgb: 0 10 35;
+    --bs-marine: 20 60 120;
+    --bs-accent: 108 198 255;
+    --bs-encre-douce-rgb: 195 216 242;
+    --bs-bandeau-base: #0a2452;
+    --bs-lisere: #2a4f86;
+    --bs-bleu-fonce: #0e2d5e;
+    --bs-encre-marine: #0a2f66;
+    --bs-encre-marine-2: #0d346e;
+    --bs-accent-plein: #6cc6ff;
+    --bs-accent-clair: #cdeeff;
+    --bs-vert: #8ff0c8;
+    --bs-encre-teintee: #e6f3ff;
+    --bs-encre-teintee-2: #eef6ff;
+    --bs-encre-teintee-3: #cfe0f5;
+    --bs-verre-haut: 90 150 230;
+    --bs-verre-milieu: 30 70 150;
+    --bs-verre-bas: 14 40 95;
+    --bs-encre-claire-rgb: 235 245 255;
+    --bs-lueur-4: 170 215 255;
+    --bs-demo-haut: #2a5ea8;
+    --bs-demo-milieu: #1d4a8c;
+    --bs-demo-bas: #153a73;
+    --bs-chat-fil: #081e44;
+    --bs-chat-haut: #2a5ea8;
+    --bs-chat-milieu: #1d4a8c;
+    --bs-chat-bas: #12346a;
+    --bs-chat-bulle: #1d4a8c;
+    --bs-encre-douce-plein: #c3d8f2;
+    --bs-encre-marine-3: #0a2350;
+    --bs-encre-teintee-4: #d9e8fa;
+  }
+
+  /* ------------------------------------------------------------- FRENCH DAYS */
+  :root[data-da='blue-sky'][data-saison='french-days'] {
+    --marque: #0a1a4a;
+    --papier: #07143a;
+    --surface: #13265e;
+    --encre-douce: #c9d3ec;
+    --trait: rgba(200, 210, 255, 0.3);
+    --trait-bouton: rgba(201, 211, 236, 0.55);
+    --contour: rgba(201, 211, 236, 0.45);
+    --corail: #ff4d5e;
+    --corail-sombre: #ff3346;
+    --corail-texte: #ff7a86;
+    --corail-btn: #d8192f;
+    --corail-btn-survol: #b51326;
+    --sarcelle: #7ee2a1;
+    --ombre: 0 18px 50px rgba(0, 5, 25, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --ombre-l: 0 30px 80px rgba(0, 5, 25, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+
+    --bs-voile-fond: linear-gradient(rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.32));
+    --bs-fond-bloc: #0c1a44;
+    --bs-degrade-bloc: linear-gradient(170deg, #162a66 0%, #0f1f52 55%, #0a163c 100%);
+    --bs-fond-carte: #11245a;
+    --bs-degrade-carte: linear-gradient(170deg, #22408f 0%, #1a3373 38%, #13265a 72%, #0c1a42 100%);
+
+    --bs-lueur: 160 180 255;
+    --bs-lueur-2: 190 200 255;
+    --bs-lueur-3: 110 140 255;
+    /* Le halo du survol en ROUGE, sur des cartes marine : le drapeau. */
+    --bs-halo: 230 40 60;
+    --bs-halo-titre: 30 70 220;
+    --bs-nuit: 8 18 50;
+    --bs-nuit-2: 8 18 52;
+    --bs-nuit-3: 9 20 56;
+    --bs-barre: 6 14 42;
+    --bs-pied: 5 12 36;
+    --bs-ombre-rgb: 0 5 25;
+    --bs-marine: 20 40 110;
+    --bs-accent: 255 77 94;
+    --bs-encre-douce-rgb: 201 211 236;
+    --bs-bandeau-base: #0b1a45;
+    --bs-lisere: #2a3f86;
+    --bs-bleu-fonce: #0f2258;
+    --bs-encre-marine: #0c2266;
+    --bs-encre-marine-2: #10286f;
+    --bs-accent-plein: #ff4d5e;
+    --bs-accent-clair: #ffc4ca;
+    --bs-vert: #7ee2a1;
+    --bs-encre-teintee: #e8ecff;
+    --bs-encre-teintee-2: #eef1ff;
+    --bs-encre-teintee-3: #cdd6f2;
+    --bs-verre-haut: 70 100 220;
+    --bs-verre-milieu: 25 45 130;
+    --bs-verre-bas: 12 25 80;
+    --bs-encre-claire-rgb: 238 242 255;
+    --bs-lueur-4: 180 195 255;
+    --bs-demo-haut: #22408f;
+    --bs-demo-milieu: #1a3373;
+    --bs-demo-bas: #13265a;
+    --bs-chat-fil: #0a163c;
+    --bs-chat-haut: #22408f;
+    --bs-chat-milieu: #1a3373;
+    --bs-chat-bas: #11245a;
+    --bs-chat-bulle: #1a3373;
+    --bs-encre-douce-plein: #c9d3ec;
+    --bs-encre-marine-3: #0a1a4a;
+    --bs-encre-teintee-4: #dde3f7;
+  }
+
+  /* ------------------------------------------------------------ BLACK FRIDAY */
+  :root[data-da='blue-sky'][data-saison='black-friday'] {
+    --marque: #0b0b0b;
+    --papier: #0a0a0a;
+    --surface: #1a1a1a;
+    --surface-2: rgba(255, 255, 255, 0.06);
+    --encre-douce: #bdbdbd;
+    --trait: rgba(255, 210, 120, 0.22);
+    --trait-bouton: rgba(220, 220, 220, 0.4);
+    --contour: rgba(220, 220, 220, 0.35);
+    --corail: #f5b301;
+    --corail-sombre: #e0a100;
+    --corail-texte: #ffcc4d;
+    --corail-btn: #f5b301;
+    --corail-btn-survol: #d99c00;
+    /* L'accent secondaire en OR CLAIR : le vert jurait sur le noir et or. */
+    --sarcelle: #ffd36b;
+    --ombre: 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --ombre-l: 0 30px 80px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    --bs-voile-fond: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25));
+    --bs-fond-bloc: #111111;
+    --bs-degrade-bloc: linear-gradient(170deg, #1f1f1f 0%, #161616 55%, #0e0e0e 100%);
+    --bs-fond-carte: #161616;
+    --bs-degrade-carte: linear-gradient(170deg, #2a2a2a 0%, #1f1f1f 38%, #171717 72%, #0d0d0d 100%);
+
+    --bs-lueur: 255 205 90;
+    --bs-lueur-2: 255 215 120;
+    --bs-lueur-3: 245 179 1;
+    --bs-halo: 245 179 1;
+    --bs-halo-titre: 200 140 0;
+    --bs-nuit: 18 18 18;
+    --bs-nuit-2: 20 20 20;
+    --bs-nuit-3: 22 22 22;
+    --bs-barre: 12 12 12;
+    --bs-pied: 10 10 10;
+    --bs-ombre-rgb: 0 0 0;
+    --bs-marine: 40 40 40;
+    --bs-accent: 245 179 1;
+    --bs-encre-douce-rgb: 200 200 200;
+    --bs-bandeau-base: #141414;
+    --bs-lisere: #3a3a3a;
+    --bs-bleu-fonce: #1c1c1c;
+    --bs-encre-marine: #1a1a1a;
+    --bs-encre-marine-2: #202020;
+    --bs-accent-plein: #f5b301;
+    --bs-accent-clair: #ffe199;
+    --bs-vert: #7ee2a1;
+    --bs-encre-teintee: #f2f2f2;
+    --bs-encre-teintee-2: #f5f5f5;
+    --bs-encre-teintee-3: #d6d6d6;
+    --bs-verre-haut: 90 90 90;
+    --bs-verre-milieu: 40 40 40;
+    --bs-verre-bas: 18 18 18;
+    --bs-encre-claire-rgb: 245 245 245;
+    --bs-lueur-4: 255 215 120;
+    --bs-demo-haut: #2a2a2a;
+    --bs-demo-milieu: #1f1f1f;
+    --bs-demo-bas: #171717;
+    --bs-chat-fil: #0e0e0e;
+    --bs-chat-haut: #2a2a2a;
+    --bs-chat-milieu: #1f1f1f;
+    --bs-chat-bas: #161616;
+    --bs-chat-bulle: #262626;
+    --bs-encre-douce-plein: #bdbdbd;
+    --bs-encre-marine-3: #111111;
+    --bs-encre-teintee-4: #e6e6e6;
+  }
+
+/* ---------------------------------------------------------- BACK TO SCHOOL
+     Le tableau vert, le bureau en bois, les crayons jaunes et orange, la pomme
+     rouge ; néons jaunes et blancs. Fond clair au centre, comme l'été : voile
+     vert profond et ombre sur les titres. Cartes vert tableau, accents jaune
+     crayon, boutons ROUGE POMME — l'orange est déjà celui de l'été. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] {
+    --marque: #0f6b4d;
+    --papier: #073d2c;
+    --surface: #0e5e44;
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --encre-douce: #d2f2e2;
+    --trait: rgba(190, 240, 215, 0.34);
+    --trait-bouton: rgba(210, 242, 226, 0.58);
+    --contour: rgba(210, 242, 226, 0.48);
+    --corail: #ffc83d;
+    --corail-sombre: #ffb81a;
+    --corail-texte: #ffd966;
+    --corail-btn: #d62839;
+    --corail-btn-survol: #b71f2f;
+    /* La craie : un vert mentholé, pour « Voir la méthode » et les coches. */
+    --sarcelle: #b8f5d4;
+    --ombre: 0 18px 50px rgba(2, 30, 20, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --ombre-l: 0 30px 80px rgba(2, 30, 20, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    --bs-voile-fond: linear-gradient(180deg, rgba(4, 60, 40, 0.48) 0%, rgba(4, 70, 48, 0.32) 55%, rgba(4, 55, 38, 0.4) 100%);
+    --bs-fond-bloc: #0a4a35;
+    --bs-degrade-bloc: linear-gradient(170deg, #0f6b4d 0%, #0b5840 55%, #074331 100%);
+    --bs-fond-carte: #0e5e44;
+    --bs-degrade-carte: linear-gradient(170deg, #1a8a63 0%, #0f6b4d 38%, #0b5840 72%, #074331 100%);
+
+    --bs-lueur: 190 240 215;
+    --bs-lueur-2: 200 245 225;
+    --bs-lueur-3: 120 220 170;
+    --bs-halo: 255 214 102;
+    --bs-halo-titre: 3 60 40;
+    --bs-nuit: 5 60 42;
+    --bs-nuit-2: 5 62 44;
+    --bs-nuit-3: 6 66 46;
+    --bs-barre: 6 70 48;
+    --bs-pied: 4 50 34;
+    --bs-ombre-rgb: 2 30 20;
+    --bs-marine: 8 80 55;
+    --bs-accent: 255 200 61;
+    --bs-encre-douce-rgb: 210 242 226;
+    --bs-bandeau-base: #0a4a35;
+    --bs-lisere: #2a8a64;
+    --bs-bleu-fonce: #0c5a41;
+    --bs-encre-marine: #084a34;
+    --bs-encre-marine-2: #0a553c;
+    --bs-accent-plein: #ffc83d;
+    --bs-accent-clair: #ffe9a8;
+    --bs-vert: #b8f5d4;
+    --bs-encre-teintee: #eafaf2;
+    --bs-encre-teintee-2: #f0fbf5;
+    --bs-encre-teintee-3: #cdeedd;
+    --bs-verre-haut: 80 190 140;
+    --bs-verre-milieu: 25 120 85;
+    --bs-verre-bas: 10 80 55;
+    --bs-encre-claire-rgb: 240 252 246;
+    --bs-lueur-4: 170 235 205;
+    --bs-demo-haut: #1a8a63;
+    --bs-demo-milieu: #0f6b4d;
+    --bs-demo-bas: #0b5840;
+    --bs-chat-fil: #083f2e;
+    --bs-chat-haut: #1a8a63;
+    --bs-chat-milieu: #0f6b4d;
+    --bs-chat-bas: #0b5840;
+    --bs-chat-bulle: #10704f;
+    --bs-encre-douce-plein: #d2f2e2;
+    --bs-encre-marine-3: #073d2c;
+    --bs-encre-teintee-4: #dcf5e9;
+  }
+
+  /* ------------------------------------------------------------- LES FONDS
+     Le même placement que Blue Sky — figé à l'écran, voilé — et le même
+     calque figé sur téléphone. Seule l'image change. */
+  :root[data-da='blue-sky'][data-saison='soldes-ete'] body,
+  :root[data-da='blue-sky'][data-saison='soldes-ete'] .maintenance.maintenance--blue-sky {
+    background-image: var(--bs-voile-fond), url('./assets/saisons/solde_ete_bg.webp');
+  }
+
+  :root[data-da='blue-sky'][data-saison='soldes-hiver'] body,
+  :root[data-da='blue-sky'][data-saison='soldes-hiver'] .maintenance.maintenance--blue-sky {
+    background-image: var(--bs-voile-fond), url('./assets/saisons/solde_hiver_bg.webp');
+  }
+
+  :root[data-da='blue-sky'][data-saison='french-days'] body,
+  :root[data-da='blue-sky'][data-saison='french-days'] .maintenance.maintenance--blue-sky {
+    background-image: var(--bs-voile-fond), url('./assets/saisons/french_day_bg.webp');
+  }
+
+  :root[data-da='blue-sky'][data-saison='black-friday'] body,
+  :root[data-da='blue-sky'][data-saison='black-friday'] .maintenance.maintenance--blue-sky {
+    background-image: var(--bs-voile-fond), url('./assets/saisons/black_friday_bg.webp');
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body,
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .maintenance.maintenance--blue-sky {
+    background-image: var(--bs-voile-fond), url('./assets/saisons/back_to_school_bg.webp');
+  }
+
+  :root[data-da='blue-sky'][data-saison] .maintenance.maintenance--blue-sky {
+    background-color: var(--marque);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  @media (max-width: 900px), (hover: none) {
+    :root[data-da='blue-sky'][data-saison] body { background-image: none; }
+
+    :root[data-da='blue-sky'][data-saison='soldes-ete'] body::before {
+      background-image: var(--bs-voile-fond), url('./assets/saisons/solde_ete_bg.webp');
+    }
+
+    :root[data-da='blue-sky'][data-saison='soldes-hiver'] body::before {
+      background-image: var(--bs-voile-fond), url('./assets/saisons/solde_hiver_bg.webp');
+    }
+
+    :root[data-da='blue-sky'][data-saison='french-days'] body::before {
+      background-image: var(--bs-voile-fond), url('./assets/saisons/french_day_bg.webp');
+    }
+
+    :root[data-da='blue-sky'][data-saison='black-friday'] body::before {
+      background-image: var(--bs-voile-fond), url('./assets/saisons/black_friday_bg.webp');
+    }
+
+    :root[data-da='blue-sky'][data-saison='back-to-school'] body::before {
+      background-image: var(--bs-voile-fond), url('./assets/saisons/back_to_school_bg.webp');
+    }
+  }
+
+  /* ------------------------------------------- LES VARIABLES LOCALES DE BLUE SKY
+     Quatre valeurs que Blue Sky pose sur un élément et non sur la racine :
+     le pied de page, les bandeaux sous les cartes, le verre et le gris de
+     l'accueil. Chaque déclinaison les reprend dans sa palette. */
+  :root[data-da='blue-sky'][data-saison] .pied { --pied-fond: rgb(var(--bs-pied) / 0.9); }
+
+  :root[data-da='blue-sky'][data-saison] :is(.matiere-fiches--notes, .matiere-fiches--dictees,
+    .matiere-fiches--comprehensions-orales, .eleve-bandeau--calendrier,
+    .eleve-bandeau--fiche, .eleve-bandeau--code) {
+    --bs-bandeau-fond: var(--bs-bandeau-base);
+  }
+
+  :root[data-da='blue-sky'][data-saison] .landing {
+    --surface: rgb(var(--bs-nuit-2) / 0.62);
+    --encre-douce: var(--bs-encre-teintee-3);
+  }
+
+  /* ------------------------------------------------------------ LES TITRES
+     Blue Sky leur donne un halo bleu. En été, c'est une OMBRE sombre qu'il
+     faut : le ciel clair est derrière. Ailleurs, le halo prend la couleur de
+     la déclinaison (voir --bs-halo-titre). */
+  :root[data-da='blue-sky']:is([data-saison='soldes-ete'], [data-saison='back-to-school']) :is(h1, h2) {
+    text-shadow: 0 2px 14px rgb(var(--bs-halo-titre) / 0.45), 0 1px 2px rgba(0, 30, 60, 0.35);
+  }
+
+  /* LES TITRES EN DÉGRADÉ, SANS OMBRE. « du CP à la Terminale » est rempli par
+     un dégradé découpé en forme de lettres (texte transparent) : l'ombre
+     héritée du titre transparaissait À TRAVERS les lettres et les salissait —
+     brun pâteux en été. Blue Sky la garde (son halo bleu se fond dans le bleu) ;
+     les déclinaisons l'ôtent. */
+  :root[data-da='blue-sky'][data-saison] .accompagnement__entete h2 .titre-accent {
+    text-shadow: none;
+  }
+
+  /* « VOIR LA MÉTHODE » SUIT LA DÉCLINAISON. Son voile turquoise est écrit en
+     dur dans le style d'origine ; il prend ici la couleur secondaire de la
+     palette (--sarcelle) : or clair en Black Friday, vert tropical en été. */
+  :root[data-da='blue-sky'][data-saison] .heros__actions .btn--fantome {
+    background: color-mix(in srgb, var(--sarcelle) 14%, transparent);
+    border-color: color-mix(in srgb, var(--sarcelle) 55%, transparent);
+  }
+
+  /* ------------------------------------------------------- LE LISERÉ TRICOLORE
+     French Days : une bande bleu, blanc, rouge sous la barre — le seul
+     ornement ajouté, et il dit la déclinaison à lui seul. */
+  :root[data-da='blue-sky'][data-saison='french-days'] .navbar {
+    background-image: linear-gradient(90deg, #1f4bd8 0 33.3%, #ffffff 33.3% 66.6%, #e3263b 66.6% 100%);
+    background-size: 100% 3px;
+    background-position: bottom;
+    background-repeat: no-repeat;
+  }
+
+  /* ------------------------------------------------ BLACK FRIDAY : L'OR À TEXTE NOIR
+     Le blanc sur l'or ne se lit pas (contraste 1,9:1). Tous les éléments qui
+     portent la couleur pleine des boutons avec un texte blanc écrit en dur —
+     liste relevée dans App.css le 29/09/2026 — passent au texte noir. Les
+     boutons « fantôme » et « danger » ont leur propre fond : ils sont exclus. */
+  :root[data-da='blue-sky'][data-saison='black-friday'] :is(
+    .btn:not(.btn--fantome):not(.btn--danger),
+    .carrousel__fleche:hover:not(:disabled),
+    .bouton-signalement,
+    .signalement-modale__badge,
+    .tarif__mention,
+    .apercu__fleche:hover
+  ) {
+    color: #141414;
+  }
+}
+
+/* L'ARABE S'ÉCRIT DE DROITE À GAUCHE — ajouté le 04/10/2026 avec le cours
+   d'arabe. `plaintext` laisse CHAQUE LIGNE choisir son sens d'après sa première
+   lettre : une ligne en arabe part de la droite, la ligne de translittération
+   qui la suit repart de la gauche. Sans cela une ligne arabe restait calée à
+   gauche, sa ponctuation du mauvais côté. Une ligne en lettres latines — tout
+   le reste du produit — ne change pas d'un pixel. */
+.ardoise__contenu,
+.bulle {
+  unicode-bidi: plaintext;
+}
+
+/* L'ARABE EN PLUS GRAND, AU TABLEAU SEULEMENT — Camara, le 04/10/2026 :
+   « l'écriture arabe est trop petite, il faut agrandir les lettres ». À corps
+   égal, une lettre arabe occupe bien moins de hauteur qu'une lettre latine,
+   et ses voyelles — de petits signes au-dessus et au-dessous — devenaient
+   illisibles à 17 px.
+
+   UNE POLICE QUI NE VAUT QUE POUR L'ARABE : `unicode-range` la réserve aux
+   lettres arabes, `size-adjust` les grossit de moitié. Le reste du tableau —
+   la translittération, le français, les figures en caractères — garde sa
+   police à chasse fixe et sa taille, au pixel près. Pas de balise à poser
+   autour des mots : le navigateur choisit la police lettre par lettre.
+
+   Les polices nommées sont celles des systèmes (Windows, macOS, Android) :
+   rien à télécharger. Un navigateur qui ignore `size-adjust` affiche l'arabe
+   à la taille ordinaire, comme avant. */
+@font-face {
+  font-family: 'ArabeDuTableau';
+  src: local('Segoe UI'), local('Geeza Pro'), local('Noto Naskh Arabic'),
+       local('Noto Sans Arabic'), local('Arial');
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF;
+  size-adjust: 150%;
+}
+
+.ardoise__contenu {
+  font-family: 'ArabeDuTableau', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }

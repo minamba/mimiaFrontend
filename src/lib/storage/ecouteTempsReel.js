@@ -1,5 +1,5 @@
 import { API_BASE_URL, enTeteAuth } from '../api/httpClient';
-import { mesurerMicro } from '../api/mesuresApi';
+import { mesurerEcoute, mesurerMicro } from '../api/mesuresApi';
 
 /**
  * Écoute en flux : le micro part vers notre serveur, les transcriptions
@@ -226,6 +226,24 @@ const DELAIS_RECONNEXION_MS = [300, 1000, 2000, 5000];
 const RECONNEXIONS_MAX = 20;
 
 /**
+ * LE BATTEMENT — Camara, le 28/09/2026 : « énormément de soucis de connexion »,
+ * surtout avec un enfant de CP, qui réfléchit longtemps entre deux réponses.
+ *
+ * Pendant ce silence, rien ne circule sur la liaison. Un relais ou un réseau
+ * mobile qui ferme les liaisons muettes la coupait sans que le navigateur le
+ * sache toujours : il ne l'apprenait qu'en reparlant — le son partait dans le
+ * vide, huit secondes d'attente, « petit souci de connexion », et le premier
+ * tour de l'enfant à renvoyer. Toutes les vingt secondes, on demande donc au
+ * serveur s'il est là ; deux battements sans réponse, et on rappelle AVANT
+ * qu'il reparle, sans rien lui dire : il n'a rien perdu.
+ */
+const BATTEMENT_MS = 20000;
+const BATTEMENTS_SANS_REPONSE_MAX = 2;
+
+/** Au plus un relevé de coupure toutes les cinq secondes : une boucle n'en envoie pas cent. */
+const RELEVE_MIN_MS = 5000;
+
+/**
  * Le petit programme qui tourne dans le fil audio.
  *
  * Il vit dans un AudioWorklet et non dans le fil principal : la capture ne doit
@@ -323,8 +341,30 @@ const HESITATIONS = new Set([
  * élève qui écrit « ça fait 3,5 » ou qui emploie un mot étranger ne doit pas
  * voir son tour disparaître. On ne coupe que le cas franchement absurde.
  */
-export function alphabetPlausible(texte) {
+/**
+ * LES ÉCRITURES QU'UN COURS DE LANGUE ATTEND — ajouté le 04/10/2026 avec le
+ * chinois et l'arabe. Dans ces deux cours, l'élève qui répond dans la langue
+ * est transcrit en caractères chinois ou en lettres arabes : le filtre
+ * ci-dessous, qui n'admet que le latin, aurait jeté toutes ses réponses.
+ * Partout ailleurs rien ne change : un tour sans une lettre latine reste une
+ * hallucination du transcripteur.
+ */
+const ECRITURES = {
+  zh: /[\u3400-\u9fff]/,
+  ar: /[\u0600-\u06ff\u0750-\u077f]/,
+};
+
+/** L'écriture propre au cours, d'après sa matière — ou null. */
+export function ecritureDuCours(matiereCode) {
+  if (matiereCode === 'CHINOIS') return 'zh';
+  if (matiereCode === 'ARABE') return 'ar';
+  return null;
+}
+
+export function alphabetPlausible(texte, ecriture = null) {
   if (!texte || !texte.trim()) return false;
+
+  if (ecriture && ECRITURES[ecriture]?.test(texte)) return true;
 
   // LES CHIFFRES COMPTENT AUTANT QUE LES LETTRES.
   //
@@ -353,11 +393,11 @@ export function alphabetPlausible(texte) {
  *
  * D'où ce juge unique : deux portes, une seule serrure.
  */
-export function estUnTourDeParole(texte) {
+export function estUnTourDeParole(texte, ecriture = null) {
   const propre = (texte ?? '').trim();
   if (!propre) return false;
 
-  return !estUneHesitation(propre) && alphabetPlausible(propre);
+  return !estUneHesitation(propre) && alphabetPlausible(propre, ecriture);
 }
 
 /**
@@ -570,7 +610,7 @@ export const ecouteTempsReel = {
    *                       un silence qui ne s'explique jamais.
    */
   ecouter({
-    conversationId, chemin, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
+    conversationId, chemin, ecriture = null, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
     onFermeture, onOuverture, onOreilleMorte, onMuet,
   }) {
     // LE MÊME MICRO HORS D'UNE SÉANCE — `chemin` remplace l'identifiant de
@@ -704,6 +744,31 @@ export const ecouteTempsReel = {
     // La reconnexion : combien d'échecs d'affilée, et la tentative programmée.
     let reconnexionsRatees = 0;
     let minuteurReconnexion = null;
+
+    // Le battement de la liaison en cours, et depuis quand elle est ouverte.
+    let battement = null;
+    let battementsSansReponse = 0;
+    let ouverteLe = 0;
+    let dernierReleve = -Infinity;
+
+    /** Le relevé d'une coupure, pour les logs du serveur. Voir mesurerEcoute. */
+    const signaler = (cause, detail = {}) => {
+      const maintenant = performance.now();
+      if (maintenant - dernierReleve < RELEVE_MIN_MS) return;
+      dernierReleve = maintenant;
+
+      mesurerEcoute({
+        cause,
+        rappels: reconnexionsRatees,
+        secondes: ouverteLe ? (maintenant - ouverteLe) / 1000 : null,
+        ...detail,
+      });
+    };
+
+    const arreterBattement = () => {
+      if (battement) clearInterval(battement);
+      battement = null;
+    };
 
     // Le son gardé d'avance, pour ne pas tronquer la première syllabe.
     const reserve = [];
@@ -872,6 +937,7 @@ export const ecouteTempsReel = {
       arrete = true;
 
       desarmer();
+      arreterBattement();
       if (minuteurReconnexion) clearTimeout(minuteurReconnexion);
       minuteurReconnexion = null;
 
@@ -1004,6 +1070,7 @@ export const ecouteTempsReel = {
       reconnexionsRatees += 1;
 
       if (reconnexionsRatees > RECONNEXIONS_MAX) {
+        signaler('abandon');
         onErreur?.("L'écoute a été interrompue. Tu peux écrire à la place.");
         arreter();
 
@@ -1032,7 +1099,7 @@ export const ecouteTempsReel = {
      * et l'annonce est toujours faite — ce silence avait une cause, l'élève
      * mérite de la connaître.
      */
-    const abandonner = (motif) => {
+    const abandonner = (motif, { silencieux = false, cause = 'oreille-morte' } = {}) => {
       if (arrete) return;
 
       if (process.env.NODE_ENV !== 'production') {
@@ -1043,8 +1110,14 @@ export const ecouteTempsReel = {
         );
       }
 
-      onOreilleMorte?.();
+      signaler(cause, { message: typeof motif === 'string' ? motif : null });
+
+      // SILENCIEUX quand l'enfant n'a rien perdu — un battement sans réponse
+      // pendant qu'il réfléchit : on rappelle sans le bandeau. Le bandeau est
+      // pour le tour de parole resté sans réponse, pas pour la liaison.
+      if (!silencieux) onOreilleMorte?.();
       desarmer();
+      arreterBattement();
 
       // On oublie la liaison AVANT de la fermer : son `onclose` se reconnaît
       // alors comme celui d'une liaison déjà remplacée, et ne programme pas
@@ -1115,6 +1188,21 @@ export const ecouteTempsReel = {
           // Une liaison déjà remplacée n'a plus rien à dire.
           if (socket !== liaison || arrete) return;
 
+          arreterBattement();
+          signaler('fermeture', { code: evenement.code, raison: evenement.reason || null });
+
+          // UN REFUS EST DÉFINITIF : le serveur ferme avec le code 1008 quand
+          // la séance n'a plus droit au micro (heures épuisées). Rappeler ne
+          // changerait rien — le message, lui, est normalement arrivé juste
+          // avant (voir `definitif` dans onmessage) ; s'il s'est perdu, on
+          // le dit quand même.
+          if (evenement.code === 1008) {
+            onErreur?.("Le micro n'est pas disponible pour cette séance. Tu peux écrire ton message.", true);
+            arreter();
+            onFermeture?.();
+            return;
+          }
+
           // FERMETURE NON VOULUE : ON RAPPELLE, SANS DÉFAIRE L'ÉCOUTE.
           //
           // Une session de transcription a une durée de vie limitée chez le
@@ -1143,6 +1231,31 @@ export const ecouteTempsReel = {
           }
 
           onOuverture?.();
+          ouverteLe = performance.now();
+
+          // LE BATTEMENT DE CETTE LIAISON. Voir BATTEMENT_MS.
+          arreterBattement();
+          battementsSansReponse = 0;
+          battement = setInterval(() => {
+            if (arrete || socket !== liaison || liaison.readyState !== WebSocket.OPEN) {
+              arreterBattement();
+              return;
+            }
+
+            if (battementsSansReponse >= BATTEMENTS_SANS_REPONSE_MAX) {
+              abandonner('liaison muette (battement sans réponse)', {
+                silencieux: true, cause: 'battement',
+              });
+              return;
+            }
+
+            battementsSansReponse += 1;
+            try {
+              liaison.send(JSON.stringify({ type: 'ping' }));
+            } catch {
+              // Une liaison qui refuse l'envoi va se fermer : `onclose` rappellera.
+            }
+          }, BATTEMENT_MS);
 
           // CE QUI ATTENDAIT PART MAINTENANT, dans l'ordre où ça a été dit :
           // la parole prononcée pendant l'ouverture, et, après une coupure,
@@ -1161,11 +1274,27 @@ export const ecouteTempsReel = {
           // guérison qui remet le compteur de rappels à zéro : une liaison
           // qui s'ouvre puis ne répond jamais n'a rien guéri.
           desarmer();
+          battementsSansReponse = 0;
 
           let charge;
           try {
             charge = JSON.parse(evenement.data);
           } catch {
+            return;
+          }
+
+          // UN REFUS DÉFINITIF — Camara, le 28/09/2026. Le serveur dit non
+          // (plus d'heures, séance sans droit au micro) et le dit UNE fois :
+          // rappeler vingt fois de suite pendant que l'enfant parle dans le
+          // vide n'y changerait rien. On s'arrête, et on le lui dit.
+          if (charge.type === 'erreur' && charge.definitif) {
+            signaler('refus', { message: charge.message ?? null });
+            onErreur?.(
+              charge.message ?? "Le micro n'est pas disponible pour cette séance. Tu peux écrire ton message.",
+              true,
+            );
+            arreter();
+            onFermeture?.();
             return;
           }
 
@@ -1217,7 +1346,9 @@ export const ecouteTempsReel = {
             // fermeture qui suit arrive sur une liaison déjà remplacée et ne
             // programme pas un second rappel. L'appelant n'est prévenu, par
             // `onErreur`, qu'après RECONNEXIONS_MAX échecs d'affilée.
-            abandonner(`erreur du relais (${charge.message ?? 'sans détail'})`);
+            abandonner(`erreur du relais (${charge.cause ?? charge.message ?? 'sans détail'})`, {
+              cause: 'erreur-relais',
+            });
             return;
           }
           else if (charge.type === 'final') {
@@ -1268,7 +1399,7 @@ export const ecouteTempsReel = {
             // Transcription hallucinée sur du bruit : on ne l'ajoute pas, et
             // on continue d'écouter, plutôt que d'envoyer au professeur un
             // message qu'il ne pourra que déclarer incompréhensible.
-            if (!alphabetPlausible(charge.texte)) {
+            if (!alphabetPlausible(charge.texte, ecriture)) {
               // DEUX CAS SOUS LE MÊME REFUS, ET UN SEUL MÉRITE QU'ON REGARDE.
               //
               // Un tour vide, c'est du silence : un souffle, une porte, le
@@ -1484,6 +1615,18 @@ export const ecouteTempsReel = {
                 && maintenant - debutVoixForte >= DUREE_COUPURE_MS
                 && blocsVoises >= blocsForts * PART_VOISEE_MIN) {
               voixSignalee = true;
+
+              // LA SEULE DÉCISION QUI FAIT TAIRE LE PROFESSEUR, ET ELLE ÉTAIT
+              // MUETTE — Camara, le 04/10/2026 : la voix coupe en pleine
+              // compréhension orale, au casque, sans qu'il ait parlé. On nomme
+              // ce que le micro a entendu, et quel micro c'était.
+              console.warn(
+                `[ecoute] voix détectée au micro « ${piste?.label || 'inconnu'} » : `
+                + `niveau ${amplitude.toFixed(3)} (seuil ${SEUIL_COUPURE}), `
+                + `${Math.round(maintenant - debutVoixForte)} ms, `
+                + `${blocsVoises}/${blocsForts} blocs voisés.`,
+              );
+
               onVoix?.();
             }
           } else {

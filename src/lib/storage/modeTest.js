@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { getReglagesPublics } from '../api/reglagesApi';
-import { appliquerBlueSky, blueSkyEnregistre } from './styleSite';
+import {
+  appliquerBlueSky, blueSkyEnregistre, saisonEnregistree, saisonValide,
+} from './styleSite';
 import { demarrerFluxReglages } from './fluxReglages';
 
 /**
@@ -28,6 +30,9 @@ const PAR_DEFAUT = {
   // que `public/index.html` a déjà posé sur la page. Partir de « éteint »
   // ferait afficher l'ancienne page d'attente un instant avant la nouvelle.
   blueSky: blueSkyEnregistre(),
+
+  // Sa déclinaison (soldes, French Days, Black Friday), même raison.
+  styleSaison: saisonEnregistree(),
 
   // ÉTEINT TANT QU'ON N'A RIEN LU : on n'ouvre pas une connexion qui peut
   // durer des heures sur une valeur qu'on n'a pas encore reçue. La première
@@ -88,6 +93,9 @@ function interroger() {
           // Appliqué juste en dessous, avant de prévenir les abonnés.
           blueSky: Boolean(data?.blueSky),
 
+          // La déclinaison de Blue Sky : une valeur inconnue ne pose rien.
+          styleSaison: saisonValide(data?.styleSaison),
+
           // LE COUPE-CIRCUIT DU TEMPS RÉEL. `?? true` et non `Boolean(...)` :
           // une API antérieure à ce drapeau ne l'envoie pas, et le lire comme
           // éteint couperait le temps réel partout le temps d'un déploiement.
@@ -142,7 +150,7 @@ function interroger() {
 
         // ICI ET PAS DANS UN COMPOSANT : le style habille le site entier, y
         // compris la page d'attente qui remplace tous les composants.
-        appliquerBlueSky(valeurs.blueSky);
+        appliquerBlueSky(valeurs.blueSky, valeurs.styleSaison);
 
         // L'ÉCOUTE S'OUVRE APRÈS LA PREMIÈRE LECTURE, et non avant : c'est
         // cette lecture qui dit si le temps réel est allumé. Ici et pas dans un

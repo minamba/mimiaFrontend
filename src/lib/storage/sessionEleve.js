@@ -55,6 +55,9 @@ export function ouvrirSessionEleve({ jeton, eleve }) {
       // ET LA CLASSE : le cycle ouvre la porte des jeux, la classe décide
       // lesquels. Un CP et un CM2 ne jouent pas au même jeu.
       niveauCode: eleve?.niveauCode ?? '',
+
+      // ET SON ÂGE, pour le ton de la voix — voir `eleveDeLaSession`.
+      age: Number.isFinite(eleve?.age) ? eleve.age : null,
     }));
   } catch {
     // Navigation privée : la session ne survivra pas à la fermeture de
@@ -105,6 +108,35 @@ export function fermerSessionEleve() {
 }
 
 /** Le jeton à mettre en en-tête, ou null si c'est un parent qui navigue. */
+/**
+ * L'ENFANT DE LA SESSION, SOUS LA FORME D'UN PROFIL — Camara, le 30/09/2026 :
+ * une maman, « mon fils parle et le micro ne marche pas, ou une fois sur dix »,
+ * et dans la console des 403 sur `/eleves` en vue élève.
+ *
+ * Les écrans trouvent l'élève dans « la liste des enfants » (`GET /eleves`) ;
+ * or cette liste est celle du PARENT, fermée à une session enfant. En vue
+ * élève elle revenait vide : la séance tournait SANS connaître l'élève, et
+ * l'effet de fin de réponse — celui qui prononce la dernière phrase et vide
+ * le lecteur — s'arrêtait à sa première ligne (`if (!eleve …) return`).
+ *
+ * La liste d'une session enfant, c'est l'enfant lui-même : `elevesSaga` la
+ * compose d'ici, sans appeler une route qui lui est fermée. Null hors session
+ * enfant.
+ */
+export function eleveDeLaSession() {
+  const session = sessionEleve();
+  if (!session?.eleveId) return null;
+
+  return {
+    id: Number(session.eleveId),
+    prenom: session.prenom ?? '',
+    niveauLibelle: session.niveau ?? '',
+    niveauCycle: session.cycle ?? '',
+    niveauCode: session.niveauCode ?? '',
+    ...(Number.isFinite(session.age) ? { age: session.age } : {}),
+  };
+}
+
 export function jetonEleve() {
   return sessionEleve()?.jeton ?? null;
 }

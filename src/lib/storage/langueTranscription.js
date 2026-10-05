@@ -46,6 +46,7 @@ export const LANGUES_ETUDIEES = {
   ALLEMAND: 'de-DE',
   ITALIEN: 'it-IT',
   CHINOIS: 'zh-CN',
+  ARABE: 'ar-SA',
   // Les spécialités de langue de la voie générale se parlent dans leur langue.
   LLCER_ANGLAIS: 'en-US',
   AMC: 'en-US',

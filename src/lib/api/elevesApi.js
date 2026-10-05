@@ -257,6 +257,33 @@ export const supprimerControle = (eleveId, controleId) =>
   httpClient.delete(`/eleves/${eleveId}/controles/${controleId}`);
 
 /**
+ * LE COURS DE L'ÉLÈVE, IMPORTÉ AVEC SON CONTRÔLE — Camara, le 26/09/2026.
+ * Le professeur prépare en suivant sa leçon, puis s'en sert pour corriger la
+ * copie. Chaque document : `{ id, nomFichier, typeMime, taille, nombrePages,
+ * lu, dateCreation }` — `lu` passe à vrai une fois la transcription faite.
+ */
+export const getCoursControle = (eleveId, controleId) =>
+  httpClient.get(`/eleves/${eleveId}/controles/${controleId}/cours`);
+
+/** Mêmes règles que les pièces jointes : images et PDF, 5 Mo, 10 pages ; le motif d'un refus est écrit pour l'élève. */
+export const ajouterCoursControle = (eleveId, controleId, fichier) => {
+  const corps = new FormData();
+  corps.append('fichier', fichier, fichier.name);
+  return httpClient.post(`/eleves/${eleveId}/controles/${controleId}/cours`, corps);
+};
+
+export const supprimerCoursControle = (eleveId, controleId, documentId) =>
+  httpClient.delete(`/eleves/${eleveId}/controles/${controleId}/cours/${documentId}`);
+
+/** Le QR code pour photographier son cours avec le téléphone : `{ jeton, expireLe }`. */
+export const creerScanCoursControle = (eleveId, controleId) =>
+  httpClient.post(`/eleves/${eleveId}/controles/${controleId}/cours/scan-mobile`);
+
+/** `{ etat: 'attente' | 'recu' | 'expire', documents, termine }`. */
+export const etatScanCoursControle = (eleveId, controleId, jeton) =>
+  httpClient.get(`/eleves/${eleveId}/controles/${controleId}/cours/scan-mobile/${encodeURIComponent(jeton)}`);
+
+/**
  * La préparation à l'examen de l'élève : `{ examen }`, où `examen` vaut
  * `null` quand sa classe n'en passe pas cette année. Voir `PreparationExamen`.
  */

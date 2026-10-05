@@ -51,6 +51,14 @@ const MATIERES = {
   PHILOSOPHIE: { clair: '#5A4A8C', sombre: '#B7A8E8' },
   ESPAGNOL: { clair: '#BE123C', sombre: '#FB7185' },
 
+  // LES QUATRE AUTRES LANGUES VIVANTES B (04/10/2026) : Jonas, Giulia, Lin,
+  // Youssef. Les teintes claires sont celles du semeur ; les sombres en sont
+  // l'éclaircie, comme pour les autres. Choisies par moi, non montrées à Camara.
+  ALLEMAND: { clair: '#3730A3', sombre: '#A5B4FC' },
+  ITALIEN: { clair: '#0E7490', sombre: '#67E8F9' },
+  CHINOIS: { clair: '#A16207', sombre: '#FACC15' },
+  ARABE: { clair: '#0F766E', sombre: '#5EEAD4' },
+
   // LES SPÉCIALITÉS DES SÉRIES TECHNOLOGIQUES (STMG, ST2S, STL). Une
   // couleur suit le professeur : les trois matières de Karim partagent son
   // vert, les spécialités scientifiques gardent l'ambre de Yann et l'olive
@@ -145,6 +153,10 @@ const PAR_LIBELLE = {
   'histoire geo': 'HISTOIRE_GEO',
   anglais: 'ANGLAIS',
   espagnol: 'ESPAGNOL',
+  allemand: 'ALLEMAND',
+  italien: 'ITALIEN',
+  chinois: 'CHINOIS',
+  arabe: 'ARABE',
   sciences: 'SCIENCES',
   'sciences et technologie': 'SCIENCES',
   'physique chimie': 'PHYSIQUE_CHIMIE',

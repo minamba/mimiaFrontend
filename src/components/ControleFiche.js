@@ -6,6 +6,8 @@ import {
 import { styleMatiere } from '../lib/couleurMatiere';
 import BarrePreparation, { palierPreparation } from './BarrePreparation';
 import ControleForm from './ControleForm';
+import CoursDuControle from './CoursDuControle';
+import OuvertureSeance from './OuvertureSeance';
 import JustificationProfesseur from './JustificationProfesseur';
 import Loader from './Loader';
 import PastillePret from './PastillePret';
@@ -88,6 +90,11 @@ export default function ControleFiche() {
 
   const [controle, setControle] = useState(null);
   const [matieres, setMatieres] = useState([]);
+
+  // LA SÉANCE QU'ON S'APPRÊTE À OUVRIR — `'controle'` ou `'bilan'` —, le temps
+  // des deux questions d'avant cours : la durée, puis le casque. Camara, le
+  // 26/09/2026 : « faire le point » ouvrait le cours sans demander le casque.
+  const [ouverture, setOuverture] = useState(null);
   const [edition, setEdition] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -317,16 +324,35 @@ export default function ControleFiche() {
         </p>
       )}
 
+      {/* LE COURS DE L'ÉLÈVE — Camara, le 26/09/2026. Ici aussi, et pas
+          seulement dans la fenêtre du contrôle : l'enfant qui n'avait pas son
+          cahier sous la main en créant le contrôle l'ajoute plus tard, là où
+          il vient préparer. Il sert aussi à la correction de la copie. */}
+      <section className="controle-fiche__cours">
+        <CoursDuControle eleveId={eleveId} controleId={controle.id} />
+      </section>
+
       </div>
+
+      {ouverture && (
+        <OuvertureSeance
+          matiere={matieres.find((m) => m.id === controle.matiereId)
+            ?? { id: controle.matiereId, profPrenom: 'Ton professeur' }}
+          onAnnuler={() => setOuverture(null)}
+          onOuvrir={(duree, casque) => navigate(
+            `/eleves/${eleveId}/matieres/${controle.matiereId}/chat`
+            + `?duree=${duree}&casque=${casque ? 1 : 0}`
+            + `&mode=${ouverture}&controleId=${controle.id}`,
+          )}
+        />
+      )}
 
       <div className="controle-fiche__actions">
         {!passe && (
           <button
             type="button"
             className="btn"
-            onClick={() => navigate(
-              `/eleves/${eleveId}/matieres/${controle.matiereId}/chat?mode=controle&controleId=${controle.id}`,
-            )}
+            onClick={() => setOuverture('controle')}
           >
             Préparer ce contrôle
           </button>
@@ -338,9 +364,7 @@ export default function ControleFiche() {
           <button
             type="button"
             className="btn"
-            onClick={() => navigate(
-              `/eleves/${eleveId}/matieres/${controle.matiereId}/chat?mode=bilan&controleId=${controle.id}`,
-            )}
+            onClick={() => setOuverture('bilan')}
           >
             Faire le point sur ce contrôle
           </button>

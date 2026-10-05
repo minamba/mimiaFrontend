@@ -208,6 +208,7 @@ const SYNONYMES = [
   [/\ballemand\b/, 'ALLEMAND'],
   [/\bitalien\b/, 'ITALIEN'],
   [/\bchinois\b/, 'CHINOIS'],
+  [/\barabe\b/, 'ARABE'],
   [/\bsvt\b|\bbio\b|\bbiologie\b|\bsciences de la vie\b/, 'SVT'],
   [/\bphysique\b|\bchimie\b|\bphysique chimie\b/, 'PHYSIQUE_CHIMIE'],
   [/\bhistoire\b|\bgeo\b|\bgeographie\b|\bhistoire geo\b/, 'HISTOIRE_GEO'],

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import QRCode from 'qrcode';
 import { creerScanMobile, etatScanMobile } from '../lib/api/chatApi';
 import { adresseScan, origineScan, tempsRestant } from '../lib/storage/scanMobile';
@@ -52,6 +53,10 @@ export function IconeScanner() {
  */
 export default function ScanMobileModale({
   conversationId, profPrenom, onRecu, onTermine, onFermer, intervalle = 2000,
+  // LE COURS D'UN CONTRÔLE — 26/09/2026 : même fenêtre, mais le QR code et son
+  // relevé passent par le contrôle, pas par une séance. Sans ces deux-là,
+  // c'est la séance `conversationId`, comme avant.
+  creer = null, lire = null,
 }) {
   const [jeton, setJeton] = useState(null);
   const [expireLe, setExpireLe] = useState(null);
@@ -70,7 +75,7 @@ export default function ScanMobileModale({
     setQr(null);
 
     try {
-      const { data } = await creerScanMobile(conversationId);
+      const { data } = await (creer ? creer() : creerScanMobile(conversationId));
       const origine = await origineScan();
 
       // UN QR CODE « localhost » EST INUTILISABLE PAR UN TÉLÉPHONE — relevé
@@ -104,7 +109,7 @@ export default function ScanMobileModale({
       setErreur('Le QR code n’a pas pu être créé. Tu peux réessayer ?');
       setEtat('erreur');
     }
-  }, [conversationId]);
+  }, [conversationId, creer]);
 
   useEffect(() => { nouveauQr(); }, [nouveauQr]);
 
@@ -126,7 +131,7 @@ export default function ScanMobileModale({
 
     const minuteur = setInterval(async () => {
       try {
-        const { data } = await etatScanMobile(conversationId, jeton);
+        const { data } = await (lire ? lire(jeton) : etatScanMobile(conversationId, jeton));
         if (!vivant) return;
 
         if (data?.etat === 'expire') {
@@ -137,7 +142,7 @@ export default function ScanMobileModale({
         // TOUTES LES PHOTOS REÇUES JUSQU'ICI, chacune remise à la séance UNE
         // fois : elles apparaissent sur l'ordinateur au fur et à mesure, et
         // l'enfant voit que ça marche pendant qu'il prend la suivante.
-        const pieces = data?.pieces ?? (data?.piece ? [data.piece] : []);
+        const pieces = data?.pieces ?? data?.documents ?? (data?.piece ? [data.piece] : []);
 
         for (const piece of pieces) {
           if (piece?.id && !livreesRef.current.has(piece.id)) {
@@ -165,7 +170,7 @@ export default function ScanMobileModale({
       vivant = false;
       clearInterval(minuteur);
     };
-  }, [etat, jeton, conversationId, intervalle, onRecu, onTermine]);
+  }, [etat, jeton, conversationId, intervalle, onRecu, onTermine, lire]);
 
   // Le compte à rebours se redessine chaque seconde.
   useEffect(() => {
@@ -183,7 +188,13 @@ export default function ScanMobileModale({
 
   const prof = profPrenom ?? 'ton professeur';
 
-  return (
+  // RENDUE DANS LE CORPS DE LA PAGE, PAS SUR PLACE — Camara, le 26/09/2026 :
+  // ouverte depuis la fenêtre « Ajouter un contrôle », elle s'affichait en
+  // HAUT de cette fenêtre, et il fallait remonter pour voir le QR code. La
+  // fenêtre du contrôle floute son fond (`backdrop-filter`), et un élément en
+  // `position: fixed` placé dedans se cale alors sur elle au lieu de l'écran.
+  // Hors de toute fenêtre, elle reste centrée à l'écran, où qu'on l'ouvre.
+  return createPortal(
     <div className="scan-mobile" role="dialog" aria-modal="true" aria-label="Scanner avec ton téléphone">
       <div className="scan-mobile__carte">
         <button type="button" className="scan-mobile__fermer" aria-label="Fermer" onClick={onFermer}>
@@ -259,6 +270,7 @@ export default function ScanMobileModale({
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

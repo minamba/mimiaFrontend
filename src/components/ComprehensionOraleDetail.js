@@ -18,6 +18,7 @@ const LIBELLE_LANGUE = {
   de: 'allemand',
   it: 'italien',
   zh: 'chinois',
+  ar: 'arabe',
 };
 
 const dateLongue = (valeur) =>

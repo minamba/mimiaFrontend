@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { nomVoix } from '../lib/nomVoix';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   chargerAdmin,
@@ -319,9 +320,21 @@ function Cout({ parent }) {
       : part >= 0.5 ? 'vigilant'
         : 'sain';
 
+  // LA VOIX, MODÈLE PAR MODÈLE, quand le serveur la détaille ; sinon le
+  // reste du total, comme avant.
+  // MESURÉE OU ESTIMÉE — depuis le 03/10/2026, le serveur journalise chaque
+  // appel de synthèse avec ses jetons : quand la fenêtre en a, le chiffre est
+  // celui que le fournisseur facture, et il se dit sans tilde.
+  const voixDetaillee = (parent.coutVoix ?? []).filter((v) => v.tours > 0 || v.appels > 0);
+  const lignesVoix = voixDetaillee.length > 0
+    ? voixDetaillee.map((v) => (v.mesure
+      ? `voix ${nomVoix(v)} ${v.dollars.toFixed(2)} $ (mesurée)`
+      : `voix ${nomVoix(v)} ~${v.dollars.toFixed(2)} $ (estimée)`))
+    : [`voix ~${voix.toFixed(2)} $ (estimée)`];
+
   const detail = [
     `dialogue ${(coutDialogueDollars ?? 0).toFixed(2)} $ (mesuré)`,
-    `voix ~${voix.toFixed(2)} $ (estimée)`,
+    ...lignesVoix,
     prix > 0 ? `soit ${Math.round(part * 100)} % des ${prix.toFixed(2)} € payés` : null,
   ].filter(Boolean).join(' · ');
 
@@ -706,13 +719,36 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
                     </span>
                     <strong>{(cout?.dialogueDollars ?? 0).toFixed(2)} $</strong>
                   </li>
-                  <li>
-                    <span>
-                      Synthèse vocale
-                      <small>estimée d'après ces mêmes tours</small>
-                    </span>
-                    <strong>{(cout?.voixDollars ?? 0).toFixed(2)} $</strong>
-                  </li>
+                  {/* UNE LIGNE PAR VOIX QUI A PARLÉ — Camara, le 28/09/2026 :
+                      « si je bascule de l'un à l'autre, les prix doivent être
+                      différenciés ; si je n'utilise pas l'un ou l'autre, il
+                      n'apparaîtra pas ». Le serveur ne renvoie que les modèles
+                      qui ont dit au moins un tour sur la période. */}
+                  {(cout?.voix?.length ?? 0) > 0 ? (
+                    cout.voix.map((v) => (
+                      <li key={v.modele}>
+                        <span>
+                          Synthèse vocale — {nomVoix(v)}
+                          <small>
+                            {v.mesure
+                              ? `mesurée sur ${Number(v.appels).toLocaleString('fr-FR')} appels`
+                                + ` · ${Number(v.jetonsSortie).toLocaleString('fr-FR')} jetons audio facturés`
+                              : `estimée sur ${v.tours.toLocaleString('fr-FR')} tours`
+                                + ` · ${Number(v.prixMinute).toLocaleString('fr-FR', { maximumFractionDigits: 5 })} $ la minute`}
+                          </small>
+                        </span>
+                        <strong>{v.dollars.toFixed(2)} $</strong>
+                      </li>
+                    ))
+                  ) : (
+                    <li>
+                      <span>
+                        Synthèse vocale
+                        <small>estimée d'après ces mêmes tours</small>
+                      </span>
+                      <strong>{(cout?.voixDollars ?? 0).toFixed(2)} $</strong>
+                    </li>
+                  )}
                 </ul>
               </section>
 
@@ -1062,7 +1098,7 @@ export default function Admin() {
       // qu'on voudrait demain. Le dernier onglet, lui, ne se lit qu'en cas de
       // panne.
       { cle: 'idees', libelle: 'Idées' },
-      { cle: 'fournisseurs', libelle: 'Anthropic / OpenAI' },
+      { cle: 'fournisseurs', libelle: 'Anthropic / OpenAI / Gemini' },
     ];
 
     // LE SUPER-ADMINISTRATEUR VOIT TOUT, ET SANS PASSER PAR LA LISTE DES

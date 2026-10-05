@@ -377,6 +377,16 @@ export const definirReglage = (cle, actif) =>
   httpClient.put(`/reglages/${cle}`, { actif });
 
 /**
+ * Montre ou cache une langue (`ESPAGNOL`, `ALLEMAND`…) — Camara, le 04/10/2026.
+ * Éteinte, elle ne figure plus nulle part : ni la grille, ni le professeur sur
+ * la page d'accueil, ni la case des options de l'élève. Route à part de
+ * `definirReglage` : la liste des langues vit côté serveur, pas dans les clés
+ * connues des modes.
+ */
+export const definirLangue = (code, actif) =>
+  httpClient.put(`/reglages/langues/${code}`, { actif });
+
+/**
  * Le nombre de places de la salle d'attente.
  *
  * PAS `definirReglage` : celui-ci n'écrit que des booléens, et il s'agit ici
@@ -400,6 +410,14 @@ export const getEtatAffluence = () => httpClient.get('/affluence/etat');
  * ensemble parce que le geste est un : les séparer ouvrirait une fenêtre où
  * l'ancien message serait affiché comme si on venait de le confirmer.
  */
+/**
+ * La déclinaison de Blue Sky (`soldes-ete`, `soldes-hiver`, `french-days`,
+ * `black-friday`), ou `null` pour le Blue Sky classique. En choisir une allume
+ * Blue Sky : le serveur s'en charge.
+ */
+export const definirStyleSaison = (saison) =>
+  httpClient.put('/reglages/style-saison', { saison: saison || null });
+
 export const definirBandeau = (message, actif) =>
   httpClient.put('/reglages/bandeau', { message, actif });
 

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   getReglages,
   definirReglage,
+  definirLangue,
+  definirStyleSaison,
   definirPlacesAffluence,
   definirOffreLancement,
   synchroniserCatalogueStripe,
@@ -10,6 +12,7 @@ import {
   getEtatBase,
 } from '../lib/api/adminApi';
 import { oublierReglages } from '../lib/storage/modeTest';
+import { SAISONS } from '../lib/storage/styleSite';
 import Loader from './Loader';
 
 /**
@@ -108,7 +111,9 @@ function PlafondAffluence({ places, onEnregistrer, occupe }) {
   );
 }
 
-export function Interrupteur({ titre, actif, connu, occupe, onBasculer, description, effets, note }) {
+export function Interrupteur({
+  titre, actif, connu, occupe, onBasculer, description, effets, note, children,
+}) {
   return (
     <div className="mode">
       <div className="mode__texte">
@@ -133,6 +138,8 @@ export function Interrupteur({ titre, actif, connu, occupe, onBasculer, descript
         )}
 
         {note && <p className="mode__note">{note}</p>}
+
+        {children}
       </div>
 
       {/* Le même interrupteur que celui de la détection vocale : mêmes classes,
@@ -863,7 +870,11 @@ export default function Modes() {
     tachesDeFond: true,
     maintenance: false,
     voixDeSecours: false,
+    voixGemini: false,
+    voixGeminiDisponible: false,
+    voixGeminiModele: '',
     blueSky: false,
+    styleSaison: null,
     modeDeveloppeur: false,
 
     // Les trois portes des jeux, éteintes par défaut : aucun jeu n existe.
@@ -889,6 +900,10 @@ export default function Modes() {
     // Le catalogue, pour cocher des formules réelles plutôt que de faire
     // taper des codes qui n'existent peut-être pas.
     formulesDisponibles: [],
+
+    // Les langues qu'on peut montrer ou cacher — celles qui ont une matière
+    // en base. Vide tant que le serveur n'a pas répondu.
+    langues: [],
   });
   const [chargement, setChargement] = useState(true);
   const [envoi, setEnvoi] = useState(null);
@@ -924,8 +939,15 @@ export default function Modes() {
           // deux quand il fonctionne.
           voixDeSecours: Boolean(data?.voixDeSecours),
 
+          // Ce que dit le serveur, qui tient compte de la configuration quand
+          // rien n'a encore été enregistré — et s'il a seulement une clé.
+          voixGemini: Boolean(data?.voixGemini),
+          voixGeminiDisponible: Boolean(data?.voixGeminiDisponible),
+          voixGeminiModele: data?.voixGeminiModele ?? '',
+
           // Éteint par défaut : le style d'origine reste la référence.
           blueSky: Boolean(data?.blueSky),
+          styleSaison: data?.styleSaison ?? null,
 
           // Éteint par défaut, et il doit le rester hors essais : allumé, il
           // vaut pour toutes les séances, celles des vrais élèves comprises.
@@ -963,6 +985,8 @@ export default function Modes() {
           formulesDisponibles: Array.isArray(data?.formulesDisponibles)
             ? data.formulesDisponibles
             : [],
+
+          langues: Array.isArray(data?.langues) ? data.langues : [],
         });
 
         setLus(true);
@@ -1030,6 +1054,59 @@ export default function Modes() {
     }
   };
 
+  /**
+   * MONTRER OU CACHER UNE LANGUE — Camara, le 04/10/2026. L'équipe de la page
+   * d'accueil et la liste des classes sont lues ailleurs et gardées en mémoire :
+   * le changement se voit au prochain chargement de ces écrans.
+   */
+  const basculerLangue = async (code) => {
+    const langue = reglages.langues.find((l) => l.code === code);
+    if (!langue) return;
+
+    const cle = `LANGUE_${code}`;
+    setEnvoi(cle);
+    setErreur(null);
+
+    try {
+      await definirLangue(code, !langue.actif);
+      setReglages((etat) => ({
+        ...etat,
+        langues: etat.langues.map((l) => (l.code === code ? { ...l, actif: !l.actif } : l)),
+      }));
+    } catch {
+      setErreur("La langue n'a pas pu être enregistrée.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
+  /**
+   * LA DÉCLINAISON DE BLUE SKY — Camara, le 29/09/2026. Une seule à la fois ;
+   * `null` revient au Blue Sky classique. En choisir une allume Blue Sky
+   * (le serveur le fait), d'où la mise à jour des deux champs.
+   */
+  const choisirSaison = async (saison) => {
+    setEnvoi('STYLE_SAISON');
+    setErreur(null);
+
+    try {
+      await definirStyleSaison(saison);
+      setReglages((etat) => ({
+        ...etat,
+        styleSaison: saison,
+        blueSky: saison ? true : etat.blueSky,
+      }));
+
+      // Même raison que pour Blue Sky : les drapeaux publics sont retenus le
+      // temps d'une session, et c'est leur relecture qui repeint cet onglet.
+      oublierReglages();
+    } catch {
+      setErreur("La déclinaison n'a pas pu être enregistrée.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
   if (chargement) return <Loader texte="Chargement des réglages…" />;
 
   return (
@@ -1091,13 +1168,37 @@ export default function Modes() {
           }}
         />
 
+        {/* LE CHOIX DE LA VOIX — Camara, le 28/09/2026 : « je veux garder
+            Google Flash-Lite, mais garder dans l'admin l'option GPT actuelle
+            afin de pouvoir basculer ». Juste avant le secours : c'est le
+            réglage de tous les jours, le secours celui des mauvais jours. */}
+        <Interrupteur
+          titre="Voix des professeurs — Gemini Flash-Lite"
+          actif={reglages.voixGemini && reglages.voixGeminiDisponible}
+          connu={lus && reglages.voixGeminiDisponible}
+          occupe={envoi === 'VOIX_GEMINI'}
+          onBasculer={() => basculer('VOIX_GEMINI', 'voixGemini')}
+          description={
+            !reglages.voixGeminiDisponible
+              ? "Aucune clé Gemini n’est configurée sur ce serveur : les professeurs parlent avec GPT-4o-mini, et cet interrupteur ne peut rien allumer. La clé se pose dans Voix:GeminiApiKey (appsettings.Production.json), puis l’API se redémarre."
+              : `En ce moment, le professeur parle avec ${reglages.voixDeSecours ? 'TTS-1 (la voix de secours a la priorité)' : reglages.voixGemini ? `Gemini (${reglages.voixGeminiModele})` : 'GPT-4o-mini'}. Allumé, les professeurs parlent avec la voix de Google ; éteint, ils reprennent celle d’OpenAI, comme avant le 28 septembre 2026.`
+          }
+          effets={[
+            'Le changement est immédiat, y compris pour les cours déjà commencés — le choix est relu à chaque phrase.',
+            'Chaque professeur a sa voix dans les deux cas, mais ce ne sont pas les mêmes timbres : un élève entendra la différence.',
+            'Si Google ne répond pas, la phrase repart aussitôt chez OpenAI : le professeur ne reste jamais muet.',
+            'La transcription du micro et les voix pré-enregistrées des jeux ne changent pas : elles restent chez OpenAI.',
+          ]}
+          note="MESURÉ LE 28/09/2026. Au banc, Gemini Flash-Lite donnait son premier son en 0,55 à 0,90 s à chaque appel ; GPT-4o-mini avait une médiane semblable mais des pics à 24 et 32 secondes — les longs silences entendus en séance. Coût comparable aujourd’hui (≈ 1,4 contre 1,5 centime la minute), à revérifier en janvier 2027."
+        />
+
         <Interrupteur
           titre="Voix de secours — TTS-1"
           actif={reglages.voixDeSecours}
           connu={lus}
           occupe={envoi === 'VOIX_DE_SECOURS'}
           onBasculer={() => basculer('VOIX_DE_SECOURS', 'voixDeSecours')}
-          description={`En ce moment, le professeur parle avec ${reglages.voixDeSecours ? "TTS-1" : "GPT-4o-mini"}. Cet interrupteur bascule toute la synthèse vocale sur « tts-1 » quand le modèle principal se met à produire des clics — ce qui est arrivé le 3 septembre 2026, sans prévenir et sans qu’on puisse le corriger de notre côté.`}
+          description={`En ce moment, le professeur parle avec ${reglages.voixDeSecours ? "TTS-1" : reglages.voixGemini && reglages.voixGeminiDisponible ? "Gemini" : "GPT-4o-mini"}. Cet interrupteur bascule toute la synthèse vocale sur « tts-1 » quand le modèle principal se met à produire des clics — ce qui est arrivé le 3 septembre 2026, sans prévenir et sans qu’on puisse le corriger de notre côté.`}
           effets={[
             'Le professeur parle avec un modèle plus ancien, plus stable, et une voix choisie pour ce modèle-là — les timbres ne sont pas les mêmes que sur le modèle principal.',
             'La lenteur des dictées est conservée : elle passe par le réglage de vitesse au lieu d’une consigne au modèle.',
@@ -1192,12 +1293,99 @@ export default function Modes() {
             'Vous le voyez tout de suite ; les autres visiteurs, au prochain chargement de page.',
           ]}
           note="RÉVERSIBLE À TOUT MOMENT. L’ancien style n’a pas été modifié : Blue Sky s’ajoute par-dessus. L’éteindre rend exactement le site d’avant, page de maintenance comprise."
-        />
+        >
+          {/* LES DÉCLINAISONS — Camara, le 29/09/2026 : « plusieurs modes de
+              design dans la même carte que le toggle Blue Sky ». Des boutons
+              exclusifs, comme un choix de thème : un seul actif, et
+              « Classique » ramène le bleu d'origine de Blue Sky. */}
+          <div className="mode__declinaisons">
+            <p className="mode__declinaisons-titre">Déclinaison</p>
+            <div className="mode__declinaisons-choix" role="radiogroup" aria-label="Déclinaison de Blue Sky">
+              {[{ cle: null, libelle: 'Classique' }, ...SAISONS].map((option) => {
+                const choisie = reglages.blueSky && (reglages.styleSaison ?? null) === option.cle;
+                return (
+                  <button
+                    key={option.cle ?? 'classique'}
+                    type="button"
+                    role="radio"
+                    aria-checked={choisie}
+                    className={`mode__declinaison${choisie ? ' mode__declinaison--choisie' : ''}`}
+                    data-saison-apercu={option.cle ?? 'classique'}
+                    disabled={!lus || envoi === 'STYLE_SAISON'}
+                    onClick={() => choisirSaison(option.cle)}
+                  >
+                    <span className="mode__declinaison-pastille" aria-hidden="true" />
+                    {option.libelle}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mode__declinaisons-aide">
+              {reglages.blueSky
+                ? 'Chacune garde la structure de Blue Sky et change son fond et ses couleurs, sur tout le site et la page de connexion. Tout le monde la voit aussitôt.'
+                : 'Choisir une déclinaison allume Blue Sky.'}
+            </p>
+          </div>
+        </Interrupteur>
 
         {/* LE MODE DÉVELOPPEUR — voulu par Camara le 16/09/2026 pour ses
             essais. Un interrupteur et NON une phrase tapée en séance : une
             phrase se répète, et le premier élève qui l'apprend obtient les
             réponses toutes faites. */}
+        {/* LES LANGUES, UNE PAR UNE — Camara, le 04/10/2026 : « on peut les
+            implémenter, je teste en local, et je ne les affiche pas en prod
+            tant qu'elles ne sont pas prêtes ». La liste vient du serveur : une
+            langue n'a son interrupteur que le jour où sa matière existe en
+            base. L'anglais n'y est pas — c'est la langue de tous les élèves. */}
+        {reglages.langues.length > 0 && (
+          <section className="mode">
+            <div className="mode__entete">
+              <div>
+                <h3 className="mode__titre">Les langues</h3>
+                <p className="mode__description">
+                  Chaque langue se montre ou se cache à part. Éteinte, elle
+                  n’apparaît plus nulle part : ni dans les matières de l’élève,
+                  ni dans ses options, ni son professeur sur la page d’accueil.
+                  Rien n’est supprimé — la rallumer rend tout tel quel.
+                </p>
+              </div>
+            </div>
+
+            {reglages.langues.map(({ code, libelle, actif }) => (
+              <div className="mode__sous-reglage" key={code}>
+                <div className="mode__sous-texte">
+                  <strong>{libelle}</strong>
+                  <span>
+                    {actif
+                      ? 'Visible : la matière, son professeur et son option sont proposés.'
+                      : 'Masquée : personne ne la voit, et aucun cours ne peut s’ouvrir.'}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  className={`bascule bascule--mini ${actif ? 'bascule--active' : ''}`}
+                  onClick={() => basculerLangue(code)}
+                  disabled={envoi === `LANGUE_${code}` || !lus}
+                  role="switch"
+                  aria-checked={actif}
+                  aria-label={libelle}
+                >
+                  <span className="bascule__piste">
+                    <span className="bascule__bouton" />
+                  </span>
+                </button>
+              </div>
+            ))}
+
+            <p className="mode__note">
+              Un élève qui avait coché une langue garde son choix : il le
+              retrouve quand elle est rallumée. Les écrans déjà ouverts se
+              mettent à jour à leur prochain chargement.
+            </p>
+          </section>
+        )}
+
         {/* LES JEUX, CYCLE PAR CYCLE — Camara, le 20/09/2026.
 
             TROIS INTERRUPTEURS ET NON UN. Les jeux du primaire — très visuels,

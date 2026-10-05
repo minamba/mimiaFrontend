@@ -102,6 +102,55 @@ export function mesurerVoix({
  * AUCUNE DONNÉE PERSONNELLE : ni identifiant d'élève, ni son. Le nom d'un micro
  * (« Realtek High Definition Audio ») décrit une machine, pas une personne.
  */
+/**
+ * UNE COUPURE D'ÉCOUTE, ET POURQUOI — Camara, le 28/09/2026 : « énormément de
+ * soucis de connexion », sans qu'on sache lesquels. Chaque rappel du serveur
+ * part ici avec sa cause : liaison fermée (et son code), oreille morte, erreur
+ * du relais (et sa cause), battement sans réponse, abandon. Journalisé
+ * seulement, comme le diagnostic du micro : on lit `docker logs mimia`.
+ */
+/**
+ * UN TROU DE VOIX EN PLEIN PASSAGE — Camara, le 28/09/2026 : le son de la
+ * synthèse s'est épuisé alors que le professeur parlait. Journalisé seulement,
+ * avec la durée du trou : c'est ce qui dira si c'est le fournisseur qui
+ * traîne ou le réseau du VPS.
+ */
+export function mesurerTrouVoix(secondes) {
+  try {
+    httpClient
+      .post('/mesures/voix-trou', {
+        seance: identifiantDeSeance(),
+        secondes: typeof secondes === 'number' && Number.isFinite(secondes) ? secondes : null,
+        navigateur: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 300) : null,
+      })
+      .catch(() => {});
+  } catch {
+    // Un relevé qui ne part pas ne doit jamais gêner la voix.
+  }
+}
+
+export function mesurerEcoute(releve = {}) {
+  const texte = (valeur, max) => (typeof valeur === 'string' && valeur ? valeur.slice(0, max) : null);
+  const nombre = (valeur) => (typeof valeur === 'number' && Number.isFinite(valeur) ? valeur : null);
+
+  try {
+    httpClient
+      .post('/mesures/ecoute', {
+        seance: identifiantDeSeance(),
+        cause: texte(releve.cause, 40) ?? 'inconnue',
+        code: nombre(releve.code),
+        raison: texte(releve.raison, 120),
+        message: texte(releve.message, 200),
+        rappels: nombre(releve.rappels) ?? 0,
+        secondes: nombre(releve.secondes),
+        navigateur: texte(typeof navigator !== 'undefined' ? navigator.userAgent : null, 300),
+      })
+      .catch(() => {});
+  } catch {
+    // Un relevé qui ne part pas ne doit jamais gêner l'écoute.
+  }
+}
+
 export function mesurerMicro(diagnostic = {}) {
   const texte = (valeur, max) => (typeof valeur === 'string' && valeur ? valeur.slice(0, max) : null);
   const nombre = (valeur) => (typeof valeur === 'number' && Number.isFinite(valeur) ? valeur : null);

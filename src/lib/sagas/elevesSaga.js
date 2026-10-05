@@ -1,5 +1,6 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
 import { getEleves, addEleve, updateEleve } from '../api/elevesApi';
+import { eleveDeLaSession } from '../storage/sessionEleve';
 import {
   ELEVES_LOAD_REQUEST,
   ELEVES_LOAD_SUCCESS,
@@ -10,6 +11,15 @@ import {
 } from '../actions/elevesActions';
 
 function* chargerElevesSaga() {
+  // EN SESSION ENFANT, LA LISTE EST L'ENFANT LUI-MÊME — voir
+  // `eleveDeLaSession`. `GET /eleves` est la liste du parent : fermée à
+  // l'enfant (403), elle laissait les écrans sans élève.
+  const enfant = eleveDeLaSession();
+  if (enfant) {
+    yield put({ type: ELEVES_LOAD_SUCCESS, payload: [enfant] });
+    return;
+  }
+
   try {
     const reponse = yield call(getEleves);
     yield put({ type: ELEVES_LOAD_SUCCESS, payload: reponse.data });

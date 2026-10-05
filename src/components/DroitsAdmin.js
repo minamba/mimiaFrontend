@@ -34,7 +34,7 @@ const LIBELLES = {
   periodes: 'Périodes scolaires',
   signalements: 'Signalements',
   idees: 'Idées',
-  fournisseurs: 'Anthropic / OpenAI',
+  fournisseurs: 'Anthropic / OpenAI / Gemini',
   cout: 'Ce que le produit me coûte',
   revenu: 'Ce que le produit me rapporte',
 };

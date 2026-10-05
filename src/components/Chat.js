@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -11,7 +11,9 @@ import {
 import {
   quitterCours, signalerFermeture, deposerPieceJointe, poserChoixCopie, getChoixCopie,
 } from '../lib/api/chatApi';
-import { mesurerVoix, nouvelleSeanceDeMesure } from '../lib/api/mesuresApi';
+import {
+  mesurerEcoute, mesurerVoix, mesurerTrouVoix, nouvelleSeanceDeMesure,
+} from '../lib/api/mesuresApi';
 import {
   departDeLaSeance, ecouleDepuisLeDepart, oublierLeDepart,
 } from '../lib/storage/departSeance';
@@ -33,15 +35,19 @@ import {
 } from '../lib/storage/etatDictee';
 import { ecouteService } from '../lib/storage/ecouteService';
 import { langueTranscription } from '../lib/storage/langueTranscription';
-import { ecouteTempsReel, estUnTourDeParole } from '../lib/storage/ecouteTempsReel';
+import { ecouteTempsReel, estUnTourDeParole, ecritureDuCours } from '../lib/storage/ecouteTempsReel';
+import { ecrireEnMaths, estMatiereMaths } from '../lib/storage/mathsOrales';
 import { estUnEcho } from '../lib/storage/echo';
 import { estUneRedite } from '../lib/storage/redite';
+import { suiteADire, resteApres, sansBorneEntamee } from '../lib/storage/suiteADire';
 import { estIOS } from '../lib/storage/appareil';
 import { estCommandePhoto } from '../lib/storage/commandePhoto';
 import {
-  etatCopieControle, lireDemandeCopie, marquerPieceControle, retirerMarqueurCopieControle,
+  etatCopieControle, lireDemandeCopie, marquerPieceControle, marquerPiecesControle, marquerStyleCorrection,
+  retirerMarqueurCopieControle,
 } from '../lib/storage/copieControle';
 import CopieControle from './CopieControle';
+import PreparationCorrection from './PreparationCorrection';
 import EnonceExercice from './EnonceExercice';
 import {
   choixAvecCopieActif, etatEnonce, marquerAvecCopie, marquerEnonce,
@@ -87,6 +93,7 @@ import {
   evaluationRendue,
   evaluationAbandonnee,
   aQuelqueChoseAMontrer,
+  ardoiseOuverte,
   seanceClose,
   sembleDireAuRevoir,
   prendConge,
@@ -902,7 +909,8 @@ export default function Chat() {
 
     // Le moteur du navigateur, en repli, n'a pas de pause : d'où l'appel
     // facultatif. Les trois verrous, eux, valent pour les deux.
-    ecouteRef.current?.suspendre?.(tapee);
+    // Vider le champ pendant un passage d'écoute ne rouvre pas le micro.
+    ecouteRef.current?.suspendre?.(tapee || lecteurRef.current?.ecouteEnCours);
   };
 
   /** Le champ est vidé : la voix reprend la main, et la parole aussi. */
@@ -910,7 +918,7 @@ export default function Chat() {
     saisieTapeeRef.current = false;
     setSaisieTapee(false);
     setSaisie('');
-    ecouteRef.current?.suspendre?.(false);
+    ecouteRef.current?.suspendre?.(Boolean(lecteurRef.current?.ecouteEnCours));
   };
 
   // La copie du contrôle qui vient d'être rendu : l'identifiant pour la
@@ -1115,6 +1123,21 @@ export default function Chat() {
    * voir `choisirCopie`. Posée au clic, relue sur le serveur après un F5.
    */
   const [choixCopie, setChoixCopie] = useState({});
+
+  /**
+   * LA FILE DE LA COPIE — Camara, le 26/09/2026 : « le fichier rentre dans la
+   * file d'attente le temps que l'élève importe sa copie ». L'énoncé et la
+   * copie importés depuis la carte sont DÉPOSÉS sur le serveur, mais ne partent
+   * au professeur qu'ENSEMBLE, une fois tout là. Avant, chaque pièce partait
+   * seule : le professeur répondait entre les deux, redemandait la copie, et la
+   * question « séparés ? » revenait.
+   *
+   * `cle` rattache la file à UNE demande de copie : une nouvelle demande
+   * repart d'une file vide.
+   */
+  const [fileCopie, setFileCopie] = useState({
+    cle: null, enonce: null, copie: null, envoi: false, erreur: null,
+  });
 
   const etatCopie = useMemo(
     () => etatCopieControle(messages, choixCopie),
@@ -1353,6 +1376,14 @@ export default function Chat() {
    */
   const rolePieceRef = useRef(null);
 
+  /**
+   * LA CAMÉRA A ÉTÉ OUVERTE DEPUIS LA CARTE DE COPIE — `{ role }`. La prochaine
+   * photo prise rejoint la file de la copie au lieu de partir au professeur.
+   * `envoyerPieceCopieRef` : la fonction qui l'y range, déclarée plus bas.
+   */
+  const photoCopieRef = useRef(null);
+  const envoyerPieceCopieRef = useRef(null);
+
   /** La fenêtre du QR code du scanner est-elle ouverte ? */
   const [scanOuvert, setScanOuvert] = useState(false);
   const [confirmationPhoto, setConfirmationPhoto] = useState(false);
@@ -1495,6 +1526,16 @@ export default function Chat() {
    */
   const [profParle, setProfParle] = useState(false);
   const [ecoute, setEcoute] = useState(false);
+
+  /** Le niveau de la voix du professeur, lu par l'avatar à chaque image. */
+  const niveauVoix = useCallback(() => lecteurRef.current?.niveau?.() ?? null, []);
+
+  /**
+   * Le professeur écrit au tableau : une ardoise est ouverte dans le flux et
+   * la voix attend qu'elle se referme. Le silence est normal, l'écran doit le
+   * dire à la place de « Le professeur parle… ». Voir `ardoiseOuverte`.
+   */
+  const ecritAuTableau = streaming && ardoiseOuverte(reponseEnCours);
 
   /**
    * Un silence de dictée est en cours : l élève doit écrire.
@@ -2002,6 +2043,21 @@ export default function Chat() {
   // n’a rien choisi — jamais `null`, qui est une valeur possible ci-dessus.
   const vitesseConversationRef = useRef(undefined);
 
+  /**
+   * LE CHOIX DOIT PRODUIRE UN RENDU, MÊME QUAND LA VITESSE NE CHANGE PAS —
+   * Camara, le 28/09/2026, compréhension orale en anglais : « j'ai choisi ma
+   * vitesse, la professeure m'a dit qu'elle allait lire le texte, et rien
+   * derrière ». Il avait cliqué la vitesse déjà en place (« Normal », celle
+   * par défaut) : `setVitesseEcoute('normal')` sur un état déjà à 'normal' ne
+   * re-rend rien, les deux marqueurs du choix sont des refs, et la carte
+   * restait « en attente » aux yeux des effets — le passage, retenu jusqu'au
+   * choix, ne partait jamais. La relecture, elle, ne repasse pas par la
+   * carte : c'est pour ça que « la deuxième fois, ça marchait ».
+   *
+   * Ce compteur ne sert qu'à ça : rendre à chaque choix, quel qu'il soit.
+   */
+  const [, marquerChoixVitesse] = useReducer((n) => n + 1, 0);
+
   const vitesseEnAttente = enConversation
     ? vitesseConversationRef.current !== ouvertureConversation
     : carteVitesseVisible({
@@ -2016,6 +2072,7 @@ export default function Chat() {
     setVitesseEcoute(cle);
     tourVitesseRef.current = tourEleve;
     passageEcouteChoisiRef.current = passageEcoute;
+    marquerChoixVitesse();
 
     // EN CONVERSATION, LE CHOIX VAUT POUR TOUT L’ÉCHANGE : on retient
     // laquelle, pour ne plus reposer la question jusqu'à l'archivage.
@@ -2076,6 +2133,7 @@ export default function Chat() {
       setVitesseEcoute(cible);
       tourVitesseRef.current = tourEleve;
       passageEcouteChoisiRef.current = passageEcoute;
+      marquerChoixVitesse();
       return;
     }
 
@@ -2084,6 +2142,7 @@ export default function Chat() {
       // s'affiche dès qu'un passage d'écoute n'a pas encore sa vitesse.
       tourVitesseRef.current = null;
       passageEcouteChoisiRef.current = '';
+      marquerChoixVitesse();
     }
   }, [reponseEnCours, messages, indexDernierProf, tourEleve, passageEcoute]);
 
@@ -2197,7 +2256,25 @@ export default function Chat() {
 
   const filRef = useRef(null);
   const lecteurRef = useRef(null);
-  const luJusquaRef = useRef(0);
+  /**
+   * CE QUI A DÉJÀ ÉTÉ CONFIÉ AU LECTEUR — le TEXTE, pas sa longueur.
+   *
+   * C'était un nombre de caractères, et ce nombre voyageait entre DEUX
+   * chaînes : le tampon du flux (`reponseEnCours`) pour le chemin normal, le
+   * message enregistré (`messages[index].contenu`) pour le rattrapage de fin.
+   * Tant que les deux sont identiques, découper l'une à la longueur lue sur
+   * l'autre tombe juste. Dès qu'elles diffèrent d'un seul caractère, la
+   * découpe glisse — et ce qui repart au lecteur est un morceau DÉJÀ dit.
+   *
+   * Camara, le 03/10/2026 : « parfois les professeurs répètent plusieurs fois
+   * la même phrase ». Le texte ne s'affiche qu'une fois, les deux chemins du
+   * serveur s'excluent, et Gemini a redit la phrase juste 10 fois sur 10 au
+   * banc : restait ce curseur.
+   *
+   * Avec le texte, la question n'est plus « combien » mais « est-ce la
+   * suite ? » — et elle a une réponse sûre : `commence par`.
+   */
+  const ditJusquaRef = useRef('');
   const ecouteRef = useRef(null);
 
   /**
@@ -2733,6 +2810,10 @@ export default function Chat() {
 
     lecteur.surRepli = () => mesurerVoix({ repli: true });
 
+    // Le son s'est épuisé en plein passage : le relevé part au serveur, avec
+    // la durée du trou. Rien à l'écran — le lecteur reprend de lui-même.
+    lecteur.surTrou = (secondes) => mesurerTrouVoix(secondes);
+
     // Une vraie coupure réseau en plein passage : le professeur a déjà
     // commencé à parler, puis plus rien, sans que l'élève sache pourquoi.
     // Le même canal que les autres soucis de voix — il n'y a pas besoin
@@ -2742,6 +2823,23 @@ export default function Chat() {
         'Le professeur a été coupé par un problème de connexion en plein milieu '
         + 'de sa phrase. Redis-lui ce qui te manque, ou continue — il suivra.',
       );
+    };
+
+    // LE PASSAGE D'ÉCOUTE SE LIT D'UNE TRAITE, CASQUE COMPRIS — décision de
+    // Camara du 04/10/2026. Relevé à la console : « voix détectée au micro
+    // Elgato Wave:XLR, niveau 0.164, 45/49 blocs voisés » — un bruit pris pour
+    // une prise de parole, et le texte de la compréhension orale coupé net.
+    //
+    // Le micro devient sourd le temps du texte, comme sans casque, et revient
+    // dès que le dernier mot du passage est dit. Sans casque il l'est déjà
+    // pour tout le tour : rien à faire. Le clic sur le micro, lui, coupe
+    // toujours — c'est un geste, pas un bruit.
+    lecteur.surEcoute = (oui) => {
+      if (sansCasque) return;
+
+      setMicEnPause(oui);
+      if (oui) ecouteRef.current?.suspendre?.(true, false);
+      else ecouteRef.current?.suspendre?.(saisieTapeeRef.current);
     };
 
     // Le silence de dictée : l'écran doit dire qu'il est voulu.
@@ -2758,6 +2856,8 @@ export default function Chat() {
       lecteur.surDelai = null;
       lecteur.surRepli = null;
       lecteur.surCoupure = null;
+      lecteur.surTrou = null;
+      lecteur.surEcoute = null;
       lecteur.surPauseDictee = null;
       lecteur.surRelectureDictee = null;
     };
@@ -2867,14 +2967,22 @@ export default function Chat() {
     // l'état juste après la fin d'un message. Sans cette condition, le
     // compteur retombait à zéro à chaque fin de flux, et l'effet de rattrapage
     // ci-dessous reprononçait le message en entier.
-    if (parlable.length > 0 && parlable.length < luJusquaRef.current) {
-      luJusquaRef.current = 0;
-    }
+    //
+    // EN FLUX, UN TEXTE QUI EN CONTREDIT UN AUTRE EST UN NOUVEAU TOUR, et il
+    // se dit en entier : c'est le cas de l'élève qui coupe la parole, où le
+    // flux enchaîne sans jamais repasser par la fin de message.
+    //
+    // UNE BORNE À MOITIÉ ARRIVÉE ATTEND LE PAQUET SUIVANT — voir
+    // `sansBorneEntamee` : « [E » en fin de paquet n'est pas encore « [EN] »,
+    // et confié tel quel il faussait le repère au point que le passage
+    // d'écoute n'était plus jamais lu.
+    const stable = sansBorneEntamee(parlable);
+    const { aDire, dit } = suiteADire(ditJusquaRef.current, stable);
+    ditJusquaRef.current = dit;
 
-    if (parlable.length > luJusquaRef.current) {
-      lecteurRef.current.alimenter(parlable.slice(luJusquaRef.current));
-      luJusquaRef.current = parlable.length;
-      paroleProfRef.current.texte = parlable;
+    if (aDire) {
+      lecteurRef.current.alimenter(aDire);
+      paroleProfRef.current.texte = stable;
     }
   }, [
     reponseEnCours, muet, conversation, dicteeEnAttente, vitesseEnAttente,
@@ -2932,12 +3040,32 @@ export default function Chat() {
     aStreameRef.current = false;
 
     const attendu = texteParle(messages[index].contenu, { bornes: true });
-    if (attendu.length > luJusquaRef.current) {
-      lecteurRef.current.alimenter(attendu.slice(luJusquaRef.current));
+    const { aDire, nouveauTour } = suiteADire(ditJusquaRef.current, attendu);
+
+    if (!nouveauTour) {
+      // Le cas ordinaire, et aussi celui du message jamais diffusé — le
+      // repère est alors vide, et c'est le message ENTIER qui part. C'est ce
+      // chemin qui sauvait l'au revoir muet.
+      if (aDire) lecteurRef.current.alimenter(aDire);
+    } else {
+      // LE MESSAGE ENREGISTRÉ N'EST PAS CELUI QUI A ÉTÉ DIT. ON NE SE TAIT
+      // PAS POUR AUTANT — corrigé le 04/10/2026 : la première version
+      // choisissait le silence, et un passage d'écoute entier n'était plus
+      // lu. `resteApres` retrouve où ce qui a été dit s'arrête dans le texte
+      // final ; au pire quelques mots sont redits. Le relevé dit que c'est
+      // arrivé.
+      const reste = resteApres(ditJusquaRef.current, attendu);
+      if (reste) lecteurRef.current.alimenter(reste);
+
+      mesurerEcoute({
+        cause: 'ecran-redite',
+        message: `flux ${ditJusquaRef.current.length} car. ≠ message ${attendu.length} car.`
+          + ` ; ${reste.length} car. repris : « ${reste.slice(0, 60)} »`,
+      });
     }
 
     lecteurRef.current.terminer();
-    luJusquaRef.current = 0;
+    ditJusquaRef.current = '';
   }, [
     streaming, indexDernierProf, messages, muet, eleve, conversation,
     dicteeEnAttente, vitesseEnAttente,
@@ -3416,6 +3544,22 @@ export default function Chat() {
     programmerEnvoi(attente);
   }, [programmerEnvoi]);
 
+  /**
+   * EN MATHS, CE QUI EST DIT S'ÉCRIT EN SYMBOLES — Camara, le 26/09/2026, sur
+   * la remontée d'un parent : « x est égal moins cinq » arrivait en toutes
+   * lettres, alors que le professeur attend « x = -5 ». Voir `mathsOrales.js`.
+   *
+   * SUR LA PHRASE ASSEMBLÉE, PAS SUR CHAQUE MORCEAU : « x est égal » et « moins
+   * cinq » arrivent parfois en deux fragments. La réécriture peut se refaire
+   * sans rien changer à ce qui l'est déjà.
+   *
+   * PAR UNE RÉFÉRENCE : les rappels du micro sont créés une fois pour la
+   * séance, et doivent lire la matière du moment.
+   */
+  const mathsRef = useRef(false);
+  mathsRef.current = estMatiereMaths(conversation?.matiereCode);
+  const enMaths = useCallback((texte) => (mathsRef.current ? ecrireEnMaths(texte) : texte), []);
+
   const accumuler = useCallback(
     (fragment) => {
       // LE DERNIER VERROU, ET LE PLUS IMPORTANT DES TROIS.
@@ -3439,7 +3583,7 @@ export default function Chat() {
 
       if (encours.minuteur) clearTimeout(encours.minuteur);
 
-      const texte = encours.texte ? `${encours.texte} ${fragment.trim()}` : fragment.trim();
+      const texte = enMaths(encours.texte ? `${encours.texte} ${fragment.trim()}` : fragment.trim());
       assemblageRef.current = { texte, minuteur: null };
       setSaisie(texte);
 
@@ -3458,7 +3602,7 @@ export default function Chat() {
       chronoRef.current.assemblageMs = attente;
       programmerEnvoi(attente);
     },
-    [programmerEnvoi],
+    [programmerEnvoi, enMaths],
   );
 
   // Quitter la page en plein assemblage laisserait un compte à rebours courir
@@ -3550,9 +3694,23 @@ export default function Chat() {
     const fichier = await cameraRef.current?.capturer();
     if (!fichier) return;
 
+    // « PHOTOGRAPHIER MA COPIE » — Camara, le 26/09/2026 : la photo rejoint
+    // la file de la copie, comme un fichier importé depuis la carte, et la
+    // caméra se referme. Elle partira avec l'autre feuille.
+    // SEULEMENT TANT QUE LA COPIE ATTEND ENCORE : une caméra ouverte depuis la
+    // carte puis refermée sans photo ne doit pas détourner la photo suivante,
+    // prise pour tout autre chose.
+    const pourLaCopie = photoCopieRef.current;
+    photoCopieRef.current = null;
+    if (pourLaCopie && etatCopie && !etatCopie.complet) {
+      cameraRef.current?.fermer();
+      envoyerPieceCopieRef.current?.(pourLaCopie.role, fichier);
+      return;
+    }
+
     autoEnvoiPhotoRef.current = true;
     deposer(fichier);
-  }, [deposer]);
+  }, [deposer, etatCopie]);
 
   // LE TOUR PART DÈS QUE LA PHOTO EST MONTÉE, SANS CLIC.
   //
@@ -3664,6 +3822,21 @@ export default function Chat() {
   );
 
   /**
+   * « Je t'aide à te corriger » / « Je corrige et t'explique » — Camara, le
+   * 26/09/2026. Un tour normal, pour la même raison que le support : le
+   * professeur attendait ce choix pour commencer, il enchaîne tout de suite.
+   * Le serveur l'enregistre avant sa réponse et le lui rappelle ensuite à
+   * chaque tour.
+   */
+  const choisirStyleCorrection = useCallback(
+    (style) => {
+      if (!etatCopie) return;
+      envoyerTexte(marquerStyleCorrection(style, etatCopie.controleId));
+    },
+    [envoyerTexte, etatCopie],
+  );
+
+  /**
    * Le support du TEXTE à rédiger — cahier ou clavier.
    *
    * POSÉE ICI ET NON PRÈS DE SON `useMemo`, et ce n'est pas du rangement :
@@ -3723,19 +3896,100 @@ export default function Chat() {
       .catch(() => { /* la question reste posée, rien de cassé */ });
   }, [conversation?.id, cleSansChoix, controleSansChoix]);
 
+  /** Une pièce de la copie rejoint la file de SA demande. */
+  const mettreEnFileCopie = useCallback((cle, role, piece) => {
+    setFileCopie((f) => ({
+      ...(f.cle === cle ? f : { cle, enonce: null, copie: null }),
+      [role]: piece,
+      envoi: false,
+      erreur: null,
+    }));
+  }, []);
+
   const envoyerPieceCopie = useCallback(
-    (role, fichier) => {
-      if (!etatCopie || !fichier) return;
+    async (role, fichier) => {
+      if (!etatCopie || !fichier || !conversation) return;
 
-      rolePieceRef.current = { role, controleId: etatCopie.controleId };
+      const { cle } = etatCopie;
+      setFileCopie((f) => ({
+        ...(f.cle === cle ? f : { cle, enonce: null, copie: null }), envoi: true, erreur: null,
+      }));
 
-      // Le même envoi sans clic que la photo dite à la voix : l'élève a déjà
-      // fait son geste en choisissant le fichier.
-      autoEnvoiPhotoRef.current = true;
-      deposer(fichier);
+      try {
+        // Réduite ici, comme toute photo de séance : c'est le téléphone de
+        // l'élève qui est lent, pas le serveur.
+        const aEnvoyer = await reduire(fichier).catch(() => fichier);
+        const { data } = await deposerPieceJointe(conversation.id, aEnvoyer);
+
+        mettreEnFileCopie(cle, role, {
+          id: data.id,
+          nomFichier: fichier.name,
+          estImage: fichier.type !== 'application/pdf',
+        });
+      } catch (e) {
+        setFileCopie((f) => ({
+          ...f,
+          envoi: false,
+          erreur: e?.response?.data?.message ?? 'Ce document n’a pas pu être importé. Tu peux réessayer ?',
+        }));
+      }
     },
-    [etatCopie, deposer],
+    [etatCopie, conversation, mettreEnFileCopie],
   );
+
+  envoyerPieceCopieRef.current = envoyerPieceCopie;
+
+  /** « Photographier l'énoncé / ma copie » : la caméra de l'ordinateur s'ouvre pour CETTE feuille. */
+  const photographierPieceCopie = useCallback((role) => {
+    if (!etatCopie) return;
+    photoCopieRef.current = { role };
+    cameraRef.current?.ouvrir();
+  }, [etatCopie]);
+
+  const retirerPieceCopie = useCallback((role) => {
+    setFileCopie((f) => ({ ...f, [role]: null, erreur: null }));
+  }, []);
+
+  // TOUT EST LÀ : L'ÉNONCÉ ET LA COPIE PARTENT ENSEMBLE, dans un seul message,
+  // marqueurs et documents dans le même ordre. Seulement ce qui manque encore
+  // au professeur : une pièce déjà reçue ne repart pas. Et jamais pendant
+  // qu'il parle — l'envoi attend la fin de sa phrase.
+  useEffect(() => {
+    if (!etatCopie || etatCopie.separee === null || etatCopie.complet) return;
+    if (streaming || seanceTerminee || !conversation) return;
+    if (fileCopie.cle !== etatCopie.cle || fileCopie.envoi) return;
+
+    const besoinEnonce = etatCopie.separee && !etatCopie.enonceRecu;
+    const besoinCopie = !etatCopie.copieRecue;
+
+    if ((besoinEnonce && !fileCopie.enonce) || (besoinCopie && !fileCopie.copie)) return;
+
+    const pieces = [
+      ...(besoinEnonce ? [['enonce', fileCopie.enonce]] : []),
+      ...(besoinCopie ? [['copie', fileCopie.copie]] : []),
+    ];
+
+    if (pieces.length === 0) return;
+
+    setFileCopie({
+      cle: fileCopie.cle, enonce: null, copie: null, envoi: false, erreur: null,
+    });
+
+    dispatch(envoyerMessage(
+      conversation.id,
+      marquerPiecesControle('', pieces.map(([role]) => role), etatCopie.controleId),
+      restantRef.current,
+      pieces.map(([, piece]) => piece.id),
+      pieces.map(([, piece]) => ({
+        id: piece.id,
+        estImage: piece.estImage,
+        consultable: true,
+        nomFichier: piece.nomFichier,
+        nombrePages: 0,
+      })),
+      vitesseEcouteRef.current,
+    ));
+  }, [etatCopie, fileCopie, streaming, seanceTerminee, conversation, dispatch]);
 
   /**
    * LA PHOTO ENVOYÉE PAR LE TÉLÉPHONE EST ARRIVÉE.
@@ -3747,6 +4001,25 @@ export default function Chat() {
    */
   const recevoirScan = useCallback((piece) => {
     if (!piece?.id) return;
+
+    // LA COPIE SCANNÉE REJOINT LA FILE DE LA COPIE, comme un fichier importé
+    // depuis la carte : elle partira avec l'énoncé. UNE page — la première.
+    const pourLaCopie = rolePieceRef.current;
+    if (pourLaCopie && etatCopie?.controleId === pourLaCopie.controleId) {
+      setFileCopie((f) => (f.cle === etatCopie.cle && f[pourLaCopie.role]
+        ? f
+        : {
+          ...(f.cle === etatCopie.cle ? f : { cle: etatCopie.cle, enonce: null, copie: null }),
+          [pourLaCopie.role]: {
+            id: piece.id,
+            nomFichier: piece.nomFichier ?? 'photo.jpg',
+            estImage: (piece.typeMime ?? 'image/jpeg') !== 'application/pdf',
+          },
+          envoi: false,
+          erreur: null,
+        }));
+      return;
+    }
 
     // ELLE REJOINT LA LISTE, ET N'ENVOIE RIEN. Le téléphone peut en avoir
     // plusieurs à donner ; c'est son « terminé » (`terminerScan`) qui fait
@@ -3764,7 +4037,7 @@ export default function Chat() {
         enCours: false,
         id: piece.id,
       }]));
-  }, []);
+  }, [etatCopie]);
 
   /**
    * LE TÉLÉPHONE A APPUYÉ SUR « ENVOYER » : tout ce qu'il a donné part au
@@ -3773,6 +4046,13 @@ export default function Chat() {
    * photo était déjà arrivée avant le signal.
    */
   const terminerScan = useCallback(() => {
+    // La copie scannée attend dans sa file : c'est elle qui l'enverra, avec
+    // l'énoncé.
+    if (rolePieceRef.current) {
+      rolePieceRef.current = null;
+      return;
+    }
+
     autoEnvoiPhotoRef.current = true;
     setPiecesEnAttente((actuelles) => [...actuelles]);
   }, []);
@@ -3858,10 +4138,10 @@ export default function Chat() {
   // « SCANNER MA COPIE » SUR ORDINATEUR = LE QR CODE DU TÉLÉPHONE. La photo
   // qui arrive part étiquetée « copie » : `recevoirScan` la remet en attente,
   // et `envoyerTexte` consomme l'étiquette posée ici.
-  const scannerCopie = useCallback(() => {
+  const scannerCopie = useCallback((role = 'copie') => {
     if (!etatCopie) return;
 
-    rolePieceRef.current = { role: 'copie', controleId: etatCopie.controleId };
+    rolePieceRef.current = { role, controleId: etatCopie.controleId };
     setScanOuvert(true);
   }, [etatCopie]);
 
@@ -4010,6 +4290,10 @@ export default function Chat() {
   const couperLaParole = useCallback(() => {
     if (!lecteurRef.current.estOccupe()) return;
 
+    // Une coupure laisse une trace : sans elle, un professeur interrompu par
+    // un bruit et un professeur dont le son n'arrive pas se ressemblent.
+    console.warn('[voix] le professeur est coupé : l’élève a pris la parole (micro ou clic).');
+
     lecteurRef.current.arreter();
 
     // La fenêtre de détection d'écho part de MAINTENANT : le professeur vient
@@ -4051,6 +4335,10 @@ export default function Chat() {
       ecouteRef.current = ecouteTempsReel.ecouter({
         conversationId: conversation.id,
 
+        // En chinois et en arabe, une réponse dans la langue n'a pas une
+        // lettre latine : le filtre d'alphabet doit le savoir.
+        ecriture: ecritureDuCours(conversation.matiereCode),
+
         // Au PREMIER son, pas à la première transcription : couper la parole
         // au professeur doit être instantané, pas attendre l'aller-retour.
         onVoix: couperLaParole,
@@ -4068,7 +4356,7 @@ export default function Chat() {
           partielConsommeRef.current = false;
 
           const debut = assemblageRef.current.texte;
-          setSaisie(debut ? `${debut} ${texte}` : texte);
+          setSaisie(enMaths(debut ? `${debut} ${texte}` : texte));
         },
 
         // Le filet. L'élève s'est tu et le fournisseur n'a toujours pas
@@ -4092,7 +4380,7 @@ export default function Chat() {
           }
 
           const partiel = partielRef.current.trim();
-          if (!estUnTourDeParole(partiel)) {
+          if (!estUnTourDeParole(partiel, ecritureDuCours(conversation.matiereCode))) {
             // TROISIÈME CHEMIN D'EFFACEMENT, ET LE DERNIER QUI ÉTAIT MUET.
             // Un provisoire non vide écarté ici disparaît de l'écran sans
             // laisser de trace : c'est le cas qu'il faut pouvoir nommer quand
@@ -4208,7 +4496,17 @@ export default function Chat() {
         // condamner le temps réel aussi sûrement que trois d'affilée.
         onOuverture: () => { echecsTempsReelRef.current = 0; },
 
-        onErreur: (message) => {
+        onErreur: (message, definitif = false) => {
+          // UN REFUS DÉFINITIF SE DIT TOUT DE SUITE — Camara, le 28/09/2026 :
+          // plus d'heures sur la séance, le serveur l'a dit une fois. Ni
+          // troisième échec à attendre, ni rappel : le message, et le champ.
+          if (definitif) {
+            replriDepuisRef.current = Date.now();
+            setErreurMicro(message);
+            setEcoute(false);
+            return;
+          }
+
           echecsTempsReelRef.current += 1;
 
           // On ne renonce qu'après plusieurs échecs de suite. Avant ça, l'effet
@@ -4241,7 +4539,7 @@ export default function Chat() {
       // La règle est vraie par construction à l'endroit où l'écouteur est
       // créé : quel que soit le chemin qui y mène, il ne peut pas naître
       // ouvert pendant une explication.
-      if (sansCasque && profParleRef.current) {
+      if ((sansCasque && profParleRef.current) || lecteurRef.current?.ecouteEnCours) {
         ecouteRef.current?.suspendre?.(true, false);
       }
 
@@ -4260,7 +4558,7 @@ export default function Chat() {
       onPartiel: (texte) => {
         if (saisieTapeeRef.current) return;
         if (assezPourCouper(texte)) couperLaParole();
-        setSaisie(texte);
+        setSaisie(enMaths(texte));
       },
       onFinal: (texte) => {
         // LA MÊME RÈGLE QU'EN PARTIEL, ET C'EST TOUT LE CORRECTIF.
@@ -4277,7 +4575,7 @@ export default function Chat() {
         // phrase « comme s'il n'y avait plus rien derrière ».
         if (saisieTapeeRef.current) return;
         if (assezPourCouper(texte)) couperLaParole();
-        setSaisie(texte);
+        setSaisie(enMaths(texte));
       },
       onFin: (texte, diagnostic) => {
         setEcoute(false);
@@ -4306,6 +4604,16 @@ export default function Chat() {
           const { texte: parole, finLe } = paroleProfRef.current;
 
           if (estUnEcho(texte, parole, finLe)) {
+            // LE RELEVÉ, POUR NE PLUS DEVINER — Camara, le 30/09/2026 : Syan,
+            // sur haut-parleurs, micro relancé dix fois en quarante-cinq minutes
+            // sans une seule coupure réseau. Chaque arrêt décidé par l'écran part
+            // dans le même journal que les coupures (« Coupure d'ecoute »), avec
+            // sa raison. Ici : combien de temps après la fin du professeur, et
+            // ce que le micro a cru entendre. Un relevé, rien d'autre.
+            mesurerEcoute({
+              cause: 'ecran-echo',
+              message: `${Date.now() - (finLe ?? Date.now())} ms après la fin du professeur : « ${texte.slice(0, 100)} »`,
+            });
             setMainsLibres(false);
             viderSaisie();
             lecteurRef.current.arreter();
@@ -4329,14 +4637,17 @@ export default function Chat() {
           // qu’on écrit et le micro est déjà tenu autrement ; cette mécanique
           // est éprouvée, on n’y touche pas. Un texte à rédiger, lui, se tape
           // en silence — une parole qui part toute seule n’y est jamais voulue.
+          // L'écho se juge sur la transcription BRUTE, plus haut : c'est elle
+          // qu'on compare aux mots du professeur. Ce qui part, en maths, est
+          // réécrit en symboles.
           if (copieEcriteRef.current) {
-            setSaisie(texte);
+            setSaisie(enMaths(texte));
             return;
           }
 
           // Envoi automatique après un court silence : l'élève porte un casque,
           // lui demander de cliquer « Envoyer » casserait la conversation.
-          envoyerTexte(texte);
+          envoyerTexte(enMaths(texte));
           return;
         }
 
@@ -4369,6 +4680,10 @@ export default function Chat() {
           }
 
           silencesRef.current = 0;
+          mesurerEcoute({
+            cause: 'ecran-silences',
+            message: `${SILENCES_AVANT_RELANCE} silences d'affilée${diagnostic?.muet ? ' (micro muet)' : ''}`,
+          });
           setMainsLibres(false);
 
           // Le professeur ne parle JAMAIS du matériel. Un professeur particulier
@@ -4441,12 +4756,14 @@ export default function Chat() {
         // Une panne de micro rend le mains libres inopérant : on le coupe
         // plutôt que de boucler sur la même erreur. Là encore, sans un mot :
         // c'est le navigateur qui a un problème, pas la leçon.
+        // Relevée comme les autres arrêts décidés par l'écran (voir l'écho).
+        mesurerEcoute({ cause: 'ecran-erreur', message: String(message ?? '').slice(0, 150) });
         setMainsLibres(false);
         setErreurMicro(message);
       },
     });
   }, [envoyerTexte, accumuler, armerEnvoi, signaler, couperLaParole, conversation, sansCasque,
-      prendrePhoto, signalerOreilleMorte,
+      prendrePhoto, signalerOreilleMorte, enMaths,
       ]);
 
   const basculerMicro = () => {
@@ -4828,8 +5145,18 @@ export default function Chat() {
             <Avatar
               nom={conversation?.profAvatar}
               couleur={conversation?.profCouleur}
-              taille={38}
-              parle={streaming && !muet}
+              // EN GRAND — Camara, le 04/10/2026 : « plus gros, pour que quand
+              // le gif sera là on voie le professeur parler ». À 38 px, des
+              // lèvres qui bougent ne se voyaient pas. Sur téléphone, la
+              // feuille de style le ramène à 46 px (voir `.chat__prof .avatar`).
+              taille={64}
+              // LA VOIX, PAS LE TEXTE — le 04/10/2026. `streaming` allumait
+              // l'avatar avant le premier son et l'éteignait parfois en pleine
+              // phrase ; `profParle` vient du lecteur, au début et à la fin
+              // réels de la parole. Et `niveau` donne aux ondes le son du
+              // moment.
+              parle={profParle && !muet}
+              niveau={niveauVoix}
             />
 
             <span className="chat__titre">
@@ -5102,7 +5429,15 @@ export default function Chat() {
             onChoisir={choisirCopie}
             onFichier={envoyerPieceCopie}
             onScanner={scannerNatif ? undefined : scannerCopie}
+            onPhoto={cameraDispo && !scannerNatif ? photographierPieceCopie : null}
             onRevenir={venuDuChoixEnonce ? revenirAuChoix : null}
+            onStyle={choisirStyleCorrection}
+            importes={fileCopie.cle === etatCopie.cle
+              ? { enonce: Boolean(fileCopie.enonce), copie: Boolean(fileCopie.copie) }
+              : { enonce: false, copie: false }}
+            enImport={fileCopie.cle === etatCopie.cle && fileCopie.envoi}
+            erreur={fileCopie.cle === etatCopie.cle ? fileCopie.erreur : null}
+            onRetirer={retirerPieceCopie}
           />
         )}
 
@@ -5124,10 +5459,35 @@ export default function Chat() {
 
         {/* Même règle pendant que le professeur écrit : la dictée arrive
             souvent en flux, et la bulle se remplissait sous la question. */}
+        {/* « NORA RÉFLÉCHIT… » TANT QU'ELLE N'A RIEN ÉCRIT — Camara, le
+            26/09/2026. Avant de corriger une copie entière, la professeure
+            peut réfléchir quarante secondes et plus sans écrire un mot : la
+            bulle restait vide, l'enfant croyait que plus rien ne se passait,
+            et en reparlant il coupait la réponse qui allait venir. */}
+        {/* LA CORRECTION SE PRÉPARE — Camara, le 26/09/2026 : pendant la
+            correction d'une copie (tout reçu, pas encore finie), une fenêtre bien
+            visible tant que la professeure n'a rien écrit. Elle se ferme
+            d'elle-même au premier mot. */}
+        <PreparationCorrection
+          visible={Boolean(streaming && !reponseEnCours?.trim() && etatCopie?.complet && !etatCopie?.termine)}
+          profPrenom={conversation?.profPrenom}
+        />
+
         {streaming && !dicteeEnAttente && (
           <div className="bulle bulle--agent">
-            <Contenu texte={reponseEnCours} onRappelerTableau={setTableauRappele} />
-            <span className="curseur" />
+            {reponseEnCours?.trim() ? (
+              <>
+                <Contenu texte={reponseEnCours} onRappelerTableau={setTableauRappele} />
+                <span className="curseur" />
+              </>
+            ) : (
+              <span className="bulle__reflexion" role="status">
+                {conversation?.profPrenom ?? 'Ton professeur'} réfléchit
+                <span className="bulle__points" aria-hidden="true">
+                  <span>.</span><span>.</span><span>.</span>
+                </span>
+              </span>
+            )}
           </div>
         )}
 
@@ -5459,6 +5819,8 @@ export default function Chat() {
                 conséquence. */}
             {oreilleMorte
               ? 'Petit souci de connexion — je me remets à t’écouter…'
+              : ecritAuTableau
+              ? 'Le professeur écrit au tableau…'
               : micEnPause || (sansCasque && profParle)
               ? 'Le professeur parle…'
               : profParle && !saisieTapee && !saisie
@@ -5642,6 +6004,7 @@ export default function Chat() {
         <CameraVoix
           ref={cameraRef}
           onErreur={setErreurMicro}
+          onPrendre={prendrePhoto}
           enSurbrillance={docDemande}
           // LE MEME ETAT QUE LES TROIS AUTRES — Camara, le 16/09/2026 : en
           // entrant dans un cours, la caméra restait allumée pendant que le
@@ -5737,6 +6100,8 @@ export default function Chat() {
               ? 'Séance suspendue — voir le forfait'
               : seanceTerminee
                 ? 'Séance terminée — relance une session pour continuer'
+                : ecritAuTableau
+                ? 'Le professeur écrit au tableau…'
                 : streaming
                 ? 'Le professeur parle…'
                 // Un document joint change l'invite : c'est une incitation à

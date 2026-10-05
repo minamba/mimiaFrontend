@@ -53,6 +53,8 @@ jest.mock('../lib/storage/fluxReglages', () => ({ demarrerFluxReglages: () => ()
 jest.mock('../lib/storage/styleSite', () => ({
   appliquerBlueSky: () => {},
   blueSkyEnregistre: () => false,
+  saisonEnregistree: () => null,
+  saisonValide: () => null,
 }));
 
 const { getReglagesPublics } = require('../lib/api/reglagesApi');
