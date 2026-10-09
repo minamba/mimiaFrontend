@@ -8,6 +8,7 @@ import BoutonsVoix from './BoutonsVoix';
 import CalculMental from './CalculMental';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA COURSE DES TABLES, À L'ÉCRAN.
@@ -55,10 +56,12 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
     if (r === a * b) {
       setTrouve(true);
       if (fautes.length === 0) setAvance((n) => n + 1);
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     setFautes((f) => [...f, r]);
+    bruitage('mauvaise');
     dire(courante.jumelle ? repliquesCourse.rappelJumelle : repliquesCourse.methode(a, b));
   }, [termine, a, b, fautes.length, courante.jumelle, manche, dire]);
 

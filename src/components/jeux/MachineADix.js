@@ -7,6 +7,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA MACHINE À DIX, À L'ÉCRAN.
@@ -57,12 +58,14 @@ export default function MachineADix({ onQuitter, matiereCode, niveau = 'CE1' }) 
       setTrouve(true);
       setSens(null);
       if (fautes.length === 0) setDuPremierCoup((x) => x + 1);
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     const suivantes = [...fautes, n];
     setFautes(suivantes);
     setSens(s);
+    bruitage('mauvaise');
     dire(suivantes.length >= ESSAIS_AVANT_AIDE ? repliquesMachine.aide(facteur) : repliquesMachine.erreur(s));
   }, [termine, courante, fautes, manche, dire, facteur]);
 

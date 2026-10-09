@@ -10,6 +10,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA BALANCE, À L'ÉCRAN.
@@ -138,9 +139,12 @@ export default function Balance({ onQuitter, matiereCode, niveau = 'CP' }) {
   const annoncerRangement = useCallback(() => {
     const v = verdictRanger(rangement);
     setAnnonce(v);
-    if (v.sens === 'juste') dire(commun.bravo(manche));
-    else {
+    if (v.sens === 'juste') {
+      bruitage('bonne');
+      dire(commun.bravo(manche));
+    } else {
       setPropre(false);
+      bruitage('mauvaise');
       dire(repliquesBalance.plusLourdQue(v.lourd, v.leger));
     }
   }, [rangement, manche, dire]);
@@ -168,12 +172,14 @@ export default function Balance({ onQuitter, matiereCode, niveau = 'CP' }) {
     setAnnonce(s);
     if (s === 'juste') {
       // Le bravo, puis la mesure dite en entier : « La pomme pèse 3 cubes. »
+      bruitage('bonne');
       dire([
         commun.bravo(manche),
         ce1 ? repliquesBalance.resultatPoids(courante.objet, niveau) : repliquesBalance.resultat(courante.objet),
       ]);
     } else {
       setPropre(false);
+      bruitage('mauvaise');
       dire(ce1 ? repliquesBalance.erreurCE1(s) : repliquesBalance.erreur(s));
     }
   }, [ce1, poids, cubes, courante.objet, manche, dire, niveau, BOITE_POIDS]);

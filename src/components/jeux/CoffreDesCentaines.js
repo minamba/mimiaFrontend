@@ -10,6 +10,7 @@ import BoutonsVoix from './BoutonsVoix';
 import GrandsNombres from './GrandsNombres';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 const VIDE = {
   milliers: 0, centaines: 0, dizaines: 0, unites: 0,
@@ -85,12 +86,14 @@ function CoffreDesCentainesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) 
   const conclure = useCallback((r) => {
     setResultat(r);
     if (r.sens === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     const suivantes = ratees + 1;
     setRatees(suivantes);
     const aide = ce2 ? repliquesCoffre.aideCE2 : repliquesCoffre.aide;
+    bruitage('mauvaise');
     dire(suivantes >= ESSAIS_AVANT_AIDE ? aide : repliquesCoffre.erreur(r.sens, r.colonne));
   }, [manche, ratees, dire, ce2]);
 

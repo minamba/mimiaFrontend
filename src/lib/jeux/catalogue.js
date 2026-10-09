@@ -78,6 +78,10 @@ import couvertureCm2Schema from '../../assets/Jeux/CM2/barre800.webp';
 import couvertureCm2Chances from '../../assets/Jeux/CM2/chance800.webp';
 import couvertureCm2Boucle from '../../assets/Jeux/CM2/boucle800.webp';
 import couvertureMarchande from '../../assets/cov_marchande.webp';
+import { CATALOGUE_COLLEGE } from './college/index.js';
+import { CATALOGUE_LYCEE } from './lycee/index.js';
+import { IMAGES_SECONDAIRE } from './imagesSecondaire.js';
+import { programmeDeLaClasse } from './frise.js';
 import couverturePaquets from '../../assets/paquet_10.webp';
 import couvertureTrain from '../../assets/train_des_nombres.webp';
 
@@ -101,6 +105,27 @@ import couvertureTrain from '../../assets/train_des_nombres.webp';
  * C'est la même règle que les référentiels, et pour la même raison — un
  * contenu pédagogique que personne ne relit finit par être faux.
  */
+
+/**
+ * LES COUVERTURES DU COLLÈGE ET DU LYCÉE — Camara, le 08/10/2026 : une
+ * couverture par jeu ET par classe, le titre peint dedans (voir
+ * `imagesSecondaire.js`). Chaque classe reçoit la sienne dans `parNiveau` ;
+ * une classe sans image garde l'aperçu dessiné, sans titre peint à cacher.
+ */
+function habiller(jeu) {
+  const couverture = (classe) => IMAGES_SECONDAIRE[`${jeu.cle}|${classe}`]?.couverture ?? null;
+  const tenue = (classe) => (couverture(classe)
+    ? { image: couverture(classe), titreDansImage: true }
+    : { image: null, titreDansImage: false });
+  const [premiere, ...autres] = jeu.niveaux;
+  return {
+    ...jeu,
+    ...tenue(premiere),
+    ...(autres.length ? {
+      parNiveau: Object.fromEntries(autres.map((n) => [n, { ...(jeu.parNiveau?.[n] ?? {}), ...tenue(n) }])),
+    } : {}),
+  };
+}
 
 /**
  * L'ILLUSTRATION D'UN JEU, OPTIONNELLE — Camara, le 21/09/2026.
@@ -738,6 +763,13 @@ export const JEUX = [
     image: couvertureCm1Liaison,
     titreDansImage: true,
   },
+
+  // LES JEUX DU COLLÈGE, de la 6e à la 3e : chaque module se décrit lui-même,
+  // son entrée se lit dans `college/index.js` — voir `entreeDuCatalogue`.
+  ...CATALOGUE_COLLEGE.map(habiller),
+
+  // LES JEUX DU LYCÉE (07/10/2026), même modèle — voir `lycee/index.js`.
+  ...CATALOGUE_LYCEE.map(habiller),
 ];
 
 /**
@@ -769,7 +801,10 @@ export function selonLaClasse(jeu, niveauCode) {
  * et une phrase qui l'explique qu'un jeu de CP proposé à un lycéen.
  */
 export function jeuxDeLaClasse(niveauCode) {
-  const code = (niveauCode ?? '').toUpperCase();
+  // AU LYCÉE, LA CLASSE EST RAMENÉE À SON PROGRAMME (07/10/2026) : une 1re
+  // STMG voit les jeux de `PREMIERE_TECHNO`, jamais ceux de la 1re générale.
+  // Voir `programmeDeLaClasse` dans `frise.js`.
+  const code = programmeDeLaClasse(niveauCode);
   if (!code) return [];
 
   return JEUX.filter((jeu) => jeu.niveaux.includes(code)).map((jeu) => selonLaClasse(jeu, code));

@@ -8,6 +8,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LES PAQUETS DE DIX, À L'ÉCRAN.
@@ -130,8 +131,13 @@ export default function PaquetsDeDix({ onQuitter, matiereCode }) {
     if (sens !== 'juste') setPropre(false);
     setAnnonce(sens);
 
-    if (sens === 'juste') dire(commun.bravo(manche));
-    else dire(sens === 'trop' ? repliquesPaquets.trop : repliquesPaquets.pasAssez);
+    if (sens === 'juste') {
+      bruitage('bonne');
+      dire(commun.bravo(manche));
+    } else {
+      bruitage('mauvaise');
+      dire(sens === 'trop' ? repliquesPaquets.trop : repliquesPaquets.pasAssez);
+    }
   }, [paquets, unites, cible, manche, dire]);
 
   const suivante = useCallback(() => {

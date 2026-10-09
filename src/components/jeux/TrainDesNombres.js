@@ -8,6 +8,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LE TRAIN DES NOMBRES, À L'ÉCRAN.
@@ -65,8 +66,13 @@ export default function TrainDesNombres({ onQuitter, matiereCode }) {
     if (valeur !== courante.nombre) setPropre(false);
 
     const s = verdict(valeur, courante.nombre);
-    if (s === 'juste') dire(commun.bravo(manche));
-    else dire(s === 'trop-loin' ? repliquesTrain.tropLoin : repliquesTrain.pasAssezLoin);
+    if (s === 'juste') {
+      bruitage('bonne');
+      dire(commun.bravo(manche));
+    } else {
+      bruitage('mauvaise');
+      dire(s === 'trop-loin' ? repliquesTrain.tropLoin : repliquesTrain.pasAssezLoin);
+    }
   }, [courante.nombre, juste, manche, dire]);
 
   const suivante = useCallback(() => {

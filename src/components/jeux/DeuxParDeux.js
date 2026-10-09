@@ -8,6 +8,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * DEUX PAR DEUX, À L'ÉCRAN.
@@ -60,9 +61,11 @@ export default function DeuxParDeux({ onQuitter, matiereCode }) {
     setChoix(valeur);
     const s = verdict(valeur, courante);
     if (s === 'juste') {
+      bruitage('bonne');
       dire([commun.bravo(manche), repliquesDeux.resultat(courante.mode, courante.n)]);
     } else {
       setPropre(false);
+      bruitage('mauvaise');
       dire(repliquesDeux.erreur(s));
     }
   }, [juste, courante, manche, dire]);

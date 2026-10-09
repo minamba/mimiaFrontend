@@ -8,6 +8,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * L'HORLOGE, À L'ÉCRAN.
@@ -87,9 +88,12 @@ export default function Horloge({ onQuitter, matiereCode, niveau = 'CP' }) {
   }, [fini, duPremierCoup, dire]);
 
   const repondre = useCallback((s) => {
-    if (s === 'juste') dire(commun.bravo(manche));
-    else {
+    if (s === 'juste') {
+      bruitage('bonne');
+      dire(commun.bravo(manche));
+    } else {
       setPropre(false);
+      bruitage('mauvaise');
       dire(repliquesHorloge.erreur(s));
     }
   }, [manche, dire]);

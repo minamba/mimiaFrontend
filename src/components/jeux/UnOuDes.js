@@ -10,6 +10,7 @@ import decor from '../../assets/Jeux/CP/uneoudes.webp';
 import AccordsCM1 from './AccordsCM1';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * UN OU DES ?, À L'ÉCRAN.
@@ -105,11 +106,13 @@ function UnOuDesCP({ onQuitter, matiereCode }) {
   const annoncer = useCallback(() => {
     const r = verdict(petitMot, forme, courante);
     if (r.sens === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
     } else {
       const suivantes = ratees + 1;
       setPropre(false);
       setRatees(suivantes);
+      bruitage('mauvaise');
       if (suivantes >= ESSAIS_AVANT_AIDE) dire(repliquesUnOuDes.aide);
       else if (r.sens === 'nombre') dire(repliquesUnOuDes.nombre(r.pluriel));
       else dire(repliquesUnOuDes.accord(r.pluriel));

@@ -8,6 +8,7 @@ import BoutonsVoix from './BoutonsVoix';
 import decor from '../../assets/Jeux/CP/syllabe.webp';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * L'ATELIER DES SYLLABES, À L'ÉCRAN.
@@ -97,6 +98,7 @@ export default function AtelierDesSyllabes({ onQuitter, matiereCode }) {
   const annoncer = useCallback(() => {
     const r = verdict(dansWagons.map((e) => e.texte), courante.mot);
     if (r.sens === 'juste') {
+      bruitage('bonne');
       dire([commun.bravo(manche), leMotDit]);
     } else {
       const suivantes = ratees + 1;
@@ -104,6 +106,7 @@ export default function AtelierDesSyllabes({ onQuitter, matiereCode }) {
       setRatees(suivantes);
       // La deuxième erreur ouvre les haut-parleurs des étiquettes : Adrien le dit.
       const ouvre = suivantes === SYLLABES_PARLANTES ? [repliquesSyllabes.sonsOuverts] : [];
+      bruitage('mauvaise');
       if (suivantes >= ESSAIS_AVANT_AIDE) dire([repliquesSyllabes.aide, leMotDit]);
       else if (r.sens === 'ordre') dire([repliquesSyllabes.ordre, leMotDit, ...ouvre]);
       else dire([repliquesSyllabes.faux(r.erreurs.length), leMotDit, ...ouvre]);

@@ -107,6 +107,8 @@ import * as simple_calculMental from '../calculMental.js';
 import * as simple_fractionsCM1 from '../fractionsCM1.js';
 import * as simple_grandsNombres from '../grandsNombres.js';
 import * as train from '../trainDesNombres.js';
+import { MODULES_COLLEGE } from '../college/index.js';
+import { MODULES_LYCEE } from '../lycee/index.js';
 
 /**
  * LE PROFESSEUR QUI PARLE, D'APRÈS LA MATIÈRE DU JEU.
@@ -121,6 +123,13 @@ export const PROFESSEUR_PAR_MATIERE = {
   MATHS: 'nora',
   // Lu en base le 21/09/2026 : Matiere FRANCAIS, prof_avatar « adrien ».
   FRANCAIS: 'adrien',
+  // Lus en base le 06/10/2026 (table Matiere, prof_avatar), pour les escape
+  // games du collège. Yann tient les deux sciences de la 6e à la 3e.
+  HISTOIRE_GEO: 'salim',
+  ANGLAIS: 'marine',
+  SCIENCES: 'yann',
+  PHYSIQUE_CHIMIE: 'yann',
+  SVT: 'ines',
 };
 
 // ------------------------------------------------------ communes à tous
@@ -533,6 +542,11 @@ const SIMPLES = [
   ['calcul-mental', simple_calculMental, 'MATHS'],
   ['fractions-cm1', simple_fractionsCM1, 'MATHS'],
   ['grands-nombres', simple_grandsNombres, 'MATHS'],
+  // LES JEUX DU COLLÈGE : le préfixe est la clé du jeu, la matière celle du
+  // module — voir `college/index.js`.
+  ...MODULES_COLLEGE.map((m) => [m.FAMILLE.cle, m, m.FAMILLE.matiereCode]),
+  // Ceux du lycée (07/10/2026), de même — voir `lycee/index.js`.
+  ...MODULES_LYCEE.map((m) => [m.FAMILLE.cle, m, m.FAMILLE.matiereCode]),
 ];
 
 // Chaque étiquette se fait lire, le nom toujours sans son s : voir la note du
@@ -947,6 +961,8 @@ export function toutesLesRepliques() {
     ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => commun.note(n)),
     ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => commun.note(n, 9)),
     ...[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => commun.note(n, 10)),
+    // Les escape games du collège ont six cadenas.
+    ...[0, 1, 2, 3, 4, 5, 6].map((n) => commun.note(n, 6)),
   ];
 
   const parProfesseur = {};

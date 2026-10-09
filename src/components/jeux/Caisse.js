@@ -9,6 +9,7 @@ import BoutonsVoix from './BoutonsVoix';
 import { Monnaie, Produit } from './Etal';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA CAISSE — la marchande du CE1, à l'écran.
@@ -71,11 +72,13 @@ export default function Caisse({ onQuitter, matiereCode }) {
     const r = verdict(posees, courante.rendu);
     setResultat(r);
     if (r === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     const suivantes = ratees + 1;
     setRatees(suivantes);
+    bruitage('mauvaise');
     if (suivantes >= ESSAIS_AVANT_AIDE) dire(repliquesMarchande.aideRendu);
     else dire(r === 'trop' ? repliquesMarchande.rendTrop : repliquesMarchande.rendPasAssez);
   }, [posees, courante.rendu, manche, ratees, dire]);

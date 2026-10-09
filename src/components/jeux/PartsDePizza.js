@@ -8,6 +8,7 @@ import BoutonsVoix from './BoutonsVoix';
 import FractionsCM1 from './FractionsCM1';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LES PARTS DE PIZZA, À L'ÉCRAN.
@@ -57,12 +58,14 @@ function PartsDePizzaAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
       setTrouve(true);
       setSens(null);
       if (fautes.length === 0) setDuPremierCoup((n) => n + 1);
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     const suivantes = [...fautes, cle(f)];
     setFautes(suivantes);
     setSens(s);
+    bruitage('mauvaise');
     dire(suivantes.length >= ESSAIS_AVANT_AIDE ? repliquesPizza.aide : repliquesPizza.erreur(s));
   }, [termine, courante, fautes, manche, dire]);
 

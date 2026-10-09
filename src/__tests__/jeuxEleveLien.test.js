@@ -68,3 +68,33 @@ describe('le lien vers un jeu précis', () => {
     expect(screen.getByRole('navigation', { name: /Choisir une classe/ })).toBeInTheDocument();
   });
 });
+
+// REVENIR LÀ OÙ L'ON ÉTAIT — Camara, le 08/10/2026 : fermer un jeu renvoyait
+// en haut de la liste. La page doit revenir à sa position d'avant, et le focus
+// sur la carte du jeu qu'on vient de quitter.
+describe('le retour à la liste', () => {
+  it('revient à la position d’avant l’ouverture, sur la carte du jeu', async () => {
+    const userEvent = (await import('@testing-library/user-event')).default;
+    mockRecherche = '';
+    const scrollTo = jest.fn();
+    const scrollToAvant = window.scrollTo;
+    window.scrollTo = scrollTo;
+    Object.defineProperty(window, 'scrollY', { value: 1234, configurable: true });
+
+    try {
+      const { container } = render(<JeuxEleve />);
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      const carte = container.querySelector('[data-jeu]');
+      const cle = carte.getAttribute('data-jeu');
+      await userEvent.click(carte);
+      await userEvent.click(screen.getAllByRole('button', { name: /Revenir aux jeux/ })[0]);
+
+      expect(scrollTo).toHaveBeenCalledWith({ top: 1234, behavior: 'auto' });
+      // La liste a été remontée : la carte est un nouvel élément, on la retrouve par sa clé.
+      // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+      expect(container.querySelector(`[data-jeu="${cle}"]`)).toHaveFocus();
+    } finally {
+      window.scrollTo = scrollToAvant;
+    }
+  });
+});

@@ -132,6 +132,14 @@ export default function useVoixJeu(matiereCode) {
   // relie, pour un enfant qui ne lit pas encore, le mot entendu au bouton.
   const [enCours, setEnCours] = useState(null);
 
+  // LE PROFESSEUR PARLE : on le fait savoir à la page (09/10/2026). L'ambiance
+  // sonore des escape games s'en sert pour baisser pendant qu'il parle — voir
+  // `lib/jeux/ambiance.js`. Un simple signal : la voix n'a pas à la connaître.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.CustomEvent !== 'function') return;
+    window.dispatchEvent(new window.CustomEvent('mimia:voix-jeu', { detail: { parle: enCours !== null } }));
+  }, [enCours]);
+
   // Chaque nouvelle lecture prend un jeton ; une suite dont le jeton n'est
   // plus le bon s'arrête d'elle-même. C'est ce qui coupe la lecture des
   // réponses dès que l'enfant en touche une.

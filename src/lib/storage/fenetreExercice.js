@@ -64,6 +64,35 @@ export function ouvreAutreChose(texte, propres = []) {
 }
 
 /**
+ * LE RANG DE L'EXERCICE EN COURS : combien de fois, dans ce fil, le professeur
+ * est « passé à autre chose » — un exercice archivé, une fiche, une fin de
+ * séance, une dictée ouverte… Tant que ce nombre ne bouge pas, on est dans le
+ * MÊME exercice.
+ *
+ * SERT À NE DEMANDER LA VITESSE QU'UNE FOIS — Camara, le 05/10/2026, en
+ * expression orale d'anglais : « à chaque phrase le choix de la vitesse
+ * apparaît, c'est chiant ! S'il doit apparaître, c'est une fois avant de
+ * commencer et c'est tout, sinon ça gâche l'échange. »
+ *
+ * La conversation avait déjà sa règle « une fois » — mais elle ne tenait qu'à
+ * une balise, [CONVERSATION], que le professeur doit penser à écrire. Qu'il
+ * l'oublie, et chaque réplique redevenait « un passage inédit » : la carte
+ * revenait à chaque tour. Ce rang ne dépend de la bonne volonté de personne :
+ * une fois la vitesse choisie, elle vaut jusqu'à ce qu'on passe à autre chose.
+ *
+ * UN COMPTE, ET NON UN INDEX DE MESSAGE — même raison que `rangConversation` :
+ * il vaut pareil pendant qu'un message s'écrit et une fois qu'il est rangé.
+ *
+ * [CONVERSATION] et [VITESSE] ne comptent pas : la première a sa propre règle,
+ * la seconde est le réglage lui-même.
+ */
+export function rangExercice(messages) {
+  return (messages ?? []).filter(
+    (m) => m?.role === 'assistant' && ouvreAutreChose(m.contenu ?? '', ['CONVERSATION', 'VITESSE']),
+  ).length;
+}
+
+/**
  * La réponse à une question posée par carte, relue à l'envers.
  *
  * Rend :

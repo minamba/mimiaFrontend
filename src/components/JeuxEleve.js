@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { chargerEleves } from '../lib/actions/elevesActions';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import iconeJeux from '../assets/games.webp';
 import { jeuxDeLaClasse, parMatiere } from '../lib/jeux/catalogue';
-import { FRISE, frisePourLaClasse, rangDeLaClasse } from '../lib/jeux/frise';
+import {
+  FRISE, classeDansSaVoie, frisePourLaClasse, programmeDeLaClasse, rangDeLaClasse,
+} from '../lib/jeux/frise';
 import { FournirJeu } from '../lib/jeux/contexteJeu';
 import { DEFI, TRANQUILLE, coeursDeLaClasse } from '../lib/jeux/coeurs';
 import ChoixDuMode from './jeux/ChoixDuMode';
@@ -11,6 +14,7 @@ import FinDuDefi from './jeux/FinDuDefi';
 import FriseDesClasses from './jeux/FriseDesClasses';
 import { sessionEleve } from '../lib/storage/sessionEleve';
 import { styleMatiere } from '../lib/couleurMatiere';
+import { bruitage, prechargerBruitages } from '../lib/jeux/bruitages';
 import Balance from './jeux/Balance';
 import BoiteDeDix from './jeux/BoiteDeDix';
 import ChantierDesFormes from './jeux/ChantierDesFormes';
@@ -74,6 +78,11 @@ import {
   VignettePartage, VignetteRuban, VignetteJardin, VignetteDuree, VignetteBouteilles, VignetteMiroir, VignetteDiagramme, VignetteComplements, VignetteSujet,
 } from './jeux/VignettesCE2';
 import VignetteTrain from './jeux/VignetteTrain';
+import { ECRANS_COLLEGE, VIGNETTES_COLLEGE } from './jeux/JeuxCollege';
+
+/** Le zoom d'un jeu en cours sur ordinateur : voir « LE JEU TIENT DANS L'ÉCRAN ». */
+const ZOOM_JEU_MAX = 1.25;
+const ZOOM_JEU_MIN = 0.7;
 
 /** Les jeux écrits à ce jour. Un jeu du catalogue sans écran ne s'affiche pas. */
 const ECRANS = {
@@ -119,6 +128,8 @@ const ECRANS = {
   'types-de-phrases': TypesDePhrases,
   'phrase-qui-dit-non': PhraseQuiDitNon,
   'contraires-et-jumeaux': ContrairesEtJumeaux,
+  // Les jeux du collège : un écran par module, tous sur l'écran à choix.
+  ...ECRANS_COLLEGE,
 };
 
 /**
@@ -157,6 +168,7 @@ const VIGNETTES = {
   'types-de-phrases': VignetteTypes,
   'phrase-qui-dit-non': VignetteNegation,
   'contraires-et-jumeaux': VignetteContraires,
+  ...VIGNETTES_COLLEGE,
 };
 
 /**
@@ -183,6 +195,39 @@ export default function JeuxEleve() {
 
   const [ouvert, setOuvert] = useState(null);
 
+  // Les bruitages (survol des cartes, bonne et mauvaise réponse) sont décodés
+  // dès l'arrivée sur la page : le premier doit tomber pile, pas après un temps.
+  useEffect(() => { prechargerBruitages(); }, []);
+
+  // LE SON DU SURVOL, SUR TOUT CE QUI SE CHOISIT — Camara, le 09/10/2026 : les
+  // cartes des jeux, puis « le choix du mode, le choix des classes, le choix de
+  // réponse ». Un seul écouteur pour toute la page plutôt qu'un par bouton :
+  // chaque jeu a ses propres boutons de réponse, et un jeu écrit demain
+  // sonnera sans rien déclarer. À la souris seulement ; un bouton inactif
+  // (une réponse déjà écartée) ne sonne pas.
+  const page = useRef(null);
+  useEffect(() => {
+    const racine = page.current;
+    if (!racine) return undefined;
+    let survole = null;
+    const entrer = (e) => {
+      if (e.pointerType !== 'mouse') return;
+      const bouton = e.target.closest?.('button, a');
+      if (!bouton || bouton === survole || !racine.contains(bouton)) return;
+      survole = bouton;
+      if (!bouton.disabled) bruitage('survol');
+    };
+    const sortir = (e) => {
+      if (survole && !survole.contains(e.relatedTarget)) survole = null;
+    };
+    racine.addEventListener('pointerover', entrer);
+    racine.addEventListener('pointerout', sortir);
+    return () => {
+      racine.removeEventListener('pointerover', entrer);
+      racine.removeEventListener('pointerout', sortir);
+    };
+  }, []);
+
   // LE MODE DE JEU, ET LE NUMÉRO DE PARTIE.
   //
   // `null` veut dire « pas encore choisi » : c'est ce qui fait apparaître
@@ -198,15 +243,29 @@ export default function JeuxEleve() {
   // le jeu est DÉMONTÉ et la fin du défi prend sa place : c'est ce qui arrête
   // sa question suivante et la voix qui la lisait (Camara, 26/09).
   const [finDefi, setFinDefi] = useState(null);
-  const terminerDefi = useCallback((bilan) => setFinDefi(bilan), []);
+  // LE SON DU DÉFI PERDU (game_over.mp3, Camara le 09/10/2026), UNE SEULE FOIS :
+  // le dernier cœur et le chrono à zéro peuvent tous deux signaler la fin.
+  const finSonnee = useRef(false);
+  const terminerDefi = useCallback((bilan) => {
+    if (!finSonnee.current) {
+      finSonnee.current = true;
+      bruitage('finDuDefi');
+    }
+    setFinDefi(bilan);
+  }, []);
 
   // Changer de partie, de mode ou de jeu efface toujours le bilan.
   const lancer = useCallback((choisi) => {
+    finSonnee.current = false;
     setFinDefi(null);
     setMode(choisi);
     setPartie((n) => n + 1);
   }, []);
+  // Tous les « Revenir aux jeux » passent par ici, d'un jeu, du choix du mode
+  // ou d'une fin de partie : le son du retour (09/10/2026) aussi.
   const fermer = useCallback(() => {
+    bruitage('retour');
+    finSonnee.current = false;
     setFinDefi(null);
     setOuvert(null);
     setMode(null);
@@ -214,7 +273,26 @@ export default function JeuxEleve() {
 
   // La classe REGARDÉE, qui n'est pas forcément la sienne : `null` tant que
   // l'enfant n'a rien choisi, pour que la page s'ouvre toujours sur son année.
-  const [regardee, setRegardee] = useState(null);
+  //
+  // GARDÉE LE TEMPS DE L'ONGLET — Camara, le 09/10/2026 : « quand je fais F5, je
+  // me retrouve sur ma classe alors que j'avais cliqué sur une autre ». Le choix
+  // survit donc à un rechargement (sessionStorage, par enfant) ; un nouvel
+  // onglet, une nouvelle visite, rouvrent toujours sur l'année de l'enfant.
+  const cleRegardee = `mimia.jeux.classeRegardee.${eleveId}`;
+  const [regardee, setRegardeeBrute] = useState(() => {
+    try {
+      return window.sessionStorage.getItem(cleRegardee) || null;
+    } catch {
+      return null;
+    }
+  });
+  const setRegardee = useCallback((code) => {
+    setRegardeeBrute(code);
+    try {
+      if (code) window.sessionStorage.setItem(cleRegardee, code);
+      else window.sessionStorage.removeItem(cleRegardee);
+    } catch { /* sans stockage, le choix vaut jusqu'au prochain rechargement */ }
+  }, [cleRegardee]);
 
   const eleve = liste.find((e) => String(e.id) === String(eleveId));
   const enfant = sessionEleve();
@@ -224,10 +302,24 @@ export default function JeuxEleve() {
   // libellé EST le code (« CE1 »), donc il suffit.
   const sien = String(enfant?.eleveId) === String(eleveId);
 
+  // APRÈS UN F5, LA LISTE DES ENFANTS EST VIDE — Camara, le 08/10/2026 : « quand
+  // je fais F5 sur la liste des jeux, je perds tout ; il faut repasser par Mes
+  // cours ». La classe vient de cette liste, que seules les autres pages
+  // chargeaient. On la charge ici aussi, comme elles — sauf en session enfant :
+  // la classe y vient de la session, et le serveur refuse la liste à un enfant.
+  const dispatch = useDispatch();
+  useEffect(() => {
+    if (liste.length === 0 && !sien) dispatch(chargerEleves());
+  }, [dispatch, liste.length, sien]);
+
   const niveauCode = eleve?.niveauCode
     ?? (sien ? (enfant?.niveauCode || enfant?.niveau) : null);
 
-  const classe = regardee ?? niveauCode;
+  // Une classe gardée AU-DESSUS de la sienne — sa classe a changé entre-temps —
+  // ne s'ouvre pas : la frise la verrouille, la mémoire ne doit pas la contourner.
+  const regardeeValide = regardee && (!rangDeLaClasse(niveauCode) || rangDeLaClasse(regardee) <= rangDeLaClasse(niveauCode))
+    ? regardee : null;
+  const classe = regardeeValide ?? niveauCode;
 
   const jeux = useMemo(
     () => jeuxDeLaClasse(classe).filter((jeu) => ECRANS[jeu.cle]),
@@ -239,7 +331,8 @@ export default function JeuxEleve() {
   const etapes = useMemo(
     () => frisePourLaClasse(
       niveauCode,
-      (code) => jeuxDeLaClasse(code).some((jeu) => ECRANS[jeu.cle]),
+      // Une année de lycée se lit dans la voie de l'élève (07/10/2026).
+      (code) => jeuxDeLaClasse(classeDansSaVoie(code, niveauCode)).some((jeu) => ECRANS[jeu.cle]),
     ),
     [niveauCode],
   );
@@ -250,6 +343,11 @@ export default function JeuxEleve() {
   const etape = FRISE.find((e) => e.rang === rangDeLaClasse(classe));
 
   const Ecran = ouvert ? ECRANS[ouvert] : null;
+
+  // EN PARTIE seulement : le jeu choisi, son mode choisi, et pas la fin du
+  // défi. L'écran du choix du mode garde sa taille (Camara, 08/10/2026 : « c'est
+  // uniquement quand on est en jeu qu'il faut faire le zoom »).
+  const enPartie = Boolean(Ecran && mode && !finDefi);
 
   // LA MATIÈRE DU JEU DÉCIDE DE LA VOIX : les mathématiques parlent avec
   // celle de Nora. Le jeu ne la connaît pas lui-même, c'est le catalogue qui
@@ -268,6 +366,20 @@ export default function JeuxEleve() {
   const zone = useRef(null);
   const premierRendu = useRef(true);
 
+  // REVENIR LÀ OÙ L'ON ÉTAIT — Camara, le 08/10/2026 : « quand je reviens sur
+  // la liste des jeux, au lieu de revenir à l'endroit où j'étais je reviens
+  // tout en haut ». Le défilement vers la zone servait aussi à la FERMETURE,
+  // et renvoyait en haut de la liste. On retient donc, à l'ouverture, la
+  // position de la page et le jeu ouvert ; à la fermeture, on y revient, et le
+  // focus retourne sur la carte de ce jeu.
+  const retour = useRef(null);
+  const ouvrir = useCallback((cle) => {
+    retour.current = { y: window.scrollY, cle };
+    setOuvert(cle);
+    setMode(null);
+    setFinDefi(null);
+  }, []);
+
   useEffect(() => {
     // Au chargement, on ne bouge rien : la page s'ouvre où elle doit.
     if (premierRendu.current) {
@@ -275,10 +387,106 @@ export default function JeuxEleve() {
       return;
     }
 
+    if (!ouvert && retour.current) {
+      const { y, cle } = retour.current;
+      retour.current = null;
+      const revenir = () => {
+        window.scrollTo?.({ top: y, behavior: 'auto' });
+        zone.current?.querySelector?.(`[data-jeu="${cle}"]`)?.focus?.({ preventScroll: true });
+      };
+      // Tout de suite, et encore une fois la liste peinte : ses couvertures et
+      // la frise se mettent en place après ce premier passage.
+      revenir();
+      window.requestAnimationFrame?.(() => window.requestAnimationFrame(revenir));
+      return;
+    }
+
     const doux = !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
     zone.current?.scrollIntoView?.({ block: 'start', behavior: doux ? 'smooth' : 'auto' });
     zone.current?.focus?.({ preventScroll: true });
   }, [ouvert]);
+
+  // LE JEU TIENT DANS L'ÉCRAN, ET AU CENTRE — Camara, le 08/10/2026 : « sur
+  // certains jeux, le jeu déborde de la fenêtre ; rends ça dynamique pour que
+  // tous les jeux s'adaptent à la taille de l'écran en hauteur et soient bien
+  // centrés ».
+  //
+  // Le zoom n'est donc plus fixe : on mesure la hauteur NATURELLE du jeu (sa
+  // hauteur affichée divisée par le zoom en cours) et la place sous la barre du
+  // site, et on prend le plus grand zoom qui tient — jamais plus de 1,25 (le
+  // réglage choisi le même jour), jamais moins de 0,7 (en dessous, le texte
+  // deviendrait illisible : mieux vaut alors défiler un peu). Puis on cale la
+  // partie au milieu de la place disponible.
+  //
+  // RECALCULÉ quand la fenêtre change, ou quand le CONTENU du jeu change de
+  // hauteur (une intro d'escape game, une question plus longue). L'observateur
+  // regarde le jeu lui-même, dont la taille en pixels de page ne bouge pas avec
+  // le zoom : changer le zoom ne relance donc pas le calcul en boucle.
+  const [zoomJeu, setZoomJeu] = useState(ZOOM_JEU_MAX);
+  const zoomRef = useRef(ZOOM_JEU_MAX);
+
+  useEffect(() => {
+    const el = zone.current;
+    const large = window.matchMedia?.('(min-width: 1100px)');
+    if (!enPartie || !el || !large?.matches) return undefined;
+
+    // LE ZOOM NE FAIT QUE DESCENDRE PENDANT LA PARTIE — Camara, le 08/10/2026 :
+    // « quand je clique sur une réponse, ça zoome et dézoome à l'infini ». Changer
+    // le zoom change la largeur intérieure du jeu, donc le nombre de lignes de
+    // ses textes, donc sa hauteur — qui relançait le calcul, qui rechangeait le
+    // zoom… Quand le CONTENU change, le zoom peut donc baisser, jamais remonter :
+    // la boucle n'a plus de quoi tourner. Il n'est recalculé librement qu'à
+    // l'ouverture du jeu et quand la fenêtre change de taille.
+    let premier = true;
+    const ajuster = (libre) => {
+      const z = zoomRef.current;
+      const haut = el.getBoundingClientRect().height;
+      if (!haut) return;
+      const barre = document.querySelector('.navbar')?.getBoundingClientRect().height ?? 0;
+      const dispo = window.innerHeight - barre - 24;
+      const calcule = Math.max(ZOOM_JEU_MIN, Math.min(ZOOM_JEU_MAX, dispo / (haut / z)));
+      const nouveau = libre ? calcule : Math.min(z, calcule);
+      if (Math.abs(nouveau - z) > 0.03) {
+        zoomRef.current = nouveau;
+        setZoomJeu(nouveau);
+      }
+      if (premier) {
+        premier = false;
+        // Au centre de la place sous la barre, une fois le nouveau zoom posé.
+        window.requestAnimationFrame?.(() => {
+          const r = el.getBoundingClientRect();
+          const marge = Math.max(12, (window.innerHeight - barre - r.height) / 2);
+          window.scrollTo?.({ top: window.scrollY + r.top - barre - marge, behavior: 'auto' });
+        });
+        return;
+      }
+      // LE JEU RESTE DANS L'ÉCRAN QUAND IL GRANDIT — Camara, le 08/10/2026 : « dans
+      // la pêche aux sons, sur une bonne réponse la fenêtre s'agrandit et
+      // déborde ». Un message, un bouton « C'est prêt ! » allongent le jeu : le
+      // zoom baisse, mais le jeu restait calé où il était et son bas sortait de
+      // l'écran. On décale la page juste assez pour le ramener, sans jamais
+      // remonter son haut sous la barre.
+      window.requestAnimationFrame?.(() => {
+        const r = el.getBoundingClientRect();
+        const depasse = r.bottom - (window.innerHeight - 12);
+        if (depasse <= 0) return;
+        const possible = r.top - (barre + 12);
+        const decalage = Math.min(depasse, Math.max(0, possible));
+        if (decalage > 0) window.scrollBy?.({ top: decalage, behavior: 'auto' });
+      });
+    };
+
+    ajuster(true);
+    const Observateur = window.ResizeObserver;
+    const observateur = Observateur ? new Observateur(() => ajuster(false)) : null;
+    if (observateur && el.firstElementChild) observateur.observe(el.firstElementChild);
+    const auRedimensionnement = () => ajuster(true);
+    window.addEventListener('resize', auRedimensionnement);
+    return () => {
+      observateur?.disconnect();
+      window.removeEventListener('resize', auRedimensionnement);
+    };
+  }, [enPartie, ouvert, partie]);
 
   // ARRIVER PAR LA CARTE DU PROFESSEUR — Camara, le 23/09/2026. À la fin du
   // cours, le professeur propose un jeu ; sa carte mène ici avec
@@ -302,10 +510,12 @@ export default function JeuxEleve() {
     setOuvert(jeuDemande);
     setMode(null);
     setFinDefi(null);
-  }, [classeDemandee, jeuDemande, niveauCode]);
+  }, [classeDemandee, jeuDemande, niveauCode, setRegardee]);
 
   return (
-    <section className="page page--large">
+    // UN JEU OUVERT PREND LA PLACE — Camara, le 08/10/2026 : « sur PC, pour les
+    // jeux, augmenter le zoom de 25 %, c'est trop petit ». Voir `.page--jeu-ouvert`.
+    <section ref={page} className={`page page--large${enPartie ? ' page--jeu-ouvert' : ''}`}>
       <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour">← Mes cours</Link>
 
       <div className="jeux-entete">
@@ -327,7 +537,12 @@ export default function JeuxEleve() {
       {/* `tabIndex={-1}` : la zone n'entre pas dans l'ordre de tabulation,
           mais elle peut RECEVOIR le focus quand on le lui donne. C'est ce qui
           permet de poser l'enfant sur le jeu qu'il vient d'ouvrir. */}
-      <div className="jeux-zone" ref={zone} tabIndex={-1}>
+      <div
+        className={`jeux-zone${enPartie ? ' jeux-zone--jeu' : ''}`}
+        ref={zone}
+        tabIndex={-1}
+        style={enPartie ? { '--zoom-jeu': zoomJeu } : undefined}
+      >
         {Ecran && !mode ? (
           // LE CHOIX DU MODE PRÉCÈDE LE JEU — mais seulement là où le défi
           // existe. Au CP, `ChoixDuMode` se choisit tout seul « tranquille » et
@@ -337,7 +552,7 @@ export default function JeuxEleve() {
             titre={jeux.find((j) => j.cle === ouvert)?.titre}
             classe={classe}
             jeuCle={ouvert}
-            niveau={(classe ?? '').toUpperCase()}
+            niveau={programmeDeLaClasse(classe)}
             onChoisir={lancer}
             onQuitter={fermer}
           />
@@ -346,6 +561,9 @@ export default function JeuxEleve() {
             coeursMax={coeursDeLaClasse(classe)}
             reussies={finDefi.reussies}
             questions={finDefi.questions}
+            // Le compte à rebours d'un escape game, et non le dernier cœur.
+            raison={finDefi.raison}
+            total={finDefi.total}
             onRefaire={() => lancer(DEFI)}
             onTranquille={() => lancer(TRANQUILLE)}
             onQuitter={fermer}
@@ -358,7 +576,7 @@ export default function JeuxEleve() {
           <FournirJeu
             value={{
               jeuCle: ouvert,
-              niveau: (classe ?? '').toUpperCase(),
+              niveau: programmeDeLaClasse(classe),
               mode,
               coeursMax: mode === DEFI ? coeursDeLaClasse(classe) : 0,
               // RELANCER, C'EST REMONTER L'ÉCRAN. Changer la clé React suffit :
@@ -375,7 +593,7 @@ export default function JeuxEleve() {
             // LA CLASSE RÈGLE LA DIFFICULTÉ : l'horloge du CE1 a ses demies. Et
             // c'est bien la classe REGARDÉE : un CM2 qui rouvre un jeu de CE1 le
             // retrouve tel qu'il était au CE1, sinon le retour n'a aucun sens.
-            niveau={(classe ?? '').toUpperCase()}
+            niveau={programmeDeLaClasse(classe)}
           />
           </FournirJeu>
         ) : (
@@ -383,7 +601,9 @@ export default function JeuxEleve() {
             <FriseDesClasses
               etapes={etapes}
               choisie={etape?.code}
-              onChoisir={setRegardee}
+              // Au lycée, l'année choisie reste dans la voie de l'élève : une
+              // terminale STMG qui regarde « 1re » retrouve la 1re techno.
+              onChoisir={(code) => setRegardee(classeDansSaVoie(code, niveauCode))}
             />
 
             {jeux.length === 0 ? (
@@ -416,7 +636,7 @@ export default function JeuxEleve() {
                     <ul className="jeux-liste">
                       {groupe.jeux.map((jeu) => (
                         <li key={jeu.cle}>
-                          <CarteJeu jeu={jeu} onOuvrir={(cle) => { setOuvert(cle); setMode(null); setFinDefi(null); }} />
+                          <CarteJeu jeu={jeu} onOuvrir={ouvrir} />
                         </li>
                       ))}
                     </ul>
@@ -432,9 +652,6 @@ export default function JeuxEleve() {
       </section>
     );
   }
-
-  /** Les matières dont les jeux sont en préparation — voir `ProchainsJeux`. */
-  const BIENTOT = ['Anglais', 'Sciences', 'Et plus encore'];
 
   /**
    * « DE NOUVEAUX JEUX ARRIVENT » — Camara, le 21/09/2026 : « à la fin de la
@@ -455,23 +672,13 @@ export default function JeuxEleve() {
         <h2 id="jeux-bientot-titre" className="jeux-bientot__titre">
           D’autres jeux <span className="jeux-bientot__accent">arrivent !</span>
         </h2>
+        {/* SANS LISTE DE MATIÈRES — Camara, le 08/10/2026 : « enlève les
+            matières ». L'anglais et les sciences ont désormais leurs escape
+            games ; nommer ce qui arrive reviendrait à promettre une date. */}
         <p className="jeux-bientot__texte">
           Tes professeurs préparent plein de nouveaux jeux, dans d’autres
-          matières. Encore un peu de patience : ils débloquent bientôt !
+          matières. Encore un peu de patience.
         </p>
-
-        <ul className="jeux-bientot__matieres">
-          {BIENTOT.map((matiere) => (
-            <li key={matiere} className="jeux-bientot__matiere">
-              <svg className="jeux-bientot__cadenas" viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
-                <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" />
-              </svg>
-              <span>{matiere}</span>
-              <span className="jeux-bientot__etiquette">Bientôt</span>
-            </li>
-          ))}
-        </ul>
 
         <div className="jeux-bientot__chargement" aria-hidden="true">
           <span className="jeux-bientot__barre" />
@@ -486,11 +693,12 @@ function CarteJeu({ jeu, onOuvrir }) {
     <button
       type="button"
       className={`jeu-carte${jeu.image ? ' jeu-carte--illustree' : ''}`}
+      data-jeu={jeu.cle}
       style={{
         ...styleMatiere({ matiereLibelle: jeu.matiere }),
         ...(jeu.image ? { backgroundImage: `url(${jeu.image})` } : {}),
       }}
-      onClick={() => onOuvrir(jeu.cle)}
+      onClick={() => { bruitage('selection'); onOuvrir(jeu.cle); }}
     >
       {/* LE DESSIN D'ABORD, LE TEXTE ENSUITE : c'est l'ordre dans
           lequel un enfant lit une carte de jeu.

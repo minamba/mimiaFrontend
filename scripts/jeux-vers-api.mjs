@@ -76,15 +76,27 @@ function transpiler(relatif) {
 }
 
 process.env.NODE_ENV ??= 'production';
+
+// LES JEUX DU COLLÈGE SE DÉCRIVENT DANS LEUR MODULE (06/10/2026) : le
+// catalogue les importe depuis `college/index.js`, qui importe chaque module,
+// qui importe `outils.js`. Tous doivent exister dans l'atelier avant le
+// premier `require`. On transpile donc tout `lib/jeux` et `lib/jeux/college` :
+// un fichier transpilé que personne ne requiert ne coûte rien.
+['lib/jeux', 'lib/jeux/college', 'lib/jeux/lycee'].forEach((dossier) => fs
+  .readdirSync(path.join(racine, 'src', dossier))
+  .filter((f) => f.endsWith('.js'))
+  .forEach((f) => transpiler(`${dossier}/${f}`)));
+
 const { jeuxDeLaClasse } = require(transpiler('lib/jeux/catalogue.js'));
-const { FRISE } = require(transpiler('lib/jeux/frise.js'));
+const { CLASSES_DU_CATALOGUE } = require(transpiler('lib/jeux/frise.js'));
 
 // ------------------------------------------------------------ la liste
 // UNE LIGNE PAR COUPLE (classe, jeu), et non un jeu avec ses classes : un
 // même jeu change de titre et de compétences d'une classe à l'autre (« Le
 // coffre des centaines » au CE1 devient « Les grands nombres » au CM2), et
 // c'est le couple que le professeur doit nommer.
-const lignes = FRISE.flatMap(({ code }) => jeuxDeLaClasse(code).map((jeu) => ({
+// Les voies du lycée ont leurs propres classes de programme (07/10/2026).
+const lignes = CLASSES_DU_CATALOGUE.flatMap((code) => jeuxDeLaClasse(code).map((jeu) => ({
   classe: code,
   cle: jeu.cle,
   titre: jeu.titre,

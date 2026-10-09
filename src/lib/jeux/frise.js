@@ -42,9 +42,9 @@ const PAR_CODE = {
   SIXIEME: 6, CINQUIEME: 7, QUATRIEME: 8, TROISIEME: 9, TROISIEME_PREPA: 9,
   SECONDE: 10, SECONDE_PRO: 10,
   PREMIERE: 11, PREMIERE_TECHNO: 11, PREMIERE_PRO: 11,
-  PREMIERE_STMG: 11, PREMIERE_ST2S: 11, PREMIERE_STL: 11,
+  PREMIERE_STMG: 11, PREMIERE_ST2S: 11, PREMIERE_STL: 11, PREMIERE_STI2D: 11,
   TERMINALE: 12, TERMINALE_TECHNO: 12, TERMINALE_PRO: 12,
-  TERMINALE_STMG: 12, TERMINALE_ST2S: 12, TERMINALE_STL: 12,
+  TERMINALE_STMG: 12, TERMINALE_ST2S: 12, TERMINALE_STL: 12, TERMINALE_STI2D: 12,
 };
 
 /** Sans accents ni casse : « Première générale » et « PREMIERE » se rejoignent. */
@@ -98,3 +98,62 @@ export function frisePourLaClasse(niveauCode, aDesJeux = () => false) {
     desJeux: Boolean(aDesJeux(etape.code)),
   }));
 }
+
+/**
+ * LA VOIE D'UNE CLASSE DE LYCÉE — Camara, le 07/10/2026, avec les jeux du
+ * lycée. Le rang dit l'année, pas le programme (voir `rangDeLaClasse`) : une
+ * 1re STMG, une 1re pro et une 1re générale n'étudient pas les mêmes maths.
+ * Un jeu se rattache donc au PROGRAMME — `PREMIERE_TECHNO` vaut pour toutes
+ * les séries technologiques — et la classe de l'élève y est ramenée ici.
+ *
+ * MÊME RÈGLE QUE `VoiesScolaires.NiveauConcerne` côté API, qui choisit les
+ * jeux proposés en cours : un élève voit les jeux de sa voie, pas ceux d'une
+ * autre voie de la même année.
+ */
+const SERIES_TECHNO = /_(TECHNO|STMG|ST2S|STL|STI2D)$/;
+
+/** « TECHNO », « PRO », ou `null` (voie générale, ou avant le lycée). */
+export function voieDeLaClasse(valeur) {
+  const code = nu(valeur).replace(/[\s-]+/g, '_');
+  if (/_PRO$/.test(code)) return 'PRO';
+  if (SERIES_TECHNO.test(code)) return 'TECHNO';
+  return null;
+}
+
+/**
+ * Le programme que suit une classe, sous le code des jeux : une 1re STMG suit
+ * celui de `PREMIERE_TECHNO`, une 3e prépa-métiers celui de la 3e. Toute autre
+ * classe est son propre programme.
+ */
+export function programmeDeLaClasse(valeur) {
+  const code = nu(valeur).replace(/[\s-]+/g, '_');
+  if (!code) return code;
+  if (code === 'TROISIEME_PREPA') return 'TROISIEME';
+  const techno = code.match(/^(PREMIERE|TERMINALE)_(STMG|ST2S|STL|STI2D)$/);
+  if (techno) return `${techno[1]}_TECHNO`;
+  return code;
+}
+
+/**
+ * L'année de la frise, dans la voie de l'élève : un élève de terminale STMG
+ * qui regarde « 1re » retrouve la 1re technologique, pas la générale. La 2de
+ * est commune aux voies générale et technologique ; la voie professionnelle a
+ * ses trois années.
+ */
+export function classeDansSaVoie(codeAnnee, codeEleve) {
+  const voie = voieDeLaClasse(codeEleve);
+  if (voie === 'PRO' && ['SECONDE', 'PREMIERE', 'TERMINALE'].includes(codeAnnee)) return `${codeAnnee}_PRO`;
+  if (voie === 'TECHNO' && ['PREMIERE', 'TERMINALE'].includes(codeAnnee)) return `${codeAnnee}_TECHNO`;
+  return codeAnnee;
+}
+
+/**
+ * LES CLASSES QUI PORTENT DES JEUX, dans l'ordre des années : les douze de la
+ * frise, et les programmes des voies technologique et professionnelle, qui
+ * partagent l'année d'une classe de la frise sans partager son programme.
+ * C'est la liste que parcourt l'export du catalogue vers l'API.
+ */
+export const CLASSES_DU_CATALOGUE = [
+  ...FRISE.map((e) => e.code),
+  'SECONDE_PRO', 'PREMIERE_TECHNO', 'PREMIERE_PRO', 'TERMINALE_TECHNO', 'TERMINALE_PRO',
+].sort((a, b) => rangDeLaClasse(a) - rangDeLaClasse(b));

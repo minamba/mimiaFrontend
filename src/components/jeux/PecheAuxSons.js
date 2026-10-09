@@ -8,6 +8,7 @@ import BoutonsVoix from './BoutonsVoix';
 import decor from '../../assets/Jeux/CP/son.webp';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA PÊCHE AUX SONS, À L'ÉCRAN.
@@ -71,11 +72,13 @@ export default function PecheAuxSons({ onQuitter, matiereCode }) {
   const annoncer = useCallback(() => {
     const r = verdict(peches, courante.poissons);
     if (r.sens === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
     } else {
       const suivantes = ratees + 1;
       setPropre(false);
       setRatees(suivantes);
+      bruitage('mauvaise');
       if (suivantes >= ESSAIS_AVANT_AIDE) dire(repliquesPeche.aide);
       else if (r.sens === 'manque') dire(repliquesPeche.manque);
       // UNE ERREUR, ET SON MOT REDIT : l'enfant entend à nouveau le mot fautif,

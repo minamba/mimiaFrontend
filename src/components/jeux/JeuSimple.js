@@ -20,7 +20,7 @@ import JeuDeChoix from './JeuDeChoix';
  */
 export default function jeuSimple({
   module: moduleCM1, prefixe: prefixeCM1, classe, rendreQuestion, rendreApres, rendreChoix, niveau: niveauFixe,
-  parNiveau = {},
+  parNiveau = {}, fond,
 }) {
   const regles = {};
   const regle = (niveau) => {
@@ -59,6 +59,7 @@ export default function jeuSimple({
         classe={`${classe} jeu--niv-${niveau.toLowerCase()}`}
         rendreQuestion={rendreQuestion ?? ((m) => <p className="phrase-a-trou">{m.question}</p>)}
         rendreApres={rendreApres ?? laBonneReponse(niveau)}
+        fond={fond}
       />
     );
   }

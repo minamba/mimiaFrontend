@@ -8,6 +8,7 @@ import BoutonsVoix from './BoutonsVoix';
 import DetectiveClasses from './DetectiveClasses';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 const ESSAIS_AVANT_AIDE = 2;
 
@@ -62,6 +63,7 @@ function DetectiveVerbeSujet({ onQuitter, matiereCode }) {
     if (temps === 'fini') return;
     const bon = temps === 'verbe' ? estVerbe(p, i) : estSujet(p, i);
     if (bon) {
+      bruitage('bonne');
       setFautes([]);
       if (temps === 'verbe') setTemps('sujet');
       else {
@@ -72,6 +74,7 @@ function DetectiveVerbeSujet({ onQuitter, matiereCode }) {
     }
     setPropre(false);
     setFautes((f) => [...f, i]);
+    bruitage('mauvaise');
     dire(temps === 'verbe' ? repliquesDetective.erreurVerbe : repliquesDetective.erreurSujet);
   }, [temps, p, manche, dire]);
 

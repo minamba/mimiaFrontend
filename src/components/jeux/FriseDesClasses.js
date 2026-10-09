@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import NiveauVerrouille from './NiveauVerrouille';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA CARTE DES NIVEAUX, en haut de « Mes jeux ».
@@ -55,8 +56,18 @@ export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
 
   // La carte défile sur les petits écrans : le portail de l'enfant est amené
   // sous ses yeux plutôt que laissé hors cadre, à droite.
+  //
+  // À L'HORIZONTALE SEULEMENT (08/10/2026) : `scrollIntoView` faisait aussi
+  // défiler la PAGE jusqu'à la frise. À chaque retour d'un jeu, la liste se
+  // remonte, la frise avec, et l'enfant se retrouvait en haut de la page au
+  // lieu de l'endroit d'où il était parti. On ne fait plus défiler que la piste.
   useEffect(() => {
-    sienne.current?.scrollIntoView?.({ block: 'nearest', inline: 'center' });
+    const portail = sienne.current;
+    const piste = portail?.closest?.('.frise__piste');
+    if (!portail || !piste) return;
+    const p = portail.getBoundingClientRect();
+    const q = piste.getBoundingClientRect();
+    piste.scrollLeft = Math.max(0, piste.scrollLeft + (p.left - q.left) - (piste.clientWidth - p.width) / 2);
   }, []);
 
   const choisir = (etape) => {
@@ -65,6 +76,8 @@ export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
       return;
     }
     setRefus(null);
+    // Une classe fermée ne fait pas le son du choix : elle n'est pas choisie.
+    bruitage('selection');
     onChoisir(etape.code);
   };
 

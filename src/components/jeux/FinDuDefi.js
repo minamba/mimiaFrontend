@@ -22,8 +22,12 @@ import Etincelle from './Etincelle';
  * celui qui s'est surestimé. Sans elle, il ne lui resterait qu'à quitter.
  */
 export default function FinDuDefi({
-  coeursMax, reussies, questions, onRefaire, onTranquille, onQuitter,
+  coeursMax, reussies, questions, onRefaire, onTranquille, onQuitter, raison, total,
 }) {
+  // LE COMPTE À REBOURS D'UN ESCAPE GAME finit aussi un défi (07/10/2026) :
+  // ni cœurs noirs ni astuce de cœurs, mais les cadenas ouverts. L'alarme qui
+  // « gagne » est celle de l'histoire, pas un reproche à l'élève.
+  const temps = raison === 'temps';
   // Le focus sur le titre : un lecteur d'écran annonce la fin, et la
   // tabulation repart d'ici plutôt que du haut de la page.
   const titre = useRef(null);
@@ -31,7 +35,9 @@ export default function FinDuDefi({
 
   // LE SCORE EST DÉJÀ DIT EN GRAND : la phrase dit autre chose — combien de
   // temps il a tenu, et comment tenir plus longtemps la prochaine fois.
-  const mot = reussies === 0
+  const mot = temps
+    ? 'L’alarme a gagné cette fois. Astuce : en mode tranquille, tu peux finir même après zéro, et repérer les cadenas qui te prennent du temps.'
+    : reussies === 0
     ? 'Chaque question t’a appris quelque chose. Astuce : deux bonnes réponses d’affilée te rendent un cœur.'
     : `Tu as tenu ${questions} question${questions > 1 ? 's' : ''}. Astuce : deux bonnes réponses d’affilée te rendent un cœur.`;
 
@@ -42,7 +48,7 @@ export default function FinDuDefi({
       </button>
 
       <p className="defi-fin__coeurs" aria-hidden="true">
-        {Array.from({ length: coeursMax }, (_, i) => (
+        {temps ? <span className="defi-fin__chrono">⏱</span> : Array.from({ length: coeursMax }, (_, i) => (
           <img
             // eslint-disable-next-line react/no-array-index-key
             key={i}
@@ -65,20 +71,28 @@ export default function FinDuDefi({
         <Etincelle grande />
         <span className="choix-mode__question">
           <span className="choix-mode__question-cerne" aria-hidden="true">
-            Le défi s&apos;arrête ici&nbsp;!
+            {temps ? 'Le temps est écoulé !' : 'Le défi s’arrête ici !'}
           </span>
-          <span className="choix-mode__question-texte">Le défi s&apos;arrête ici&nbsp;!</span>
+          <span className="choix-mode__question-texte">{temps ? 'Le temps est écoulé !' : 'Le défi s’arrête ici !'}</span>
         </span>
         <Etincelle grande />
       </h2>
 
       <div className="fin-jeu__score" role="status">
-        <strong>{reussies}</strong>
-        <span>
-          bonne{reussies > 1 ? 's' : ''} réponse{reussies > 1 ? 's' : ''}
-          <br />
-          du premier coup
-        </span>
+        <strong>{temps ? questions : reussies}</strong>
+        {temps ? (
+          <span>
+            cadenas ouvert{questions > 1 ? 's' : ''}
+            <br />
+            sur {total}
+          </span>
+        ) : (
+          <span>
+            bonne{reussies > 1 ? 's' : ''} réponse{reussies > 1 ? 's' : ''}
+            <br />
+            du premier coup
+          </span>
+        )}
       </div>
 
       <p className="fin-jeu__mot">{mot}</p>

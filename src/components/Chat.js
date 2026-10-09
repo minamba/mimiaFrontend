@@ -36,6 +36,7 @@ import {
 import { ecouteService } from '../lib/storage/ecouteService';
 import { langueTranscription } from '../lib/storage/langueTranscription';
 import { ecouteTempsReel, estUnTourDeParole, ecritureDuCours } from '../lib/storage/ecouteTempsReel';
+import { rangExercice } from '../lib/storage/fenetreExercice';
 import { ecrireEnMaths, estMatiereMaths } from '../lib/storage/mathsOrales';
 import { estUnEcho } from '../lib/storage/echo';
 import { estUneRedite } from '../lib/storage/redite';
@@ -2058,9 +2059,15 @@ export default function Chat() {
    */
   const [, marquerChoixVitesse] = useReducer((n) => n + 1, 0);
 
+  // UNE FOIS PAR EXERCICE, QUOI QU'IL ARRIVE — voir `rangExercice`. L'exercice
+  // pour lequel l'élève a déjà choisi sa vitesse ; `undefined` tant qu'il n'a
+  // rien choisi, ou quand le professeur rouvre la question ([VITESSE]).
+  const exerciceEnCours = useMemo(() => rangExercice(messages), [messages]);
+  const exerciceVitesseRef = useRef(undefined);
+
   const vitesseEnAttente = enConversation
     ? vitesseConversationRef.current !== ouvertureConversation
-    : carteVitesseVisible({
+    : exerciceVitesseRef.current !== exerciceEnCours && carteVitesseVisible({
       passageEcoute,
       passageChoisi: passageEcouteChoisiRef.current,
       tourDuChoix: tourVitesseRef.current,
@@ -2072,6 +2079,7 @@ export default function Chat() {
     setVitesseEcoute(cle);
     tourVitesseRef.current = tourEleve;
     passageEcouteChoisiRef.current = passageEcoute;
+    exerciceVitesseRef.current = exerciceEnCours;
     marquerChoixVitesse();
 
     // EN CONVERSATION, LE CHOIX VAUT POUR TOUT L’ÉCHANGE : on retient
@@ -2133,6 +2141,7 @@ export default function Chat() {
       setVitesseEcoute(cible);
       tourVitesseRef.current = tourEleve;
       passageEcouteChoisiRef.current = passageEcoute;
+      exerciceVitesseRef.current = exerciceEnCours;
       marquerChoixVitesse();
       return;
     }
@@ -2142,9 +2151,10 @@ export default function Chat() {
       // s'affiche dès qu'un passage d'écoute n'a pas encore sa vitesse.
       tourVitesseRef.current = null;
       passageEcouteChoisiRef.current = '';
+      exerciceVitesseRef.current = undefined;
       marquerChoixVitesse();
     }
-  }, [reponseEnCours, messages, indexDernierProf, tourEleve, passageEcoute]);
+  }, [reponseEnCours, messages, indexDernierProf, tourEleve, passageEcoute, exerciceEnCours]);
 
   // LE PASSAGE GRANDIT PENDANT QUE LE PROFESSEUR ÉCRIT. Le choix a été fait
   // sur ses premiers mots ; sans cette mise à jour, la relecture du texte
@@ -4305,6 +4315,27 @@ export default function Chat() {
     // l'élève terminé — le professeur reprendrait sa phrase là où on l'a
     // coupé, ce qui est exactement ce qu'on cherche à éviter.
     aStreameRef.current = false;
+
+    // IL NE PARLE PLUS, ET IL FAUT LE DIRE — remonté par un parent le
+    // 05/10/2026 : « Miyah a cliqué sur le micro, ça a coupé la parole à la
+    // prof, et c'est là que tout a basculé : la détection ne fonctionnait
+    // plus. On a quitté le cours et on est revenu. »
+    //
+    // Le lecteur ne signale son silence (`auSilence`) que lorsqu'il FINIT de
+    // lui-même ; coupé, il se tait sans rien dire. « Le professeur parle »
+    // restait donc vrai pour toujours. Au casque, ce n'était qu'un bandeau
+    // menteur. Sur haut-parleur — le cas de Miyah —, c'est le verrou du micro :
+    // tant que le professeur « parle », l'écouteur naît sourd et la
+    // réouverture automatique s'abstient. Plus rien n'entendait l'élève, et
+    // le professeur, qui n'entendait plus rien, ne reparlait jamais pour
+    // lever le verrou.
+    //
+    // Ce que fait `auSilence`, on le fait donc ici aussi.
+    profParleRef.current = false;
+    setProfParle(false);
+    setMicEnPause(false);
+    ecouteRef.current?.suspendre?.(saisieTapeeRef.current);
+    setTourDeParole((n) => n + 1);
   }, []);
 
   const demarrerEcoute = useCallback(() => {

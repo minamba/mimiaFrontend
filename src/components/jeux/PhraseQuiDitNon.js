@@ -9,6 +9,7 @@ import TransformerPhrase from './TransformerPhrase';
 import PhrasesCM1 from './PhrasesCM1';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA PHRASE QUI DIT NON, À L'ÉCRAN.
@@ -75,11 +76,13 @@ function PhraseQuiDitNonCE1({ onQuitter, matiereCode }) {
     const r = verdict(p, { ne, pas, forme });
     setResultat(r);
     if (r === 'juste') {
+      bruitage('bonne');
       dire([commun.bravo(manche), repliquesNegation.phrase(manches[manche])]);
       return;
     }
     const suivantes = ratees + 1;
     setRatees(suivantes);
+    bruitage('mauvaise');
     dire(suivantes >= ESSAIS_AVANT_AIDE ? repliquesNegation.aide : repliquesNegation.erreur(r));
   }, [p, ne, pas, forme, manche, manches, ratees, dire]);
 

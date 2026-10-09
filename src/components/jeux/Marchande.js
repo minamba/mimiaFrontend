@@ -11,6 +11,7 @@ import PrixAVirgule from './PrixAVirgule';
 import { Monnaie, Produit } from './Etal';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA MARCHANDE, À L'ÉCRAN.
@@ -73,8 +74,13 @@ function MarchandeCP({ onQuitter, matiereCode }) {
   // elle devient trop grosse. Tant qu'on reste « trop », on ne le répète
   // pas à chaque pièce posée en plus.
   useEffect(() => {
-    if (sens === 'juste') dire(commun.bravo(manche));
-    else if (sens === 'trop') dire(repliquesMarchande.trop);
+    if (sens === 'juste') {
+      bruitage('bonne');
+      dire(commun.bravo(manche));
+    } else if (sens === 'trop') {
+      bruitage('mauvaise');
+      dire(repliquesMarchande.trop);
+    }
   }, [sens, manche, dire]);
 
   useEffect(() => {

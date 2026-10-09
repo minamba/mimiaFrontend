@@ -12,9 +12,9 @@
 // `public/jeux.json` : servi avec le site, et relu par l'API toutes les heures.
 import genere from '../../public/jeux.json';
 import { jeuxDeLaClasse } from '../lib/jeux/catalogue';
-import { FRISE } from '../lib/jeux/frise';
+import { CLASSES_DU_CATALOGUE } from '../lib/jeux/frise';
 
-const attendu = FRISE.flatMap(({ code }) => jeuxDeLaClasse(code).map((jeu) => ({
+const attendu = CLASSES_DU_CATALOGUE.flatMap((code) => jeuxDeLaClasse(code).map((jeu) => ({
   classe: code,
   cle: jeu.cle,
   titre: jeu.titre,
@@ -32,7 +32,10 @@ describe('le catalogue passé à l’API', () => {
       expect(ligne.classe).toBeTruthy();
       expect(ligne.cle).toBeTruthy();
       expect(ligne.titre).toBeTruthy();
-      expect(['MATHS', 'FRANCAIS']).toContain(ligne.matiereCode);
+      // Les escape games du collège (06/10/2026) ont ouvert l'histoire-géo,
+      // l'anglais et les trois sciences ; l'API compare la matière telle quelle.
+      expect(['MATHS', 'FRANCAIS', 'HISTOIRE_GEO', 'ANGLAIS', 'SCIENCES', 'PHYSIQUE_CHIMIE', 'SVT'])
+        .toContain(ligne.matiereCode);
       expect(ligne.competences.length).toBeGreaterThan(0);
     });
   });

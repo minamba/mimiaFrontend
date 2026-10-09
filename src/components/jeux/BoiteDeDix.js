@@ -9,6 +9,7 @@ import BoutonsVoix from './BoutonsVoix';
 import { BoiteAOeufs, PanierDOeufs } from './Oeufs';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LA BOÎTE DE 10, À L'ÉCRAN.
@@ -71,8 +72,13 @@ export default function BoiteDeDix({ onQuitter, matiereCode }) {
     if (!gagnee(courante.depart, valeur)) setPropre(false);
 
     const s = verdict(courante.depart, valeur);
-    if (s === 'juste') dire(commun.bravo(manche));
-    else dire(s === 'trop' ? repliquesBoite.trop : repliquesBoite.manque);
+    if (s === 'juste') {
+      bruitage('bonne');
+      dire(commun.bravo(manche));
+    } else {
+      bruitage('mauvaise');
+      dire(s === 'trop' ? repliquesBoite.trop : repliquesBoite.manque);
+    }
   }, [courante.depart, juste, manche, dire]);
 
   const suivante = useCallback(() => {

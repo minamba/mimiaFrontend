@@ -7,6 +7,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 const ESSAIS_AVANT_AIDE = 2;
 
@@ -53,10 +54,12 @@ export default function DetectiveClasses({ onQuitter, matiereCode }) {
     if (p.classes[i] === cible) {
       setTrouve(i);
       if (fautes.length === 0) setDuPremierCoup((n) => n + 1);
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     setFautes((f) => [...f, i]);
+    bruitage('mauvaise');
     dire([repliquesDetective.estUn(p.classes[i]), repliquesDetective.definition(cible)]);
   }, [termine, p, cible, fautes.length, manche, dire]);
 

@@ -4,6 +4,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * L'ÉCRAN COMMUN DES JEUX « UNE QUESTION, DES CHOIX » — a ou à, les types de
@@ -24,7 +25,7 @@ import Coeurs from './Coeurs';
 export const ESSAIS_AVANT_AIDE = 2;
 
 export default function JeuDeChoix({
-  onQuitter, matiereCode, regle, classe, rendreQuestion, rendreApres,
+  onQuitter, matiereCode, regle, classe, rendreQuestion, rendreApres, fond,
 }) {
   const [graine, setGraine] = useState(() => Date.now());
   const manches = useMemo(() => regle.serie(graine), [regle, graine]);
@@ -61,6 +62,7 @@ export default function JeuDeChoix({
       setTrouve(true);
       setSens(null);
       if (fautes.length === 0) setDuPremierCoup((n) => n + 1);
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
@@ -68,6 +70,7 @@ export default function JeuDeChoix({
     setFautes(suivantes);
     setSens(s);
     const aide = suivantes.length >= ESSAIS_AVANT_AIDE ? regle.aide(courante) : null;
+    bruitage('mauvaise');
     dire(aide ?? regle.erreur(courante, s));
   }, [termine, regle, courante, fautes, manche, dire]);
 
@@ -107,7 +110,9 @@ export default function JeuDeChoix({
   const aide = montrer ? regle.aide(courante) : null;
 
   return (
-    <div className={`jeu jeu--scene ${classe}`}>
+    // LE FOND PEUT VENIR DU JEU (collège et lycée, 08/10/2026) : une image par
+    // jeu et par classe, trop nombreuses pour une règle CSS chacune.
+    <div className={`jeu jeu--scene ${classe}`} style={fond ? { backgroundImage: `url(${fond})` } : undefined}>
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>

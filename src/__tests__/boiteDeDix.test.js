@@ -227,9 +227,13 @@ describe('le jeu à l’écran', () => {
 describe('la ludothèque est construite pour la classe', () => {
   it('la boîte de 10 n’est proposée qu’au CP', () => {
     expect(jeuxDeLaClasse('CP').map((j) => j.cle)).toContain('boite-de-dix');
-    // Le CM2 a ses jeux depuis le 21/09/2026 ; le collège, pas encore.
+    // Le collège et le lycée ont leurs jeux depuis le 06-07/10/2026 : on
+    // vérifie qu'aucune autre classe ne se voit proposer la boîte de 10.
+    ['CE1', 'CM2', 'SIXIEME', 'TROISIEME', 'SECONDE', 'TERMINALE', 'TERMINALE_PRO'].forEach((classe) => {
+      expect(jeuxDeLaClasse(classe).map((j) => j.cle)).not.toContain('boite-de-dix');
+    });
+    // Un libellé qui n'est pas un code de classe ne rend rien.
     expect(jeuxDeLaClasse('6E')).toHaveLength(0);
-    expect(jeuxDeLaClasse('TERMINALE')).toHaveLength(0);
   });
 
   it('une classe inconnue ne montre rien plutôt que tout', () => {

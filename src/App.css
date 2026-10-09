@@ -34841,3 +34841,355 @@ body:has(.cookies) .bouton-signalement { display: none; }
 .ardoise__contenu {
   font-family: 'ArabeDuTableau', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }
+
+/* ================================================================
+   LES JEUX DU COLLÈGE — voir `components/jeux/JeuxCollege.js`.
+   Des questions plus longues qu'au primaire (un programme, un extrait,
+   un tableau de valeurs) : plus petites, et leurs retours à la ligne
+   gardés. Le décor reste celui des scènes, sans illustration.
+   ================================================================ */
+.jeu--college { background-color: #dde6f0; }
+
+.phrase-a-trou.college__question {
+  max-width: 40em;
+  align-self: center;
+  font-size: 22px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+/* LES CHOIX D'UN COLLÉGIEN SONT DES PHRASES, pas des nombres seuls. */
+.jeu--college .scene__carte { max-width: 22em; font-size: 18px; }
+
+.college__vignette {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--matiere) 22%, var(--surface-2));
+  color: var(--matiere);
+  font-family: 'Outfit', sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.college__vignette--escape { font-size: 44px; }
+
+/* ----------------------------------------------- l'escape game */
+.escape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.escape__intro,
+.escape__recit,
+.escape__fin {
+  max-width: 40em;
+  margin: 0;
+  padding: 9px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.93);
+  color: #123;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.escape__intro { font-weight: 600; }
+.escape__recit { font-style: italic; }
+
+.escape__fin {
+  background: #e6f6ec;
+  color: #1d6b3e;
+  font-weight: 700;
+  text-align: center;
+}
+
+.escape__cadenas {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(10, 22, 40, 0.78);
+}
+
+.escape__serrure { font-size: 22px; }
+
+.escape__code {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.escape__piece {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 38px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.escape__piece--trouvee { background: rgba(255, 255, 255, 0.9); color: #123; }
+.escape__piece--courante { outline: 2px dashed rgba(255, 255, 255, 0.7); }
+.escape__piece--nouvelle { background: #2e9e5b; color: #fff; animation: escape-piece 0.5s ease-out; }
+
+@keyframes escape-piece {
+  from { transform: scale(1.5); }
+  to { transform: scale(1); }
+}
+
+@media (max-width: 620px) {
+  .phrase-a-trou.college__question { font-size: 18px; }
+  .jeu--college .scene__carte { font-size: 16px; }
+  .escape__piece { width: 26px; height: 32px; font-size: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .escape__piece--nouvelle { animation: none; }
+}
+
+/* Le mot à analyser, en français : souligné, jamais entre crochets. */
+.college__designe {
+  font-weight: 700;
+  color: #b0562a;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 5px;
+}
+
+/* ----------------------------------------------- le compte à rebours */
+/* LE CHRONO EN MODE JEU VIDÉO — Camara, le 08/10/2026. Un boîtier sombre en
+   verre, un anneau néon qui se vide, un cadran à chiffres lumineux. Cyan tant
+   qu'il reste du temps ; ROUGE dans la dernière minute, avec un halo qui pulse
+   autour du boîtier ; rouge fixe à zéro. Tout passe par trois variables, que
+   les états redéfinissent. */
+.escape__chrono {
+  --chrono-neon: #3ee6ff;
+  --chrono-neon-doux: rgba(62, 230, 255, 0.35);
+  --chrono-fond: rgba(6, 14, 30, 0.86);
+
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 20px 8px 10px;
+  border: 2px solid var(--chrono-neon);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 55%),
+    var(--chrono-fond);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5) inset,
+    0 0 14px var(--chrono-neon-doux),
+    0 6px 18px rgba(0, 0, 0, 0.45);
+  color: #fff;
+}
+
+.escape__anneau {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+}
+
+.escape__anneau svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.escape__anneau-fond { fill: none; stroke: rgba(255, 255, 255, 0.12); stroke-width: 4; }
+
+.escape__anneau-jauge {
+  fill: none;
+  stroke: var(--chrono-neon);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+  filter: drop-shadow(0 0 4px var(--chrono-neon));
+  transition: stroke-dashoffset 0.25s linear, stroke 0.4s;
+}
+
+.escape__anneau-icone { font-size: 18px; line-height: 1; }
+
+.escape__temps { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+
+.escape__etiquette {
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--chrono-neon);
+  opacity: 0.9;
+}
+
+.escape__cadran {
+  min-width: 3.4em;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 30px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 0 6px var(--chrono-neon), 0 0 16px var(--chrono-neon-doux);
+}
+
+/* LA DERNIÈRE MINUTE : rouge, et un halo qui respire autour du boîtier. */
+.escape__chrono.est-presse {
+  --chrono-neon: #ff3b4e;
+  --chrono-neon-doux: rgba(255, 59, 78, 0.45);
+  --chrono-fond: rgba(40, 6, 12, 0.88);
+  animation: escape-halo 1s ease-in-out infinite;
+}
+
+.escape__chrono.est-presse .escape__cadran { animation: escape-battement 1s ease-in-out infinite; }
+
+/* À ZÉRO : rouge fixe, plus de battement — le temps est fini. */
+.escape__chrono.est-ecoule {
+  border-radius: 22px;
+  --chrono-neon: #ff3b4e;
+  --chrono-neon-doux: rgba(255, 59, 78, 0.35);
+  --chrono-fond: rgba(40, 6, 12, 0.9);
+}
+
+.escape__ecoule {
+  flex-basis: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: #ffd2d6;
+}
+
+@keyframes escape-halo {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 0 10px var(--chrono-neon-doux), 0 0 0 0 rgba(255, 59, 78, 0.55); }
+  50% { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5) inset, 0 0 26px var(--chrono-neon), 0 0 0 12px rgba(255, 59, 78, 0); }
+}
+
+@keyframes escape-battement {
+  50% { transform: scale(1.08); }
+}
+
+.escape__annonce {
+  max-width: 40em;
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 244, 214, 0.95);
+  color: #5a3b00;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.escape__duree {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.93);
+  color: #123;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.defi-fin__chrono { font-size: 96px; line-height: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .escape__chrono.est-presse,
+  .escape__chrono.est-presse .escape__cadran { animation: none; }
+}
+
+/* Une question sur plusieurs lignes se lit de gauche à droite ; le code garde
+   son indentation, en chasse fixe (07/10/2026). */
+.phrase-a-trou.college__question--lignes { text-align: left; white-space: pre-wrap; }
+.phrase-a-trou.college__question--code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 18px;
+  tab-size: 4;
+}
+
+/* ================================================================
+   UN JEU OUVERT, PLUS GRAND SUR ORDINATEUR — Camara, le 08/10/2026 :
+   « sur PC, pour les jeux, ça serait bien d'augmenter le zoom à +25 %,
+   c'est trop petit. J'ai fait un zoom à 125 % et là c'est bien : on est
+   focus sur le jeu et il prend bien l'espace. »
+
+   On reproduit EXACTEMENT ce zoom, mais sur le jeu seul : la page
+   s'élargit de 25 % (1 180 → 1 475 px) et le jeu est agrandi de 25 %
+   (`zoom`, qui recompte la mise en page, contrairement à `transform`).
+   Le jeu garde donc sa largeur intérieure d'avant, tout simplement plus
+   grand à l'écran. Ni l'en-tête ni la liste des jeux ne changent.
+
+   Seulement sur un écran large : sur tablette et téléphone, le jeu
+   remplit déjà l'écran.
+   ================================================================ */
+@media (min-width: 1100px) {
+  .page.page--large.page--jeu-ouvert { max-width: 1475px; }
+  /* Le zoom est CALCULÉ pour que le jeu tienne en hauteur (08/10/2026) :
+     voir « LE JEU TIENT DANS L'ÉCRAN » dans JeuxEleve.js. 1,25 au plus. */
+  .jeux-zone--jeu { zoom: var(--zoom-jeu, 1.25); }
+}
+
+/* ----------------------------------------------- l'ambiance sonore (09/10/2026) */
+/* Le chrono et le bouton d'ambiance, côte à côte. */
+.escape__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.escape__ambiance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(6, 14, 30, 0.72);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.escape__ambiance:hover { background: rgba(6, 14, 30, 0.88); }
+.escape__ambiance.est-coupee { opacity: 0.7; }
+
+/* SUR ORDINATEUR, LE CHRONO AU CENTRE — Camara, le 09/10/2026 : le bouton
+   d'ambiance, posé à côté de lui, le décentrait. La barre prend toute la
+   largeur, le chrono reste seul au milieu, et le bouton se range au bord droit,
+   hors du flux. Sur tablette et téléphone, rien ne change : il reste à côté,
+   ou passe dessous quand la place manque. */
+@media (min-width: 1100px) {
+  .escape__barre {
+    position: relative;
+    width: 100%;
+  }
+
+  .escape__ambiance {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+  }
+}

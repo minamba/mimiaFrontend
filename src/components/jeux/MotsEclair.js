@@ -8,6 +8,7 @@ import BoutonsVoix from './BoutonsVoix';
 import decor from '../../assets/Jeux/CP/mot_eclaire.webp';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LES MOTS ÉCLAIR, À L'ÉCRAN.
@@ -73,11 +74,13 @@ export default function MotsEclair({ onQuitter, matiereCode }) {
     if (termine || temps !== 'choix') return;
     if (carte === courante.mot) {
       setTrouve(true);
+      bruitage('bonne');
       dire([commun.bravo(manche), repliquesEclair.mot(courante.mot)]);
       return;
     }
     const suivantes = [...fautes, carte];
     setFautes(suivantes);
+    bruitage('mauvaise');
     if (suivantes.length >= ESSAIS_AVANT_AIDE) dire([repliquesEclair.aide, repliquesEclair.mot(courante.mot)]);
     else dire(repliquesEclair.erreur);
   }, [termine, temps, courante.mot, fautes, manche, dire]);

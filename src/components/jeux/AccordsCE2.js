@@ -7,6 +7,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * FÉMININ ET PLURIEL — « Un ou des ? » au CE2, à l'écran.
@@ -60,11 +61,13 @@ export default function AccordsCE2({ onQuitter, matiereCode }) {
     const r = verdict(g, nom, adj);
     setResultat(r);
     if (r === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     const suivantes = ratees + 1;
     setRatees(suivantes);
+    bruitage('mauvaise');
     dire(suivantes >= ESSAIS_AVANT_AIDE ? repliquesAccords.aide : repliquesAccords.regle(r));
   }, [g, nom, adj, manche, ratees, dire]);
 

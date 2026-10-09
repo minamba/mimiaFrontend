@@ -5,6 +5,7 @@ import { DEFI, TRANQUILLE, coeursDeLaClasse } from '../../lib/jeux/coeurs';
 import imageTranquille from '../../assets/tranquille.webp';
 import imageDefi from '../../assets/defi.webp';
 import Etincelle from './Etincelle';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * « COMMENT VEUX-TU JOUER ? » — l'écran qui précède le jeu.
@@ -111,7 +112,7 @@ export default function ChoixDuMode({
           <button
             type="button"
             className="choix-mode__porte"
-            onClick={() => onChoisir(TRANQUILLE)}
+            onClick={() => { bruitage('selection'); onChoisir(TRANQUILLE); }}
             // SANS TEXTE, UN BOUTON N'A PLUS DE NOM. Les illustrations portent
             // maintenant leur titre en dessin ; un lecteur d'écran, lui, n'y
             // voit rien. L'étiquette rend ce que l'image dit à l'œil — sinon
@@ -137,7 +138,7 @@ export default function ChoixDuMode({
           <button
             type="button"
             className="choix-mode__porte choix-mode__porte--defi"
-            onClick={() => onChoisir(DEFI)}
+            onClick={() => { bruitage('selection'); onChoisir(DEFI); }}
             aria-label={`Jouer en mode défi : ${coeurs} cœurs, chaque erreur en coûte un`}
           >
             <img

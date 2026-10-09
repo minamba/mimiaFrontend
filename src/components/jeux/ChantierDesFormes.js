@@ -8,6 +8,7 @@ import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LE CHANTIER DES FORMES, À L'ÉCRAN.
@@ -89,11 +90,13 @@ export default function ChantierDesFormes({ onQuitter, matiereCode }) {
     const r = verdict(choisies, courante.pieces);
 
     if (r.sens === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
     } else {
       const suivantes = ratees + 1;
       setPropre(false);
       setRatees(suivantes);
+      bruitage('mauvaise');
       dire(suivantes >= ESSAIS_AVANT_AIDE
         ? repliquesChantier.aide(courante.famille)
         : erreur(r, courante.famille, courante.pieces));

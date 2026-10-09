@@ -36,6 +36,12 @@ const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const { toutesLesRepliques } = await import(
   new URL('../src/lib/jeux/voix/repliques.js', import.meta.url).href
 );
+const { MODULES_COLLEGE } = await import(
+  new URL('../src/lib/jeux/college/index.js', import.meta.url).href
+);
+const { MODULES_LYCEE } = await import(
+  new URL('../src/lib/jeux/lycee/index.js', import.meta.url).href
+);
 const { enLettres: centaines } = await import(
   new URL('../src/lib/jeux/nombresEnLettres.js', import.meta.url).href
 );
@@ -60,8 +66,37 @@ const MODELE = PAR_OPENAI ? 'gpt-4o-mini-tts' : 'gemini-3.8-flash-lite-tts';
  * (l'empreinte fera le reste).
  */
 const VOIX = PAR_OPENAI
-  ? { nora: 'coral', adrien: 'ash' }
-  : { nora: 'Zephyr', adrien: 'Sadaltager' };
+  ? {
+    nora: 'coral', adrien: 'ash', salim: 'onyx', marine: 'shimmer', yann: 'echo', ines: 'sage',
+  }
+  : {
+    nora: 'Zephyr', adrien: 'Sadaltager', salim: 'Charon', marine: 'Aoede', yann: 'Iapetus', ines: 'Vindemiatrix',
+  };
+
+/** Le prénom de chaque professeur, pour le portrait que lit Gemini. */
+const PRENOMS = {
+  nora: 'Nora', adrien: 'Adrien', salim: 'Salim', marine: 'Marine', yann: 'Yann', ines: 'Inès',
+};
+
+/**
+ * LE TON DU COLLÈGE — 06/10/2026. Les jeux du collège parlent à des élèves de
+ * onze à quinze ans : le registre « enfant de sept ans » des jeux du CP les
+ * ferait fuir. Une réplique est du collège quand elle vient d'un module de
+ * `college/`, ou quand son professeur n'a QUE des jeux du collège (Salim,
+ * Marine, Yann, Inès) — leurs bravos et leurs notes compris.
+ *
+ * LES SONS DU PRIMAIRE N'EN SONT PAS TOUCHÉS : sans ton du collège, la
+ * consigne reste au caractère près celle d'avant, et donc l'empreinte aussi.
+ */
+// Le lycée parle comme le collège : à des adolescents (07/10/2026). L'option
+// `--college` les enregistre aussi.
+const PREFIXES_COLLEGE = new Set([...MODULES_COLLEGE, ...MODULES_LYCEE].map((m) => m.FAMILLE.cle));
+const DU_PRIMAIRE = new Set(['nora', 'adrien']);
+// La note sur six n'existe que pour les escape games du collège : elle en a le ton.
+const tonDe = (professeur, cle) => (
+  !DU_PRIMAIRE.has(professeur) || PREFIXES_COLLEGE.has(cle.split('/')[0]) || /^commun\/note-\d+-sur-6$/.test(cle)
+    ? PRENOMS[professeur] : null
+);
 
 /**
  * LA CONSIGNE DE DICTION — celle de l'API pour un enfant de sept ans :
@@ -83,6 +118,11 @@ de ton de présentateur.
 
 Prononciation française d'un bout à l'autre, y compris sur un mot
 bref ou isolé — jamais un accent anglicisé, même passager.`;
+
+const REGISTRE_COLLEGE = (elle) => `Tu es ${elle ? 'une professeure particulière' : 'un professeur particulier'} qui parle à un collégien de onze à quinze ans.
+Débit vif et naturel, ton chaleureux mais pas enfantin : tu parles à
+quelqu'un de grand, avec respect et complicité, comme un bon prof qu'on
+aime bien.`;
 
 const REGISTRE_CP = (elle) => `Tu es ${elle ? 'une professeure particulière' : 'un professeur particulier'} qui parle à un enfant de sept ans.
 Débit lent et très articulé, ton chaleureux et rassurant, beaucoup
@@ -133,17 +173,17 @@ isolé : « six » se dit comme en français, jamais comme en anglais.`);
  * les répliques des professeures, celle d'Adrien restant mot pour mot la
  * même.
  */
-const consigneDe = (elle) => `${ACCENT(elle)}
+const consigneDe = (elle, college = false) => `${ACCENT(elle)}
 
 ${elle ? `Tu es une femme, et ta voix reste une voix de femme d'un bout à
 l'autre — y compris sur une phrase brève, une exclamation ou un ordre.
 
 ` : ''}${NATUREL}
 
-${REGISTRE_CP(elle)}`;
+${college ? REGISTRE_COLLEGE(elle) : REGISTRE_CP(elle)}`;
 
 /** Les voix féminines. `coral` (OpenAI) et `Zephyr` (Gemini) sont celles de Nora. */
-const VOIX_FEMININES = new Set(['coral', 'sage', 'shimmer', 'nova', 'alloy', 'Zephyr']);
+const VOIX_FEMININES = new Set(['coral', 'sage', 'shimmer', 'nova', 'alloy', 'Zephyr', 'Aoede', 'Vindemiatrix']);
 
 /**
  * LA CONSIGNE DE GEMINI, À LA MANIÈRE DE GOOGLE — reprise de
@@ -165,14 +205,32 @@ const notesGemini = (elle) => [
   '#### TRANSCRIPT',
 ].join('\n');
 
+/** La même structure, pour un collégien — voir `tonDe`. `prenom` est celui du professeur. */
+const notesGeminiCollege = (elle, prenom) => [
+  `# AUDIO PROFILE: ${prenom}, a warm French private tutor talking one-on-one with a teenager (11 to 15 years old).`,
+  "### DIRECTOR'S NOTES",
+  'Style: a friendly, encouraging teacher talking to a teenager — clear, warm and confident, never childish or sing-song. Talking, not reading.',
+  'Voice quality: a clear, full speaking voice. Never breathy, whispery, husky, intimate, sultry or seductive — this is a lesson, not a confidence.',
+  'Pace: lively, the speed of a real conversation; no dragging, no exaggerated articulation, no long pauses.',
+  'Accent: native French from France. Every word, every number and every isolated word is French: « six » is the French word, never the English one.',
+  ...(elle ? ["Voice: a woman's voice from start to finish, even on a short exclamation or an order."] : []),
+  'Say the transcript exactly once.',
+  '#### TRANSCRIPT',
+].join('\n');
+
 const CONSIGNES = {};
-const consignePour = (voix) => {
-  if (!CONSIGNES[voix]) {
-    CONSIGNES[voix] = PAR_OPENAI
-      ? consigneDe(VOIX_FEMININES.has(voix))
-      : notesGemini(VOIX_FEMININES.has(voix));
+/** `college` : le prénom du professeur quand la réplique est du collège, sinon rien (voir `tonDe`). */
+const consignePour = (voix, college = null) => {
+  const cle = college ? `${voix}|${college}` : voix;
+  if (!CONSIGNES[cle]) {
+    const elle = VOIX_FEMININES.has(voix);
+    if (college) {
+      CONSIGNES[cle] = PAR_OPENAI ? consigneDe(elle, true) : notesGeminiCollege(elle, college);
+    } else {
+      CONSIGNES[cle] = PAR_OPENAI ? consigneDe(elle) : notesGemini(elle);
+    }
   }
-  return CONSIGNES[voix];
+  return CONSIGNES[cle];
 };
 
 /**
@@ -352,6 +410,56 @@ function priseReguliere(prises) {
   return prises[meilleure < 0 ? 0 : meilleure];
 }
 
+/**
+ * LA PHRASE DITE DEUX FOIS — Camara, le 07/10/2026 : « la prof de
+ * mathématique a répété deux fois une même consigne », dans les jeux du
+ * collège. Gemini redit parfois tout son texte d'un trait, et l'écoute ne
+ * l'attrape pas : Whisper ne transcrit souvent qu'UNE fois un passage répété,
+ * et la prise doublée passait pour juste.
+ *
+ * ON MESURE DONC LE TEMPS DE PAROLE (trames de 20 ms au-dessus de 4 % du pic,
+ * silences exclus) rapporté aux lettres du texte dit. Le débit de chaque voix
+ * a été relevé le 07/10/2026 sur 2 256 sons du collège : une prise qui parle
+ * sous 62 % de ce débit dure à peu près le double de ce qu'elle devrait, et
+ * elle est rejetée. Les textes de moins de vingt lettres sont exemptés : un
+ * mot court a un débit trop variable pour qu'on en juge.
+ */
+const DEBIT_PAROLE = {
+  Zephyr: 20.8, Sadaltager: 18.7, Charon: 19.9, Aoede: 18.4, Iapetus: 17.8, Vindemiatrix: 19.2,
+};
+const SEUIL_DOUBLON = 0.62;
+// LES PHRASES D'ANGLAIS MÊLENT DES MOTS ANGLAIS, que la voix détache : son
+// débit y est naturellement plus lent. Pour Marine, le seuil est abaissé —
+// le 07/10/2026, deux de ses règles bien dites passaient pour doublées.
+const SEUIL_DOUBLON_PAR_VOIX = { Aoede: 0.5, shimmer: 0.5 };
+
+function tempsParle(pcm) {
+  const trame = Math.round(FREQUENCE * 0.02);
+  const rms = [];
+  for (let t = 0; t + trame <= pcm.length; t += trame) {
+    let e = 0;
+    for (let i = 0; i < trame; i += 1) e += pcm[t + i] * pcm[t + i];
+    rms.push(Math.sqrt(e / trame));
+  }
+  const pic = rms.reduce((m, r) => Math.max(m, r), 0);
+  return rms.filter((r) => r > pic * 0.04).length * 0.02;
+}
+
+function sembleDoublee(pcm, dit, voix) {
+  const lettres = dit.replace(/[^\p{L}\p{N}]/gu, '').length;
+  // UNE FORMULE DICTÉE (« u prime v plus u v prime ») se dit lentement, lettre
+  // après lettre : au-delà d'un mot sur six fait d'une seule lettre, le seuil
+  // descend à 40 % (08/10/2026 — onze formules passaient pour doublées).
+  const mots = dit.split(/\s+/).filter(Boolean);
+  const isolees = mots.filter((m) => /^\p{L}[,.;:]?$/u.test(m)).length;
+  const formule = mots.length > 0 && isolees / mots.length > 1 / 6;
+  const debit = DEBIT_PAROLE[voix];
+  if (!debit || lettres < 20) return false;
+  const parle = tempsParle(pcm);
+  const seuil = formule ? 0.4 : (SEUIL_DOUBLON_PAR_VOIX[voix] ?? SEUIL_DOUBLON);
+  return parle > 0 && lettres / parle < seuil * debit;
+}
+
 function meilleurePrise(prises) {
   const durees = prises.map(dureeParole);
   const triees = [...durees].sort((a, b) => a - b);
@@ -464,13 +572,25 @@ const motsSeuls = process.argv.includes('--mots-seuls');
 // --refaire : réenregistre ce que --seulement retient, même s'il est à jour —
 // pour refaire un mot à l'unité quand l'oreille dit qu'il sonne faux.
 const refaire = process.argv.includes('--refaire');
+// --college : n'enregistre que les répliques du collège (voir `tonDe`). Les sons
+// du primaire réparés le 05/10/2026 sans réenregistrement portent encore leur
+// ancienne empreinte : sans ce filtre, ils repartiraient dans la liste.
+const seulCollege = process.argv.includes('--college');
+// --sauf <préfixe,préfixe> : laisse de côté ces jeux — par exemple ceux qu'on
+// est en train de réécrire, pour ne pas payer des voix aussitôt périmées.
+const iSauf = process.argv.indexOf('--sauf');
+const sauf = iSauf >= 0 ? process.argv[iSauf + 1].split(',').map((x) => x.trim()).filter(Boolean) : [];
+// --liste <fichier.json> : un tableau de « professeur/clé » à refaire, et
+// rien d'autre — pour reprendre des sons repérés défectueux (07/10/2026).
+const iListe = process.argv.indexOf('--liste');
+const aRefaire = iListe >= 0 ? new Set(JSON.parse(fs.readFileSync(process.argv[iListe + 1], 'utf8'))) : null;
 
 // Le choix de prise d'un élément de liste entre dans l'empreinte : le changer
 // réenregistre ces éléments-là, et eux seuls.
-function empreinte(professeur, texte, liste, syllabe = false) {
+function empreinte(professeur, texte, liste, syllabe = false, college = null) {
   return crypto.createHash('sha256')
     .update([
-      MODELE, VOIX[professeur], consignePour(VOIX[professeur]), TRAITEMENT, ...(liste ? [`liste-${DUREE_LISTE}`] : []), 'francais-ecoute-v2',
+      MODELE, VOIX[professeur], consignePour(VOIX[professeur], college), TRAITEMENT, ...(liste ? [`liste-${DUREE_LISTE}`] : []), 'francais-ecoute-v2',
       ...(syllabe ? ['syllabe-v1'] : []),
       // Le WAV de Gemini lu en entier, signature comprise (05/10/2026) : cette
       // marque refait tous les sons enregistrés avant la correction.
@@ -535,7 +655,10 @@ const attendre = (ms) => new Promise((r) => { setTimeout(r, ms); });
  */
 async function appeler(url, options, essaiN) {
   try {
-    return await fetch(url, options);
+    // UNE LIMITE DE TEMPS PAR APPEL — le 08/10/2026, le lot s'est figé vingt
+    // minutes sur une réponse qui ne venait jamais. Au-delà de 90 s, l'appel
+    // échoue et se retente comme une erreur réseau.
+    return await fetch(url, { ...options, signal: AbortSignal.timeout(90_000) });
   } catch (erreur) {
     if (essaiN >= 4) throw erreur;
     return { ok: false, status: 503, json: async () => ({}) };
@@ -579,7 +702,7 @@ function donneesAudio(octets) {
   throw new Error('WAV de Gemini sans bloc de données');
 }
 
-async function unePriseGemini(voix, texte) {
+async function unePriseGemini(voix, texte, college = null) {
   const cle = lireCleGemini();
 
   for (let essaiN = 1; essaiN <= 5; essaiN += 1) {
@@ -591,7 +714,7 @@ async function unePriseGemini(voix, texte) {
         method: 'POST',
         headers: { 'x-goog-api-key': cle, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: `${consignePour(voix)}\n${texte}` }] }],
+          contents: [{ role: 'user', parts: [{ text: `${consignePour(voix, college)}\n${texte}` }] }],
           generationConfig: {
             responseModalities: ['AUDIO'],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voix } } },
@@ -634,8 +757,8 @@ async function unePriseGemini(voix, texte) {
   throw new Error('Gemini ne répond pas après cinq essais');
 }
 
-async function unePrise(cle, voix, texte) {
-  if (!PAR_OPENAI) return unePriseGemini(voix, texte);
+async function unePrise(cle, voix, texte, college = null) {
+  if (!PAR_OPENAI) return unePriseGemini(voix, texte, college);
 
   for (let essaiN = 1; essaiN <= 4; essaiN += 1) {
     const reponse = await appeler('https://api.openai.com/v1/audio/speech', {
@@ -644,7 +767,7 @@ async function unePrise(cle, voix, texte) {
       body: JSON.stringify({
         // LE SON BRUT, pas un MP3 : on le retravaille avant de l'encoder, et
         // décoder puis réencoder un MP3 l'abîmerait deux fois.
-        model: MODELE, voice: voix, input: texte, instructions: consignePour(voix), response_format: 'pcm',
+        model: MODELE, voice: voix, input: texte, instructions: consignePour(voix, college), response_format: 'pcm',
       }),
     }, essaiN);
 
@@ -860,7 +983,58 @@ const heuresEnLettres = (t) => t
   .replace(/\b(\d{1,2})\s*h\s*15\b/gi, '$1 heures et quart')
   .replace(/\b(\d{1,2})\s*h\b/gi, '$1 heures');
 
-const normaliser = (t) => enFrancais(heuresEnLettres(t))
+/**
+ * LES ÉCRITURES SAVANTES DE LA TRANSCRIPTION — le 07/10/2026, cinq phrases du
+ * collège ont été rejetées douze fois alors que la voix les disait juste :
+ * l'écoute écrit « AM sur AB » pour « A M sur A B », « 3x² » pour « trois x au
+ * carré », « av. J.-C. » pour « avant Jésus-Christ », « 8e siècle » pour
+ * « VIIIe siècle ». Appliquée aux DEUX textes comparés, elle les ramène à la
+ * même écriture. Elle n'entre pas dans l'empreinte : aucun son n'est à refaire.
+ */
+const ROMAINS = {
+  I: 1, V: 5, X: 10, L: 50, C: 100,
+};
+const versArabe = (r) => [...r].reduce((s, c, i) => {
+  const v = ROMAINS[c];
+  return ROMAINS[r[i + 1]] > v ? s - v : s + v;
+}, 0);
+// Les ordinaux en lettres, du deuxième au vingt et unième (08/10/2026) : la voix
+// dit « seizième », l'écoute écrit « XVIe » ou « 16e ». Tous deviennent « 16 eme ».
+const ORDINAUX = {
+  deuxieme: 2, troisieme: 3, quatrieme: 4, cinquieme: 5, sixieme: 6, septieme: 7, huitieme: 8,
+  neuvieme: 9, dixieme: 10, onzieme: 11, douzieme: 12, treizieme: 13, quatorzieme: 14,
+  quinzieme: 15, seizieme: 16, 'dix-septieme': 17, 'dix-huitieme': 18, 'dix-neuvieme': 19,
+  vingtieme: 20, 'vingt et unieme': 21,
+};
+const ordinauxEnChiffres = (t) => t.replace(
+  /\b(vingt et uni[eè]me|dix-(?:septi|huiti|neuvi)[eè]me|(?:deux|trois|quatr|cinqu|six|sept|huit|neuv|dix|onz|douz|treiz|quatorz|quinz|seiz|vingt)i[eè]me)\b/gi,
+  (m) => `${ORDINAUX[m.toLowerCase().replace(/è/g, 'e')]} eme`,
+);
+
+const ecritsEnMots = (t) => ordinauxEnChiffres(t)
+  .replace(/\bav\.?\s*J\.?\s*-?\s*C\.?/g, 'avant Jésus-Christ')
+  .replace(/\bap\.?\s*J\.?\s*-?\s*C\.?/g, 'après Jésus-Christ')
+  // Un siècle en chiffres romains ou arabes : « VIIIe siècle », « 8e siècle ».
+  .replace(/\b([IVXLC]+)(?:e|er|ème)(?=\s+(?:siècle|millénaire))/g, (_, r) => `${versArabe(r)} eme`)
+  .replace(/\b([IVXL]{2,}|[VX])(?:e|ème)\b/g, (_, r) => `${versArabe(r)} eme`)
+  .replace(/\b(\d+)(?:e|er|ème)\b/g, '$1 eme')
+  // LES FORMULES DICTÉES (08/10/2026, lycée) : « u prime v plus u v prime »
+  // s'écrit « u'v + uv' », « P de A inter B » s'écrit « P(A∩B) ». On ramène
+  // la notation aux mots, des deux côtés.
+  .replace(/([A-Za-z])['\u2019\u2032]/g, '$1 prime ')
+  .replace(/\u2229/g, ' inter ').replace(/\u222A/g, ' union ')
+  .replace(/([A-Za-z])\s*\(/g, '$1 de ').replace(/[()]/g, ' ')
+  .replace(/\s*=\s*/g, ' égale ').replace(/\s*\+\s*/g, ' plus ')
+  .replace(/\s[-\u2212]\s/g, ' moins ').replace(/\s*[×*]\s*/g, ' fois ')
+  .replace(/\s*\^\s*/g, ' puissance ').replace(/\s*\/\s*/g, ' sur ')
+  .replace(/\bln\b/gi, ' ln ')
+  // Des lettres isolées : « A M » et « AM », « u v » et « uv » se disent pareil.
+  .replace(/\b([A-Za-z])\s+(?=[A-Za-z]\b)/g, '$1')
+  .replace(/²/g, ' au carré').replace(/³/g, ' au cube')
+  // « 3x » : un nombre collé à sa lettre.
+  .replace(/(\d)([a-zA-Z])/g, '$1 $2');
+
+const normaliser = (t) => enFrancais(heuresEnLettres(ecritsEnMots(t))).replace(/\b(cent|vingt)s\b/gi, '$1')
   .toLowerCase()
   .normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/[^a-z ]+/g, ' ')
@@ -1083,7 +1257,7 @@ const unSeulMot = (dit) => normaliser(dit).split(' ').filter(Boolean).length ===
  * puis « voilà » — pour couper proprement, sans comparer ce qui est entendu.
  * Ce qui garantit le son, c'est l'orthographe dite (`PRONONCIATION`).
  */
-async function motDansUnePhrase(cleApi, voix, dit, combien = 2, syllabe = false) {
+async function motDansUnePhrase(cleApi, voix, dit, combien = 2, syllabe = false, college = null) {
   const voulu = jumeau(normaliser(dit));
   const gardees = [];
   const probables = [];
@@ -1095,7 +1269,7 @@ async function motDansUnePhrase(cleApi, voix, dit, combien = 2, syllabe = false)
     // Les points forcent une respiration avant et après le mot ; les phrases
     // autour gardent la prononciation française. On coupe au milieu de chaque
     // silence.
-    const pcm = await unePrise(cleApi, voix, `Écoute bien. ${dit}. Voilà.`);
+    const pcm = await unePrise(cleApi, voix, `Écoute bien. ${dit}. Voilà.`, college);
     const { mots } = await ecouterMots(cleApi, pcm);
     const i = mots.findIndex((m) => normaliser(m.word) === 'bien');
     // TOUT CE QUI EST DIT ENTRE « bien » ET « voilà » : « ses » est transcrit
@@ -1166,7 +1340,7 @@ async function ecouterMots(cleApi, pcm) {
   throw new Error('Transcription : pas de réponse');
 }
 
-async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe) {
+async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe, college = null) {
   // Deux fois plus de prises pour un élément de liste : on cherche une durée
   // précise, pas seulement la plus courte, et le hasard a besoin de place.
   const combien = liste ? PRISES * 2 : PRISES;
@@ -1181,7 +1355,7 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe) {
 
   // UN MOT SEUL PASSE TOUJOURS PAR SA PHRASE PORTEUSE — voir `motDansUnePhrase`.
   if (unSeulMot(dit)) {
-    const dansUnePhrase = await motDansUnePhrase(cleApi, voix, dit, 2, syllabe);
+    const dansUnePhrase = await motDansUnePhrase(cleApi, voix, dit, 2, syllabe, college);
     const claires = dansUnePhrase.filter((p) => !sonneMasculin(p, feminine));
     prises.push(...(claires.length > 0 ? claires : dansUnePhrase));
     if (claires.length === 0 && dansUnePhrase.length > 0) statistiques.graves.push(cleReplique);
@@ -1191,7 +1365,15 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe) {
   }
 
   for (let essai = 0; prises.length < combien && essai < combien * 3; essai += 1) {
-    const pcm = await unePrise(cleApi, voix, dit);
+    const pcm = await unePrise(cleApi, voix, dit, college);
+    // Une phrase dite deux fois est rejetée AVANT tout le reste — et avant
+    // l'écoute : la transcription se paie sur le crédit OpenAI, celui du micro
+    // des cours (crédit épuisé le 08/10/2026). Voir `sembleDoublee`.
+    if (sembleDoublee(pcm, dit, voix)) {
+      statistiques.doublees += 1;
+      rejetees += 1;
+      continue;
+    }
     const court = normaliser(dit).split(' ').filter(Boolean).length <= MOTS_COURTS;
     const ecoute = await ecouter(cleApi, pcm, court ? 'fr' : null);
     const bas = sonneMasculin(pcm, feminine);
@@ -1220,7 +1402,9 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe) {
 
 // `graves` porte les CLÉS et non un compte : une réplique qui n'a eu que des
 // prises basses est à réécouter, et on ne la retrouve pas sans son nom.
-const statistiques = { rejetees: 0, basses: 0, graves: [] };
+const statistiques = {
+  rejetees: 0, basses: 0, graves: [], doublees: 0,
+};
 
 // ------------------------------------------------------------------------
 
@@ -1237,11 +1421,20 @@ for (const [professeur, repliques] of Object.entries(inventaire)) {
     cle, texte, liste, syllabe,
   } of repliques) {
     const fichier = path.join(DOSSIER, professeur, `${cle}.mp3`);
-    const e = empreinte(professeur, texte, liste, syllabe);
+    const college = tonDe(professeur, cle);
+    const e = empreinte(professeur, texte, liste, syllabe, college);
     const aJour = connues[cle]?.empreinte === e && fs.existsSync(fichier);
     const retenue = !seulement || `${professeur}/${cle}`.startsWith(seulement) || cle.startsWith(seulement);
-    if ((!aJour || (refaire && seulement)) && retenue && (!motsSeuls || unSeulMot(texteDit(texte, liste)))) aFaire.push({
-      professeur, cle, texte, liste, syllabe, fichier, empreinte: e,
+    // `--liste` : ces sons-là, et eux seuls, sont refaits même s'ils sont à jour.
+    if (aRefaire) {
+      if (aRefaire.has(`${professeur}/${cle}`)) aFaire.push({
+        professeur, cle, texte, liste, syllabe, fichier, empreinte: e, college,
+      });
+      continue;
+    }
+    if (sauf.includes(cle.split('/')[0])) continue;
+    if ((!aJour || (refaire && seulement)) && retenue && (!seulCollege || college) && (!motsSeuls || unSeulMot(texteDit(texte, liste)))) aFaire.push({
+      professeur, cle, texte, liste, syllabe, fichier, empreinte: e, college,
     });
   }
 }
@@ -1262,11 +1455,30 @@ const echecs = [];
 // QUATRE À LA FOIS : assez pour finir en une minute, pas assez pour se faire
 // refuser par la limite de débit du compte.
 const file = [...aFaire];
+
+/**
+ * L'ÉCRITURE DU MANIFESTE RÉSISTE À UN VERROU PASSAGER — le 08/10/2026, trois
+ * fois, Windows a refusé d'ouvrir le fichier (« UNKNOWN: unknown error, open »),
+ * sans doute pris un instant par l'antivirus ou l'éditeur. La phrase, pourtant
+ * enregistrée, était comptée en échec. On réessaie quelques fois avant d'abandonner.
+ */
+async function ecrireManifeste() {
+  for (let essaiN = 1; ; essaiN += 1) {
+    try {
+      fs.writeFileSync(MANIFESTE, `${JSON.stringify(manifeste, null, 2)}\n`);
+      return;
+    } catch (erreur) {
+      if (essaiN >= 5) throw erreur;
+      await attendre(300 * essaiN);
+    }
+  }
+}
+
 async function ouvrier() {
   while (file.length > 0) {
     const r = file.shift();
     try {
-      const audio = await enregistrer(cle, VOIX[r.professeur], r.texte, r.cle, r.liste, r.syllabe);
+      const audio = await enregistrer(cle, VOIX[r.professeur], r.texte, r.cle, r.liste, r.syllabe, r.college);
       fs.mkdirSync(path.dirname(r.fichier), { recursive: true });
       fs.writeFileSync(r.fichier, audio);
 
@@ -1275,7 +1487,7 @@ async function ouvrier() {
       faites += 1;
       // LE MANIFESTE EST ÉCRIT À CHAQUE PHRASE : le 21/09/2026, un enregistrement
       // interrompu avait laissé 42 fichiers que le manifeste ignorait.
-      fs.writeFileSync(MANIFESTE, `${JSON.stringify(manifeste, null, 2)}\n`);
+      await ecrireManifeste();
       process.stdout.write(`\r${faites}/${aFaire.length}`);
     } catch (erreur) {
       echecs.push(`${r.professeur}/${r.cle} : ${erreur.message}`);
@@ -1289,10 +1501,11 @@ await Promise.all([ouvrier(), ouvrier(), ouvrier(), ouvrier()]);
 // gardé, et seul ce qui a échoué sera retenté au prochain lancement.
 manifeste.modele = MODELE;
 fs.mkdirSync(DOSSIER, { recursive: true });
-fs.writeFileSync(MANIFESTE, `${JSON.stringify(manifeste, null, 2)}\n`);
+await ecrireManifeste();
 
 console.log(`\n${faites} enregistrée(s).`);
 console.log(`${statistiques.rejetees} prise(s) rejetée(s) à l'écoute : langue ou nombre entendus faux.`);
+console.log(`${statistiques.doublees} prise(s) écartée(s) : phrase dite deux fois.`);
 console.log(`${statistiques.basses} prise(s) écartée(s) pour voix trop grave (seuil ${HAUTEUR_MINIMALE} Hz).`);
 if (statistiques.graves.length > 0) {
   console.log(`${statistiques.graves.length} réplique(s) n'ont eu QUE des prises graves, à réécouter :`);

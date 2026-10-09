@@ -10,6 +10,7 @@ import BoutonsVoix from './BoutonsVoix';
 import { Monnaie, Produit } from './Etal';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
+import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
  * LES PRIX À VIRGULE — la marchande du CE2, à l'écran.
@@ -64,11 +65,13 @@ export default function PrixAVirgule({ onQuitter, matiereCode }) {
     const r = verdictCE2(posees, courante.prix);
     setResultat(r);
     if (r === 'juste') {
+      bruitage('bonne');
       dire(commun.bravo(manche));
       return;
     }
     const suivantes = ratees + 1;
     setRatees(suivantes);
+    bruitage('mauvaise');
     dire(suivantes >= ESSAIS_AVANT_AIDE ? repliquesMarchande.aideCE2 : repliquesMarchande.erreurCE2(r));
   }, [posees, courante.prix, manche, ratees, dire]);
 
