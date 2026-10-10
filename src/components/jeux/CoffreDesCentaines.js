@@ -11,6 +11,8 @@ import GrandsNombres from './GrandsNombres';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { humeurDe } from './scenes/ce1-maths/communs';
+import { Coffret, DecorCoffre, FeteCoffre } from './scenes/ce1-maths/SceneCoffre';
 
 const VIDE = {
   milliers: 0, centaines: 0, dizaines: 0, unites: 0,
@@ -153,10 +155,14 @@ function CoffreDesCentainesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) 
   } = decomposer(courante.nombre);
 
   return (
-    <div className={`jeu jeu--scene jeu--coffre${ce2 ? ' jeu--coffre-ce2' : ''}`}>
+    // L'UNIVERS DE LA COUVERTURE (09/10/2026, `scenes/ce1-maths/SceneCoffre.js`) :
+    // la salle du château, le petit coffre qui a des yeux, la fête à la
+    // réussite. Le jeu, lui, ne change pas d'une ligne.
+    <div className={`jeu jeu--scene jeu--coffre${ce2 ? ' jeu--coffre-ce2' : ''} sc-coffre-des-centaines${juste ? ' est-gagne' : ''}`}>
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+      <DecorCoffre />
 
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
@@ -257,6 +263,9 @@ function CoffreDesCentainesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) 
           C’est prêt&nbsp;!
         </button>
       )}
+
+      {juste && <FeteCoffre key={`fete-${manche}`} />}
+      <Coffret humeur={humeurDe({ reussi: juste, faute: Boolean(resultat) })} cle={`${manche}-${ratees}`} />
     </div>
   );
 }

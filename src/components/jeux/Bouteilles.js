@@ -1,6 +1,7 @@
 import * as b from '../../lib/jeux/bouteilles';
 import { repliquesBouteilles } from '../../lib/jeux/voix/repliques';
 import JeuDeChoix from './JeuDeChoix';
+import { ChoixBouteilles, QuestionBouteilles } from './scenes/ce2-maths/SceneBouteilles';
 
 /**
  * LES BOUTEILLES, À L'ÉCRAN — une conversion, trois récipients à comparer, ou
@@ -8,8 +9,13 @@ import JeuDeChoix from './JeuDeChoix';
  *
  * À LA COMPARAISON, LES RÉCIPIENTS ONT TOUS LA MÊME TAILLE : dessinés à leur
  * contenance, ils donneraient la réponse sans lire les étiquettes.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) : le comptoir au bord du lac, son
+ * ardoise, Plouf la goutte d'eau qui réagit, des récipients à prendre sur le
+ * comptoir pour réponses, et le versement une fois la réponse donnée — voir
+ * `scenes/ce2-maths/SceneBouteilles.js`, où vit aussi le dessin de la bouteille.
  */
-const REGLE = {
+export const REGLE = {
   MANCHES: b.MANCHES,
   serie: b.serie,
   bilan: b.bilan,
@@ -21,6 +27,7 @@ const REGLE = {
   verdict: b.verdict,
   erreur: (m, sens) => repliquesBouteilles.erreur(sens),
   aide: () => repliquesBouteilles.erreur('litre'),
+  rendreLesChoix: (p) => <ChoixBouteilles {...p} />,
 };
 
 export default function Bouteilles(props) {
@@ -29,40 +36,7 @@ export default function Bouteilles(props) {
       {...props}
       regle={REGLE}
       classe="jeu--bouteilles"
-      rendreQuestion={(m, termine) => {
-        if (m.mode === 'comparer') {
-          return (
-            <ul className="bouteilles__rangee">
-              {m.recipients.map((r) => (
-                <li key={r.nom} className={`bouteilles__recipient${termine && r.nom === m.bonne ? ' est-bon' : ''}`}>
-                  <Bouteille />
-                  <span className="bouteilles__nom">{r.nom}</span>
-                  <span className="bouteilles__etiquette">{b.ecrire(r.cl)}</span>
-                  {termine && <span className="bouteilles__cl">= {r.cl} cL</span>}
-                </li>
-              ))}
-            </ul>
-          );
-        }
-        return (
-          <p className="bouteilles__question">
-            {!termine && m.question}
-            {termine && m.mode === 'remplir' && `${m.bonne} verres de ${m.verre} cL remplissent ${b.ecrire(m.bouteille)}.`}
-            {termine && m.mode !== 'remplir' && m.question.replace('?', String(m.bonne))}
-          </p>
-        );
-      }}
+      rendreQuestion={(m, termine, extra) => <QuestionBouteilles m={m} termine={termine} extra={extra} />}
     />
-  );
-}
-
-/** Une bouteille dessinée, toujours de la même taille. */
-function Bouteille() {
-  return (
-    <svg className="bouteilles__dessin" viewBox="0 0 40 80" aria-hidden="true">
-      <rect x="15" y="2" width="10" height="10" rx="2" className="bouteilles__bouchon" />
-      <path d="M14 12 h12 v8 q10 6 10 18 v34 q0 6 -6 6 h-20 q-6 0 -6 -6 v-34 q0 -12 10 -18 z" className="bouteilles__verre" />
-      <path d="M6 44 h28 v28 q0 6 -6 6 h-16 q-6 0 -6 -6 z" className="bouteilles__eau" />
-    </svg>
   );
 }

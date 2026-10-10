@@ -2,11 +2,16 @@ import * as se from '../../lib/jeux/sujetEloigne';
 import { repliquesSujetEloigne } from '../../lib/jeux/voix/repliques';
 import JeuDeChoix from './JeuDeChoix';
 import PasseComposeCM1 from './PasseComposeCM1';
+import { sceneDe } from './scenes/ce2-francais';
+
+const SCENE = sceneDe('sujet-qui-s-eloigne');
 
 /**
  * LE SUJET QUI S'ÉLOIGNE, À L'ÉCRAN — la phrase à trou, trois formes du
  * verbe ; une fois trouvée, la question qui retrouve le sujet. Toute la règle
- * vit dans `sujetEloigne.js`.
+ * vit dans `sujetEloigne.js`. L'univers de la couverture (le panneau de bois,
+ * le chemin où court le petit SUJET, les galets qu'on glisse dans le trou)
+ * vit dans `scenes/ce2-francais/Chemin.js` (09/10/2026).
  */
 const REGLE = {
   MANCHES: se.MANCHES,
@@ -17,6 +22,7 @@ const REGLE = {
   verdict: se.verdict,
   erreur: (p, sens) => repliquesSujetEloigne.erreur(sens),
   aide: () => repliquesSujetEloigne.erreur('proche'),
+  rendreLesChoix: SCENE.choix,
 };
 
 function SujetEloigneAvantCM1(props) {
@@ -25,18 +31,8 @@ function SujetEloigneAvantCM1(props) {
       {...props}
       regle={REGLE}
       classe="jeu--sujet"
-      rendreQuestion={(p, termine) => {
-        // Le sujet, surligné une fois la réponse trouvée.
-        const reste = p.avant.slice(p.sujet.length);
-        return (
-          <p className="phrase-a-trou">
-            {termine ? <mark className="sujet__sujet">{p.sujet}</mark> : p.sujet}
-            {reste}{' '}
-            <span className={`phrase-a-trou__trou${termine ? ' est-rempli' : ''}`}>{termine ? p.bon : '…'}</span>
-            {' '}{p.apres}
-          </p>
-        );
-      }}
+      // La phrase à trou ; le sujet, surligné une fois la réponse trouvée : voir la scène.
+      rendreQuestion={SCENE.question}
       rendreApres={(p) => (
         <p className="scene__bulle">{se.question(p)} <em>{p.sujet}.</em></p>
       )}

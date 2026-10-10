@@ -109,6 +109,23 @@ import * as simple_grandsNombres from '../grandsNombres.js';
 import * as train from '../trainDesNombres.js';
 import { MODULES_COLLEGE } from '../college/index.js';
 import { MODULES_LYCEE } from '../lycee/index.js';
+import { textesEnPlus } from '../escapeTextes.js';
+import * as bonusOperations from '../bonus/operations.js';
+import * as bonusMotsCaches from '../bonus/motsCaches.js';
+import * as bonusPaires from '../bonus/paires.js';
+import * as bonusPuzzle from '../bonus/puzzle.js';
+import * as bonusMotDePasse from '../bonus/motDePasse.js';
+import * as bonusDrapeaux from '../bonus/drapeaux.js';
+import * as bonusMorpion from '../bonus/morpion.js';
+import * as bonusEchecs from '../bonus/echecs.js';
+import * as bonusMotSecret from '../bonus/motSecret.js';
+import * as bonusPlanetes from '../bonus/planetes.js';
+import * as bonusImageQuiMent from '../bonus/histoire/imageQuiMent.js';
+import * as bonusMytheOuHistoire from '../bonus/histoire/mytheOuHistoire.js';
+import * as bonusOuSurTerre from '../bonus/geo/ouSurTerre.js';
+import * as bonusEnqueteCarte from '../bonus/geo/enquete.js';
+import * as bonusGrandJeuDeGeo from '../bonus/geo/grandJeu.js';
+import { PHRASES_MOT as bonusPhrasesMot, PHRASES_PHRASE as bonusPhrasesPhrase } from '../bonus/devinettes.js';
 
 /**
  * LE PROFESSEUR QUI PARLE, D'APRÈS LA MATIÈRE DU JEU.
@@ -547,6 +564,26 @@ const SIMPLES = [
   ...MODULES_COLLEGE.map((m) => [m.FAMILLE.cle, m, m.FAMILLE.matiereCode]),
   // Ceux du lycée (07/10/2026), de même — voir `lycee/index.js`.
   ...MODULES_LYCEE.map((m) => [m.FAMILLE.cle, m, m.FAMILLE.matiereCode]),
+  // LES JEUX BONUS (09/10/2026) : une consigne, un bravo, un « dommage » chacun.
+  // Le calcul est dit par Nora, les jeux de mots par Adrien.
+  ['bonus-operations', bonusOperations, 'MATHS'],
+  ['bonus-mots-caches', bonusMotsCaches, 'FRANCAIS'],
+  ['bonus-paires', bonusPaires, 'FRANCAIS'],
+  ['bonus-devine-le-mot', { PHRASES: bonusPhrasesMot }, 'FRANCAIS'],
+  ['bonus-devine-la-phrase', { PHRASES: bonusPhrasesPhrase }, 'FRANCAIS'],
+  ['bonus-puzzle', bonusPuzzle, 'FRANCAIS'],
+  ['bonus-mot-de-passe', bonusMotDePasse, 'FRANCAIS'],
+  ['bonus-drapeaux', bonusDrapeaux, 'FRANCAIS'],
+  ['bonus-morpion', bonusMorpion, 'FRANCAIS'],
+  ['bonus-echecs', bonusEchecs, 'FRANCAIS'],
+  ['bonus-mot-secret', bonusMotSecret, 'FRANCAIS'],
+  ['bonus-planetes', bonusPlanetes, 'FRANCAIS'],
+  // L'histoire et la géographie (10/10/2026) : la voix de Salim.
+  ['bonus-image-qui-ment', bonusImageQuiMent, 'HISTOIRE_GEO'],
+  ['bonus-mythe-ou-histoire', bonusMytheOuHistoire, 'HISTOIRE_GEO'],
+  ['bonus-ou-sur-terre', bonusOuSurTerre, 'HISTOIRE_GEO'],
+  ['bonus-enquete-carte', bonusEnqueteCarte, 'HISTOIRE_GEO'],
+  ['bonus-grand-jeu-de-geo', bonusGrandJeuDeGeo, 'HISTOIRE_GEO'],
 ];
 
 // Chaque étiquette se fait lire, le nom toujours sans son s : voir la note du
@@ -938,6 +975,8 @@ export function toutesLesRepliques() {
   // Les jeux simples : toutes les phrases de chaque module.
   SIMPLES.forEach(([prefixe, module, matiere]) => {
     parJeu.push({ matiere, repliques: Object.keys(module.PHRASES).map(phrasesDe(prefixe, module)) });
+    // Un escape game lit aussi son intro, l'annonce du chrono et ses récits (09/10/2026).
+    if (module.ESCAPE) parJeu.push({ matiere, repliques: textesEnPlus(prefixe, module) });
   });
 
   // Un ou des ? : la consigne et les remarques, jamais l'étiquette.

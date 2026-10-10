@@ -17,6 +17,12 @@
  *   - RAYON ET DIAMÈTRE (1) : LE PIÈGE, confondre les deux ;
  *   - DEDANS, DESSUS, DEHORS (1) : comparer la distance au centre avec le
  *     rayon — et non avec le diamètre.
+ *
+ * LE DESSIN (09/10/2026) : seul « rayon et diamètre » porte un `visuel`, le
+ * disque avec son rayon ET son diamètre, la longueur donnée et « ? » pour la
+ * cherchée. Les triangles et
+ * quadrilatères n'en ont pas (le dessin donnerait la réponse), ni le point M
+ * (le dessinateur ne sait pas placer un point près du cercle).
  */
 
 import { bilan as bilanCommun, outils } from '../outils.js';
@@ -168,11 +174,13 @@ export function serie(graine = Date.now(), niveau = 'SIXIEME') {
     let question;
     let juste;
     let faux;
+    let cotes;
     if (sorte === 0) {
       const r = entre(2, 15) * 10;
       question = `Un cercle a un rayon de ${cm(r)}. Son diamètre ?`;
       juste = 2 * r;
       faux = r / 2;
+      cotes = { rayon: cm(r), diametre: '?' };
     } else {
       const D = entre(4, 20) * 10;
       question = sorte === 1
@@ -180,6 +188,7 @@ export function serie(graine = Date.now(), niveau = 'SIXIEME') {
         : `A est sur le cercle de centre O et de diamètre ${cm(D)}. OA ?`;
       juste = D / 2;
       faux = sorte === 1 ? 2 * D : D;
+      cotes = { diametre: cm(D), rayon: '?' };
     }
     const bonne = cm(juste);
     const piege = cm(faux);
@@ -191,6 +200,7 @@ export function serie(graine = Date.now(), niveau = 'SIXIEME') {
       bonne,
       choix: melanger(choix).map((c) => ({ cle: c, libelle: c })),
       pieges: { [piege]: 'rayon-diametre' },
+      visuel: { type: 'figure', forme: 'disque', cotes },
     });
   }
 

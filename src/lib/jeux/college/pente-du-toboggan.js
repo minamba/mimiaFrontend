@@ -18,6 +18,12 @@
  *        longueur ; calculer un angle. Pièges : sinus et cosinus échangés,
  *        la tangente quand l'hypoténuse est en jeu, le produit en croix à
  *        l'envers, l'autre angle aigu.
+ *
+ * LE DESSIN (09/10/2026) : chaque manche porte un `visuel`, le toboggan (un
+ * triangle rectangle posé au sol) : l'angle étudié en bas à droite, son
+ * adjacent couché, son opposé debout, les sommets nommés comme dans la
+ * question. Les longueurs et l'angle donnés y sont écrits, « ? » pour le
+ * cherché ; pour « quel rapport ? », seulement les sommets et l'arc.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -92,6 +98,22 @@ function triangle({ au, melanger }) {
     P,
     angle: `${W}${V}${P}`,
     cote: { adj: seg(V, P), opp: seg(P, W), hyp: seg(V, W) },
+    // Pour le dessin : W en haut, l'angle droit P, V en bas à droite.
+    noms: [W, P, V],
+  };
+}
+
+/** Où le dessin pose chaque côté, vu de l'angle étudié (en bas à droite). */
+const PLACE = { adj: 'horizontal', opp: 'vertical', hyp: 'hypotenuse' };
+
+/** Le toboggan dessiné : `cotes` par côté (adj, opp, hyp), `valeur` sur l'arc de l'angle. */
+function toboggan(noms, cotes, valeur) {
+  return {
+    type: 'figure',
+    forme: 'toboggan',
+    cotes: Object.fromEntries(Object.entries(cotes).map(([c, texte]) => [PLACE[c], texte])),
+    angle: valeur ? { sommet: 'bas', valeur } : { sommet: 'bas' },
+    noms,
   };
 }
 
@@ -105,16 +127,23 @@ const angleAigu = (entre) => {
 // ------------------------------------------------------------------ 4e
 
 function cosinusRapport(o) {
-  const { nom, P, angle, cote } = triangle(o);
-  return monter(o.melanger, 'cosinus-rapport', `${nom} rectangle en ${P}. Cosinus de l’angle ${angle} = ?`, `${cote.adj}/${cote.hyp}`, [
-    [`${cote.opp}/${cote.hyp}`, 'cosinus-adjacent'],
-    [`${cote.hyp}/${cote.adj}`, 'hypotenuse-en-bas'],
-  ], () => `${cote.opp}/${cote.adj}`);
+  const {
+    nom, P, angle, cote, noms,
+  } = triangle(o);
+  return {
+    ...monter(o.melanger, 'cosinus-rapport', `${nom} rectangle en ${P}. Cosinus de l’angle ${angle} = ?`, `${cote.adj}/${cote.hyp}`, [
+      [`${cote.opp}/${cote.hyp}`, 'cosinus-adjacent'],
+      [`${cote.hyp}/${cote.adj}`, 'hypotenuse-en-bas'],
+    ], () => `${cote.opp}/${cote.adj}`),
+    visuel: toboggan(noms, {}),
+  };
 }
 
 function cosinusLongueur(o, sorte) {
   const { entre, melanger } = o;
-  const { nom, P, angle, cote } = triangle(o);
+  const {
+    nom, P, angle, cote, noms,
+  } = triangle(o);
   const a = angleAigu(entre);
   const c = TRIGO.cos(a);
   const enRadians = Math.cos(a);
@@ -125,36 +154,44 @@ function cosinusLongueur(o, sorte) {
   if (Math.abs(enRadians) >= 0.2) {
     pieges.push([`${dix(sorte === 'adjacent' ? x * enRadians : x / enRadians)} cm`, 'calculatrice-degres']);
   }
-  return monter(
-    melanger,
-    'cosinus-longueur',
-    `${nom} rectangle en ${P} : angle ${angle} = ${a}°, ${connu} = ${x} cm. ${cherche} ≈ ? (arrondi au dixième)`,
-    `${dix(juste)} cm`,
-    pieges,
-    (k) => `${dix(juste + k)} cm`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'cosinus-longueur',
+      `${nom} rectangle en ${P} : angle ${angle} = ${a}°, ${connu} = ${x} cm. ${cherche} ≈ ? (arrondi au dixième)`,
+      `${dix(juste)} cm`,
+      pieges,
+      (k) => `${dix(juste + k)} cm`,
+    ),
+    visuel: toboggan(noms, sorte === 'adjacent' ? { hyp: `${x} cm`, adj: '?' } : { adj: `${x} cm`, hyp: '?' }, `${a}°`),
+  };
 }
 
 function cosinusAngle(o) {
   const { entre, melanger } = o;
-  const { nom, P, angle, cote } = triangle(o);
+  const {
+    nom, P, angle, cote, noms,
+  } = triangle(o);
   let adj; let hyp; let a;
   do {
     adj = entre(2, 9);
     hyp = entre(adj + 1, 12);
     a = Math.round(ARC.cos(adj / hyp));
   } while (a === 45);
-  return monter(
-    melanger,
-    'cosinus-angle',
-    `${nom} rectangle en ${P} : ${cote.adj} = ${adj} cm, ${cote.hyp} = ${hyp} cm. Angle ${angle} ≈ ? (arrondi au degré)`,
-    `${a}°`,
-    [
-      [`${90 - a}°`, 'angle-complementaire'],
-      [`${cent(adj / hyp)}°`, 'arccos-touche'],
-    ],
-    (k) => `${a + k}°`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'cosinus-angle',
+      `${nom} rectangle en ${P} : ${cote.adj} = ${adj} cm, ${cote.hyp} = ${hyp} cm. Angle ${angle} ≈ ? (arrondi au degré)`,
+      `${a}°`,
+      [
+        [`${90 - a}°`, 'angle-complementaire'],
+        [`${cent(adj / hyp)}°`, 'arccos-touche'],
+      ],
+      (k) => `${a + k}°`,
+    ),
+    visuel: toboggan(noms, { adj: `${adj} cm`, hyp: `${hyp} cm` }, '?'),
+  };
 }
 
 function quatrieme(o) {
@@ -173,7 +210,9 @@ export const rapportDe = (x, y) => Object.keys(COTES).find((f) => COTES[f].inclu
 
 function choisirRapport(o) {
   const { au, melanger } = o;
-  const { nom, P, angle, cote } = triangle(o);
+  const {
+    nom, P, angle, cote, noms,
+  } = triangle(o);
   const [connu, cherche] = melanger(au([['opp', 'hyp'], ['adj', 'hyp'], ['opp', 'adj']]));
   const bonne = rapportDe(connu, cherche);
   const pieges = {
@@ -187,6 +226,8 @@ function choisirRapport(o) {
     bonne,
     choix: ['sin', 'cos', 'tan'].map((cle) => ({ cle, libelle: RAPPORTS[cle] })),
     pieges,
+    // Aucune longueur dans la question : le côté connu porte son nom, le cherché « ? ».
+    visuel: toboggan(noms, { [connu]: cote[connu], [cherche]: '?' }),
   };
 }
 
@@ -195,7 +236,9 @@ const AUTRE = { sin: ['cos', 'reperer-cotes'], cos: ['sin', 'reperer-cotes'], ta
 
 function trigoLongueur(o) {
   const { entre, au, melanger } = o;
-  const { nom, P, angle, cote } = triangle(o);
+  const {
+    nom, P, angle, cote, noms,
+  } = triangle(o);
   const f = au(['sin', 'cos', 'tan']);
   const a = angleAigu(entre);
   const s = entre(3, 15);
@@ -208,19 +251,24 @@ function trigoLongueur(o) {
   const [connu, cherche, juste, croix, autre] = connuEnBas
     ? [bas, haut, s * v, s / v, s * w]
     : [haut, bas, s / v, s * v, s / w];
-  return monter(
-    melanger,
-    'trigo-longueur',
-    `${nom} rectangle en ${P} : angle ${angle} = ${a}°, ${cote[connu]} = ${s} cm. ${cote[cherche]} ≈ ? (arrondi au dixième)`,
-    `${dix(juste)} cm`,
-    [[`${dix(croix)} cm`, 'produit-en-croix'], [`${dix(autre)} cm`, phrase]],
-    (k) => `${dix(juste + k)} cm`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'trigo-longueur',
+      `${nom} rectangle en ${P} : angle ${angle} = ${a}°, ${cote[connu]} = ${s} cm. ${cote[cherche]} ≈ ? (arrondi au dixième)`,
+      `${dix(juste)} cm`,
+      [[`${dix(croix)} cm`, 'produit-en-croix'], [`${dix(autre)} cm`, phrase]],
+      (k) => `${dix(juste + k)} cm`,
+    ),
+    visuel: toboggan(noms, { [connu]: `${s} cm`, [cherche]: '?' }, `${a}°`),
+  };
 }
 
 function trigoAngle(o) {
   const { entre, au, melanger } = o;
-  const { nom, P, angle, cote } = triangle(o);
+  const {
+    nom, P, angle, cote, noms,
+  } = triangle(o);
   const f = au(['sin', 'cos', 'tan']);
   const [haut, bas] = COTES[f];
   let h; let b; let a;
@@ -238,14 +286,17 @@ function trigoAngle(o) {
   if (f !== 'tan') pieges.push([`${Math.round(ARC.tan(h / b))}°`, 'sohcahtoa']);
   else if (h < b) pieges.push([`${Math.round(ARC.sin(h / b))}°`, 'sohcahtoa']);
   const donnees = melanger([`${cote[haut]} = ${h} cm`, `${cote[bas]} = ${b} cm`]);
-  return monter(
-    melanger,
-    'trigo-angle',
-    `${nom} rectangle en ${P} : ${donnees.join(', ')}. Angle ${angle} ≈ ? (arrondi au degré)`,
-    `${a}°`,
-    pieges,
-    (k) => `${a + k}°`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'trigo-angle',
+      `${nom} rectangle en ${P} : ${donnees.join(', ')}. Angle ${angle} ≈ ? (arrondi au degré)`,
+      `${a}°`,
+      pieges,
+      (k) => `${a + k}°`,
+    ),
+    visuel: toboggan(noms, { [haut]: `${h} cm`, [bas]: `${b} cm` }, '?'),
+  };
 }
 
 function troisieme(o) {

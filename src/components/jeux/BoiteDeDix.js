@@ -10,6 +10,8 @@ import { BoiteAOeufs, PanierDOeufs } from './Oeufs';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { classesScene, humeurDe } from './scenes/cp-maths-1/commun';
+import { DecorFerme, FeteFerme, Poule } from './scenes/cp-maths-1/Ferme';
 
 /**
  * LA BOÎTE DE 10, À L'ÉCRAN.
@@ -123,9 +125,18 @@ export default function BoiteDeDix({ onQuitter, matiereCode }) {
   const cases = alveoles(courante.depart, Math.min(poses, 10 - courante.depart), courante.masquee && !juste);
   const enTrop = Math.max(0, courante.depart + poses - 10);
 
+  // L'UNIVERS DE LA COUVERTURE (09/10/2026) : la ferme vit, Cocotte la poule
+  // dit la consigne et réagit à l'essai — voir `scenes/cp-maths-1/Ferme.js`.
+  // Son humeur se lit dans l'état du jeu ; elle n'en a pas à elle.
+  const humeur = humeurDe({ juste, faux: sens !== null });
 
   return (
-    <div className="jeu jeu--ferme" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--ferme sc-cp-maths-1 ${classesScene('sc-boite-de-dix', humeur)}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorFerme />
+
       {/* LA PROGRESSION EN POINTS, PAS EN CHIFFRES : « manche 3 sur 8 » demande
           de lire et de comparer deux nombres — exactement ce qu'on est en
           train d'apprendre, et donc la dernière chose à mettre dans un décor. */}
@@ -139,10 +150,17 @@ export default function BoiteDeDix({ onQuitter, matiereCode }) {
         ))}
       </ol>
 
-      <p className="jeu__consigne">
-        {laConsigne.texte}
-        <BoutonsVoix voix={voix} consigne={laConsigne} />
-      </p>
+      <div className="sc-cp-maths-1__parole">
+        {/* UNE NOUVELLE RÉACTION À CHAQUE ESSAI : la clé change, l'animation
+            repart du début. */}
+        <span className="sc-cp-maths-1__mascotte" key={`${manche}-${essai}`}>
+          <Poule humeur={humeur} />
+        </span>
+        <p className="jeu__consigne">
+          {laConsigne.texte}
+          <BoutonsVoix voix={voix} consigne={laConsigne} />
+        </p>
+      </div>
 
       <BoiteAOeufs cases={cases} />
 
@@ -182,6 +200,8 @@ export default function BoiteDeDix({ onQuitter, matiereCode }) {
       {sens === 'pas-assez' && (
         <p className="jeu__trop" role="status">{PHRASES.manque}</p>
       )}
+
+      {juste && <FeteFerme key={`fete-${manche}`} />}
 
       {juste && (
         <div className="jeu__gagne" role="status">

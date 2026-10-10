@@ -243,7 +243,8 @@ describe('la ludothèque est construite pour la classe', () => {
   });
 
   it('chaque jeu déclare les compétences du référentiel qu’il travaille', () => {
-    jeuxDeLaClasse('CP').forEach((jeu) => {
+    // Les jeux bonus (09/10/2026) n'en ont pas : ils ne sont pas du programme.
+    jeuxDeLaClasse('CP').filter((jeu) => !jeu.bonus).forEach((jeu) => {
       expect(jeu.competences.length).toBeGreaterThan(0);
       jeu.competences.forEach((code) => expect(code).toMatch(/^[A-Z]+_[A-Z0-9]+_/));
     });

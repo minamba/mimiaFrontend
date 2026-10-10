@@ -14,7 +14,8 @@ import genere from '../../public/jeux.json';
 import { jeuxDeLaClasse } from '../lib/jeux/catalogue';
 import { CLASSES_DU_CATALOGUE } from '../lib/jeux/frise';
 
-const attendu = CLASSES_DU_CATALOGUE.flatMap((code) => jeuxDeLaClasse(code).map((jeu) => ({
+// Les jeux bonus (09/10/2026) restent hors du fichier : voir le script.
+const attendu = CLASSES_DU_CATALOGUE.flatMap((code) => jeuxDeLaClasse(code).filter((jeu) => !jeu.bonus).map((jeu) => ({
   classe: code,
   cle: jeu.cle,
   titre: jeu.titre,

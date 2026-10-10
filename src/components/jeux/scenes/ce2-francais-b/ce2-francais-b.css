@@ -1,0 +1,1584 @@
+/* ================================================================
+   LES TROIS JEUX DE GRAMMAIRE DU CE2 — UN UNIVERS PAR JEU (09/10/2026)
+   Camara : « fais la même chose avec les jeux du CP, CE1, CE2 ». Trois
+   écrans : féminin et pluriel (la tonnelle fleurie), le détective des
+   classes (le bureau de l'enquête et son tableau de liège), transforme la
+   phrase (le tableau noir au bord du lac). Chacun garde sa mécanique ; on
+   ajoute le décor de sa couverture, une mascotte qui réagit, une explication
+   animée après la réponse et la fête de la réussite.
+   Toutes les classes sont préfixées : `sc-ce2-francais-b` pour les briques
+   communes, `sc-<clé du jeu>-ce2` pour le reste. Les classes de l'écran
+   (`.unoudes__tuile`, `.detective__phrase`, `.non__oui`…) ne sont restylées
+   qu'à travers la classe du jeu.
+   ================================================================ */
+
+/* ---------- LES BRIQUES COMMUNES ---------- */
+
+.jeu.sc-ce2-francais-b { isolation: isolate; }
+
+/* LE DÉCOR, DERRIÈRE LE JEU : jamais devant, jamais cliquable. */
+.jeu.sc-ce2-francais-b > .sc-ce2-francais-b__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-ce2-francais-b__decor svg { display: block; overflow: visible; }
+
+/* LA MASCOTTE, en bas à droite. Elle ne prend jamais le doigt. */
+.sc-ce2-francais-b__mascotte {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  width: clamp(88px, 10vw, 128px);
+  pointer-events: none;
+}
+
+.jeu.sc-ce2-francais-b > .sc-ce2-francais-b__mascotte { z-index: 2; }
+
+.sc-ce2-francais-b__mascotte svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.32));
+}
+
+.sc-ce2-francais-b__pose {
+  transform-origin: 50% 100%;
+  animation: sc-ce2-francais-b-respire 3.2s ease-in-out infinite;
+}
+
+.sc-ce2-francais-b__pose.est-bravo {
+  animation:
+    sc-ce2-francais-b-saut 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 3,
+    sc-ce2-francais-b-respire 3.2s ease-in-out 1.8s infinite;
+}
+
+.sc-ce2-francais-b__pose.est-encourage {
+  animation:
+    sc-ce2-francais-b-hoche 0.55s ease-in-out 2,
+    sc-ce2-francais-b-respire 3.2s ease-in-out 1.1s infinite;
+}
+
+.sc-ce2-francais-b__pose.est-montre {
+  animation:
+    sc-ce2-francais-b-acquiesce 0.8s ease-in-out 2,
+    sc-ce2-francais-b-respire 3.2s ease-in-out 1.6s infinite;
+}
+
+@keyframes sc-ce2-francais-b-respire {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-5px) scale(1.02, 0.98); }
+}
+
+@keyframes sc-ce2-francais-b-saut {
+  0% { transform: translateY(0) scale(1.1, 0.88); }
+  40% { transform: translateY(-34px) scale(0.94, 1.08) rotate(-6deg); }
+  70% { transform: translateY(-10px) rotate(4deg); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+@keyframes sc-ce2-francais-b-hoche {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-9deg); }
+  70% { transform: rotate(7deg); }
+}
+
+@keyframes sc-ce2-francais-b-acquiesce {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(6px) scale(1.03, 0.96); }
+}
+
+/* LA BOUCHE : un sourire en attendant, grande ouverte quand on fête. */
+.sc-ce2-francais-b__bouche { opacity: 0; }
+[data-humeur="bravo"] .sc-ce2-francais-b__bouche { opacity: 1; }
+[data-humeur="bravo"] .sc-ce2-francais-b__sourire { opacity: 0; }
+
+/* LES YEUX CLIGNENT, de temps en temps. */
+.sc-ce2-francais-b__cligne {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-ce2-francais-b-cligne 4.4s infinite;
+  animation-delay: var(--decalage, 0s);
+}
+
+@keyframes sc-ce2-francais-b-cligne {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+/* LES ÉTOILES DE LA RÉUSSITE, qui montent autour de la mascotte. */
+.sc-ce2-francais-b__aureole { position: absolute; inset: 0; }
+
+.sc-ce2-francais-b__etoile {
+  position: absolute;
+  left: calc(4% + var(--n) * 24%);
+  top: 16%;
+  width: 22px;
+  height: 22px;
+  background: #ffd23f;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  opacity: 0;
+  animation: sc-ce2-francais-b-monte 1.5s ease-out calc(var(--n) * 0.16s) both;
+}
+
+.sc-ce2-francais-b__etoile:nth-child(even) { background: #fff3b0; width: 16px; height: 16px; }
+
+@keyframes sc-ce2-francais-b-monte {
+  0% { opacity: 0; transform: translateY(14px) scale(0.3) rotate(0); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.15) rotate(170deg); }
+}
+
+/* LE CŒUR DE L'ENCOURAGEMENT : jamais de moquerie, un cœur qui flotte. */
+.sc-ce2-francais-b__coeur {
+  position: absolute;
+  left: 6%;
+  top: 2%;
+  width: 26px;
+  height: 24px;
+  background: #ff6b8a;
+  clip-path: path("M13 23 C6 17 1 12.5 1 7.5 C1 3.8 3.8 1 7.4 1 C9.8 1 11.8 2.3 13 4.2 C14.2 2.3 16.2 1 18.6 1 C22.2 1 25 3.8 25 7.5 C25 12.5 20 17 13 23 Z");
+  animation: sc-ce2-francais-b-coeur 1.8s ease-out both;
+}
+
+@keyframes sc-ce2-francais-b-coeur {
+  0% { opacity: 0; transform: translateY(10px) scale(0.4); }
+  25% { opacity: 1; transform: translateY(0) scale(1.2); }
+  45% { transform: scale(0.95); }
+  65% { transform: scale(1.1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1); }
+}
+
+/* LA FÊTE : une gerbe d'éclats qui part du milieu, une seule fois. */
+.sc-ce2-francais-b__fete {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.jeu.sc-ce2-francais-b > .sc-ce2-francais-b__fete { z-index: 3; }
+
+.sc-ce2-francais-b__flash {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 60px;
+  height: 60px;
+  margin: -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85), rgba(255, 226, 120, 0.45) 45%, transparent 70%);
+  opacity: 0;
+  animation: sc-ce2-francais-b-flash 0.9s ease-out both;
+}
+
+@keyframes sc-ce2-francais-b-flash {
+  0% { opacity: 0; transform: scale(0.2); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: scale(8); }
+}
+
+.sc-ce2-francais-b__eclat {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 18px;
+  height: 18px;
+  margin: -9px;
+  background: var(--teinte);
+  opacity: 0;
+  animation: sc-ce2-francais-b-eclat 1.5s cubic-bezier(0.15, 0.7, 0.3, 1) var(--delai) both;
+}
+
+/* Les cœurs et les pétales de la tonnelle. */
+.sc-ce2-francais-b__eclat--coeur {
+  width: 22px;
+  height: 20px;
+  clip-path: path("M11 19 C5 14 1 10.5 1 6.5 C1 3.3 3.3 1 6.3 1 C8.3 1 10 2 11 3.6 C12 2 13.7 1 15.7 1 C18.7 1 21 3.3 21 6.5 C21 10.5 17 14 11 19 Z");
+}
+
+.sc-ce2-francais-b__eclat--coeur:nth-child(3n) { border-radius: 80% 0 80% 0; clip-path: none; width: 14px; height: 10px; }
+
+/* Les confettis de papier du détective : des petites fiches. */
+.sc-ce2-francais-b__eclat--papier { width: 14px; height: 18px; border-radius: 2px; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.5); }
+
+/* Les bâtons de craie du tableau. */
+.sc-ce2-francais-b__eclat--craie { width: 26px; height: 8px; border-radius: 4px; }
+
+@keyframes sc-ce2-francais-b-eclat {
+  0% { opacity: 0; transform: rotate(var(--angle)) translateX(0) scale(0.4); }
+  12% { opacity: 1; }
+  65% { opacity: 1; transform: rotate(var(--angle)) translateX(var(--dist)) rotate(var(--tour)) scale(1.1); }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateX(calc(var(--dist) * 1.15)) rotate(var(--tour)) scale(0.7); }
+}
+
+/* GLISSER : l'objet suit le doigt, la cible s'allume quand il est dessus. */
+.sc-ce2-francais-b--glisse {
+  position: relative;
+  z-index: 10;
+  cursor: grabbing !important;
+  animation: none !important;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* ================================================================
+   FÉMININ ET PLURIEL — LA TONNELLE FLEURIE (`Tonnelle.js`)
+   ================================================================ */
+
+.jeu.sc-un-ou-des-ce2 {
+  --sc-un-ou-des-ce2-teinte: #ff8fc0;
+  background: linear-gradient(180deg, #9fd6ff 0%, #d4efff 34%, #f7e8f1 60%, #ecd6bb 100%);
+  padding-bottom: 64px;
+}
+
+.jeu.sc-un-ou-des-ce2--pluriel { --sc-un-ou-des-ce2-teinte: #c9a7ff; }
+
+.jeu.sc-un-ou-des-ce2::before { background: transparent; }
+
+.sc-un-ou-des-ce2__poutre {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 18px;
+  background: linear-gradient(180deg, #9a6a3a, #6e4421);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.sc-un-ou-des-ce2__vigne {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  width: 100%;
+  height: 58px;
+  transform-origin: 50% 0;
+  animation: sc-un-ou-des-ce2-vigne 6s ease-in-out infinite alternate;
+}
+
+@keyframes sc-un-ou-des-ce2-vigne {
+  from { transform: skewX(-1.6deg); }
+  to { transform: skewX(1.6deg); }
+}
+
+.sc-un-ou-des-ce2__decor.est-fete .sc-un-ou-des-ce2__fleur-vigne {
+  animation: sc-un-ou-des-ce2-eclot 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 2;
+}
+
+@keyframes sc-un-ou-des-ce2-eclot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+}
+
+.sc-un-ou-des-ce2__village {
+  position: absolute;
+  left: 1%;
+  top: 34%;
+  width: clamp(90px, 13vw, 170px);
+  opacity: 0.8;
+}
+
+.sc-un-ou-des-ce2__lanterne {
+  position: absolute;
+  top: 62px;
+  right: 5%;
+  width: 34px;
+  transform-origin: 50% 0;
+  animation: sc-un-ou-des-ce2-balance 3.4s ease-in-out infinite alternate;
+}
+
+@keyframes sc-un-ou-des-ce2-balance {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg); }
+}
+
+.sc-un-ou-des-ce2__halo {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 90px;
+  height: 90px;
+  margin: -45px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 110, 0.55), transparent 65%);
+  animation: sc-un-ou-des-ce2-lueur 2.4s ease-in-out infinite alternate;
+}
+
+.sc-un-ou-des-ce2__decor.est-fete .sc-un-ou-des-ce2__halo { background: radial-gradient(circle, rgba(255, 220, 120, 0.9), transparent 70%); }
+
+@keyframes sc-un-ou-des-ce2-lueur {
+  from { opacity: 0.6; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.1); }
+}
+
+.sc-un-ou-des-ce2__flamme {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-un-ou-des-ce2-flamme 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes sc-un-ou-des-ce2-flamme {
+  from { transform: scale(0.9, 1); }
+  to { transform: scale(1.08, 1.12); }
+}
+
+/* LES PÉTALES qui tombent, lentement, en tournoyant. */
+.sc-un-ou-des-ce2__petale {
+  position: absolute;
+  top: -20px;
+  left: var(--x);
+  width: 13px;
+  height: 9px;
+  border-radius: 80% 0 80% 0;
+  background: #ffa8c9;
+  opacity: 0;
+  animation: sc-un-ou-des-ce2-tombe var(--duree) linear var(--delai) infinite;
+}
+
+.sc-un-ou-des-ce2__petale:nth-child(odd) { background: #fff0f6; }
+
+@keyframes sc-un-ou-des-ce2-tombe {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  10% { opacity: 0.9; }
+  50% { transform: translate(28px, 330px) rotate(200deg); }
+  90% { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(-10px, 680px) rotate(420deg); }
+}
+
+.sc-un-ou-des-ce2__table {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 120px, rgba(0, 0, 0, 0.12) 120px 122px),
+    linear-gradient(180deg, #b47c45, #8b5a2b);
+  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sc-un-ou-des-ce2__craie {
+  position: absolute;
+  left: var(--x);
+  bottom: 12px;
+  width: 36px;
+  height: 9px;
+  border-radius: 4px;
+  background: var(--couleur);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+  transform: rotate(var(--angle));
+}
+
+/* LE TABLEAU DE LA TONNELLE : cadre de bois, ardoise sombre, écriture à la craie. */
+.sc-un-ou-des-ce2__tableau {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 740px);
+  padding: 18px 26px 20px;
+  border: 10px solid #8b5a2b;
+  border-radius: 14px;
+  background: radial-gradient(ellipse at 30% 20%, #3c4b45 0%, #222d29 72%);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 10px 22px rgba(0, 0, 0, 0.3);
+  animation: sc-un-ou-des-ce2-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes sc-un-ou-des-ce2-entre {
+  from { opacity: 0; transform: translateY(-14px) scale(0.98); }
+}
+
+.sc-un-ou-des-ce2 .accords__depart {
+  position: relative;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fdfbf6;
+  font-size: 28px;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.sc-un-ou-des-ce2 .unoudes__etiquette {
+  position: relative;
+  flex-wrap: wrap;
+  justify-content: center;
+  border: 3px dashed rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+
+.sc-un-ou-des-ce2 .unoudes__case {
+  color: rgba(255, 255, 255, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.sc-un-ou-des-ce2 .unoudes__case.est-pleine {
+  color: #fff;
+  border-bottom-color: #fff;
+  animation: sc-un-ou-des-ce2-ecrit 0.35s ease-out;
+}
+
+@keyframes sc-un-ou-des-ce2-ecrit {
+  from { opacity: 0.3; transform: scale(0.92); }
+}
+
+.sc-un-ou-des-ce2 .unoudes__case.est-fautive { color: #ffc2b8; border-bottom-color: #ff7b6b; }
+
+.sc-un-ou-des-ce2 .unoudes__etiquette.est-juste { border: 3px solid #8ce99a; }
+.sc-un-ou-des-ce2 .unoudes__etiquette.est-juste .unoudes__case { border-bottom-color: #8ce99a; }
+
+/* LES DESSINS À LA CRAIE : des cœurs et des traits d'éclat, dans les coins. */
+.sc-un-ou-des-ce2__dessins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sc-un-ou-des-ce2__coeur-craie {
+  position: absolute;
+  color: var(--sc-un-ou-des-ce2-teinte);
+  font-size: 28px;
+  line-height: 1;
+  opacity: 0.85;
+  animation: sc-un-ou-des-ce2-bat 2.6s ease-in-out infinite;
+}
+
+.sc-un-ou-des-ce2__coeur-craie::before { content: "♡"; }
+.sc-un-ou-des-ce2__coeur-craie--a { left: 12px; top: 8px; }
+.sc-un-ou-des-ce2__coeur-craie--b { right: 16px; top: 12px; font-size: 22px; animation-delay: -0.9s; }
+.sc-un-ou-des-ce2__coeur-craie--c { right: 26px; bottom: 8px; font-size: 24px; animation-delay: -1.7s; }
+
+.sc-un-ou-des-ce2.est-fete .sc-un-ou-des-ce2__coeur-craie { animation-duration: 0.7s; color: #ff6fa8; }
+
+@keyframes sc-un-ou-des-ce2-bat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+.sc-un-ou-des-ce2__trait {
+  position: absolute;
+  width: 22px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.sc-un-ou-des-ce2__trait--a { left: 14px; bottom: 26px; transform: rotate(-30deg); box-shadow: 4px 10px 0 rgba(255, 255, 255, 0.6); }
+.sc-un-ou-des-ce2__trait--b { right: 52px; top: 20px; transform: rotate(25deg); box-shadow: -6px 10px 0 rgba(255, 220, 100, 0.7); }
+
+/* L'EXPLICATION : la fin qui s'efface, la fin qui s'écrit en couleur. */
+.sc-un-ou-des-ce2__explication {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 22px;
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fdfbf6;
+}
+
+.sc-un-ou-des-ce2__paire {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.07);
+  animation: sc-un-ou-des-ce2-paire 0.45s ease-out calc(0.2s + var(--i) * 0.35s) both;
+}
+
+@keyframes sc-un-ou-des-ce2-paire {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+.sc-un-ou-des-ce2__avant { color: rgba(255, 255, 255, 0.78); }
+
+.sc-un-ou-des-ce2__ote {
+  text-decoration: line-through;
+  text-decoration-color: #ff7b6b;
+  text-decoration-thickness: 3px;
+  opacity: 0.6;
+  animation: sc-un-ou-des-ce2-efface 0.6s ease-out calc(0.4s + var(--i) * 0.35s) both;
+}
+
+@keyframes sc-un-ou-des-ce2-efface {
+  from { opacity: 1; text-decoration-color: transparent; }
+}
+
+.sc-un-ou-des-ce2__vers { color: #ffe066; font-weight: 800; }
+
+.sc-un-ou-des-ce2__ajoute {
+  display: inline-block;
+  color: var(--sc-un-ou-des-ce2-teinte);
+  font-weight: 800;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+  border-bottom: 3px solid currentColor;
+  animation: sc-un-ou-des-ce2-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) calc(0.6s + var(--i) * 0.35s) both;
+}
+
+@keyframes sc-un-ou-des-ce2-pop {
+  0% { opacity: 0; transform: scale(0.3) translateY(-8px); }
+  60% { opacity: 1; transform: scale(1.35); }
+}
+
+.sc-un-ou-des-ce2__paire.est-pareil .sc-un-ou-des-ce2__vers { color: #8ce99a; }
+
+/* LES CHOIX : des plaquettes de bois piquées d'une fleur, qui se balancent. */
+.sc-un-ou-des-ce2 .unoudes__rangee { flex-wrap: wrap; justify-content: center; }
+
+.sc-un-ou-des-ce2 .unoudes__tuile {
+  position: relative;
+  border-color: #c99560;
+  background: linear-gradient(180deg, #fff6e6, #f3dcb4);
+  box-shadow: 0 5px 0 #a8733f, 0 8px 14px rgba(0, 0, 0, 0.2);
+  animation: sc-un-ou-des-ce2-plaque 3.6s ease-in-out infinite alternate;
+}
+
+.sc-un-ou-des-ce2 .unoudes__rangee li:nth-child(2) .unoudes__tuile { animation-delay: -1.2s; }
+.sc-un-ou-des-ce2 .unoudes__rangee li:nth-child(3) .unoudes__tuile { animation-delay: -2.4s; }
+
+.sc-un-ou-des-ce2 .unoudes__tuile::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd84d 0 30%, #ff8fb8 32%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sc-un-ou-des-ce2 .unoudes__rangee:last-child .unoudes__tuile::before { background: radial-gradient(circle, #ffd84d 0 30%, #b48bff 32%); }
+
+@keyframes sc-un-ou-des-ce2-plaque {
+  from { rotate: -1.2deg; }
+  to { rotate: 1.2deg; }
+}
+
+.sc-un-ou-des-ce2 .unoudes__tuile.est-choisie {
+  border-color: #d6578f;
+  background: #fff0f6;
+  box-shadow: 0 5px 0 #b8326d, 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+
+.sc-un-ou-des-ce2 .unoudes__rangee:last-child .unoudes__tuile.est-choisie {
+  border-color: #8a5fd6;
+  background: #f3edff;
+  box-shadow: 0 5px 0 #6a3fb8, 0 8px 14px rgba(0, 0, 0, 0.2);
+}
+
+/* FLEURETTE, sur la table, en bas à droite. */
+.sc-ce2-francais-b__mascotte.sc-un-ou-des-ce2__fleurette { bottom: 20px; }
+
+.sc-un-ou-des-ce2__tete {
+  transform-origin: 70px 74px;
+  animation: sc-un-ou-des-ce2-tete 3s ease-in-out infinite alternate;
+}
+
+@keyframes sc-un-ou-des-ce2-tete {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(5deg); }
+}
+
+.sc-un-ou-des-ce2__feuille {
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  animation: sc-un-ou-des-ce2-feuille 2.6s ease-in-out infinite alternate;
+}
+
+.sc-un-ou-des-ce2__feuille--d { transform-origin: 0 50%; animation-delay: -1.3s; }
+
+@keyframes sc-un-ou-des-ce2-feuille {
+  from { transform: rotate(-8deg); }
+  to { transform: rotate(8deg); }
+}
+
+/* LES SŒURS, cachées : elles poussent au pluriel réussi (une fleur → des fleurs). */
+.sc-un-ou-des-ce2__soeur { transform: scale(0); }
+
+.sc-un-ou-des-ce2__fleurette[data-humeur="bravo"][data-sens="pluriel"] .sc-un-ou-des-ce2__soeur {
+  transform: scale(1);
+  animation: sc-un-ou-des-ce2-pousse 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.25s both;
+}
+
+.sc-un-ou-des-ce2__fleurette[data-humeur="bravo"][data-sens="pluriel"] .sc-un-ou-des-ce2__soeur--d { animation-delay: 0.45s; }
+
+@keyframes sc-un-ou-des-ce2-pousse {
+  from { transform: scale(0); }
+}
+
+/* LE NŒUD ROSE, caché : il se pose au féminin réussi. */
+.sc-un-ou-des-ce2__noeud { transform: scale(0); }
+
+.sc-un-ou-des-ce2__fleurette[data-humeur="bravo"][data-sens="feminin"] .sc-un-ou-des-ce2__noeud {
+  transform: scale(1) rotate(-10deg);
+  animation: sc-un-ou-des-ce2-noeud 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.3s both;
+}
+
+@keyframes sc-un-ou-des-ce2-noeud {
+  from { transform: scale(0) rotate(-120deg); }
+}
+
+/* ================================================================
+   LE DÉTECTIVE DES CLASSES — LE BUREAU ET LE TABLEAU DE LIÈGE (`Enquete.js`)
+   ================================================================ */
+
+.jeu.sc-detective-du-verbe-ce2 {
+  background:
+    radial-gradient(circle at 88% 26%, rgba(255, 210, 120, 0.4), transparent 34%),
+    linear-gradient(180deg, #2b2742 0%, #3d3030 52%, #4b3423 100%);
+  padding-bottom: 64px;
+}
+
+.jeu.sc-detective-du-verbe-ce2::before { background: transparent; }
+
+.sc-detective-du-verbe-ce2__fenetre {
+  position: absolute;
+  left: 2%;
+  top: 70px;
+  width: clamp(96px, 13vw, 170px);
+  height: clamp(120px, 17vw, 210px);
+  overflow: hidden;
+  border: 8px solid #5a3b22;
+  border-radius: 10px 10px 2px 2px;
+  background: linear-gradient(180deg, #0e1838, #26386a);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+.sc-detective-du-verbe-ce2__fenetre::before,
+.sc-detective-du-verbe-ce2__fenetre::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  background: #5a3b22;
+}
+
+.sc-detective-du-verbe-ce2__fenetre::before { left: 50%; top: 0; bottom: 0; width: 6px; margin-left: -3px; }
+.sc-detective-du-verbe-ce2__fenetre::after { top: 46%; left: 0; right: 0; height: 6px; }
+
+.sc-detective-du-verbe-ce2__lune {
+  position: absolute;
+  right: 14%;
+  top: 10%;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe0, #ffe9a0);
+  box-shadow: 0 0 22px 6px rgba(255, 240, 180, 0.55);
+  animation: sc-detective-du-verbe-ce2-lune 4s ease-in-out infinite alternate;
+}
+
+@keyframes sc-detective-du-verbe-ce2-lune {
+  from { box-shadow: 0 0 16px 4px rgba(255, 240, 180, 0.4); }
+  to { box-shadow: 0 0 28px 10px rgba(255, 240, 180, 0.65); }
+}
+
+.sc-detective-du-verbe-ce2__etoile-ciel {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  animation: sc-detective-du-verbe-ce2-scintille 2.2s ease-in-out var(--delai) infinite;
+}
+
+@keyframes sc-detective-du-verbe-ce2-scintille {
+  0%, 100% { opacity: 0.2; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.sc-detective-du-verbe-ce2__clocher {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 38%;
+}
+
+.sc-detective-du-verbe-ce2__halo {
+  position: absolute;
+  right: -80px;
+  top: 40px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 130, 0.35), transparent 65%);
+  animation: sc-detective-du-verbe-ce2-halo 5s ease-in-out infinite alternate;
+}
+
+.sc-detective-du-verbe-ce2__decor.est-resolu .sc-detective-du-verbe-ce2__halo { background: radial-gradient(circle, rgba(255, 224, 140, 0.6), transparent 68%); }
+
+@keyframes sc-detective-du-verbe-ce2-halo {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+.sc-detective-du-verbe-ce2__poussiere {
+  position: absolute;
+  left: var(--x);
+  top: 62%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 236, 180, 0.85);
+  opacity: 0;
+  animation: sc-detective-du-verbe-ce2-poussiere var(--duree) ease-in-out var(--delai) infinite;
+}
+
+@keyframes sc-detective-du-verbe-ce2-poussiere {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-24px, -220px); }
+}
+
+.sc-detective-du-verbe-ce2__photo {
+  position: absolute;
+  right: 3%;
+  width: clamp(54px, 6vw, 76px);
+  aspect-ratio: 0.85;
+  padding: 5px 5px 14px;
+  background: #f4efe4;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transform-origin: 50% 0;
+  animation: sc-detective-du-verbe-ce2-photo 4.5s ease-in-out infinite alternate;
+}
+
+.sc-detective-du-verbe-ce2__photo::before {
+  content: "";
+  display: block;
+  height: 100%;
+  background:
+    radial-gradient(circle at 50% 38%, #2a2a2a 0 18%, transparent 19%),
+    radial-gradient(ellipse at 50% 95%, #2a2a2a 0 38%, transparent 39%),
+    linear-gradient(#9aa3ab, #6d7680);
+}
+
+.sc-detective-du-verbe-ce2__photo::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8a8a, #b31b1b);
+}
+
+.sc-detective-du-verbe-ce2__photo--a { top: 46%; rotate: 6deg; }
+.sc-detective-du-verbe-ce2__photo--b { top: 66%; right: 9%; rotate: -5deg; animation-delay: -2s; }
+
+@keyframes sc-detective-du-verbe-ce2-photo {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+.sc-detective-du-verbe-ce2__boussole {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  width: 62px;
+}
+
+.sc-detective-du-verbe-ce2__aiguille {
+  transform-origin: 30px 30px;
+  animation: sc-detective-du-verbe-ce2-aiguille 3.2s ease-in-out infinite;
+}
+
+.sc-detective-du-verbe-ce2__decor.est-resolu .sc-detective-du-verbe-ce2__aiguille { animation: sc-detective-du-verbe-ce2-tour 1.2s ease-out both; }
+
+@keyframes sc-detective-du-verbe-ce2-aiguille {
+  0%, 100% { transform: rotate(-18deg); }
+  35% { transform: rotate(14deg); }
+  60% { transform: rotate(-6deg); }
+}
+
+@keyframes sc-detective-du-verbe-ce2-tour {
+  from { transform: rotate(0); }
+  to { transform: rotate(720deg); }
+}
+
+/* LE TABLEAU DE LIÈGE : cinq fiches, une par classe, reliées par le fil rouge. */
+.sc-detective-du-verbe-ce2__liege {
+  position: relative;
+  width: min(100%, 780px);
+  padding: 18px 12px 12px;
+  border: 8px solid #6b4423;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(80, 40, 10, 0.25) 1px, transparent 2px) 0 0 / 9px 9px,
+    radial-gradient(circle at 70% 60%, rgba(255, 240, 210, 0.2) 1px, transparent 2px) 0 0 / 7px 7px,
+    linear-gradient(180deg, #cf9c66, #b47f4a);
+  box-shadow: inset 0 0 18px rgba(60, 30, 5, 0.45), 0 8px 18px rgba(0, 0, 0, 0.35);
+  animation: sc-detective-du-verbe-ce2-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes sc-detective-du-verbe-ce2-entre {
+  from { opacity: 0; transform: translateY(-12px); }
+}
+
+.sc-detective-du-verbe-ce2__fil {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 8px;
+  width: calc(100% - 24px);
+  height: 26px;
+  z-index: 3;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sc-detective-du-verbe-ce2__fil path {
+  fill: none;
+  stroke: #d62828;
+  stroke-width: 2.5px;
+  vector-effect: non-scaling-stroke;
+  animation: sc-detective-du-verbe-ce2-fil 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes sc-detective-du-verbe-ce2-fil {
+  from { transform: translateY(0); }
+  to { transform: translateY(1.5px); }
+}
+
+.sc-detective-du-verbe-ce2__fiches {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-detective-du-verbe-ce2__fiche {
+  --couleur: #2f7fd1;
+  --penche: -2deg;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-height: 72px;
+  padding: 14px 6px 8px;
+  border-top: 6px solid var(--couleur);
+  border-radius: 3px;
+  background: #fffdf4;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  rotate: var(--penche);
+  animation: sc-detective-du-verbe-ce2-fiche 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) calc(0.1s + var(--n) * 0.07s) both;
+}
+
+.sc-detective-du-verbe-ce2__fiche--nom { --couleur: #2f7fd1; --penche: -2deg; }
+.sc-detective-du-verbe-ce2__fiche--verbe { --couleur: #d62828; --penche: 1.5deg; }
+.sc-detective-du-verbe-ce2__fiche--determinant { --couleur: #2e8b57; --penche: -1deg; }
+.sc-detective-du-verbe-ce2__fiche--adjectif { --couleur: #d9730d; --penche: 2deg; }
+.sc-detective-du-verbe-ce2__fiche--pronom { --couleur: #8e44c9; --penche: -1.5deg; }
+
+@keyframes sc-detective-du-verbe-ce2-fiche {
+  from { opacity: 0; transform: translateY(-16px) scale(0.9); }
+}
+
+/* LA FICHE RECHERCHÉE : entourée de rouge, elle frétille tant qu'on cherche. */
+.sc-detective-du-verbe-ce2__fiche.est-recherchee {
+  z-index: 2;
+  background: #fff7e0;
+  animation:
+    sc-detective-du-verbe-ce2-fiche 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) calc(0.1s + var(--n) * 0.07s) both,
+    sc-detective-du-verbe-ce2-fretille 1.8s ease-in-out 0.8s infinite;
+}
+
+.sc-detective-du-verbe-ce2__liege.est-termine .sc-detective-du-verbe-ce2__fiche.est-recherchee {
+  animation: sc-detective-du-verbe-ce2-classe 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+@keyframes sc-detective-du-verbe-ce2-fretille {
+  0%, 60%, 100% { transform: rotate(0); }
+  70% { transform: rotate(-3deg); }
+  80% { transform: rotate(3deg); }
+  90% { transform: rotate(-1.5deg); }
+}
+
+@keyframes sc-detective-du-verbe-ce2-classe {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.12); }
+  100% { transform: scale(1.04); }
+}
+
+.sc-detective-du-verbe-ce2__cercle {
+  position: absolute;
+  inset: -9px -8px;
+  border: 3px solid #d62828;
+  border-radius: 50%;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: sc-detective-du-verbe-ce2-cercle 0.7s ease-out 0.5s both;
+}
+
+@keyframes sc-detective-du-verbe-ce2-cercle {
+  from { opacity: 0; transform: scale(1.3) rotate(-8deg); }
+}
+
+.sc-detective-du-verbe-ce2__punaise {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8a8a, #b31b1b);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.sc-detective-du-verbe-ce2__titre {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--couleur);
+}
+
+.sc-detective-du-verbe-ce2__icone {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sc-detective-du-verbe-ce2__pieces {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* UN MOT ÉPINGLÉ : il tombe sur sa fiche. Un mot faux est bien classé ici : il n'est pas barré. */
+.sc-detective-du-verbe-ce2__piece {
+  padding: 1px 8px;
+  border: 1px dashed #9fb3c4;
+  border-radius: 4px;
+  background: #f4efe2;
+  color: #33475b;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  animation: sc-detective-du-verbe-ce2-epingle 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.sc-detective-du-verbe-ce2__piece.est-bon {
+  border: none;
+  background: var(--couleur);
+  color: #fff;
+  animation-delay: 0.15s;
+}
+
+@keyframes sc-detective-du-verbe-ce2-epingle {
+  from { opacity: 0; transform: translateY(-28px) rotate(-12deg) scale(1.3); }
+}
+
+.sc-detective-du-verbe-ce2__tampon {
+  position: absolute;
+  right: -14px;
+  bottom: -14px;
+  width: 40px;
+  height: 40px;
+  transform: rotate(-12deg);
+  animation: sc-detective-du-verbe-ce2-tampon 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) 0.3s both;
+}
+
+@keyframes sc-detective-du-verbe-ce2-tampon {
+  from { opacity: 0; transform: scale(2.6) rotate(-40deg); }
+}
+
+/* LE DOSSIER DE L'ENQUÊTE : une chemise kraft, chaque mot une fiche scotchée. */
+.sc-detective-du-verbe-ce2 .detective__phrase {
+  position: relative;
+  margin-top: 18px;
+  row-gap: 28px;
+  padding: 22px 22px 30px;
+  border-radius: 4px 14px 14px 14px;
+  background: linear-gradient(180deg, #ecd09a, #d9b373);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  animation: sc-detective-du-verbe-ce2-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) 0.1s both;
+}
+
+.sc-detective-du-verbe-ce2 .detective__phrase::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -16px;
+  width: 120px;
+  height: 18px;
+  border-radius: 10px 10px 0 0;
+  background: #ecd09a;
+}
+
+.sc-detective-du-verbe-ce2 .detective__mot {
+  background: #fffdf6;
+  box-shadow: 0 3px 0 #c9b48a, 0 5px 9px rgba(0, 0, 0, 0.18);
+  cursor: zoom-in;
+  rotate: -1deg;
+  transition: translate 0.15s ease;
+}
+
+.sc-detective-du-verbe-ce2 .detective__mot:nth-child(even) { rotate: 1.2deg; }
+
+.sc-detective-du-verbe-ce2 .detective__mot::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 34px;
+  height: 12px;
+  margin-left: -17px;
+  background: rgba(255, 245, 200, 0.75);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.sc-detective-du-verbe-ce2 .detective__mot:hover:not(:disabled) { translate: 0 -3px; }
+
+.sc-detective-du-verbe-ce2 .detective__mot.est-faux { animation: sc-detective-du-verbe-ce2-non 0.45s ease-in-out; }
+
+@keyframes sc-detective-du-verbe-ce2-non {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* LE BON MOT : entouré de rouge, comme le « verbe » de la couverture. */
+.sc-detective-du-verbe-ce2 .detective__mot.est-montre::before {
+  content: "";
+  position: absolute;
+  inset: -9px -12px;
+  border: 3px solid #d62828;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sc-detective-du-verbe-ce2-cercle 0.6s ease-out both;
+}
+
+.sc-detective-du-verbe-ce2 .detective__etiquette { color: #5b3a1a; }
+
+.sc-detective-du-verbe-ce2__definition { animation: sc-detective-du-verbe-ce2-entre 0.5s ease-out 0.4s both; }
+
+/* LA TASSE, sur le bureau, en bas à droite. */
+.sc-detective-du-verbe-ce2__vapeur {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0;
+  animation: sc-detective-du-verbe-ce2-vapeur 3s ease-in-out calc(var(--n) * 1s) infinite;
+}
+
+[data-humeur="bravo"] .sc-detective-du-verbe-ce2__vapeur { stroke: #ffd23f; }
+
+@keyframes sc-detective-du-verbe-ce2-vapeur {
+  0% { opacity: 0; transform: translateY(10px); }
+  40% { opacity: 0.85; }
+  100% { opacity: 0; transform: translateY(-12px); }
+}
+
+.sc-detective-du-verbe-ce2__casquette {
+  transform-origin: 34px 50px;
+  animation: sc-detective-du-verbe-ce2-casquette 3.8s ease-in-out infinite alternate;
+}
+
+@keyframes sc-detective-du-verbe-ce2-casquette {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(4deg); }
+}
+
+[data-humeur="bravo"] .sc-detective-du-verbe-ce2__casquette { animation: sc-detective-du-verbe-ce2-salut 0.6s ease-in-out 3; }
+
+@keyframes sc-detective-du-verbe-ce2-salut {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-14px) rotate(-10deg); }
+}
+
+/* ================================================================
+   TRANSFORME LA PHRASE — LE TABLEAU AU BORD DU LAC (`Lac.js`)
+   ================================================================ */
+
+.jeu.sc-phrase-qui-dit-non-ce2 {
+  background: linear-gradient(180deg, #8fd0ff 0%, #cdeeff 36%, #bfe3cc 66%, #8fc47c 100%);
+}
+
+.jeu.sc-phrase-qui-dit-non-ce2::before { background: transparent; }
+
+.sc-phrase-qui-dit-non-ce2__nuage {
+  position: absolute;
+  top: 9%;
+  left: -20%;
+  width: 150px;
+  height: 44px;
+  border-radius: 44px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 34px -16px 0 -2px rgba(255, 255, 255, 0.9), 70px 0 0 -6px rgba(255, 255, 255, 0.9);
+  animation: sc-phrase-qui-dit-non-ce2-nuage 70s linear infinite;
+}
+
+.sc-phrase-qui-dit-non-ce2__nuage--b { top: 22%; animation-duration: 95s; animation-delay: -48s; transform: scale(0.75); }
+
+@keyframes sc-phrase-qui-dit-non-ce2-nuage {
+  from { translate: 0 0; }
+  to { translate: 140vw 0; }
+}
+
+.sc-phrase-qui-dit-non-ce2__montagnes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 36%;
+  width: 100%;
+  height: 22%;
+}
+
+.sc-phrase-qui-dit-non-ce2__lac {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 57%;
+  height: 13%;
+  background: linear-gradient(180deg, #5fb0e6, #8fd0f2);
+}
+
+.sc-phrase-qui-dit-non-ce2__reflet {
+  position: absolute;
+  left: var(--x);
+  top: 40%;
+  width: 60px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.85);
+  animation: sc-phrase-qui-dit-non-ce2-reflet 3.6s ease-in-out var(--delai) infinite;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-reflet {
+  0%, 100% { opacity: 0.2; transform: translateX(-8px) scaleX(0.6); }
+  50% { opacity: 1; transform: translateX(8px) scaleX(1); }
+}
+
+/* LA VIGNE qui grimpe aux deux bords, et se balance. */
+.sc-phrase-qui-dit-non-ce2__vigne {
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 320px;
+  transform-origin: 50% 0;
+  animation: sc-phrase-qui-dit-non-ce2-vigne 5s ease-in-out infinite alternate;
+}
+
+.sc-phrase-qui-dit-non-ce2__vigne--g { left: 2px; }
+.sc-phrase-qui-dit-non-ce2__vigne--d { right: 2px; scale: -1 1; animation-delay: -2.5s; }
+
+@keyframes sc-phrase-qui-dit-non-ce2-vigne {
+  from { transform: rotate(-1.5deg); }
+  to { transform: rotate(1.5deg); }
+}
+
+.sc-phrase-qui-dit-non-ce2__feuille {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  animation: sc-phrase-qui-dit-non-ce2-feuille 2.4s ease-in-out calc(var(--n) * -0.3s) infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-feuille {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg); }
+}
+
+.sc-phrase-qui-dit-non-ce2__lanterne {
+  position: absolute;
+  top: 58px;
+  right: 9%;
+  width: 32px;
+  transform-origin: 50% 0;
+  animation: sc-phrase-qui-dit-non-ce2-balance 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-balance {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg); }
+}
+
+.sc-phrase-qui-dit-non-ce2__flamme {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-phrase-qui-dit-non-ce2-flamme 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-flamme {
+  from { transform: scale(0.9, 1); }
+  to { transform: scale(1.08, 1.12); }
+}
+
+.sc-phrase-qui-dit-non-ce2__paquerette {
+  position: absolute;
+  left: var(--x);
+  bottom: 0;
+  width: 26px;
+  transform-origin: 50% 100%;
+  animation: sc-phrase-qui-dit-non-ce2-paquerette 2.8s ease-in-out var(--delai) infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-paquerette {
+  from { transform: rotate(-7deg); }
+  to { transform: rotate(7deg); }
+}
+
+/* LE TABLEAU : cadre de bois, ardoise sombre, rebord à craies. */
+.sc-phrase-qui-dit-non-ce2__tableau {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: min(100%, 740px);
+  margin-bottom: 28px;
+  padding: 18px 30px 20px;
+  border: 12px solid #8b5a2b;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 35% 25%, #3d413c 0%, #1f2321 72%);
+  box-shadow: inset 0 0 34px rgba(0, 0, 0, 0.55), 0 12px 24px rgba(0, 0, 0, 0.3);
+  animation: sc-phrase-qui-dit-non-ce2-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-phrase-qui-dit-non-ce2__tableau::after {
+  content: "";
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  bottom: -26px;
+  height: 12px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(180deg, #7a4c25, #5e3a1b);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-entre {
+  from { opacity: 0; transform: translateY(-14px) scale(0.98); }
+}
+
+.sc-phrase-qui-dit-non-ce2__tableau--negative { --sc-phrase-qui-dit-non-ce2-teinte: #ff9a9a; }
+.sc-phrase-qui-dit-non-ce2__tableau--interrogative { --sc-phrase-qui-dit-non-ce2-teinte: #7cc6ff; }
+.sc-phrase-qui-dit-non-ce2__tableau--exclamative { --sc-phrase-qui-dit-non-ce2-teinte: #ffd43b; }
+
+.sc-phrase-qui-dit-non-ce2 .non__oui {
+  color: #fdfbf6;
+  font-size: 26px;
+  text-align: center;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.sc-phrase-qui-dit-non-ce2__tableau--negative .non__marque { background: #d6343a; }
+.sc-phrase-qui-dit-non-ce2__tableau--interrogative .non__marque { background: #1d6fb8; }
+.sc-phrase-qui-dit-non-ce2__tableau--exclamative .non__marque { background: #c96a00; }
+
+/* Le gribouillis de la couverture : l'ampoule à la craie, dans le coin. */
+.sc-phrase-qui-dit-non-ce2__gribouillis {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  width: 30px;
+  height: 40px;
+  pointer-events: none;
+}
+
+.sc-phrase-qui-dit-non-ce2__ampoule {
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  width: 18px;
+  height: 20px;
+  border: 2px solid #ffe066;
+  border-radius: 50% 50% 40% 40%;
+  animation: sc-phrase-qui-dit-non-ce2-idee 2.4s ease-in-out infinite;
+}
+
+.sc-phrase-qui-dit-non-ce2__ampoule::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: -7px;
+  width: 8px;
+  height: 5px;
+  border: 2px solid #ffe066;
+  border-top: none;
+}
+
+.sc-phrase-qui-dit-non-ce2__eclats {
+  position: absolute;
+  left: 13px;
+  top: 0;
+  width: 4px;
+  height: 5px;
+  border-radius: 2px;
+  background: #ffe066;
+  box-shadow: -12px 6px 0 #ffe066, 12px 6px 0 #ffe066;
+  animation: sc-phrase-qui-dit-non-ce2-idee 2.4s ease-in-out infinite;
+}
+
+.sc-phrase-qui-dit-non-ce2__tableau.est-termine .sc-phrase-qui-dit-non-ce2__ampoule { background: rgba(255, 224, 102, 0.45); }
+
+@keyframes sc-phrase-qui-dit-non-ce2-idee {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.sc-phrase-qui-dit-non-ce2__fleche {
+  width: 40px;
+  height: 28px;
+  fill: none;
+  stroke: #ffe066;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: sc-phrase-qui-dit-non-ce2-fleche 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-fleche {
+  from { transform: translateY(-2px); }
+  to { transform: translateY(3px); }
+}
+
+/* LA LIGNE : vide et clignotante, puis la bonne phrase s'y écrit. */
+.sc-phrase-qui-dit-non-ce2__ligne {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 8px 6px;
+  border-bottom: 3px dashed rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: #fdfbf6;
+  text-align: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.sc-phrase-qui-dit-non-ce2__ligne.sc-ce2-francais-b--survolee {
+  border-color: #ffe066;
+  background: rgba(255, 224, 102, 0.14);
+}
+
+.sc-phrase-qui-dit-non-ce2__ligne.est-ecrite { border-bottom-style: solid; border-bottom-color: #8ce99a; }
+
+.sc-phrase-qui-dit-non-ce2__curseur {
+  display: block;
+  width: 4px;
+  height: 30px;
+  border-radius: 2px;
+  background: #fdfbf6;
+  animation: sc-phrase-qui-dit-non-ce2-curseur 1.1s steps(1) infinite;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-curseur {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.sc-phrase-qui-dit-non-ce2__ecrite {
+  display: inline-block;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.35);
+  animation: sc-phrase-qui-dit-non-ce2-ecrit 1.1s steps(18) both;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-ecrit {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* CE QUI A CHANGÉ : en craie de couleur, et ça bondit — les mots changent tout. */
+.sc-phrase-qui-dit-non-ce2__ajout {
+  display: inline-block;
+  padding: 0 2px;
+  border-bottom: 3px solid currentColor;
+  color: var(--sc-phrase-qui-dit-non-ce2-teinte, #ffe066);
+  font-weight: 800;
+  animation: sc-phrase-qui-dit-non-ce2-ajout 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) calc(1s + var(--n) * 0.2s) both;
+}
+
+.sc-phrase-qui-dit-non-ce2__ajout.est-point { margin-left: 2px; border-bottom: none; font-size: 1.2em; }
+
+@keyframes sc-phrase-qui-dit-non-ce2-ajout {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.45) rotate(-4deg); text-shadow: 0 0 12px currentColor; }
+  100% { transform: scale(1); }
+}
+
+/* LE SEAU DE CRAIES, posé sur le rebord du tableau, à droite. */
+.sc-ce2-francais-b__mascotte.sc-phrase-qui-dit-non-ce2__seau {
+  right: -10px;
+  bottom: -44px;
+  z-index: 3;
+  width: 76px;
+}
+
+.sc-phrase-qui-dit-non-ce2__baton {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-phrase-qui-dit-non-ce2-dandine 2.2s ease-in-out calc(var(--n) * -0.45s) infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-dandine {
+  from { transform: rotate(-5deg) translateY(0); }
+  to { transform: rotate(5deg) translateY(-3px); }
+}
+
+[data-humeur="bravo"] .sc-phrase-qui-dit-non-ce2__baton {
+  animation: sc-phrase-qui-dit-non-ce2-jaillit 0.75s cubic-bezier(0.3, 1.4, 0.5, 1) calc(var(--n) * 0.08s) 2;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-jaillit {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-26px) rotate(25deg); }
+}
+
+/* LES NUAGES DE CRAIE : les réponses, qui flottent doucement. */
+.sc-phrase-qui-dit-non-ce2__nuages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 680px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-phrase-qui-dit-non-ce2__nuages > li { animation: sc-phrase-qui-dit-non-ce2-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) calc(0.25s + var(--i, 0) * 0.1s) both; }
+
+@keyframes sc-phrase-qui-dit-non-ce2-arrive {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+}
+
+.sc-phrase-qui-dit-non-ce2__nuage-choix {
+  --craie: #ff8fb8;
+  position: relative;
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 30px;
+  border: 3px dashed var(--craie);
+  border-radius: 44px / 36px;
+  background: #27302c;
+  color: #fdfbf6;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  animation: sc-phrase-qui-dit-non-ce2-flotte 4.2s ease-in-out calc(var(--i, 0) * -1.4s) infinite alternate;
+  transition: background 0.15s ease, scale 0.15s ease;
+}
+
+.sc-phrase-qui-dit-non-ce2__teinte--1 { --craie: #7cc6ff; }
+.sc-phrase-qui-dit-non-ce2__teinte--2 { --craie: #ffd43b; }
+
+.sc-phrase-qui-dit-non-ce2__nuage-choix:hover:not(:disabled) { background: #33403a; scale: 1.02; }
+.sc-phrase-qui-dit-non-ce2__nuage-choix:focus-visible { outline: 3px solid #ffe066; outline-offset: 3px; }
+
+.sc-phrase-qui-dit-non-ce2__nuage-choix.est-fausse {
+  cursor: default;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #4f5753;
+  color: rgba(253, 251, 246, 0.6);
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+  text-decoration-color: #ff7b6b;
+  animation: sc-phrase-qui-dit-non-ce2-tremble 0.45s ease-in-out;
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-flotte {
+  from { transform: translateY(-3px) rotate(-0.6deg); }
+  to { transform: translateY(3px) rotate(0.6deg); }
+}
+
+@keyframes sc-phrase-qui-dit-non-ce2-tremble {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  75% { transform: translateX(7px); }
+}
+
+/* ---------- LE TÉLÉPHONE ---------- */
+
+@media (max-width: 620px) {
+  .sc-ce2-francais-b__decor .sc-un-ou-des-ce2__lanterne,
+  .sc-ce2-francais-b__decor .sc-un-ou-des-ce2__village,
+  .sc-ce2-francais-b__decor .sc-detective-du-verbe-ce2__photo,
+  .sc-ce2-francais-b__decor .sc-phrase-qui-dit-non-ce2__lanterne,
+  .sc-ce2-francais-b__decor .sc-phrase-qui-dit-non-ce2__vigne,
+  .sc-phrase-qui-dit-non-ce2__gribouillis { display: none; }
+
+  .jeu.sc-un-ou-des-ce2,
+  .jeu.sc-detective-du-verbe-ce2 { padding-bottom: 110px; }
+
+  .sc-un-ou-des-ce2__tableau { padding: 14px 12px 16px; border-width: 8px; }
+  .sc-un-ou-des-ce2 .accords__depart { font-size: 22px; }
+  .sc-un-ou-des-ce2__explication { font-size: 19px; gap: 6px 12px; }
+  .sc-un-ou-des-ce2 .unoudes__etiquette { padding: 10px 10px; gap: 8px; }
+
+  .sc-detective-du-verbe-ce2__fenetre { opacity: 0.55; }
+  .sc-detective-du-verbe-ce2__fiches { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 8px; }
+  .sc-detective-du-verbe-ce2__fiche { flex: 0 1 auto; min-width: 70px; min-height: 0; padding: 12px 8px 6px; }
+  .sc-detective-du-verbe-ce2__titre { font-size: 15px; }
+  .sc-detective-du-verbe-ce2__icone { display: none; }
+  .sc-detective-du-verbe-ce2 .detective__phrase { padding: 20px 12px 28px; }
+
+  .sc-phrase-qui-dit-non-ce2__tableau { padding: 16px 12px 18px; border-width: 9px; }
+  .sc-phrase-qui-dit-non-ce2 .non__oui { font-size: 21px; }
+  .sc-phrase-qui-dit-non-ce2__ligne { font-size: 21px; }
+  .sc-phrase-qui-dit-non-ce2__nuage-choix { font-size: 19px; padding: 10px 18px; }
+  .sc-ce2-francais-b__mascotte.sc-phrase-qui-dit-non-ce2__seau { width: 60px; bottom: -40px; right: -8px; }
+}
+
+/* ---------- SANS MOUVEMENT ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-ce2-francais-b,
+  .sc-ce2-francais-b *,
+  .sc-ce2-francais-b__mascotte *,
+  .sc-un-ou-des-ce2__tableau *,
+  .sc-detective-du-verbe-ce2__liege *,
+  .sc-phrase-qui-dit-non-ce2__tableau,
+  .sc-phrase-qui-dit-non-ce2__tableau *,
+  .sc-phrase-qui-dit-non-ce2__nuages * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sc-ce2-francais-b__fete,
+  .sc-ce2-francais-b__aureole,
+  .sc-ce2-francais-b__coeur,
+  .sc-un-ou-des-ce2__petale,
+  .sc-detective-du-verbe-ce2__poussiere { display: none; }
+
+  .sc-detective-du-verbe-ce2__vapeur { opacity: 0.6; }
+}

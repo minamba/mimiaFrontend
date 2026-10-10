@@ -9,6 +9,8 @@ import DetectiveClasses from './DetectiveClasses';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/cp-ce1-francais/communs';
+import { DecorBureau, Loupe } from './scenes/cp-ce1-francais/Detective';
 
 const ESSAIS_AVANT_AIDE = 2;
 
@@ -25,6 +27,12 @@ const ESSAIS_AVANT_AIDE = 2;
  *
  * LA MANCHE COMPTE « DU PREMIER COUP » si le verbe ET le sujet ont été
  * trouvés sans erreur.
+ *
+ * L'UNIVERS DE LA COUVERTURE, AU CE1 (09/10/2026) — voir
+ * `scenes/cp-ce1-francais/Detective.js` : le bureau de nuit vit (lune,
+ * lanterne, lampe, empreintes), la phrase devient la carte de l'enquête, le
+ * verbe trouvé s'entoure de rouge et le sujet de bleu, la loupe au grand œil
+ * réagit, et l'affaire résolue fait tomber le tampon. Rien de la règle ne change.
  */
 /** Au CE2, le détective enquête sur les classes de mots — voir `DetectiveClasses.js`. */
 export default function DetectiveDuVerbe({ niveau, ...props }) {
@@ -122,7 +130,8 @@ function DetectiveVerbeSujet({ onQuitter, matiereCode }) {
   const sujetTrouve = temps === 'fini';
 
   return (
-    <div className="jeu jeu--scene jeu--detective">
+    <div className={`jeu jeu--scene jeu--detective sc-cp-ce1-francais sc-detective-du-verbe${sujetTrouve ? ' est-fete' : ''}`}>
+      <DecorBureau resolu={sujetTrouve} />
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -189,6 +198,16 @@ function DetectiveVerbeSujet({ onQuitter, matiereCode }) {
           </button>
         </div>
       )}
+
+      {/* La loupe fête le verbe trouvé du premier coup, puis l'affaire résolue. */}
+      <Loupe
+        humeur={humeurDe({
+          reussi: sujetTrouve || (verbeTrouve && propre && fautes.length === 0),
+          faute: fautes.length > 0,
+        })}
+        declic={`${temps}-${fautes.length}`}
+      />
+      {sujetTrouve && <Fete forme="etoile" />}
     </div>
   );
 }

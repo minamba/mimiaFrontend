@@ -18,9 +18,17 @@
  *     peut être atteint à une borne, confondre minimum et maximum ;
  *   - L'EXTREMUM DE LA FONCTION CARRÉ sur un intervalle qui contient zéro :
  *     le minimum est zéro ; le maximum, à la borne la plus éloignée de zéro.
+ *
+ * LE DESSIN (09/10/2026) : chaque manche porte un `visuel` (voir
+ * `lib/jeux/visuels.js`) — la courbe de la fonction de référence, construite
+ * avec les valeurs de la question et sans aucun tirage (la même graine redonne
+ * la même partie). L'intervalle étudié est grisé sous la courbe, ses bornes
+ * marquées ; les deux nombres à comparer sont posés sur la courbe ; le tableau
+ * de variations devient une ligne brisée. Rien n'indique la réponse elle-même.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
+import { valeur as ordonneeEn } from '../visuels.js';
 
 export const FAMILLE = { cle: 'fonctions-de-reference', titre: 'Les fonctions de référence', matiereCode: 'MATHS' };
 
@@ -89,6 +97,50 @@ function image(f, v) {
   return `√${v}`;
 }
 
+/* ------------------------------------------------------------ les dessins */
+
+// « + 0 » : jamais de −0, qu’un aller-retour JSON ne redonnerait pas.
+const arrondi = (x) => Math.round(x * 100) / 100 + 0;
+
+/** La fonction de référence, en données pour le dessin. */
+const COURBE = {
+  carre: { forme: 'carre' }, inverse: { forme: 'inverse' }, racine: { forme: 'racine' }, cube: { forme: 'cube' },
+};
+
+/** Le point de la courbe d'abscisse x (son ordonnée arrondie au centième). */
+const surLaCourbe = (f, x, etiquette) => ({ x, y: arrondi(ordonneeEn(COURBE[f], x)), ...(etiquette ? { etiquette } : {}) });
+
+/**
+ * La courbe de f sur [xmin ; xmax], la fenêtre calée sur elle et sur l'axe des x ;
+ * l'inverse, qui file à l'infini en zéro, est coupée entre −3 et 3.
+ */
+function dessin(f, xmin, xmax, autres = {}) {
+  let fenetre;
+  if (f === 'inverse') fenetre = { xmin, xmax, ymin: -3, ymax: 3 };
+  else {
+    const ys = [0];
+    for (let i = 0; i <= 48; i += 1) {
+      const y = ordonneeEn(COURBE[f], xmin + ((xmax - xmin) * i) / 48);
+      if (Number.isFinite(y)) ys.push(y);
+    }
+    const air = Math.max((Math.max(...ys) - Math.min(...ys)) * 0.1, 0.5);
+    fenetre = {
+      xmin, xmax, ymin: arrondi(Math.min(...ys) - air), ymax: arrondi(Math.max(...ys) + air),
+    };
+  }
+  return {
+    type: 'courbe', fenetre, fonctions: [COURBE[f]], ...autres,
+  };
+}
+
+/** La fenêtre d'un intervalle borné [a ; b] : zéro et le tournant de la courbe y restent visibles. */
+const autour = (f, a, b) => [f === 'racine' ? -1 : Math.min(a, -1) - 1, Math.max(b, 1) + 1];
+
+/** La fenêtre d'une fonction seule, sans intervalle. */
+const SEULE = {
+  carre: [-4, 4], inverse: [-4, 4], racine: [-1, 9], cube: [-2.5, 2.5],
+};
+
 /* --------------------------------------------------------- les variations */
 
 const SENS = { c: 'Croissante', d: 'Décroissante', n: 'Ni croissante ni décroissante' };
@@ -100,23 +152,36 @@ function variations(t) {
   }[f];
   const demi = t.entre(0, 2) === 0;
   let I;
+  // Les bornes en nombres, pour le dessin : null pour l'infini.
+  let bornes;
   if (zone === 'neg') {
-    if (demi) I = f === 'inverse' ? ']−∞ ; 0[' : ']−∞ ; 0]';
-    else {
+    if (demi) {
+      I = f === 'inverse' ? ']−∞ ; 0[' : ']−∞ ; 0]';
+      bornes = [null, 0];
+    } else {
       const a = -t.entre(4, 9);
       const b = a + t.entre(1, -a - (f === 'inverse' ? 1 : 0));
       I = `[${nb(a)} ; ${nb(b)}]`;
+      bornes = [a, b];
     }
   } else if (zone === 'pos') {
-    if (demi) I = f === 'inverse' ? ']0 ; +∞[' : '[0 ; +∞[';
-    else {
+    if (demi) {
+      I = f === 'inverse' ? ']0 ; +∞[' : '[0 ; +∞[';
+      bornes = [0, null];
+    } else {
       const a = t.entre(f === 'inverse' ? 1 : 0, 5);
-      I = `[${nb(a)} ; ${nb(a + t.entre(1, 6))}]`;
+      const b = a + t.entre(1, 6);
+      I = `[${nb(a)} ; ${nb(b)}]`;
+      bornes = [a, b];
     }
   } else if (demi && f === 'cube') {
     I = ']−∞ ; +∞['; // la fonction cube : sur tout ℝ
+    bornes = [null, null];
   } else {
-    I = `[${nb(-t.entre(1, 7))} ; ${nb(t.entre(1, 7))}]`;
+    const a = -t.entre(1, 7);
+    const b = t.entre(1, 7);
+    I = `[${nb(a)} ; ${nb(b)}]`;
+    bornes = [a, b];
   }
   let juste;
   let fautes;
@@ -141,13 +206,24 @@ function variations(t) {
   }
   const parLibelle = {};
   Object.entries(fautes).forEach(([k, p]) => { parLibelle[SENS[k]] = p; });
-  return mancheFixe(t.melanger, {
+  const m = mancheFixe(t.melanger, {
     consigne: 'variations',
     question: `Sur ${I}, ${NOMS[f]} est…`,
     libelles: Object.values(SENS),
     bonne: SENS[juste],
     fautes: parLibelle,
   });
+  // La courbe entière, l'intervalle grisé dessous (jusqu'au bord pour l'infini), ses bornes marquées.
+  const [a, b] = bornes;
+  const [xmin, xmax] = a !== null && b !== null ? autour(f, a, b) : SEULE[f];
+  const points = [a, b].filter((x) => x !== null && Number.isFinite(ordonneeEn(COURBE[f], x))).map((x) => surLaCourbe(f, x));
+  return {
+    ...m,
+    visuel: dessin(f, xmin, xmax, {
+      points,
+      ...(a === null && b === null ? {} : { aire: { fonction: 0, a: a ?? xmin, b: b ?? xmax } }),
+    }),
+  };
 }
 
 /* ----------------------------------------- comparer les images, en lettres */
@@ -171,13 +247,15 @@ function comparerLettres(t, cas) {
   const [f, condition, juste, fInf, fSup, fRien] = cas;
   const [ia, ib] = [image(f, 'a'), image(f, 'b')];
   const lib = { '<': `${ia} < ${ib}`, '>': `${ia} > ${ib}`, '?': PAS_DE_CONCLUSION };
-  return mancheFixe(t.melanger, {
+  const m = mancheFixe(t.melanger, {
     consigne: 'comparer-images',
     question: `On sait que ${condition}.\nQue dire de ${ia} et ${ib} ?`,
     libelles: Object.values(lib),
     bonne: lib[juste],
     fautes: { [lib['<']]: fInf, [lib['>']]: fSup, [lib['?']]: fRien },
   });
+  // a et b sont des lettres : la courbe seule, sans point qui suggérerait une conclusion.
+  return { ...m, visuel: dessin(f, ...SEULE[f]) };
 }
 
 /* ------------------------------------------ comparer deux nombres précis */
@@ -201,13 +279,23 @@ function comparerNombres(t) {
     cube: 'cube-croissante',
     racine: 'racine-croissante',
   }[f];
-  return mancheFixe(t.melanger, {
+  const m = mancheFixe(t.melanger, {
     consigne: 'comparer-nombres',
     question: `${image(f, nb(u / 10))}   …   ${image(f, nb(v / 10))}`,
     libelles: ['<', '>'],
     bonne: juste,
     fautes: { '<': faute, '>': faute },
   });
+  // Les deux nombres posés sur la courbe, chacun nommé par son image écrite ;
+  // la fenêtre serrée autour d'eux, pour que l'écart des hauteurs se voie.
+  const [x1, x2] = [u / 10, v / 10];
+  const xmin = Math.min(x1, x2) - 1;
+  return {
+    ...m,
+    visuel: dessin(f, f === 'racine' ? Math.max(xmin, 0) : xmin, Math.max(x1, x2) + 1, {
+      points: [surLaCourbe(f, x1, image(f, nb(x1))), surLaCourbe(f, x2, image(f, nb(x2)))],
+    }),
+  };
 }
 
 /* ------------------------------------------- l'extremum dans un tableau */
@@ -245,13 +333,30 @@ function extremumTableau(t) {
       [q, 'minimum-ou-maximum'],
     ])];
   }
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'extremum-tableau',
     question,
     bonne: nb(bonne),
     pieges: pieges.map(([v, ph]) => [nb(v), ph]),
     voisin: (k) => nb(bonne + (k % 2 ? k : -k)),
   });
+  // Le tableau dessiné : une ligne brisée par ses trois points, marqués de leurs
+  // coordonnées (le lire, c'est le but) ; de la place à droite pour les écrire.
+  const xs = [x0, x1, x2];
+  const ys = [p, q, r];
+  const fonction = { forme: 'morceaux', points: xs.map((x, i) => [x, ys[i]]) };
+  const air = Math.max((Math.max(...ys, 0) - Math.min(...ys, 0)) * 0.1, 0.5);
+  return {
+    ...m,
+    visuel: {
+      type: 'courbe',
+      fenetre: {
+        xmin: x0 - 0.5, xmax: x2 + (x2 - x0) * 0.35 + 1, ymin: arrondi(Math.min(...ys, 0) - air), ymax: arrondi(Math.max(...ys, 0) + air),
+      },
+      fonctions: [fonction],
+      points: xs.map((x, i) => ({ x, y: ys[i], etiquette: `(${nb(x)} ; ${nb(ys[i])})` })),
+    },
+  };
 }
 
 /* --------------------------------------- l'extremum de la fonction carré */
@@ -272,13 +377,18 @@ function extremumCarre(t) {
       [0, 'minimum-ou-maximum'],
       [Math.max(-a, b), 'valeur-ou-abscisse'],
     ]);
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'extremum-carre',
     question: `Sur [${nb(a)} ; ${nb(b)}], le ${demande} de la fonction carré ?`,
     bonne: nb(bonne),
     pieges: pieges.map(([v, ph]) => [nb(v), ph]),
     voisin: (k) => nb(bonne + k),
   });
+  // La parabole, les deux bornes de l'intervalle marquées sur elle.
+  return {
+    ...m,
+    visuel: dessin('carre', a - 1, b + 1, { points: [surLaCourbe('carre', a), surLaCourbe('carre', b)] }),
+  };
 }
 
 /* ------------------------------------------------------------ la partie */

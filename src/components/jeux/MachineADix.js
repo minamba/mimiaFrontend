@@ -8,6 +8,10 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { humeurDe } from './scenes/ce1-maths/communs';
+import {
+  DecorMachine, Engrenages, FeteMachine, Mecano, Tapis,
+} from './scenes/ce1-maths/SceneMachine';
 
 /**
  * LA MACHINE À DIX, À L'ÉCRAN.
@@ -107,10 +111,14 @@ export default function MachineADix({ onQuitter, matiereCode, niveau = 'CE1' }) 
   const inconnu = <span className="machine__inconnu">?</span>;
 
   return (
-    <div className="jeu jeu--scene jeu--machine">
+    // L'UNIVERS DE LA COUVERTURE (09/10/2026, `scenes/ce1-maths/SceneMachine.js`) :
+    // l'atelier, le tapis roulant et ses caisses, le mécanicien et son gros
+    // bouton rouge, la fête à la réussite.
+    <div className={`jeu jeu--scene jeu--machine sc-machine-a-dix${termine ? ' est-termine' : ''}${trouve ? ' est-gagne' : ''}`}>
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+      <DecorMachine />
 
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
@@ -128,14 +136,15 @@ export default function MachineADix({ onQuitter, matiereCode, niveau = 'CE1' }) 
       </p>
 
       <div className="machine" role="img" aria-label={sortie ? `${entree} entre dans la machine` : `${sort} sort de la machine`}>
-        <span className="machine__bouche">{sortie || termine ? entree : inconnu}</span>
+        <span className={`machine__bouche${termine && !sortie ? ' sc-machine-a-dix__revelee' : ''}`}>{sortie || termine ? entree : inconnu}</span>
         <span className="machine__fleche" aria-hidden="true">→</span>
         <span className="machine__corps">
-          <span className="machine__engrenage" aria-hidden="true">⚙</span>
+          <span className="machine__engrenage" aria-hidden="true"><Engrenages /></span>
           <span className="machine__capot">× {facteur}</span>
         </span>
         <span className="machine__fleche" aria-hidden="true">→</span>
-        <span className="machine__bouche machine__bouche--sortie">{!sortie || termine ? sort : inconnu}</span>
+        <span className={`machine__bouche machine__bouche--sortie${termine && sortie ? ' sc-machine-a-dix__revelee' : ''}`}>{!sortie || termine ? sort : inconnu}</span>
+        <Tapis />
       </div>
 
       {!termine && (
@@ -168,6 +177,9 @@ export default function MachineADix({ onQuitter, matiereCode, niveau = 'CE1' }) 
       )}
       {/* La bonne réponse, pour les lecteurs d'écran qui ne voient pas la machine. */}
       <span className="visuellement-cache">{termine ? `La réponse était ${reponse(courante)}.` : ''}</span>
+
+      {trouve && <FeteMachine key={`fete-${manche}`} />}
+      <Mecano humeur={humeurDe({ reussi: trouve, faute: fautes.length > 0 })} cle={`${manche}-${fautes.length}`} />
     </div>
   );
 }

@@ -39,9 +39,19 @@
  *
  * Toutes les bonnes réponses sont calculées ici, avec des coefficients
  * entiers ; un piège qui tomberait sur la bonne réponse est écarté.
+ *
+ * LE DESSIN (09/10/2026) : la plupart des manches portent un `visuel` (voir
+ * `lib/jeux/visuels.js`), la courbe même de la question, sans aucun tirage —
+ * la même graine redonne la même partie. On marque ce que la question donne
+ * (le sommet décrit, les racines, le point de passage, le point de contact,
+ * les deux points de même image pour l'axe), jamais ce qu'elle demande : ni
+ * sommet à trouver, ni tangente à écrire. En terminale, la courbe en 1/x est
+ * dessinée point par point (le dessinateur n'a pas de forme « ax + c + b/x »).
+ * Les dérivées à écrire n'ont pas de dessin : ce sont des calculs.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
+import { valeur as ordonneeEn } from '../visuels.js';
 
 export const FAMILLE = { cle: 'fonctions-et-paraboles', titre: 'Fonctions et paraboles', matiereCode: 'MATHS' };
 
@@ -132,39 +142,88 @@ function racines(t, pair = false) {
 
 const versLe = (a) => (a > 0 ? 'le haut' : 'le bas');
 
+/* ------------------------------------------------------------ les dessins */
+
+// « + 0 » : jamais de −0, qu’un aller-retour JSON ne redonnerait pas.
+const arrondi = (x) => Math.round(x * 100) / 100 + 0;
+
+/** [a, b, c] (du plus haut degré au plus bas, comme `poly`) → la fonction dessinée. */
+const trace = (coefs) => ({ forme: 'poly', coefs: [...coefs].reverse().map((c) => c + 0) });
+
+/** Un dessin de courbes sur [xmin ; xmax] : la fenêtre se cale sur les fonctions, les points et l'axe des x. */
+function dessin(xmin, xmax, fonctions, points = []) {
+  const ys = [0, ...points.map((p) => p.y)];
+  fonctions.forEach((f) => {
+    for (let i = 0; i <= 48; i += 1) {
+      const y = ordonneeEn(f, xmin + ((xmax - xmin) * i) / 48);
+      if (Number.isFinite(y)) ys.push(y);
+    }
+  });
+  const air = Math.max((Math.max(...ys) - Math.min(...ys)) * 0.1, 0.5);
+  return {
+    type: 'courbe',
+    fenetre: {
+      xmin: arrondi(xmin), xmax: arrondi(xmax), ymin: arrondi(Math.min(...ys) - air), ymax: arrondi(Math.max(...ys) + air),
+    },
+    fonctions,
+    ...(points.length ? { points } : {}),
+  };
+}
+
+/** Une parabole [a, b, c], la fenêtre centrée sur son sommet et assez large pour les abscisses `aVoir`. */
+function parabole(coefs, aVoir = [], points = []) {
+  const s = -coefs[1] / (2 * coefs[0]);
+  const demi = Math.max(3, ...aVoir.map((x) => Math.abs(x - s) + 1.5));
+  return dessin(s - demi, s + demi, [trace(coefs)], points);
+}
+
+/** Les coefficients de a(x − x₁)(x − x₂). */
+const developpe = (a, x1, x2) => [a, -a * (x1 + x2), a * x1 * x2];
+
+/** Une courbe en 1/x, de k/4 à 3k, dessinée point par point : le dessinateur n'a pas de forme « ax + c + b/x ». */
+function enUnSurX(f, k) {
+  const points = [];
+  for (let j = 4; j <= 48; j += 1) points.push([(k * j) / 16, arrondi(f((k * j) / 16))]);
+  return { forme: 'morceaux', points };
+}
+
 /* ---------------------------------------------------------------- associer */
 
 function associer(sorte, t) {
   const a = t.au(SIGNES);
+  // La parabole décrite en mots, dessinée : ce que la question en dit y est marqué.
   if (sorte === 'sommet') {
     const c = t.entre(1, 6) * t.au([1, -1]);
-    return manche(t.melanger, {
+    const m = manche(t.melanger, {
       consigne: 'associer',
       question: `Parabole tournée vers ${versLe(a)}, de sommet (0 ; ${ent(c)}). Son expression ?`,
       bonne: poly([a, 0, c]),
       pieges: [[poly([-a, 0, c]), 'sens-de-a'], [poly([a, 0, -c]), 'ordonnee-du-sommet']],
       voisin: (k) => poly([a, 0, c + k]),
     });
+    return { ...m, visuel: parabole([a, 0, c], [], [{ x: 0, y: c, etiquette: `(0 ; ${ent(c)})` }]) };
   }
   if (sorte === 'racines') {
     const [x1, x2] = racines(t);
-    return manche(t.melanger, {
+    const m = manche(t.melanger, {
       consigne: 'associer',
       question: `Parabole tournée vers ${versLe(a)}, qui coupe l’axe des abscisses en ${ent(x1)} et en ${ent(x2)}. Son expression ?`,
       bonne: facto(a, x1, x2),
       pieges: [[facto(a, -x1, -x2), 'signe-des-racines'], [facto(-a, x1, x2), 'sens-de-a']],
       voisin: (k) => facto(a, x1 - k, x2 + k),
     });
+    return { ...m, visuel: parabole(developpe(a, x1, x2), [x1, x2], [{ x: x1, y: 0 }, { x: x2, y: 0 }]) };
   }
   const x0 = t.au([-3, -2, 2, 3]);
   const y = a * x0 * x0;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'associer',
     question: `Parabole de sommet l’origine, qui passe par le point (${ent(x0)} ; ${ent(y)}). Son expression ?`,
     bonne: poly([a, 0, 0]),
     pieges: [[poly([y / x0, 0, 0]), 'carre-de-x'], [poly([-a, 0, 0]), 'point-sur-la-courbe']],
     voisin: (k) => poly([a + k * Math.sign(a), 0, 0]),
   });
+  return { ...m, visuel: parabole([a, 0, 0], [x0], [{ x: x0, y, etiquette: `(${ent(x0)} ; ${ent(y)})` }]) };
 }
 
 /* ------------------------------------------------------------------- lire */
@@ -173,25 +232,29 @@ function lire(sorte, t) {
   const a = t.au(SIGNES);
   const [x1, x2] = racines(t, sorte === 'sommet');
   const f = facto(a, x1, x2);
+  // La parabole de la forme factorisée ; racines et sommet, qu'on demande, ne sont pas marqués.
+  const visuel = parabole(developpe(a, x1, x2), [x1, x2]);
   if (sorte === 'racines') {
-    return manche(t.melanger, {
+    const resultat = manche(t.melanger, {
       consigne: 'lire',
       question: `f(x) = ${f}. Racines de f ?`,
       bonne: `${ent(x1)} et ${ent(x2)}`,
       pieges: [[`${ent(-x2)} et ${ent(-x1)}`, 'signe-des-racines']],
       voisin: (k) => `${ent(x1 - k)} et ${ent(x2 + k)}`,
     });
+    return { ...resultat, visuel };
   }
   if (sorte === 'sommet') {
     const m = (x1 + x2) / 2;
     const ym = a * (m - x1) * (m - x2);
-    return manche(t.melanger, {
+    const resultat = manche(t.melanger, {
       consigne: 'lire',
       question: `f(x) = ${f}. Sommet de la parabole ?`,
       bonne: `(${ent(m)} ; ${ent(ym)})`,
       pieges: [[`(${ent(m)} ; ${ent(a * x1 * x2)})`, 'ordonnee-a-l-origine'], [`(${ent(-m)} ; ${ent(ym)})`, 'signe-des-racines']],
       voisin: (k) => `(${ent(m)} ; ${ent(ym + k)})`,
     });
+    return { ...resultat, visuel };
   }
   const interieur = t.au([true, false]);
   const intervalle = interieur
@@ -205,6 +268,8 @@ function lire(sorte, t) {
     choix: [{ cle: 'positif', libelle: 'Positif' }, { cle: 'negatif', libelle: 'Négatif' }],
     bonne,
     pieges: { [positif ? 'negatif' : 'positif']: 'signe-hors-racines' },
+    // Pour le signe, les racines sont marquées : elles bornent les intervalles.
+    visuel: { ...visuel, points: [{ x: x1, y: 0 }, { x: x2, y: 0 }] },
   };
 }
 
@@ -215,13 +280,15 @@ function axe(t) {
   let s = t.entre(-5, 5);
   if (s === 0) s = 2;
   const c = t.entre(-9, 9);
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'axe',
     question: `f(x) = ${poly([a, -2 * a * s, c])}. Axe de symétrie de la parabole ?`,
     bonne: `x = ${ent(s)}`,
     pieges: [[`x = ${ent(-s)}`, 'signe-de-l-axe'], [`x = ${ent(2 * s)}`, 'axe-au-milieu']],
     voisin: (k) => `x = ${ent(s + k)}`,
   });
+  // La méthode en image : 0 et −b/a = 2s ont la même image ; l'axe passe au milieu (non tracé).
+  return { ...m, visuel: parabole([a, -2 * a * s, c], [0, 2 * s], [{ x: 0, y: c }, { x: 2 * s, y: c }]) };
 }
 
 /* ---------------------------------------------------------------- dérivée */
@@ -264,13 +331,15 @@ function variations(degre, t) {
     const gauche = (x) => `]−∞ ; ${ent(x)}]`;
     const droite = (x) => `[${ent(x)} ; +∞[`;
     const cote = aGauche ? gauche : droite;
-    return manche(t.melanger, {
+    const m = manche(t.melanger, {
       consigne: 'variations',
       question: `f(x) = ${poly([a, -2 * a * s, c])}. Sur quel intervalle f est-elle ${sens} ?`,
       bonne: cote(s),
       pieges: [[(aGauche ? droite : gauche)(s), 'signe-de-la-derivee'], [cote(-s), 'signe-de-l-axe']],
       voisin: (k) => cote(s + k),
     });
+    // La parabole, sommet non marqué : c'est son abscisse qu'on cherche.
+    return { ...m, visuel: parabole([a, -2 * a * s, c]) };
   }
   // f′(x) = 3a(x − p)(x − q) : f = ax³ − (3a/2)(p + q)x² + 3apq x + d, à coefficients entiers.
   const a = t.au([-2, -1, 1, 2]);
@@ -283,13 +352,17 @@ function variations(degre, t) {
   const d = t.entre(-5, 5);
   const f = [a, (-3 * a * (p + q)) / 2, 3 * a * p * q, d];
   const sens = a > 0 ? 'décroissante' : 'croissante';
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'variations',
     question: `f(x) = ${poly(f)}. Sur quel intervalle f est-elle ${sens} ?`,
     bonne: `[${ent(p)} ; ${ent(q)}]`,
     pieges: [[`[${ent(q)} ; +∞[`, 'signe-de-la-derivee'], [`[${ent(-q)} ; ${ent(-p)}]`, 'signe-des-racines']],
     voisin: (k) => `[${ent(p - k)} ; ${ent(q)}]`,
   });
+  // La cubique, ses deux bosses en vue ; rien de marqué : ce sont elles qu'on cherche.
+  const milieu = (p + q) / 2;
+  const demi = Math.max(3, (q - p) / 2 + 1.5);
+  return { ...m, visuel: dessin(milieu - demi, milieu + demi, [trace(f)]) };
 }
 
 /* --------------------------------------------------------------- tangente */
@@ -310,13 +383,15 @@ function tangente(t) {
   const image = valeurEn(f, x0);
   const pente = valeurEn(fPrime, x0);
   const ordonnee = image - pente * x0;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'tangente',
     question: `f(x) = ${poly(f)}. Tangente au point d’abscisse ${ent(x0)} ?`,
     bonne: `y = ${poly([pente, ordonnee])}`,
     pieges: [[`y = ${poly([pente, image])}`, 'tangente-en-a'], [`y = ${poly([image, pente])}`, 'pente-et-image']],
     voisin: (k) => `y = ${poly([pente + k, ordonnee])}`,
   });
+  // La courbe et le point de contact A ; la tangente n'est pas tracée : c'est elle qu'on cherche.
+  return { ...m, visuel: dessin(x0 - 2.5, x0 + 2.5, [trace(f)], [{ x: x0, y: image, etiquette: 'A' }]) };
 }
 
 /* ------------------------------------------------- terminale : l'hyperbole */
@@ -367,13 +442,15 @@ function variationsInverse(t) {
   const gauche = (x) => `]0 ; ${x}]`;
   const droite = (x) => `[${x} ; +∞[`;
   const cote = aGauche ? gauche : droite;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'variations',
     question: `f(x) = ${avecInverse([a, c], a * k * k)} ${SUR}. Sur quel intervalle f est-elle ${sens} ?`,
     bonne: cote(k),
     pieges: [[(aGauche ? droite : gauche)(k), 'signe-de-la-derivee'], [cote(k * k), 'x-carre-racine']],
     voisin: (j) => cote(k + j),
   });
+  // La courbe, son tournant non marqué : c'est son abscisse qu'on cherche.
+  return { ...m, visuel: dessin(0, 3 * k, [enUnSurX((x) => a * x + c + (a * k * k) / x, k)]) };
 }
 
 function minimumCout(t) {
@@ -382,13 +459,15 @@ function minimumCout(t) {
   const c = t.entre(0, 20);
   const cout = (x) => a * x + c + (a * k * k) / x;
   const euros = (x) => `${x} €`;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'minimum',
     question: `Une entreprise fabrique x centaines de pièces (x > 0). Le coût moyen d’une pièce, en euros, est C(x) = ${avecInverse([a, c], a * k * k)}. Coût moyen minimal ?`,
     bonne: euros(cout(k)),
     pieges: [[euros(k), 'valeur-pas-position'], [euros(cout(k * k)), 'x-carre-racine']],
     voisin: (j) => euros(cout(k) + j),
   });
+  // La courbe du coût moyen, son creux non marqué : c'est lui qu'on calcule.
+  return { ...m, visuel: dessin(0, 3 * k, [enUnSurX(cout, k)]) };
 }
 
 function tangenteInverse(t) {
@@ -399,7 +478,7 @@ function tangenteInverse(t) {
   const image = m * x0 + c;
   const pente = -m;
   const droite = (p, o) => `y = ${poly([p, o])}`;
-  return manche(t.melanger, {
+  const resultat = manche(t.melanger, {
     consigne: 'tangente',
     question: `f(x) = ${inverseEtConstante(m * x0 * x0, c)} ${SUR}. Tangente au point d’abscisse ${x0} ?`,
     bonne: droite(pente, image - pente * x0),
@@ -410,6 +489,11 @@ function tangenteInverse(t) {
     ],
     voisin: (k) => droite(pente + k, image - pente * x0),
   });
+  // L'hyperbole et le point de contact A (un des points du tracé) ; la tangente n'est pas tracée.
+  return {
+    ...resultat,
+    visuel: dessin(0, 3 * x0, [enUnSurX((x) => (m * x0 * x0) / x + c, x0)], [{ x: x0, y: image, etiquette: 'A' }]),
+  };
 }
 
 function serieTerminale(t) {

@@ -27,6 +27,11 @@
  * Toutes les réponses sont construites puis vérifiées par le calcul ; un
  * piège qui serait juste lui aussi (vecteur colinéaire, équation
  * proportionnelle, point du plan) est écarté.
+ *
+ * LE VISUEL (09/10/2026) : aucune manche n'en porte, et c'est voulu. Tout se
+ * joue sur des coordonnées, des équations et des positions relatives : aucune
+ * figure ni aucun solide du dessinateur (`lib/jeux/visuels.js`) ne les montre
+ * fidèlement. Il faudrait un repère de l'espace, avec droites et plans.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';

@@ -9,6 +9,8 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { classesScene, humeurDe } from './scenes/cp-maths-1/commun';
+import { DecorGare, FeteGare, Oiseau } from './scenes/cp-maths-1/Gare';
 
 /**
  * LE TRAIN DES NOMBRES, À L'ÉCRAN.
@@ -109,8 +111,17 @@ export default function TrainDesNombres({ onQuitter, matiereCode }) {
     );
   }
 
+  // L'UNIVERS DE LA COUVERTURE (09/10/2026) : la gare vit, Piou l'oiseau
+  // chef de gare dit la consigne et réagit — voir `scenes/cp-maths-1/Gare.js`.
+  const humeur = humeurDe({ juste, faux: sens !== null });
+
   return (
-    <div className="jeu jeu--train" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--train sc-cp-maths-1 ${classesScene('sc-train-des-nombres', humeur)}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorGare />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -125,15 +136,21 @@ export default function TrainDesNombres({ onQuitter, matiereCode }) {
         ))}
       </ol>
 
-      <p className="jeu__consigne">
-        {PHRASES.consigne}
-        <BoutonsVoix voix={voix} consigne={repliquesTrain.consigne} />
-      </p>
+      <div className="sc-cp-maths-1__parole">
+        <span className="sc-cp-maths-1__mascotte" key={`${manche}-${pose}`}>
+          <Oiseau humeur={humeur} />
+        </span>
+        <p className="jeu__consigne">
+          {PHRASES.consigne}
+          <BoutonsVoix voix={voix} consigne={repliquesTrain.consigne} />
+        </p>
+      </div>
 
       {/* LE WAGON À PLACER, au-dessus de la voie tant qu'il n'est pas posé :
-          c'est lui qui porte la question, et il doit rester sous les yeux. */}
+          c'est lui qui porte la question, et il doit rester sous les yeux.
+          Sa clé suit l'essai : un essai faux lui fait redire « non ». */}
       {!juste && (
-        <div className="train__wagon-attente" aria-label={`Wagon numéro ${courante.nombre}`}>
+        <div className="train__wagon-attente" key={`attente-${pose}`} aria-label={`Wagon numéro ${courante.nombre}`}>
           <Wagon nombre={courante.nombre} />
         </div>
       )}
@@ -185,6 +202,8 @@ export default function TrainDesNombres({ onQuitter, matiereCode }) {
         <p className="jeu__trop" role="status">{PHRASES.pasAssezLoin}</p>
       )}
 
+      {juste && <FeteGare key={`fete-${manche}`} />}
+
       {juste && (
         <div className="jeu__gagne" role="status">
           <p className="jeu__gagne-calcul">{courante.nombre}</p>
@@ -197,25 +216,41 @@ export default function TrainDesNombres({ onQuitter, matiereCode }) {
   );
 }
 
-/** La locomotive, à l'arrêt sur le zéro. */
+/**
+ * La locomotive, à l'arrêt sur le zéro. Elle FUME en attendant (trois
+ * bouffées qui montent au-dessus de la cheminée) et, à la réussite, le panache
+ * s'emballe et ses roues tournent — le dessin déborde du cadre vers le haut,
+ * d'où le `overflow: visible`. Les couleurs et les animations vivent dans
+ * `scenes/cp-maths-1/cp-maths-1.css`.
+ */
 function Locomotive() {
   return (
-    <svg className="locomotive" viewBox="0 0 84 60" aria-hidden="true">
+    <svg className="locomotive" viewBox="0 0 84 60" aria-hidden="true" overflow="visible">
+      <circle className="sc-train-des-nombres__fumee" cx="18" cy="0" r="6" />
+      <circle className="sc-train-des-nombres__fumee sc-train-des-nombres__fumee--2" cx="18" cy="0" r="7" />
+      <circle className="sc-train-des-nombres__fumee sc-train-des-nombres__fumee--3" cx="18" cy="0" r="5" />
       <rect className="locomotive__corps" x="6" y="18" width="54" height="26" rx="6" />
       <rect className="locomotive__cabine" x="44" y="6" width="30" height="38" rx="6" />
+      <rect className="sc-train-des-nombres__toit" x="41" y="3" width="36" height="6" rx="3" />
       <rect className="locomotive__vitre" x="52" y="13" width="15" height="13" rx="3" />
       <rect className="locomotive__cheminee" x="12" y="6" width="12" height="14" rx="3" />
+      <circle className="sc-train-des-nombres__phare" cx="8" cy="28" r="3.5" />
       <circle className="locomotive__roue" cx="22" cy="50" r="9" />
       <circle className="locomotive__roue" cx="58" cy="50" r="9" />
+      <path className="sc-train-des-nombres__rayon" d="M15 50 H 29 M22 43 V 57" />
+      <path className="sc-train-des-nombres__rayon" d="M51 50 H 65 M58 43 V 57" />
     </svg>
   );
 }
 
-/** Le wagon, avec son numéro peint sur le flanc. */
+/** Le wagon, avec son numéro peint sur le flanc, un toit et deux fenêtres. */
 function Wagon({ nombre }) {
   return (
     <svg className="wagon" viewBox="0 0 76 56" aria-hidden="true">
+      <rect className="sc-train-des-nombres__toit" x="1" y="2" width="74" height="7" rx="3.5" />
       <rect className="wagon__caisse" x="4" y="6" width="68" height="34" rx="6" />
+      <rect className="sc-train-des-nombres__fenetre" x="7" y="12" width="5" height="12" rx="2" />
+      <rect className="sc-train-des-nombres__fenetre" x="64" y="12" width="5" height="12" rx="2" />
       <rect className="wagon__plaque" x="14" y="12" width="48" height="22" rx="4" />
       <text className="wagon__nombre" x="38" y="30" textAnchor="middle">{nombre}</text>
       <circle className="wagon__roue" cx="20" cy="46" r="8" />

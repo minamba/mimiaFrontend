@@ -9,6 +9,8 @@ import decor from '../../assets/Jeux/CP/mot_eclaire.webp';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/cp-ce1-francais/communs';
+import { DecorOrage, Zip } from './scenes/cp-ce1-francais/Eclair';
 
 /**
  * LES MOTS ÉCLAIR, À L'ÉCRAN.
@@ -27,6 +29,11 @@ import { bruitage } from '../../lib/jeux/bruitages';
  * LE DÉCOR MONTRE DES MOTS QUI VOLENT (« chat », « avion »…) : le cadre de
  * l'éclair est donc OPAQUE dans ses trois temps, pour qu'aucun mot du décor
  * ne se lise à la place du mot à retrouver.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) — voir `scenes/cp-ce1-francais/Eclair.js` :
+ * l'orage de mots (traînées, éclairs, cartes qui filent — sans un mot), la
+ * pièce qui s'illumine quand le mot passe, Zip le petit éclair qui réagit, une
+ * gerbe d'éclairs à la bonne carte. Rien de la règle ne change.
  */
 export default function MotsEclair({ onQuitter, matiereCode }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -126,7 +133,11 @@ export default function MotsEclair({ onQuitter, matiereCode }) {
   const erreur = fautes.length > 0 && !termine;
 
   return (
-    <div className="jeu jeu--eclair" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--eclair sc-cp-ce1-francais sc-mots-eclair${trouve ? ' est-fete' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorOrage eclair={temps === 'eclair'} />
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
         {manches.map((m, i) => (
@@ -211,6 +222,12 @@ export default function MotsEclair({ onQuitter, matiereCode }) {
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+
+      <Zip
+        humeur={temps === 'eclair' && !termine ? 'eclair' : humeurDe({ reussi: trouve, faute: fautes.length > 0 })}
+        declic={fautes.length}
+      />
+      {trouve && <Fete forme="eclair" />}
     </div>
   );
 }

@@ -22,6 +22,13 @@
  *
  * Les coefficients sont choisis pour que les primitives et les intégrales
  * soient entières ou en fractions exactes ; tout est calculé ici.
+ *
+ * LE DESSIN (09/10/2026) : l'intégrale, l'aire et la valeur moyenne portent
+ * un `visuel`, la courbe de f et l'aire entre la courbe et l'axe sur [a ; b],
+ * qui se remplit — jamais la valeur cherchée. Le signe montre une courbe
+ * quelconque du signe annoncé, et les bornes dans l'ordre où on les lit
+ * (« de », « à »). Rien pour les primitives ni pour la linéarité : des règles
+ * de calcul, pas une situation à dessiner.
  */
 
 import { bilan as bilanCommun, outils } from '../outils.js';
@@ -95,7 +102,7 @@ const enPoints = (f) => POINTS.map(f);
  * Chaque candidat est [libellé, valeur] ; un piège est [libellé, valeur, phrase].
  */
 function manche(t, {
-  consigne, question, bonne, pieges = [], voisins = [], aide,
+  consigne, question, bonne, pieges = [], voisins = [], aide, visuel,
 }) {
   const liste = [bonne];
   const table = {};
@@ -115,6 +122,7 @@ function manche(t, {
     pieges: table,
   };
   if (aide) m.aide = aide;
+  if (visuel) m.visuel = visuel;
   return m;
 }
 
@@ -259,6 +267,26 @@ function trinome(t, { constant = false } = {}) {
     texte: poly(termes),
     f: enFonction(termes),
     F: enFonction([[P, 3], [Q, 2], [r, 1]]),
+    coefs: [r, 2 * Q, 3 * P],
+  };
+}
+
+/**
+ * Le dessin : la courbe de f un peu au-delà de [a ; b], l'axe des abscisses
+ * toujours en vue, et l'aire entre les deux sur [a ; b].
+ */
+function dessin({ f, coefs }, a, b) {
+  const [xmin, xmax] = [a - 0.5, b + 0.5];
+  const ys = Array.from({ length: 41 }, (_, i) => f(xmin + ((xmax - xmin) * i) / 40));
+  const [lo, hi] = [Math.min(0, ...ys), Math.max(0, ...ys)];
+  const air = Math.max(1, (hi - lo) * 0.1);
+  return {
+    type: 'courbe',
+    fenetre: {
+      xmin, xmax, ymin: Math.floor(lo - air), ymax: Math.ceil(hi + air),
+    },
+    fonctions: [{ forme: 'poly', coefs, etiquette: 'f' }],
+    aire: { fonction: 0, a, b },
   };
 }
 
@@ -270,7 +298,8 @@ function bornes(t, ecart = 1) {
 const integ = (a, b, g = 'f(x)') => `∫ de ${entier(a)} à ${entier(b)} de ${g} dx`;
 
 function integrale(t) {
-  const { texte, f, F } = trinome(t);
+  const tri = trinome(t);
+  const { texte, f, F } = tri;
   const [a, b] = bornes(t);
   const I = F(b) - F(a);
   const pieges = [
@@ -285,11 +314,13 @@ function integrale(t) {
     pieges,
     voisins: [nombre(I + 1), nombre(I - 1), nombre(I + 2)],
     aide: 'integrale-regle',
+    visuel: dessin(tri, a, b),
   });
 }
 
 function aire(t) {
-  const { texte, f, F } = trinome(t, { constant: true });
+  const tri = trinome(t, { constant: true });
+  const { texte, f, F } = tri;
   const [a, b] = bornes(t);
   const I = F(b) - F(a);
   const A = Math.abs(I);
@@ -305,6 +336,7 @@ function aire(t) {
     pieges,
     voisins: [nombre(A + 1), nombre(A + 2), nombre(A + 3)],
     aide: 'aire-regle',
+    visuel: dessin(tri, a, b),
   });
 }
 
@@ -322,19 +354,34 @@ function signe(t) {
   const [bas, haut] = envers ? [hi, lo] : [lo, hi];
   const bonne = positive !== envers ? POSITIF : NEGATIF;
   const autre = bonne === POSITIF ? NEGATIF : POSITIF;
+  // Une courbe quelconque du signe annoncé, seulement sur [lo ; hi], et les
+  // bornes de l'intégrale dans l'ordre où on les lit : « de », puis « à ».
+  const s = positive ? 1 : -1;
+  const L = hi - lo;
   return manche(t, {
     consigne: 'signe',
     question: `f est continue et ${positive ? 'positive' : 'négative'} sur [${entier(lo)} ; ${entier(hi)}].\nSigne de ${integ(bas, haut)} ?`,
     bonne: [bonne, bonne],
     pieges: [[autre, autre, envers ? 'bornes-inversees' : 'signe-integrale'], [RIEN, RIEN, 'positivite']],
     aide: 'signe-regle',
+    visuel: {
+      type: 'courbe',
+      fenetre: {
+        xmin: lo - 1, xmax: hi + 1, ymin: positive ? -1 : -3, ymax: positive ? 3 : 1,
+      },
+      // Sans étiquette : le dessinateur la pose en bout de fenêtre, là où f n'est pas définie.
+      fonctions: [{ forme: 'morceaux', points: [[lo, 1.2 * s], [lo + L / 3, 2.4 * s], [lo + (2 * L) / 3, 1.5 * s], [hi, 2.1 * s]] }],
+      aire: { fonction: 0, a: bas, b: haut },
+      points: [{ x: bas, y: 0, etiquette: 'de' }, { x: haut, y: 0, etiquette: 'à' }],
+    },
   });
 }
 
 /* --------------------------------------------------- la valeur moyenne */
 
 function moyenne(t) {
-  const { texte, f, F } = trinome(t);
+  const tri = trinome(t);
+  const { texte, f, F } = tri;
   const [a, b] = bornes(t, 2);
   const I = F(b) - F(a);
   const L = b - a;
@@ -348,6 +395,7 @@ function moyenne(t) {
     ],
     voisins: [fraction(I + 1, L), fraction(I - 1, L), fraction(I + 2, L)],
     aide: 'moyenne-regle',
+    visuel: dessin(tri, a, b),
   });
 }
 

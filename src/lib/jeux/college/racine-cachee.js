@@ -12,6 +12,12 @@
  *   - LA SOMME (2) : LE PIÈGE du chapitre, √(a + b) n'est pas √a + √b.
  *     Les couples sont choisis pour que a + b soit aussi un carré parfait :
  *     les deux calculs tombent juste, et différents.
+ *
+ * LE DESSIN (09/10/2026) : la racine se voit comme le côté d'un carré dont le
+ * nombre est l'aire. Racine exacte et encadrement portent ce `visuel` (aire
+ * connue, côté « ? ») ; (√7)², le carré de côté √7 et d'aire « ? ». La
+ * somme : √9 + √16, deux carrés côte à côte ; √(9 + 16), un seul carré
+ * d'aire 9 + 16 — la différence des deux dessins, c'est la leçon.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -51,26 +57,38 @@ function monter(melanger, consigne, question, bonne, pieges, voisin) {
   };
 }
 
+/** Le carré dont on connaît l'aire (ou le côté), l'autre grandeur en « ? ». */
+const carre = (cotes) => ({ type: 'figure', forme: 'carre', cotes });
+
 function racineExacte({ entre, melanger }, sorte) {
   if (sorte === 'entier') {
     const r = entre(4, 15);
-    return monter(melanger, 'racine-exacte', `√${r * r} = ?`, nb(r), [
-      [nb((r * r) / 2), 'racine-pas-moitie'],
-      [nb(-r), 'racine-positive'],
-    ], (k) => nb(r + k));
+    return {
+      ...monter(melanger, 'racine-exacte', `√${r * r} = ?`, nb(r), [
+        [nb((r * r) / 2), 'racine-pas-moitie'],
+        [nb(-r), 'racine-positive'],
+      ], (k) => nb(r + k)),
+      visuel: carre({ aire: `${r * r} cm²`, cote: '?' }),
+    };
   }
   if (sorte === 'decimal') {
     const r = entre(2, 9);
-    return monter(melanger, 'racine-exacte', `√${nb((r * r) / 100)} = ?`, nb(r / 10), [
-      [nb(r / 100), 'verifier-au-carre'],
-      [nb((r * r) / 200), 'racine-pas-moitie'],
-    ], (k) => nb((r + k) / 10));
+    return {
+      ...monter(melanger, 'racine-exacte', `√${nb((r * r) / 100)} = ?`, nb(r / 10), [
+        [nb(r / 100), 'verifier-au-carre'],
+        [nb((r * r) / 200), 'racine-pas-moitie'],
+      ], (k) => nb((r + k) / 10)),
+      visuel: carre({ aire: `${nb((r * r) / 100)} cm²`, cote: '?' }),
+    };
   }
   const n = melanger([2, 3, 5, 6, 7, 10, 11, 13])[0];
-  return monter(melanger, 'carre-racine', `(√${n})² = ?`, nb(n), [
-    [nb(n * n), 'carre-de-racine'],
-    [nb(2 * n), 'carre-pas-double'],
-  ], (k) => nb(n + k));
+  return {
+    ...monter(melanger, 'carre-racine', `(√${n})² = ?`, nb(n), [
+      [nb(n * n), 'carre-de-racine'],
+      [nb(2 * n), 'carre-pas-double'],
+    ], (k) => nb(n + k)),
+    visuel: carre({ cote: `√${n} cm`, aire: '?' }),
+  };
 }
 
 function encadrement({ entre, melanger }) {
@@ -78,25 +96,42 @@ function encadrement({ entre, melanger }) {
   while (Number.isInteger(Math.sqrt(n))) n = entre(10, 150);
   const r = Math.floor(Math.sqrt(n));
   const h = Math.floor(n / 2);
-  return monter(melanger, 'encadrement', `√${n} est compris entre…`, `${r} et ${r + 1}`, [
-    [`${r * r} et ${(r + 1) * (r + 1)}`, 'encadrer-racines'],
-    [`${h} et ${h + 1}`, 'racine-pas-moitie'],
-  ], (k) => `${r + k} et ${r + k + 1}`);
+  return {
+    ...monter(melanger, 'encadrement', `√${n} est compris entre…`, `${r} et ${r + 1}`, [
+      [`${r * r} et ${(r + 1) * (r + 1)}`, 'encadrer-racines'],
+      [`${h} et ${h + 1}`, 'racine-pas-moitie'],
+    ], (k) => `${r + k} et ${r + k + 1}`),
+    visuel: carre({ aire: `${n} cm²`, cote: '?' }),
+  };
 }
 
 function somme({ au, melanger }) {
   const [a, b] = au(COUPLES);
   const [ra, rb, rs] = [Math.sqrt(a), Math.sqrt(b), Math.sqrt(a + b)];
   if (au(['separees', 'ensemble']) === 'separees') {
-    return monter(melanger, 'somme-racines', `√${a} + √${b} = ?`, nb(ra + rb), [
-      [nb(rs), 'somme-racines-separees'],
-      [nb(a + b), 'oublier-racine'],
-    ], (k) => nb(ra + rb + k));
+    // Deux carrés, deux côtés cherchés : on les ajoute.
+    return {
+      ...monter(melanger, 'somme-racines', `√${a} + √${b} = ?`, nb(ra + rb), [
+        [nb(rs), 'somme-racines-separees'],
+        [nb(a + b), 'oublier-racine'],
+      ], (k) => nb(ra + rb + k)),
+      visuel: {
+        type: 'figure',
+        forme: 'deux-carres',
+        cotes: {
+          aire1: `${a} cm²`, aire2: `${b} cm²`, cote1: '?', cote2: '?',
+        },
+      },
+    };
   }
-  return monter(melanger, 'somme-racines', `√(${a} + ${b}) = ?`, nb(rs), [
-    [nb(ra + rb), 'racine-somme'],
-    [nb(a + b), 'oublier-racine'],
-  ], (k) => nb(rs + k));
+  // Un seul carré, d'aire a + b : c'est tout le piège.
+  return {
+    ...monter(melanger, 'somme-racines', `√(${a} + ${b}) = ?`, nb(rs), [
+      [nb(ra + rb), 'racine-somme'],
+      [nb(a + b), 'oublier-racine'],
+    ], (k) => nb(rs + k)),
+    visuel: carre({ aire: `(${a} + ${b}) cm²`, cote: '?' }),
+  };
 }
 
 function troisieme(o) {

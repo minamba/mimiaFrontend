@@ -1,0 +1,1554 @@
+/* ========================================================================
+   LES SCÈNES DU GROUPE « CE2-MATHS » (09/10/2026)
+   Cinq jeux de maths du CE2, chacun son univers repris de sa couverture et
+   sa mascotte : le tour du jardin (le rouge-gorge), combien de temps (Tic le
+   réveil), les bouteilles (Plouf la goutte), le miroir (le papillon), le
+   diagramme (la craie).
+   LES PRÉFIXES PORTENT « -ce2 » : `sc-le-miroir`, `sc-le-diagramme` et
+   `sc-tour-du-jardin` sont déjà pris par les scènes du CM1-CM2 et du collège
+   (le CSS est global). Le commun du groupe porte `sc-ce2-maths`.
+   Tout le mouvement est coupé sous `prefers-reduced-motion` (fin du fichier).
+   ======================================================================== */
+
+/* ------------------------------------------------------------------------
+   LE COMMUN : le panneau de scène, la mascotte, sa bulle, la fête.
+   ------------------------------------------------------------------------ */
+.sc-tour-du-jardin-ce2,
+.sc-combien-de-temps-ce2,
+.sc-les-bouteilles-ce2,
+.sc-le-miroir-ce2,
+.sc-le-diagramme-ce2 {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 780px);
+  margin: 0 auto;
+  padding: 18px 104px 18px 18px;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  animation: sc-ce2-maths-arrive 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+/* La mascotte : en bas à droite du panneau, hors du texte. */
+.sc-tour-du-jardin-ce2__mascotte,
+.sc-combien-de-temps-ce2__mascotte,
+.sc-les-bouteilles-ce2__mascotte,
+.sc-le-miroir-ce2__mascotte,
+.sc-le-diagramme-ce2__mascotte {
+  position: absolute;
+  right: 12px;
+  bottom: 14px;
+  z-index: 2;
+  width: 84px;
+  pointer-events: none;
+}
+
+.sc-tour-du-jardin-ce2__mascotte > svg,
+.sc-combien-de-temps-ce2__mascotte > svg,
+.sc-les-bouteilles-ce2__mascotte > svg,
+.sc-le-miroir-ce2__mascotte > svg,
+.sc-le-diagramme-ce2__mascotte > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Elle attend en respirant, saute à la réussite, encourage en se penchant. */
+.sc-tour-du-jardin-ce2__mascotte.est-attend > svg,
+.sc-combien-de-temps-ce2__mascotte.est-attend > svg,
+.sc-les-bouteilles-ce2__mascotte.est-attend > svg,
+.sc-le-miroir-ce2__mascotte.est-attend > svg,
+.sc-le-diagramme-ce2__mascotte.est-attend > svg { animation: sc-ce2-maths-respire 2.6s ease-in-out infinite; }
+
+.sc-tour-du-jardin-ce2__mascotte.est-fete > svg,
+.sc-combien-de-temps-ce2__mascotte.est-fete > svg,
+.sc-les-bouteilles-ce2__mascotte.est-fete > svg,
+.sc-le-miroir-ce2__mascotte.est-fete > svg,
+.sc-le-diagramme-ce2__mascotte.est-fete > svg { animation: sc-ce2-maths-saute 0.7s cubic-bezier(0.3, 1.4, 0.5, 1) 3; transform-origin: 50% 100%; }
+
+.sc-tour-du-jardin-ce2__mascotte.est-encourage > svg,
+.sc-combien-de-temps-ce2__mascotte.est-encourage > svg,
+.sc-les-bouteilles-ce2__mascotte.est-encourage > svg,
+.sc-le-miroir-ce2__mascotte.est-encourage > svg,
+.sc-le-diagramme-ce2__mascotte.est-encourage > svg { animation: sc-ce2-maths-encourage 0.9s ease-in-out 2; transform-origin: 50% 100%; }
+
+.sc-tour-du-jardin-ce2__mascotte.est-explique > svg,
+.sc-combien-de-temps-ce2__mascotte.est-explique > svg,
+.sc-les-bouteilles-ce2__mascotte.est-explique > svg,
+.sc-le-miroir-ce2__mascotte.est-explique > svg,
+.sc-le-diagramme-ce2__mascotte.est-explique > svg { animation: sc-ce2-maths-penche 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
+
+/* La bulle du mot de la mascotte. */
+.sc-ce2-maths__bulle {
+  position: absolute;
+  right: 6px;
+  bottom: 100%;
+  margin-bottom: 4px;
+  padding: 4px 10px;
+  border: 2px solid #1d3a5c;
+  border-radius: 14px 14px 4px 14px;
+  background: #fff;
+  color: #1d3a5c;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  animation: sc-ce2-maths-bulle 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+/* La fête : des confettis et des étoiles qui jaillissent de la mascotte. */
+.sc-ce2-maths__fete { position: absolute; left: 50%; top: 45%; width: 0; height: 0; }
+
+.sc-ce2-maths__eclat {
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--couleur);
+  opacity: 0;
+  animation: sc-ce2-maths-jaillit 1.2s ease-out both;
+  animation-delay: calc(var(--n) * 40ms);
+}
+
+.sc-ce2-maths__eclat--etoile {
+  width: 18px;
+  height: 18px;
+  left: -9px;
+  top: -9px;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+/* Un bouton-réponse faux : barré, terni, il ne se prend plus. */
+.sc-tour-du-jardin-ce2__rouleau.est-fausse,
+.sc-combien-de-temps-ce2__valise.est-fausse,
+.sc-les-bouteilles-ce2__prendre.est-fausse,
+.sc-le-miroir-ce2__crayon.est-fausse,
+.sc-le-diagramme-ce2__ardoise.est-fausse {
+  opacity: 0.45;
+  filter: grayscale(0.85);
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+  cursor: not-allowed;
+  animation: sc-ce2-maths-tremble 0.45s ease-in-out;
+}
+
+/* ------------------------------------------------------------------------
+   LE TOUR DU JARDIN — SceneJardin.js
+   Le ciel, le soleil, l'arbre à cabane, la palissade, le rouge-gorge.
+   ------------------------------------------------------------------------ */
+.sc-tour-du-jardin-ce2 {
+  min-height: 290px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  background: linear-gradient(180deg, #7cc8f5 0%, #c8ebff 46%, #a5df82 47%, #6cbf4a 100%);
+}
+
+.sc-tour-du-jardin-ce2__decor { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+
+.sc-tour-du-jardin-ce2__soleil {
+  position: absolute;
+  top: 16px;
+  right: 120px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3a0 0 40%, #ffd43b 70%);
+  box-shadow: 0 0 22px rgba(255, 212, 59, 0.9);
+}
+
+.sc-tour-du-jardin-ce2__soleil::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 224, 102, 0.9) 0 9deg, transparent 9deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 22px, #000 23px);
+  mask: radial-gradient(circle, transparent 0 22px, #000 23px);
+  animation: sc-tour-du-jardin-ce2-tourne 22s linear infinite;
+}
+
+.sc-tour-du-jardin-ce2__nuage {
+  position: absolute;
+  top: calc(10px + var(--n) * 46px);
+  left: -140px;
+  width: 110px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 26px -12px 0 2px rgba(255, 255, 255, 0.92), 56px 2px 0 -3px rgba(255, 255, 255, 0.92);
+  animation: sc-tour-du-jardin-ce2-nuage 30s linear infinite;
+  animation-delay: calc(var(--n) * -15s);
+}
+
+.sc-tour-du-jardin-ce2__arbre { position: absolute; left: -8px; bottom: 30px; width: 112px; height: auto; }
+
+.sc-tour-du-jardin-ce2__palissade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40px;
+  background:
+    linear-gradient(180deg, transparent 0 10px, #8a5a2b 10px 15px, transparent 15px 27px, #8a5a2b 27px 32px, transparent 32px),
+    repeating-linear-gradient(90deg, #c8915a 0 20px, #a8743f 20px 22px, transparent 22px 30px);
+}
+
+.sc-tour-du-jardin-ce2__fleur {
+  position: absolute;
+  bottom: 6px;
+  left: calc(6% + var(--n) * 21%);
+  width: 26px;
+  height: auto;
+  transform-origin: 50% 100%;
+  animation: sc-tour-du-jardin-ce2-balance 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.7s);
+}
+
+.sc-tour-du-jardin-ce2__papillon {
+  position: absolute;
+  top: 34%;
+  left: 12%;
+  width: 34px;
+  height: auto;
+  animation: sc-tour-du-jardin-ce2-vol 16s ease-in-out infinite;
+}
+
+.sc-tour-du-jardin-ce2__ailes { transform-box: fill-box; transform-origin: 50% 50%; animation: sc-tour-du-jardin-ce2-bat 0.35s ease-in-out infinite alternate; }
+
+/* Le plan du jardin, épinglé sur sa planche. */
+.sc-tour-du-jardin-ce2__plan {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 14px 8px;
+  border: 3px solid #c8915a;
+  border-radius: 14px;
+  background:
+    repeating-linear-gradient(0deg, rgba(90, 150, 200, 0.12) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(90deg, rgba(90, 150, 200, 0.12) 0 1px, transparent 1px 18px),
+    #fffdf3;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.sc-tour-du-jardin-ce2__punaise {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin-left: -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8787, #e03131 60%, #a51111);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.sc-tour-du-jardin-ce2 .jardin__dessin { display: block; width: min(100%, 320px); overflow: visible; }
+
+.sc-tour-du-jardin-ce2__cote {
+  stroke: transparent;
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke 0.4s ease;
+}
+
+.sc-tour-du-jardin-ce2__cote.est-compte { stroke: #ff922b; animation: sc-tour-du-jardin-ce2-brille 0.8s ease-out; }
+
+.sc-tour-du-jardin-ce2 .sc-tour-du-jardin-ce2__longueur--comptee { fill: #c2410c; }
+
+.sc-tour-du-jardin-ce2__longueur--revelee {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: sc-tour-du-jardin-ce2-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.sc-tour-du-jardin-ce2__coccinelle { transition: transform 0.75s ease-in-out; }
+.sc-tour-du-jardin-ce2__coccinelle-corps { animation: sc-tour-du-jardin-ce2-trotte 0.3s ease-in-out infinite alternate; }
+
+.sc-tour-du-jardin-ce2 .sc-tour-du-jardin-ce2__calcul {
+  margin: 0;
+  min-height: 1.3em;
+  color: #2b7a3d;
+  font-size: 24px;
+  text-align: center;
+}
+
+.sc-tour-du-jardin-ce2 .sc-tour-du-jardin-ce2__calcul.est-fini { animation: sc-tour-du-jardin-ce2-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+
+/* Le rouge-gorge sur la palissade. */
+.sc-tour-du-jardin-ce2__mascotte { bottom: 22px; width: 88px; }
+.sc-tour-du-jardin-ce2__oeil { transform-box: fill-box; transform-origin: 50% 50%; animation: sc-ce2-maths-cligne 4.5s infinite; }
+.sc-tour-du-jardin-ce2__aile { transform-box: fill-box; transform-origin: 0 50%; }
+.sc-tour-du-jardin-ce2__mascotte.est-fete .sc-tour-du-jardin-ce2__aile,
+.sc-tour-du-jardin-ce2__mascotte.est-encourage .sc-tour-du-jardin-ce2__aile { animation: sc-tour-du-jardin-ce2-battement 0.18s ease-in-out 8 alternate; }
+.sc-tour-du-jardin-ce2__queue { transform-box: fill-box; transform-origin: 100% 50%; animation: sc-tour-du-jardin-ce2-queue 2.2s ease-in-out infinite; }
+
+/* Les rouleaux de clôture. */
+.sc-tour-du-jardin-ce2__choix {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-tour-du-jardin-ce2__choix > li { animation: sc-ce2-maths-sort 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both; animation-delay: calc(0.2s + var(--i, 0) * 0.12s); }
+
+.sc-tour-du-jardin-ce2__rouleau {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 66px;
+  padding: 6px 20px 6px 8px;
+  border: 3px solid #8a5a2b;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff8e6, #ffe6b3);
+  color: #3b2414;
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 6px 0 #8a5a2b, 0 10px 18px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sc-tour-du-jardin-ce2__rouleau:hover:not(:disabled) { transform: translateY(-4px); }
+.sc-tour-du-jardin-ce2__rouleau:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #8a5a2b, 0 4px 8px rgba(0, 0, 0, 0.3); }
+.sc-tour-du-jardin-ce2__rouleau:focus-visible { outline: 4px solid #1d4e89; outline-offset: 3px; }
+.sc-tour-du-jardin-ce2__bobine { width: 58px; height: auto; flex: none; }
+.sc-tour-du-jardin-ce2__rouleau:hover:not(:disabled) .sc-tour-du-jardin-ce2__bobine { animation: sc-tour-du-jardin-ce2-deroule 0.6s ease-in-out; }
+.sc-tour-du-jardin-ce2__etiquette { white-space: nowrap; }
+
+/* ------------------------------------------------------------------------
+   COMBIEN DE TEMPS ? — SceneTemps.js
+   Le quai de la gare de montagne, l'horloge, le train, Tic le réveil.
+   ------------------------------------------------------------------------ */
+.sc-combien-de-temps-ce2 {
+  min-height: 250px;
+  padding-top: 34px;
+  padding-bottom: 26px;
+  border: 3px solid rgba(255, 236, 200, 0.9);
+  background: linear-gradient(180deg, #9fd3f5 0%, #fdeccd 52%, #e8d5b5 53%, #d9c29c 100%);
+}
+
+.sc-combien-de-temps-ce2__decor { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+
+.sc-combien-de-temps-ce2__montagnes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22%;
+  height: 32%;
+  background: linear-gradient(180deg, #f8fbff 0 18%, #8fa7c4 19%, #6f86a6 100%);
+  clip-path: polygon(0 100%, 0 60%, 10% 30%, 18% 55%, 30% 8%, 42% 50%, 52% 25%, 64% 60%, 76% 15%, 88% 52%, 100% 30%, 100% 100%);
+  opacity: 0.85;
+}
+
+.sc-combien-de-temps-ce2__viaduc { position: absolute; left: 4%; top: 40%; width: 46%; height: 30px; }
+
+.sc-combien-de-temps-ce2__train {
+  position: absolute;
+  top: calc(52% - 22px);
+  left: 100%;
+  display: flex;
+  gap: 3px;
+  animation: sc-combien-de-temps-ce2-passe 22s linear infinite;
+}
+
+.sc-combien-de-temps-ce2__wagon-loin {
+  width: 58px;
+  height: 22px;
+  border-radius: 5px 5px 2px 2px;
+  background: repeating-linear-gradient(90deg, #2f6b4f 0 6px, #cfe9dc 6px 14px, #2f6b4f 14px 18px) 0 4px / 100% 8px no-repeat, #2f6b4f;
+  box-shadow: inset 0 -4px 0 #1d4532;
+}
+
+.sc-combien-de-temps-ce2__wagon-loin.est-loco { width: 44px; border-radius: 12px 5px 2px 2px; background: #1d4532; }
+
+.sc-combien-de-temps-ce2__marquise {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 22px;
+  background:
+    radial-gradient(circle at 50% 0, transparent 0 9px, #8a5a2b 10px) 0 6px / 24px 16px repeat-x,
+    linear-gradient(180deg, #a8743f 0 8px, transparent 8px);
+}
+
+.sc-combien-de-temps-ce2__lanterne {
+  position: absolute;
+  top: 18px;
+  left: 40px;
+  width: 22px;
+  height: 30px;
+  border-radius: 6px 6px 10px 10px;
+  background: radial-gradient(circle at 50% 60%, #fff6bf 0 30%, #ffc94d 70%);
+  box-shadow: 0 0 22px 8px rgba(255, 210, 110, 0.65);
+  transform-origin: 50% -18px;
+  animation: sc-combien-de-temps-ce2-balance 3.4s ease-in-out infinite alternate;
+}
+
+.sc-combien-de-temps-ce2__lanterne::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 2px;
+  height: 18px;
+  background: #4a3520;
+}
+
+.sc-combien-de-temps-ce2__quai {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  background: repeating-linear-gradient(90deg, #c9b38e 0 46px, #b39a72 46px 48px);
+  border-top: 4px solid #fff3d6;
+}
+
+.sc-combien-de-temps-ce2__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 18px;
+}
+
+.sc-combien-de-temps-ce2__horloge {
+  width: 112px;
+  height: 112px;
+  flex: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+
+.sc-combien-de-temps-ce2__boitier { fill: #2f4f3f; stroke: #c99a3a; stroke-width: 3; }
+.sc-combien-de-temps-ce2__cadran { fill: #fffaf0; }
+.sc-combien-de-temps-ce2__chiffre { fill: #1b1d3a; font-size: 10px; font-weight: 800; }
+
+.sc-combien-de-temps-ce2__petite,
+.sc-combien-de-temps-ce2__grande {
+  stroke: #1b1d3a;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  transition: transform 1s ease-in-out;
+}
+
+.sc-combien-de-temps-ce2__petite { stroke-width: 4.5; }
+.sc-combien-de-temps-ce2__grande { stroke-width: 2.8; }
+.sc-combien-de-temps-ce2__axe { fill: #c92a2a; }
+
+/* Le tableau des départs. */
+.sc-combien-de-temps-ce2__tableau {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 10px 18px 14px;
+  border: 6px solid #8a5a2b;
+  border-radius: 14px;
+  background: #1f2d2b;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.sc-combien-de-temps-ce2 .duree__activite {
+  margin: 0;
+  color: #ffd43b;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.sc-combien-de-temps-ce2 .duree__heure {
+  border-color: #c99a3a;
+  background: #fffaf0;
+  color: #1b1d3a;
+  font-size: 30px;
+}
+
+.sc-combien-de-temps-ce2 .duree__heure span { color: #5b4a2a; font-size: 15px; }
+.sc-combien-de-temps-ce2 .duree__fleche { color: #ffd43b; }
+
+/* Le train du temps : un wagon par morceau de durée. */
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__convoi {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 8px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon {
+  position: relative;
+  margin: 0 0 8px;
+  padding: 8px 14px;
+  border-radius: 10px 10px 4px 4px;
+  background: #2f6b4f;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: inset 0 -5px 0 #1d4532, 0 4px 10px rgba(0, 0, 0, 0.3);
+  opacity: 0.25;
+  transition: opacity 0.4s ease;
+}
+
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon::before,
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #adb5bd 0 30%, #212529 32%);
+}
+
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon::before { left: 12px; }
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon::after { right: 12px; }
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon strong { color: #ffe066; }
+
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon.est-la {
+  opacity: 1;
+  animation: sc-combien-de-temps-ce2-accroche 0.6s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon--total { background: #ffd43b; color: #1b1d3a; box-shadow: inset 0 -5px 0 #e0a800, 0 4px 10px rgba(0, 0, 0, 0.3); }
+.sc-combien-de-temps-ce2 .sc-combien-de-temps-ce2__wagon--total strong { color: #1b5e20; }
+
+/* Tic, le réveil. */
+.sc-combien-de-temps-ce2__mascotte { bottom: 16px; width: 78px; }
+.sc-combien-de-temps-ce2__reveil { transform-origin: 50% 100%; }
+.sc-combien-de-temps-ce2__mascotte.est-attend .sc-combien-de-temps-ce2__reveil { animation: sc-combien-de-temps-ce2-tictac 1s steps(2, jump-none) infinite alternate; }
+.sc-combien-de-temps-ce2__trotteuse-reveil { transform-box: view-box; transform-origin: 45px 50px; animation: sc-tour-du-jardin-ce2-tourne 6s steps(60) infinite; }
+.sc-combien-de-temps-ce2__yeux { transform-box: fill-box; transform-origin: 50% 50%; animation: sc-ce2-maths-cligne 5s infinite; }
+.sc-combien-de-temps-ce2__cloches { transform-box: fill-box; transform-origin: 50% 100%; }
+.sc-combien-de-temps-ce2__mascotte.est-fete .sc-combien-de-temps-ce2__cloches { animation: sc-combien-de-temps-ce2-sonne 0.08s linear 20 alternate; }
+
+.sc-combien-de-temps-ce2__dring {
+  position: absolute;
+  left: -34px;
+  top: 6px;
+  color: #c92a2a;
+  font-size: 16px;
+  font-weight: 900;
+  text-shadow: 0 0 4px #fff, 0 0 8px #fff;
+  transform: rotate(-14deg);
+  animation: sc-ce2-maths-bulle 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+/* Les valises. */
+.sc-combien-de-temps-ce2__bagages {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-combien-de-temps-ce2__bagages > li { padding-top: 14px; animation: sc-ce2-maths-sort 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both; animation-delay: calc(0.2s + var(--i, 0) * 0.12s); }
+
+.sc-combien-de-temps-ce2__valise {
+  --cuir: #8d5a35;
+  --cuir-fonce: #5a3a1a;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 170px;
+  min-height: 76px;
+  padding: 10px 22px;
+  border: 3px solid var(--cuir-fonce);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--cuir) 0%, var(--cuir-fonce) 140%);
+  cursor: pointer;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s ease;
+  animation: sc-combien-de-temps-ce2-valise 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-combien-de-temps-ce2__valise--1 { --cuir: #c92a2a; --cuir-fonce: #7a1414; }
+.sc-combien-de-temps-ce2__valise--2 { --cuir: #1864ab; --cuir-fonce: #0b3a66; }
+.sc-combien-de-temps-ce2__valise:hover:not(:disabled) { transform: translateY(-6px) rotate(-2deg); animation-play-state: paused; }
+.sc-combien-de-temps-ce2__valise:focus-visible { outline: 4px solid #ffd43b; outline-offset: 4px; }
+
+.sc-combien-de-temps-ce2__poignee {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 48px;
+  height: 16px;
+  margin-left: -24px;
+  border: 5px solid var(--cuir-fonce);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+
+.sc-combien-de-temps-ce2__sangle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 18px;
+  width: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: calc(var(--largeur, 120px)) 0 0 rgba(0, 0, 0, 0.25);
+}
+
+.sc-combien-de-temps-ce2__etiquette {
+  position: relative;
+  z-index: 1;
+  padding: 6px 14px 6px 22px;
+  border: 2px solid #c9a86a;
+  border-radius: 6px 10px 10px 6px;
+  background: #fffaf0;
+  color: #1b1d3a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sc-combien-de-temps-ce2__etiquette::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border: 2px solid #c9a86a;
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------------------
+   LES BOUTEILLES — SceneBouteilles.js
+   Le comptoir au bord du lac, l'ardoise, le tonneau qui goutte, Plouf.
+   ------------------------------------------------------------------------ */
+.sc-les-bouteilles-ce2 {
+  min-height: 240px;
+  padding-top: 32px;
+  padding-bottom: 30px;
+  border: 3px solid rgba(220, 245, 255, 0.9);
+  background: linear-gradient(180deg, #8fd0f5 0%, #dff3ff 34%, #6cbde6 35%, #3a96c4 60%, #b8834e 61%, #8d5a35 100%);
+}
+
+.sc-les-bouteilles-ce2__decor { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+
+.sc-les-bouteilles-ce2__montagnes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12%;
+  height: 24%;
+  background: linear-gradient(180deg, #ffffff 0 22%, #9bb3cc 23%, #7590ad 100%);
+  clip-path: polygon(0 100%, 0 70%, 12% 25%, 22% 60%, 36% 0, 50% 55%, 62% 20%, 78% 70%, 88% 30%, 100% 62%, 100% 100%);
+}
+
+.sc-les-bouteilles-ce2__lac { position: absolute; left: 0; right: 0; top: 36%; height: 24%; }
+
+.sc-les-bouteilles-ce2__ride {
+  position: absolute;
+  top: calc(18% + var(--n) * 20%);
+  left: calc(10% + var(--n) * 21%);
+  width: 70px;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.75);
+  animation: sc-les-bouteilles-ce2-ride 4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -1s);
+}
+
+.sc-les-bouteilles-ce2__poutre {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 20px;
+  background: linear-gradient(180deg, #b07a45, #7a4e2a);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sc-les-bouteilles-ce2__feuille {
+  position: absolute;
+  top: 12px;
+  left: calc(4% + var(--n) * 15%);
+  width: 18px;
+  height: 11px;
+  border-radius: 0 100%;
+  background: #4caf50;
+  transform-origin: 0 0;
+  animation: sc-les-bouteilles-ce2-feuille 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.5s);
+}
+
+.sc-les-bouteilles-ce2__lampe {
+  position: absolute;
+  top: 20px;
+  right: 116px;
+  width: 34px;
+  height: 18px;
+  border-radius: 18px 18px 4px 4px;
+  background: #5c4a3a;
+  transform-origin: 50% -10px;
+  animation: sc-combien-de-temps-ce2-balance 3.8s ease-in-out infinite alternate;
+}
+
+.sc-les-bouteilles-ce2__lampe::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 14px;
+  width: 16px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff3a0;
+  box-shadow: 0 0 22px 10px rgba(255, 220, 120, 0.7);
+  animation: sc-les-bouteilles-ce2-lueur 2.4s ease-in-out infinite alternate;
+}
+
+.sc-les-bouteilles-ce2__tonneau {
+  position: absolute;
+  left: 10px;
+  bottom: 18px;
+  width: 52px;
+  height: 66px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, transparent 0 14px, #555 14px 18px, transparent 18px 48px, #555 48px 52px, transparent 52px),
+    linear-gradient(90deg, #8a5a2b, #c08850 50%, #8a5a2b);
+}
+
+.sc-les-bouteilles-ce2__robinet {
+  position: absolute;
+  right: -10px;
+  top: 32px;
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  background: #adb5bd;
+}
+
+.sc-les-bouteilles-ce2__goutte-qui-tombe {
+  position: absolute;
+  right: -8px;
+  top: 40px;
+  width: 7px;
+  height: 9px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: #4dabf7;
+  animation: sc-les-bouteilles-ce2-goutte 2s ease-in infinite;
+}
+
+.sc-les-bouteilles-ce2__planche {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18px;
+  background: repeating-linear-gradient(90deg, #7a4e2a 0 80px, #6b4226 80px 82px);
+}
+
+.sc-les-bouteilles-ce2__scene {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 18px;
+}
+
+/* L'ardoise du comptoir, écrite à la craie. */
+.sc-les-bouteilles-ce2__ardoise {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 22px;
+  border: 8px solid #a0703f;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.06), transparent 60%), #2b3a3a;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+.sc-les-bouteilles-ce2 .sc-les-bouteilles-ce2__craie {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fdfdf8;
+  font-size: 32px;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.sc-les-bouteilles-ce2__reponse {
+  margin: 0;
+  color: #ffe066;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-ce2-maths-bulle 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+/* L'étagère : les bouteilles posées, leur étiquette de papier. */
+.sc-les-bouteilles-ce2__etagere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px 0;
+  border-bottom: 8px solid #7a4e2a;
+  border-radius: 4px;
+}
+
+.sc-les-bouteilles-ce2__posee { display: grid; justify-items: center; gap: 2px; }
+.sc-les-bouteilles-ce2__posee .bouteilles__dessin { width: 40px; height: 80px; }
+.sc-les-bouteilles-ce2__posee.est-petite .bouteilles__dessin { width: 30px; height: 60px; }
+.sc-les-bouteilles-ce2__posee.est-carafe .bouteilles__dessin { width: 56px; height: 112px; }
+
+.sc-les-bouteilles-ce2__papier {
+  padding: 2px 7px;
+  border: 1px solid #c9a86a;
+  border-radius: 4px;
+  background: #fffaf0;
+  color: #1b1d3a;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sc-les-bouteilles-ce2__posee.est-converti .sc-les-bouteilles-ce2__papier {
+  border-color: #2f9e44;
+  background: #d3f9d8;
+  animation: sc-tour-du-jardin-ce2-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.sc-les-bouteilles-ce2__verre-modele { display: grid; justify-items: center; gap: 2px; }
+
+.sc-les-bouteilles-ce2__eau-monte {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scaleY(var(--niveau, 0.5));
+  transition: transform 0.7s ease;
+}
+
+.sc-les-bouteilles-ce2__rangee .sc-les-bouteilles-ce2__eau-monte {
+  animation: sc-les-bouteilles-ce2-monte 1.4s ease-out both;
+  animation-delay: calc(0.2s + var(--i, 0) * 0.3s);
+}
+
+.sc-les-bouteilles-ce2__verre { width: 34px; height: 46px; }
+.sc-les-bouteilles-ce2__paroi { fill: rgba(255, 255, 255, 0.7); stroke: #5aa6c8; stroke-width: 2; }
+
+.sc-les-bouteilles-ce2__boisson {
+  fill: #74c0fc;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: scaleY(0);
+  transition: transform 0.5s ease;
+}
+
+.sc-les-bouteilles-ce2__verre.est-plein .sc-les-bouteilles-ce2__boisson { transform: scaleY(1); }
+.sc-les-bouteilles-ce2__verres { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 280px; }
+
+.sc-les-bouteilles-ce2__versement {
+  align-self: center;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: sc-les-bouteilles-ce2-pousse 0.9s ease-in-out infinite alternate;
+}
+
+.sc-les-bouteilles-ce2__somme {
+  margin: 0;
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: rgba(27, 42, 42, 0.9);
+  color: #fdfdf8;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sc-les-bouteilles-ce2__somme.est-fini { color: #ffe066; animation: sc-tour-du-jardin-ce2-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+
+/* La comparaison, une fois trouvée : l'eau à sa vraie hauteur. */
+.sc-les-bouteilles-ce2 .sc-les-bouteilles-ce2__rangee { flex-wrap: wrap; justify-content: center; gap: 14px; }
+.sc-les-bouteilles-ce2 .sc-les-bouteilles-ce2__rangee .bouteilles__recipient { position: relative; padding: 8px 14px; }
+.sc-les-bouteilles-ce2 .sc-les-bouteilles-ce2__rangee .bouteilles__dessin { width: 46px; height: 92px; }
+
+.sc-les-bouteilles-ce2__ruban {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffd43b;
+  color: #c2410c;
+  font-size: 22px;
+  line-height: 34px;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  animation: sc-les-bouteilles-ce2-ruban 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) 1.4s both;
+}
+
+.sc-les-bouteilles-ce2__enseigne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 18px;
+  border: 6px solid #a0703f;
+  border-radius: 12px;
+  background: #2b3a3a;
+  color: #ffe066;
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.sc-les-bouteilles-ce2__enseigne .bouteilles__dessin { width: 34px; height: 68px; animation: sc-les-bouteilles-ce2-hesite 2.4s ease-in-out infinite alternate; }
+
+/* Plouf, la goutte. */
+.sc-les-bouteilles-ce2__mascotte { bottom: 18px; width: 66px; }
+.sc-les-bouteilles-ce2__mascotte.est-attend > svg { animation: sc-les-bouteilles-ce2-rebond 1.6s ease-in-out infinite; transform-origin: 50% 100%; }
+.sc-les-bouteilles-ce2__yeux { transform-box: fill-box; transform-origin: 50% 50%; animation: sc-ce2-maths-cligne 4s infinite; }
+
+/* Le comptoir des réponses. */
+.sc-les-bouteilles-ce2__comptoir {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 12px 16px;
+  max-width: 100%;
+  margin: 0;
+  padding: 10px 16px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #c08850 0%, #8d5a35 100%);
+  box-shadow: inset 0 -6px 0 #6b4226, 0 8px 18px rgba(0, 0, 0, 0.3);
+  list-style: none;
+}
+
+.sc-les-bouteilles-ce2__comptoir > li { animation: sc-ce2-maths-sort 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both; animation-delay: calc(0.2s + var(--i, 0) * 0.12s); }
+
+.sc-les-bouteilles-ce2__prendre {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 110px;
+  min-height: 64px;
+  padding: 8px 14px 10px;
+  border: 3px solid #5aa6c8;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1d3a5c;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s ease;
+}
+
+.sc-les-bouteilles-ce2__prendre:hover:not(:disabled) { transform: translateY(-8px); }
+.sc-les-bouteilles-ce2__prendre:hover:not(:disabled) svg { animation: sc-les-bouteilles-ce2-hesite 0.5s ease-in-out 2 alternate; }
+.sc-les-bouteilles-ce2__prendre:focus-visible { outline: 4px solid #1d4e89; outline-offset: 3px; }
+.sc-les-bouteilles-ce2__prendre .bouteilles__dessin { width: 34px; height: 68px; }
+.sc-les-bouteilles-ce2__comptoir--comparer .sc-les-bouteilles-ce2__prendre .bouteilles__dessin { width: 44px; height: 88px; }
+.sc-les-bouteilles-ce2__prendre .sc-les-bouteilles-ce2__verre { width: 40px; height: 54px; }
+.sc-les-bouteilles-ce2__libelle { font-size: 22px; font-weight: 800; white-space: nowrap; }
+.sc-les-bouteilles-ce2__contenance { padding: 0 8px; border-radius: 6px; background: #fff3bf; color: #123; font-size: 24px; font-weight: 800; white-space: nowrap; }
+
+/* ------------------------------------------------------------------------
+   LE MIROIR — SceneMiroir.js
+   Le miroir à cadre de bois, le lierre, la lanterne, le papillon.
+   ------------------------------------------------------------------------ */
+.sc-le-miroir-ce2 {
+  min-height: 250px;
+  padding-top: 12px;
+  padding-bottom: 16px;
+  border: 3px solid rgba(255, 230, 250, 0.9);
+  background: linear-gradient(180deg, #a9d8ff 0%, #f6ecff 62%, #c08850 63%, #8d5a35 100%);
+}
+
+.sc-le-miroir-ce2__decor { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+
+.sc-le-miroir-ce2__lierre {
+  position: absolute;
+  top: calc(-6px + var(--n) * 1px);
+  left: calc(var(--n) * 14.5%);
+  width: 26px;
+  height: 16px;
+  border-radius: 0 100%;
+  background: #37b24d;
+  box-shadow: 18px 8px 0 -3px #2f9e44, -10px 12px 0 -4px #51cf66;
+  transform-origin: 0 0;
+  animation: sc-les-bouteilles-ce2-feuille 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.45s);
+}
+
+.sc-le-miroir-ce2__lanterne {
+  position: absolute;
+  top: 16px;
+  right: 120px;
+  width: 22px;
+  height: 30px;
+  border: 3px solid #3d2b1f;
+  border-radius: 4px;
+  background: radial-gradient(circle at 50% 60%, #fff6bf 0 30%, #ffc94d 75%);
+  box-shadow: 0 0 22px 8px rgba(255, 210, 110, 0.6);
+  transform-origin: 50% -16px;
+  animation: sc-combien-de-temps-ce2-balance 3.2s ease-in-out infinite alternate;
+}
+
+.sc-le-miroir-ce2__lanterne::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 2px;
+  height: 16px;
+  margin-left: -1px;
+  background: #3d2b1f;
+}
+
+.sc-le-miroir-ce2__table { position: absolute; left: 0; right: 0; bottom: 0; height: 37%; background: repeating-linear-gradient(90deg, transparent 0 120px, rgba(0, 0, 0, 0.12) 120px 122px); }
+
+.sc-le-miroir-ce2__fleur {
+  position: absolute;
+  bottom: 8px;
+  left: calc(4% + var(--n) * 5%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd43b 0 30%, #fff 32%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+  animation: sc-tour-du-jardin-ce2-balance 2.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.6s);
+}
+
+/* Le miroir : le cadre vissé, la glace, le reflet qui la balaie. */
+.sc-le-miroir-ce2__cadre {
+  position: relative;
+  padding: 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #c08850 0%, #8a5a2b 50%, #b07a45 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.2), 0 12px 22px rgba(0, 0, 0, 0.35);
+}
+
+.sc-le-miroir-ce2__vis {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f1f3f5, #868e96);
+}
+
+.sc-le-miroir-ce2__vis--0 { top: 3px; left: 3px; }
+.sc-le-miroir-ce2__vis--1 { top: 3px; right: 3px; }
+.sc-le-miroir-ce2__vis--2 { bottom: 3px; left: 3px; }
+.sc-le-miroir-ce2__vis--3 { bottom: 3px; right: 3px; }
+
+.sc-le-miroir-ce2__glace { position: relative; overflow: hidden; border-radius: 8px; }
+
+.sc-le-miroir-ce2 .miroir__dessin {
+  height: auto;
+  display: block;
+  width: min(100%, 280px);
+  padding: 6px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8fdff 0%, #e2f2fb 55%, #d4ebf7 100%);
+  box-shadow: none;
+}
+
+.sc-le-miroir-ce2__reflet {
+  position: absolute;
+  top: -30%;
+  left: -50%;
+  width: 30%;
+  height: 160%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: rotate(20deg);
+  pointer-events: none;
+  animation: sc-le-miroir-ce2-reflet 6s ease-in-out infinite;
+}
+
+/* Les lignes et les coins portent la couleur de leur crayon. */
+.sc-le-miroir-ce2 .sc-le-miroir-ce2__ligne { stroke: var(--couleur); stroke-width: 3; }
+.sc-le-miroir-ce2 .sc-le-miroir-ce2__lettre { fill: var(--couleur); font-size: 17px; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+.sc-le-miroir-ce2__coin { fill: var(--couleur); }
+.sc-le-miroir-ce2 .miroir__trace.est-axe .sc-le-miroir-ce2__ligne { stroke: #2e9e5b; stroke-width: 4.5; animation: sc-le-miroir-ce2-pli-brille 1s ease-in-out 3; }
+.sc-le-miroir-ce2 .miroir__trace.est-axe .sc-le-miroir-ce2__lettre { fill: #2e9e5b; }
+.sc-le-miroir-ce2__trace--eteinte { opacity: 0.25; transition: opacity 0.5s ease; }
+
+/* Le pli : la moitié se rabat sur l'autre. */
+.sc-le-miroir-ce2__moitie { fill: rgba(255, 146, 43, 0.6); stroke: #e8590c; stroke-width: 2; stroke-dasharray: 5 3; }
+
+.sc-le-miroir-ce2__volet {
+  transform-box: view-box;
+  transform-origin: 100px 80px;
+}
+
+.sc-le-miroir-ce2__volet--v { transform: scaleX(-1); animation: sc-le-miroir-ce2-plie-v 2.6s ease-in-out 0.4s both; }
+.sc-le-miroir-ce2__volet--h { transform: scaleY(-1); animation: sc-le-miroir-ce2-plie-h 2.6s ease-in-out 0.4s both; }
+
+/* L'équerre qui se cale dans le coin, puis son petit carré. */
+.sc-le-miroir-ce2__equerre { transform-box: view-box; animation: sc-le-miroir-ce2-equerre 1.2s cubic-bezier(0.2, 1, 0.3, 1.15) 0.3s both; }
+.sc-le-miroir-ce2__equerre-corps { fill: rgba(255, 236, 153, 0.8); stroke: #b8860b; stroke-width: 1.5; }
+.sc-le-miroir-ce2__equerre-trou { fill: #eaf6fc; stroke: #b8860b; stroke-width: 1; }
+.sc-le-miroir-ce2 .sc-le-miroir-ce2__carre { animation: sc-le-miroir-ce2-apparait 0.4s ease-out 1.4s both; }
+
+.sc-le-miroir-ce2__legende {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #3d1a5c;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  animation: sc-le-miroir-ce2-apparait 0.5s ease-out 1.2s both;
+}
+
+/* Le papillon. */
+.sc-le-miroir-ce2__mascotte { bottom: auto; top: 40%; width: 82px; }
+.sc-le-miroir-ce2__mascotte.est-attend > svg { animation: sc-le-miroir-ce2-plane 3.4s ease-in-out infinite; }
+.sc-le-miroir-ce2__aile { transform-box: view-box; transform-origin: 0 0; animation: sc-le-miroir-ce2-bat 0.9s ease-in-out infinite alternate; }
+.sc-le-miroir-ce2__mascotte.est-fete .sc-le-miroir-ce2__aile { animation-duration: 0.18s; }
+.sc-le-miroir-ce2__mascotte.est-encourage .sc-le-miroir-ce2__aile { animation-duration: 1.6s; }
+.sc-le-miroir-ce2__yeux { transform-box: fill-box; transform-origin: 50% 50%; animation: sc-ce2-maths-cligne 4.2s infinite; }
+
+/* Les crayons dans leur pot. */
+.sc-le-miroir-ce2__pot-entier { position: relative; display: flex; justify-content: center; padding: 0 10px; }
+
+.sc-le-miroir-ce2__crayons {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  margin: 0;
+  padding: 28px 26px 0;
+  list-style: none;
+}
+
+.sc-le-miroir-ce2__crayons > li { animation: sc-le-miroir-ce2-sort 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) both; animation-delay: calc(0.2s + var(--i, 0) * 0.14s); }
+
+.sc-le-miroir-ce2__crayon {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 66px;
+  height: 100px;
+  padding: 12px 0 0;
+  border: none;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 22%, transparent 22% 78%, rgba(0, 0, 0, 0.18) 78%), var(--couleur);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  animation: sc-le-miroir-ce2-crayon 3s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -1s);
+}
+
+.sc-le-miroir-ce2__crayon:hover:not(:disabled) { transform: translateY(-16px); animation-play-state: paused; }
+.sc-le-miroir-ce2__crayon:focus-visible { outline: 4px solid #1d4e89; outline-offset: 3px; }
+
+.sc-le-miroir-ce2__mine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 28px;
+  background: linear-gradient(180deg, var(--couleur) 0 30%, #f1c27d 30%);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.sc-le-miroir-ce2__bois {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  color: #1b1d3a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sc-le-miroir-ce2__crayon.est-fausse { transform: translateY(14px); }
+
+.sc-le-miroir-ce2__pot {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 0;
+  height: 36px;
+  border-radius: 6px 6px 16px 16px;
+  background: linear-gradient(90deg, #868e96, #dee2e6 35%, #adb5bd 60%, #868e96);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------------
+   LE DIAGRAMME — SceneDiagramme.js
+   Le tableau noir, le diagramme à la craie, les lanternes, la craie.
+   ------------------------------------------------------------------------ */
+.sc-le-diagramme-ce2 {
+  min-height: 260px;
+  padding-top: 14px;
+  padding-bottom: 30px;
+  border: 12px solid #9c6b3c;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(255, 255, 255, 0.07), transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(255, 255, 255, 0.05), transparent 45%),
+    #24332f;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6), 0 14px 30px rgba(0, 0, 0, 0.4);
+}
+
+.sc-le-diagramme-ce2__decor { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+
+.sc-le-diagramme-ce2__lanterne {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  width: 20px;
+  height: 28px;
+  border: 3px solid #3d2b1f;
+  border-radius: 4px;
+  background: radial-gradient(circle at 50% 60%, #fff6bf 0 30%, #ffc94d 75%);
+  box-shadow: 0 0 22px 8px rgba(255, 210, 110, 0.45);
+  transform-origin: 50% -10px;
+  animation: sc-combien-de-temps-ce2-balance 3.4s ease-in-out infinite alternate;
+}
+
+.sc-le-diagramme-ce2__lanterne--2 { left: auto; right: 14px; animation-delay: -1.7s; }
+
+.sc-le-diagramme-ce2__soleil {
+  position: absolute;
+  top: 34px;
+  right: 30px;
+  width: 52px;
+  height: 52px;
+  opacity: 0.85;
+}
+
+.sc-le-diagramme-ce2__rayons { transform-box: view-box; transform-origin: 30px 30px; animation: sc-tour-du-jardin-ce2-tourne 24s linear infinite; }
+
+.sc-le-diagramme-ce2__rebord {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18px;
+  background: linear-gradient(180deg, #b07a45, #7a4e2a);
+}
+
+.sc-le-diagramme-ce2__morceau {
+  position: absolute;
+  left: 26%;
+  top: -5px;
+  width: 30px;
+  height: 7px;
+  border-radius: 3px;
+  background: #fdfdf8;
+}
+
+.sc-le-diagramme-ce2__morceau--bleu { left: 32%; width: 20px; background: #74c0fc; transform: rotate(-8deg); }
+
+.sc-le-diagramme-ce2__brosse {
+  position: absolute;
+  left: 46%;
+  top: -12px;
+  width: 50px;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #a0703f 0 50%, #ced4da 50%);
+}
+
+/* Le diagramme d'origine, redessiné à la craie. */
+.sc-le-diagramme-ce2 .diagramme__dessin { display: block; width: min(100%, 390px); height: auto; margin-bottom: -18px; }
+.sc-le-diagramme-ce2 .diagramme__titre { fill: #fdfdf8; font-size: 13px; }
+.sc-le-diagramme-ce2 .diagramme__grille { stroke: rgba(255, 255, 255, 0.18); }
+.sc-le-diagramme-ce2 .diagramme__graduation { fill: #e9ecef; font-size: 11px; }
+.sc-le-diagramme-ce2 .diagramme__nom { fill: #fdfdf8; font-size: 12px; }
+.sc-le-diagramme-ce2 .diagramme__valeur { fill: #ffe066; font-size: 14px; }
+.sc-le-diagramme-ce2 .diagramme__axe { stroke: #fdfdf8; stroke-width: 2.5; }
+
+.sc-le-diagramme-ce2 .diagramme__question {
+  margin: 0;
+  color: #fdfdf8;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.sc-le-diagramme-ce2__barre {
+  fill-opacity: 0.88;
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-le-diagramme-ce2-pousse 0.9s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+  animation-delay: calc(0.15s + var(--i, 0) * 0.12s);
+}
+
+.sc-le-diagramme-ce2.est-termine .sc-le-diagramme-ce2__barre { animation: none; }
+.sc-le-diagramme-ce2__colonne { transition: opacity 0.5s ease; }
+.sc-le-diagramme-ce2__colonne.est-terne { opacity: 0.32; }
+.sc-le-diagramme-ce2__colonne.est-comptee .sc-le-diagramme-ce2__barre { stroke: #ffe066; stroke-width: 3; animation: sc-le-diagramme-ce2-compte 0.6s ease-out; }
+
+.sc-le-diagramme-ce2__trait { stroke: #ffe066; stroke-width: 2; stroke-dasharray: 5 4; }
+.sc-le-diagramme-ce2__lecture .sc-le-diagramme-ce2__trait { transform-box: fill-box; transform-origin: 100% 50%; animation: sc-le-diagramme-ce2-trace 0.9s ease-out 0.3s both; }
+.sc-le-diagramme-ce2__point { fill: #ffe066; transform-box: fill-box; transform-origin: 50% 50%; animation: sc-le-diagramme-ce2-point 0.8s ease-in-out 1.2s 3 alternate; }
+.sc-le-diagramme-ce2__or { fill: #ffd43b; stroke: #e8590c; stroke-width: 1.5; }
+.sc-le-diagramme-ce2__couronne { transform-box: view-box; animation: sc-le-diagramme-ce2-couronne 0.9s cubic-bezier(0.3, 1.4, 0.5, 1) 0.3s both; }
+.sc-le-diagramme-ce2__ecart { animation: sc-le-miroir-ce2-apparait 0.6s ease-out 0.3s both; }
+.sc-le-diagramme-ce2__surplus { fill: rgba(255, 224, 102, 0.3); stroke: #ffe066; stroke-width: 2; stroke-dasharray: 4 3; animation: sc-le-diagramme-ce2-clignote 0.7s ease-in-out 0.9s 4 alternate; }
+
+.sc-le-diagramme-ce2__explication {
+  margin: 0;
+  color: #ffe066;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-le-miroir-ce2-apparait 0.5s ease-out 0.5s both;
+}
+
+/* La craie, sur le rebord. */
+.sc-le-diagramme-ce2__mascotte { right: 16px; bottom: 16px; width: 54px; }
+.sc-le-diagramme-ce2__mascotte.est-attend > svg { animation: sc-le-diagramme-ce2-dandine 2s ease-in-out infinite alternate; }
+.sc-le-diagramme-ce2__yeux { transform-box: fill-box; transform-origin: 50% 50%; animation: sc-ce2-maths-cligne 3.8s infinite; }
+.sc-le-diagramme-ce2__bras-d { transform-box: fill-box; transform-origin: 0 100%; }
+.sc-le-diagramme-ce2__mascotte.est-fete .sc-le-diagramme-ce2__bras-d,
+.sc-le-diagramme-ce2__mascotte.est-explique .sc-le-diagramme-ce2__bras-d { animation: sc-le-diagramme-ce2-salue 0.3s ease-in-out 6 alternate; }
+
+.sc-le-diagramme-ce2__poussiere {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 26px;
+  height: 12px;
+  margin-left: -13px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  filter: blur(2px);
+  opacity: 0;
+}
+
+.sc-le-diagramme-ce2__mascotte.est-encourage .sc-le-diagramme-ce2__poussiere,
+.sc-le-diagramme-ce2__mascotte.est-fete .sc-le-diagramme-ce2__poussiere { animation: sc-le-diagramme-ce2-poussiere 0.9s ease-out 2; }
+
+/* Les ardoises suspendues. */
+.sc-le-diagramme-ce2__ardoises {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-le-diagramme-ce2__ardoises > li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 0;
+  animation: sc-ce2-maths-sort 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both, sc-le-diagramme-ce2-pendule 3.2s ease-in-out 0.8s infinite alternate;
+  animation-delay: calc(0.2s + var(--i, 0) * 0.12s), calc(var(--i, 0) * -1s);
+}
+
+.sc-le-diagramme-ce2__ficelle { width: 2px; height: 16px; background: #c9a86a; box-shadow: 0 -3px 0 2px #6b4226; }
+
+.sc-le-diagramme-ce2__ardoise {
+  min-width: 110px;
+  min-height: 64px;
+  padding: 8px 18px;
+  border: 6px solid #a0703f;
+  border-radius: 10px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), transparent 60%), #2b3a3a;
+  color: #fdfdf8;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s ease;
+}
+
+.sc-le-diagramme-ce2__ardoise:hover:not(:disabled) { transform: scale(1.06); }
+.sc-le-diagramme-ce2__ardoise:focus-visible { outline: 4px solid #ffd43b; outline-offset: 3px; }
+
+/* ------------------------------------------------------------------------
+   LE TÉLÉPHONE : la mascotte rentre dans le flux, le décor se fait discret.
+   ------------------------------------------------------------------------ */
+@media (max-width: 640px) {
+  .sc-tour-du-jardin-ce2,
+  .sc-combien-de-temps-ce2,
+  .sc-les-bouteilles-ce2,
+  .sc-le-miroir-ce2,
+  .sc-le-diagramme-ce2 { padding-left: 10px; padding-right: 10px; }
+
+  .sc-le-diagramme-ce2 { border-width: 8px; }
+
+  .sc-tour-du-jardin-ce2__mascotte,
+  .sc-combien-de-temps-ce2__mascotte,
+  .sc-les-bouteilles-ce2__mascotte,
+  .sc-le-miroir-ce2__mascotte,
+  .sc-le-diagramme-ce2__mascotte {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    align-self: flex-end;
+    width: 58px;
+    margin: 0 2px -6px 0;
+  }
+
+  /* La bulle passe à gauche de la mascotte, pour ne rien couvrir. */
+  .sc-ce2-maths__bulle { right: 100%; bottom: 30%; margin: 0 6px 0 0; }
+
+  .sc-tour-du-jardin-ce2__arbre,
+  .sc-les-bouteilles-ce2__tonneau,
+  .sc-le-diagramme-ce2__soleil { display: none; }
+
+  .sc-tour-du-jardin-ce2__soleil { right: 14px; }
+  .sc-les-bouteilles-ce2__lampe,
+  .sc-le-miroir-ce2__lanterne { right: 20px; }
+
+  .sc-combien-de-temps-ce2__horloge { width: 84px; height: 84px; }
+  .sc-combien-de-temps-ce2 .duree__heure { padding: 6px 10px; font-size: 24px; }
+  .sc-combien-de-temps-ce2 .duree__heures { gap: 8px; }
+  .sc-combien-de-temps-ce2__tableau { padding: 8px 10px 10px; }
+  .sc-combien-de-temps-ce2__valise { min-width: 140px; min-height: 64px; padding: 8px 14px; }
+  .sc-combien-de-temps-ce2__etiquette { font-size: 21px; }
+
+  .sc-les-bouteilles-ce2 .sc-les-bouteilles-ce2__craie { font-size: 26px; }
+  .sc-les-bouteilles-ce2__prendre { min-width: 92px; padding: 6px 8px 8px; }
+  .sc-les-bouteilles-ce2__libelle { font-size: 19px; }
+
+  .sc-le-miroir-ce2__crayons { gap: 12px; padding: 30px 14px 0; }
+  .sc-le-miroir-ce2__crayon { width: 60px; height: 94px; }
+
+  .sc-tour-du-jardin-ce2__rouleau { font-size: 23px; padding-right: 14px; }
+  .sc-tour-du-jardin-ce2__bobine { width: 46px; }
+
+  .sc-le-diagramme-ce2 .diagramme__question { font-size: 19px; }
+  .sc-le-diagramme-ce2__ardoise { min-width: 92px; font-size: 24px; }
+}
+
+/* ------------------------------------------------------------------------
+   LES MOUVEMENTS
+   ------------------------------------------------------------------------ */
+@keyframes sc-ce2-maths-arrive { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes sc-ce2-maths-respire { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.02, 0.98); } }
+@keyframes sc-ce2-maths-saute { 0%, 100% { transform: translateY(0) rotate(0); } 40% { transform: translateY(-34px) rotate(-8deg) scale(1.08); } 70% { transform: translateY(0) scale(1.1, 0.9); } }
+@keyframes sc-ce2-maths-encourage { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-9deg); } 50% { transform: rotate(7deg); } 75% { transform: rotate(-4deg); } }
+@keyframes sc-ce2-maths-penche { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-2px); } }
+@keyframes sc-ce2-maths-bulle { from { opacity: 0; transform: translateY(8px) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes sc-ce2-maths-jaillit {
+  0% { opacity: 1; transform: rotate(var(--angle)) translateY(0) scale(0.4); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateY(-78px) scale(1); }
+}
+@keyframes sc-ce2-maths-tremble { 0%, 100% { translate: 0 0; } 20% { translate: -6px 0; } 40% { translate: 6px 0; } 60% { translate: -4px 0; } 80% { translate: 3px 0; } }
+@keyframes sc-ce2-maths-sort { from { opacity: 0; transform: translateY(18px) scale(0.85); } to { opacity: 1; transform: none; } }
+@keyframes sc-ce2-maths-cligne { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+
+@keyframes sc-tour-du-jardin-ce2-tourne { to { transform: rotate(360deg); } }
+@keyframes sc-tour-du-jardin-ce2-nuage { from { transform: translateX(0); } to { transform: translateX(1100px); } }
+@keyframes sc-tour-du-jardin-ce2-balance { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes sc-tour-du-jardin-ce2-vol {
+  0%, 100% { transform: translate(0, 0) rotate(-6deg); }
+  25% { transform: translate(160px, -30px) rotate(8deg); }
+  50% { transform: translate(380px, 10px) rotate(-4deg); }
+  75% { transform: translate(200px, 40px) rotate(6deg); }
+}
+@keyframes sc-tour-du-jardin-ce2-bat { from { transform: scaleX(1); } to { transform: scaleX(0.35); } }
+@keyframes sc-tour-du-jardin-ce2-brille { from { stroke: #fff3bf; stroke-width: 11; } to { stroke: #ff922b; stroke-width: 7; } }
+@keyframes sc-tour-du-jardin-ce2-pop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes sc-tour-du-jardin-ce2-trotte { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes sc-tour-du-jardin-ce2-battement { from { transform: rotate(0); } to { transform: rotate(-35deg); } }
+@keyframes sc-tour-du-jardin-ce2-queue { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(12deg); } }
+@keyframes sc-tour-du-jardin-ce2-deroule { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-12deg) translateX(-3px); } }
+
+@keyframes sc-combien-de-temps-ce2-passe { from { transform: translateX(0); } to { transform: translateX(-1150px); } }
+@keyframes sc-combien-de-temps-ce2-balance { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-combien-de-temps-ce2-tictac { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes sc-combien-de-temps-ce2-sonne { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes sc-combien-de-temps-ce2-accroche { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes sc-combien-de-temps-ce2-valise { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1.5deg) translateY(-2px); } }
+
+@keyframes sc-les-bouteilles-ce2-ride { from { transform: translateX(-12px); opacity: 0.4; } to { transform: translateX(14px); opacity: 0.9; } }
+@keyframes sc-les-bouteilles-ce2-feuille { from { transform: rotate(-10deg); } to { transform: rotate(14deg); } }
+@keyframes sc-les-bouteilles-ce2-lueur { from { opacity: 0.8; } to { opacity: 1; } }
+@keyframes sc-les-bouteilles-ce2-goutte { 0%, 40% { opacity: 0; transform: translateY(0) scale(0.4); } 50% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(30px) scale(1); } }
+@keyframes sc-les-bouteilles-ce2-monte { from { transform: scaleY(0.04); } to { transform: scaleY(var(--niveau, 0.5)); } }
+@keyframes sc-les-bouteilles-ce2-pousse { from { transform: translateX(-4px); } to { transform: translateX(4px); } }
+@keyframes sc-les-bouteilles-ce2-ruban { from { opacity: 0; transform: scale(0) rotate(-180deg); } to { opacity: 1; transform: none; } }
+@keyframes sc-les-bouteilles-ce2-hesite { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-les-bouteilles-ce2-rebond { 0%, 100% { transform: translateY(0) scale(1, 1); } 45% { transform: translateY(-14px) scale(0.95, 1.05); } 85% { transform: translateY(0) scale(1.08, 0.92); } }
+
+@keyframes sc-le-miroir-ce2-reflet { 0%, 55% { left: -50%; } 100% { left: 130%; } }
+@keyframes sc-le-miroir-ce2-pli-brille { 0%, 100% { stroke-width: 4.5; } 50% { stroke-width: 7; } }
+@keyframes sc-le-miroir-ce2-plie-v { 0%, 10% { transform: scaleX(1); } 60%, 100% { transform: scaleX(-1); } }
+@keyframes sc-le-miroir-ce2-plie-h { 0%, 10% { transform: scaleY(1); } 60%, 100% { transform: scaleY(-1); } }
+@keyframes sc-le-miroir-ce2-equerre { from { opacity: 0; transform: translate(calc(var(--sx) * 60px), calc(var(--sy) * 60px)) rotate(28deg); } to { opacity: 1; transform: none; } }
+@keyframes sc-le-miroir-ce2-apparait { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-le-miroir-ce2-plane { 0%, 100% { transform: translate(0, 0) rotate(-5deg); } 50% { transform: translate(-6px, -10px) rotate(5deg); } }
+@keyframes sc-le-miroir-ce2-bat { from { transform: scaleX(1); } to { transform: scaleX(0.4); } }
+@keyframes sc-le-miroir-ce2-sort { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
+@keyframes sc-le-miroir-ce2-crayon { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+
+@keyframes sc-le-diagramme-ce2-pousse { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes sc-le-diagramme-ce2-compte { from { stroke-width: 7; } to { stroke-width: 3; } }
+@keyframes sc-le-diagramme-ce2-trace { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes sc-le-diagramme-ce2-point { from { transform: scale(1); } to { transform: scale(1.8); } }
+@keyframes sc-le-diagramme-ce2-couronne { from { opacity: 0; transform: translateY(-50px) rotate(-20deg); } to { opacity: 1; transform: none; } }
+@keyframes sc-le-diagramme-ce2-clignote { from { fill: rgba(255, 224, 102, 0.15); } to { fill: rgba(255, 224, 102, 0.6); } }
+@keyframes sc-le-diagramme-ce2-dandine { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-le-diagramme-ce2-salue { from { transform: rotate(0); } to { transform: rotate(-30deg); } }
+@keyframes sc-le-diagramme-ce2-poussiere { 0% { opacity: 0.8; transform: scale(0.5); } 100% { opacity: 0; transform: scale(2) translateY(-8px); } }
+@keyframes sc-le-diagramme-ce2-pendule { from { transform: rotate(-2.5deg); } to { transform: rotate(2.5deg); } }
+
+/* ------------------------------------------------------------------------
+   MOINS DE MOUVEMENT : tout s'arrête, chaque scène montre son état final.
+   ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .sc-tour-du-jardin-ce2, .sc-tour-du-jardin-ce2 *,
+  .sc-tour-du-jardin-ce2__choix, .sc-tour-du-jardin-ce2__choix *,
+  .sc-combien-de-temps-ce2, .sc-combien-de-temps-ce2 *,
+  .sc-combien-de-temps-ce2__bagages, .sc-combien-de-temps-ce2__bagages *,
+  .sc-les-bouteilles-ce2, .sc-les-bouteilles-ce2 *,
+  .sc-les-bouteilles-ce2__comptoir, .sc-les-bouteilles-ce2__comptoir *,
+  .sc-le-miroir-ce2, .sc-le-miroir-ce2 *,
+  .sc-le-miroir-ce2__pot-entier, .sc-le-miroir-ce2__pot-entier *,
+  .sc-le-diagramme-ce2, .sc-le-diagramme-ce2 *,
+  .sc-le-diagramme-ce2__ardoises, .sc-le-diagramme-ce2__ardoises * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sc-ce2-maths__fete,
+  .sc-combien-de-temps-ce2__train,
+  .sc-le-miroir-ce2__reflet { display: none; }
+}

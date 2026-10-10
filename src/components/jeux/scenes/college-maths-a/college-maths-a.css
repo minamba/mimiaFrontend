@@ -1,0 +1,4463 @@
+/* =====================================================================
+   LES SCÈNES « COLLÈGE, MATHS A » (09/10/2026) — une scène par jeu, voir
+   `components/jeux/scenes/college-maths-a/`. Toutes les classes et toutes
+   les animations sont préfixées par la clé de leur jeu (`sc-<cle>`) :
+   App.css est global, des noms courts y sont déjà pris. Une classe commune
+   (`.college__question`, `.scene__carte`) n'est touchée qu'à travers la
+   classe du jeu. Sous `prefers-reduced-motion`, tout s'immobilise : l'état
+   final de chaque animation est l'état normal de l'élément.
+   ===================================================================== */
+
+/* ------------------------------------------- LA CITÉ DES GRANDS NOMBRES */
+.sc-grands-nombres-college {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-grands-nombres-college__cite {
+  display: block;
+  width: min(100%, 460px);
+  height: auto;
+  margin-bottom: -22px;
+  overflow: visible;
+  filter: drop-shadow(0 6px 8px rgba(80, 30, 10, 0.35));
+}
+
+.sc-grands-nombres-college__soleil {
+  fill: #ffd98a;
+  opacity: 0.9;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-grands-nombres-college-soleil 5s ease-in-out infinite alternate;
+}
+
+.sc-grands-nombres-college__nuages { fill: #fff; opacity: 0.88; animation: sc-grands-nombres-college-nuages 9s ease-in-out infinite alternate; }
+.sc-grands-nombres-college__tour-decor rect { fill: #d9895a; stroke: #8a4426; stroke-width: 1.5; }
+.sc-grands-nombres-college__tour-decor .sc-grands-nombres-college__creneau { fill: #c06a3e; }
+.sc-grands-nombres-college__fenetre { fill: #5a2a14; }
+.sc-grands-nombres-college__mat { stroke: #6b3a1e; stroke-width: 2; }
+
+.sc-grands-nombres-college__fanion {
+  fill: #d63a2f;
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: sc-grands-nombres-college-fanion 1.4s ease-in-out infinite alternate;
+}
+
+/* La bannière tendue entre deux tours. */
+.sc-grands-nombres-college__banniere {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 4px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #b5532c, #d9895a 50%, #b5532c);
+  box-shadow: 0 10px 22px rgba(70, 25, 8, 0.4);
+}
+
+.sc-grands-nombres-college .sc-grands-nombres-college__question.college__question {
+  margin: 0;
+  padding: 12px 26px;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #fff8ea, #f6e3c2);
+  color: #3d1d0c;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Le nombre gravé sur le rempart, une pierre par chiffre. */
+.sc-grands-nombres-college__rempart {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 10px 12px 12px;
+  border-radius: 12px;
+  background: rgba(90, 42, 20, 0.82);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.sc-grands-nombres-college__pierre {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: sc-grands-nombres-college-pierre 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-grands-nombres-college__chiffre {
+  display: grid;
+  place-items: center;
+  width: clamp(28px, 8vw, 44px);
+  height: clamp(36px, 10vw, 50px);
+  border: 2px solid #8a4426;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f3d6ad, #ddb07c);
+  color: #4a2410;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(20px, 5.4vw, 28px);
+  font-weight: 800;
+  box-shadow: inset 0 -4px 0 rgba(138, 68, 38, 0.35);
+}
+
+.sc-grands-nombres-college__pierre.est-fin-de-classe { margin-right: 10px; }
+.sc-grands-nombres-college__pierre.est-avant-virgule { margin-right: 12px; }
+
+.sc-grands-nombres-college__pierre.est-avant-virgule::after {
+  content: ",";
+  position: absolute;
+  right: -11px;
+  top: 14px;
+  color: #ffd25e;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.sc-grands-nombres-college__etiquette {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 2.6em;
+  color: #ffe9c4;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+  animation: sc-grands-nombres-college-apparait 0.4s ease-out both;
+  animation-delay: calc(var(--d, 0s) + 0.5s);
+}
+
+.sc-grands-nombres-college__etiquette em { color: #ffd25e; font-size: 16px; font-style: normal; white-space: nowrap; }
+
+.sc-grands-nombres-college__pierre.est-allumee .sc-grands-nombres-college__chiffre {
+  border-color: #fff3c4;
+  background: linear-gradient(180deg, #fff1b0, #ffc94a);
+  box-shadow: 0 0 14px rgba(255, 210, 94, 0.9);
+  animation: sc-grands-nombres-college-allume 0.6s ease-out both;
+  animation-delay: 1s;
+}
+
+.sc-grands-nombres-college__pierre.est-le-rang .sc-grands-nombres-college__chiffre {
+  outline: 3px solid #d63a2f;
+  outline-offset: 2px;
+  animation: sc-grands-nombres-college-rang 1.2s ease-in-out 1s infinite alternate;
+}
+
+/* Après « le plus grand » : les nombres alignés sur leurs unités. */
+.sc-grands-nombres-college__alignes {
+  border-collapse: separate;
+  border-spacing: 3px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(90, 42, 20, 0.85);
+}
+
+.sc-grands-nombres-college__alignes tr { animation: sc-grands-nombres-college-glisse 0.5s ease-out both; animation-delay: var(--d, 0s); }
+
+.sc-grands-nombres-college__alignes td {
+  width: clamp(22px, 6.5vw, 36px);
+  height: 38px;
+  border-radius: 5px;
+  background: #f6e3c2;
+  color: #4a2410;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(18px, 5vw, 24px);
+  font-weight: 700;
+  text-align: center;
+}
+
+.sc-grands-nombres-college__alignes td:empty { background: rgba(246, 227, 194, 0.25); }
+.sc-grands-nombres-college__alignes td.est-virgule { box-shadow: 6px 0 0 -2px #ffd25e; }
+.sc-grands-nombres-college__alignes td.est-decisive { background: #ffd25e; animation: sc-grands-nombres-college-allume 0.6s ease-out 0.9s both; }
+.sc-grands-nombres-college__alignes tr.est-le-plus-grand td { color: #b5221a; font-weight: 900; }
+
+/* Les tours qui poussent à leur vraie taille. */
+.sc-grands-nombres-college__horizon {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  width: min(100%, 440px);
+  height: 130px;
+  border-bottom: 6px solid #8a4426;
+}
+
+.sc-grands-nombres-college__tour-finale {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 30%;
+  height: var(--h, 60%);
+  border: 2px solid #8a4426;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: repeating-linear-gradient(0deg, #d9895a 0 12px, #c97a4c 12px 14px);
+  transform-origin: bottom center;
+  animation: sc-grands-nombres-college-pousse 0.9s cubic-bezier(0.3, 1.2, 0.5, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-grands-nombres-college__tour-nom {
+  margin-top: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #fff4e0;
+  color: #4a2410;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  height: fit-content;
+}
+
+.sc-grands-nombres-college__tour-finale.est-la-plus-haute::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 26px;
+  height: 30px;
+  background: linear-gradient(90deg, #6b3a1e 0 3px, transparent 3px), linear-gradient(#ffd25e, #ffd25e) 3px 2px / 23px 15px no-repeat;
+  clip-path: polygon(0 0, 100% 15%, 3px 52%, 3px 100%, 0 100%);
+  animation: sc-grands-nombres-college-fanion 1.4s ease-in-out infinite alternate;
+}
+
+/* Une phrase, et la bonne réponse. */
+.sc-grands-nombres-college__phrase,
+.sc-grands-nombres-college__resultat {
+  margin: 0;
+  padding: 7px 18px;
+  border-radius: 14px;
+  background: rgba(255, 248, 234, 0.96);
+  color: #3d1d0c;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  animation: sc-grands-nombres-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-grands-nombres-college__resultat strong { color: #b5221a; font-size: 24px; }
+.sc-grands-nombres-college__resultat { border: 3px solid #ffd25e; box-shadow: 0 0 18px rgba(255, 210, 94, 0.7); }
+
+.sc-grands-nombres-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Les réponses : trois tours, de même hauteur. */
+.sc-grands-nombres-college__tours {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-grands-nombres-college__tours > li {
+  animation: sc-grands-nombres-college-monte 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  animation-delay: calc(0.25s + var(--i, 0) * 0.12s);
+}
+
+.sc-grands-nombres-college__tour {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: clamp(98px, 28vw, 160px);
+  min-height: 136px;
+  padding: 16px 6px 0;
+  border: 3px solid #8a4426;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: repeating-linear-gradient(0deg, #d9895a 0 14px, #c97a4c 14px 16px);
+  cursor: pointer;
+  box-shadow: 0 10px 16px rgba(60, 20, 5, 0.35);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-grands-nombres-college__tour:hover:not(:disabled),
+.sc-grands-nombres-college__tour:focus-visible {
+  transform: translateY(-6px);
+  filter: brightness(1.1) drop-shadow(0 0 12px rgba(255, 210, 94, 0.9));
+}
+
+.sc-grands-nombres-college__toit {
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: -16px;
+  height: 16px;
+  background: repeating-linear-gradient(90deg, #b5532c 0 14px, transparent 14px 22px);
+}
+
+.sc-grands-nombres-college__toit::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 24px;
+  height: 26px;
+  background: linear-gradient(90deg, #6b3a1e 0 3px, transparent 3px), linear-gradient(#d63a2f, #d63a2f) 3px 2px / 21px 13px no-repeat;
+  clip-path: polygon(0 0, 100% 15%, 3px 52%, 3px 100%, 0 100%);
+  transform-origin: left center;
+  animation: sc-grands-nombres-college-fanion 1.2s ease-in-out infinite alternate;
+}
+
+.sc-grands-nombres-college__plaque {
+  padding: 6px 8px;
+  border: 2px solid #8a4426;
+  border-radius: 8px;
+  background: #fff4e0;
+  color: #3d1d0c;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(17px, 4.6vw, 22px);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sc-grands-nombres-college__porte {
+  width: 30px;
+  height: 36px;
+  border-radius: 15px 15px 0 0;
+  background: #5a2a14;
+}
+
+.sc-grands-nombres-college__tour.est-fausse {
+  cursor: default;
+  filter: grayscale(0.85);
+  opacity: 0.6;
+  transform: rotate(-3deg) translateY(8px);
+}
+
+.sc-grands-nombres-college__tour.est-fausse .sc-grands-nombres-college__plaque { text-decoration: line-through; color: #8a2a1c; }
+
+@keyframes sc-grands-nombres-college-soleil { from { transform: scale(0.94); opacity: 0.75; } to { transform: scale(1.06); opacity: 1; } }
+@keyframes sc-grands-nombres-college-nuages { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+@keyframes sc-grands-nombres-college-fanion { from { transform: skewY(-8deg) scaleX(0.85); } to { transform: skewY(6deg) scaleX(1); } }
+@keyframes sc-grands-nombres-college-pierre { from { opacity: 0; transform: translateY(-22px); } to { opacity: 1; transform: none; } }
+@keyframes sc-grands-nombres-college-apparait { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes sc-grands-nombres-college-allume { from { filter: brightness(0.6); } to { filter: none; } }
+@keyframes sc-grands-nombres-college-rang { from { transform: scale(1); } to { transform: scale(1.1); } }
+@keyframes sc-grands-nombres-college-glisse { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+@keyframes sc-grands-nombres-college-pousse { from { transform: scaleY(0.05); } to { transform: none; } }
+@keyframes sc-grands-nombres-college-monte { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 620px) {
+  .sc-grands-nombres-college .sc-grands-nombres-college__question.college__question { font-size: 19px; padding: 10px 14px; }
+  .sc-grands-nombres-college__pierre.est-fin-de-classe { margin-right: 5px; }
+  .sc-grands-nombres-college__rempart { padding: 8px 6px; gap: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-grands-nombres-college *,
+  .sc-grands-nombres-college__tours > li,
+  .sc-grands-nombres-college__tour,
+  .sc-grands-nombres-college__toit::after { animation: none !important; }
+}
+
+/* ------------------------------------------- LE JARDIN D'EAU À LA LOUPE */
+.sc-loupe-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-loupe-college__jardin {
+  position: relative;
+  width: min(100%, 520px);
+  height: 96px;
+  overflow: hidden;
+  border-radius: 18px 18px 40px 40px;
+}
+
+.sc-loupe-college__eau { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sc-loupe-college__vague { fill: #6cc5bd; }
+.sc-loupe-college__pas { fill: #b9b5a6; stroke: #7d7a6e; stroke-width: 1.5; }
+
+.sc-loupe-college__rond {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.8);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-loupe-college-rond 3s ease-out infinite;
+}
+
+.sc-loupe-college__rond--2 { animation-delay: -1.5s; }
+
+.sc-loupe-college__petale {
+  position: absolute;
+  top: -12px;
+  width: 12px;
+  height: 9px;
+  border-radius: 60% 0 60% 0;
+  background: #f7a9c4;
+  animation: sc-loupe-college-petale 7s linear infinite;
+}
+
+/* La loupe de laiton, qui se balance et grossit le nombre de la question. */
+.sc-loupe-college__loupe {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  animation: sc-loupe-college-balance 4s ease-in-out infinite alternate;
+}
+
+.sc-loupe-college__verre {
+  position: absolute;
+  left: -46px;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 84px;
+  border: 7px solid #b8862b;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(214, 245, 240, 0.85) 60%, rgba(150, 215, 205, 0.85));
+  color: #1f3d36;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 2px #e8c36a, 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sc-loupe-college__manche {
+  position: absolute;
+  left: 34px;
+  top: 74px;
+  width: 12px;
+  height: 40px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #7a4f1a, #b8862b, #7a4f1a);
+  transform: rotate(-40deg);
+  transform-origin: top center;
+}
+
+/* Le panneau de bois au bord de l'eau. */
+.sc-loupe-college__panneau {
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #a8743a, #7a4f22);
+  box-shadow: 0 10px 20px rgba(30, 50, 40, 0.35);
+}
+
+.sc-loupe-college .sc-loupe-college__question.college__question {
+  margin: 0;
+  padding: 12px 22px;
+  border-radius: 10px;
+  background: #fffaf0;
+  color: #24352b;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Après la réponse : le chemin de pierres devient une demi-droite graduée. */
+.sc-loupe-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-loupe-college__chemin {
+  display: block;
+  width: min(100%, 480px);
+  height: auto;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(240, 252, 249, 0.96), rgba(196, 236, 228, 0.96));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+.sc-loupe-college__axe { stroke: #5d7b70; stroke-width: 3; stroke-linecap: round; }
+.sc-loupe-college__pierre { fill: #c9c5b6; stroke: #7d7a6e; stroke-width: 1.2; }
+.sc-loupe-college__graduation { animation: sc-loupe-college-apparait 0.4s ease-out both; animation-delay: var(--d, 0s); }
+.sc-loupe-college__compte { fill: #2b6d5f; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; }
+.sc-loupe-college__marque { fill: #3b2a12; font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; }
+.sc-loupe-college__encadre { fill: rgba(255, 213, 79, 0.35); stroke: #e0a800; stroke-width: 2; animation: sc-loupe-college-apparait 0.5s ease-out 0.9s both; }
+.sc-loupe-college__milieu { stroke: #b8285c; stroke-width: 2; stroke-dasharray: 4 4; animation: sc-loupe-college-apparait 0.5s ease-out 0.9s both; }
+
+.sc-loupe-college__lotus {
+  animation: sc-loupe-college-lotus 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) 1.4s both;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.sc-loupe-college__lotus path { fill: #f06c9b; stroke: #b8285c; stroke-width: 1; }
+.sc-loupe-college__lotus-nom { fill: #b8285c; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 900; }
+
+.sc-loupe-college__etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-loupe-college__etape,
+.sc-loupe-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 250, 240, 0.96);
+  color: #24352b;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-loupe-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-loupe-college__resultat { border: 3px solid #f06c9b; }
+.sc-loupe-college__resultat strong { color: #b8285c; font-size: 24px; }
+
+/* Les nénuphars qui dérivent. */
+.sc-loupe-college__etang {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 22px;
+  margin: 6px 0 0;
+  padding: 14px 18px;
+  border-radius: 40px;
+  list-style: none;
+  background: radial-gradient(ellipse at center, rgba(108, 197, 189, 0.85), rgba(60, 150, 145, 0.6) 70%, transparent 72%);
+}
+
+.sc-loupe-college__etang > li {
+  animation: sc-loupe-college-derive 5s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.6s);
+}
+
+.sc-loupe-college__nenuphar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 128px;
+  min-height: 84px;
+  padding: 10px 22px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  text-shadow: 0 2px 0 #24521a, 0 0 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* La feuille de nénuphar, avec son encoche. */
+.sc-loupe-college__nenuphar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: conic-gradient(from 160deg, transparent 0 22deg, #6fb63f 22deg 360deg);
+  box-shadow: inset 0 -6px 0 rgba(30, 80, 20, 0.35);
+}
+
+.sc-loupe-college__fleur {
+  position: absolute;
+  right: 6px;
+  top: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe680 0 22%, #f7a9c4 24% 60%, #f06c9b 62%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sc-loupe-college__nenuphar:hover:not(:disabled),
+.sc-loupe-college__nenuphar:focus-visible { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9)); }
+
+.sc-loupe-college__nenuphar.est-fausse {
+  cursor: default;
+  filter: grayscale(0.9);
+  opacity: 0.55;
+  text-decoration: line-through;
+  transform: translateY(6px) scale(0.94);
+}
+
+@keyframes sc-loupe-college-rond { from { transform: scale(0.4); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+@keyframes sc-loupe-college-petale { from { transform: translate(0, 0) rotate(0); } to { transform: translate(40px, 120px) rotate(300deg); } }
+@keyframes sc-loupe-college-balance { from { transform: rotate(-7deg) translateX(-30px); } to { transform: rotate(6deg) translateX(30px); } }
+@keyframes sc-loupe-college-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-loupe-college-lotus { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: none; } }
+@keyframes sc-loupe-college-derive { from { transform: translate(-6px, 0) rotate(-3deg); } to { transform: translate(6px, -5px) rotate(3deg); } }
+
+@media (max-width: 620px) {
+  .sc-loupe-college .sc-loupe-college__question.college__question { font-size: 18px; padding: 10px 14px; }
+  .sc-loupe-college__nenuphar { min-width: 100px; font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-loupe-college *,
+  .sc-loupe-college__etang > li { animation: none !important; }
+}
+
+/* ------------------------------------------- L'ATELIER DU BOULIER */
+.sc-operations-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-operations-college__boulier {
+  display: block;
+  width: min(100%, 360px);
+  height: auto;
+  margin-bottom: -10px;
+  filter: drop-shadow(0 6px 8px rgba(20, 30, 60, 0.35));
+}
+
+/* Après la réponse, l'ardoise passe devant : le boulier se fait plus petit. */
+.sc-operations-college.est-termine .sc-operations-college__boulier { width: min(100%, 220px); }
+
+.sc-operations-college__cadre { fill: rgba(255, 248, 232, 0.92); stroke: #8a5a2b; stroke-width: 5; }
+.sc-operations-college__tige { stroke: #b58a4a; stroke-width: 2.5; }
+.sc-operations-college__perle { stroke: rgba(0, 0, 0, 0.3); stroke-width: 1; }
+.sc-operations-college__perles { animation: sc-operations-college-perles 3.6s ease-in-out infinite alternate; }
+
+/* Le fronton bleu et or de l'atelier. */
+.sc-operations-college__fronton {
+  position: relative;
+  z-index: 1;
+  padding: 4px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #f2b631, #f28a1c, #f2b631);
+  box-shadow: 0 10px 20px rgba(20, 30, 60, 0.4);
+}
+
+.sc-operations-college .sc-operations-college__question.college__question {
+  margin: 0;
+  padding: 10px 28px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #24489e, #1a3478);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: none;
+}
+
+/* L'ardoise : l'opération posée, à la craie. */
+.sc-operations-college__ardoise {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 12px 22px 14px;
+  border: 7px solid #b07a3a;
+  border-radius: 12px;
+  background: #2c3a4a;
+  color: #f4f1ea;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(24px, 6vw, 32px);
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), inset 0 0 22px rgba(0, 0, 0, 0.4);
+}
+
+.sc-operations-college__ligne { display: flex; }
+.sc-operations-college__case { display: inline-block; width: 0.8em; text-align: center; }
+.sc-operations-college__case.est-virgule { width: 0.4em; color: #f2b631; }
+.sc-operations-college__case.est-complete { color: #8ea6bd; }
+
+.sc-operations-college__ligne--resultat {
+  min-height: 1.25em;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 3px solid #f4f1ea;
+  color: #ffd36b;
+}
+
+.sc-operations-college__ligne--resultat .sc-operations-college__case.est-ecrite {
+  animation: sc-operations-college-craie 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-operations-college__ligne--retenues {
+  color: #f28a1c;
+  font-size: 0.6em;
+}
+
+.sc-operations-college__ligne--retenues .sc-operations-college__case {
+  width: 1.33em;
+  animation: sc-operations-college-craie 0.4s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+/* × 10, × 0,1 : le tableau de numération, les chiffres qui glissent. */
+.sc-operations-college__numeration {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 250, 240, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.sc-operations-college__rangee { display: flex; }
+
+.sc-operations-college__chiffre {
+  display: grid;
+  place-items: center;
+  width: clamp(30px, 8.5vw, 46px);
+  height: 42px;
+  border-right: 1px dashed #c9b48a;
+  color: #1a3478;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(20px, 5.4vw, 26px);
+  font-weight: 800;
+}
+
+.sc-operations-college__chiffre.est-unite { background: rgba(242, 182, 49, 0.22); box-shadow: inset -4px 0 0 #f28a1c; }
+.sc-operations-college__rangee--titres .sc-operations-college__chiffre { height: 26px; color: #8a5a2b; font-size: clamp(13px, 3.6vw, 16px); }
+.sc-operations-college__rangee--apres { border-top: 2px solid #1a3478; }
+.sc-operations-college__rangee--apres .sc-operations-college__chiffre { color: #c2410c; }
+
+.sc-operations-college__rangee--apres .est-glisse {
+  animation: sc-operations-college-glisse 1s cubic-bezier(0.5, 0, 0.3, 1) 0.6s both;
+}
+
+.sc-operations-college__rangee--apres .est-zero {
+  animation: sc-operations-college-craie 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 1.7s both;
+}
+
+.sc-operations-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-operations-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-operations-college__etape,
+.sc-operations-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1a2a55;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-operations-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-operations-college__resultat { border: 3px solid #f28a1c; }
+.sc-operations-college__resultat strong { color: #1a3478; font-size: 26px; }
+
+/* Les réponses : des perles de boulier enfilées sur leur tige. */
+.scene__choix .scene__carte.objet--sc-operations-college {
+  overflow: visible;
+  min-width: 120px;
+  padding: 14px 26px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 24px;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  background: radial-gradient(circle at 35% 28%, #8fb0ff 0 10%, #2c56c8 45%, #142f7a 100%);
+}
+
+.scene__choix > li:nth-child(3n + 2) .scene__carte.objet--sc-operations-college {
+  color: #1a3478;
+  text-shadow: none;
+  background: radial-gradient(circle at 35% 28%, #fff 0 14%, #efe9dc 50%, #c9bfae 100%);
+}
+
+.scene__choix > li:nth-child(3n + 3) .scene__carte.objet--sc-operations-college {
+  background: radial-gradient(circle at 35% 28%, #ffd2a0 0 10%, #f28a1c 45%, #b45309 100%);
+}
+
+/* La tige du boulier, qui passe derrière la perle. */
+.scene__choix > li:has(> .objet--sc-operations-college) { position: relative; }
+
+.scene__choix > li:has(> .objet--sc-operations-college)::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  top: 50%;
+  z-index: -1;
+  height: 5px;
+  border-radius: 3px;
+  background: #8a5a2b;
+  transform: translateY(-50%);
+}
+
+.scene__choix .scene__carte.objet--sc-operations-college .objet__eclat { border-radius: 999px; overflow: hidden; }
+
+@keyframes sc-operations-college-perles { from { transform: translateX(0); } to { transform: translateX(44px); } }
+@keyframes sc-operations-college-craie { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: none; } }
+@keyframes sc-operations-college-glisse { from { transform: translateX(calc(var(--k, 0) * 100%)); } to { transform: none; } }
+@keyframes sc-operations-college-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 620px) {
+  .sc-operations-college .sc-operations-college__question.college__question { font-size: 22px; padding: 8px 16px; }
+  .scene__choix .scene__carte.objet--sc-operations-college { min-width: 96px; font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-operations-college * { animation: none !important; }
+}
+
+/* ------------------------------------------- LA TABLE DU BOULANGER */
+.sc-partage-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-partage-college__terrasse {
+  display: block;
+  width: min(100%, 440px);
+  height: auto;
+  margin-bottom: -6px;
+  overflow: visible;
+  filter: drop-shadow(0 5px 6px rgba(60, 30, 10, 0.4));
+}
+
+.sc-partage-college__planche { fill: #8a5a2b; stroke: #5e3a18; stroke-width: 1.5; }
+.sc-partage-college__pain-decor { fill: #e0a95a; stroke: #a8682a; stroke-width: 2; }
+.sc-partage-college__entaille { fill: none; stroke: #a8682a; stroke-width: 2.5; stroke-linecap: round; }
+.sc-partage-college__fumet { fill: none; stroke: rgba(255, 255, 255, 0.85); stroke-width: 2.5; stroke-linecap: round; animation: sc-partage-college-fumet 2.6s ease-in-out infinite; }
+.sc-partage-college__four path { fill: #e3c49a; stroke: #8a5a2b; stroke-width: 2; }
+.sc-partage-college__four .sc-partage-college__braise { fill: #ff7b2c; animation: sc-partage-college-braise 1.2s ease-in-out infinite alternate; }
+
+.sc-partage-college__olivier {
+  transform-box: fill-box;
+  transform-origin: right top;
+  animation: sc-partage-college-olivier 4s ease-in-out infinite alternate;
+}
+
+.sc-partage-college__olivier path { fill: none; stroke: #6b5a2a; stroke-width: 2.5; }
+.sc-partage-college__olivier ellipse { fill: #7d9a3c; }
+
+/* L'ardoise du jour : la question, et la division posée. */
+.sc-partage-college__ardoise {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 12px 20px 14px;
+  border: 7px solid #9a6a36;
+  border-radius: 12px;
+  background: #2f3a33;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), inset 0 0 26px rgba(0, 0, 0, 0.45);
+}
+
+.sc-partage-college .sc-partage-college__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #f4f1ea;
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* La potence. */
+.sc-partage-college__potence {
+  display: inline-flex;
+  align-items: flex-start;
+  max-width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #2f3a33;
+  color: #f4f1ea;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(20px, 5.4vw, 26px);
+  font-weight: 700;
+  line-height: 1.3;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sc-partage-college__ardoise .sc-partage-college__potence { box-shadow: none; padding: 4px 0 0; }
+.sc-partage-college__gauche { padding-right: 10px; border-right: 3px solid #f4f1ea; }
+.sc-partage-college__rang { display: flex; }
+
+.sc-partage-college__rang + .sc-partage-college__rang {
+  animation: sc-partage-college-craie 0.45s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-partage-college__rang.est-produit { color: #ffb3a0; box-shadow: 0 2px 0 rgba(244, 241, 234, 0.6); }
+.sc-partage-college__case { display: inline-block; width: 0.75em; text-align: center; }
+.sc-partage-college__case.est-abaisse { color: #9fd6ff; }
+.sc-partage-college__droite { display: flex; flex-direction: column; }
+.sc-partage-college__diviseur { padding: 0 12px; border-bottom: 3px solid #f4f1ea; }
+.sc-partage-college__quotient { padding: 0 12px; color: #ffd36b; }
+
+.sc-partage-college__q {
+  display: inline-block;
+  animation: sc-partage-college-pose 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-partage-college__q.est-vide { color: rgba(255, 211, 107, 0.6); animation: none; }
+
+/* Le service : les assiettes servies, le reste au panier. */
+.sc-partage-college__service {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sc-partage-college__assiette-servie,
+.sc-partage-college__panier {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  color: #3d1d0c;
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  animation: sc-partage-college-sert 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-partage-college__assiette-servie {
+  border-radius: 50%;
+  background: radial-gradient(circle, #f0c27a 0 34%, #fff 36% 58%, #1e4f9c 60% 66%, #fff 68%);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sc-partage-college__panier {
+  border-radius: 6px 6px 24px 24px;
+  background: repeating-linear-gradient(45deg, #b07a3a 0 5px, #8a5a2b 5px 10px);
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+
+.sc-partage-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-partage-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-partage-college__etape,
+.sc-partage-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 250, 240, 0.97);
+  color: #2a2318;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-partage-college-craie 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-partage-college__resultat { border: 3px solid #1e4f9c; }
+.sc-partage-college__resultat strong { color: #1e4f9c; font-size: 24px; }
+
+/* Les réponses : des assiettes de pain, sur la nappe. */
+.sc-partage-college__table {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin: 6px 0 0;
+  padding: 16px 14px;
+  border-radius: 18px;
+  list-style: none;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0 22px, rgba(205, 220, 245, 0.92) 22px 44px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-partage-college__table > li {
+  animation: sc-partage-college-flotte 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+}
+
+.sc-partage-college__assiette {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: clamp(150px, 42vw, 196px);
+  height: 112px;
+  padding: 0 8px 14px;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #fff 0 54%, #1e4f9c 55% 59%, #fff 60% 66%, #c9d6ee 67% 100%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-partage-college__assiette:hover:not(:disabled),
+.sc-partage-college__assiette:focus-visible { transform: translateY(-5px) scale(1.04); filter: drop-shadow(0 0 10px rgba(255, 200, 100, 0.9)); }
+
+/* Le pain rond, coupé en parts. */
+.sc-partage-college__pain {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  width: 78px;
+  height: 42px;
+  border-radius: 50%;
+  background:
+    linear-gradient(100deg, transparent 46%, rgba(120, 60, 10, 0.45) 47% 49%, transparent 50%),
+    linear-gradient(80deg, transparent 30%, rgba(120, 60, 10, 0.35) 31% 33%, transparent 34% 66%, rgba(120, 60, 10, 0.35) 67% 69%, transparent 70%),
+    radial-gradient(ellipse at 40% 30%, #f8d9a0, #e0a95a 60%, #b8722a);
+  transform: translateX(-50%);
+}
+
+.sc-partage-college__etiquette {
+  position: relative;
+  padding: 2px 10px;
+  border: 2px solid #c8643b;
+  border-radius: 6px;
+  background: #fffaf0;
+  color: #3d1d0c;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sc-partage-college__assiette.est-fausse {
+  cursor: default;
+  filter: grayscale(0.9);
+  opacity: 0.55;
+  transform: rotate(-4deg);
+}
+
+.sc-partage-college__assiette.est-fausse .sc-partage-college__etiquette { text-decoration: line-through; color: #8a2a1c; }
+
+@keyframes sc-partage-college-fumet { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+@keyframes sc-partage-college-braise { from { fill: #ff7b2c; } to { fill: #ffc04a; } }
+@keyframes sc-partage-college-olivier { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes sc-partage-college-craie { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-partage-college-pose { from { opacity: 0; transform: translateY(-14px) scale(1.5); } to { opacity: 1; transform: none; } }
+@keyframes sc-partage-college-sert { from { opacity: 0; transform: translateY(-24px) scale(0.6); } to { opacity: 1; transform: none; } }
+@keyframes sc-partage-college-flotte { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+
+@media (max-width: 620px) {
+  .sc-partage-college .sc-partage-college__question.college__question { font-size: 19px; }
+  .sc-partage-college__etiquette { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-partage-college *,
+  .sc-partage-college__table > li { animation: none !important; }
+}
+
+/* ------------------------------------------- LE PALAIS DES ÉTOILES FILANTES */
+.sc-calcul-mental-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-calcul-mental-college__scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 600px);
+  min-height: 150px;
+  padding: 26px 10px;
+}
+
+.sc-calcul-mental-college__ciel { position: absolute; inset: 0; pointer-events: none; }
+.sc-calcul-mental-college__anneau { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.sc-calcul-mental-college__ruban {
+  fill: none;
+  stroke: #ffd34d;
+  stroke-width: 3;
+  stroke-dasharray: 46 20;
+  filter: drop-shadow(0 0 4px rgba(255, 211, 77, 0.9));
+  animation: sc-calcul-mental-college-ruban 6s linear infinite;
+}
+
+.sc-calcul-mental-college__ruban--2 { stroke: #7fdcff; stroke-width: 2; opacity: 0.8; animation-duration: 9s; animation-direction: reverse; }
+
+.sc-calcul-mental-college__cristal {
+  position: absolute;
+  top: 30%;
+  width: 16px;
+  height: 26px;
+  clip-path: polygon(50% 0, 100% 40%, 50% 100%, 0 40%);
+  background: linear-gradient(160deg, #e6fbff, #7fdcff 50%, #2b6fd6);
+  animation: sc-calcul-mental-college-cristal 3.2s ease-in-out infinite alternate;
+}
+
+.sc-calcul-mental-college__etincelle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  background: #fff6c4;
+  animation: sc-calcul-mental-college-scintille 1.8s ease-in-out infinite;
+}
+
+/* Le médaillon bleu nuit cerclé d'or. */
+.sc-calcul-mental-college__medaillon {
+  position: relative;
+  z-index: 1;
+  padding: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b8860b, #ffd34d, #b8860b);
+  box-shadow: 0 0 24px rgba(255, 211, 77, 0.7), 0 10px 20px rgba(10, 20, 60, 0.45);
+}
+
+.sc-calcul-mental-college .sc-calcul-mental-college__question.college__question {
+  margin: 0;
+  padding: 12px 34px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at 50% 30%, #2b4fc0, #13235a 75%);
+  color: #fff;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: none;
+}
+
+/* Après la réponse : le raccourci, en étoiles filantes. */
+.sc-calcul-mental-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-calcul-mental-college__etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 18px;
+  list-style: none;
+  background: rgba(19, 35, 90, 0.9);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.sc-calcul-mental-college__etape {
+  position: relative;
+  padding: 4px 14px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  white-space: pre-wrap;
+  text-align: center;
+  animation: sc-calcul-mental-college-filante 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* La traînée de l'étoile filante. */
+.sc-calcul-mental-college__etape::before {
+  content: "";
+  position: absolute;
+  left: -40px;
+  top: 50%;
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, #ffd34d);
+  opacity: 0;
+  animation: sc-calcul-mental-college-trainee 0.9s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-calcul-mental-college__resultat {
+  margin: 0;
+  padding: 6px 20px;
+  border: 3px solid #ffd34d;
+  border-radius: 999px;
+  background: #13235a;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(255, 211, 77, 0.8);
+  animation: sc-calcul-mental-college-filante 0.6s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-calcul-mental-college__resultat strong { color: #ffd34d; font-size: 26px; }
+
+/* Les réponses : trois étoiles d'or à attraper. */
+.sc-calcul-mental-college__etoiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 26px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-calcul-mental-college__etoiles > li {
+  animation: sc-calcul-mental-college-flotte 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+}
+
+.sc-calcul-mental-college__etoile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(110px, 30vw, 140px);
+  height: clamp(106px, 29vw, 134px);
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-calcul-mental-college__branches {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(50% 0, 63% 34%, 100% 36%, 71% 58%, 81% 96%, 50% 75%, 19% 96%, 29% 58%, 0 36%, 37% 34%);
+  background: radial-gradient(circle at 45% 40%, #fffbe0, #ffd34d 45%, #e09a10 100%);
+  filter: drop-shadow(0 0 8px rgba(255, 211, 77, 0.9));
+  animation: sc-calcul-mental-college-tourne 4s ease-in-out infinite alternate;
+}
+
+.sc-calcul-mental-college__valeur {
+  margin-top: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #13235a;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(17px, 4.6vw, 21px);
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 0 2px #ffd34d;
+}
+
+.sc-calcul-mental-college__etoile:hover:not(:disabled),
+.sc-calcul-mental-college__etoile:focus-visible { transform: scale(1.1) rotate(-4deg); filter: drop-shadow(0 0 14px rgba(255, 240, 160, 1)); }
+
+.sc-calcul-mental-college__etoile.est-fausse { cursor: default; opacity: 0.5; transform: translateY(12px) scale(0.9); }
+.sc-calcul-mental-college__etoile.est-fausse .sc-calcul-mental-college__branches { background: #9aa3b5; filter: none; animation: none; }
+.sc-calcul-mental-college__etoile.est-fausse .sc-calcul-mental-college__valeur { text-decoration: line-through; background: #5d6577; }
+
+@keyframes sc-calcul-mental-college-ruban { to { stroke-dashoffset: -264; } }
+@keyframes sc-calcul-mental-college-cristal { from { transform: translateY(-8px) rotate(-8deg); } to { transform: translateY(8px) rotate(8deg); } }
+@keyframes sc-calcul-mental-college-scintille { 0%, 100% { opacity: 0.2; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes sc-calcul-mental-college-filante { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: none; } }
+@keyframes sc-calcul-mental-college-trainee { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes sc-calcul-mental-college-flotte { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+@keyframes sc-calcul-mental-college-tourne { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+
+@media (max-width: 620px) {
+  .sc-calcul-mental-college .sc-calcul-mental-college__question.college__question { font-size: 26px; padding: 10px 22px; }
+  .sc-calcul-mental-college__etape { font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-calcul-mental-college *,
+  .sc-calcul-mental-college *::before,
+  .sc-calcul-mental-college__etoiles > li,
+  .sc-calcul-mental-college__branches { animation: none !important; }
+
+  .sc-calcul-mental-college__etape::before { opacity: 0; }
+}
+
+/* ------------------------------------------- LES ARCHES DU JARDIN */
+.sc-bonne-parenthese {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-bonne-parenthese__arcades {
+  display: block;
+  width: min(100%, 460px);
+  height: auto;
+  margin-bottom: -14px;
+  filter: drop-shadow(0 6px 8px rgba(60, 40, 70, 0.35));
+}
+
+.sc-bonne-parenthese__pierre { fill: #f3ead8; stroke: #b9a98d; stroke-width: 1.5; }
+
+.sc-bonne-parenthese__jasmin {
+  fill: #fff;
+  stroke: #e8d9a8;
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-bonne-parenthese-jasmin 2.6s ease-in-out infinite;
+}
+
+.sc-bonne-parenthese__lanterne {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: sc-bonne-parenthese-lanterne 2.8s ease-in-out infinite alternate;
+}
+
+.sc-bonne-parenthese__lanterne line { stroke: #5a4632; stroke-width: 1.5; }
+.sc-bonne-parenthese__lanterne rect { fill: #ffbf47; stroke: #b5651d; stroke-width: 1.5; filter: drop-shadow(0 0 5px rgba(255, 191, 71, 0.95)); }
+
+/* La plaque de pierre, et le calcul où chaque parenthèse devient une arche. */
+.sc-bonne-parenthese__plaque {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6aa84f, #3f7a2f);
+  box-shadow: 0 10px 22px rgba(50, 40, 60, 0.4);
+}
+
+.sc-bonne-parenthese .sc-bonne-parenthese__question.college__question {
+  margin: 0;
+  padding: 26px 26px 12px;
+  border: 3px double #b9a98d;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbf6ea, #efe4cc);
+  color: #3d2f1f;
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 800;
+  line-height: 1.9;
+  box-shadow: none;
+}
+
+.sc-bonne-parenthese__arche { position: relative; }
+
+/* L'arche fleurie au-dessus d'un groupe entre parenthèses : plus haute si elle en contient une autre. */
+.sc-bonne-parenthese__arche::before {
+  content: "";
+  position: absolute;
+  left: -0.05em;
+  right: -0.05em;
+  top: calc(-0.08em - var(--haut, 1) * 0.3em);
+  height: calc(0.45em + var(--haut, 1) * 0.3em);
+  border: 3px solid #6aa84f;
+  border-bottom: none;
+  border-radius: 999px 999px 0 0;
+  background: radial-gradient(circle at 20% 0, #fff 0 3px, transparent 4px), radial-gradient(circle at 70% 0, #fff 0 3px, transparent 4px);
+  pointer-events: none;
+}
+
+/* Après la réponse : le calcul se réduit, pas à pas. */
+.sc-bonne-parenthese__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-bonne-parenthese__etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 16px;
+  list-style: none;
+  background: rgba(251, 246, 234, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-bonne-parenthese__etape {
+  color: #3d2f1f;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(19px, 5vw, 24px);
+  font-weight: 700;
+  text-align: center;
+  animation: sc-bonne-parenthese-descend 0.55s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-bonne-parenthese__etape + .sc-bonne-parenthese__etape::before { content: "↓ "; color: #6aa84f; }
+.sc-bonne-parenthese__regle { font-size: 17px; font-weight: 600; color: #4f3a24; }
+.sc-bonne-parenthese__etape.sc-bonne-parenthese__regle::before { content: ""; }
+
+/* L'opération à faire, éclairée comme une lanterne. */
+.sc-bonne-parenthese__allume {
+  padding: 0 3px;
+  border-radius: 6px;
+  background: #ffbf47;
+  box-shadow: 0 0 10px rgba(255, 191, 71, 0.9);
+}
+
+.sc-bonne-parenthese__resultat {
+  margin: 0;
+  padding: 6px 18px;
+  border: 3px solid #6aa84f;
+  border-radius: 14px;
+  background: #fff;
+  color: #3d2f1f;
+  font-size: 18px;
+  font-weight: 700;
+  animation: sc-bonne-parenthese-descend 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-bonne-parenthese__resultat strong { color: #b5651d; font-size: 26px; }
+
+/* Les réponses : des lanternes de papier allumées. */
+.scene__choix .scene__carte.objet--sc-bonne-parenthese {
+  overflow: visible;
+  min-width: 110px;
+  margin-top: 10px;
+  padding: 16px 24px 14px;
+  border-radius: 18px 18px 24px 24px;
+  color: #4a2a05;
+  font-size: 24px;
+  text-shadow: none;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 18px, rgba(181, 101, 29, 0.25) 18px 20px),
+    radial-gradient(ellipse at 50% 40%, #fff6d0, #ffbf47 62%, #e08a1c);
+  box-shadow: 0 0 18px rgba(255, 191, 71, 0.85);
+  animation: sc-bonne-parenthese-balance 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.9s);
+  transform-origin: top center;
+}
+
+/* Le chapeau de bois de la lanterne, et son crochet. */
+.scene__choix .scene__carte.objet--sc-bonne-parenthese::before {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: -9px;
+  height: 10px;
+  border-radius: 5px 5px 2px 2px;
+  background: #5a4632;
+}
+
+.scene__choix .scene__carte.objet--sc-bonne-parenthese .objet__eclat { border-radius: 18px 18px 24px 24px; overflow: hidden; }
+.scene__choix .scene__carte.objet--sc-bonne-parenthese.est-fausse { background: #c9c2b4; box-shadow: none; color: #6b5a44; animation: none; }
+
+@keyframes sc-bonne-parenthese-jasmin { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+@keyframes sc-bonne-parenthese-lanterne { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes sc-bonne-parenthese-descend { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes sc-bonne-parenthese-balance { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-bonne-parenthese *,
+  .scene__choix .scene__carte.objet--sc-bonne-parenthese { animation: none !important; }
+}
+
+/* ------------------------------------------- LES CRIBLES DES MARAIS SALANTS */
+.sc-crible-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-crible-college__marais {
+  display: block;
+  width: min(100%, 440px);
+  height: auto;
+  margin-bottom: -8px;
+  overflow: visible;
+  filter: drop-shadow(0 5px 6px rgba(10, 50, 80, 0.35));
+}
+
+.sc-crible-college__muret { fill: #f4f1ea; stroke: #cfc6b4; stroke-width: 2; }
+.sc-crible-college__sel { fill: #fff; stroke: #d5dee4; stroke-width: 1.5; }
+.sc-crible-college__eclat-sel { fill: #bfe8fa; animation: sc-crible-college-filet 1.8s ease-in-out infinite; }
+
+.sc-crible-college__roue {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-crible-college-roue 8s linear infinite;
+}
+
+.sc-crible-college__roue circle { fill: none; stroke: #8a5a2b; stroke-width: 5; }
+.sc-crible-college__roue line { stroke: #8a5a2b; stroke-width: 3.5; stroke-linecap: round; }
+.sc-crible-college__roue .sc-crible-college__moyeu { fill: #8a5a2b; }
+.sc-crible-college__goutte { fill: #bfe8fa; animation: sc-crible-college-goutte 1.4s ease-in infinite; }
+
+/* La stèle de pierre blanche. */
+.sc-crible-college__stele {
+  max-width: 100%;
+  padding: 4px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f4f1ea, #d9d2c2);
+  box-shadow: 0 10px 20px rgba(10, 50, 80, 0.35);
+}
+
+.sc-crible-college .sc-crible-college__question.college__question {
+  margin: 0;
+  padding: 12px 24px;
+  border: 2px solid #cfc6b4;
+  border-radius: 10px;
+  background: #fbfaf6;
+  color: #17405f;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+/* Après la réponse : le crible trie les fèves. */
+.sc-crible-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-crible-college__tri {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 620px);
+  padding: 10px 12px 12px;
+  border-radius: 18px;
+  background: rgba(251, 250, 246, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-crible-college__crible-tri {
+  width: 180px;
+  height: 26px;
+  margin-bottom: 8px;
+  border: 3px solid #cfc6b4;
+  border-top: none;
+  border-radius: 0 0 90px 90px;
+  background: radial-gradient(circle, #1f8fd6 0 3px, transparent 3.5px) 0 0 / 14px 10px, #f4f1ea;
+}
+
+.sc-crible-college__epreuves { display: flex; flex-direction: column; gap: 6px; width: 100%; margin: 0; padding: 0; list-style: none; }
+
+.sc-crible-college__epreuve {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  animation: sc-crible-college-arrive 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-crible-college__epreuve.est-reussie { background: rgba(46, 158, 91, 0.16); }
+.sc-crible-college__epreuve.est-ratee { background: rgba(120, 120, 120, 0.1); }
+
+.sc-crible-college__feve-tri {
+  min-width: 64px;
+  padding: 6px 12px;
+  border-radius: 50% / 60%;
+  background: radial-gradient(ellipse at 35% 30%, #e86a5a, #b5302a 60%, #7a1a14);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-crible-college__epreuve.est-reussie .sc-crible-college__feve-tri {
+  animation: sc-crible-college-passe 0.8s cubic-bezier(0.4, 0, 0.6, 1.4) both;
+  animation-delay: calc(var(--d, 0s) + 0.4s);
+}
+
+.sc-crible-college__epreuve.est-ratee .sc-crible-college__feve-tri { filter: grayscale(0.7); opacity: 0.75; }
+.sc-crible-college__test { color: #17405f; font-size: 17px; font-weight: 600; }
+.sc-crible-college__verdict { font-size: 26px; font-weight: 900; }
+.sc-crible-college__epreuve.est-reussie .sc-crible-college__verdict { color: #2e9e5b; }
+.sc-crible-college__epreuve.est-ratee .sc-crible-college__verdict { color: #c0392b; }
+
+.sc-crible-college__etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 16px;
+  list-style: none;
+  background: rgba(251, 250, 246, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-crible-college__etape {
+  color: #17405f;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-crible-college-arrive 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-crible-college__resultat {
+  margin: 0;
+  padding: 6px 18px;
+  border: 3px solid #1f8fd6;
+  border-radius: 14px;
+  background: #fff;
+  color: #17405f;
+  font-size: 18px;
+  font-weight: 700;
+  animation: sc-crible-college-arrive 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-crible-college__resultat strong { color: #b5302a; font-size: 26px; }
+
+/* Les réponses : des fèves, et le crible où les glisser. */
+.sc-crible-college__atelier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 24px;
+  margin-top: 6px;
+}
+
+.sc-crible-college__feves { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
+
+.sc-crible-college__feves > li {
+  animation: sc-crible-college-roule 2.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.8s);
+}
+
+.sc-crible-college__feve {
+  min-width: 106px;
+  min-height: 70px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 50% / 60%;
+  background: radial-gradient(ellipse at 35% 28%, #f08a7a, #b5302a 58%, #7a1a14);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-crible-college__feves > li:nth-child(3n + 2) .sc-crible-college__feve {
+  background: radial-gradient(ellipse at 35% 28%, #fff1c4, #d9b25c 58%, #9a7424);
+  color: #3a2a08;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.sc-crible-college__feves > li:nth-child(3n + 3) .sc-crible-college__feve { background: radial-gradient(ellipse at 35% 28%, #8a8a8a, #3a3a3a 58%, #111); }
+
+.sc-crible-college__feve:hover:not(:disabled),
+.sc-crible-college__feve:focus-visible { transform: translateY(-5px) rotate(-6deg) scale(1.06); filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9)); }
+
+.sc-crible-college__feve.est-fausse { cursor: default; filter: grayscale(0.9); opacity: 0.5; text-decoration: line-through; transform: scale(0.9); }
+
+/* Le crible de pierre percé de trous ; l'eau qui s'en écoule. */
+.sc-crible-college__crible {
+  position: relative;
+  width: 150px;
+  height: 84px;
+  border: 4px solid #cfc6b4;
+  border-radius: 10px 10px 80px 80px;
+  background: radial-gradient(circle, #2a6f9a 0 4px, transparent 4.5px) 4px 6px / 18px 16px, linear-gradient(180deg, #fbfaf6, #e6dfcf);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.sc-crible-college__crible.est-survole { transform: scale(1.06); box-shadow: 0 0 0 4px #1f8fd6, 0 0 22px rgba(31, 143, 214, 0.8); }
+
+.sc-crible-college__filet {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 6px;
+  height: 22px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #bfe8fa, transparent);
+  transform: translateX(-50%);
+  animation: sc-crible-college-filet 1s ease-in-out infinite;
+}
+
+@keyframes sc-crible-college-roue { to { transform: rotate(360deg); } }
+@keyframes sc-crible-college-goutte { from { transform: translateY(-6px); opacity: 1; } to { transform: translateY(30px); opacity: 0; } }
+@keyframes sc-crible-college-arrive { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+@keyframes sc-crible-college-passe { 0% { transform: translateY(-24px); } 60% { transform: translateY(6px); } 100% { transform: none; } }
+@keyframes sc-crible-college-roule { from { transform: rotate(-6deg); } to { transform: rotate(6deg) translateY(-4px); } }
+@keyframes sc-crible-college-filet { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+@media (max-width: 620px) {
+  .sc-crible-college .sc-crible-college__question.college__question { font-size: 19px; padding: 10px 14px; }
+  .sc-crible-college__test { font-size: 16px; }
+  .sc-crible-college__crible { width: 120px; height: 66px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-crible-college *,
+  .sc-crible-college__feves > li,
+  .sc-crible-college__filet { animation: none !important; }
+}
+
+/* ------------------------------------------- L'ÎLE AUX JARDINS PARTAGÉS */
+.sc-fractions-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-fractions-college__decor {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 480px);
+  height: 118px;
+  margin-bottom: -18px;
+  overflow: hidden;
+}
+
+.sc-fractions-college__grande-ile {
+  position: relative;
+  z-index: 1;
+  display: block;
+  animation: sc-fractions-college-vent 5s ease-in-out infinite alternate;
+}
+
+.sc-fractions-college__onde {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 110px;
+  height: 110px;
+  margin: -55px 0 0 -55px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  animation: sc-fractions-college-onde 3.6s ease-out infinite;
+}
+
+.sc-fractions-college__onde--2 { animation-delay: -1.8s; }
+
+.sc-fractions-college__petale {
+  position: absolute;
+  top: -10px;
+  width: 11px;
+  height: 8px;
+  border-radius: 60% 0 60% 0;
+  background: #f39ac0;
+  animation: sc-fractions-college-petale 6.5s linear infinite;
+}
+
+/* Les îles dessinées : lac, rive, champs, l'arbre du milieu. */
+.sc-fractions-college__ile { display: block; overflow: visible; }
+.sc-fractions-college__lac { fill: #3fa7d6; }
+.sc-fractions-college__rive { fill: #e3d3a8; }
+
+.sc-fractions-college__champ {
+  stroke: #fff;
+  stroke-width: 0.8;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-fractions-college-pousse 0.4s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+/* Une part cueillie : de la terre, là où il y avait des fleurs. */
+.sc-fractions-college__champ.est-cueilli {
+  fill: #8a6a44;
+  opacity: 0.7;
+  animation: sc-fractions-college-cueille 0.7s ease-in both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-fractions-college__arbre { fill: #2f6b2a; stroke: #fff; stroke-width: 1; }
+
+/* Le panneau de jardin. */
+.sc-fractions-college__panneau {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #a8743a, #7a4f22);
+  box-shadow: 0 10px 20px rgba(20, 40, 60, 0.35);
+}
+
+.sc-fractions-college .sc-fractions-college__question.college__question {
+  margin: 0;
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: #fff8e8;
+  color: #2a3b1f;
+  font-size: 26px;
+  font-weight: 800;
+  white-space: pre-wrap;
+  box-shadow: none;
+}
+
+/* Après la réponse : les îles partagées, les calculs. */
+.sc-fractions-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-fractions-college__vue {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  border-radius: 18px;
+  background: rgba(63, 167, 214, 0.35);
+}
+
+.sc-fractions-college__archipel { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; }
+
+.sc-fractions-college__archipel em {
+  margin-left: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #2a3b1f;
+  color: #fff;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.sc-fractions-college__etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 16px;
+  list-style: none;
+  background: rgba(255, 248, 232, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-fractions-college__etape {
+  color: #2a3b1f;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-fractions-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-fractions-college__resultat {
+  margin: 0;
+  padding: 6px 18px;
+  border: 3px solid #6dbb4a;
+  border-radius: 14px;
+  background: #fff;
+  color: #2a3b1f;
+  font-size: 18px;
+  font-weight: 700;
+  animation: sc-fractions-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-fractions-college__resultat strong { color: #d9342b; font-size: 26px; }
+
+/* Les réponses : des îlots fleuris, la fraction écrite en vrai. */
+.sc-fractions-college__ilots { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 22px; margin: 6px 0 0; padding: 0; list-style: none; }
+
+.sc-fractions-college__ilots > li {
+  animation: sc-fractions-college-flotte 3.4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-fractions-college__ilot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(104px, 28vw, 124px);
+  height: clamp(104px, 28vw, 124px);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #6dbb4a 0 52%, #e3d3a8 53% 62%, #3fa7d6 63% 100%);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.6), 0 8px 14px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* Quelques fleurs plantées sur l'îlot. */
+.sc-fractions-college__fleurs {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 18% 30%, #f6c933 0 4px, transparent 5px),
+    radial-gradient(circle at 80% 26%, #e8433f 0 4px, transparent 5px),
+    radial-gradient(circle at 24% 78%, #f39ac0 0 4px, transparent 5px),
+    radial-gradient(circle at 78% 76%, #9b7fe0 0 4px, transparent 5px);
+  pointer-events: none;
+}
+
+.sc-fractions-college__fraction {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 900;
+  line-height: 1.05;
+  text-shadow: 0 2px 0 #24521a;
+}
+
+.sc-fractions-college__barre { width: 100%; min-width: 1.4em; height: 4px; margin: 2px 0; border-radius: 2px; background: #fff; box-shadow: 0 2px 0 #24521a; }
+.sc-fractions-college__entier { position: relative; color: #fff; font-size: 30px; font-weight: 900; text-shadow: 0 2px 0 #24521a; }
+
+.sc-fractions-college__ilot:hover:not(:disabled),
+.sc-fractions-college__ilot:focus-visible { transform: scale(1.08); filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)); }
+
+.sc-fractions-college__ilot.est-fausse { cursor: default; filter: grayscale(0.9); opacity: 0.5; transform: scale(0.9); }
+
+.sc-fractions-college__ilot.est-fausse::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 50%;
+  height: 5px;
+  border-radius: 3px;
+  background: #8a2a1c;
+  transform: rotate(-24deg);
+}
+
+@keyframes sc-fractions-college-vent { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes sc-fractions-college-onde { from { transform: scale(0.8); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
+@keyframes sc-fractions-college-petale { from { transform: translate(0, 0) rotate(0); } to { transform: translate(-50px, 140px) rotate(320deg); } }
+@keyframes sc-fractions-college-pousse { from { transform: scale(0.3); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sc-fractions-college-cueille { from { fill: #f6c933; opacity: 1; transform: none; } 50% { transform: scale(0.85); } to { fill: #8a6a44; opacity: 0.7; transform: none; } }
+@keyframes sc-fractions-college-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-fractions-college-flotte { from { transform: translate(-3px, 0) rotate(-3deg); } to { transform: translate(3px, -6px) rotate(3deg); } }
+
+@media (max-width: 620px) {
+  .sc-fractions-college .sc-fractions-college__question.college__question { font-size: 20px; padding: 10px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-fractions-college *,
+  .sc-fractions-college__ilots > li { animation: none !important; }
+}
+
+/* ------------------------------------------- LA PROMENADE DES LAMPADAIRES */
+.sc-droite-des-fractions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-droite-des-fractions__bord {
+  display: block;
+  width: min(100%, 460px);
+  height: auto;
+  margin-bottom: -8px;
+  overflow: visible;
+  filter: drop-shadow(0 4px 5px rgba(10, 30, 70, 0.35));
+}
+
+.sc-droite-des-fractions__guirlande > path:first-child { fill: none; stroke: #2b2f3a; stroke-width: 1.5; }
+.sc-droite-des-fractions__drapeau { transform-box: fill-box; transform-origin: top center; animation: sc-droite-des-fractions-drapeau 1.4s ease-in-out infinite alternate; }
+.sc-droite-des-fractions__drapeau--0 { fill: #1d4fa3; }
+.sc-droite-des-fractions__drapeau--1 { fill: #e9703a; }
+.sc-droite-des-fractions__drapeau--2 { fill: #fff; stroke: #1d4fa3; stroke-width: 0.8; }
+.sc-droite-des-fractions__cage { fill: #2b2f3a; }
+.sc-droite-des-fractions__mouette path { fill: none; stroke: #33404f; stroke-width: 2; stroke-linecap: round; }
+.sc-droite-des-fractions__mouette { animation: sc-droite-des-fractions-plane 7s ease-in-out infinite alternate; }
+.sc-droite-des-fractions__mouette--2 { animation-duration: 9s; animation-delay: -3s; }
+.sc-droite-des-fractions__reverbere line { stroke: #2b2f3a; stroke-width: 3; }
+.sc-droite-des-fractions__reverbere circle { filter: drop-shadow(0 0 4px #ffd36b); fill: #ffd36b; animation: sc-droite-des-fractions-lampe 2.4s ease-in-out infinite alternate; }
+
+/* La plaque émaillée bleue de la promenade. */
+.sc-droite-des-fractions__plaque {
+  max-width: 100%;
+  padding: 4px;
+  border: 3px solid #fff;
+  border-radius: 12px;
+  background: #1d4fa3;
+  box-shadow: 0 0 0 3px #1d4fa3, 0 10px 20px rgba(10, 30, 70, 0.4);
+}
+
+.sc-droite-des-fractions .sc-droite-des-fractions__question.college__question {
+  margin: 0;
+  padding: 10px 22px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2b62c4, #1d4fa3);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Après la réponse : la promenade graduée. */
+.sc-droite-des-fractions__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-droite-des-fractions__promenade {
+  display: block;
+  width: min(100%, 600px);
+  height: auto;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(232, 244, 255, 0.97), rgba(255, 250, 240, 0.97));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  overflow: visible;
+}
+
+.sc-droite-des-fractions__quai { fill: #e9e2d4; }
+
+.sc-droite-des-fractions__dalle {
+  fill: #e9a07a;
+  animation: sc-droite-des-fractions-dalle 0.35s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-droite-des-fractions__dalle.est-impaire { fill: #7fb3e0; }
+.sc-droite-des-fractions__dalle.est-premiere { stroke: #1d4fa3; stroke-width: 1.5; }
+.sc-droite-des-fractions__trait { stroke: #2b2f3a; stroke-width: 1.5; }
+.sc-droite-des-fractions__lampadaire { animation: sc-droite-des-fractions-dalle 0.4s ease-out both; animation-delay: var(--d, 0s); }
+.sc-droite-des-fractions__lampadaire line { stroke: #2b2f3a; stroke-width: 2.5; }
+.sc-droite-des-fractions__lampe { fill: #ffd36b; stroke: #2b2f3a; stroke-width: 1; }
+.sc-droite-des-fractions__entier { fill: #2b2f3a; font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 900; }
+.sc-droite-des-fractions__accolade { fill: #1d4fa3; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; }
+
+.sc-droite-des-fractions__saut path {
+  fill: none;
+  stroke: #d9342b;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  animation: sc-droite-des-fractions-trace 0.9s ease-in-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-droite-des-fractions__saut text {
+  fill: #d9342b;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  animation: sc-droite-des-fractions-dalle 0.4s ease-out both;
+  animation-delay: calc(var(--d, 0s) + 0.5s);
+}
+
+.sc-droite-des-fractions__point {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: sc-droite-des-fractions-pose 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-droite-des-fractions__point path { fill: #1d4fa3; }
+.sc-droite-des-fractions__point text { fill: #1d4fa3; font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 900; }
+
+.sc-droite-des-fractions__etapes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-droite-des-fractions__etape,
+.sc-droite-des-fractions__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1d2a44;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-droite-des-fractions-dalle 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-droite-des-fractions__resultat { border: 3px solid #1d4fa3; }
+.sc-droite-des-fractions__resultat strong { color: #d9342b; font-size: 26px; }
+
+/* Les réponses : des fanions qui claquent au vent. */
+.sc-droite-des-fractions__fanions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 26px; margin: 6px 0 0; padding: 0; list-style: none; }
+
+.sc-droite-des-fractions__fanion {
+  display: flex;
+  align-items: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-droite-des-fractions__mat {
+  width: 6px;
+  height: 94px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4a3220, #8a6a44);
+}
+
+.sc-droite-des-fractions__toile {
+  margin-top: 4px;
+  padding: 12px 34px 12px 16px;
+  background: #1d4fa3;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  clip-path: polygon(0 0, 100% 0, 84% 50%, 100% 100%, 0 100%);
+  transform-origin: left center;
+  animation: sc-droite-des-fractions-vent 1.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.5s);
+}
+
+.sc-droite-des-fractions__fanions > li:nth-child(3n + 2) .sc-droite-des-fractions__toile { background: #e9703a; }
+.sc-droite-des-fractions__fanions > li:nth-child(3n + 3) .sc-droite-des-fractions__toile { background: #fff; color: #1d4fa3; }
+
+.sc-droite-des-fractions__fanion:hover:not(:disabled),
+.sc-droite-des-fractions__fanion:focus-visible { transform: translateY(-5px); filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)); }
+
+.sc-droite-des-fractions__fanion.est-fausse { cursor: default; opacity: 0.5; filter: grayscale(0.9); }
+
+.sc-droite-des-fractions__fanion.est-fausse .sc-droite-des-fractions__toile {
+  text-decoration: line-through;
+  transform: rotate(28deg);
+  animation: none;
+}
+
+@keyframes sc-droite-des-fractions-drapeau { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes sc-droite-des-fractions-plane { from { transform: translate(-20px, 4px); } to { transform: translate(40px, -4px); } }
+@keyframes sc-droite-des-fractions-lampe { from { opacity: 0.6; } to { opacity: 1; } }
+@keyframes sc-droite-des-fractions-dalle { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-droite-des-fractions-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sc-droite-des-fractions-pose { from { opacity: 0; transform: translateY(-30px) scale(0.5); } to { opacity: 1; transform: none; } }
+@keyframes sc-droite-des-fractions-vent { from { transform: skewY(-4deg) scaleX(0.94); } to { transform: skewY(3deg) scaleX(1); } }
+
+@media (max-width: 620px) {
+  .sc-droite-des-fractions .sc-droite-des-fractions__question.college__question { font-size: 19px; padding: 8px 14px; }
+  .sc-droite-des-fractions__toile { font-size: 20px; padding: 10px 28px 10px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-droite-des-fractions *,
+  .sc-droite-des-fractions__fanions * { animation: none !important; }
+}
+
+/* ------------------------------------------- LE MARCHÉ AUX GRAINS */
+.sc-deux-tiers-du-sac {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-deux-tiers-du-sac__etal {
+  position: relative;
+  width: min(100%, 460px);
+  height: 104px;
+  margin-bottom: -10px;
+}
+
+/* L'auvent rouge et crème, festonné. */
+.sc-deux-tiers-du-sac__auvent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30px;
+  border-radius: 6px 6px 0 0;
+  background: repeating-linear-gradient(90deg, #c0392b 0 28px, #f4e3c3 28px 56px);
+  box-shadow: 0 6px 10px rgba(80, 20, 10, 0.3);
+  -webkit-mask: radial-gradient(circle at 14px 100%, transparent 0 8px, #000 8.5px) 0 0 / 28px 100%;
+  mask: radial-gradient(circle at 14px 100%, transparent 0 8px, #000 8.5px) 0 0 / 28px 100%;
+}
+
+.sc-deux-tiers-du-sac__sac {
+  position: absolute;
+  left: 8%;
+  bottom: 0;
+  width: 112px;
+  height: auto;
+  transform-origin: 30% 100%;
+  animation: sc-deux-tiers-du-sac-respire 3s ease-in-out infinite alternate;
+  transition: transform 0.6s ease;
+}
+
+.sc-deux-tiers-du-sac.est-termine .sc-deux-tiers-du-sac__sac { animation: none; transform: rotate(-14deg); }
+.sc-deux-tiers-du-sac__toile { fill: #c9a46a; stroke: #8a6a3a; stroke-width: 2; }
+.sc-deux-tiers-du-sac__dessus { fill: #e6b84a; stroke: #a8822a; stroke-width: 1.5; }
+.sc-deux-tiers-du-sac__grain-decor { fill: #f2c95a; stroke: #a8822a; stroke-width: 1; }
+
+.sc-deux-tiers-du-sac__epi {
+  position: absolute;
+  bottom: 0;
+  width: 22px;
+  height: 80px;
+  transform-origin: 50% 100%;
+  animation: sc-deux-tiers-du-sac-epi 2.6s ease-in-out infinite alternate;
+}
+
+.sc-deux-tiers-du-sac__epi:nth-of-type(2) { right: 14%; }
+.sc-deux-tiers-du-sac__epi:nth-of-type(3) { right: 9%; height: 70px; }
+.sc-deux-tiers-du-sac__epi:nth-of-type(4) { right: 4%; }
+.sc-deux-tiers-du-sac__epi line { stroke: #b8902a; stroke-width: 2; }
+.sc-deux-tiers-du-sac__epi ellipse { fill: #e6b84a; stroke: #a8822a; stroke-width: 0.8; }
+
+/* L'ardoise du marchand. */
+.sc-deux-tiers-du-sac__ardoise {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 12px 22px;
+  border: 7px solid #8a5a2b;
+  border-radius: 10px;
+  background: #2f3a33;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), inset 0 0 22px rgba(0, 0, 0, 0.4);
+}
+
+.sc-deux-tiers-du-sac .sc-deux-tiers-du-sac__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #f4f1ea;
+  font-size: 23px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Après la réponse : les bols, et les grains comptés. */
+.sc-deux-tiers-du-sac__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-deux-tiers-du-sac__bols {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 8px;
+  max-width: min(100%, 720px);
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(120, 80, 40, 0.75);
+}
+
+.sc-deux-tiers-du-sac__bol {
+  position: relative;
+  width: 58px;
+  height: 64px;
+  border-radius: 12px;
+}
+
+/* Le bol de bois. */
+.sc-deux-tiers-du-sac__bol::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 0;
+  height: 26px;
+  border-radius: 4px 4px 28px 28px;
+  background: linear-gradient(180deg, #b0703a, #7a4a20);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25);
+}
+
+.sc-deux-tiers-du-sac__grains {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 20px;
+  height: 14px;
+  border-radius: 50% 50% 0 0;
+  background: radial-gradient(circle, #f2c95a 0 2px, #d9a83a 2.5px) 0 0 / 6px 6px;
+  transform-origin: bottom center;
+  animation: sc-deux-tiers-du-sac-verse 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-deux-tiers-du-sac__dose {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  padding: 0 7px;
+  border-radius: 8px;
+  background: #fff4dc;
+  color: #3d2a10;
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  transform: translateX(-50%);
+  animation: sc-deux-tiers-du-sac-apparait 0.4s ease-out both;
+  animation-delay: calc(var(--d, 0s) + 0.3s);
+}
+
+/* Les bols qu'on prend (ou ceux qui restent) s'allument. */
+.sc-deux-tiers-du-sac__bol.est-garde {
+  box-shadow: 0 0 0 3px #ffd36b, 0 0 16px rgba(255, 211, 107, 0.9);
+  animation: sc-deux-tiers-du-sac-allume 0.5s ease-out both;
+  animation-delay: var(--d2, 0s);
+}
+
+.sc-deux-tiers-du-sac__bol.est-pris {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+  animation: sc-deux-tiers-du-sac-part 0.6s ease-in both;
+  animation-delay: var(--d2, 0s);
+}
+
+.sc-deux-tiers-du-sac__compte {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  max-width: 360px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(120, 80, 40, 0.75);
+}
+
+.sc-deux-tiers-du-sac__grain {
+  width: 16px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e6c98a;
+  animation: sc-deux-tiers-du-sac-apparait 0.25s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-deux-tiers-du-sac__grain.est-compte { background: #d9342b; box-shadow: 0 0 6px rgba(255, 120, 100, 0.8); }
+
+.sc-deux-tiers-du-sac__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-deux-tiers-du-sac__etape,
+.sc-deux-tiers-du-sac__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 248, 232, 0.97);
+  color: #3d2a10;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-deux-tiers-du-sac-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-deux-tiers-du-sac__resultat { border: 3px solid #e6b84a; }
+.sc-deux-tiers-du-sac__resultat strong { color: #c0392b; font-size: 26px; }
+
+/* Les réponses : des sachets de toile noués. */
+.scene__choix .scene__carte.objet--sc-deux-tiers-du-sac {
+  overflow: visible;
+  min-width: 108px;
+  padding: 26px 24px 16px;
+  border-radius: 16px 16px 40px 40px;
+  color: #3d2a10;
+  font-size: 24px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: repeating-linear-gradient(45deg, #d4b07a 0 4px, #c49e64 4px 8px);
+  box-shadow: inset 0 -6px 0 rgba(90, 60, 20, 0.3);
+}
+
+/* Le lien qui noue le sachet. */
+.scene__choix .scene__carte.objet--sc-deux-tiers-du-sac::before {
+  content: "";
+  position: absolute;
+  left: 28%;
+  right: 28%;
+  top: 9px;
+  height: 6px;
+  border-radius: 3px;
+  background: #8a5a2b;
+  box-shadow: 0 -5px 0 -1px #e6b84a;
+}
+
+.scene__choix .scene__carte.objet--sc-deux-tiers-du-sac .objet__eclat { border-radius: 16px 16px 40px 40px; overflow: hidden; }
+
+@keyframes sc-deux-tiers-du-sac-respire { from { transform: scale(1); } to { transform: scale(1.03, 0.98); } }
+@keyframes sc-deux-tiers-du-sac-epi { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-deux-tiers-du-sac-verse { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes sc-deux-tiers-du-sac-apparait { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-deux-tiers-du-sac-allume { from { box-shadow: none; } }
+@keyframes sc-deux-tiers-du-sac-part { from { opacity: 1; filter: none; } }
+
+@media (max-width: 620px) {
+  .sc-deux-tiers-du-sac .sc-deux-tiers-du-sac__question.college__question { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-deux-tiers-du-sac * { animation: none !important; }
+}
+
+/* ------------------------------------------- LA CUISINE AUX CITRONS */
+.sc-recette-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-recette-college__cuisine {
+  position: relative;
+  width: min(100%, 460px);
+  height: 92px;
+  margin-bottom: -12px;
+}
+
+.sc-recette-college__branche {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 4px;
+  height: 6px;
+  border-radius: 3px;
+  background: #6b5a2a;
+}
+
+.sc-recette-college__citron {
+  position: absolute;
+  top: 10px;
+  width: 28px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbc0, #f5d33a 55%, #d9a91a);
+  transform-origin: 50% -6px;
+  animation: sc-recette-college-citron 2.4s ease-in-out infinite alternate;
+}
+
+/* La queue verte du citron. */
+.sc-recette-college__citron::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -7px;
+  width: 3px;
+  height: 8px;
+  background: #6b8a2a;
+}
+
+.sc-recette-college__saladier {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 128px;
+  height: 50px;
+  border-radius: 6px 6px 64px 64px;
+  background: linear-gradient(180deg, #f4f1e4 0 30%, #7a9a5a 30% 42%, #f4f1e4 42%);
+  box-shadow: 0 6px 10px rgba(40, 50, 20, 0.3);
+  transform: translateX(-50%);
+}
+
+.sc-recette-college__fouet {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  width: 6px;
+  height: 58px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #8a5a2b 0 40%, #c9ccd2 40%);
+  transform: translateX(-50%);
+  transform-origin: 50% 100%;
+  animation: sc-recette-college-fouet 0.9s ease-in-out infinite alternate;
+}
+
+.sc-recette-college__vapeur {
+  position: absolute;
+  left: 30%;
+  bottom: 44px;
+  width: 14px;
+  height: 30px;
+  border-left: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  animation: sc-recette-college-vapeur 3s ease-in-out infinite;
+}
+
+.sc-recette-college__vapeur--2 { left: 66%; animation-delay: -1.5s; }
+
+/* La fiche de recette, papier ligné, épinglée d'un citron. */
+.sc-recette-college__fiche {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 18px 22px 14px 30px;
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, transparent 18px, #e07a6a 18px 20px, transparent 20px),
+    repeating-linear-gradient(180deg, #fffdf6 0 31px, #cfe0f0 31px 32px);
+  box-shadow: 0 10px 20px rgba(40, 50, 20, 0.35);
+  transform: rotate(-0.6deg);
+}
+
+.sc-recette-college__epingle {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbc0, #f5d33a 60%, #c9961a);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+  transform: translateX(-50%);
+}
+
+.sc-recette-college .sc-recette-college__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #2a3a2a;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Le tableau de proportionnalité. */
+.sc-recette-college__tableau-cadre {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.sc-recette-college__tableau {
+  border-collapse: collapse;
+  background: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+}
+
+.sc-recette-college__tableau th,
+.sc-recette-college__tableau td {
+  padding: 4px 10px;
+  border: 2px solid #7a9a5a;
+  color: #2a3a2a;
+}
+
+.sc-recette-college__tableau th { background: #eef4e6; font-weight: 700; text-align: left; }
+.sc-recette-college__tableau td { min-width: 2.4em; font-weight: 800; text-align: center; }
+
+.sc-recette-college__tableau td.est-rempli {
+  background: #f5d33a;
+  animation: sc-recette-college-remplit 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) 1s both;
+}
+
+.sc-recette-college__quotients td {
+  color: #3d7a6a;
+  animation: sc-recette-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-recette-college__fleche {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  animation: sc-recette-college-remplit 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) 0.5s both;
+}
+
+.sc-recette-college__fleche::before { content: "↓ "; }
+
+/* Le bocal qui se remplit jusqu'au pourcentage. */
+.sc-recette-college__bocal {
+  position: relative;
+  display: inline-block;
+  width: 72px;
+  height: 92px;
+  margin-right: 70px;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 12px 12px 18px 18px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.sc-recette-college__couvercle {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: -12px;
+  height: 10px;
+  border-radius: 4px;
+  background: #7a9a5a;
+}
+
+.sc-recette-college__contenu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--p, 50%);
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(180deg, #fff2a0, #f5d33a);
+  transform-origin: bottom;
+  animation: sc-recette-college-monte 1.2s ease-out 0.3s both;
+}
+
+.sc-recette-college__graduation {
+  position: absolute;
+  left: 100%;
+  bottom: calc(var(--p, 50%) - 12px);
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: #fff;
+  color: #2a3a2a;
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sc-recette-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-recette-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-recette-college__etape,
+.sc-recette-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 253, 246, 0.97);
+  color: #2a3a2a;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-recette-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-recette-college__resultat { border: 3px solid #f5d33a; }
+.sc-recette-college__resultat strong { color: #3d7a6a; font-size: 26px; }
+
+/* Les réponses : des bocaux de cuisine (crème de citron, farine, sucre roux). */
+.scene__choix .scene__carte.objet--sc-recette-college {
+  overflow: visible;
+  min-width: 110px;
+  margin-top: 12px;
+  padding: 18px 22px 14px;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 12px 12px 18px 18px;
+  color: #2a3a2a;
+  font-size: 22px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: linear-gradient(0deg, #f5d33a 0 42%, rgba(255, 255, 255, 0.88) 42%);
+}
+
+.scene__choix > li:nth-child(3n + 2) .scene__carte.objet--sc-recette-college { background: linear-gradient(0deg, #f6f1e4 0 46%, rgba(255, 255, 255, 0.88) 46%); }
+.scene__choix > li:nth-child(3n + 3) .scene__carte.objet--sc-recette-college { background: linear-gradient(0deg, #c98a4a 0 38%, rgba(255, 255, 255, 0.88) 38%); }
+
+/* Le couvercle vert du bocal. */
+.scene__choix .scene__carte.objet--sc-recette-college::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: -13px;
+  height: 11px;
+  border-radius: 5px;
+  background: #7a9a5a;
+}
+
+.scene__choix .scene__carte.objet--sc-recette-college .objet__eclat { border-radius: 10px 10px 16px 16px; overflow: hidden; }
+
+@keyframes sc-recette-college-citron { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+@keyframes sc-recette-college-fouet { from { transform: translateX(-50%) rotate(-24deg); } to { transform: translateX(-50%) rotate(24deg); } }
+@keyframes sc-recette-college-vapeur { 0% { opacity: 0; transform: translateY(10px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
+@keyframes sc-recette-college-remplit { from { opacity: 0; transform: scale(1.6); } to { opacity: 1; transform: none; } }
+@keyframes sc-recette-college-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-recette-college-monte { from { transform: scaleY(0); } to { transform: none; } }
+
+@media (max-width: 620px) {
+  .sc-recette-college .sc-recette-college__question.college__question { font-size: 18px; }
+  .sc-recette-college__tableau { font-size: 16px; }
+  .sc-recette-college__tableau th, .sc-recette-college__tableau td { padding: 3px 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-recette-college * { animation: none !important; }
+}
+
+/* ------------------------------------------- L'ATELIER DES MESURES */
+.sc-metre-ruban-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-metre-ruban-college__atelier {
+  display: block;
+  width: min(100%, 440px);
+  height: auto;
+  margin-bottom: -6px;
+  overflow: visible;
+}
+
+.sc-metre-ruban-college__ruban-decor {
+  fill: none;
+  stroke: #f6ecd2;
+  stroke-width: 11;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  filter: drop-shadow(0 3px 3px rgba(60, 10, 20, 0.4));
+  animation: sc-metre-ruban-college-deroule 2.4s ease-out both;
+}
+
+.sc-metre-ruban-college__ruban-traits { fill: none; stroke: #7a1f2b; stroke-width: 6; stroke-dasharray: 1.5 7; opacity: 0.55; }
+.sc-metre-ruban-college__balance line { stroke: #c9a24a; stroke-width: 3; }
+
+.sc-metre-ruban-college__fleau {
+  transform-box: view-box;
+  transform-origin: 60px 18px;
+  animation: sc-metre-ruban-college-fleau 3s ease-in-out infinite alternate;
+}
+
+.sc-metre-ruban-college__fleau path { fill: #c9a24a; stroke: #8a6a1e; stroke-width: 1; }
+.sc-metre-ruban-college__eprouvette rect { fill: rgba(255, 255, 255, 0.4); stroke: #fff; stroke-width: 1.5; }
+
+.sc-metre-ruban-college__eprouvette .sc-metre-ruban-college__liquide {
+  fill: #7fc8e8;
+  stroke: none;
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: sc-metre-ruban-college-liquide 2.2s ease-in-out infinite alternate;
+}
+
+/* La plaque de laiton. */
+.sc-metre-ruban-college__plaque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 10px 26px 8px;
+  border: 3px solid #8a6a1e;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f6e3a4, #c9a24a);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.6), 0 10px 20px rgba(60, 10, 20, 0.45);
+}
+
+.sc-metre-ruban-college .sc-metre-ruban-college__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #3a2408;
+  font-size: 28px;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.sc-metre-ruban-college__famille { color: #5a3a10; font-size: 16px; font-weight: 700; letter-spacing: 0.04em; }
+
+/* Le ruban déroulé en tableau de conversion. */
+.sc-metre-ruban-college__ruban {
+  position: relative;
+  width: min(100%, 640px);
+  padding: 6px 6px 8px;
+  border: 2px solid #c9a24a;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, #7a1f2b 0 1px, transparent 1px 8px) 0 0 / 100% 7px no-repeat,
+    #f6ecd2;
+  box-shadow: 0 8px 18px rgba(60, 10, 20, 0.35);
+  animation: sc-metre-ruban-college-ouvre 0.6s ease-out both;
+}
+
+.sc-metre-ruban-college__rangee {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n, 7), minmax(0, 1fr));
+}
+
+.sc-metre-ruban-college__unite {
+  padding: 6px 0 4px;
+  color: #7a1f2b;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(14px, 3.8vw, 18px);
+  font-weight: 800;
+  text-align: center;
+  border-bottom: 3px solid transparent;
+}
+
+.sc-metre-ruban-college__unite.est-depart { border-bottom-color: #7a1f2b; background: rgba(122, 31, 43, 0.12); }
+.sc-metre-ruban-college__unite.est-arrivee { border-bottom-color: #c9a24a; background: rgba(201, 162, 74, 0.3); }
+
+.sc-metre-ruban-college__case {
+  height: 40px;
+  border-left: 1px dashed #c9a24a;
+  color: #3a2408;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(20px, 5.4vw, 26px);
+  font-weight: 900;
+  line-height: 40px;
+  text-align: center;
+}
+
+.sc-metre-ruban-college__rangee--pose .sc-metre-ruban-college__case {
+  animation: sc-metre-ruban-college-pose 0.4s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-metre-ruban-college__rangee--pose .sc-metre-ruban-college__case.est-depart { background: rgba(122, 31, 43, 0.1); }
+.sc-metre-ruban-college__rangee--lu { border-top: 2px solid #7a1f2b; }
+.sc-metre-ruban-college__rangee--lu .sc-metre-ruban-college__case.est-arrivee { background: rgba(201, 162, 74, 0.3); }
+
+.sc-metre-ruban-college__rangee--lu .sc-metre-ruban-college__case.est-zero {
+  color: #c0392b;
+  animation: sc-metre-ruban-college-pose 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+/* La virgule, juste après la colonne de l'unité ; elle saute d'une unité à l'autre. */
+.sc-metre-ruban-college__virgule {
+  position: absolute;
+  bottom: -2px;
+  left: calc(var(--c, 0) * 100% / var(--n, 7));
+  color: #c0392b;
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1;
+  transform: translateX(-50%);
+}
+
+.sc-metre-ruban-college__virgule--saute {
+  animation: sc-metre-ruban-college-saute 0.9s cubic-bezier(0.4, 0, 0.3, 1) 1.2s both;
+}
+
+.sc-metre-ruban-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-metre-ruban-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-metre-ruban-college__etape,
+.sc-metre-ruban-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 248, 232, 0.97);
+  color: #3a2408;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-metre-ruban-college-pose 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-metre-ruban-college__resultat { border: 3px solid #7a1f2b; }
+.sc-metre-ruban-college__resultat strong { color: #7a1f2b; font-size: 26px; }
+
+/* Les réponses : des poids de laiton. */
+.scene__choix .scene__carte.objet--sc-metre-ruban-college {
+  min-width: 118px;
+  padding: 22px 26px 12px;
+  border-radius: 8px 8px 4px 4px;
+  color: #3a2408;
+  font-size: 22px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%);
+  background:
+    radial-gradient(circle at 50% 9px, #8a6a1e 0 6px, transparent 6.5px),
+    linear-gradient(180deg, #f6e3a4, #c9a24a 60%, #8a6a1e);
+}
+
+@keyframes sc-metre-ruban-college-deroule { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sc-metre-ruban-college-fleau { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes sc-metre-ruban-college-liquide { from { transform: scaleY(0.92); } to { transform: scaleY(1.04); } }
+@keyframes sc-metre-ruban-college-ouvre { from { opacity: 0; transform: scaleX(0.4); } to { opacity: 1; transform: none; } }
+@keyframes sc-metre-ruban-college-pose { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes sc-metre-ruban-college-saute { from { left: calc(var(--c0, 0) * 100% / var(--n, 7)); } to { left: calc(var(--c, 0) * 100% / var(--n, 7)); } }
+
+@media (max-width: 620px) {
+  .sc-metre-ruban-college .sc-metre-ruban-college__question.college__question { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-metre-ruban-college * { animation: none !important; }
+}
+
+/* ------------------------------------------- LA GARE AU COUCHER DU SOLEIL */
+.sc-combien-de-temps-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-combien-de-temps-college__quai {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: min(100%, 440px);
+  height: 118px;
+  margin-bottom: -8px;
+}
+
+.sc-combien-de-temps-college__marquise {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 16px;
+  border-radius: 4px;
+  background: #2b2433;
+  -webkit-mask: radial-gradient(circle at 12px 100%, transparent 0 6px, #000 6.5px) 0 0 / 24px 100%;
+  mask: radial-gradient(circle at 12px 100%, transparent 0 6px, #000 6.5px) 0 0 / 24px 100%;
+}
+
+.sc-combien-de-temps-college__quai .sc-combien-de-temps-college__horloge {
+  position: relative;
+  z-index: 1;
+  width: 100px;
+  margin-top: 16px;
+}
+
+/* La tige qui suspend l'horloge à la marquise. */
+.sc-combien-de-temps-college__quai::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  width: 4px;
+  height: 10px;
+  background: #2b2433;
+  transform: translateX(-50%);
+}
+
+.sc-combien-de-temps-college__lanterne {
+  position: absolute;
+  left: 14%;
+  top: 22px;
+  width: 18px;
+  height: 28px;
+  border: 3px solid #2b2433;
+  border-radius: 4px 4px 8px 8px;
+  background: #ffb347;
+  box-shadow: 0 0 16px rgba(255, 179, 71, 0.95);
+  animation: sc-combien-de-temps-college-lanterne 2.2s ease-in-out infinite alternate;
+}
+
+.sc-combien-de-temps-college__lanterne--2 { left: auto; right: 14%; animation-delay: -1.1s; }
+
+/* L'horloge de la gare. */
+.sc-combien-de-temps-college__horloge { display: block; height: auto; overflow: visible; }
+.sc-combien-de-temps-college__cadran { fill: #f8efe0; stroke: #2b2433; stroke-width: 4; }
+.sc-combien-de-temps-college__repere { stroke: #2b2433; stroke-width: 2.5; }
+
+.sc-combien-de-temps-college__petite,
+.sc-combien-de-temps-college__grande {
+  stroke: #2b2433;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  transform: rotate(var(--a, 0deg));
+  animation: sc-combien-de-temps-college-aiguille 3.4s cubic-bezier(0.45, 0, 0.3, 1) 0.4s both;
+}
+
+.sc-combien-de-temps-college__petite { stroke-width: 5; }
+.sc-combien-de-temps-college__grande { stroke-width: 3.5; }
+
+.sc-combien-de-temps-college__trotteuse {
+  stroke: #c0392b;
+  stroke-width: 1.5;
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  animation: sc-combien-de-temps-college-trotteuse 60s steps(60) infinite;
+}
+
+.sc-combien-de-temps-college__axe { fill: #c0392b; }
+
+/* Le tableau des départs. */
+.sc-combien-de-temps-college__tableau {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  padding: 6px 18px 12px;
+  border: 4px solid #3a3346;
+  border-radius: 10px;
+  background: #14121a;
+  box-shadow: 0 10px 22px rgba(20, 10, 40, 0.5);
+}
+
+.sc-combien-de-temps-college__titre { color: #f29a4a; font-size: 16px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
+
+.sc-combien-de-temps-college .sc-combien-de-temps-college__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #ffb347;
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(255, 179, 71, 0.6);
+  box-shadow: none;
+}
+
+/* Après la réponse : le voyage. */
+.sc-combien-de-temps-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-combien-de-temps-college__voyage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 22px;
+  width: min(100%, 680px);
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(74, 44, 107, 0.92), rgba(242, 154, 74, 0.85));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.sc-combien-de-temps-college__voyage .sc-combien-de-temps-college__horloge,
+.sc-combien-de-temps-college__explication > .sc-combien-de-temps-college__horloge { width: 104px; }
+
+.sc-combien-de-temps-college__frise {
+  position: relative;
+  flex: 1 1 300px;
+  max-width: 480px;
+  height: 104px;
+  margin: 0 30px;
+}
+
+.sc-combien-de-temps-college__rails {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52px;
+  height: 12px;
+  border-top: 3px solid #d7dbe0;
+  border-bottom: 3px solid #d7dbe0;
+  background: repeating-linear-gradient(90deg, #6b5a4a 0 5px, transparent 5px 16px);
+}
+
+.sc-combien-de-temps-college__train {
+  position: absolute;
+  left: 100%;
+  top: 30px;
+  width: 46px;
+  height: 24px;
+  border-radius: 6px 16px 4px 4px;
+  background: linear-gradient(180deg, #e04a3a, #a8281c);
+  box-shadow: inset 6px 4px 0 -2px #ffe2a8, 0 3px 0 #2b2433;
+  transform: translateX(-50%);
+  animation: sc-combien-de-temps-college-roule calc(var(--n, 1) * 1s) linear 0.4s both;
+}
+
+.sc-combien-de-temps-college__fumee {
+  position: absolute;
+  right: 6px;
+  top: -12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  animation: sc-combien-de-temps-college-fumee 0.8s ease-out infinite;
+}
+
+.sc-combien-de-temps-college__gares { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+
+/* Une gare occupe le tronçon qui la précède : son heure au bout, la durée au milieu. */
+.sc-combien-de-temps-college__gare {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  animation: sc-combien-de-temps-college-gare 0.4s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-combien-de-temps-college__heure {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #14121a;
+  color: #ffb347;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(50%);
+}
+
+/* Un poteau de gare sous chaque heure. */
+.sc-combien-de-temps-college__heure::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 3px;
+  height: 26px;
+  background: #14121a;
+}
+
+.sc-combien-de-temps-college__troncon {
+  position: absolute;
+  left: 50%;
+  top: 72px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+  transform: translateX(-50%);
+}
+
+.sc-combien-de-temps-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-combien-de-temps-college__etape,
+.sc-combien-de-temps-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(248, 239, 224, 0.97);
+  color: #2b2433;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-combien-de-temps-college-gare 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-combien-de-temps-college__resultat { border: 3px solid #f29a4a; }
+.sc-combien-de-temps-college__resultat strong { color: #4a2c6b; font-size: 26px; }
+
+/* Les réponses : un billet de train par voie. */
+.sc-combien-de-temps-college__billets { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin: 6px 0 0; padding: 0; list-style: none; }
+
+.sc-combien-de-temps-college__billets > li {
+  animation: sc-combien-de-temps-college-billet 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+}
+
+.sc-combien-de-temps-college__billet {
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: #f8efe0;
+  box-shadow: 0 6px 12px rgba(20, 10, 40, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-combien-de-temps-college__voie {
+  display: grid;
+  place-items: center;
+  padding: 8px 10px;
+  border-right: 3px dashed #c9b9a0;
+  background: #4a2c6b;
+  color: #ffb347;
+  font-size: 16px;
+  font-weight: 800;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.sc-combien-de-temps-college__duree {
+  display: grid;
+  place-items: center;
+  padding: 14px 20px;
+  color: #2b2433;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sc-combien-de-temps-college__billet:hover:not(:disabled),
+.sc-combien-de-temps-college__billet:focus-visible { transform: translateY(-5px) rotate(-2deg); filter: drop-shadow(0 0 10px rgba(255, 179, 71, 0.95)); }
+
+.sc-combien-de-temps-college__billet.est-fausse { cursor: default; opacity: 0.5; filter: grayscale(0.9); }
+.sc-combien-de-temps-college__billet.est-fausse .sc-combien-de-temps-college__duree { text-decoration: line-through; color: #8a2a1c; }
+
+@keyframes sc-combien-de-temps-college-lanterne { from { opacity: 0.7; } to { opacity: 1; } }
+@keyframes sc-combien-de-temps-college-aiguille { from { transform: rotate(var(--de, 0deg)); } to { transform: rotate(var(--a, 0deg)); } }
+@keyframes sc-combien-de-temps-college-trotteuse { to { transform: rotate(360deg); } }
+@keyframes sc-combien-de-temps-college-roule { from { left: 0; } to { left: 100%; } }
+@keyframes sc-combien-de-temps-college-fumee { from { opacity: 0.9; transform: translateY(0) scale(0.6); } to { opacity: 0; transform: translateY(-14px) scale(1.4); } }
+@keyframes sc-combien-de-temps-college-gare { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-combien-de-temps-college-billet { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg) translateY(-4px); } }
+
+@media (max-width: 620px) {
+  .sc-combien-de-temps-college .sc-combien-de-temps-college__question.college__question { font-size: 19px; }
+  .sc-combien-de-temps-college__heure { padding: 1px 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-combien-de-temps-college *,
+  .sc-combien-de-temps-college__billets > li { animation: none !important; }
+}
+
+/* ------------------------------------------- LE POTAGER CLOS */
+.sc-tour-du-jardin-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-tour-du-jardin-college__potager {
+  position: relative;
+  width: min(100%, 460px);
+  height: 82px;
+  margin-bottom: -8px;
+}
+
+.sc-tour-du-jardin-college__muret {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24px;
+  border-radius: 6px 6px 0 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(120, 100, 70, 0.6) 34px 36px) 0 0 / 100% 12px,
+    repeating-linear-gradient(90deg, transparent 0 17px, rgba(120, 100, 70, 0.6) 17px 19px, transparent 19px 34px) 0 12px / 100% 12px,
+    linear-gradient(180deg, #e3d4b4, #c9b48a);
+  background-repeat: no-repeat;
+}
+
+.sc-tour-du-jardin-college__fontaine {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  width: 78px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #d8c8a8, #a89470);
+  box-shadow: inset 0 4px 0 #7fc8e8;
+  transform: translateX(-50%);
+}
+
+.sc-tour-du-jardin-college__jet {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  width: 5px;
+  height: 40px;
+  border-radius: 3px;
+  background: linear-gradient(0deg, rgba(127, 200, 232, 0.2), #bfe8fa);
+  transform-origin: bottom;
+  animation: sc-tour-du-jardin-college-jet 1.2s ease-in-out infinite alternate;
+}
+
+.sc-tour-du-jardin-college__jet--2 { height: 26px; margin-left: -14px; transform: rotate(-24deg); animation-delay: -0.6s; }
+
+.sc-tour-du-jardin-college__papillon {
+  position: absolute;
+  left: 20%;
+  top: 8px;
+  width: 20px;
+  height: 14px;
+  background:
+    radial-gradient(ellipse at 25% 50%, #e8542c 0 45%, transparent 47%),
+    radial-gradient(ellipse at 75% 50%, #f2a33a 0 45%, transparent 47%);
+  animation: sc-tour-du-jardin-college-papillon 6s ease-in-out infinite alternate, sc-tour-du-jardin-college-ailes 0.3s ease-in-out infinite alternate;
+}
+
+.sc-tour-du-jardin-college__papillon--2 { left: 70%; top: 20px; animation-delay: -3s, -0.15s; filter: hue-rotate(160deg); }
+
+.sc-tour-du-jardin-college__arrosoir {
+  position: absolute;
+  right: 6%;
+  bottom: 22px;
+  width: 40px;
+  height: 28px;
+  border-radius: 6px 6px 8px 8px;
+  background: linear-gradient(180deg, #e2e6ea, #9aa3ad);
+  transform-origin: 50% 100%;
+  animation: sc-tour-du-jardin-college-arrosoir 3s ease-in-out infinite alternate;
+}
+
+/* Le bec de l'arrosoir. */
+.sc-tour-du-jardin-college__arrosoir::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 2px;
+  width: 24px;
+  height: 5px;
+  border-radius: 3px;
+  background: #9aa3ad;
+  transform: rotate(-30deg);
+}
+
+/* La plate-bande : la figure de la question, bordée de bois. */
+.sc-tour-du-jardin-college .visuel {
+  border: 6px solid #8a5a2b;
+  background: #fbf6ea;
+}
+
+.sc-tour-du-jardin-college__pancarte {
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #c8955a, #8a5a2b);
+  box-shadow: 0 10px 20px rgba(40, 30, 10, 0.35);
+}
+
+.sc-tour-du-jardin-college .sc-tour-du-jardin-college__question.college__question {
+  margin: 0;
+  padding: 10px 22px;
+  border-radius: 7px;
+  background: #fff8e6;
+  color: #2f3a1f;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Après la réponse : le carnet du jardinier. */
+.sc-tour-du-jardin-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-tour-du-jardin-college__carnet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: repeating-linear-gradient(180deg, #fffdf3 0 27px, #e6efd8 27px 28px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-tour-du-jardin-college__carnet.avec-cloture { margin: 6px; }
+
+/* La clôture qui se pose tout autour, pour un périmètre. */
+.sc-tour-du-jardin-college__cloture {
+  position: absolute;
+  inset: -9px;
+  border: 5px dashed #8a5a2b;
+  border-radius: 16px;
+  pointer-events: none;
+  animation: sc-tour-du-jardin-college-cloture 1.8s ease-in-out 0.3s both;
+}
+
+/* Les carrés de terre qui se plantent. */
+.sc-tour-du-jardin-college__carres {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 5), 12px);
+  gap: 2px;
+  padding: 6px;
+  border: 3px solid #8a5a2b;
+  border-radius: 4px;
+  background: #6b4a2a;
+}
+
+.sc-tour-du-jardin-college__carre {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #6dbb4a;
+  animation: sc-tour-du-jardin-college-plante 0.3s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-tour-du-jardin-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-tour-du-jardin-college__etape {
+  color: #2f3a1f;
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-tour-du-jardin-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-tour-du-jardin-college__etape:first-child { color: #4f8a3a; font-style: italic; }
+
+.sc-tour-du-jardin-college__resultat {
+  margin: 0;
+  padding: 6px 18px;
+  border: 3px solid #4f8a3a;
+  border-radius: 14px;
+  background: #fff;
+  color: #2f3a1f;
+  font-size: 18px;
+  font-weight: 700;
+  animation: sc-tour-du-jardin-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-tour-du-jardin-college__resultat strong { color: #e8542c; font-size: 26px; }
+
+/* L'arrosoir qui verse sur le carnet. */
+.sc-tour-du-jardin-college__arrosoir-verse {
+  position: absolute;
+  right: -14px;
+  top: -24px;
+  width: 30px;
+  height: 22px;
+  border-radius: 5px 5px 7px 7px;
+  background: linear-gradient(180deg, #e2e6ea, #9aa3ad);
+  transform: rotate(-24deg);
+}
+
+.sc-tour-du-jardin-college__arrosoir-verse::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 18px;
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #bfe8fa, transparent);
+  animation: sc-tour-du-jardin-college-goutte 0.8s ease-in infinite;
+}
+
+/* Les réponses : des étiquettes de semis en bois. */
+.scene__choix .scene__carte.objet--sc-tour-du-jardin-college {
+  min-width: 112px;
+  padding: 14px 24px 30px;
+  border-radius: 6px;
+  color: #3a2408;
+  font-size: 22px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  clip-path: polygon(0 0, 100% 0, 100% 74%, 50% 100%, 0 74%);
+  background:
+    radial-gradient(ellipse at 18% 18%, #6dbb4a 0 7px, transparent 8px),
+    radial-gradient(ellipse at 26% 12%, #4f8a3a 0 5px, transparent 6px),
+    linear-gradient(180deg, #ecca90, #c8955a);
+}
+
+/* Après la réponse : le dessin et l'explication côte à côte quand la place le permet ; le décor s'efface. */
+.sc-tour-du-jardin-college.est-termine {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.sc-tour-du-jardin-college.est-termine > .visuel-question { flex: 1 1 320px; width: auto; max-width: 440px; }
+.sc-tour-du-jardin-college.est-termine > .sc-tour-du-jardin-college__explication { flex: 1 1 300px; width: auto; max-width: 460px; }
+
+@keyframes sc-tour-du-jardin-college-jet { from { transform: scaleY(0.75); } to { transform: scaleY(1.1); } }
+@keyframes sc-tour-du-jardin-college-papillon { from { transform: translate(0, 0); } 50% { transform: translate(40px, -6px); } to { transform: translate(80px, 8px); } }
+@keyframes sc-tour-du-jardin-college-ailes { from { scale: 1 1; } to { scale: 0.4 1; } }
+@keyframes sc-tour-du-jardin-college-arrosoir { from { transform: rotate(-6deg); } to { transform: rotate(8deg); } }
+@keyframes sc-tour-du-jardin-college-cloture { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes sc-tour-du-jardin-college-plante { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: none; } }
+@keyframes sc-tour-du-jardin-college-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-tour-du-jardin-college-goutte { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(16px); } }
+
+@media (max-width: 620px) {
+  .sc-tour-du-jardin-college .sc-tour-du-jardin-college__question.college__question { font-size: 18px; padding: 8px 14px; }
+  .sc-tour-du-jardin-college__etape { font-size: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-tour-du-jardin-college *,
+  .sc-tour-du-jardin-college *::after { animation: none !important; }
+}
+
+/* ------------------------------------------- L'OBSERVATOIRE DE LAITON */
+.sc-rapporteur {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-rapporteur__observatoire {
+  position: relative;
+  width: min(100%, 440px);
+  height: 64px;
+  margin-bottom: -4px;
+}
+
+.sc-rapporteur__armillaire {
+  position: absolute;
+  left: 4%;
+  top: 0;
+  width: 64px;
+  height: 64px;
+  overflow: visible;
+}
+
+.sc-rapporteur__armillaire circle,
+.sc-rapporteur__armillaire line,
+.sc-rapporteur__armillaire ellipse { fill: none; stroke: #c9a24a; stroke-width: 3; }
+
+.sc-rapporteur__armillaire .sc-rapporteur__globe { fill: #2f5fa8; stroke: #1d4f8f; stroke-width: 1; }
+
+.sc-rapporteur__anneau-tourne {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-rapporteur-anneau 5s ease-in-out infinite;
+}
+
+.sc-rapporteur__anneau-tourne--2 { animation-delay: -2.5s; }
+
+.sc-rapporteur__etoile {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  background: #fff3c4;
+  animation: sc-rapporteur-scintille 2s ease-in-out infinite;
+}
+
+/* L'angle de la question, cerclé de laiton. */
+.sc-rapporteur .visuel {
+  border: 5px solid #c9a24a;
+  background: #f3f6fb;
+  box-shadow: 0 0 0 3px #8a6a1e, 0 10px 22px rgba(10, 30, 70, 0.35);
+}
+
+.sc-rapporteur__plaque {
+  max-width: 100%;
+  padding: 4px;
+  border: 3px solid #8a6a1e;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f6e6b0, #c9a24a);
+  box-shadow: 0 10px 20px rgba(10, 30, 70, 0.35);
+}
+
+.sc-rapporteur .sc-rapporteur__question.college__question {
+  margin: 0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: rgba(255, 252, 240, 0.92);
+  color: #1d2a44;
+  font-size: 21px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Après la réponse : le rapporteur s'explique. */
+.sc-rapporteur__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-rapporteur__demi-disque {
+  display: block;
+  width: min(100%, 420px);
+  height: auto;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(243, 246, 251, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  overflow: visible;
+}
+
+.sc-rapporteur__corps { fill: rgba(201, 162, 74, 0.18); stroke: #8a6a1e; stroke-width: 2; }
+.sc-rapporteur__graduation { stroke: #8a6a1e; stroke-width: 1.2; }
+
+.sc-rapporteur__echelle-ext,
+.sc-rapporteur__echelle-int {
+  fill: #1d4f8f;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.45;
+}
+
+.sc-rapporteur__echelle-ext.est-lue,
+.sc-rapporteur__echelle-int.est-lue {
+  fill: #c0392b;
+  font-weight: 900;
+  opacity: 1;
+  animation: sc-rapporteur-lue 0.6s ease-out 0.3s both;
+}
+
+.sc-rapporteur__cote { stroke: #2b2433; stroke-width: 3; stroke-linecap: round; }
+.sc-rapporteur__cote--b { stroke: #c0392b; }
+
+.sc-rapporteur__arc {
+  fill: none;
+  stroke: #c0392b;
+  stroke-width: 3;
+  stroke-dasharray: 1;
+  animation: sc-rapporteur-trace 1.2s ease-in-out 0.6s both;
+}
+
+.sc-rapporteur__secteur path { stroke: #fff; stroke-width: 1.5; }
+.sc-rapporteur__secteur text { fill: #1d2a44; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 900; }
+.sc-rapporteur__secteur--connu path { fill: rgba(47, 95, 168, 0.45); }
+
+.sc-rapporteur__secteur--cherche {
+  transform-box: view-box;
+  transform-origin: 110px 104px;
+  animation: sc-rapporteur-ouvre 0.9s cubic-bezier(0.3, 1.3, 0.5, 1) 0.6s both;
+}
+
+.sc-rapporteur__secteur--cherche path { fill: rgba(242, 154, 74, 0.75); }
+.sc-rapporteur__zone--aigu { fill: rgba(111, 190, 90, 0.45); }
+.sc-rapporteur__zone--obtus { fill: rgba(242, 154, 74, 0.45); }
+.sc-rapporteur__nom-zone { fill: #1d2a44; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 900; }
+
+.sc-rapporteur__aiguille {
+  stroke: #c0392b;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 110px 104px;
+  transform: rotate(var(--a, 0deg));
+  animation: sc-rapporteur-aiguille 1.6s cubic-bezier(0.3, 1.2, 0.5, 1) 0.4s both;
+}
+
+.sc-rapporteur__centre { fill: #2b2433; }
+
+.sc-rapporteur__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-rapporteur__etape,
+.sc-rapporteur__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 252, 240, 0.97);
+  color: #1d2a44;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-rapporteur-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-rapporteur__resultat { border: 3px solid #c9a24a; }
+.sc-rapporteur__resultat strong { color: #c0392b; font-size: 26px; }
+
+/* Les réponses : le grand cadran de laiton, ses médaillons, l'alidade qui balaie. */
+.sc-rapporteur__cadran {
+  position: relative;
+  width: min(100%, 460px);
+  aspect-ratio: 2.1 / 1;
+  margin: 30px auto 0;
+}
+
+.sc-rapporteur__arc-cadran {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 6%;
+  bottom: 0;
+  border: 10px solid #c9a24a;
+  border-bottom: none;
+  border-radius: 999px 999px 0 0;
+  background:
+    repeating-conic-gradient(from -90deg at 50% 100%, rgba(138, 106, 30, 0.7) 0 0.6deg, transparent 0.6deg 10deg),
+    radial-gradient(ellipse at 50% 100%, rgba(243, 246, 251, 0.55) 0 60%, rgba(201, 162, 74, 0.35) 61% 100%);
+  box-shadow: inset 0 0 0 3px #8a6a1e, 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+.sc-rapporteur__alidade {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 40%;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #8a6a1e, #e2b84a);
+  transform-origin: 0 50%;
+  transform: rotate(-90deg);
+  animation: sc-rapporteur-alidade 7s ease-in-out infinite alternate;
+}
+
+.sc-rapporteur__medaillons { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+
+.sc-rapporteur__medaillons > li {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  transform: translate(-50%, -50%);
+}
+
+.sc-rapporteur__medaillon {
+  min-width: 96px;
+  padding: 10px 16px;
+  border: 3px solid #8a6a1e;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fff6d0, #e2b84a 60%, #a8801e);
+  color: #2a1e05;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  animation: sc-rapporteur-medaillon 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-rapporteur__medaillon:hover:not(:disabled),
+.sc-rapporteur__medaillon:focus-visible { filter: brightness(1.12) drop-shadow(0 0 12px rgba(255, 230, 150, 1)); }
+
+.sc-rapporteur__medaillon.est-fausse { cursor: default; filter: grayscale(0.9); opacity: 0.55; text-decoration: line-through; animation: none; }
+
+/* Après la réponse : le dessin et l'explication côte à côte quand la place le permet ; le décor s'efface. */
+.sc-rapporteur.est-termine {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.sc-rapporteur.est-termine > .visuel-question { flex: 1 1 320px; width: auto; max-width: 440px; }
+.sc-rapporteur.est-termine > .sc-rapporteur__explication { flex: 1 1 300px; width: auto; max-width: 460px; }
+
+@keyframes sc-rapporteur-anneau { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.15); } }
+@keyframes sc-rapporteur-scintille { 0%, 100% { opacity: 0.2; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes sc-rapporteur-lue { from { opacity: 0.45; } to { opacity: 1; } }
+@keyframes sc-rapporteur-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sc-rapporteur-ouvre { from { transform: scale(0); } to { transform: none; } }
+@keyframes sc-rapporteur-aiguille { from { transform: rotate(0deg); } to { transform: rotate(var(--a, 0deg)); } }
+@keyframes sc-rapporteur-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-rapporteur-alidade { from { transform: rotate(-165deg); } to { transform: rotate(-15deg); } }
+@keyframes sc-rapporteur-medaillon { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+@media (max-width: 620px) {
+  .sc-rapporteur .sc-rapporteur__question.college__question { font-size: 18px; padding: 8px 12px; }
+  .sc-rapporteur__medaillon { min-width: 80px; padding: 8px 12px; font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-rapporteur *,
+  .sc-rapporteur__cadran * { animation: none !important; }
+}
+
+/* ------------------------------------------- L'ENQUÊTE DES RUINES */
+.sc-detective-des-figures {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+/* LES FORMES DES RUINES SE VOIENT (09/10/2026, Camara : « les formes ne sont pas
+   super visibles ») : plus grandes, en couleurs vives bordées de blanc, avec un
+   halo, posées sur un socle de pierre sombre qui les détache du décor. */
+.sc-detective-des-figures__ruines {
+  position: relative;
+  width: min(100%, 440px);
+  height: 86px;
+  overflow: hidden;
+  border: 2px solid rgba(217, 178, 92, 0.75);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(30, 18, 34, 0.72), rgba(20, 12, 24, 0.88));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.sc-detective-des-figures__incrustation {
+  position: absolute;
+  bottom: 12px;
+  width: 58px;
+  height: 58px;
+  border: 3px solid #fff;
+  background: linear-gradient(135deg, #ff9bb3, #d93445);
+  box-shadow: 0 0 16px rgba(255, 140, 170, 0.75), 0 6px 10px rgba(0, 0, 0, 0.45);
+  animation: sc-detective-des-figures-lueur 3s ease-in-out infinite;
+}
+
+.sc-detective-des-figures__incrustation--triangle {
+  left: 14%;
+  border: none;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  background: linear-gradient(160deg, #fff4b8 0 10%, #ffd34d 30%, #f08a24 100%);
+  box-shadow: none;
+  filter: drop-shadow(0 0 10px rgba(255, 200, 60, 0.9));
+  /* Sa lueur garde son halo : la lueur commune remplacerait le filtre. */
+  animation-name: sc-detective-des-figures-lueur-triangle;
+}
+
+.sc-detective-des-figures__incrustation--cercle { left: calc(50% - 29px); border-radius: 50%; background: linear-gradient(135deg, #a8dcff, #2463d6); box-shadow: 0 0 16px rgba(120, 190, 255, 0.85), 0 6px 10px rgba(0, 0, 0, 0.45); animation-delay: -1s; }
+.sc-detective-des-figures__incrustation--carre { right: 14%; border-radius: 6px; animation-delay: -2s; }
+
+.sc-detective-des-figures__feuille {
+  position: absolute;
+  top: -12px;
+  width: 13px;
+  height: 13px;
+  border-radius: 0 70% 0 70%;
+  background: #a8233a;
+  animation: sc-detective-des-figures-feuille 6s linear infinite;
+}
+
+/* La fiche d'indice du dossier. */
+.sc-detective-des-figures__indice {
+  position: relative;
+  max-width: 100%;
+  padding: 40px 26px 14px;
+  border: 1px solid #c9b48a;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #fbf3e2, #f1e3c4);
+  box-shadow: 0 10px 22px rgba(40, 10, 30, 0.4);
+  transform: rotate(0.6deg);
+}
+
+.sc-detective-des-figures__trombone {
+  position: absolute;
+  left: 24px;
+  top: -6px;
+  width: 14px;
+  height: 34px;
+  border: 3px solid #9aa0a8;
+  border-radius: 10px;
+}
+
+.sc-detective-des-figures__titre {
+  position: absolute;
+  right: 14px;
+  top: 6px;
+  padding: 0 8px;
+  border: 2px solid #8c1d2c;
+  border-radius: 4px;
+  color: #8c1d2c;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(6deg);
+}
+
+.sc-detective-des-figures .sc-detective-des-figures__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #2b1d14;
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* La loupe qui passe et repasse sur l'indice. */
+.sc-detective-des-figures__loupe {
+  position: absolute;
+  top: -30px;
+  left: 6%;
+  width: 54px;
+  height: 54px;
+  border: 5px solid #c9a24a;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08) 60%);
+  pointer-events: none;
+  animation: sc-detective-des-figures-loupe 7s ease-in-out infinite alternate;
+}
+
+.sc-detective-des-figures__loupe::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  top: 44px;
+  width: 8px;
+  height: 26px;
+  border-radius: 4px;
+  background: #6b3a1e;
+  transform: rotate(-45deg);
+  transform-origin: top center;
+}
+
+.sc-detective-des-figures .visuel { border: 4px solid #8c1d2c; }
+
+/* Après la réponse : le coupable démasqué. */
+.sc-detective-des-figures__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-detective-des-figures__dossier-resolu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 18px;
+}
+
+.sc-detective-des-figures__portrait {
+  position: relative;
+  padding: 8px;
+  border: 3px solid #8c1d2c;
+  border-radius: 8px;
+  background: #fbf3e2;
+  box-shadow: 0 8px 18px rgba(40, 10, 30, 0.35);
+}
+
+.sc-detective-des-figures__figure { display: block; width: 200px; height: auto; overflow: visible; }
+
+.sc-detective-des-figures__trace {
+  fill: rgba(140, 29, 44, 0.12);
+  stroke: #8c1d2c;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: sc-detective-des-figures-trace 1.2s ease-in-out 0.2s both;
+}
+
+.sc-detective-des-figures__codages,
+.sc-detective-des-figures__diagonales,
+.sc-detective-des-figures__m { animation: sc-detective-des-figures-apparait 0.5s ease-out 1.2s both; }
+
+.sc-detective-des-figures__code { fill: none; stroke: #1d4f8f; stroke-width: 2.5; stroke-linecap: round; }
+.sc-detective-des-figures__diagonales line { stroke: #5b3a6b; stroke-width: 2; stroke-dasharray: 5 4; }
+.sc-detective-des-figures__rayon { stroke: #1d4f8f; stroke-width: 2.5; }
+.sc-detective-des-figures__diametre { stroke: #1d4f8f; stroke-width: 2.5; stroke-dasharray: 5 3; }
+.sc-detective-des-figures__om { stroke: #c0392b; stroke-width: 2.5; stroke-dasharray: 5 3; }
+.sc-detective-des-figures__point { fill: #2b1d14; }
+.sc-detective-des-figures__lettre { fill: #2b1d14; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 900; }
+.sc-detective-des-figures__cote { fill: #1d4f8f; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 800; }
+
+/* Le tampon « Affaire résolue ». */
+.sc-detective-des-figures__tampon {
+  position: absolute;
+  right: -14px;
+  bottom: 8px;
+  padding: 2px 8px;
+  border: 3px solid #c0392b;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #c0392b;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: rotate(-12deg);
+  animation: sc-detective-des-figures-tampon 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 1.5s both;
+}
+
+.sc-detective-des-figures__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 360px; margin: 0; padding: 0; list-style: none; }
+
+.sc-detective-des-figures__etape,
+.sc-detective-des-figures__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(251, 243, 226, 0.97);
+  color: #2b1d14;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-detective-des-figures-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-detective-des-figures__resultat { border: 3px solid #8c1d2c; }
+.sc-detective-des-figures__resultat strong { color: #8c1d2c; font-size: 24px; }
+
+/* Les réponses : les suspects encapuchonnés. */
+.sc-detective-des-figures__suspects { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 6px 0 0; padding: 0; list-style: none; }
+
+.sc-detective-des-figures__suspects > li {
+  animation: sc-detective-des-figures-hesite 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-detective-des-figures__suspect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: clamp(104px, 29vw, 176px);
+  min-height: 100%;
+  padding: 10px 8px 12px;
+  border: 3px solid #c9a24a;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #4a3442, #2b1d26);
+  cursor: pointer;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* La silhouette encapuchonnée, et ses yeux qui clignent. */
+.sc-detective-des-figures__silhouette {
+  position: relative;
+  display: block;
+  width: 60px;
+  height: 64px;
+  border-radius: 30px 30px 10px 10px;
+  background: radial-gradient(ellipse at 50% 42%, #1a1015 0 34%, #3b2a35 36%, #120b0f 100%);
+}
+
+.sc-detective-des-figures__yeux {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 24px;
+  height: 7px;
+  background:
+    radial-gradient(circle at 20% 50%, #ffd34d 0 3px, transparent 3.5px),
+    radial-gradient(circle at 80% 50%, #ffd34d 0 3px, transparent 3.5px);
+  transform-origin: center;
+  animation: sc-detective-des-figures-cligne 4s ease-in-out infinite;
+}
+
+.sc-detective-des-figures__nom {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f6ecd8;
+  color: #2b1d14;
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sc-detective-des-figures__suspect:hover:not(:disabled),
+.sc-detective-des-figures__suspect:focus-visible { transform: translateY(-5px); filter: drop-shadow(0 0 10px rgba(255, 211, 77, 0.85)); }
+
+.sc-detective-des-figures__suspect.est-fausse { cursor: default; opacity: 0.5; filter: grayscale(0.9); }
+.sc-detective-des-figures__suspect.est-fausse .sc-detective-des-figures__nom { text-decoration: line-through; color: #8a2a1c; }
+.sc-detective-des-figures__suspect.est-fausse .sc-detective-des-figures__yeux { animation: none; opacity: 0; }
+
+/* Après la réponse : le dessin et l'explication côte à côte quand la place le permet ; le décor s'efface. */
+.sc-detective-des-figures.est-termine {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.sc-detective-des-figures.est-termine > .visuel-question { flex: 1 1 320px; width: auto; max-width: 440px; }
+.sc-detective-des-figures.est-termine > .sc-detective-des-figures__explication { flex: 1 1 300px; width: auto; max-width: 460px; }
+
+@keyframes sc-detective-des-figures-lueur { 0%, 100% { filter: brightness(0.9); } 50% { filter: brightness(1.35); } }
+@keyframes sc-detective-des-figures-lueur-triangle { 0%, 100% { filter: brightness(0.95) drop-shadow(0 0 8px rgba(255, 200, 60, 0.8)); } 50% { filter: brightness(1.25) drop-shadow(0 0 14px rgba(255, 200, 60, 1)); } }
+@keyframes sc-detective-des-figures-feuille { from { transform: translate(0, 0) rotate(0); } to { transform: translate(-40px, 90px) rotate(360deg); } }
+@keyframes sc-detective-des-figures-loupe { from { left: 4%; } to { left: 78%; } }
+@keyframes sc-detective-des-figures-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sc-detective-des-figures-apparait { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-detective-des-figures-tampon { from { opacity: 0; transform: rotate(-12deg) scale(2.6); } to { opacity: 1; transform: rotate(-12deg); } }
+@keyframes sc-detective-des-figures-hesite { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
+@keyframes sc-detective-des-figures-cligne { 0%, 90%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.1); } }
+
+@media (max-width: 620px) {
+  .sc-detective-des-figures .sc-detective-des-figures__question.college__question { font-size: 18px; }
+  .sc-detective-des-figures__nom { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-detective-des-figures *,
+  .sc-detective-des-figures__suspects > li,
+  .sc-detective-des-figures__yeux { animation: none !important; }
+}
+
+/* ------------------------------------------- LE LAC MIROIR */
+.sc-miroir-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-miroir-college__lac {
+  position: relative;
+  width: min(100%, 460px);
+  height: 74px;
+  margin-bottom: -12px;
+  overflow: hidden;
+}
+
+.sc-miroir-college__lac svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 4px 5px rgba(60, 10, 10, 0.4)); }
+
+/* La branche d'érable, qui se balance. */
+.sc-miroir-college__branche {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: sc-miroir-college-ondule 4s ease-in-out infinite alternate;
+}
+
+.sc-miroir-college__branche > path { fill: none; stroke: #5a3a22; stroke-width: 4; stroke-linecap: round; }
+.sc-miroir-college__feuille--0 { fill: #d9342b; }
+.sc-miroir-college__feuille--1 { fill: #e8622c; }
+.sc-miroir-college__feuille--2 { fill: #b82020; }
+
+.sc-miroir-college__erable {
+  position: absolute;
+  top: -14px;
+  width: 16px;
+  height: 16px;
+  clip-path: polygon(50% 0, 60% 30%, 90% 18%, 74% 48%, 100% 58%, 66% 66%, 58% 100%, 50% 74%, 42% 100%, 34% 66%, 0 58%, 26% 48%, 10% 18%, 40% 30%);
+  background: #d9342b;
+  animation: sc-miroir-college-erable 6.5s linear infinite;
+}
+
+/* La plaque votive de bois, suspendue à son cordon rouge. */
+.sc-miroir-college__ema {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  padding: 24px 24px 14px;
+  border: 3px solid #8a5a2b;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #f3d6a0, #e0b878);
+  box-shadow: 0 10px 22px rgba(30, 20, 10, 0.4);
+  clip-path: polygon(10% 0, 90% 0, 100% 16%, 100% 100%, 0 100%, 0 16%);
+}
+
+.sc-miroir-college__cordon {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 30px;
+  height: 12px;
+  border: 3px solid #d9342b;
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  transform: translateX(-50%);
+}
+
+.sc-miroir-college .sc-miroir-college__question.college__question {
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #3a2408;
+  font-size: 22px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Après la réponse : le lac devient un repère. */
+.sc-miroir-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-miroir-college__lac-vue {
+  display: flex;
+  justify-content: center;
+  width: min(100%, 460px);
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(250, 252, 255, 0.97);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-miroir-college__repere,
+.sc-miroir-college__quadri,
+.sc-miroir-college__droites,
+.sc-miroir-college__notation,
+.sc-miroir-college__images { display: block; width: 100%; max-width: 420px; max-height: 260px; overflow: visible; }
+
+.sc-miroir-college__grille line { stroke: #d6e4f2; stroke-width: 1; }
+.sc-miroir-college__grille .sc-miroir-college__axe-repere { stroke: #7a8aa0; stroke-width: 1.8; }
+.sc-miroir-college__axe { stroke: #d9342b; stroke-width: 3.5; filter: drop-shadow(0 0 3px rgba(217, 52, 43, 0.6)); }
+.sc-miroir-college__pointe { fill: #2b2433; }
+
+.sc-miroir-college__segment {
+  stroke: #2b2433;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  animation: sc-miroir-college-trace 0.8s ease-in-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-miroir-college__segment.sc-miroir-college__image { stroke: #d9342b; }
+
+.sc-miroir-college__segment.sc-miroir-college__pointille {
+  stroke: #5b6b80;
+  stroke-dasharray: 0.03 0.025;
+  animation: sc-miroir-college-apparait 0.6s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-miroir-college__arc {
+  fill: none;
+  stroke: #d9342b;
+  stroke-width: 2.5;
+  stroke-dasharray: 1;
+  animation: sc-miroir-college-trace 1s ease-in-out 0.9s both;
+}
+
+.sc-miroir-college__point { animation: sc-miroir-college-apparait 0.4s ease-out both; animation-delay: var(--d, 0s); }
+.sc-miroir-college__point circle { fill: #2b2433; }
+.sc-miroir-college__point text { fill: #2b2433; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 900; }
+.sc-miroir-college__point.sc-miroir-college__image circle { fill: #d9342b; }
+.sc-miroir-college__point.sc-miroir-college__image text { fill: #d9342b; }
+.sc-miroir-college__point.sc-miroir-college__centre circle { fill: #3a7fc0; }
+
+.sc-miroir-college__contour {
+  fill: rgba(58, 127, 192, 0.12);
+  stroke: #3a7fc0;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: sc-miroir-college-trace 1.2s ease-in-out 0.2s both;
+}
+
+.sc-miroir-college__diagonales { animation: sc-miroir-college-apparait 0.5s ease-out 1.1s both; }
+.sc-miroir-college__diagonales line { stroke: #6b8a3a; stroke-width: 2; stroke-dasharray: 5 4; }
+.sc-miroir-college__diagonales circle { fill: #6b8a3a; }
+.sc-miroir-college__diagonales text { fill: #4a6a2a; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 900; }
+.sc-miroir-college__fleches { animation: sc-miroir-college-apparait 0.5s ease-out 1.1s both; }
+.sc-miroir-college__fleches line { stroke: #d9342b; stroke-width: 2.5; }
+.sc-miroir-college__sommet { fill: #2b2433; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 900; }
+.sc-miroir-college__etiquette { fill: #2b2433; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 800; animation: sc-miroir-college-apparait 0.5s ease-out 1.3s both; }
+.sc-miroir-college__etiquette.sc-miroir-college__cherche { fill: #d9342b; font-size: 15px; font-weight: 900; }
+
+.sc-miroir-college__droite line {
+  stroke: #3a7fc0;
+  stroke-width: 3;
+  stroke-dasharray: 1;
+  animation: sc-miroir-college-trace 0.7s ease-in-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-miroir-college__droite:last-child line { stroke: #d9342b; }
+.sc-miroir-college__droite text { fill: #2b2433; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 900; }
+
+.sc-miroir-college__trait-notation {
+  stroke: #2b2433;
+  stroke-width: 3;
+  stroke-dasharray: 1;
+  animation: sc-miroir-college-trace 1s ease-in-out 0.2s both;
+}
+
+.sc-miroir-college__mesure { fill: none; stroke: #d9342b; stroke-width: 2; animation: sc-miroir-college-apparait 0.5s ease-out 1s both; }
+.sc-miroir-college__point-n { fill: #d9342b; }
+.sc-miroir-college__figure-depart { fill: rgba(58, 127, 192, 0.35); stroke: #3a7fc0; stroke-width: 2; }
+.sc-miroir-college__figure-image { animation: sc-miroir-college-apparait 0.7s ease-out 0.8s both; }
+.sc-miroir-college__figure-image polygon { fill: rgba(217, 52, 43, 0.35); stroke: #d9342b; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.sc-miroir-college__glisse { stroke: #d9342b; stroke-width: 2.5; stroke-dasharray: 6 4; }
+
+.sc-miroir-college__etapes { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.sc-miroir-college__etape,
+.sc-miroir-college__resultat {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(250, 244, 230, 0.97);
+  color: #2b2433;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-miroir-college-apparait 0.5s ease-out both;
+  animation-delay: var(--d, 0s);
+}
+
+.sc-miroir-college__resultat { border: 3px solid #d9342b; }
+.sc-miroir-college__resultat strong { color: #c8321f; font-size: 26px; }
+
+/* Les réponses : des lanternes de papier qui flottent sur le lac. */
+.sc-miroir-college__lanternes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 22px;
+  margin: 6px 0 0;
+  padding: 18px 16px 30px;
+  border-radius: 30px;
+  list-style: none;
+  background: linear-gradient(180deg, rgba(58, 127, 192, 0), rgba(58, 127, 192, 0.65) 40%, rgba(40, 90, 150, 0.8));
+}
+
+.sc-miroir-college__lanternes > li {
+  animation: sc-miroir-college-flotte 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-miroir-college__lanterne {
+  position: relative;
+  min-width: 116px;
+  max-width: 230px;
+  padding: 22px 16px 14px;
+  border: 2px solid #c8321f;
+  border-radius: 10px 10px 14px 14px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 14px, rgba(200, 50, 31, 0.15) 14px 15px),
+    linear-gradient(180deg, #fff8e6, #ffdca0);
+  color: #3a2408;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(255, 179, 71, 0.75);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-miroir-college__toit {
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  top: -9px;
+  height: 14px;
+  border-radius: 7px 7px 3px 3px;
+  background: #c8321f;
+}
+
+/* Le reflet de la lanterne dans l'eau. */
+.sc-miroir-college__lanterne::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: calc(100% + 6px);
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 200, 110, 0.7), transparent 70%);
+  animation: sc-miroir-college-reflet 1.6s ease-in-out infinite alternate;
+}
+
+.sc-miroir-college__lanterne:hover:not(:disabled),
+.sc-miroir-college__lanterne:focus-visible { transform: translateY(-5px); filter: brightness(1.06) drop-shadow(0 0 12px rgba(255, 200, 110, 1)); }
+
+.sc-miroir-college__lanterne.est-fausse {
+  cursor: default;
+  opacity: 0.55;
+  background: #cfc9bf;
+  box-shadow: none;
+  text-decoration: line-through;
+}
+
+.sc-miroir-college__lanterne.est-fausse::after { display: none; }
+
+@keyframes sc-miroir-college-ondule { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg) translateY(2px); } }
+@keyframes sc-miroir-college-erable { from { transform: translate(0, 0) rotate(0); } to { transform: translate(-30px, 130px) rotate(400deg); } }
+@keyframes sc-miroir-college-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes sc-miroir-college-apparait { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-miroir-college-flotte { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-6px) rotate(2deg); } }
+@keyframes sc-miroir-college-reflet { from { opacity: 0.5; transform: scaleX(0.85); } to { opacity: 1; transform: scaleX(1.1); } }
+
+@media (max-width: 620px) {
+  .sc-miroir-college .sc-miroir-college__question.college__question { font-size: 18px; }
+  .sc-miroir-college__lanterne { min-width: 96px; font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-miroir-college *,
+  .sc-miroir-college__lanternes > li,
+  .sc-miroir-college__lanterne::after { animation: none !important; }
+}

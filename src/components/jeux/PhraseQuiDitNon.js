@@ -10,6 +10,8 @@ import PhrasesCM1 from './PhrasesCM1';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/cp-ce1-francais/communs';
+import { Chat, DecorVillage, PhraseQuiDitNonEcrite } from './scenes/cp-ce1-francais/Non';
 
 /**
  * LA PHRASE QUI DIT NON, À L'ÉCRAN.
@@ -20,6 +22,12 @@ import { bruitage } from '../../lib/jeux/bruitages';
  * toucher un espace entre deux mots ; ensuite toucher l'espace de « pas ».
  * Toucher un mot posé le retire. Chaque espace est un vrai bouton — pas de
  * glisser, même raison que les autres jeux.
+ *
+ * L'UNIVERS DE LA COUVERTURE, AU CE1 (09/10/2026) — voir
+ * `scenes/cp-ce1-francais/Non.js` : le chemin du village vit (nuages,
+ * lanterne, papillons, fleurs), la phrase devient une bulle de parole où
+ * « ne » et « pas » s'allument en rouge une fois écrite, et le chat roux
+ * réagit — il lève le panneau « NON » à la bonne phrase. Rien de la règle ne change.
  */
 /** Au CE2, on transforme la phrase — voir `TransformerPhrase.js`. */
 function PhraseQuiDitNonAvantCM1({ niveau, ...props }) {
@@ -149,7 +157,8 @@ function PhraseQuiDitNonCE1({ onQuitter, matiereCode }) {
   const fautif = resultat && !termine;
 
   return (
-    <div className="jeu jeu--scene jeu--non">
+    <div className={`jeu jeu--scene jeu--non sc-cp-ce1-francais sc-phrase-qui-dit-non${juste ? ' est-fete' : ''}`}>
+      <DecorVillage />
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -173,7 +182,7 @@ function PhraseQuiDitNonCE1({ onQuitter, matiereCode }) {
 
       <p className={`non__phrase${fautif ? ' est-fautive' : ''}`} aria-label="La phrase à écrire">
         {termine ? (
-          <span className="non__finale">{negative(p)}</span>
+          <span className="non__finale"><PhraseQuiDitNonEcrite texte={negative(p)} /></span>
         ) : (
           <>
             {espace(0)}
@@ -226,6 +235,9 @@ function PhraseQuiDitNonCE1({ onQuitter, matiereCode }) {
           C’est prêt&nbsp;!
         </button>
       )}
+
+      <Chat humeur={humeurDe({ reussi: juste, faute: Boolean(fautif) || montrer })} declic={ratees} />
+      {juste && <Fete forme="petale" />}
     </div>
   );
 }

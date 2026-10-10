@@ -1,7 +1,7 @@
 import couvertureEclair from '../assets/Jeux/CP/mot_eclaire800.webp';
-import couvertureBonbons from '../assets/Jeux/CE2/bonbon800.webp';
 import couvertureLiaison from '../assets/Jeux/CM1/liaison800.webp';
-import couvertureFractions from '../assets/Jeux/CM2/frac800.webp';
+import couvertureNavale from '../assets/Jeux/secondaire/cinquieme/bataille-navale_couverture.webp';
+import couvertureServeur from '../assets/Jeux/secondaire/seconde/escape-maths-lycee_couverture.webp';
 
 /**
  * « APPRENDRE, C'EST AUSSI JOUER » — le teaser des jeux sur la page d'accueil.
@@ -33,6 +33,12 @@ import couvertureFractions from '../assets/Jeux/CM2/frac800.webp';
  * 40 jeux » impressionne et ne ment pas ; le niveau réellement couvert est
  * écrit juste en dessous, sans être ce qu'on lit en premier.
  *
+ * MIS À JOUR LE 10/10/2026 (Camara) : le collège et le lycée sont jouables.
+ * « Plus de 250 jeux » = 249 jeux distincts du catalogue (titres de
+ * public/jeux.json, du CP à la terminale) + 17 jeux bonus, soit 266. Le chiffre
+ * suppose les interrupteurs Collège et Lycée allumés (Admin › Modes) ; sans le
+ * lycée ni le collège, il redevient faux.
+ *
  * ET LA COUVERTURE DIT L'ÉTAT, PAS LA LIMITE. « En maths et en français au
  * primaire » tout court enfermait le produit dans ce qu'il est aujourd'hui,
  * alors que d'autres matières et le collège sont en route : la phrase dit
@@ -47,15 +53,14 @@ import couvertureFractions from '../assets/Jeux/CM2/frac800.webp';
  * n'est ni au parent ni à l'enfant de chercher le bon jeu.
  *
  * QUATRE COUVERTURES ÉCRITES, TROIS MONTRÉES SUR GRAND ÉCRAN — Camara, le
- * 23/09/2026. Elles vont du CP au CM2, dans l'ordre, et couvrent les deux
- * matières : la série entière dit d'un coup d'œil que ces jeux ne s'arrêtent
- * pas au début du primaire.
+ * 23/09/2026. Depuis le 10/10/2026 elles vont du CP à la 2de, dans l'ordre :
+ * « La bataille navale » (5e) a remplacé « Le partage des bonbons » (CE2) et
+ * « Le serveur piraté » (2de) « Les fractions décimales » (CM2).
  *
- * C'est le CM1 qui s'efface sur grand écran, PAS LE CM2. Trois cartes tiennent
- * en une rangée, quatre feraient un bandeau ; il fallait donc en retirer une.
- * Retirer la dernière aurait coupé la série au CM1 et refait exactement le
- * défaut qu'on venait de corriger sur téléphone. En retirant celle du milieu,
- * les trois restantes bornent toujours le primaire entier — CP, CE2, CM2.
+ * C'est le CM1, en DEUXIÈME position, qui s'efface sur grand écran (règle
+ * nth-child(2) dans App.css). Trois cartes tiennent en une rangée, quatre
+ * feraient un bandeau ; les trois restantes bornent alors toute la scolarité :
+ * CP, 5e, 2de.
  *
  * SUR TÉLÉPHONE, LES QUATRE. Deux colonnes, deux rangées : la grille tombe
  * juste, et l'ordre du DOM suffit à les lire dans l'ordre des classes. Rien
@@ -74,14 +79,14 @@ import couvertureFractions from '../assets/Jeux/CM2/frac800.webp';
  * devient « Les fractions décimales » au CM2, et c'est ce titre-là qu'un
  * parent verra.
  *
- * LE TROISIÈME EST CELUI QUE LE GRAND ÉCRAN MASQUE : si tu changes cette
- * liste, garde en troisième position celui dont tu peux te passer.
+ * LE DEUXIÈME EST CELUI QUE LE GRAND ÉCRAN MASQUE : si tu changes cette
+ * liste, garde en deuxième position celui dont tu peux te passer.
  */
 const APERCUS = [
   { image: couvertureEclair, titre: 'Les mots éclair', classe: 'CP', matiere: 'Français' },
-  { image: couvertureBonbons, titre: 'Le partage des bonbons', classe: 'CE2', matiere: 'Mathématiques' },
   { image: couvertureLiaison, titre: 'Les mots de liaison', classe: 'CM1', matiere: 'Français' },
-  { image: couvertureFractions, titre: 'Les fractions décimales', classe: 'CM2', matiere: 'Mathématiques' },
+  { image: couvertureNavale, titre: 'La bataille navale', classe: '5e', matiere: 'Mathématiques' },
+  { image: couvertureServeur, titre: 'Le serveur piraté', classe: '2de', matiere: 'Mathématiques' },
 ];
 
 export default function JeuxApercu() {
@@ -107,12 +112,13 @@ export default function JeuxApercu() {
         </p>
 
         <p className="jeux-apercu__nombre">
-          <strong>Plus de 40 jeux</strong> déjà jouables
+          <strong>Plus de 250 jeux</strong> déjà jouables
         </p>
 
         <p className="jeux-apercu__couverture">
-          En maths et en français au primaire. De nouvelles matières et de
-          nouveaux niveaux arrivent progressivement, jusqu’au lycée.
+          Du CP à la terminale, en maths et en français, mais aussi en
+          histoire-géo, en anglais et en sciences. D’autres matières
+          arrivent progressivement.
         </p>
       </div>
 

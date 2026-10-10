@@ -28,6 +28,12 @@
  *   - LE VOLUME DE LA BOULE, 4/3 πr³ : LES PIÈGES, l'aire, le diamètre pris
  *     pour le rayon, oublier 4/3 ;
  *   - LES GRANDEURS COMPOSÉES : km/h et m/s, litres par seconde et m³ par heure.
+ *
+ * LE VISUEL (09/10/2026) : chaque figure ou solide de la question porte un
+ * `visuel` (voir `lib/jeux/visuels.js`), dessiné avec les mêmes cotes que
+ * l'énoncé : le diamètre est coté de bord à bord, le prisme a une base en
+ * triangle rectangle. Rien pour les conversions et les vitesses. Aucun tirage
+ * en plus : la même graine redonne la même partie.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -59,9 +65,12 @@ const FINE = ' ';
 
 const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
 
-/** Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent. */
+/**
+ * Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent.
+ * Le `visuel`, s'il y en a un, passe tel quel : il ne tire rien au hasard.
+ */
 function manche(melanger, {
-  consigne, question, bonne, pieges = [], voisin,
+  consigne, question, bonne, pieges = [], voisin, visuel,
 }) {
   const b = String(bonne);
   const valides = pieges.filter(([v]) => v !== null && String(v) !== b);
@@ -72,9 +81,15 @@ function manche(melanger, {
     if (liste.includes(c) && !(c in table)) table[c] = phrase;
   });
   return {
-    consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table,
+    consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table, ...(visuel ? { visuel } : {}),
   };
 }
+
+/** Le dessin d'une figure plane ou d'un solide, ses cotes écrites comme dans la question. */
+const figure = (forme, cotes) => ({ type: 'figure', forme, cotes });
+const solide = (forme, cotes, plus = {}) => ({
+  type: 'solide', forme, cotes, ...plus,
+});
 
 const net = (x) => Math.round(x * 1e6) / 1e6;
 
@@ -104,6 +119,7 @@ function perimetre6(sorte, { entre, melanger }) {
       bonne: 4 * c,
       pieges: [[c * c, 'aire-ou-perimetre'], [2 * c, 'perimetre-tous-les-cotes']],
       voisin: (k) => 4 * c + k,
+      visuel: figure('carre', { cote: `${c} cm` }),
     });
   }
   if (sorte === 'triangle') {
@@ -119,6 +135,7 @@ function perimetre6(sorte, { entre, melanger }) {
       bonne: a + b + c,
       pieges: [[a + b, 'perimetre-tous-les-cotes']],
       voisin: (k) => a + b + c + k,
+      visuel: figure('triangle-quelconque', { BC: `${a} cm`, AB: `${b} cm`, AC: `${c} cm` }),
     });
   }
   const l = entre(2, 12);
@@ -129,6 +146,7 @@ function perimetre6(sorte, { entre, melanger }) {
     bonne: 2 * (lo + l),
     pieges: [[lo * l, 'aire-ou-perimetre'], [lo + l, 'perimetre-tous-les-cotes']],
     voisin: (k) => 2 * (lo + l) + k,
+    visuel: figure('rectangle', { longueur: `${lo} cm`, largeur: `${l} cm` }),
   });
 }
 
@@ -142,6 +160,7 @@ function aire6(sorte, { entre, melanger }) {
       bonne: lo * l,
       pieges: [[2 * (lo + l), 'aire-ou-perimetre'], [lo + l, 'aire-regle']],
       voisin: (k) => lo * l + k,
+      visuel: figure('rectangle', { longueur: `${lo} cm`, largeur: `${l} cm` }),
     });
   }
   const b = 2 * entre(2, 8);
@@ -155,6 +174,9 @@ function aire6(sorte, { entre, melanger }) {
     bonne: (b * h) / 2,
     pieges: [[b * h, 'triangle-moitie'], [b + h, 'aire-regle']],
     voisin: (k) => (b * h) / 2 + k,
+    visuel: sorte === 'triangle-rectangle'
+      ? figure('triangle-rectangle', { horizontal: `${b} cm`, vertical: `${h} cm` })
+      : figure('triangle', { base: `${b} cm`, hauteur: `${h} cm` }),
   });
 }
 
@@ -166,6 +188,7 @@ function volume6({ entre, melanger }) {
     bonne: lo * l * h,
     pieges: [[2 * (lo * l + l * h + lo * h), 'volume-ou-aire'], [lo + l + h, 'volume-multiplier']],
     voisin: (k) => lo * l * h + k,
+    visuel: solide('pave', { longueur: `${lo} cm`, largeur: `${l} cm`, hauteur: `${h} cm` }),
   });
 }
 
@@ -182,6 +205,8 @@ function aire5(sorte, { entre, melanger }) {
       bonne: b * h,
       pieges: [[b * c, 'hauteur-pas-cote'], [2 * (b + c), 'aire-ou-perimetre']],
       voisin: (k) => b * h + k,
+      // Le côté oblique n'a pas de cote au dessin : base et hauteur seulement.
+      visuel: figure('parallelogramme', { base: `${b} cm`, hauteur: `${h} cm` }),
     });
   }
   return manche(melanger, {
@@ -190,6 +215,7 @@ function aire5(sorte, { entre, melanger }) {
     bonne: (b * h) / 2,
     pieges: [[b * h, 'triangle-moitie'], [(b * c) / 2, 'hauteur-pas-cote']],
     voisin: (k) => (b * h) / 2 + k,
+    visuel: figure('triangle', { base: `${b} cm`, hauteur: `${h} cm` }),
   });
 }
 
@@ -204,6 +230,7 @@ function disque5(sorte, { entre, melanger }) {
       bonne: auDixieme(Math.PI * r * r),
       pieges: [[auDixieme(Math.PI * d * d), 'rayon-ou-diametre'], [auDixieme(Math.PI * d), 'aire-ou-perimetre']],
       voisin: (k) => auDixieme(Math.PI * r * r + k),
+      visuel: figure('disque', { diametre: `${d} cm` }),
     });
   }
   let r = entre(3, 12);
@@ -214,6 +241,7 @@ function disque5(sorte, { entre, melanger }) {
     bonne: pi(2 * r),
     pieges: [[pi(r * r), 'aire-ou-perimetre'], [pi(r), 'perimetre-cercle']],
     voisin: (k) => pi(2 * r + k),
+    visuel: figure('disque', { rayon: `${r} cm` }),
   });
 }
 
@@ -228,6 +256,8 @@ function volume5(sorte, { entre, melanger }) {
       bonne: (a * b * h) / 2,
       pieges: [[a * b * h, 'triangle-moitie'], [(a * b) / 2 + h, 'volume-base-fois-hauteur']],
       voisin: (k) => (a * b * h) / 2 + k,
+      // Les deux côtés de l'angle droit sur la base ; la hauteur du prisme, sa longueur.
+      visuel: solide('prisme', { base: `${a} cm`, hauteur: `${b} cm`, longueur: `${h} cm` }, { angleDroit: true }),
     });
   }
   const r = entre(2, 9);
@@ -238,6 +268,7 @@ function volume5(sorte, { entre, melanger }) {
     bonne: aLUnite(Math.PI * r * r * h),
     pieges: [[aLUnite(2 * Math.PI * r * h), 'volume-ou-aire'], [aLUnite(r * r * h), 'volume-base-fois-hauteur']],
     voisin: (k) => aLUnite(Math.PI * r * r * h + k),
+    visuel: solide('cylindre', { rayon: `${r} cm`, hauteur: `${h} cm` }),
   });
 }
 
@@ -298,6 +329,7 @@ function sphere3(sorte, { entre, melanger }) {
       bonne: pi(4 * r * r),
       pieges: [[pi(r * r), 'aire-sphere-quatre'], [pi((4 * r * r * r) / 3), 'aire-ou-volume']],
       voisin: (k) => pi(4 * r * r + k),
+      visuel: solide('boule', { rayon: `${r} cm` }),
     });
   }
   const r = entre(2, 9);
@@ -307,6 +339,7 @@ function sphere3(sorte, { entre, melanger }) {
     bonne: auDixieme(4 * Math.PI * r * r),
     pieges: [[auDixieme(Math.PI * r * r), 'aire-sphere-quatre'], [auDixieme((4 / 3) * Math.PI * r ** 3), 'aire-ou-volume']],
     voisin: (k) => auDixieme(4 * Math.PI * r * r + k),
+    visuel: solide('boule', { rayon: `${r} cm` }),
   });
 }
 
@@ -319,6 +352,7 @@ function boule3(sorte, { entre, au, melanger }) {
       bonne: aLUnite((4 / 3) * Math.PI * r ** 3),
       pieges: [[aLUnite(4 * Math.PI * r * r), 'aire-ou-volume'], [aLUnite(Math.PI * r ** 3), 'volume-boule-formule']],
       voisin: (k) => aLUnite((4 / 3) * Math.PI * r ** 3 + k),
+      visuel: solide('boule', { rayon: `${r} cm` }),
     });
   }
   const r = 3 * entre(1, 3);
@@ -330,6 +364,7 @@ function boule3(sorte, { entre, au, melanger }) {
       bonne: pi(v),
       pieges: [[pi((4 * (2 * r) ** 3) / 3), 'rayon-ou-diametre'], [pi(4 * r * r), 'aire-ou-volume']],
       voisin: (k) => pi(v + k),
+      visuel: solide('boule', { diametre: `${2 * r} cm` }),
     });
   }
   return manche(melanger, {
@@ -338,6 +373,7 @@ function boule3(sorte, { entre, au, melanger }) {
     bonne: pi(v),
     pieges: [[pi(4 * r * r), 'aire-ou-volume'], [pi(r ** 3), 'volume-boule-formule']],
     voisin: (k) => pi(v + k),
+    visuel: solide('boule', { rayon: `${r} cm` }),
   });
 }
 

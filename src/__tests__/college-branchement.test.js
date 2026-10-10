@@ -12,6 +12,19 @@ import { CATALOGUE_COLLEGE, LIBELLES_MATIERE, MODULES_COLLEGE } from '../lib/jeu
 import { JEUX, jeuxDeLaClasse } from '../lib/jeux/catalogue';
 import { PROFESSEUR_PAR_MATIERE, toutesLesRepliques } from '../lib/jeux/voix/repliques';
 import { ECRANS_COLLEGE, VIGNETTES_COLLEGE } from '../components/jeux/JeuxCollege';
+import { sansRang } from '../lib/jeux/escapeTextes';
+
+/**
+ * UN ESCAPE GAME SE JOUE DANS SA SALLE (09/10/2026) : on commence l'enquête,
+ * puis on fouille l'objet qui brille, et l'énigme s'ouvre. Un jeu ordinaire
+ * n'a ni l'un ni l'autre : rien à faire.
+ */
+async function ouvrirEnigme() {
+  const commencer = screen.queryByRole('button', { name: 'Commencer l’enquête' });
+  if (commencer) await userEvent.click(commencer);
+  const fouiller = screen.queryByRole('button', { name: /^Fouiller / });
+  if (fouiller) await userEvent.click(fouiller);
+}
 
 const CLASSES_COLLEGE = ['SIXIEME', 'CINQUIEME', 'QUATRIEME', 'TROISIEME'];
 const PARTIE = (m) => m.FAMILLE.cle;
@@ -35,7 +48,8 @@ describe('les jeux du collège dans le catalogue', () => {
 
   it.each(CLASSES_COLLEGE)('%s : chaque jeu de la classe a son titre, son accroche et ses compétences de l’année', (classe) => {
     const annee = { SIXIEME: '_6E_', CINQUIEME: '_5E_', QUATRIEME: '_4E_', TROISIEME: '_3E_' }[classe];
-    const jeux = jeuxDeLaClasse(classe);
+    // Les jeux bonus (09/10/2026) n'ont pas de compétences : ils ne sont pas du programme.
+    const jeux = jeuxDeLaClasse(classe).filter((jeu) => !jeu.bonus);
     expect(jeux.length).toBeGreaterThan(10);
     jeux.forEach((jeu) => {
       expect(jeu.titre).toBeTruthy();
@@ -125,6 +139,7 @@ describe('les écrans des jeux du collège', () => {
     const m = module.serie(2024, niveau)[0];
     const Jeu = ECRANS_COLLEGE[cle];
     render(<Jeu onQuitter={jest.fn()} matiereCode={module.FAMILLE.matiereCode} niveau={niveau} />);
+    await ouvrirEnigme();
 
     const bonne = m.choix.find((c) => String(c.cle) === String(m.bonne));
     const fausse = m.choix.find((c) => String(c.cle) !== String(m.bonne));
@@ -135,7 +150,7 @@ describe('les écrans des jeux du collège', () => {
   });
 
   it.each(MODULES_COLLEGE.filter((m) => m.ESCAPE).map((m) => [PARTIE(m), m]))(
-    '%s : l’intro, le récit, puis la pièce du code une fois le cadenas ouvert',
+    '%s : la mission, l’objet à fouiller, son récit, puis la pièce rangée dans l’inventaire',
     async (cle, module) => {
       jest.spyOn(Date, 'now').mockReturnValue(2024);
       const niveau = module.CLASSES[0];
@@ -143,17 +158,21 @@ describe('les écrans des jeux du collège', () => {
       const Jeu = ECRANS_COLLEGE[cle];
       render(<Jeu onQuitter={jest.fn()} matiereCode={module.FAMILLE.matiereCode} niveau={niveau} />);
 
+      // La mission d'abord : l'intro, et aucune question tant qu'on n'a rien fouillé.
       expect(screen.getByText(module.PAR_CLASSE[niveau].intro)).toBeInTheDocument();
-      expect(screen.getByText(m.recit)).toBeInTheDocument();
-      const avant = screen.getByLabelText('Code : 0 pièce sur 6');
+      expect(screen.queryByText(sansRang(m.recit))).toBeNull();
+      await ouvrirEnigme();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText(sansRang(m.recit))).toBeInTheDocument();
+      const avant = screen.getByLabelText('Inventaire : 0 pièce sur 6');
       expect(within(avant).getAllByRole('listitem')).toHaveLength(6);
-      expect(within(avant).getByText('?')).toBeInTheDocument();
+      expect(within(avant).getAllByText('?')).toHaveLength(6);
 
       const bonne = m.choix.find((c) => String(c.cle) === String(m.bonne));
       await userEvent.click(screen.getByRole('button', { name: String(bonne.libelle) }));
-      const apres = screen.getByLabelText('Code : 1 pièce sur 6');
+      const apres = screen.getByLabelText('Inventaire : 1 pièce sur 6');
       expect(within(apres).getByText(String(m.cadenas.piece))).toBeInTheDocument();
-      expect(within(apres).queryByText('?')).toBeNull();
+      expect(within(apres).getAllByText('?')).toHaveLength(5);
     },
   );
 

@@ -1,0 +1,1217 @@
+/*
+ * LE GROUPE « CP-MATHS-2 » (09/10/2026) — le chantier des formes, l'horloge,
+ * la balance et deux par deux : l'univers de chaque couverture autour des
+ * écrans propres du CP.
+ *
+ * TOUTES LES CLASSES ET LES IMAGES CLÉS SONT PRÉFIXÉES PAR LA CLÉ DU JEU
+ * (sc-chantier-des-formes, sc-horloge, sc-balance, sc-deux-par-deux) :
+ * App.css est global et les noms courts y sont pris. Les éléments existants
+ * ne sont restylés qu'à travers la classe préfixée de la racine du jeu.
+ *
+ * LE SOCLE (décor, mascotte, gerbe) est le même pour les quatre jeux, écrit
+ * une fois par préfixe ; l'univers de chacun suit.
+ */
+
+/* ---------------------------------------------------- sc-chantier-des-formes : le socle */
+
+/* LE DÉCOR VIVANT, au-dessus du voile du décor peint et sous le jeu. */
+.jeu > .sc-chantier-des-formes__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* LA MASCOTTE, dans le coin bas droit — jamais à gauche, où se pose le
+   médaillon du professeur. Elle ne prend aucun clic. */
+.jeu > .sc-chantier-des-formes__mascotte {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  z-index: 2;
+  width: 138px;
+  pointer-events: none;
+}
+
+.sc-chantier-des-formes__m-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sc-chantier-des-formes__m-ombre { fill: rgba(0, 0, 0, 0.22); }
+
+.sc-chantier-des-formes__m-corps {
+  transform-box: view-box;
+  transform-origin: 60px 170px;
+  animation: sc-chantier-des-formes-respire 3.2s ease-in-out infinite;
+}
+
+.sc-chantier-des-formes__m-tete {
+  transform-box: view-box;
+  transform-origin: 60px 96px;
+  transition: rotate 0.3s ease;
+}
+
+.sc-chantier-des-formes__m-paupieres {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+  animation: sc-chantier-des-formes-cligne 4.8s infinite;
+}
+
+.sc-chantier-des-formes__m-bras-g,
+.sc-chantier-des-formes__m-bras-d {
+  transform-box: view-box;
+  transition: rotate 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.sc-chantier-des-formes__m-bras-g { transform-origin: 43px 108px; }
+.sc-chantier-des-formes__m-bras-d { transform-origin: 77px 108px; }
+
+.sc-chantier-des-formes__m-bulle {
+  transform-box: fill-box;
+  transform-origin: 20% 100%;
+  animation: sc-chantier-des-formes-bulle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* BRAVO : il saute, bras en l'air, et les agite. */
+.sc-chantier-des-formes__mascotte--bravo .sc-chantier-des-formes__m-corps { animation: sc-chantier-des-formes-saut 0.55s ease-out 4; }
+.sc-chantier-des-formes__mascotte--bravo .sc-chantier-des-formes__m-bras-g { rotate: 130deg; animation: sc-chantier-des-formes-hourra-g 0.4s ease-in-out 6 alternate; }
+.sc-chantier-des-formes__mascotte--bravo .sc-chantier-des-formes__m-bras-d { rotate: -130deg; animation: sc-chantier-des-formes-hourra-d 0.4s ease-in-out 6 alternate; }
+
+/* OUPS : la tête se penche, la main se lève — « essaie encore ! ». */
+.sc-chantier-des-formes__mascotte--oups .sc-chantier-des-formes__m-tete { rotate: 7deg; animation: sc-chantier-des-formes-penche 0.9s ease-in-out 2 alternate; }
+.sc-chantier-des-formes__mascotte--oups .sc-chantier-des-formes__m-bras-d { rotate: -95deg; animation: sc-chantier-des-formes-pouce 0.5s ease-in-out 3 alternate; }
+
+@keyframes sc-chantier-des-formes-respire {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3px; }
+}
+
+@keyframes sc-chantier-des-formes-cligne {
+  0%, 93%, 100% { transform: scaleY(0); }
+  96% { transform: scaleY(1); }
+}
+
+@keyframes sc-chantier-des-formes-bulle {
+  from { scale: 0; opacity: 0; }
+  to { scale: 1; opacity: 1; }
+}
+
+@keyframes sc-chantier-des-formes-saut {
+  0%, 100% { translate: 0 0; scale: 1 1; }
+  15% { scale: 1.06 0.92; }
+  50% { translate: 0 -24px; scale: 0.96 1.05; }
+  85% { translate: 0 0; scale: 1.05 0.94; }
+}
+
+@keyframes sc-chantier-des-formes-hourra-g {
+  from { rotate: 118deg; }
+  to { rotate: 146deg; }
+}
+
+@keyframes sc-chantier-des-formes-hourra-d {
+  from { rotate: -118deg; }
+  to { rotate: -146deg; }
+}
+
+@keyframes sc-chantier-des-formes-penche {
+  from { rotate: -6deg; }
+  to { rotate: 9deg; }
+}
+
+@keyframes sc-chantier-des-formes-pouce {
+  from { rotate: -85deg; }
+  to { rotate: -105deg; }
+}
+
+/* LA GERBE DE LA RÉUSSITE : les éclats partent du centre et retombent, une
+   seule fois. Elle passe devant le jeu sans prendre un seul clic. */
+.jeu > .sc-chantier-des-formes__fete {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-chantier-des-formes__eclat {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  opacity: 0;
+  animation: sc-chantier-des-formes-eclat 1.7s cubic-bezier(0.15, 0.75, 0.35, 1) var(--t) forwards;
+}
+
+@keyframes sc-chantier-des-formes-eclat {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  12% { opacity: 1; }
+  70% { opacity: 1; transform: translate(var(--x), var(--y)) scale(var(--e)) rotate(var(--r)); }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 70px)) scale(var(--e)) rotate(var(--r)); }
+}
+
+/* SOUS 1 000 PX, LA MASCOTTE A SA BANDE : le jeu lui garde le bas de la
+   scène, elle n'empiète plus sur les réponses. */
+@media (max-width: 999px) {
+  .jeu.sc-chantier-des-formes { padding-bottom: 100px; }
+  .jeu > .sc-chantier-des-formes__mascotte { right: 10px; bottom: 6px; width: 64px; }
+}
+
+
+/* ---------------------------------------------------- sc-horloge : le socle */
+
+/* LE DÉCOR VIVANT, au-dessus du voile du décor peint et sous le jeu. */
+.jeu > .sc-horloge__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* LA MASCOTTE, dans le coin bas droit — jamais à gauche, où se pose le
+   médaillon du professeur. Elle ne prend aucun clic. */
+.jeu > .sc-horloge__mascotte {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  z-index: 2;
+  width: 138px;
+  pointer-events: none;
+}
+
+.sc-horloge__m-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sc-horloge__m-ombre { fill: rgba(0, 0, 0, 0.22); }
+
+.sc-horloge__m-corps {
+  transform-box: view-box;
+  transform-origin: 60px 170px;
+  animation: sc-horloge-respire 3.2s ease-in-out infinite;
+}
+
+.sc-horloge__m-tete {
+  transform-box: view-box;
+  transform-origin: 60px 96px;
+  transition: rotate 0.3s ease;
+}
+
+.sc-horloge__m-paupieres {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+  animation: sc-horloge-cligne 4.8s infinite;
+}
+
+.sc-horloge__m-bras-g,
+.sc-horloge__m-bras-d {
+  transform-box: view-box;
+  transition: rotate 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.sc-horloge__m-bras-g { transform-origin: 43px 108px; }
+.sc-horloge__m-bras-d { transform-origin: 77px 108px; }
+
+.sc-horloge__m-bulle {
+  transform-box: fill-box;
+  transform-origin: 20% 100%;
+  animation: sc-horloge-bulle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* BRAVO : il saute, bras en l'air, et les agite. */
+.sc-horloge__mascotte--bravo .sc-horloge__m-corps { animation: sc-horloge-saut 0.55s ease-out 4; }
+.sc-horloge__mascotte--bravo .sc-horloge__m-bras-g { rotate: 130deg; animation: sc-horloge-hourra-g 0.4s ease-in-out 6 alternate; }
+.sc-horloge__mascotte--bravo .sc-horloge__m-bras-d { rotate: -130deg; animation: sc-horloge-hourra-d 0.4s ease-in-out 6 alternate; }
+
+/* OUPS : la tête se penche, la main se lève — « essaie encore ! ». */
+.sc-horloge__mascotte--oups .sc-horloge__m-tete { rotate: 7deg; animation: sc-horloge-penche 0.9s ease-in-out 2 alternate; }
+.sc-horloge__mascotte--oups .sc-horloge__m-bras-d { rotate: -95deg; animation: sc-horloge-pouce 0.5s ease-in-out 3 alternate; }
+
+@keyframes sc-horloge-respire {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3px; }
+}
+
+@keyframes sc-horloge-cligne {
+  0%, 93%, 100% { transform: scaleY(0); }
+  96% { transform: scaleY(1); }
+}
+
+@keyframes sc-horloge-bulle {
+  from { scale: 0; opacity: 0; }
+  to { scale: 1; opacity: 1; }
+}
+
+@keyframes sc-horloge-saut {
+  0%, 100% { translate: 0 0; scale: 1 1; }
+  15% { scale: 1.06 0.92; }
+  50% { translate: 0 -24px; scale: 0.96 1.05; }
+  85% { translate: 0 0; scale: 1.05 0.94; }
+}
+
+@keyframes sc-horloge-hourra-g {
+  from { rotate: 118deg; }
+  to { rotate: 146deg; }
+}
+
+@keyframes sc-horloge-hourra-d {
+  from { rotate: -118deg; }
+  to { rotate: -146deg; }
+}
+
+@keyframes sc-horloge-penche {
+  from { rotate: -6deg; }
+  to { rotate: 9deg; }
+}
+
+@keyframes sc-horloge-pouce {
+  from { rotate: -85deg; }
+  to { rotate: -105deg; }
+}
+
+/* LA GERBE DE LA RÉUSSITE : les éclats partent du centre et retombent, une
+   seule fois. Elle passe devant le jeu sans prendre un seul clic. */
+.jeu > .sc-horloge__fete {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-horloge__eclat {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  opacity: 0;
+  animation: sc-horloge-eclat 1.7s cubic-bezier(0.15, 0.75, 0.35, 1) var(--t) forwards;
+}
+
+@keyframes sc-horloge-eclat {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  12% { opacity: 1; }
+  70% { opacity: 1; transform: translate(var(--x), var(--y)) scale(var(--e)) rotate(var(--r)); }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 70px)) scale(var(--e)) rotate(var(--r)); }
+}
+
+/* SOUS 1 000 PX, LA MASCOTTE A SA BANDE : le jeu lui garde le bas de la
+   scène, elle n'empiète plus sur les réponses. */
+@media (max-width: 999px) {
+  .jeu.sc-horloge { padding-bottom: 100px; }
+  .jeu > .sc-horloge__mascotte { right: 10px; bottom: 6px; width: 64px; }
+}
+
+
+/* ---------------------------------------------------- sc-balance : le socle */
+
+/* LE DÉCOR VIVANT, au-dessus du voile du décor peint et sous le jeu. */
+.jeu > .sc-balance__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* LA MASCOTTE, dans le coin bas droit — jamais à gauche, où se pose le
+   médaillon du professeur. Elle ne prend aucun clic. */
+.jeu > .sc-balance__mascotte {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  z-index: 2;
+  width: 138px;
+  pointer-events: none;
+}
+
+.sc-balance__m-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sc-balance__m-ombre { fill: rgba(0, 0, 0, 0.22); }
+
+.sc-balance__m-corps {
+  transform-box: view-box;
+  transform-origin: 60px 170px;
+  animation: sc-balance-respire 3.2s ease-in-out infinite;
+}
+
+.sc-balance__m-tete {
+  transform-box: view-box;
+  transform-origin: 60px 96px;
+  transition: rotate 0.3s ease;
+}
+
+.sc-balance__m-paupieres {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+  animation: sc-balance-cligne 4.8s infinite;
+}
+
+.sc-balance__m-bras-g,
+.sc-balance__m-bras-d {
+  transform-box: view-box;
+  transition: rotate 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.sc-balance__m-bras-g { transform-origin: 43px 108px; }
+.sc-balance__m-bras-d { transform-origin: 77px 108px; }
+
+.sc-balance__m-bulle {
+  transform-box: fill-box;
+  transform-origin: 20% 100%;
+  animation: sc-balance-bulle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* BRAVO : il saute, bras en l'air, et les agite. */
+.sc-balance__mascotte--bravo .sc-balance__m-corps { animation: sc-balance-saut 0.55s ease-out 4; }
+.sc-balance__mascotte--bravo .sc-balance__m-bras-g { rotate: 130deg; animation: sc-balance-hourra-g 0.4s ease-in-out 6 alternate; }
+.sc-balance__mascotte--bravo .sc-balance__m-bras-d { rotate: -130deg; animation: sc-balance-hourra-d 0.4s ease-in-out 6 alternate; }
+
+/* OUPS : la tête se penche, la main se lève — « essaie encore ! ». */
+.sc-balance__mascotte--oups .sc-balance__m-tete { rotate: 7deg; animation: sc-balance-penche 0.9s ease-in-out 2 alternate; }
+.sc-balance__mascotte--oups .sc-balance__m-bras-d { rotate: -95deg; animation: sc-balance-pouce 0.5s ease-in-out 3 alternate; }
+
+@keyframes sc-balance-respire {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3px; }
+}
+
+@keyframes sc-balance-cligne {
+  0%, 93%, 100% { transform: scaleY(0); }
+  96% { transform: scaleY(1); }
+}
+
+@keyframes sc-balance-bulle {
+  from { scale: 0; opacity: 0; }
+  to { scale: 1; opacity: 1; }
+}
+
+@keyframes sc-balance-saut {
+  0%, 100% { translate: 0 0; scale: 1 1; }
+  15% { scale: 1.06 0.92; }
+  50% { translate: 0 -24px; scale: 0.96 1.05; }
+  85% { translate: 0 0; scale: 1.05 0.94; }
+}
+
+@keyframes sc-balance-hourra-g {
+  from { rotate: 118deg; }
+  to { rotate: 146deg; }
+}
+
+@keyframes sc-balance-hourra-d {
+  from { rotate: -118deg; }
+  to { rotate: -146deg; }
+}
+
+@keyframes sc-balance-penche {
+  from { rotate: -6deg; }
+  to { rotate: 9deg; }
+}
+
+@keyframes sc-balance-pouce {
+  from { rotate: -85deg; }
+  to { rotate: -105deg; }
+}
+
+/* LA GERBE DE LA RÉUSSITE : les éclats partent du centre et retombent, une
+   seule fois. Elle passe devant le jeu sans prendre un seul clic. */
+.jeu > .sc-balance__fete {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-balance__eclat {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  opacity: 0;
+  animation: sc-balance-eclat 1.7s cubic-bezier(0.15, 0.75, 0.35, 1) var(--t) forwards;
+}
+
+@keyframes sc-balance-eclat {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  12% { opacity: 1; }
+  70% { opacity: 1; transform: translate(var(--x), var(--y)) scale(var(--e)) rotate(var(--r)); }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 70px)) scale(var(--e)) rotate(var(--r)); }
+}
+
+/* SOUS 1 000 PX, LA MASCOTTE A SA BANDE : le jeu lui garde le bas de la
+   scène, elle n'empiète plus sur les réponses. */
+@media (max-width: 999px) {
+  .jeu.sc-balance { padding-bottom: 100px; }
+  .jeu > .sc-balance__mascotte { right: 10px; bottom: 6px; width: 64px; }
+}
+
+
+/* ---------------------------------------------------- sc-deux-par-deux : le socle */
+
+/* LE DÉCOR VIVANT, au-dessus du voile du décor peint et sous le jeu. */
+.jeu > .sc-deux-par-deux__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* LA MASCOTTE, dans le coin bas droit — jamais à gauche, où se pose le
+   médaillon du professeur. Elle ne prend aucun clic. */
+.jeu > .sc-deux-par-deux__mascotte {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  z-index: 2;
+  width: 138px;
+  pointer-events: none;
+}
+
+.sc-deux-par-deux__m-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sc-deux-par-deux__m-ombre { fill: rgba(0, 0, 0, 0.22); }
+
+.sc-deux-par-deux__m-corps {
+  transform-box: view-box;
+  transform-origin: 60px 170px;
+  animation: sc-deux-par-deux-respire 3.2s ease-in-out infinite;
+}
+
+.sc-deux-par-deux__m-tete {
+  transform-box: view-box;
+  transform-origin: 60px 96px;
+  transition: rotate 0.3s ease;
+}
+
+.sc-deux-par-deux__m-paupieres {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+  animation: sc-deux-par-deux-cligne 4.8s infinite;
+}
+
+.sc-deux-par-deux__m-bras-g,
+.sc-deux-par-deux__m-bras-d {
+  transform-box: view-box;
+  transition: rotate 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+.sc-deux-par-deux__m-bras-g { transform-origin: 43px 108px; }
+.sc-deux-par-deux__m-bras-d { transform-origin: 77px 108px; }
+
+.sc-deux-par-deux__m-bulle {
+  transform-box: fill-box;
+  transform-origin: 20% 100%;
+  animation: sc-deux-par-deux-bulle 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* BRAVO : il saute, bras en l'air, et les agite. */
+.sc-deux-par-deux__mascotte--bravo .sc-deux-par-deux__m-corps { animation: sc-deux-par-deux-saut 0.55s ease-out 4; }
+.sc-deux-par-deux__mascotte--bravo .sc-deux-par-deux__m-bras-g { rotate: 130deg; animation: sc-deux-par-deux-hourra-g 0.4s ease-in-out 6 alternate; }
+.sc-deux-par-deux__mascotte--bravo .sc-deux-par-deux__m-bras-d { rotate: -130deg; animation: sc-deux-par-deux-hourra-d 0.4s ease-in-out 6 alternate; }
+
+/* OUPS : la tête se penche, la main se lève — « essaie encore ! ». */
+.sc-deux-par-deux__mascotte--oups .sc-deux-par-deux__m-tete { rotate: 7deg; animation: sc-deux-par-deux-penche 0.9s ease-in-out 2 alternate; }
+.sc-deux-par-deux__mascotte--oups .sc-deux-par-deux__m-bras-d { rotate: -95deg; animation: sc-deux-par-deux-pouce 0.5s ease-in-out 3 alternate; }
+
+@keyframes sc-deux-par-deux-respire {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -3px; }
+}
+
+@keyframes sc-deux-par-deux-cligne {
+  0%, 93%, 100% { transform: scaleY(0); }
+  96% { transform: scaleY(1); }
+}
+
+@keyframes sc-deux-par-deux-bulle {
+  from { scale: 0; opacity: 0; }
+  to { scale: 1; opacity: 1; }
+}
+
+@keyframes sc-deux-par-deux-saut {
+  0%, 100% { translate: 0 0; scale: 1 1; }
+  15% { scale: 1.06 0.92; }
+  50% { translate: 0 -24px; scale: 0.96 1.05; }
+  85% { translate: 0 0; scale: 1.05 0.94; }
+}
+
+@keyframes sc-deux-par-deux-hourra-g {
+  from { rotate: 118deg; }
+  to { rotate: 146deg; }
+}
+
+@keyframes sc-deux-par-deux-hourra-d {
+  from { rotate: -118deg; }
+  to { rotate: -146deg; }
+}
+
+@keyframes sc-deux-par-deux-penche {
+  from { rotate: -6deg; }
+  to { rotate: 9deg; }
+}
+
+@keyframes sc-deux-par-deux-pouce {
+  from { rotate: -85deg; }
+  to { rotate: -105deg; }
+}
+
+/* LA GERBE DE LA RÉUSSITE : les éclats partent du centre et retombent, une
+   seule fois. Elle passe devant le jeu sans prendre un seul clic. */
+.jeu > .sc-deux-par-deux__fete {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-deux-par-deux__eclat {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  opacity: 0;
+  animation: sc-deux-par-deux-eclat 1.7s cubic-bezier(0.15, 0.75, 0.35, 1) var(--t) forwards;
+}
+
+@keyframes sc-deux-par-deux-eclat {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.2) rotate(0deg); }
+  12% { opacity: 1; }
+  70% { opacity: 1; transform: translate(var(--x), var(--y)) scale(var(--e)) rotate(var(--r)); }
+  100% { opacity: 0; transform: translate(var(--x), calc(var(--y) + 70px)) scale(var(--e)) rotate(var(--r)); }
+}
+
+/* SOUS 1 000 PX, LA MASCOTTE A SA BANDE : le jeu lui garde le bas de la
+   scène, elle n'empiète plus sur les réponses. */
+@media (max-width: 999px) {
+  .jeu.sc-deux-par-deux { padding-bottom: 100px; }
+  .jeu > .sc-deux-par-deux__mascotte { right: 10px; bottom: 6px; width: 64px; }
+}
+
+
+/* ====================================================================
+   LE CHANTIER DES FORMES — le petit chef de chantier, la grue, la caisse.
+   ==================================================================== */
+
+.sc-chantier-des-formes__nuage {
+  position: absolute;
+  left: -160px;
+  width: 130px;
+  animation: sc-chantier-des-formes-nuage 70s linear infinite;
+}
+
+.sc-chantier-des-formes__nuage--1 { top: 9%; }
+.sc-chantier-des-formes__nuage--2 { top: 19%; width: 92px; animation-duration: 85s; animation-delay: -30s; }
+.sc-chantier-des-formes__nuage--3 { top: 3%; width: 72px; animation-duration: 100s; animation-delay: -62s; }
+
+@keyframes sc-chantier-des-formes-nuage {
+  from { left: -160px; }
+  to { left: 105%; }
+}
+
+/* LA GRUE : un câble qui descend du haut de la scène, une caisse qui se
+   balance doucement — et qui danse à la réussite. */
+.sc-chantier-des-formes__grue {
+  position: absolute;
+  top: 0;
+  right: 13%;
+  width: 66px;
+  overflow: visible;
+}
+
+.sc-chantier-des-formes__grue-balancier {
+  transform-box: view-box;
+  transform-origin: 40px 0;
+  animation: sc-chantier-des-formes-balance 4.5s ease-in-out infinite alternate;
+}
+
+.sc-chantier-des-formes--gagne .sc-chantier-des-formes__grue-balancier {
+  animation: sc-chantier-des-formes-danse 0.45s ease-in-out 6 alternate;
+}
+
+.sc-chantier-des-formes__fanion {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-chantier-des-formes-hisse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sc-chantier-des-formes-balance {
+  from { rotate: -5deg; }
+  to { rotate: 5deg; }
+}
+
+@keyframes sc-chantier-des-formes-danse {
+  from { rotate: -9deg; translate: 0 0; }
+  to { rotate: 9deg; translate: 0 -10px; }
+}
+
+@keyframes sc-chantier-des-formes-hisse {
+  from { scale: 1 0; }
+  to { scale: 1 1; }
+}
+
+/* LA BARRIÈRE ET SON GYROPHARE, sur le bord gauche (écran large seulement). */
+.sc-chantier-des-formes__barriere {
+  position: absolute;
+  left: 2.5%;
+  top: 46%;
+  width: 104px;
+}
+
+.sc-chantier-des-formes__gyro-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0.15;
+  animation: sc-chantier-des-formes-gyro 1.1s ease-in-out infinite;
+}
+
+@keyframes sc-chantier-des-formes-gyro {
+  0%, 100% { opacity: 0.1; scale: 0.8; }
+  50% { opacity: 0.75; scale: 1.5; }
+}
+
+/* LA POUSSIÈRE DU SABLE, qui se lève et retombe. */
+.sc-chantier-des-formes__poussiere {
+  position: absolute;
+  bottom: 5%;
+  width: 46px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(236, 206, 156, 0.75), transparent);
+  opacity: 0;
+  animation: sc-chantier-des-formes-poussiere 6s ease-out infinite;
+}
+
+.sc-chantier-des-formes__poussiere--1 { left: 24%; }
+.sc-chantier-des-formes__poussiere--2 { left: 58%; animation-delay: -2s; }
+.sc-chantier-des-formes__poussiere--3 { left: 76%; animation-delay: -4s; }
+
+@keyframes sc-chantier-des-formes-poussiere {
+  0% { opacity: 0; translate: 0 0; scale: 0.5; }
+  25% { opacity: 0.9; }
+  100% { opacity: 0; translate: 26px -40px; scale: 1.8; }
+}
+
+/* LES PIÈCES, PLANCHES DE CHANTIER : un cadre de bois clouté autour de la
+   tuile claire. Le cadre est dans un pseudo-élément : la bordure, le fond
+   et l'ombre de la pièce restent ceux de ses états (choisie, fautive,
+   montrée), intacts. */
+.sc-chantier-des-formes .chantier__piece::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 4px solid #dcae72;
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 7px 7px, #8d8d8d 0 2.6px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #8d8d8d 0 2.6px, transparent 3.2px),
+    radial-gradient(circle at 7px calc(100% - 7px), #8d8d8d 0 2.6px, transparent 3.2px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #8d8d8d 0 2.6px, transparent 3.2px);
+  pointer-events: none;
+}
+
+/* UNE PIÈCE CHOISIE SE VOIT DE LOIN (09/10/2026, Camara : « quand je sélectionne,
+   on ne voit pas très bien la sélection ») : elle se soulève et grossit, son
+   cadre de bois devient doré, un halo jaune l'entoure, le fond se teinte, et
+   une pastille verte ✔ se pose dans son coin. La pièce fautive garde sa croix. */
+.sc-chantier-des-formes .chantier__piece.est-choisie {
+  border-color: #ffb703;
+  background: #fff4c7;
+  box-shadow: 0 0 0 5px #ffd34d, 0 0 26px 6px rgba(255, 196, 0, 0.75), 0 12px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-8px) scale(1.07);
+}
+
+.sc-chantier-des-formes .chantier__piece.est-choisie::before { border-color: #f2a900; }
+
+.sc-chantier-des-formes .chantier__piece.est-choisie:not(.est-fautive)::after {
+  content: "✔";
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #22a559;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  animation: sc-chantier-des-formes-coche 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes sc-chantier-des-formes-coche {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* À CHAQUE MANCHE, LES PIÈCES DESCENDENT UNE À UNE sur le tas. */
+.sc-chantier-des-formes .chantier__tas > li {
+  animation: sc-chantier-des-formes-pose 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.sc-chantier-des-formes .chantier__tas > li:nth-child(2) { animation-delay: 0.06s; }
+.sc-chantier-des-formes .chantier__tas > li:nth-child(3) { animation-delay: 0.12s; }
+.sc-chantier-des-formes .chantier__tas > li:nth-child(4) { animation-delay: 0.18s; }
+.sc-chantier-des-formes .chantier__tas > li:nth-child(5) { animation-delay: 0.24s; }
+.sc-chantier-des-formes .chantier__tas > li:nth-child(6) { animation-delay: 0.3s; }
+.sc-chantier-des-formes .chantier__tas > li:nth-child(n+7) { animation-delay: 0.36s; }
+
+@keyframes sc-chantier-des-formes-pose {
+  from { opacity: 0; transform: translateY(-40px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* À LA RÉUSSITE, les bonnes pièces sautillent. */
+.sc-chantier-des-formes--gagne .chantier__piece.est-choisie {
+  animation: sc-chantier-des-formes-hop 0.5s ease-out 3;
+}
+
+@keyframes sc-chantier-des-formes-hop {
+  0%, 100% { translate: 0 0; }
+  45% { translate: 0 -12px; }
+}
+
+/* L'ENFANT : il tient son cube devant lui, et le brandit à la réussite. */
+.sc-chantier-des-formes__mascotte--attente .sc-chantier-des-formes__m-bras-d { rotate: -38deg; }
+
+/* ====================================================================
+   L'HORLOGE — la fillette, le soleil, le sablier, le réveil.
+   ==================================================================== */
+
+/* LES RAYONS DU SOLEIL entrent par la fenêtre, à gauche, et respirent. */
+.sc-horloge__rayon {
+  position: absolute;
+  top: -20%;
+  width: 70px;
+  height: 150%;
+  background: linear-gradient(rgba(255, 236, 170, 0.42), rgba(255, 236, 170, 0));
+  rotate: -28deg;
+  transform-origin: top;
+  animation: sc-horloge-rayon 7s ease-in-out infinite alternate;
+}
+
+.sc-horloge__rayon--1 { left: 6%; }
+.sc-horloge__rayon--2 { left: 15%; width: 40px; animation-delay: -2.5s; }
+.sc-horloge__rayon--3 { left: 22%; width: 90px; animation-delay: -5s; }
+
+@keyframes sc-horloge-rayon {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+/* LES GRAINS DE LUMIÈRE, qui montent lentement dans le soleil. */
+.sc-horloge__grain {
+  position: absolute;
+  bottom: 8%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff3c4;
+  box-shadow: 0 0 8px 3px rgba(255, 228, 140, 0.8);
+  opacity: 0;
+  animation: sc-horloge-grain 12s linear infinite;
+}
+
+.sc-horloge__grain--1 { left: 5%; }
+.sc-horloge__grain--2 { left: 11%; animation-delay: -3s; animation-duration: 14s; }
+.sc-horloge__grain--3 { left: 18%; animation-delay: -6s; }
+.sc-horloge__grain--4 { left: 26%; animation-delay: -9s; animation-duration: 15s; }
+.sc-horloge__grain--5 { right: 9%; animation-delay: -1.5s; }
+.sc-horloge__grain--6 { right: 16%; animation-delay: -7.5s; animation-duration: 13s; }
+.sc-horloge__grain--7 { right: 24%; animation-delay: -4.5s; }
+
+@keyframes sc-horloge-grain {
+  0% { opacity: 0; translate: 0 0; }
+  15% { opacity: 0.9; }
+  50% { translate: 18px -220px; }
+  85% { opacity: 0.7; }
+  100% { opacity: 0; translate: -10px -440px; }
+}
+
+/* LE SABLIER : dix secondes pour se vider, puis il se retourne — et comme il
+   est symétrique, le tour suivant repart pile du même dessin. */
+.sc-horloge__sablier {
+  position: absolute;
+  right: 4%;
+  top: 36%;
+  width: 46px;
+  overflow: visible;
+}
+
+.sc-horloge__sablier-tour {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-horloge-retourne 10s ease-in-out infinite;
+}
+
+.sc-horloge__sable-haut {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-horloge-se-vide 10s linear infinite;
+}
+
+.sc-horloge__sable-bas {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-horloge-se-remplit 10s linear infinite;
+}
+
+.sc-horloge__sable-filet { animation: sc-horloge-filet 0.6s linear infinite; }
+
+@keyframes sc-horloge-retourne {
+  0%, 88% { rotate: 0deg; }
+  100% { rotate: 180deg; }
+}
+
+@keyframes sc-horloge-se-vide {
+  0% { scale: 1 1; }
+  86%, 100% { scale: 1 0.02; }
+}
+
+@keyframes sc-horloge-se-remplit {
+  0% { scale: 1 0.02; }
+  86%, 100% { scale: 1 1; }
+}
+
+@keyframes sc-horloge-filet {
+  to { stroke-dashoffset: -7; }
+}
+
+/* LE CADRAN DEVIENT UN RÉVEIL : un cerclage bleu comme l'horloge de la
+   couverture, et la place des clochettes au-dessus. À chaque manche, il
+   arrive d'un petit bond. */
+.sc-horloge .cadran {
+  margin-top: calc(min(78vw, 300px) * 0.15);
+  animation: sc-horloge-arrive 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.sc-horloge .cadran__bord { stroke: #2456a6; stroke-width: 9; }
+
+@keyframes sc-horloge-arrive {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+/* LES CLOCHETTES — `.cadran svg` (App.css) étire tous les dessins du cadran
+   à sa hauteur : les clochettes reprennent la leur. */
+.cadran .sc-horloge__clochettes {
+  position: absolute;
+  left: 0;
+  top: -17%;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sc-horloge__clochette { transform-box: fill-box; transform-origin: 50% 15%; }
+.sc-horloge__marteau { transform-box: view-box; transform-origin: 100px 30px; }
+.sc-horloge__ondes { opacity: 0; }
+
+.sc-horloge__clochettes--sonne .sc-horloge__clochette--g { animation: sc-horloge-dring 0.11s linear 14 alternate; }
+.sc-horloge__clochettes--sonne .sc-horloge__clochette--d { animation: sc-horloge-dring 0.11s linear 14 alternate-reverse; }
+.sc-horloge__clochettes--sonne .sc-horloge__marteau { animation: sc-horloge-marteau 0.11s linear 14 alternate; }
+.sc-horloge__clochettes--sonne .sc-horloge__ondes { animation: sc-horloge-ondes 0.5s ease-out 4; }
+
+/* Le réveil entier tressaute pendant qu'il sonne. */
+.sc-horloge--gagne .cadran { animation: sc-horloge-tressaute 0.11s linear 14 alternate; }
+
+@keyframes sc-horloge-dring {
+  from { rotate: -11deg; }
+  to { rotate: 11deg; }
+}
+
+@keyframes sc-horloge-marteau {
+  from { rotate: -28deg; }
+  to { rotate: 28deg; }
+}
+
+@keyframes sc-horloge-ondes {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes sc-horloge-tressaute {
+  from { transform: rotate(-1.6deg); }
+  to { transform: rotate(1.6deg); }
+}
+
+/* LA FILLETTE montre l'horloge du doigt, comme sur la couverture ; sa
+   queue de cheval se balance. */
+.sc-horloge__mascotte--attente .sc-horloge__m-bras-g { rotate: 112deg; }
+
+.sc-horloge__m-queue {
+  transform-box: view-box;
+  transform-origin: 87px 44px;
+  animation: sc-horloge-queue 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes sc-horloge-queue {
+  from { rotate: -7deg; }
+  to { rotate: 6deg; }
+}
+
+/* ====================================================================
+   LA BALANCE — le marché, l'auvent rayé, le garçon à la pomme.
+   ==================================================================== */
+
+.sc-balance__auvent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+}
+
+.sc-balance__feston {
+  position: absolute;
+  top: 19px;
+  left: 0;
+  width: 100%;
+  height: 14px;
+  transform-origin: top;
+  animation: sc-balance-feston 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes sc-balance-feston {
+  from { transform: skewX(-5deg) scaleY(0.88); }
+  to { transform: skewX(5deg) scaleY(1.06); }
+}
+
+.sc-balance__nuage {
+  position: absolute;
+  left: -160px;
+  width: 120px;
+  animation: sc-balance-nuage 80s linear infinite;
+}
+
+.sc-balance__nuage--1 { top: 12%; }
+.sc-balance__nuage--2 { top: 23%; width: 84px; animation-duration: 95s; animation-delay: -45s; }
+
+@keyframes sc-balance-nuage {
+  from { left: -160px; }
+  to { left: 105%; }
+}
+
+/* L'OISEAU : la traversée (le conteneur), le battement (l'aile). */
+.sc-balance__vol {
+  position: absolute;
+  top: 15%;
+  left: -60px;
+  width: 34px;
+  animation: sc-balance-traverse 24s linear infinite;
+  animation-delay: -6s;
+}
+
+.sc-balance__oiseau { display: block; width: 100%; overflow: visible; }
+
+.sc-balance__aile {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-balance-bat 0.32s ease-in-out infinite alternate;
+}
+
+@keyframes sc-balance-traverse {
+  0% { left: -60px; translate: 0 0; }
+  50% { translate: 0 -24px; }
+  100% { left: 105%; translate: 0 6px; }
+}
+
+@keyframes sc-balance-bat {
+  from { scale: 1 1; }
+  to { scale: 1 -0.5; }
+}
+
+/* LES FEUILLES qui tombent de l'arbre, sur les bords. */
+.sc-balance__feuille {
+  position: absolute;
+  top: 16%;
+  width: 22px;
+  opacity: 0;
+  animation: sc-balance-tombe 11s ease-in infinite;
+}
+
+.sc-balance__feuille--1 { left: 7%; }
+.sc-balance__feuille--2 { right: 9%; animation-delay: -5.5s; animation-duration: 13s; }
+
+@keyframes sc-balance-tombe {
+  0% { opacity: 0; translate: 0 0; rotate: 0deg; }
+  10% { opacity: 1; }
+  30% { translate: 22px 90px; rotate: 60deg; }
+  60% { translate: -16px 200px; rotate: -40deg; }
+  90% { opacity: 1; }
+  100% { opacity: 0; translate: 10px 320px; rotate: 90deg; }
+}
+
+/* LA BALANCE EN LAITON, comme celle de la couverture. */
+.sc-balance .balance__pied { fill: #a87a1f; }
+.sc-balance .balance__colonne { fill: #c9962e; }
+.sc-balance .balance__fleau rect { fill: #d4a637; stroke: #8a6414; stroke-width: 1.5; }
+
+/* À CHAQUE MANCHE, la balance se pose d'un petit bond ; à la réussite, elle
+   rebondit de joie. */
+.sc-balance .balance { animation: sc-balance-arrive 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.sc-balance--gagne .balance { animation: sc-balance-rebond 0.5s ease-out 3; }
+
+@keyframes sc-balance-arrive {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-balance-rebond {
+  0%, 100% { transform: none; }
+  40% { transform: translateY(-12px); }
+}
+
+/* LE GARÇON tient sa pomme devant lui. */
+.sc-balance__mascotte--attente .sc-balance__m-bras-d { rotate: -32deg; }
+
+/* ====================================================================
+   DEUX PAR DEUX — la fête foraine, les fanions, les ballons par paires.
+   ==================================================================== */
+
+.sc-deux-par-deux__guirlande {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.sc-deux-par-deux__fanion { animation: sc-deux-par-deux-fanion 2.2s ease-in-out infinite alternate; }
+.sc-deux-par-deux__fanion--1 { animation-duration: 2.7s; animation-delay: -0.8s; }
+.sc-deux-par-deux__fanion--2 { animation-duration: 3.1s; animation-delay: -1.6s; }
+
+@keyframes sc-deux-par-deux-fanion {
+  from { rotate: -7deg; }
+  to { rotate: 7deg; }
+}
+
+/* LES AMPOULES clignotent une sur deux, comme au manège. */
+.sc-deux-par-deux__ampoule { fill: #fff6c8; animation: sc-deux-par-deux-ampoule 1.4s steps(1, end) infinite; }
+.sc-deux-par-deux__ampoule--1 { animation-delay: -0.7s; }
+
+@keyframes sc-deux-par-deux-ampoule {
+  0% { fill: #fff6c8; }
+  50% { fill: #ffb800; }
+}
+
+/* LES BALLONS PAR DEUX, sur les bords (écran large seulement). */
+.sc-deux-par-deux__paire {
+  position: absolute;
+  top: 28%;
+  width: 66px;
+  overflow: visible;
+  animation: sc-deux-par-deux-flotte 4s ease-in-out infinite alternate;
+}
+
+.sc-deux-par-deux__paire--g { left: 2.5%; }
+.sc-deux-par-deux__paire--d { right: 3%; top: 22%; animation-delay: -2s; }
+
+@keyframes sc-deux-par-deux-flotte {
+  from { translate: 0 0; rotate: -3deg; }
+  to { translate: 0 -14px; rotate: 3deg; }
+}
+
+/* À LA RÉUSSITE, une paire de ballons s'envole du milieu de la fête. */
+.sc-deux-par-deux__envol {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 72px;
+  margin-left: -36px;
+  overflow: visible;
+  animation: sc-deux-par-deux-envol 3.2s ease-in forwards;
+}
+
+@keyframes sc-deux-par-deux-envol {
+  0% { opacity: 0; translate: 0 40px; }
+  12% { opacity: 1; }
+  50% { translate: 30px -300px; rotate: 6deg; }
+  100% { opacity: 0; translate: -20px -760px; rotate: -6deg; }
+}
+
+/* À CHAQUE MANCHE, la table arrive. EN `transform`, PAS EN `scale`/`translate` :
+   sur ce dessin SVG racine, Chrome laissait l'animation des propriétés
+   séparées à opacité nulle — la table restait invisible. */
+.sc-deux-par-deux .deux__table { animation: sc-deux-par-deux-arrive 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes sc-deux-par-deux-arrive {
+  from { opacity: 0; transform: translateY(18px) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+/* LA FILLETTE fait son « V » bras levé, comme sur la couverture. */
+.sc-deux-par-deux__mascotte--attente .sc-deux-par-deux__m-bras-d {
+  rotate: -140deg;
+  animation: sc-deux-par-deux-coucou 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes sc-deux-par-deux-coucou {
+  from { rotate: -132deg; }
+  to { rotate: -148deg; }
+}
+
+/* ====================================================================
+   LES ÉCRANS ÉTROITS ET LE MOUVEMENT RÉDUIT
+   ==================================================================== */
+
+/* SOUS 1 000 PX, le décor des bords se retire : la grue, la barrière, le
+   sablier, les feuilles et les ballons tomberaient sur le jeu. Les nuages,
+   les rayons, l'auvent et la guirlande restent. */
+@media (max-width: 999px) {
+  .sc-chantier-des-formes__grue,
+  .sc-chantier-des-formes__barriere,
+  .sc-horloge__sablier,
+  .sc-balance__feuille,
+  .sc-deux-par-deux__paire { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-chantier-des-formes__decor *,
+  .sc-chantier-des-formes__mascotte *,
+  .sc-chantier-des-formes .chantier__tas > li,
+  .sc-chantier-des-formes .chantier__piece.est-choisie:not(.est-fautive)::after,
+  .sc-chantier-des-formes .chantier__piece,
+  .sc-horloge__decor *,
+  .sc-horloge__mascotte *,
+  .sc-horloge .cadran,
+  .sc-horloge__clochettes *,
+  .sc-balance__decor *,
+  .sc-balance__mascotte *,
+  .sc-balance .balance,
+  .sc-deux-par-deux__decor *,
+  .sc-deux-par-deux__mascotte *,
+  .sc-deux-par-deux .deux__table {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sc-chantier-des-formes__fete,
+  .sc-horloge__fete,
+  .sc-balance__fete,
+  .sc-deux-par-deux__fete,
+  .sc-deux-par-deux__envol { display: none; }
+
+  /* Immobiles, les nuages et l'oiseau gardent une place dans le ciel. */
+  .sc-chantier-des-formes__nuage--1,
+  .sc-balance__nuage--1 { left: 8%; }
+  .sc-chantier-des-formes__nuage--2,
+  .sc-balance__nuage--2 { left: 70%; }
+  .sc-chantier-des-formes__nuage--3 { left: 40%; }
+  .sc-balance__vol { left: 30%; }
+  .sc-horloge__grain,
+  .sc-balance__feuille { opacity: 0.6; }
+}

@@ -9,6 +9,10 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import {
+  Clochettes, DecorHorloge, FeteHorloge, MascotteHorloge,
+} from './scenes/cp-maths-2/SceneHorloge';
+import { humeurDe } from './scenes/cp-maths-2/communs';
 
 /**
  * L'HORLOGE, À L'ÉCRAN.
@@ -41,6 +45,12 @@ import { bruitage } from '../../lib/jeux/bruitages';
  * ENTRE deux nombres. Au CP, elles restent indépendantes — la grande part
  * n'importe où, et une petite qui se décalerait avec elle troublerait un
  * enfant qui apprend à la poser sur un nombre.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) vit dans
+ * `scenes/cp-maths-2/SceneHorloge.js` : le soleil dans la chambre, le
+ * sablier qui s'écoule, la fillette qui montre l'horloge, encourage et saute
+ * de joie, et le cadran devenu réveil, dont les clochettes sonnent à la bonne
+ * heure. Rien de la règle n'a bougé.
  */
 export default function Horloge({ onQuitter, matiereCode, niveau = 'CP' }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -166,7 +176,12 @@ export default function Horloge({ onQuitter, matiereCode, niveau = 'CP' }) {
     || aiguilles.grande !== courante.depart.grande);
 
   return (
-    <div className="jeu jeu--horloge" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--horloge sc-horloge${juste ? ' sc-horloge--gagne' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorHorloge />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -190,6 +205,8 @@ export default function Horloge({ onQuitter, matiereCode, niveau = 'CP' }) {
       </p>
 
       <Cadran
+        key={`cadran-${manche}`}
+        sonne={juste}
         aiguilles={montre}
         choisie={lecture ? null : choisie}
         onPoser={lecture || juste ? null : poser}
@@ -249,6 +266,10 @@ export default function Horloge({ onQuitter, matiereCode, niveau = 'CP' }) {
         </button>
       ))}
 
+      {/* LA CLÉ DE LA RÉPONSE : une autre réponse refusée relance
+          l'encouragement, même sans passer par l'attente. */}
+      <MascotteHorloge key={`${manche}-${reponse}`} humeur={humeurDe({ gagne: juste, refus: Boolean(sens) })} />
+      {juste && <FeteHorloge key={`fete-${manche}`} />}
     </div>
   );
 }
@@ -273,7 +294,7 @@ const CLE_PHRASE = {
  * au clavier et au lecteur d'écran.
  */
 function Cadran({
-  aiguilles, choisie, onPoser, heureDite,
+  aiguilles, choisie, onPoser, heureDite, sonne = false,
 }) {
   const nombres = Array.from({ length: 12 }, (_, i) => i + 1);
   const position = (n, rayon) => {
@@ -288,6 +309,7 @@ function Cadran({
 
   return (
     <div className="cadran">
+      <Clochettes sonne={sonne} />
       <svg viewBox="0 0 200 200" role="img" aria-label={libelle}>
         <circle className="cadran__fond" cx="100" cy="100" r="96" />
         <circle className="cadran__bord" cx="100" cy="100" r="96" />

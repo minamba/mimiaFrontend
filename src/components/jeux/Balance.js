@@ -11,6 +11,8 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { DecorBalance, FeteBalance, MascotteBalance } from './scenes/cp-maths-2/SceneBalance';
+import { humeurDe } from './scenes/cp-maths-2/communs';
 
 /**
  * LA BALANCE, À L'ÉCRAN.
@@ -40,6 +42,12 @@ import { bruitage } from '../../lib/jeux/bruitages';
  * AU CE1, LA BOÎTE DE POIDS remplace les cubes au mesurage : toucher un poids
  * de la boîte le pose sur le plateau, toucher un poids posé le range. La
  * boîte n'a que ses cinq poids — voir `balance.js`.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) vit dans
+ * `scenes/cp-maths-2/SceneBalance.js` : l'auvent rayé du marché, les nuages,
+ * l'oiseau, le garçon à la pomme qui regarde le plateau qui descend,
+ * encourage et saute de joie, et la gerbe de pommes de la réussite. Rien de
+ * la règle n'a bougé.
  */
 export default function Balance({ onQuitter, matiereCode, niveau = 'CP' }) {
   // Au CE1 comme au CE2, on mesure avec des poids marqués ; seule la boîte
@@ -256,7 +264,12 @@ export default function Balance({ onQuitter, matiereCode, niveau = 'CP' }) {
   else if (plein) message = PHRASES.plein;
 
   return (
-    <div className="jeu jeu--balance" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--balance sc-balance${juste ? ' sc-balance--gagne' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorBalance />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -278,6 +291,7 @@ export default function Balance({ onQuitter, matiereCode, niveau = 'CP' }) {
 
       {(!ranger || phase === 'peser') && (
         <Plateaux
+          key={`plateaux-${manche}`}
           angle={angle}
           gauche={gauche}
           droite={droite}
@@ -400,6 +414,13 @@ export default function Balance({ onQuitter, matiereCode, niveau = 'CP' }) {
         </div>
       )}
 
+      {/* LE GARÇON REGARDE LA BALANCE quand elle est là : ses yeux suivent le
+          plateau qui descend. */}
+      <MascotteBalance
+        humeur={humeurDe({ gagne: juste, refus: Boolean(message) })}
+        regard={!ranger || phase === 'peser' ? Math.sign(angle) : 0}
+      />
+      {juste && <FeteBalance key={`fete-${manche}`} />}
     </div>
   );
 }

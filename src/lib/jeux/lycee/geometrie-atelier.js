@@ -35,6 +35,12 @@
  *     l'angle qui n'est pas en face du côté isolé ;
  *   - LA LOI DES SINUS : LES PIÈGES, sinus inversés, proportionnalité aux
  *     angles au lieu de leurs sinus, oublier de calculer le troisième angle.
+ *
+ * LE VISUEL (09/10/2026) : chaque manche porte un `visuel` (voir
+ * `lib/jeux/visuels.js`) — pièce, solide, triangle rectangle ou triangle
+ * quelconque ABC —, avec les cotes de l'énoncé et « ? » pour la longueur ou
+ * l'angle cherché ; un diamètre est coté de bord à bord, une diagonale tracée.
+ * Aucun tirage en plus : la même graine redonne la même partie.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -88,9 +94,12 @@ const deg = (rad) => rad / RAD;
 
 const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
 
-/** Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent. */
+/**
+ * Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent.
+ * Le `visuel`, s'il y en a un, passe tel quel : il ne tire rien au hasard.
+ */
 function manche(melanger, {
-  consigne, question, bonne, pieges = [], voisin,
+  consigne, question, bonne, pieges = [], voisin, visuel,
 }) {
   const b = String(bonne);
   const valides = pieges.filter(([v]) => v !== null && v !== undefined && String(v) !== b);
@@ -101,16 +110,22 @@ function manche(melanger, {
     if (liste.includes(c) && !(c in table)) table[c] = phrase;
   });
   return {
-    consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table,
+    consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table, ...(visuel ? { visuel } : {}),
   };
 }
+
+/** Le dessin d'une figure plane ou d'un solide, ses cotes écrites comme dans la question. */
+const figure = (forme, cotes, plus = {}) => ({
+  type: 'figure', forme, cotes, ...plus,
+});
+const solide = (forme, cotes) => ({ type: 'solide', forme, cotes });
 
 /**
  * Une manche dont la réponse est un arrondi : chaque choix est arrondi à la
  * même précision, et les voisins s'écartent d'un nombre entier de pas.
  */
 function mancheArrondie(t, {
-  consigne, question, exact, d, pieges, pas,
+  consigne, question, exact, d, pieges, pas, visuel,
 }) {
   const unite = 10 ** -d;
   return manche(t.melanger, {
@@ -119,6 +134,7 @@ function mancheArrondie(t, {
     bonne: fixe(exact, d),
     pieges: t.melanger(pieges.map(([v, phrase]) => [fixe(v, d), phrase])),
     voisin: (k) => fixe(exact + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.max(pas, unite), d),
+    visuel,
   });
 }
 
@@ -137,6 +153,7 @@ function aire2(t) {
       bonne: nb((L * l) / 100),
       pieges: t.melanger([[nb((2 * (L + l)) / 10), 'aire-perimetre'], [nb((L + l) / 10), 'aire-produit']]),
       voisin: (k) => nb((L * l + 10 * k) / 100),
+      visuel: figure('rectangle', { longueur: `${nb(L / 10)} m`, largeur: `${nb(l / 10)} m` }),
     });
   }
   const D = dixiemes(t, 6, 24);
@@ -147,6 +164,7 @@ function aire2(t) {
     d: 2,
     pas: 0.1,
     pieges: [[Math.PI * D * D, 'rayon-diametre'], [Math.PI * D, 'aire-perimetre']],
+    visuel: figure('disque', { diametre: `${nb(D)} m` }),
   });
 }
 
@@ -161,6 +179,8 @@ function volume2(t) {
       bonne: nb((L * l * e) / 100),
       pieges: t.melanger([[nb(L * l * e), 'memes-unites'], [nb(L * l), 'volume-trois-dimensions']]),
       voisin: (k) => nb((L * l * e + 10 * k) / 100),
+      // L'épaisseur est la hauteur du pavé, laissée en centimètres comme dans l'énoncé.
+      visuel: solide('pave', { longueur: `${L} m`, largeur: `${l} m`, hauteur: `${e} cm` }),
     });
   }
   const D = dixiemes(t, 6, 20);
@@ -173,6 +193,7 @@ function volume2(t) {
     d: 0,
     pas: 50,
     pieges: [[Math.PI * D * D * H * 1000, 'rayon-diametre'], [exact / 10, 'conversion-litres']],
+    visuel: solide('cylindre', { diametre: `${nb(D)} m`, hauteur: `${nb(H)} m` }),
   });
 }
 
@@ -187,6 +208,7 @@ function pythagore2(t) {
       d: 2,
       pas: 0.1,
       pieges: [[Math.sqrt(L * L + d * d), 'hypotenuse-plus-long'], [L - d, 'pythagore-carres']],
+      visuel: figure('echelle', { hypotenuse: `${nb(L)} m`, horizontal: `${nb(d)} m`, vertical: '?' }),
     });
   }
   const a = dixiemes(t, 25, 50);
@@ -198,6 +220,8 @@ function pythagore2(t) {
     d: 2,
     pas: 0.1,
     pieges: [[a + b, 'pythagore-carres'], [Math.sqrt(a * a - b * b), 'hypotenuse-plus-long']],
+    // Le portail et son écharpe : la diagonale du rectangle.
+    visuel: figure('rectangle', { longueur: `${nb(a)} m`, largeur: `${nb(b)} m`, diagonale: '?' }),
   });
 }
 
@@ -219,6 +243,7 @@ function trigo2(t) {
       d: 2,
       pas: 0.1,
       pieges: [[L * cos(a), 'cosinus-adjacent'], [L * tan(a), 'tangente-hypotenuse']],
+      visuel: figure('triangle-rectangle', { hypotenuse: `${nb(L)} m`, vertical: '?' }, { angle: { sommet: 'bas', valeur: `${a}°` } }),
     });
   }
   // Une pente d'au moins un cinquième : sinon l'arc sinus et l'arc tangente
@@ -233,6 +258,7 @@ function trigo2(t) {
     d: 1,
     pas: 1,
     pieges: [[deg(Math.atan(d / h)), 'angle-complementaire'], [deg(Math.asin(h / d)), 'tangente-deux-cotes']],
+    visuel: figure('triangle-rectangle', { vertical: `${nb(h)} m`, horizontal: `${nb(d)} m` }, { angle: { sommet: 'bas', valeur: '?' } }),
   });
 }
 
@@ -252,6 +278,7 @@ function cone1(t) {
     d: 2,
     pas: 0.1,
     pieges: [[Math.PI * r * r * h, 'cone-tiers'], [(Math.PI * r * h) / 3, 'rayon-au-carre']],
+    visuel: solide('cone', { rayon: `${nb(r)} m`, hauteur: `${nb(h)} m` }),
   });
 }
 
@@ -265,6 +292,7 @@ function boule1(t) {
     d: 2,
     pas: 0.1,
     pieges: [[4 * Math.PI * r * r, 'aire-ou-volume'], [(4 / 3) * Math.PI * r * r, 'rayon-au-cube']],
+    visuel: solide('boule', { rayon: `${nb(r)} m` }),
   });
 }
 
@@ -279,6 +307,10 @@ function diagonale1(t) {
     d: 2,
     pas: 0.1,
     pieges: [[Math.sqrt(a * a + b * b), 'diagonale-espace'], [a + b + c, 'pythagore-carres']],
+    // La caisse, ses trois dimensions et sa grande diagonale, la barre cherchée.
+    visuel: solide('pave', {
+      longueur: `${nb(a)} m`, largeur: `${nb(b)} m`, hauteur: `${nb(c)} m`, diagonale: '?',
+    }),
   });
 }
 
@@ -292,6 +324,7 @@ function tole1(t) {
     d: 2,
     pas: 0.1,
     pieges: [[Math.PI * r * r * h, 'aire-ou-volume'], [Math.PI * r * h, 'perimetre-du-cercle']],
+    visuel: solide('cylindre', { rayon: `${nb(r)} m`, hauteur: `${nb(h)} m` }),
   });
 }
 
@@ -317,6 +350,7 @@ function kashiCote(t) {
     d: 2,
     pas: 0.1,
     pieges: [[Math.sqrt(ps), 'pythagore-hors-rectangle'], [Math.sqrt(ps + 2 * b * c * cos(a)), 'signe-al-kashi']],
+    visuel: figure('triangle-quelconque', { AB: `${c} m`, AC: `${b} m`, BC: '?' }, { angle: { A: `${a}°` } }),
   });
 }
 
@@ -339,6 +373,7 @@ function kashiAngle(t) {
     d: 1,
     pas: 1,
     pieges: [[180 - A, 'signe-al-kashi'], [B, 'angle-oppose']],
+    visuel: figure('triangle-quelconque', { BC: `${a} m`, AC: `${b} m`, AB: `${c} m` }, { angle: { A: '?' } }),
   });
 }
 
@@ -354,6 +389,7 @@ function sinus(t) {
   const a = t.entre(4, 20);
   const cherche = t.entre(0, 1) ? 'AC' : 'AB';
   const debut = `${t.au(TRIANGLES)}\nBC = ${a} m, Â = ${A}°, B̂ = ${B}°.\nLongueur ${cherche} (m, au centième) ?`;
+  const visuel = figure('triangle-quelconque', { BC: `${a} m`, [cherche]: '?' }, { angle: { A: `${A}°`, B: `${B}°` } });
   if (cherche === 'AC') {
     return mancheArrondie(t, {
       consigne: 'loi-des-sinus',
@@ -362,6 +398,7 @@ function sinus(t) {
       d: 2,
       pas: 0.1,
       pieges: [[(a * sin(A)) / sin(B), 'sinus-face-a-face'], [(a * B) / A, 'sinus-des-angles']],
+      visuel,
     });
   }
   return mancheArrondie(t, {
@@ -371,6 +408,7 @@ function sinus(t) {
     d: 2,
     pas: 0.1,
     pieges: [[(a * sin(B)) / sin(A), 'troisieme-angle'], [(a * sin(A)) / sin(C), 'sinus-face-a-face']],
+    visuel,
   });
 }
 

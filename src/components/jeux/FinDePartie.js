@@ -56,8 +56,50 @@ function Etoile({ gagnee, rang }) {
   );
 }
 
+/**
+ * LE COFFRE DE LA CAGNOTTE (09/10/2026) — pour les jeux qui comptent des
+ * points (`JeuDeChoix`). Il s'ouvre, les pièces en jaillissent — plus il y a
+ * d'étoiles, plus il en sort — et la cagnotte s'affiche avec la meilleure série.
+ */
+function Coffre({ points, meilleureSerie, etoiles }) {
+  return (
+    <div className={`tresor tresor--${etoiles}`}>
+      <svg className="tresor__dessin" viewBox="0 0 120 100" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="tresor-bois" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#b5652f" />
+            <stop offset="1" stopColor="#6e3514" />
+          </linearGradient>
+          <radialGradient id="tresor-lueur" cx="50%" cy="100%" r="80%">
+            <stop offset="0" stopColor="#fff6c2" stopOpacity="0.95" />
+            <stop offset="1" stopColor="#ffd34d" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <ellipse className="tresor__lueur" cx="60" cy="52" rx="46" ry="30" fill="url(#tresor-lueur)" />
+        {/* Une, trois ou cinq pièces, selon les étoiles. */}
+        {Array.from({ length: etoiles * 2 - 1 }, (_, i) => (
+          <circle key={i} className="tresor__piece" cx={60 + (i - (etoiles - 1)) * 9} cy="50" r="6" fill="#ffd34d" stroke="#c98a0b" strokeWidth="1.5" style={{ '--n': i }} />
+        ))}
+        <rect x="18" y="50" width="84" height="42" rx="6" fill="url(#tresor-bois)" stroke="#4a210a" strokeWidth="2.5" />
+        <rect x="18" y="62" width="84" height="7" fill="#e8b23a" />
+        <rect x="53" y="58" width="14" height="16" rx="3" fill="#ffd34d" stroke="#8a5a0b" strokeWidth="1.5" />
+        <g className="tresor__couvercle">
+          <path d="M18 50 V38 Q18 22 60 22 Q102 22 102 38 V50 Z" fill="url(#tresor-bois)" stroke="#4a210a" strokeWidth="2.5" />
+          <path d="M18 44 H102" stroke="#e8b23a" strokeWidth="6" />
+        </g>
+      </svg>
+      <p className="tresor__butin">
+        <span className="cagnotte__piece" aria-hidden="true" />
+        <strong>{points}</strong>
+        {' points'}
+        {meilleureSerie >= 2 && <span className="tresor__serie">{`🔥 meilleure série : ${meilleureSerie}`}</span>}
+      </p>
+    </div>
+  );
+}
+
 export default function FinDePartie({
-  score, total, mot, onRejouer, onQuitter,
+  score, total, mot, onRejouer, onQuitter, points, meilleureSerie = 0,
 }) {
   const etoiles = etoilesDuScore(score, total);
   const titre = score === total && total > 0 ? 'Parfait !' : TITRES[etoiles];
@@ -98,6 +140,8 @@ export default function FinDePartie({
       </div>
 
       <p className="fin-jeu__mot">{mot}</p>
+
+      {points !== undefined && <Coffre points={points} meilleureSerie={meilleureSerie} etoiles={etoiles} />}
 
       <RecordJeu score={score} total={total} />
 

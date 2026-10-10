@@ -5,6 +5,9 @@ import { DEFI, TRANQUILLE, coeursDeLaClasse } from '../../lib/jeux/coeurs';
 import imageTranquille from '../../assets/tranquille.webp';
 import imageDefi from '../../assets/defi.webp';
 import Etincelle from './Etincelle';
+import { dureeDuDefi, enMinutesSecondes } from '../../lib/jeux/bonus/reglages.js';
+import { meilleurTemps } from '../../lib/jeux/bonus/recordTemps.js';
+import { CATALOGUE_BONUS } from '../../lib/jeux/bonus/catalogue.js';
 import { bruitage } from '../../lib/jeux/bruitages';
 
 /**
@@ -49,6 +52,16 @@ export default function ChoixDuMode({
   const coeurs = coeursDeLaClasse(classe);
   const { eleveId } = sessionEleve() ?? {};
   const record = eleveId && jeuCle ? recordDe(eleveId, jeuCle, niveau ?? '') : null;
+  // UN JEU BONUS SE JOUE CONTRE LA MONTRE (09/10/2026) : en défi, pas de cœurs,
+  // un compte à rebours ; son record est un temps.
+  const bonus = String(jeuCle ?? '').startsWith('bonus-');
+  const sorteDeDefi = CATALOGUE_BONUS.find((j) => j.cle === jeuCle)?.defi ?? 'chrono';
+  const texteDuDefi = sorteDeDefi === 'adversaire' ? '🤖 L’ordinateur joue plus fort'
+    : sorteDeDefi === 'rapide' ? '⚡ Moins de temps à chaque question'
+      : sorteDeDefi === 'sans-aide' ? '🧠 Sans aide : ni coups montrés, ni coup repris'
+      : null;
+  const montre = bonus ? dureeDuDefi(jeuCle.replace(/^bonus-/, ''), niveau ?? classe) * 1000 : null;
+  const recordTemps = bonus && eleveId ? meilleurTemps(eleveId, jeuCle, niveau ?? '') : null;
 
   // PAS DE CHOIX, PAS D'ÉCRAN. L'effet plutôt qu'un rendu conditionnel dans la
   // page : la décision appartient à ce fichier, qui est le seul à savoir que
@@ -139,22 +152,36 @@ export default function ChoixDuMode({
             type="button"
             className="choix-mode__porte choix-mode__porte--defi"
             onClick={() => { bruitage('selection'); onChoisir(DEFI); }}
-            aria-label={`Jouer en mode défi : ${coeurs} cœurs, chaque erreur en coûte un`}
+            aria-label={bonus ? `Jouer en mode défi : ${texteDuDefi ?? `contre la montre, en ${enMinutesSecondes(montre)}`}` : `Jouer en mode défi : ${coeurs} cœurs, chaque erreur en coûte un`}
           >
-            <img
-              className="choix-mode__image"
-              src={imageDefi}
-              alt=""
-              aria-hidden="true"
-              width="620"
-              height="870"
-            />
-
+            <span className="choix-mode__cadre">
+              <img
+                className="choix-mode__image"
+                src={imageDefi}
+                alt=""
+                aria-hidden="true"
+                width="620"
+                height="870"
+              />
+              {/* L'IMAGE PARLE DE CŒURS (« 4 vies ») : pour un jeu bonus, ce bandeau
+                  recouvre ce texte-là et dit ce que le défi change vraiment. Posé
+                  SUR l'image, il n'allonge pas l'écran (09/10/2026). */}
+              {bonus && (
+                <span className="choix-mode__montre">
+                  {texteDuDefi ?? `⏳ Contre la montre : ${enMinutesSecondes(montre)}`}
+                </span>
+              )}
+            </span>
           </button>
         </li>
       </ul>
 
-      {record && (
+      {recordTemps !== null && (
+        <p className="choix-mode__record">
+          Ton meilleur temps&nbsp;: <strong>{enMinutesSecondes(recordTemps)}</strong>.
+        </p>
+      )}
+      {record && !bonus && (
         <p className="choix-mode__record">
           Ton meilleur à ce jeu&nbsp;:{' '}
           <strong>

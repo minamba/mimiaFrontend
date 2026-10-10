@@ -25,9 +25,22 @@
  *
  * Tout ce qui se calcule est calculé ; les banques se vérifient à part (le
  * test recalcule le signe de chaque f″ sur des points de l'intervalle).
+ *
+ * LE DESSIN (09/10/2026) : quatre sortes portent un `visuel` (voir
+ * `lib/jeux/visuels.js`), construit avec les valeurs de la question et sans
+ * aucun tirage — la même graine redonne la même partie :
+ *   - convexe sur un intervalle : la cubique, les bornes marquées sur elle ;
+ *   - le point d'inflexion : la cubique et ses deux bosses, rien de marqué ;
+ *   - les points d'inflexion : la courbe de f″ (pas de f), ses racines
+ *     marquées — la racine double touche l'axe sans le traverser ;
+ *   - les fonctions de référence : leur courbe sur l'intervalle de la
+ *     question (cos et sin point par point, le dessinateur n'en a pas).
+ * Pas de dessin pour la dérivée seconde à écrire (un calcul), ni pour les
+ * tangentes et cordes et le lien avec les dérivées (f n'y est pas donnée).
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
+import { valeur as ordonneeEn } from '../visuels.js';
 
 export const FAMILLE = { cle: 'convexite', titre: 'La convexité', matiereCode: 'MATHS' };
 
@@ -73,6 +86,78 @@ const devant = (k) => {
 };
 
 const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
+
+/* ------------------------------------------------------------ les dessins */
+
+// « + 0 » : jamais de −0, qu’un aller-retour JSON ne redonnerait pas.
+const arrondi = (x) => Math.round(x * 100) / 100 + 0;
+
+/** [a, b, c…] (du plus haut degré au plus bas, comme `polynome`) → la fonction dessinée. */
+const trace = (coefs, etiquette) => ({ forme: 'poly', coefs: [...coefs].reverse().map((c) => c + 0), ...(etiquette ? { etiquette } : {}) });
+
+/**
+ * Un dessin de courbes sur [xmin ; xmax] : la fenêtre se cale sur les fonctions
+ * et les points. L'axe des x n'y entre que s'il ne prend pas plus de place que
+ * la courbe : loin de lui, une cubique écrasée cacherait sa courbure — ce
+ * qu'on regarde ici.
+ */
+function dessin(xmin, xmax, fonctions, points = []) {
+  const ys = points.map((p) => p.y);
+  fonctions.forEach((f) => {
+    for (let i = 0; i <= 48; i += 1) {
+      const y = ordonneeEn(f, xmin + ((xmax - xmin) * i) / 48);
+      if (Number.isFinite(y)) ys.push(y);
+    }
+  });
+  let bas = Math.min(...ys);
+  let haut = Math.max(...ys);
+  if (bas > 0 && bas <= haut - bas) bas = 0;
+  if (haut < 0 && -haut <= haut - bas) haut = 0;
+  const air = Math.max((haut - bas) * 0.1, 0.5);
+  return {
+    type: 'courbe',
+    fenetre: {
+      xmin: arrondi(xmin), xmax: arrondi(xmax), ymin: arrondi(bas - air), ymax: arrondi(haut + air),
+    },
+    fonctions,
+    ...(points.length ? { points } : {}),
+  };
+}
+
+/** Une fonction sans forme dans le dessinateur (cos, sin), en 24 morceaux sur [a ; b]. */
+function parPoints(fn, a, b) {
+  const points = [];
+  for (let i = 0; i <= 24; i += 1) {
+    const x = a + ((b - a) * i) / 24;
+    points.push([arrondi(x), arrondi(fn(x))]);
+  }
+  return { forme: 'morceaux', points };
+}
+
+const DEMI_PI = Math.PI / 2;
+
+/** Pour chaque fonction de référence (« fonction|intervalle ») : sa courbe et sa fenêtre en x, l'intervalle de la question. */
+const COURBES_DE_REFERENCE = {
+  'x ↦ x²|ℝ': [{ forme: 'carre' }, -3, 3],
+  'x ↦ eˣ|ℝ': [{ forme: 'exp' }, -3, 2],
+  'x ↦ e^(−x)|ℝ': [{ forme: 'exp', k: -1 }, -2, 3],
+  'x ↦ x⁴|ℝ': [trace([1, 0, 0, 0, 0]), -2, 2],
+  'x ↦ x³|[0 ; +∞[': [{ forme: 'cube' }, 0, 2.5],
+  'x ↦ 1/x|]0 ; +∞[': [{ forme: 'inverse' }, 0, 5],
+  'x ↦ ln x|]0 ; +∞[': [{ forme: 'ln' }, 0, 8],
+  'x ↦ √x|]0 ; +∞[': [{ forme: 'racine' }, 0, 9],
+  'x ↦ −x²|ℝ': [trace([-1, 0, 0]), -3, 3],
+  'x ↦ 1/x|]−∞ ; 0[': [{ forme: 'inverse' }, -5, 0],
+  'x ↦ cos x|[−π/2 ; π/2]': [parPoints(Math.cos, -DEMI_PI, DEMI_PI), -DEMI_PI, DEMI_PI],
+  'x ↦ sin x|[0 ; π]': [parPoints(Math.sin, 0, Math.PI), 0, Math.PI],
+  'x ↦ x³|ℝ': [{ forme: 'cube' }, -2, 2],
+};
+
+/** Le dessin d'une fonction de référence sur son intervalle, ou null si la banque en a une sans dessin. */
+export function dessinReference(fonction, intervalle) {
+  const courbe = COURBES_DE_REFERENCE[`${fonction}|${intervalle}`];
+  return courbe ? dessin(courbe[1], courbe[2], [courbe[0]]) : null;
+}
 
 function manche(t, {
   consigne, question, bonne, pieges = [], voisin,
@@ -137,12 +222,16 @@ function convexeSur(t) {
   const pieges = bonne === 'ni'
     ? { convexe: 'changement-de-signe', concave: 'changement-de-signe' }
     : { [bonne === 'convexe' ? 'concave' : 'convexe']: 'convexe-positif', ni: 'signe-constant' };
+  // La cubique autour de l'intervalle, ses bornes marquées sur la courbe.
+  const f = trace([a, b, c, d]);
+  const surF = (x) => ({ x, y: ordonneeEn(f, x) + 0 });
   return {
     consigne: 'convexe-sur',
     question: `f(x) = ${polynome([a, b, c, d])}\nSur [${ecrire(p)} ; ${ecrire(q)}], f est :`,
     choix: t.melanger(Object.entries(ALLURES).map(([cle, libelle]) => ({ cle, libelle }))),
     bonne,
     pieges,
+    visuel: dessin(p - 1, q + 1, [f], [surF(p), surF(q)]),
   };
 }
 
@@ -159,13 +248,16 @@ function inflexion(t) {
   const r = (p + q) / 2;
   const f = [a, -3 * a * r, 3 * a * p * q, t.entre(-5, 5)];
   const valeur = (x) => `x = ${ecrire(x)}`;
-  return manche(t, {
+  const m = manche(t, {
     consigne: 'inflexion',
     question: `f(x) = ${polynome(f)}\nAbscisse du point d’inflexion de la courbe de f ?`,
     bonne: valeur(r),
     pieges: [[valeur(p), 'extremum-pas-inflexion'], [valeur(q), 'extremum-pas-inflexion'], [valeur(-r), 'resoudre-signe']],
     voisin: (j) => valeur(r + j),
   });
+  // La cubique et ses deux bosses ; rien de marqué : le point d'inflexion, on le cherche.
+  const demi = Math.max(3, Math.abs(q - p) / 2 + 1.5);
+  return { ...m, visuel: dessin(r - demi, r + demi, [trace(f)]) };
 }
 
 /* --------------------------------------- les points d'inflexion, f″ factorisée */
@@ -186,12 +278,18 @@ function pointsInflexion(t) {
   const pieges = double
     ? { [seul(p)]: 'annule-sans-changer', [deux]: 'annule-sans-changer' }
     : { [seul(lo)]: 'deux-changements', [seul(hi)]: 'deux-changements' };
+  // La courbe de f″ (pas de f !) développée, ses racines marquées : la racine
+  // double touche l'axe sans le traverser.
+  const f2 = double
+    ? [k, -k * (2 * p + q), k * (p * p + 2 * p * q), -k * p * p * q]
+    : [k, -k * (p + q), k * p * q];
   return {
     consigne: 'points-inflexion',
     question: `f″(x) = ${expression}\nOù la courbe de f a-t-elle un point d’inflexion ?`,
     choix: cartes(t.melanger([seul(lo), seul(hi), deux])),
     bonne,
     pieges,
+    visuel: dessin(Math.min(lo - 1, (lo + hi) / 2 - 3), Math.max(hi + 1, (lo + hi) / 2 + 3), [trace(f2, 'f″')], [{ x: p, y: 0 }, { x: q, y: 0 }]),
   };
 }
 
@@ -275,13 +373,16 @@ function piegesReference(fonction, allure) {
 }
 
 function reference([fonction, intervalle, allure], t) {
-  return {
+  const m = {
     consigne: 'reference',
     question: `${fonction} sur ${intervalle}.\nCette fonction est :`,
     choix: t.melanger(Object.entries(ALLURES).map(([cle, libelle]) => ({ cle, libelle }))),
     bonne: allure,
     pieges: piegesReference(fonction, allure),
   };
+  // La courbe de référence sur l'intervalle de la question : son creux ou sa bosse se voit.
+  const visuel = dessinReference(fonction, intervalle);
+  return visuel ? { ...m, visuel } : m;
 }
 
 /* ---------------------------------------------- le lien avec les dérivées */

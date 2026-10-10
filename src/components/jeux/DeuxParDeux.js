@@ -9,6 +9,8 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { DecorDeux, FeteDeux, MascotteDeux } from './scenes/cp-maths-2/SceneDeux';
+import { humeurDe } from './scenes/cp-maths-2/communs';
 
 /**
  * DEUX PAR DEUX, À L'ÉCRAN.
@@ -25,6 +27,12 @@ import { bruitage } from '../../lib/jeux/bruitages';
  *
  * LE DÉCOR EST UNE IMAGE, LES ASSIETTES SONT DESSINÉES — la règle des autres
  * jeux. L'esplanade de la fête foraine, au centre, porte la table.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) vit dans
+ * `scenes/cp-maths-2/SceneDeux.js` : la guirlande de fanions et ses
+ * ampoules, les ballons par deux, la fillette au « V » qui attend, encourage
+ * et saute de joie, la paire de ballons qui s'envole à la réussite. Rien de
+ * la règle n'a bougé.
  */
 export default function DeuxParDeux({ onQuitter, matiereCode }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -107,7 +115,12 @@ export default function DeuxParDeux({ onQuitter, matiereCode }) {
   const message = sens && !juste ? PHRASES[CLE_PHRASE[sens]] : null;
 
   return (
-    <div className="jeu jeu--deux" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--deux sc-deux-par-deux${juste ? ' sc-deux-par-deux--gagne' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorDeux gagne={juste} />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -127,7 +140,7 @@ export default function DeuxParDeux({ onQuitter, matiereCode }) {
         <BoutonsVoix voix={voix} consigne={aDire} />
       </p>
 
-      <Table mode={courante.mode} n={courante.n} devoile={juste} />
+      <Table key={`table-${manche}`} mode={courante.mode} n={courante.n} devoile={juste} />
 
       {!juste && (
         <div className="deux__reponses" role="group" aria-label="Choisis ta réponse">
@@ -157,6 +170,10 @@ export default function DeuxParDeux({ onQuitter, matiereCode }) {
         </div>
       )}
 
+      {/* LA CLÉ DE LA RÉPONSE : une autre réponse refusée relance
+          l'encouragement, même sans passer par l'attente. */}
+      <MascotteDeux key={`${manche}-${choix}`} humeur={humeurDe({ gagne: juste, refus: Boolean(sens) })} />
+      {juste && <FeteDeux key={`fete-${manche}`} />}
     </div>
   );
 }

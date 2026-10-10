@@ -26445,7 +26445,9 @@ html.defilement-bloque body {
    angles arrondis de la carte laissent le reste — ce rayon-là les mange. */
 .choix-mode__image {
   display: block;
-  height: 500px;
+  /* Jamais plus haute que l'écran ne le permet (09/10/2026 : « attention que
+     les fenêtres ne débordent pas ») : l'en-tête et la barre du site en moins. */
+  height: clamp(260px, calc(100vh - 340px), 500px);
   width: auto;
   max-width: 100%;
   border-radius: 18px;
@@ -32682,16 +32684,16 @@ html.defilement-bloque body {
 }
 
 /* SUR GRAND ÉCRAN, TROIS CARTES SUR QUATRE. La quatrième ferait un bandeau au
-   lieu d'une rangée ; c'est celle du MILIEU qui s'efface, pas la dernière —
-   les trois restantes bornent alors le primaire entier (CP, CE2, CM2). Voir
-   l'en-tête de `JeuxApercu.js`. */
-.jeux-apercu__carte:nth-child(3) { display: none; }
+   lieu d'une rangée ; c'est la DEUXIÈME (le CM1) qui s'efface — les trois
+   restantes bornent alors toute la scolarité (CP, 5e, 2de, le 10/10/2026).
+   Voir l'en-tête de `JeuxApercu.js`. */
+.jeux-apercu__carte:nth-child(2) { display: none; }
 
 /* L'ESCALIER SE FAIT À LA MARGE, PLUS À LA TRANSFORMATION : `transform` est
    désormais pris par le flottement ci-dessous, et deux règles qui se
    disputent la même propriété, c'est celle du bas qui gagne — l'escalier
    aurait disparu. */
-.jeux-apercu__carte:nth-child(2) { margin-top: 18px; }
+.jeux-apercu__carte:nth-child(3) { margin-top: 18px; }
 .jeux-apercu__carte:nth-child(4) { margin-top: 36px; }
 
 /* ------------------------------------------------- les couvertures flottent
@@ -32827,7 +32829,7 @@ html.defilement-bloque body {
     gap: 32px;
   }
 
-  .jeux-apercu__carte:nth-child(2),
+  .jeux-apercu__carte:nth-child(3),
   .jeux-apercu__carte:nth-child(4) { margin-top: 0; }
 }
 
@@ -32846,13 +32848,13 @@ html.defilement-bloque body {
      DEUX COLONNES, ET LA QUATRIÈME CARTE REVIENT. Celle que le grand écran
      masque — le CM1 — reprend sa place ici : quatre cartes remplissent deux
      rangées pleines, là où trois en laissaient une bancale. La série se lit
-     alors dans l'ordre des classes, CP, CE2, CM1, CM2.
+     alors dans l'ordre des classes, CP, CM1, 5e, 2de (10/10/2026).
 
      À 700 px ET NON 560 : entre les deux, trois cartes de front retombaient
      sous 160 px et les titres se recassaient en deux. Deux cartes y tiennent
      largement. */
   .jeux-apercu__grille { grid-template-columns: repeat(2, 1fr); }
-  .jeux-apercu__carte:nth-child(3) { display: flex; }
+  .jeux-apercu__carte:nth-child(2) { display: flex; }
 }
 
 /* ================================================================
@@ -35192,4 +35194,3263 @@ body:has(.cookies) .bouton-signalement { display: none; }
     right: 0;
     transform: translateY(-50%);
   }
+}
+
+/* ------------------------------------------ la salle à fouiller (escape games)
+   Camara, le 09/10/2026 : « dans un escape game, on se déplace dans des pièces,
+   on sélectionne des choses ». Le décor devient une salle (aux proportions de
+   l'image, pour que les objets repérés en pourcentage tombent pile), six objets
+   y brillent tour à tour, un inventaire range les pièces trouvées, et l'énigme
+   s'ouvre en zoomant depuis l'objet touché. Préfixe `.exploration` : `.salle`
+   est déjà la salle d'attente. */
+.jeu--salle {
+  background: radial-gradient(ellipse at 50% 0%, #1b2440 0%, #0a0f1d 70%);
+}
+
+.exploration {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.exploration__corps {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.exploration__piece {
+  position: relative;
+  flex: 0 1 auto;
+  width: 100%;
+  aspect-ratio: 1400 / 788;
+  min-width: 0;
+  border-radius: 16px;
+  background: #0a0f1d center / cover no-repeat;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  /* Sans « both » : une fois jouée, l'animation ne laisse pas de transform, qui
+     piégerait la fiche « fixed » du téléphone dans la salle. */
+  animation: exploration-entree 0.8s ease-out;
+}
+
+/* Les bords s'assombrissent : l'œil va au centre, et les objets ressortent. */
+.exploration__piece::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+/* Une poussière qui flotte dans la lumière : la salle respire. */
+.exploration__poussiere {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 30%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 38% 62%, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1.5px 1.5px at 64% 22%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 82% 70%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(2px 2px at 52% 44%, rgba(255, 240, 200, 0.35), transparent);
+  background-size: 340px 340px;
+  animation: exploration-poussiere 26s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Un objet de la salle : un point lumineux posé sur lui. */
+.exploration__objet {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  background: rgba(10, 16, 30, 0.55);
+  color: #fff;
+  font-size: 20px;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(2px);
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.3s ease;
+}
+
+.exploration__objet.est-ferme {
+  width: 34px;
+  height: 34px;
+  border-color: rgba(255, 255, 255, 0.35);
+  font-size: 14px;
+  opacity: 0.55;
+}
+
+.exploration__objet.est-fouille {
+  width: 34px;
+  height: 34px;
+  border-color: #6ee7a8;
+  background: rgba(16, 92, 56, 0.75);
+  color: #d9ffe9;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Celui du cadenas en cours appelle l'œil : un halo qui pulse. */
+.exploration__objet.est-a-fouiller {
+  border-color: #ffd36b;
+  background: rgba(60, 40, 0, 0.55);
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(255, 211, 107, 0.7), 0 0 22px rgba(255, 211, 107, 0.55);
+  animation: exploration-halo 1.6s ease-out infinite;
+}
+
+.exploration__objet.est-a-fouiller:hover,
+.exploration__objet.est-a-fouiller:focus-visible {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: rgba(90, 60, 0, 0.75);
+}
+
+.exploration__etiquette {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(10, 16, 30, 0.82);
+  color: #ffe9b0;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.exploration__porte {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+  border-radius: 12px;
+  background: rgba(10, 16, 30, 0.5);
+  font-size: 18px;
+  transform: translate(-50%, -50%);
+  opacity: 0.75;
+}
+
+.exploration__porte.est-ouverte {
+  width: 58px;
+  height: 58px;
+  border: 2px solid #6ee7a8;
+  background: rgba(16, 92, 56, 0.8);
+  font-size: 28px;
+  opacity: 1;
+  cursor: pointer;
+  animation: exploration-porte 1.2s ease-in-out infinite alternate;
+}
+
+.exploration__sortie {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(92%, 640px);
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(8, 14, 28, 0.86);
+  color: #fff;
+  transform: translateX(-50%);
+  animation: exploration-monte 0.5s ease-out both;
+}
+
+/* L'inventaire : une feuille de papier, comme dans les jeux d'enquête. */
+.exploration__inventaire {
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 10px;
+  border-radius: 6px;
+  background: linear-gradient(175deg, #f4efe4 0%, #e6dfcf 100%);
+  color: #2b2418;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  transform: rotate(1.2deg);
+}
+
+.exploration__inventaire-titre {
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.exploration__cases {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.exploration__case {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(43, 36, 24, 0.12);
+}
+
+.exploration__case.est-pleine {
+  background: rgba(43, 36, 24, 0.2);
+}
+
+.exploration__case.est-nouvelle {
+  animation: exploration-trouve 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.exploration__lettre {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #2b2418;
+  color: #ffd36b;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.exploration__provenance {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.exploration__vide {
+  margin: 0 auto;
+  color: rgba(43, 36, 24, 0.35);
+  font-weight: 800;
+}
+
+/* Les fiches : la mission au départ, puis chaque énigme. */
+.exploration__voile {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  padding: 16px 12px;
+  border-radius: 16px;
+  background: rgba(4, 8, 18, 0.72);
+  backdrop-filter: blur(3px);
+  overflow: auto;
+  animation: exploration-voile 0.35s ease-out both;
+}
+
+.exploration__fiche {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  /* Centrée dans la salle, sans jamais couper son haut quand elle déborde. */
+  margin: auto;
+  width: min(100%, 760px);
+  padding: 22px 22px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(20, 26, 42, 0.97), rgba(10, 14, 26, 0.97));
+  color: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+
+/* L'énigme surgit de l'objet touché. */
+.exploration__voile--enigme .exploration__fiche {
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+  animation: exploration-zoom 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+.exploration__titre {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  color: #ffd36b;
+  text-shadow: 0 0 18px rgba(255, 211, 107, 0.35);
+}
+
+.exploration__lieu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.exploration__numero {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 24px;
+  color: #fff;
+}
+
+.exploration__numero::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: #e5484d;
+}
+
+.exploration__recit {
+  margin: 0;
+  max-width: 40em;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-align: center;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.exploration__curseur {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  animation: exploration-curseur 0.8s steps(1) infinite;
+}
+
+.exploration__conseil {
+  margin: 0;
+  color: #ffe9b0;
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+}
+
+.exploration__enigme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Dans la fiche sombre, la consigne et la question gardent leur carte claire. */
+.exploration__fiche .jeu__consigne,
+.exploration__fiche .college__question {
+  margin: 0;
+}
+
+.exploration__fiche .scene__choix {
+  margin: 0;
+}
+
+@keyframes exploration-entree {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes exploration-poussiere {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-340px, -120px); }
+}
+
+@keyframes exploration-halo {
+  0% { box-shadow: 0 0 0 0 rgba(255, 211, 107, 0.7), 0 0 22px rgba(255, 211, 107, 0.55); }
+  70% { box-shadow: 0 0 0 18px rgba(255, 211, 107, 0), 0 0 22px rgba(255, 211, 107, 0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 211, 107, 0), 0 0 22px rgba(255, 211, 107, 0.55); }
+}
+
+@keyframes exploration-porte {
+  from { box-shadow: 0 0 10px rgba(110, 231, 168, 0.5); transform: translate(-50%, -50%) scale(1); }
+  to { box-shadow: 0 0 32px rgba(110, 231, 168, 0.95); transform: translate(-50%, -50%) scale(1.08); }
+}
+
+@keyframes exploration-monte {
+  from { opacity: 0; transform: translate(-50%, 20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes exploration-trouve {
+  0% { transform: scale(0.6); background: rgba(255, 211, 107, 0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes exploration-voile {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes exploration-zoom {
+  from { opacity: 0; transform: scale(0.15); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes exploration-curseur {
+  50% { opacity: 0; }
+}
+
+/* LA SALLE TIENT DANS L'ÉCRAN — Camara, le 09/10/2026 : « la fenêtre déborde au
+   lieu de s'adapter ». Calée sur la largeur, une image 16/9 dépasse la hauteur
+   d'un écran d'ordinateur. Sa largeur suit donc la hauteur disponible (l'écran,
+   moins la barre du site et celles du jeu). Sur ordinateur, le jeu est zoomé
+   (`--zoom-jeu`, voir JeuxEleve) : on divise par le zoom, si bien que la salle
+   garde la même taille À L'ÉCRAN quel que soit le zoom — et le calcul du zoom,
+   qui mesure le jeu, ne peut pas boucler sur elle. */
+@media (min-width: 761px) and (max-width: 1099px) {
+  .exploration__piece {
+    width: min(100%, calc((100vh - 250px) * 1400 / 788));
+  }
+}
+
+@media (min-width: 1100px) {
+  .exploration__piece {
+    width: min(100%, calc((100vh - 300px) / var(--zoom-jeu, 1.25) * 1400 / 788));
+  }
+
+  .exploration__fiche {
+    padding: 18px 20px 14px;
+  }
+
+  .exploration__recit {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+}
+
+/* Sur un écran étroit, l'inventaire passe sous la salle, en une rangée, et les
+   fiches gagnent la hauteur qu'il leur faut : la salle seule serait trop basse. */
+@media (max-width: 760px) {
+  .exploration__corps {
+    flex-direction: column;
+  }
+
+  .exploration__inventaire {
+    flex-basis: auto;
+    transform: none;
+  }
+
+  .exploration__cases {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+  }
+
+  .exploration__case {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 2px;
+  }
+
+  .exploration__provenance {
+    display: none;
+  }
+
+  /* La salle est trop basse pour une fiche : elle s'ouvre en plein écran. */
+  .exploration__voile {
+    position: fixed;
+    z-index: 1000;
+    border-radius: 0;
+  }
+
+  .exploration__objet {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+
+  .exploration__objet.est-ferme,
+  .exploration__objet.est-fouille {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .exploration__etiquette {
+    display: none;
+  }
+
+  .exploration__recit {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exploration__piece,
+  .exploration__poussiere,
+  .exploration__objet.est-a-fouiller,
+  .exploration__porte.est-ouverte,
+  .exploration__case.est-nouvelle,
+  .exploration__voile,
+  .exploration__voile--enigme .exploration__fiche,
+  .exploration__sortie {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------ les jeux bonus
+   Camara, le 09/10/2026, modèles Genially à l'appui : devine le mot, les mots
+   cachés, devine la phrase, les paires, les opérations à trous. Un décor de
+   salle de jeux — nuit bleue et néons — commun aux cinq, et ce que chacun
+   anime en plus. Préfixes `.bonus`, `.operations`, `.mots-caches`,
+   `.devinette`, `.paires` : vérifiés libres dans ce fichier. */
+.bonus {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 92, 196, 0.28), transparent 38%),
+    radial-gradient(circle at 88% 82%, rgba(64, 196, 255, 0.28), transparent 40%),
+    linear-gradient(160deg, #1d1559 0%, #10204f 55%, #071233 100%);
+  border-color: rgba(140, 120, 255, 0.45);
+  box-shadow: 0 18px 50px rgba(8, 10, 40, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Le décor peint du jeu (09/10/2026) : sous un voile de nuit, pour que le
+   texte blanc et les plateaux restent lisibles sur n'importe quelle image. */
+.bonus-decor { display: contents; }
+.bonus-decor .bonus {
+  background:
+    linear-gradient(180deg, rgba(8, 10, 40, 0.55) 0%, rgba(8, 10, 40, 0.42) 45%, rgba(8, 10, 40, 0.62) 100%),
+    var(--fond-bonus, none) center / cover no-repeat,
+    #10204f;
+}
+
+.bonus .jeu__consigne {
+  max-width: 44em;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1b1d3a;
+  font-size: 17px;
+}
+
+.bonus__entete {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bonus__titre {
+  margin: 0;
+  padding: 6px 30px;
+  border: 2px solid #c48cff;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #2a1d7a, #160f4a);
+  color: #fff;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-shadow: 0 0 14px rgba(196, 140, 255, 0.7);
+  box-shadow: 0 0 22px rgba(196, 140, 255, 0.55), inset 0 0 14px rgba(196, 140, 255, 0.25);
+  animation: bonus-titre 3s ease-in-out infinite alternate;
+}
+
+.bonus__sous-titre {
+  margin: 0;
+  color: #ffd36b;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.bonus__compteurs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Le chrono et les compteurs, opaques sur tous les décors (09/10/2026, Camara : « le timer et le bouton Reprendre ne sont pas visibles »). */
+.bonus__chrono,
+.bonus__compte {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(14, 12, 44, 0.9);
+  border: 2px solid rgba(255, 211, 107, 0.85);
+  box-shadow: 0 0 14px rgba(255, 211, 107, 0.3), 0 6px 14px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.bonus__chrono-valeur {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+}
+
+.bonus__chrono.est-presse {
+  border-color: #ff5a6a;
+  background: rgba(160, 20, 40, 0.55);
+  animation: bonus-presse 0.9s ease-in-out infinite alternate;
+}
+
+.bonus__compte--coups { font-size: 15px; font-weight: 700; opacity: 0.85; }
+
+.bonus__vignette { font-size: 44px; }
+
+/* Le bandeau du défi d'un jeu bonus, posé sur le bas de la carte, là où le
+   dessin parle de cœurs : il le recouvre, sans rien ajouter sous la carte. */
+.choix-mode__cadre {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.choix-mode__montre {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: 73%;
+  bottom: 4%;
+  display: grid;
+  place-items: center;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #3b0f2c, #24081c);
+  box-shadow: inset 0 0 0 2px rgba(255, 140, 90, 0.55);
+  color: #ffd36b;
+  font-size: clamp(14px, 1.6vw, 18px);
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.bonus-fin__record {
+  margin: 0;
+  color: #ffd36b;
+  font-size: 22px;
+  font-weight: 900;
+  animation: bonus-record 0.8s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+/* --- les opérations à trous */
+.operations__calculs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  width: min(100%, 860px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.operations__calcul {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff;
+  color: #2b55d6;
+  font-size: 30px;
+  font-weight: 900;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+  animation: bonus-arrive 0.45s ease-out both;
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.operations__morceau { display: inline-flex; align-items: center; gap: 10px; }
+
+.operations__trou {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 2px dashed #9db4f5;
+  border-radius: 12px;
+  background: #eef3ff;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.operations__trou.est-plein {
+  border: none;
+  background: #2b55d6;
+  animation: bonus-pose 0.3s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.operations__resultat {
+  padding: 4px 16px;
+  border-radius: 12px;
+  background: #ffe39e;
+  color: #2b3a8a;
+}
+
+.operations__calcul.est-juste {
+  background: #e6fbef;
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px #3fcf86, 0 6px 0 rgba(0, 0, 0, 0.15);
+}
+
+.operations__calcul.est-juste .operations__trou { background: #1f9d5c; }
+.operations__calcul.est-faux { animation: bonus-tremble 0.45s ease-in-out; }
+
+.operations__signes {
+  display: flex;
+  gap: 14px;
+  padding: 12px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.operations__signe {
+  width: 66px;
+  height: 66px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #4f7bff, #2b55d6);
+  color: #fff;
+  font-size: 36px;
+  font-weight: 900;
+  cursor: grab;
+  box-shadow: 0 6px 0 #1b3a9e;
+  transition: transform 0.15s ease;
+}
+
+.operations__signe:hover { transform: translateY(-3px); }
+
+.operations__signe.est-en-main {
+  background: linear-gradient(180deg, #ffd36b, #ff9f1c);
+  box-shadow: 0 6px 0 #b86a00, 0 0 22px rgba(255, 211, 107, 0.8);
+  transform: translateY(-4px) scale(1.06);
+}
+
+/* --- les mots cachés */
+.mots-caches__corps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 22px;
+  width: 100%;
+}
+
+.mots-caches__grille {
+  display: grid;
+  grid-template-columns: repeat(var(--taille), 1fr);
+  gap: 3px;
+  width: min(100%, calc(var(--taille) * 46px));
+  padding: 10px;
+  border-radius: 16px;
+  background: #f6f2e9;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.mots-caches__grille.est-rate { animation: bonus-tremble 0.35s ease-in-out; }
+
+.mots-caches__case {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1.5px solid #3156c9;
+  border-radius: 6px;
+  background: #fff;
+  color: #2a49b8;
+  font-size: clamp(14px, 2.4vw, 22px);
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mots-caches__case.est-trouvee {
+  background: hsl(var(--teinte) 70% 52%);
+  border-color: hsl(var(--teinte) 70% 40%);
+  color: #fff;
+}
+
+.mots-caches__case.est-tracee {
+  background: #ffd36b;
+  border-color: #ff9f1c;
+  color: #3a2600;
+  transform: scale(1.08);
+}
+
+.mots-caches__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 170px;
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  list-style: none;
+}
+
+.mots-caches__mot {
+  font-size: 19px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.mots-caches__mot.est-trouve {
+  color: hsl(var(--teinte) 80% 70%);
+  text-decoration: line-through 3px;
+  animation: bonus-pose 0.4s ease-out;
+}
+
+/* --- devine le mot, devine la phrase */
+.devinette__corps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.devinette__centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex: 1 1 420px;
+  max-width: 760px;
+}
+
+/* L'INDICE SE VOIT SUR TOUS LES DÉCORS (09/10/2026, capture de Camara : « le
+   cadre indice n'est pas trop visible ») : un fond sombre opaque, une bordure
+   dorée et une pastille, au lieu d'un voile doré à 16 % qui se fondait dans
+   l'image peinte. */
+.devinette__indice {
+  margin: 0;
+  padding: 12px 20px;
+  border: 2px solid #ffd36b;
+  border-radius: 16px;
+  background: rgba(18, 14, 48, 0.9);
+  color: #fff6dc;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 0 18px rgba(255, 211, 107, 0.35), 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.devinette__indice-mot {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #ffd36b;
+  color: #2a1a00;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.devinette__tableau {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 22px;
+}
+
+.devinette__mot { display: inline-flex; gap: 5px; }
+
+.devinette__case {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 48px;
+  border-radius: 8px;
+  background: #f1f4f9;
+  color: #1b1d3a;
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+}
+
+.devinette__case.est-signe {
+  width: auto;
+  min-width: 14px;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+}
+
+.devinette__case.est-vue:not(.est-signe) {
+  background: #ff9a4d;
+  color: #fff;
+  animation: bonus-retourne 0.4s ease-out;
+}
+
+.devinette__case.est-devoilee { background: #8b93a8; }
+
+.bonus--devine-le-mot .devinette__case {
+  width: 46px;
+  height: 56px;
+  background: transparent;
+  box-shadow: inset 0 -4px 0 #fff;
+  color: #fff;
+}
+
+.bonus--devine-le-mot .devinette__case.est-vue { background: transparent; color: #ffd36b; }
+
+.devinette__erreurs { margin: 0; font-size: 16px; font-weight: 800; }
+
+.devinette__vies { display: inline-flex; gap: 8px; margin: 0; }
+
+.devinette__vie {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffd36b;
+  box-shadow: 0 0 10px rgba(255, 211, 107, 0.7);
+  transition: background 0.3s ease;
+}
+
+.devinette__vie.est-perdue { background: #d6334a; box-shadow: none; animation: bonus-pose 0.4s ease-out; }
+
+.devinette__clavier {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 8px;
+  width: min(100%, 560px);
+}
+
+.devinette__touche {
+  height: 50px;
+  border: none;
+  border-radius: 10px;
+  background: #121a3a;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 4px 0 #050a1e;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.devinette__touche:hover:not(:disabled) { transform: translateY(-2px); background: #1e2a5c; }
+.devinette__touche.est-bonne { background: #3fae5a; box-shadow: 0 4px 0 #1f6d33; }
+.devinette__touche.est-mauvaise { background: #c0392b; box-shadow: 0 4px 0 #7d1f16; }
+.devinette__touche:disabled { cursor: default; }
+
+.devinette__issue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  animation: bonus-arrive 0.4s ease-out both;
+}
+
+.devinette__issue p { margin: 0; }
+.devinette__issue.est-gagne { background: rgba(63, 207, 134, 0.22); border: 1px solid #3fcf86; }
+.devinette__issue.est-perdu { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); }
+
+/* --- les paires */
+.paires__table {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes), minmax(0, 1fr));
+  gap: 12px;
+  width: min(100%, calc(var(--colonnes) * 150px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paires__carte {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  perspective: 800px;
+  animation: bonus-arrive 0.4s ease-out both;
+}
+
+.paires__dos,
+.paires__face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border-radius: 16px;
+  backface-visibility: hidden;
+  transition: transform 0.45s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+
+.paires__dos {
+  background: linear-gradient(160deg, #f3e9ff, #e2d2ff);
+  border: 2px solid #d6c2ff;
+  color: #b18cf2;
+  font-size: 48px;
+  font-weight: 900;
+}
+
+.paires__face {
+  background: #fffdf6;
+  border: 2px solid #ffd36b;
+  color: #1b1d3a;
+  font-size: clamp(13px, 1.8vw, 18px);
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  transform: rotateY(180deg);
+  overflow-wrap: anywhere;
+}
+
+.paires__face.est-dessin { font-size: clamp(36px, 6vw, 58px); }
+.paires__carte.est-retournee .paires__dos { transform: rotateY(-180deg); }
+.paires__carte.est-retournee .paires__face { transform: rotateY(0); }
+.paires__carte.est-gagnee .paires__face { border-color: #3fcf86; box-shadow: 0 0 18px rgba(63, 207, 134, 0.7); animation: bonus-pose 0.4s ease-out; }
+
+@media (max-width: 640px) {
+  .operations__calcul { font-size: 24px; gap: 6px; }
+  .operations__trou { width: 44px; height: 44px; font-size: 24px; }
+  .operations__signe { width: 56px; height: 56px; font-size: 30px; }
+  .devinette__clavier { grid-template-columns: repeat(7, 1fr); }
+  .devinette__case { width: 30px; height: 38px; font-size: 20px; }
+  .paires__table { gap: 8px; }
+}
+
+@keyframes bonus-titre {
+  from { box-shadow: 0 0 16px rgba(196, 140, 255, 0.45), inset 0 0 12px rgba(196, 140, 255, 0.2); }
+  to { box-shadow: 0 0 30px rgba(196, 140, 255, 0.85), inset 0 0 18px rgba(196, 140, 255, 0.35); }
+}
+
+@keyframes bonus-presse {
+  from { box-shadow: 0 0 6px rgba(255, 90, 106, 0.4); }
+  to { box-shadow: 0 0 22px rgba(255, 90, 106, 0.95); }
+}
+
+@keyframes bonus-arrive {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes bonus-pose {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bonus-tremble {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+@keyframes bonus-retourne {
+  from { transform: rotateX(90deg); }
+  to { transform: rotateX(0); }
+}
+
+@keyframes bonus-record {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bonus__titre, .bonus__chrono.est-presse, .operations__calcul, .paires__carte, .devinette__issue { animation: none; }
+}
+
+/* --- les jeux bonus, deuxième fournée (09/10/2026) : puzzle, morpion,
+   défi des drapeaux, mot de passe. Préfixes `.puzzle`, `.morpion`,
+   `.drapeaux`, `.mdp` : vérifiés libres. */
+
+/* le puzzle */
+.puzzle__cadre {
+  width: min(100%, 860px);
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #2f7bff, #1a55d6);
+  box-shadow: 0 10px 0 #123b9a, 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.puzzle__grille {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes), 1fr);
+  grid-template-rows: repeat(var(--lignes), 1fr);
+  gap: 3px;
+  aspect-ratio: 1400 / 788;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0d2a75;
+}
+
+.puzzle__piece {
+  padding: 0;
+  border: none;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.puzzle__piece:hover:not(.est-en-place) { filter: brightness(1.12); }
+
+.puzzle__piece.est-choisie {
+  z-index: 1;
+  transform: scale(0.94);
+  box-shadow: 0 0 0 4px #ffd36b, 0 0 24px rgba(255, 211, 107, 0.9);
+}
+
+.puzzle__piece.est-en-place {
+  cursor: default;
+  animation: bonus-pose 0.35s ease-out;
+}
+
+.puzzle__modele {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-size: cover;
+  animation: bonus-arrive 0.2s ease-out;
+}
+
+.puzzle__voir {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  touch-action: none;
+  user-select: none;
+}
+
+/* le morpion
+   LA GRILLE SE VOIT ET GRANDIT AVEC LA DIFFICULTÉ (10/10/2026, Camara : « trop
+   simple, je veux un niveau compliqué avec plus de cases ») : des cases claires
+   comme des tuiles de papier de riz, bordées de bois, sur un plateau sombre ;
+   3, 5 ou 7 cases de côté (`--taille`). */
+.morpion__tour {
+  align-self: center;
+  margin: 0;
+  padding: 6px 18px;
+  border: 2px solid rgba(255, 211, 107, 0.85);
+  border-radius: 999px;
+  background: rgba(14, 12, 44, 0.9);
+  color: #ffe08a;
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.morpion__grille {
+  --taille: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--taille), minmax(0, 1fr));
+  gap: calc(14px - var(--taille) * 1.2px);
+  width: min(100%, calc(150px + var(--taille) * 70px));
+  max-width: 100%;
+  padding: 14px;
+  border: 4px solid #8a5a2b;
+  border-radius: 22px;
+  background: linear-gradient(160deg, #3b2412, #20140a);
+  box-shadow: 0 0 0 3px rgba(255, 211, 107, 0.45), 0 16px 34px rgba(0, 0, 0, 0.5);
+}
+
+.morpion__case {
+  aspect-ratio: 1;
+  min-width: 0;
+  border: none;
+  border-radius: calc(18px - var(--taille, 3) * 1.6px);
+  background: linear-gradient(160deg, #fffaf0, #f0e2c4);
+  color: #1b1d3a;
+  font-size: calc(var(--plateau, min(100vw, 520px)) / var(--taille, 3) * 0.42);
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 rgba(120, 80, 30, 0.25), 0 2px 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.morpion__case:hover:not(:disabled) { background: #fff6d0; transform: translateY(-2px); }
+.morpion__case:disabled { cursor: default; }
+.morpion__case.est-croix { color: #e0533a; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15); animation: bonus-pose 0.3s ease-out; }
+.morpion__case.est-rond { color: #1f6bd6; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.15); animation: bonus-pose 0.3s ease-out; }
+.morpion__case.est-gagnante { background: linear-gradient(160deg, #ffe680, #ffc93c); box-shadow: 0 0 0 3px #fff, 0 0 22px rgba(255, 200, 60, 0.95); animation: morpion-gagnante 0.8s ease-in-out infinite alternate; }
+
+@keyframes morpion-gagnante {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+/* Le choix de la difficulté : une carte colorée par niveau, avec sa grille en miniature. */
+.morpion__difficultes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  width: min(100%, 860px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.morpion__difficulte {
+  --teinte: #1f9d55;
+  --sombre: #0d4f2a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 14px 12px 16px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  background: linear-gradient(160deg, var(--teinte), var(--sombre));
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 0 var(--sombre), 0 14px 24px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.morpion__difficulte--moyen { --teinte: #2f7de1; --sombre: #143f80; }
+.morpion__difficulte--difficile { --teinte: #f08a24; --sombre: #8a4405; }
+.morpion__difficulte--expert { --teinte: #d93445; --sombre: #6e0d18; }
+.morpion__difficulte:hover { transform: translateY(-4px); filter: brightness(1.1); }
+.morpion__difficulte:active { transform: translateY(5px); box-shadow: 0 3px 0 var(--sombre), 0 6px 12px rgba(0, 0, 0, 0.4); }
+.morpion__embleme { font-size: 30px; line-height: 1; }
+.morpion__difficulte strong { font-size: 23px; }
+.morpion__difficulte > span:not(.morpion__embleme):not(.morpion__mini) { font-size: 14px; font-weight: 600; }
+
+.morpion__mini {
+  display: grid;
+  grid-template-columns: repeat(var(--taille), 1fr);
+  gap: 2px;
+  width: 56px;
+  aspect-ratio: 1;
+  padding: 3px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.morpion__mini i { border-radius: 2px; background: rgba(255, 255, 255, 0.85); }
+
+.morpion__difficulte em {
+  margin-top: 3px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #ffd36b;
+  color: #2a1a00;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+  text-shadow: none;
+}
+
+.morpion__difficulte.est-conseillee { border-color: #ffd36b; box-shadow: 0 8px 0 var(--sombre), 0 0 0 4px rgba(255, 211, 107, 0.55), 0 0 28px rgba(255, 211, 107, 0.6); }
+
+@media (prefers-reduced-motion: reduce) {
+  .morpion__case.est-gagnante { animation: none; }
+}
+
+/* le défi des drapeaux */
+.drapeaux__scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 18px 26px;
+  border-radius: 20px;
+  background: #fffdf6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.drapeaux__drapeau {
+  display: block;
+  width: min(320px, 70vw);
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 8px 8px 0 #1b1d3a;
+  animation: drapeaux-arrive 0.45s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+
+.drapeaux__minuteur {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: conic-gradient(#ffd36b calc(var(--part) * 360deg), rgba(27, 29, 58, 0.85) 0);
+  color: #1b1d3a;
+  font-size: 20px;
+  font-weight: 900;
+  box-shadow: 0 0 0 4px #1b1d3a;
+}
+
+.drapeaux__minuteur.est-presse {
+  background: conic-gradient(#ff5a6a calc(var(--part) * 360deg), rgba(27, 29, 58, 0.85) 0);
+  animation: bonus-presse 0.6s ease-in-out infinite alternate;
+}
+
+.drapeaux__choix {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drapeaux__pays {
+  min-width: 180px;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  background: #ffc531;
+  color: #1b1d3a;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #b88a00;
+  transition: transform 0.12s ease;
+}
+
+.drapeaux__pays:hover:not(:disabled) { transform: translateY(-2px); }
+.drapeaux__pays.est-juste { background: #3fcf86; box-shadow: 0 5px 0 #1f7a4c; color: #fff; }
+.drapeaux__pays.est-faux { background: #e5484d; box-shadow: 0 5px 0 #8a1f22; color: #fff; animation: bonus-tremble 0.4s ease-in-out; }
+.drapeaux__pays.est-eteint { opacity: 0.45; }
+.drapeaux__trop-tard { margin: 0; color: #ff8a8a; font-size: 20px; font-weight: 900; }
+
+@keyframes drapeaux-arrive {
+  from { opacity: 0; transform: translateY(-20px) rotate(-6deg) scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+
+/* le mot de passe */
+.mdp__annonce {
+  margin: 0;
+  padding: 10px 22px;
+  border-radius: 12px;
+  background: #e2ff00;
+  color: #1b1d3a;
+  font-size: 18px;
+  font-weight: 900;
+  font-style: italic;
+  animation: bonus-arrive 0.4s ease-out;
+}
+
+.mdp__table {
+  position: relative;
+  width: min(100%, 760px);
+  /* La languette du chrono dépasse en haut : la place lui est gardée, sans
+     mordre sur ce qui précède (09/10/2026). */
+  margin-top: 26px;
+  padding: 30px 14px 14px;
+  border-radius: 18px;
+  background: rgba(20, 8, 70, 0.55);
+}
+
+.mdp__minuteur {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  padding: 6px 22px;
+  border-radius: 14px 14px 0 0;
+  background: #3a1aa8;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  transform: translateX(-50%);
+}
+
+.mdp__minuteur.est-presse { background: #c0263a; animation: bonus-presse 0.6s ease-in-out infinite alternate; }
+
+.mdp__indices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mdp__indice {
+  display: grid;
+  place-items: center;
+  min-height: 92px;
+  border-radius: 12px;
+  background: #2c1585;
+}
+
+.mdp__indice.est-ouvert { background: #fff; animation: bonus-retourne 0.4s ease-out; }
+
+.mdp__mot-indice {
+  color: #2c1585;
+  font-size: clamp(16px, 2.6vw, 22px);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mdp__loupe {
+  width: 58px;
+  height: 58px;
+  border: none;
+  border-radius: 50%;
+  background: #e2ff00;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(226, 255, 0, 0.55);
+}
+
+.mdp__loupe:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+
+.mdp__saisie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  width: min(100%, 560px);
+}
+
+.mdp__champ {
+  flex: 1 1 260px;
+  padding: 12px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.mdp__champ::placeholder { color: rgba(255, 255, 255, 0.6); }
+.mdp__saisie.est-faux, .mdp__choix.est-faux { animation: bonus-tremble 0.4s ease-in-out; }
+
+.mdp__choix {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mdp__issue {
+  margin: 0;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 20px;
+  font-weight: 900;
+  animation: bonus-arrive 0.35s ease-out;
+}
+
+.mdp__issue.est-trouve { background: rgba(63, 207, 134, 0.25); border: 1px solid #3fcf86; }
+
+@media (max-width: 640px) {
+  .mdp__indices { grid-template-columns: 1fr; }
+  .mdp__indice { min-height: 64px; }
+  .drapeaux__pays { min-width: 140px; font-size: 16px; }
+}
+
+/* --- les jeux bonus À LA TAILLE DE L'ÉCRAN — Camara, le 09/10/2026 : « le
+   bouton revenir aux jeux n'est pas à sa place ; les fenêtres ne s'adaptent pas
+   à la taille de l'écran, c'est petit ».
+
+   LE RETOUR EN HAUT À GAUCHE, comme dans tous les autres jeux, hors du flux.
+   L'EN-TÊTE TIENT SUR UNE LIGNE (titre, puis chrono et compteurs à côté) : la
+   hauteur gagnée va au plateau.
+   LE PLATEAU SE RÈGLE SUR LA HAUTEUR LIBRE (`--libre`), comme la salle des
+   escape games : l'écran, moins la barre du site et l'en-tête du jeu, divisé
+   par le zoom des jeux (`--zoom-jeu`, voir JeuxEleve) — la même taille à
+   l'écran quel que soit le zoom, et rien sur quoi le calcul du zoom boucle. */
+.bonus > .jeu__quitter {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  z-index: 3;
+}
+
+.bonus {
+  padding-top: 18px;
+  gap: 12px;
+}
+
+.bonus__entete {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 6px;
+  padding: 0 180px;
+}
+
+.bonus__titre { padding: 4px 22px; font-size: clamp(22px, 3vw, 30px); }
+.bonus__compteurs { margin-top: 0; }
+.bonus .jeu__consigne { padding: 7px 16px; font-size: 15.5px; }
+
+.puzzle__voir {
+  cursor: pointer;
+  font-size: 15px;
+  touch-action: none;
+  user-select: none;
+}
+
+@media (min-width: 1100px) {
+  .bonus { --libre: calc((100vh - 300px) / var(--zoom-jeu, 1.25)); }
+
+  .puzzle__cadre { width: min(100%, calc(var(--libre) * 1.7766 + 28px)); }
+
+  .mots-caches__grille { width: min(100%, var(--libre)); }
+  .mots-caches__case { font-size: calc(var(--libre) / var(--taille) * 0.5); }
+
+  .paires__table {
+    width: min(100%, calc((var(--libre) - (var(--rangees) - 1) * 12px) / var(--rangees) * 0.75 * var(--colonnes) + (var(--colonnes) - 1) * 12px));
+  }
+  .paires__face { font-size: calc(var(--libre) / var(--rangees) * 0.12); }
+  .paires__face.est-dessin { font-size: calc(var(--libre) / var(--rangees) * 0.42); }
+  .paires__dos { font-size: calc(var(--libre) / var(--rangees) * 0.32); }
+
+  /* La grille tient dans l'écran avec la consigne et la ligne du tour (10/10/2026,
+     Camara : « le morpion déborde ») : `--libre` ne retire que l'en-tête. */
+  /* La largeur de la grille est MESURÉE par le jeu (useTientDansLEcran) ; les signes suivent `--plateau`. */
+
+  .drapeaux__drapeau { width: min(480px, calc(var(--libre) * 0.62)); }
+
+  .operations__calculs { width: min(100%, 1100px); }
+  .operations__calcul { font-size: clamp(28px, calc(var(--libre) * 0.075), 40px); }
+  .operations__trou { width: clamp(54px, calc(var(--libre) * 0.13), 70px); height: clamp(54px, calc(var(--libre) * 0.13), 70px); }
+
+  .mdp__table { width: min(100%, 900px); }
+  .mdp__indice { min-height: calc(var(--libre) * 0.32); }
+}
+
+/* Sur un écran étroit, le retour garde sa place en haut et l'en-tête passe dessous. */
+@media (max-width: 760px) {
+  .bonus { padding-top: 58px; }
+  .bonus__entete { padding: 0; }
+}
+
+/* --- LA DISPOSITION DES JEUX BONUS — Camara, le 09/10/2026 : « le titre doit
+   être centré ; la disposition n'est pas optimale ». Celle des autres jeux :
+   le retour en haut à gauche, le chrono et les compteurs EN FACE, en haut à
+   droite (là où les autres jeux ont leur piste « Question 1/8 »), et au milieu,
+   seul, le titre avec son sous-titre dessous. Puis la consigne, puis le plateau. */
+.bonus__entete {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  row-gap: 4px;
+  padding: 0;
+}
+
+.bonus__compteurs {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 3;
+  margin: 0;
+  gap: 8px;
+}
+
+.bonus__compteurs .bonus__chrono,
+.bonus__compteurs .bonus__compte { padding: 5px 14px; font-size: 16px; }
+.bonus__compteurs .bonus__chrono-valeur { font-size: 19px; }
+
+/* Plus étroit, le retour, le titre et les compteurs ne tiennent plus sur une
+   rangée : les compteurs reviennent sous le titre, centrés. À 1180 px et non
+   1000 (10/10/2026, Camara sur tablette : « le chrono mange un peu le titre ») :
+   un iPad en portrait fait 1024 px, et les échecs ont TROIS compteurs (chrono,
+   annuler, ambiance) qui mordaient sur le titre. */
+@media (max-width: 1180px) {
+  .bonus__compteurs { position: static; justify-content: center; }
+  .bonus { padding-top: 58px; }
+}
+
+/* --- LES OPÉRATIONS À TROUS, SANS DÉBORDER — Camara, le 09/10/2026 (capture :
+   les nombres sortaient des cartes). Une grille à colonnes fixes coupait les
+   calculs à deux trous, plus longs : chaque carte prend désormais la largeur de
+   SON calcul, et les cartes passent à la ligne, centrées. Le texte ne grossit
+   plus avec la hauteur de l'écran. */
+.operations__calculs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 1180px);
+}
+
+.operations__calcul {
+  flex: 0 1 auto;
+  white-space: nowrap;
+  padding: 12px 20px;
+  font-size: 30px;
+}
+
+.operations__trou { width: 54px; height: 54px; }
+
+@media (min-width: 1100px) {
+  .operations__calculs { width: min(100%, 1180px); }
+  .operations__calcul { font-size: 30px; }
+  .operations__trou { width: 56px; height: 56px; }
+}
+
+@media (max-width: 640px) {
+  .operations__calcul { font-size: 22px; padding: 10px 12px; gap: 6px; }
+  .operations__trou { width: 42px; height: 42px; font-size: 22px; }
+}
+
+/* « Pour le plaisir de jouer : pas liés aux notions de cours » — sous le titre
+   de la section des jeux bonus (09/10/2026). */
+.jeux-matiere__note {
+  margin: -8px 0 16px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15px;
+  font-style: italic;
+}
+
+/* --- les jeux bonus, troisième fournée (09/10/2026) : échecs, mot secret,
+   planètes. Préfixes `.echecs`, `.secret`, `.planetes` : vérifiés libres. */
+
+/* les échecs */
+.echecs__difficultes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  width: min(100%, 860px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* LES NIVEAUX SE VOIENT SUR LE DÉCOR (09/10/2026, capture de Camara : « le choix
+   de la difficulté n'est pas très visible ») : cartes opaques, une couleur par
+   niveau, la pièce et les étoiles qui montent avec la difficulté. */
+.echecs__difficulte {
+  --teinte: #1f9d55;
+  --sombre: #0d4f2a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 16px 14px 18px;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  background: linear-gradient(160deg, var(--teinte), var(--sombre));
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 0 var(--sombre), 0 14px 24px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.echecs__difficultes > li:nth-child(2) .echecs__difficulte { --teinte: #2f7de1; --sombre: #143f80; }
+.echecs__difficultes > li:nth-child(3) .echecs__difficulte { --teinte: #f08a24; --sombre: #8a4405; }
+.echecs__difficultes > li:nth-child(4) .echecs__difficulte { --teinte: #d93445; --sombre: #6e0d18; }
+
+.echecs__difficulte:hover { transform: translateY(-4px); filter: brightness(1.1); }
+.echecs__difficulte:active { transform: translateY(5px); box-shadow: 0 3px 0 var(--sombre), 0 6px 12px rgba(0, 0, 0, 0.4); }
+.echecs__embleme { font-size: 46px; line-height: 1; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4)); }
+.echecs__etoiles { color: #ffe08a; font-size: 18px; letter-spacing: 3px; }
+.echecs__difficulte strong { font-size: 24px; }
+.echecs__difficulte span:not(.echecs__embleme):not(.echecs__etoiles) { font-size: 15px; font-weight: 600; }
+.echecs__difficulte em {
+  margin-top: 4px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #ffd36b;
+  color: #2a1a00;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+  text-shadow: none;
+}
+.echecs__difficulte.est-conseillee { border-color: #ffd36b; box-shadow: 0 8px 0 var(--sombre), 0 0 0 4px rgba(255, 211, 107, 0.55), 0 0 28px rgba(255, 211, 107, 0.6); }
+
+/* L'ÉCHIQUIER DU PALAIS DE GLACE (09/10/2026) — Camara, capture à l'appui :
+   « améliore le design de l'échiquier, je veux que ce soit beaucoup plus beau,
+   en rapport avec le thème ; les prises, le chrono et Reprendre ne sont pas
+   visibles ». Le décor est un palais de glace où s'affrontent des pièces de
+   cristal bleu et de cristal rouge : les blancs sont de glace, les noirs de
+   rubis, le plateau de givre et de saphir dans un cadre d'argent à gemmes. */
+/* Deux colonnes jumelles, de la hauteur de l'échiquier : la plaque du joueur
+   en haut (allumée quand c'est son tour), ses prises en dessous. */
+.echecs__colonne {
+  display: flex;
+  flex: 0 0 176px;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 12px;
+}
+
+.echecs__tour {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 2px solid rgba(255, 211, 107, 0.55);
+  border-radius: 16px;
+  background: rgba(12, 18, 46, 0.92);
+  color: #ffe08a;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.echecs__tour.est-actif { border-color: #ffd36b; box-shadow: 0 0 0 3px rgba(255, 211, 107, 0.35), 0 0 26px rgba(255, 211, 107, 0.55); }
+.echecs__tour--ordi { border-color: rgba(255, 111, 135, 0.55); color: #ffc2cd; }
+.echecs__tour--ordi.est-actif { border-color: #ff6f87; box-shadow: 0 0 0 3px rgba(255, 111, 135, 0.35), 0 0 26px rgba(255, 70, 100, 0.6); }
+
+.echecs__joueur {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.echecs__joueur .echecs__piece { font-size: 26px; }
+.echecs__reflexion i { font-style: normal; animation: echecs-points 1.2s ease-in-out infinite; }
+.echecs__reflexion i:nth-child(2) { animation-delay: 0.2s; }
+.echecs__reflexion i:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes echecs-points {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+.echecs__colonne .echecs__prises { flex: 1 1 auto; align-self: stretch; min-height: 0; }
+
+.echecs__table {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+}
+
+/* Le cadre : argent givré, halo de glace et reflet de rubis. */
+.echecs__cadre {
+  position: relative;
+  /* Assez large pour porter les chiffres et les lettres, hors du plateau. */
+  padding: 26px;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, #f4fbff 0%, #a9cfee 18%, #4f7fb3 42%, #1b355f 58%, #8fc3ec 82%, #eaf6ff 100%);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.7),
+    0 0 36px rgba(120, 190, 255, 0.6),
+    0 0 90px rgba(255, 60, 90, 0.22),
+    0 26px 50px rgba(0, 0, 0, 0.6);
+  animation: echecs-halo 5s ease-in-out infinite alternate;
+}
+
+.echecs__cadre::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 13px;
+  pointer-events: none;
+}
+
+.echecs__gemme {
+  position: absolute;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  transform: rotate(45deg);
+  border: 2px solid #f4fbff;
+  background: radial-gradient(circle at 35% 30%, #fff 0 12%, #6fd0ff 35%, #1660b8 100%);
+  box-shadow: 0 0 12px rgba(110, 200, 255, 0.9);
+  pointer-events: none;
+}
+
+.echecs__gemme--hg { top: -4px; left: -4px; }
+.echecs__gemme--hd { top: -4px; right: -4px; background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ff7a92 35%, #a3102c 100%); box-shadow: 0 0 12px rgba(255, 70, 100, 0.9); }
+.echecs__gemme--bg { bottom: -4px; left: -4px; }
+.echecs__gemme--bd { bottom: -4px; right: -4px; background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ff7a92 35%, #a3102c 100%); box-shadow: 0 0 12px rgba(255, 70, 100, 0.9); }
+
+/* La neige qui tombe sur le plateau, sans jamais gêner le clic. */
+.echecs__neige {
+  position: absolute;
+  inset: 26px;
+  z-index: 3;
+  border-radius: 6px;
+  background-image:
+    radial-gradient(2px 2px at 12% 8%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1.5px 1.5px at 38% 22%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2.5px 2.5px at 66% 14%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 84% 36%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 24% 52%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 54% 68%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(2px 2px at 92% 76%, rgba(255, 255, 255, 0.85), transparent),
+    radial-gradient(1.5px 1.5px at 8% 88%, rgba(255, 255, 255, 0.75), transparent);
+  background-size: 100% 50%;
+  animation: echecs-neige 14s linear infinite;
+  pointer-events: none;
+}
+
+.echecs__plateau {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  /* HUIT RANGÉES ÉGALES (09/10/2026) : sans cela, une rangée de pièces
+     grandissait et les rangées vides s'écrasaient. */
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  width: min(100%, 520px);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgba(10, 30, 60, 0.8), 0 0 0 3px rgba(255, 255, 255, 0.35);
+}
+
+.echecs__case {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+/* Cases de givre et de saphir, chacune avec son éclat. */
+.echecs__case.est-claire {
+  background:
+    radial-gradient(1.5px 1.5px at 30% 30%, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1px 1px at 70% 60%, rgba(255, 255, 255, 0.8), transparent),
+    linear-gradient(135deg, #fbfeff 0%, #dcefff 55%, #bcdcf5 100%);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.9), inset -2px -2px 5px rgba(60, 110, 170, 0.25);
+}
+
+.echecs__case.est-sombre {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, transparent 40%),
+    linear-gradient(135deg, #4a78b0 0%, #2a4f86 50%, #172f58 100%);
+  box-shadow: inset 1px 1px 0 rgba(180, 220, 255, 0.35), inset -2px -2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.echecs__case:hover:not(:disabled) { filter: brightness(1.12); }
+
+.echecs__case.est-dernier::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(120, 230, 255, 0.55), rgba(120, 230, 255, 0.1) 70%);
+  pointer-events: none;
+}
+
+.echecs__case.est-choisie { box-shadow: inset 0 0 0 4px #ffd36b, inset 0 0 22px rgba(255, 211, 107, 0.85); animation: echecs-choisie 1.2s ease-in-out infinite alternate; }
+
+.echecs__case.est-en-echec::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 40, 70, 0.95), rgba(255, 40, 70, 0) 72%);
+  animation: echecs-alerte 0.9s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* Les cases où l'on peut jouer : une rune de lumière. */
+/* Une rune d'or au liseré sombre : visible sur le givre comme sur le saphir
+   (09/10/2026, Camara : « sur les cases blanches, les points ne sont pas très visibles »). */
+.echecs__case.est-possible::after {
+  content: '';
+  width: 32%;
+  height: 32%;
+  border: 2px solid rgba(80, 40, 0, 0.75);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fffbe6 0 18%, #ffd34d 45%, #f29c00 100%);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 14px rgba(255, 190, 40, 0.95);
+  animation: echecs-rune 1.4s ease-in-out infinite alternate;
+}
+
+.echecs__case.est-prenable { box-shadow: inset 0 0 0 4px rgba(255, 70, 100, 0.95), inset 0 0 20px rgba(255, 70, 100, 0.7); }
+
+/* Les pièces : cristal de glace pour les blancs, cristal de rubis pour les noirs. */
+.echecs__piece {
+  position: relative;
+  z-index: 1;
+  font-family: 'Segoe UI Symbol', 'DejaVu Sans', 'Arial Unicode MS', sans-serif;
+  font-size: clamp(26px, 5.4vw, 50px);
+  line-height: 1;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  user-select: none;
+}
+
+.echecs__piece.est-blanche {
+  background-image: linear-gradient(180deg, #ffffff 0%, #e6f6ff 40%, #8fd0ff 75%, #4f9fe0 100%);
+  filter: drop-shadow(0 0 1px #0b2a4a) drop-shadow(0 0 1px #0b2a4a) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 7px rgba(150, 215, 255, 0.85));
+  text-shadow: none;
+}
+
+.echecs__piece.est-noire {
+  background-image: linear-gradient(180deg, #ffb3c1 0%, #ff4d6d 35%, #c4122f 70%, #5c0716 100%);
+  filter: drop-shadow(0 0 1px #2a0008) drop-shadow(0 0 1px #2a0008) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 7px rgba(255, 50, 90, 0.75));
+  text-shadow: none;
+}
+
+.echecs__case.est-choisie .echecs__piece { animation: echecs-souleve 0.9s ease-in-out infinite alternate; }
+.echecs__case.est-dernier .echecs__piece { animation: echecs-pose 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+/* LES REPÈRES DE L'ÉCHIQUIER, LISIBLES (09/10/2026, Camara : « on ne voit pas
+   super bien les chiffres et les lettres », puis « ça chevauche ») : une
+   pastille sombre bordée de glace, posée SUR LE CADRE, hors des cases — les
+   chiffres à gauche de leur rangée, les lettres sous leur colonne. */
+.echecs__coord {
+  position: absolute;
+  z-index: 2;
+  min-width: 1.35em;
+  padding: 1px 5px;
+  border: 1px solid rgba(160, 215, 255, 0.9);
+  border-radius: 7px;
+  background: rgba(8, 20, 48, 0.88);
+  color: #ffffff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow: 0 0 6px rgba(120, 200, 255, 0.55);
+  pointer-events: none;
+}
+
+.echecs__coord--ligne { top: 50%; left: -27px; transform: translateY(-50%); }
+.echecs__coord--colonne { left: 50%; bottom: -27px; transform: translateX(-50%); }
+
+/* Les prises : deux vitrines opaques, de glace (les tiennes) et de rubis (les siennes). */
+.echecs__prises {
+  flex: 0 0 132px;
+  align-self: center;
+  min-height: 160px;
+  padding: 12px 10px;
+  border: 2px solid #8fd0ff;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(14, 28, 62, 0.94), rgba(8, 14, 36, 0.94));
+  box-shadow: 0 0 18px rgba(120, 200, 255, 0.4), 0 12px 24px rgba(0, 0, 0, 0.45);
+}
+
+.echecs__prises--lui { border-color: #ff6f87; box-shadow: 0 0 18px rgba(255, 70, 100, 0.4), 0 12px 24px rgba(0, 0, 0, 0.45); }
+
+.echecs__prises-titre {
+  margin: 0 0 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #8fd0ff;
+  color: #0b1d3a;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.echecs__prises--lui .echecs__prises-titre { background: #ff6f87; color: #2a0008; }
+.echecs__prises-liste { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 0; }
+.echecs__prises .echecs__piece { font-size: 28px; }
+.echecs__prises-vide { color: rgba(220, 235, 255, 0.6); font-size: 14px; font-style: italic; }
+
+@keyframes echecs-halo {
+  from { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 30px rgba(120, 190, 255, 0.5), 0 0 80px rgba(255, 60, 90, 0.18), 0 26px 50px rgba(0, 0, 0, 0.6); }
+  to { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 48px rgba(120, 190, 255, 0.75), 0 0 110px rgba(255, 60, 90, 0.3), 0 26px 50px rgba(0, 0, 0, 0.6); }
+}
+
+@keyframes echecs-neige {
+  from { background-position: 0 -50%; }
+  to { background-position: 0 150%; }
+}
+
+@keyframes echecs-choisie {
+  from { box-shadow: inset 0 0 0 4px #ffd36b, inset 0 0 14px rgba(255, 211, 107, 0.6); }
+  to { box-shadow: inset 0 0 0 4px #fff2b8, inset 0 0 28px rgba(255, 211, 107, 1); }
+}
+
+@keyframes echecs-alerte {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+@keyframes echecs-rune {
+  from { transform: scale(0.8); opacity: 0.7; }
+  to { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes echecs-souleve {
+  from { transform: translateY(0) scale(1.05); }
+  to { transform: translateY(-5px) scale(1.1); }
+}
+
+@keyframes echecs-pose {
+  0% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+@media (min-width: 1100px) {
+  /* L'ÉCHIQUIER TIENT DANS L'ÉCRAN AVEC TOUT CE QUI L'ENTOURE (09/10/2026,
+     Camara : « je dois scroller pour que le jeu soit au milieu ») : `--libre`
+     ne retire que l'en-tête ; la consigne et le cadre d'argent prennent encore
+     ~120 px (la ligne « À toi de jouer » est passée à gauche, « l'échiquier doit
+     être plus gros »). Sans les retirer, le jeu dépassait
+     l'écran quel que soit le zoom, et ne pouvait pas être centré. */
+  /* La largeur de l'échiquier est MESURÉE par le jeu (useTientDansLEcran) ; les pièces suivent `--plateau`. */
+  .echecs__plateau .echecs__piece { font-size: calc(var(--plateau, 480px) / 8 * 0.7); }
+}
+
+@media (max-width: 760px) {
+  .echecs__table { flex-direction: column; align-items: center; }
+  .echecs__colonne { flex-basis: auto; width: min(100%, 540px); }
+  .echecs__colonne .echecs__prises { min-height: 0; }
+  .echecs__cadre { padding: 26px; }
+  .echecs__neige { inset: 26px; }
+  .echecs__coord { font-size: 12px; }
+  .echecs__coord--ligne { left: -23px; }
+  .echecs__coord--colonne { bottom: -23px; }
+  .echecs__prises { flex-basis: auto; width: min(100%, 540px); min-height: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echecs__reflexion i,
+  .echecs__cadre,
+  .echecs__neige,
+  .echecs__case.est-choisie,
+  .echecs__case.est-en-echec::before,
+  .echecs__case.est-possible::after,
+  .echecs__case.est-choisie .echecs__piece,
+  .echecs__case.est-dernier .echecs__piece { animation: none; }
+}
+
+/* le mot secret
+   LA ROUE TIENT DANS L'ÉCRAN (09/10/2026, capture de Camara : le N coupé en
+   bas, le Z, le A et le B sur la consigne). Sa largeur suit aussi la HAUTEUR
+   libre, consigne comprise ; les lettres restent DANS la roue, même la lettre
+   grossie ; le disque clair (rayons en `closest-side`) couvre tout le centre. */
+.secret__table {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 18px 40px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.secret__roue {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(100%, 560px, max(280px, calc(100vh - 340px)));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle closest-side, rgba(64, 140, 255, 0.35) 0 70%, rgba(64, 140, 255, 0.12) 70% 99%, transparent 99%);
+}
+
+.secret__lettre {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 8.5%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  background: #1f6bff;
+  color: #fff;
+  font-size: clamp(14px, 2.2vw, 22px);
+  font-weight: 900;
+  transform: translate(-50%, -50%);
+  opacity: 0.45;
+  transition: transform 0.3s ease, background 0.3s ease, opacity 0.3s ease;
+}
+
+.secret__lettre.est-a-venir { opacity: 0.9; }
+.secret__lettre.est-courante { opacity: 1; background: #ffd36b; color: #1b1d3a; transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 20px rgba(255, 211, 107, 0.9); }
+.secret__lettre.est-trouve { opacity: 1; background: #3fae5a; }
+.secret__lettre.est-manque { opacity: 1; background: #c0392b; }
+
+.secret__centre {
+  position: absolute;
+  inset: 22%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+/* La définition et la réponse, à côté de la roue (dessous sur un écran étroit). */
+.secret__panneau {
+  display: flex;
+  flex: 1 1 300px;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 440px;
+  padding: 22px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+  text-align: center;
+}
+
+.secret__minuteur {
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: #3a1aa8;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.secret__minuteur.est-presse { background: #c0263a; animation: bonus-presse 0.6s ease-in-out infinite alternate; }
+.secret__lettre-du-mot { display: flex; flex-direction: column; align-items: center; margin: 0; line-height: 1; }
+.secret__commence { font-size: clamp(12px, 1.4vw, 15px); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+.secret__initiale { font-size: clamp(56px, 9vw, 96px); font-weight: 900; color: #ffd36b; text-shadow: 0 0 24px rgba(255, 211, 107, 0.55); }
+.secret__definition { margin: 0; font-size: clamp(17px, 1.9vw, 21px); font-weight: 700; line-height: 1.35; }
+.secret__saisie { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+.secret__saisie .mdp__champ { flex: 1 1 120px; min-width: 0; font-size: 18px; }
+.secret__choix { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.secret__saisie.est-faux, .secret__choix.est-faux { animation: bonus-tremble 0.4s ease-in-out; }
+.secret__issue { margin: 0; font-size: 20px; font-weight: 900; }
+.secret__issue.est-trouve { color: #6ee7a8; }
+
+@media (min-width: 1100px) {
+  /* La consigne prend ~70 px de la hauteur libre (les autres jeux bonus n'en ont pas). */
+  .secret__roue { width: min(100%, 560px, max(300px, calc(var(--libre) - 70px))); }
+}
+
+/* les planètes */
+.planetes__ciel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 210px;
+  padding: 18px 18px 18px 120px;
+  border-radius: 20px;
+  background:
+    radial-gradient(1.5px 1.5px at 10% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 70%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 60% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 85% 60%, #fff, transparent),
+    #050a1e;
+  overflow: hidden;
+}
+
+.planetes__ciel--taille { padding-left: 18px; }
+
+.planetes__soleil {
+  position: absolute;
+  left: -110px;
+  top: 50%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe08a 0%, #ff8a3d 55%, #ff4d4d 100%);
+  box-shadow: 0 0 40px rgba(255, 170, 60, 0.9), 0 0 110px rgba(255, 120, 40, 0.55);
+  transform: translateY(-50%);
+  animation: planetes-soleil 4s ease-in-out infinite alternate;
+}
+
+.planetes__orbites {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-around;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planetes__orbite { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.planetes__place {
+  display: grid;
+  place-items: center;
+  width: var(--diametre, 74px);
+  height: var(--diametre, 74px);
+  padding: 0;
+  border: 3px dotted var(--indice, rgba(255, 255, 255, 0.45));
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.planetes__place.est-ouverte { box-shadow: 0 0 14px rgba(255, 211, 107, 0.55); }
+.planetes__place.est-occupee { border-color: transparent; cursor: default; }
+.planetes__place.est-ratee { animation: bonus-tremble 0.4s ease-in-out; border-color: #e5484d; }
+
+.planetes__astre { position: relative; display: inline-block; }
+
+/* Les planètes dessinées (Astre.js, 09/10/2026) : l'anneau dépasse du carré,
+   la surface glisse de 100 (le motif est posé deux fois) — la planète tourne. */
+.astre { display: block; overflow: visible; filter: drop-shadow(0 0 6px rgba(140, 180, 255, 0.18)); }
+.astre__surface { animation: astre-tourne var(--tour, 60s) linear infinite; }
+@keyframes astre-tourne { from { transform: translateX(0); } to { transform: translateX(-100px); } }
+@media (prefers-reduced-motion: reduce) { .astre__surface { animation: none; } }
+
+.planetes__soleil-dessin { display: block; width: 100%; height: 100%; }
+
+.planetes__nom { font-size: 14px; font-weight: 800; color: #fff; }
+
+.planetes__reserve {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  min-height: 110px;
+  margin: 0;
+  padding: 14px 18px;
+  border: 2px solid rgba(140, 120, 255, 0.6);
+  border-radius: 16px;
+  list-style: none;
+}
+
+.planetes__pion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  cursor: grab;
+  animation: planetes-flotte 3s ease-in-out infinite alternate;
+}
+
+.planetes__pion.est-en-main { box-shadow: 0 0 22px rgba(255, 211, 107, 0.85); animation: none; transform: scale(1.08); }
+
+@keyframes planetes-soleil {
+  from { box-shadow: 0 0 40px rgba(255, 138, 61, 0.6); }
+  to { box-shadow: 0 0 80px rgba(255, 138, 61, 0.95); }
+}
+
+@keyframes planetes-flotte {
+  from { transform: translateY(0); }
+  to { transform: translateY(-6px); }
+}
+
+@media (max-width: 760px) {
+  .planetes__ciel { padding-left: 70px; }
+  .planetes__soleil { left: -150px; }
+  .planetes__orbites { flex-wrap: wrap; }
+}
+
+/* ------------------------------------------- LES JEUX PLUS VIVANTS (étape 1)
+   Camara, le 09/10/2026 : « rends les jeux question-réponse plus vivants et
+   animés ». Pour les 160 jeux de l'écran commun (`JeuDeChoix`), sans toucher
+   à leur contenu :
+   - la question arrive en glissant, les réponses l'une après l'autre (l'écran
+     les remonte à chaque manche, l'animation rejoue) ;
+   - une bonne réponse lance une gerbe d'étincelles, une mauvaise fait trembler
+     son bouton ;
+   - le décor respire : un zoom lent, à peine visible, qui fait vivre l'image.
+     Il est dessiné par un pseudo-élément qui HÉRITE du fond du jeu — fond
+     posé par le style ou par la classe du jeu, peu importe. */
+.jeu--scene { isolation: isolate; }
+
+.jeu--scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: inherit;
+  background-size: cover;
+  animation: decor-respire 36s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.jeu--scene > .jeu__consigne,
+.jeu--scene > .phrase-a-trou,
+.jeu--scene > .college__question {
+  animation: question-glisse 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.jeu--scene > .phrase-a-trou,
+.jeu--scene > .college__question { animation-delay: 0.08s; }
+
+.scene__choix > li {
+  animation: reponse-pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(0.25s + var(--i, 0) * 0.09s);
+}
+
+.scene__carte.est-fausse { animation: carte-tremble 0.45s ease-in-out; }
+
+.jeu__gagne { position: relative; }
+
+.gerbe {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.gerbe__eclat {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #ffd36b 45%, #ff9f1c 100%);
+  box-shadow: 0 0 10px rgba(255, 211, 107, 0.9);
+  opacity: 0;
+  animation: gerbe-eclat 0.85s ease-out both;
+  animation-delay: var(--delai, 0ms);
+}
+
+@keyframes decor-respire {
+  from { transform: scale(1); }
+  to { transform: scale(1.06) translate(-0.8%, -0.6%); }
+}
+
+@keyframes question-glisse {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes reponse-pop {
+  from { opacity: 0; transform: translateY(14px) scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes carte-tremble {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px) rotate(-2deg); }
+  40% { transform: translateX(9px) rotate(2deg); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+@keyframes gerbe-eclat {
+  0% { opacity: 1; transform: rotate(var(--angle)) translateX(0) scale(1.2); }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateX(120px) scale(0.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jeu--scene::after,
+  .jeu--scene > .jeu__consigne,
+  .jeu--scene > .phrase-a-trou,
+  .jeu--scene > .college__question,
+  .scene__choix > li,
+  .scene__carte.est-fausse,
+  .gerbe__eclat { animation: none; }
+}
+
+/* ------------------------------------------- LES ILLUSTRATIONS (étape 2)
+   Camara, le 09/10/2026 : « une boule animée avec ses dimensions ». Voir
+   `components/jeux/Visuel.js` : les traits se dessinent, puis les cotes
+   apparaissent ; la boule tourne, les solides flottent, les courbes se tracent. */
+.visuel-question {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.jeu--scene > .visuel-question { animation: question-glisse 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) 0.08s both; }
+
+.visuel {
+  margin: 0;
+  width: min(100%, 420px);
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+}
+
+.visuel--courbe { width: min(100%, 460px); }
+.visuel__svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.visuel__trait {
+  fill: none;
+  stroke: #1d3f9e;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: visuel-dessine 1.1s ease-out 0.2s forwards;
+}
+
+.visuel__trait.est-pointille { stroke-dasharray: 6 6; stroke-dashoffset: 0; stroke-width: 2; opacity: 0; animation: visuel-apparait 0.6s ease-out 0.9s forwards; }
+.visuel__trait.est-cote { stroke: #e8590c; stroke-width: 2.5; animation-delay: 0.9s; }
+.visuel__face { fill: rgba(91, 141, 239, 0.18); stroke: none; }
+.visuel__face.est-dessus { fill: rgba(91, 141, 239, 0.32); }
+.visuel__face.est-cote { fill: rgba(91, 141, 239, 0.1); }
+.visuel__remplit { animation: visuel-remplit 1.2s ease-out 0.6s both; transform-box: fill-box; transform-origin: center bottom; }
+.visuel__surface { animation: visuel-apparait 0.8s ease-out both; }
+.visuel__meridien { stroke: rgba(255, 255, 255, 0.75); stroke-width: 2; }
+.visuel__point { fill: #1d3f9e; }
+.visuel__arc { fill: none; stroke: #e8590c; stroke-width: 2.5; opacity: 0; animation: visuel-apparait 0.5s ease-out 1.1s forwards; }
+.visuel__mur { fill: #c9b79c; }
+.visuel__sol { fill: #8bbf6a; }
+
+.visuel__cote { opacity: 0; animation: visuel-cote 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) 1.2s forwards; }
+.visuel__cote rect { fill: #fff3d6; stroke: #e8590c; stroke-width: 1.5; }
+.visuel__cote text { fill: #7a3a00; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 800; }
+.visuel__cote.est-inconnue rect { fill: #e8590c; }
+.visuel__cote.est-inconnue text { fill: #fff; }
+.visuel__nom { fill: #1d3f9e; font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; }
+
+.visuel__flotte { animation: visuel-flotte 4s ease-in-out infinite alternate; }
+
+.visuel__rapporteur path { fill: rgba(255, 220, 120, 0.25); stroke: #b8860b; stroke-width: 1.2; }
+
+.visuel__grille { stroke: #e3e8f4; stroke-width: 1; }
+.visuel__axe { stroke: #34405e; stroke-width: 1.6; }
+.visuel__graduation { fill: #5b6684; font-family: 'Outfit', sans-serif; font-size: 10px; }
+.visuel__courbe { stroke-width: 3; }
+.visuel__courbe.est-1 { stroke: #e8590c; }
+.visuel__courbe.est-2 { stroke: #2b8a3e; }
+.visuel__tangente { stroke: #c2255c; stroke-width: 2; animation-delay: 1.2s; }
+.visuel__aire { fill: rgba(91, 141, 239, 0.28); opacity: 0; animation: visuel-apparait 0.8s ease-out 1.2s forwards; }
+.visuel__terme { fill: #e8590c; opacity: 0; animation: visuel-cote 0.35s ease-out forwards; }
+.visuel__marque { opacity: 0; animation: visuel-apparait 0.4s ease-out forwards; }
+
+@keyframes visuel-dessine { to { stroke-dashoffset: 0; } }
+@keyframes visuel-apparait { to { opacity: 1; } }
+@keyframes visuel-cote { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes visuel-remplit { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes visuel-flotte { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+
+.visuel__cote { transform-box: fill-box; transform-origin: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .visuel__trait, .visuel__trait.est-pointille, .visuel__arc, .visuel__cote, .visuel__aire,
+  .visuel__terme, .visuel__marque, .visuel__remplit, .visuel__surface, .visuel__flotte {
+    animation: none; opacity: 1; stroke-dashoffset: 0;
+  }
+}
+.visuel__repere-ligne { stroke: #c2255c; stroke-width: 1.5; stroke-dasharray: 5 5; opacity: 0; animation: visuel-apparait 0.5s ease-out 0.9s forwards; }
+
+/* ------------------------------------------- LES JEUX QUI DONNENT ENVIE (09/10/2026)
+   Camara : « là on n'a que du texte ; fais des choses originales qui attirent
+   les enfants à rejouer ». Voir `JeuDeChoix.js` : les réponses deviennent des
+   OBJETS de la matière, une cagnotte compte les points et les combos, le
+   professeur réagit en médaillon, et un coffre s'ouvre à la fin.
+   Préfixes `.objet`, `.cagnotte`, `.tresor`, `.jeu__prof`, `.jeu__cagnotte` :
+   vérifiés libres dans ce fichier (`.coffre` était pris). */
+
+/* ---- l'objet commun ---- */
+.scene__carte--objet {
+  --c1: #7cc4ff;
+  --c2: #2463d6;
+  --c3: #123a8a;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-width: 128px;
+  padding: 16px 30px;
+  border: none;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.28);
+  background: linear-gradient(150deg, var(--c1) 0%, var(--c2) 52%, var(--c3) 100%);
+  box-shadow: none;
+  animation: objet-flotte 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.7s);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.scene__choix > li:nth-child(5n + 2) .scene__carte--objet { --c1: #ff9bb3; --c2: #e0335e; --c3: #8c1238; }
+.scene__choix > li:nth-child(5n + 3) .scene__carte--objet { --c1: #8ff0c4; --c2: #17a868; --c3: #0b5e3a; }
+.scene__choix > li:nth-child(5n + 4) .scene__carte--objet { --c1: #d6b0ff; --c2: #8a45e6; --c3: #4b1a94; }
+.scene__choix > li:nth-child(5n + 5) .scene__carte--objet { --c1: #ffe08a; --c2: #f0a019; --c3: #9a5a05; }
+
+.scene__choix > li:has(> .scene__carte--objet) { filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.32)); }
+
+.scene__carte--objet:hover:not(:disabled) {
+  transform: translateY(-6px) scale(1.05);
+  filter: brightness(1.12) drop-shadow(0 0 14px var(--c1));
+  animation-play-state: paused;
+}
+
+/* Le reflet qui passe sur l'objet, de temps en temps.
+   IL RESTE DANS SA FORME (09/10/2026, Camara : « il y a un effet étrange ») :
+   une réponse qui laisse déborder son contenu (perles sur leur tige, bulle,
+   ballon…) laissait le reflet glisser dans le vide à côté d'elle. Le cadre du
+   reflet ne bouge plus et coupe tout ce qui dépasse ; c'est sa lumière qui
+   passe dedans. */
+.objet__eclat {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.objet__eclat::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 48%, transparent 60%);
+  transform: translateX(-120%);
+  animation: objet-reflet 4.5s ease-in-out infinite;
+  animation-delay: calc(1s + var(--i, 0) * 0.6s);
+}
+
+/* Fausse : l'objet se ternit, se fend, et le texte reste barré. */
+.scene__carte--objet.est-fausse {
+  color: #fff;
+  background: linear-gradient(150deg, #9aa3b5, #5d6577);
+  filter: grayscale(0.6);
+  opacity: 0.7;
+  animation: carte-tremble 0.45s ease-in-out;
+}
+
+.scene__carte--objet.est-fausse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(62deg, transparent 47%, rgba(30, 30, 40, 0.65) 48% 50%, transparent 51%),
+    linear-gradient(-48deg, transparent 56%, rgba(30, 30, 40, 0.5) 57% 58.5%, transparent 59.5%);
+  pointer-events: none;
+}
+
+/* ---- les gemmes (maths) : taillées en hexagone, avec leurs facettes ---- */
+.objet--gemme {
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%);
+  border-radius: 0;
+  padding-inline: 36px;
+}
+
+.objet--gemme::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0 38%, transparent 38%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 16px, transparent 16px calc(100% - 16px), rgba(0, 0, 0, 0.18) calc(100% - 16px));
+  pointer-events: none;
+}
+
+/* ---- les bulles (français) : des bulles de bande dessinée ---- */
+.objet--bulle {
+  overflow: visible;
+  border: 3px solid #fff;
+  border-radius: 28px;
+  color: #1b1d3a;
+  text-shadow: none;
+  background: linear-gradient(160deg, #fff 0%, var(--c1) 100%);
+}
+
+.objet--bulle::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  bottom: -14px;
+  width: 22px;
+  height: 18px;
+  background: var(--c1);
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  border-bottom-left-radius: 4px;
+}
+
+/* La bulle et le ballon débordent (queue, ficelle) : pas de reflet, il sortirait de la forme. */
+.objet--bulle .objet__eclat,
+.objet--ballon .objet__eclat { display: none; }
+
+/* ---- les ballons (langues) : ronds, brillants, au bout de leur ficelle ---- */
+.objet--ballon {
+  overflow: visible;
+  border-radius: 50% 50% 46% 46% / 62% 62% 38% 38%;
+  padding: 22px 30px 26px;
+  background: radial-gradient(circle at 32% 26%, #fff 0 6%, var(--c1) 18%, var(--c2) 60%, var(--c3) 100%);
+  animation-name: objet-ballon;
+}
+
+.objet--ballon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.75);
+  transform: translateX(-50%);
+}
+
+/* ---- les médailles (histoire) : des pièces d'or frappées ---- */
+.objet--medaille {
+  --c1: #fff1b3; --c2: #e2b23c; --c3: #8f6410;
+  border-radius: 999px;
+  color: #4a2f04;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.35), inset 0 0 0 7px rgba(143, 100, 16, 0.55);
+}
+
+.scene__choix > li:nth-child(even) .objet--medaille { --c1: #f2f4f8; --c2: #b3bccb; --c3: #5f6b80; }
+
+/* ---- les fioles (sciences) : du verre, un liquide, des bulles ---- */
+.objet--fiole {
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 18px 18px 30px 30px;
+  background:
+    linear-gradient(0deg, var(--c2) 0 46%, var(--c1) 46% 52%, rgba(255, 255, 255, 0.18) 52%),
+    rgba(20, 40, 70, 0.55);
+}
+
+.objet--fiole::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 2px, transparent 3px) 20% 100% / 18px 18px,
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 1.5px, transparent 2.5px) 70% 100% / 14px 14px;
+  background-repeat: no-repeat;
+  animation: objet-bulles 2.4s linear infinite;
+}
+
+/* ---- les feuilles (SVT) ---- */
+.objet--feuille {
+  --c1: #b8f28a; --c2: #4caf2f; --c3: #1f6b14;
+  border-radius: 6px 40px 6px 40px;
+}
+
+.objet--feuille::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 2px;
+  z-index: -1;
+  background: rgba(255, 255, 255, 0.45);
+  transform: rotate(-8deg);
+}
+
+.scene__choix > li:nth-child(even) .objet--feuille { --c1: #ffd27a; --c2: #e8892a; --c3: #8f4a0e; }
+
+/* ---- les blocs de pixels (informatique) ---- */
+.objet--pixel {
+  border-radius: 0;
+  color: #6effc4;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 8px rgba(110, 255, 196, 0.8);
+  background: #0d1b2a;
+  box-shadow: inset 0 0 0 3px #6effc4, inset 6px 6px 0 rgba(110, 255, 196, 0.15);
+}
+
+/* ---- la cagnotte : les points, le gain qui s'envole, le combo ---- */
+.jeu__cagnotte {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.cagnotte__compte {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 8px;
+  border: 2px solid rgba(255, 211, 77, 0.9);
+  border-radius: 999px;
+  background: rgba(20, 16, 50, 0.82);
+  color: #ffe08a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  animation: cagnotte-bond 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.cagnotte__piece {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6c2 0 12%, #ffd34d 40%, #c98a0b 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.4), 0 0 10px rgba(255, 211, 77, 0.6);
+}
+
+.cagnotte__gain {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  color: #ffe08a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: cagnotte-gain 1.2s ease-out both;
+}
+
+.cagnotte__combo {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff9a3c, #e8332f);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 0 16px rgba(255, 120, 40, 0.75);
+  animation: cagnotte-combo 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+/* ---- le professeur en médaillon ---- */
+.jeu__prof {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.jeu__prof-visage {
+  display: block;
+  padding: 4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd34d, #ff7ab8, #7cc4ff);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.jeu__prof.est-bravo .jeu__prof-visage { animation: prof-bravo 0.9s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.jeu__prof.est-encourage .jeu__prof-visage { animation: prof-encourage 1s ease-in-out; }
+
+.jeu__prof-bulle {
+  margin-bottom: 52px;
+  padding: 6px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: #fff;
+  color: #1b1d3a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  animation: prof-bulle 2.2s ease both;
+}
+
+.jeu__prof.est-bravo .jeu__prof-bulle { color: #17803f; }
+.jeu__prof.est-encourage .jeu__prof-bulle { color: #b5541a; }
+
+/* ---- le coffre de fin ---- */
+.tresor { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 4px 0 6px; }
+.tresor__dessin { width: 130px; height: auto; overflow: visible; }
+.tresor__couvercle { transform-box: fill-box; transform-origin: 50% 100%; animation: tresor-ouvre 0.7s cubic-bezier(0.3, 1.5, 0.5, 1) 0.5s both; }
+.tresor__lueur { opacity: 0; animation: tresor-lueur 1.2s ease 0.8s both; }
+.tresor__piece { opacity: 0; transform-box: fill-box; transform-origin: center; animation: tresor-piece 0.9s cubic-bezier(0.2, 1.2, 0.4, 1) both; animation-delay: calc(0.9s + var(--n) * 0.1s); }
+
+.tresor__butin {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  color: #ffe08a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.tresor__butin strong { font-size: 30px; }
+.tresor__serie { width: 100%; color: #ffb37a; font-size: 16px; text-align: center; }
+
+/* ---- les mouvements ---- */
+@keyframes objet-flotte {
+  from { transform: translateY(0) rotate(-0.6deg); }
+  to { transform: translateY(-6px) rotate(0.6deg); }
+}
+
+@keyframes objet-ballon {
+  from { transform: translateY(0) rotate(-3deg); }
+  to { transform: translateY(-10px) rotate(3deg); }
+}
+
+@keyframes objet-reflet {
+  0%, 70% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@keyframes objet-bulles {
+  from { background-position: 20% 100%, 70% 100%; }
+  to { background-position: 20% -20%, 70% -30%; }
+}
+
+@keyframes cagnotte-bond {
+  from { transform: scale(1.35); }
+  to { transform: scale(1); }
+}
+
+@keyframes cagnotte-gain {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.6); }
+  25% { opacity: 1; transform: translate(-50%, 0) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -46px) scale(1); }
+}
+
+@keyframes cagnotte-combo {
+  from { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes prof-bravo {
+  0% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-22px) scale(1.12) rotate(-6deg); }
+  65% { transform: translateY(0) scale(0.96) rotate(4deg); }
+  100% { transform: none; }
+}
+
+@keyframes prof-encourage {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  50% { transform: rotate(6deg) translateY(-4px); }
+  75% { transform: rotate(-3deg); }
+}
+
+@keyframes prof-bulle {
+  0% { opacity: 0; transform: translateY(8px) scale(0.6); }
+  15%, 80% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes tresor-ouvre {
+  from { transform: rotate(0); }
+  to { transform: translateY(-6px) rotate(-28deg); }
+}
+
+@keyframes tresor-lueur {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tresor-piece {
+  0% { opacity: 0; transform: translateY(10px) scale(0.4); }
+  60% { opacity: 1; transform: translateY(-34px) scale(1.1); }
+  100% { opacity: 1; transform: translateY(-26px) scale(1); }
+}
+
+/* Sur un petit écran, le professeur rétrécit et la cagnotte passe sous le retour. */
+@media (max-width: 640px) {
+  .jeu__prof { left: 10px; bottom: 10px; }
+  /* Le médaillon ne couvre jamais la dernière réponse : le jeu lui garde une bande en bas. */
+  .jeu--scene:has(> .jeu__prof) { padding-bottom: 92px; }
+  .jeu__prof-visage .avatar { transform: scale(0.7); transform-origin: bottom left; }
+  /* Sur téléphone, la cagnotte rejoint le flux : en surimpression, elle chevauchait la consigne. */
+  .jeu__cagnotte { position: relative; top: auto; left: auto; align-self: center; transform: none; margin: 2px auto 0; }
+  .cagnotte__compte { font-size: 18px; }
+  .scene__carte--objet { min-width: 96px; padding: 12px 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene__carte--objet,
+  .objet__eclat::before,
+  .objet--fiole::before,
+  .cagnotte__compte,
+  .cagnotte__gain,
+  .cagnotte__combo,
+  .jeu__prof-visage,
+  .tresor__couvercle,
+  .tresor__piece { animation: none; }
+  .tresor__couvercle { transform: translateY(-6px) rotate(-28deg); }
+  .tresor__piece, .tresor__lueur { opacity: 1; }
+}
+
+/* ---- vrai ou faux, oui ou non : deux buzzers (09/10/2026) — voir `enDuel` ---- */
+.scene__choix--duel { gap: clamp(28px, 6vw, 80px); }
+
+.buzzer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  --clair: #9dffbf;
+  --vif: #18b45a;
+  --fonce: #0a6a32;
+}
+
+.buzzer--non { --clair: #ffb0b0; --vif: #e5383b; --fonce: #8c0f12; }
+
+.buzzer__dome {
+  display: grid;
+  place-items: center;
+  width: clamp(96px, 11vw, 132px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff 0 7%, var(--clair) 20%, var(--vif) 58%, var(--fonce) 100%);
+  color: #fff;
+  font-size: clamp(46px, 5.5vw, 64px);
+  font-weight: 900;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 0 var(--fonce), 0 18px 26px rgba(0, 0, 0, 0.4), inset 0 -6px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  animation: buzzer-appel 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.8s);
+}
+
+.buzzer:hover:not(:disabled) .buzzer__dome { filter: brightness(1.1); }
+
+.buzzer:active:not(:disabled) .buzzer__dome {
+  transform: translateY(8px);
+  box-shadow: 0 2px 0 var(--fonce), 0 6px 10px rgba(0, 0, 0, 0.35), inset 0 -4px 10px rgba(0, 0, 0, 0.3);
+  animation: none;
+}
+
+.buzzer__plaque {
+  max-width: 16em;
+  padding: 6px 18px;
+  border: 2px solid var(--vif);
+  border-radius: 999px;
+  background: rgba(10, 14, 40, 0.85);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.buzzer.est-fausse { cursor: default; opacity: 0.55; filter: grayscale(0.8); }
+.buzzer.est-fausse .buzzer__dome { animation: carte-tremble 0.45s ease-in-out; box-shadow: 0 3px 0 var(--fonce); transform: translateY(7px); }
+.buzzer.est-fausse .buzzer__plaque { text-decoration: line-through; }
+
+/* Le tampon de la bonne réponse. */
+.tampon {
+  display: inline-block;
+  margin: 0 auto 8px;
+  padding: 6px 22px;
+  border: 5px solid currentColor;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(26px, 3.6vw, 40px);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+  animation: tampon-frappe 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.tampon--oui { color: #14924a; }
+.tampon--non { color: #d1262a; }
+
+@keyframes buzzer-appel {
+  0%, 100% { box-shadow: 0 10px 0 var(--fonce), 0 18px 26px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(255, 255, 255, 0.5); }
+  50% { box-shadow: 0 10px 0 var(--fonce), 0 18px 26px rgba(0, 0, 0, 0.4), 0 0 0 12px rgba(255, 255, 255, 0); }
+}
+
+@keyframes tampon-frappe {
+  from { opacity: 0; transform: scale(2.4) rotate(-22deg); }
+  to { opacity: 1; transform: scale(1) rotate(-7deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buzzer__dome,
+  .buzzer.est-fausse .buzzer__dome,
+  .tampon { animation: none; }
+}
+
+/* ------------------------------------------- L'USINE PYTHON (09/10/2026)
+   Voir `components/jeux/scenes/UsinePython.js` : la console de l'usine et son
+   python avant la réponse ; l'usine qui rejoue le programme après. Préfixes
+   `.usine`, `.serpent`, `.objet--caisse` : vérifiés libres. */
+.usine {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+/* Le python, enroulé sur le haut de la console. */
+.serpent {
+  position: relative;
+  z-index: 2;
+  width: min(300px, 70%);
+  height: auto;
+  margin-bottom: -26px;
+  overflow: visible;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+}
+
+.serpent__anneau {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: serpent-ondule 1.6s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.1s);
+}
+
+.serpent__tete { animation: serpent-tete 1.6s ease-in-out infinite; animation-delay: -1.6s; }
+.serpent__langue { transform-box: fill-box; transform-origin: left center; animation: serpent-langue 2.8s ease-in-out infinite; }
+.serpent__oeil { transform-box: fill-box; transform-origin: center; animation: serpent-cligne 4s ease-in-out infinite; }
+
+/* La console de l'usine. */
+.usine__console {
+  width: 100%;
+  overflow: hidden;
+  border: 3px solid #3776ab;
+  border-radius: 16px;
+  background: #141b2e;
+  box-shadow: 0 0 0 4px rgba(255, 212, 59, 0.35), 0 16px 30px rgba(0, 0, 0, 0.45);
+  text-align: left;
+}
+
+.usine__barre {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: linear-gradient(90deg, #3776ab, #2b5d88);
+}
+
+.usine__barre span { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+.usine__barre span:nth-child(2) { background: #febc2e; }
+.usine__barre span:nth-child(3) { background: #28c840; }
+.usine__barre em { margin-left: 8px; color: #e8f1ff; font-family: 'Courier New', monospace; font-size: 14px; font-style: normal; font-weight: 700; }
+
+.usine__code {
+  margin: 0;
+  padding: 14px 18px 16px 8px;
+  color: #e6edf7;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: clamp(16px, 1.9vw, 22px);
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.usine__ligne { display: block; border-radius: 6px; transition: background 0.15s ease; }
+.usine__ligne.est-allumee { background: rgba(255, 212, 59, 0.22); box-shadow: inset 4px 0 0 #ffd43b; }
+.usine__numero { display: inline-block; width: 2.2em; margin-right: 10px; color: #5c6b8a; text-align: right; user-select: none; }
+.usine__mot { color: #c792ea; font-weight: 700; }
+.usine__nombre { color: #ffb86b; }
+
+/* L'usine en marche : la console, les tubes, l'écran d'affichage. */
+.usine--en-marche { gap: 12px; width: min(100%, 980px); }
+
+.usine__atelier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.usine__atelier .usine__console { flex: 1 1 380px; }
+
+.usine__tubes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(20, 27, 46, 0.78);
+}
+
+.usine__tube { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.usine__verre {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  flex-wrap: wrap-reverse;
+  align-content: center;
+  justify-content: flex-start;
+  gap: 2px;
+  width: 58px;
+  height: 140px;
+  padding: 6px 5px;
+  border: 3px solid rgba(220, 240, 255, 0.85);
+  border-top: none;
+  border-radius: 0 0 22px 22px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 40%, rgba(255, 255, 255, 0.14));
+}
+
+.usine__bille {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 10%, #b77cff 35%, #6a1fc2 100%);
+  animation: usine-bille 0.35s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+.usine__bille:nth-child(even) { background: radial-gradient(circle at 35% 30%, #fff 0 10%, #b8f26a 35%, #4f9a12 100%); }
+
+.usine__jauge {
+  position: absolute;
+  inset: auto 5px 6px;
+  height: 70%;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(0deg, #6a1fc2, #b77cff);
+  opacity: 0.85;
+}
+
+.usine__valeur {
+  position: absolute;
+  left: 50%;
+  top: -30px;
+  min-width: 44px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #ffd43b;
+  color: #1b1d3a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: usine-valeur 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.usine__nom { color: #e6edf7; font-family: 'Courier New', monospace; font-size: 17px; font-weight: 800; }
+.usine__tube:first-child .usine__verre { margin-top: 30px; }
+.usine__tube .usine__verre { margin-top: 30px; }
+
+.usine__ecran {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 22px;
+  border: 3px solid #28c840;
+  border-radius: 14px;
+  background: #07130b;
+  color: #6effa0;
+  font-family: 'Courier New', monospace;
+  font-size: 26px;
+  box-shadow: 0 0 18px rgba(40, 200, 64, 0.35);
+}
+
+.usine__ecran-titre { color: #8fb79a; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; }
+.usine__ecran.est-fini strong { animation: usine-valeur 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); text-shadow: 0 0 12px rgba(110, 255, 160, 0.9); }
+
+/* Les caisses de billes : les réponses du jeu Python. */
+.objet--caisse {
+  overflow: visible;
+  border: 3px solid #5a3412;
+  border-radius: 8px;
+  padding: 14px 30px 12px;
+  color: #fff8e6;
+  text-shadow: 0 2px 0 #3d200a, 0 0 6px rgba(0, 0, 0, 0.5);
+  background:
+    linear-gradient(90deg, transparent 0 10px, rgba(0, 0, 0, 0.25) 10px 13px, transparent 13px calc(100% - 13px), rgba(0, 0, 0, 0.25) calc(100% - 13px) calc(100% - 10px), transparent calc(100% - 10px)),
+    repeating-linear-gradient(0deg, #b9773a 0 14px, #9c5f27 14px 16px);
+}
+
+/* Les billes qui dépassent du haut de la caisse. */
+.objet--caisse::before {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: -12px;
+  height: 16px;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 10% 70%, #b77cff 0 6px, transparent 7px),
+    radial-gradient(circle at 26% 55%, #8fd14f 0 6px, transparent 7px),
+    radial-gradient(circle at 42% 75%, #9a52ef 0 6px, transparent 7px),
+    radial-gradient(circle at 58% 55%, #a6e36a 0 6px, transparent 7px),
+    radial-gradient(circle at 74% 72%, #b77cff 0 6px, transparent 7px),
+    radial-gradient(circle at 90% 58%, #8fd14f 0 6px, transparent 7px);
+}
+
+.objet--caisse .objet__eclat { display: none; }
+
+@keyframes serpent-ondule {
+  0%, 100% { transform: translateY(-5px); }
+  50% { transform: translateY(5px); }
+}
+
+@keyframes serpent-tete {
+  0%, 100% { transform: translateY(-4px) rotate(-3deg); }
+  50% { transform: translateY(4px) rotate(3deg); }
+}
+
+@keyframes serpent-langue {
+  0%, 60%, 100% { transform: scaleX(0); }
+  68%, 80% { transform: scaleX(1); }
+}
+
+@keyframes serpent-cligne {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes usine-bille {
+  from { opacity: 0; transform: translateY(-60px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes usine-valeur {
+  from { transform: translateX(-50%) scale(1.5); }
+  to { transform: translateX(-50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .serpent__anneau, .serpent__tete, .serpent__langue, .serpent__oeil,
+  .usine__bille, .usine__valeur, .usine__ecran.est-fini strong { animation: none; }
 }

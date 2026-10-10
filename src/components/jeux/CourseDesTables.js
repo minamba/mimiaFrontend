@@ -9,6 +9,10 @@ import CalculMental from './CalculMental';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { humeurDe } from './scenes/ce1-maths/communs';
+import {
+  DecorCourse, FeteCourse, Kart, Pilote,
+} from './scenes/ce1-maths/SceneCourse';
 
 /**
  * LA COURSE DES TABLES, À L'ÉCRAN.
@@ -97,10 +101,14 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
   }
 
   return (
-    <div className="jeu jeu--scene jeu--course">
+    // L'UNIVERS DE LA COUVERTURE (09/10/2026, `scenes/ce1-maths/SceneCourse.js`) :
+    // le circuit de karting, le pilote dans son casque, la fête à la réussite.
+    // Le kart crache sa fumée quand il gagne sa case.
+    <div className={`jeu jeu--scene jeu--course sc-course-des-tables${trouve ? ' est-gagne' : ''}${trouve && fautes.length === 0 ? ' est-en-avant' : ''}`}>
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+      <DecorCourse />
 
       {/* LA COURSE N'A PAS DE RANGÉE DE MANCHES : sa piste EST son avancement.
           Les cœurs se posent donc au-dessus de la consigne, seul endroit
@@ -125,7 +133,7 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
           style={{ left: `calc(${(avance / MANCHES) * 100}% * 0.9)` }}
           aria-hidden="true"
         >
-          <Voiture />
+          <Kart />
         </span>
       </div>
 
@@ -177,6 +185,9 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
           </button>
         </div>
       )}
+
+      {trouve && <FeteCourse key={`fete-${manche}`} />}
+      <Pilote humeur={humeurDe({ reussi: trouve, faute: fautes.length > 0 })} cle={`${manche}-${fautes.length}`} />
     </div>
   );
 }
@@ -184,28 +195,9 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
 /**
  * LA VOITURE ET L'ARRIVÉE SONT DESSINÉES, pas des émojis : sur certains
  * écrans l'émoji de course sortait minuscule, et la voiture est tout le score.
+ * Depuis le 09/10/2026, la voiture est le kart de la couverture (`Kart`,
+ * dans `scenes/ce1-maths/SceneCourse.js`), toujours tourné vers le drapeau.
  */
-function Voiture() {
-  return (
-    <svg viewBox="0 0 64 30" className="course__dessin-voiture">
-      {/* ELLE ROULE VERS LE DRAPEAU — Camara, le 22/09/2026 : « la voiture est
-          à l'envers ». Elle était dessinée capot à gauche, donc elle reculait
-          le long de la piste à mesure qu'elle avançait. Le dessin est retourné
-          ici plutôt que retracé point par point : une symétrie ne peut pas se
-          tromper de coordonnée, et le capot, le pare-brise et les roues
-          gardent exactement leurs proportions. */}
-      <g transform="translate(64 0) scale(-1 1)">
-        <path d="M4 20 L10 12 L24 10 L34 3 L48 4 L56 12 L61 14 L61 21 L4 22 Z" fill="#e63946" stroke="#9b1c27" strokeWidth="1.5" />
-        <path d="M28 10 L35 5 L46 5.5 L51 11 Z" fill="#cfeaf8" />
-        <circle cx="16" cy="22" r="6" fill="#2c2c36" />
-        <circle cx="48" cy="22" r="6" fill="#2c2c36" />
-        <circle cx="16" cy="22" r="2.4" fill="#b8bec8" />
-        <circle cx="48" cy="22" r="2.4" fill="#b8bec8" />
-      </g>
-    </svg>
-  );
-}
-
 function Arrivee() {
   return (
     <svg viewBox="0 0 24 28" className="course__arrivee" aria-hidden="true">

@@ -1,0 +1,1208 @@
+/* ------------------------------------------------------------ « Cap sur le Monde »
+   Les trois jeux bonus de géographie (10/10/2026) : « Où sur Terre ? »,
+   « Enquête sur la carte », « Le grand jeu de géo ». Style manga, comme tout
+   Mimia : couleurs vives, gros contours d'encre, ombres franches décalées.
+   PRÉFIXES : `.hg-carte` (la carte commune), `.hg-geo` (Salim, boussole,
+   tampon), `.hg-ost` (Où sur Terre), `.hg-enquete`, `.hg-gjg` (grand jeu).
+   Vérifiés libres dans App.css et dans les jeux d'histoire (`.hg-histoire`,
+   `.hg-loupe`, `.hg-mythe` sont à eux). Animations `hg-geo-…`. */
+
+.hg-ost,
+.hg-enquete,
+.hg-gjg {
+  --hg-geo-encre: #1b1d3a;
+  --hg-geo-creme: #fff8e8;
+  --hg-geo-or: #ffd36b;
+  --hg-geo-rouge: #ff4d6d;
+  --hg-geo-vert: #2fd27a;
+  --hg-geo-libre: 380px;
+}
+
+@media (min-width: 1100px) {
+  .hg-ost,
+  .hg-enquete,
+  .hg-gjg { --hg-geo-libre: max(300px, var(--libre, 380px)); }
+}
+
+/* Le texte des verdicts, lu par les lecteurs d'écran : il s'affiche déjà dans la bulle. */
+.hg-geo__annonce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ================================================================ la carte */
+.hg-carte {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.hg-carte__cadre {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 960 / 500;
+  overflow: hidden;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 8% 20%, rgba(255, 255, 255, 0.85) 0 1px, transparent 2px),
+    radial-gradient(circle at 92% 14%, rgba(255, 255, 255, 0.8) 0 1px, transparent 2px),
+    radial-gradient(circle at 6% 86%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 95% 80%, rgba(255, 255, 255, 0.8) 0 1.5px, transparent 2.5px),
+    linear-gradient(160deg, #1d1559, #0b1a44);
+  box-shadow: 5px 5px 0 var(--hg-geo-encre, #1b1d3a), 0 0 24px rgba(92, 200, 255, 0.35);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hg-carte__cadre:active { cursor: grabbing; }
+.hg-carte.est-desactivee .hg-carte__cadre { cursor: default; }
+
+.hg-carte__cadre:focus-visible {
+  outline: 4px solid var(--hg-geo-or, #ffd36b);
+  outline-offset: 3px;
+}
+
+.hg-carte__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hg-carte__espace { fill: transparent; }
+.hg-carte__mer { fill: url(#hg-mer); }
+
+.hg-carte__vagues {
+  pointer-events: none;
+  animation: hg-geo-houle 5s ease-in-out infinite alternate;
+}
+
+.hg-carte__vague {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.hg-carte__graticule {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 0.6;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.hg-carte__pays {
+  fill: var(--hg-geo-fond, #f6d98b);
+  stroke: #24346e;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: fill 0.25s ease, opacity 0.25s ease;
+}
+
+.hg-carte:not(.est-desactivee) .hg-carte__pays:hover { fill: #fffbe6; }
+
+.hg-carte__pays.est-pale { opacity: 0.45; }
+.hg-carte__pays.est-choisi { fill: #fffaf0; }
+.hg-carte__pays.est-juste { fill: var(--hg-geo-vert, #2fd27a); opacity: 1; animation: hg-geo-eclat 0.9s ease-out; }
+.hg-carte__pays.est-faux { fill: var(--hg-geo-rouge, #ff4d6d); opacity: 1; }
+.hg-carte__pays.est-montre { fill: #ff5fd2; opacity: 1; animation: hg-geo-clignote 0.55s ease-in-out 5 alternate; }
+
+.hg-carte__frontieres {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.hg-carte__bord {
+  fill: none;
+  stroke: #0b1a44;
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.hg-carte__ligne {
+  fill: none;
+  stroke: var(--hg-geo-or, #ffd36b);
+  stroke-width: 3;
+  stroke-dasharray: 8 6;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  animation: hg-geo-pointilles 1s linear infinite;
+}
+
+.hg-carte__marques { pointer-events: none; }
+
+.hg-carte__libelle {
+  fill: #fff;
+  stroke: var(--hg-geo-encre, #1b1d3a);
+  stroke-width: 7px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+/* L'épingle tombe, rebondit, et se plante. */
+.hg-carte__epingle-tete {
+  fill: var(--hg-geo-rouge, #ff4d6d);
+  stroke: var(--hg-geo-encre, #1b1d3a);
+  stroke-width: 2.2;
+}
+.hg-carte__epingle-ombre { fill: rgba(0, 0, 0, 0.35); }
+.hg-carte__epingle-chute { animation: hg-geo-chute 0.75s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.hg-carte__marque.est-montree .hg-carte__epingle-tete { fill: var(--hg-geo-or, #ffd36b); }
+
+.hg-carte__clic {
+  fill: #fff;
+  stroke: var(--hg-geo-encre, #1b1d3a);
+  stroke-width: 2.4;
+}
+.hg-carte__onde {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hg-geo-onde 1.1s ease-out both;
+}
+.hg-carte__marque.est-froid .hg-carte__clic { fill: #74c6ff; }
+.hg-carte__marque.est-tiede .hg-carte__clic { fill: #ffb35c; }
+.hg-carte__marque.est-chaud .hg-carte__clic { fill: #ff5a3c; }
+.hg-carte__marque.est-trouve .hg-carte__clic { fill: var(--hg-geo-vert, #2fd27a); }
+
+.hg-carte__cible-anneau {
+  fill: none;
+  stroke: var(--hg-geo-or, #ffd36b);
+  stroke-width: 4;
+  animation: hg-geo-pouls 1s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hg-carte__cible-coeur { fill: var(--hg-geo-or, #ffd36b); stroke: var(--hg-geo-encre, #1b1d3a); stroke-width: 2; }
+
+.hg-carte__petit-point {
+  fill: #fff;
+  stroke: var(--hg-geo-encre, #1b1d3a);
+  stroke-width: 1.6;
+}
+
+/* Le viseur du clavier : seulement quand la carte a le focus. */
+.hg-carte__viseur { display: none; pointer-events: none; }
+.hg-carte__viseur circle,
+.hg-carte__viseur path {
+  fill: none;
+  stroke: var(--hg-geo-or, #ffd36b);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.hg-carte__cadre:focus-visible .hg-carte__viseur { display: inline; }
+
+/* Les villes à choisir : un vrai bouton de 44 px autour d'un point visible. */
+.hg-carte__boutons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hg-carte__bouton {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.hg-carte__bouton-point {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55), 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.hg-carte__bouton.est-petit .hg-carte__bouton-point { width: 15px; height: 15px; border-width: 2.5px; }
+.hg-carte__bouton:hover:not(:disabled) .hg-carte__bouton-point,
+.hg-carte__bouton:focus-visible .hg-carte__bouton-point { transform: scale(1.35); background: var(--hg-geo-or, #ffd36b); }
+.hg-carte__bouton:focus-visible { outline: 3px solid var(--hg-geo-or, #ffd36b); }
+.hg-carte__bouton:disabled { cursor: default; }
+.hg-carte__bouton.est-faux .hg-carte__bouton-point { background: var(--hg-geo-rouge, #ff4d6d); }
+.hg-carte__bouton.est-montre .hg-carte__bouton-point { background: var(--hg-geo-or, #ffd36b); animation: hg-geo-pouls 0.5s ease-in-out 5 alternate; }
+
+.hg-carte__etiquette {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 22px;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: rgba(27, 29, 58, 0.86);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.hg-carte__etiquette--haut { top: auto; bottom: 34px; }
+.hg-carte__etiquette--droite { top: 50%; left: 34px; transform: translateY(-50%); }
+.hg-carte__etiquette--gauche { top: 50%; left: auto; right: 34px; transform: translateY(-50%); }
+
+.hg-carte__zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hg-carte__zoom-bouton {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 12px;
+  background: var(--hg-geo-creme, #fff8e8);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+}
+
+.hg-carte__zoom-bouton:hover { background: var(--hg-geo-or, #ffd36b); }
+.hg-carte__zoom-bouton:active { transform: translate(2px, 2px); box-shadow: none; }
+
+.hg-carte__coord {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(27, 29, 58, 0.85);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.hg-carte--charge {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 960 / 500;
+  border: 3px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 18px;
+  background: linear-gradient(160deg, #1d1559, #0b1a44);
+}
+
+.hg-carte__chargement {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  animation: hg-geo-respire 1.2s ease-in-out infinite alternate;
+}
+
+.hg-carte__aide-cachee {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ================================================================ Salim, la boussole, le tampon */
+.hg-geo__bulle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.hg-geo__salim {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 50%;
+  background: #ffe6a8;
+  object-fit: cover;
+  object-position: top;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-geo__parole {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 9px 14px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--hg-geo-encre, #1b1d3a);
+  box-shadow: 4px 4px 0 var(--hg-geo-encre, #1b1d3a);
+  animation: hg-geo-pop 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.hg-geo__parole::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: -13px;
+  border: 8px solid transparent;
+  border-right: 11px solid var(--hg-geo-encre, #1b1d3a);
+  border-left: 0;
+}
+
+.hg-geo__parole::after {
+  content: '';
+  position: absolute;
+  top: 19px;
+  left: -8px;
+  border: 5px solid transparent;
+  border-right: 7px solid #fff;
+  border-left: 0;
+}
+
+.hg-geo__bulle.est-bon .hg-geo__parole { background: #e6ffef; }
+.hg-geo__bulle.est-bon .hg-geo__parole::after { border-right-color: #e6ffef; }
+.hg-geo__bulle.est-faux .hg-geo__parole { background: #fff0f2; }
+.hg-geo__bulle.est-faux .hg-geo__parole::after { border-right-color: #fff0f2; }
+
+.hg-geo__parole-titre {
+  margin: 0 0 2px;
+  color: #6a3cff;
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hg-geo__parole-texte {
+  margin: 0;
+  padding-right: 34px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.hg-geo__reecouter {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.hg-geo__reecouter:hover { background: #f1ecff; }
+
+.hg-geo__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hg-geo__actions:not(:empty) { margin-top: 8px; }
+
+.hg-geo__bouton {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 12px;
+  background: var(--hg-geo-or, #ffd36b);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 17px;
+  font-weight: 900;
+  box-shadow: 3px 3px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+}
+
+.hg-geo__bouton:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--hg-geo-encre, #1b1d3a); }
+.hg-geo__bouton:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--hg-geo-encre, #1b1d3a); }
+.hg-geo__bouton:disabled { opacity: 0.55; cursor: default; }
+.hg-geo__bouton--suite { background: #7ef0b0; animation: hg-geo-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.hg-geo__bouton--aide { background: #ffe9a0; }
+
+.hg-geo__boussole {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 12px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 16px;
+  background: rgba(14, 12, 44, 0.88);
+  box-shadow: 4px 4px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-geo__boussole-cadran { flex: none; width: 80px; height: 80px; }
+.hg-geo__boussole-bord { fill: #c98a2e; stroke: var(--hg-geo-encre, #1b1d3a); stroke-width: 4; }
+.hg-geo__boussole-fond { fill: var(--hg-geo-creme, #fff8e8); stroke: #e3b25a; stroke-width: 3; }
+.hg-geo__boussole-graduation { stroke: var(--hg-geo-encre, #1b1d3a); stroke-width: 2.5; stroke-linecap: round; }
+.hg-geo__boussole-lettre { fill: var(--hg-geo-encre, #1b1d3a); font-size: 15px; font-weight: 900; }
+.hg-geo__boussole-lettre.est-nord { fill: #e0323e; }
+
+.hg-geo__aiguille {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transition: transform 0.9s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.hg-geo__boussole.est-attente .hg-geo__aiguille { animation: hg-geo-cherche 3.2s ease-in-out infinite alternate; }
+
+.hg-geo__aiguille-pointe { fill: #9aa3b8; stroke: var(--hg-geo-encre, #1b1d3a); stroke-width: 2; stroke-linejoin: round; }
+.hg-geo__aiguille-queue { fill: #fff; stroke: var(--hg-geo-encre, #1b1d3a); stroke-width: 2; stroke-linejoin: round; }
+.hg-geo__aiguille-axe { fill: var(--hg-geo-or, #ffd36b); stroke: var(--hg-geo-encre, #1b1d3a); stroke-width: 2; }
+.hg-geo__boussole.est-froid .hg-geo__aiguille-pointe { fill: #4fb3ff; }
+.hg-geo__boussole.est-tiede .hg-geo__aiguille-pointe { fill: #ffa12e; }
+.hg-geo__boussole.est-chaud .hg-geo__aiguille-pointe { fill: #ff3b3b; }
+.hg-geo__boussole.est-chaud .hg-geo__boussole-bord { animation: hg-geo-brule 0.6s ease-in-out infinite alternate; }
+
+.hg-geo__boussole-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hg-geo__boussole-texte strong { font-size: 22px; font-weight: 900; }
+.hg-geo__boussole.est-froid strong { color: #8fd3ff; }
+.hg-geo__boussole.est-tiede strong { color: #ffc46b; }
+.hg-geo__boussole.est-chaud strong { color: #ff7a6b; }
+
+.hg-geo__tampon {
+  position: absolute;
+  right: 18px;
+  top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 14px;
+  border: 4px double currentColor;
+  border-radius: 12px;
+  color: #e0233f;
+  background: rgba(255, 255, 255, 0.82);
+  font-weight: 900;
+  text-transform: uppercase;
+  transform: rotate(-12deg);
+  pointer-events: none;
+  animation: hg-geo-tampon 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.hg-geo__tampon--bleu { color: #2a5bd7; }
+.hg-geo__tampon-texte { font-size: 22px; letter-spacing: 0.04em; }
+.hg-geo__tampon-sous { font-size: 16px; letter-spacing: 0.12em; }
+
+/* ================================================================ Où sur Terre ? */
+.hg-ost__accueil {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.hg-ost__niveaux {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: min(100%, 860px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hg-ost__niveau {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 14px 12px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fff8e8, #ffe7b0);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 5px 5px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.hg-ost__niveau--normal { background: linear-gradient(180deg, #eef7ff, #bfe3ff); }
+.hg-ost__niveau--expert { background: linear-gradient(180deg, #fff0f6, #ffc2da); }
+.hg-ost__niveau:hover { transform: translateY(-3px) rotate(-1deg); }
+.hg-ost__niveau strong { font-size: 22px; font-weight: 900; }
+.hg-ost__niveau em { color: #6a3cff; font-style: normal; font-weight: 900; }
+.hg-ost__niveau.est-conseille { outline: 4px solid var(--hg-geo-or, #ffd36b); outline-offset: 3px; }
+.hg-ost__niveau-embleme { font-size: 36px; }
+.hg-ost__niveau-etoiles { color: #ff9f1c; font-size: 18px; letter-spacing: 0.1em; }
+
+.hg-ost__passeport-resume,
+.hg-ost__bilan p {
+  margin: 0;
+  padding: 8px 18px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 999px;
+  background: #2a1d7a;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow: 3px 3px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-ost__bilan {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px auto 0;
+}
+
+.hg-ost__table {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+.hg-ost__dossier {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hg-ost__chemise {
+  position: relative;
+  padding: 26px 10px 10px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 6px 16px 16px 16px;
+  background: linear-gradient(180deg, #ffd98a, #f4b955);
+  box-shadow: 4px 4px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-ost__chemise::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: -3px;
+  width: 42%;
+  height: 14px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: #ffd98a;
+}
+
+.hg-ost__chemise-titre {
+  position: absolute;
+  top: 2px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  color: #5a3300;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.hg-ost__en-jeu { color: #8a2d00; }
+
+.hg-ost__loupe { position: relative; }
+
+.hg-ost__preuve-zone {
+  position: relative;
+  overflow: hidden;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 10px;
+  background: #222;
+  line-height: 0;
+}
+
+.hg-ost__loupe.est-active .hg-ost__preuve-zone { cursor: none; touch-action: none; }
+
+.hg-ost__preuve-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(var(--hg-geo-libre) - 124px);
+  object-fit: cover;
+  animation: hg-geo-apparait 0.4s ease-out;
+}
+
+.hg-ost__verre {
+  position: absolute;
+  width: 144px;
+  height: 144px;
+  margin: -72px 0 0 -72px;
+  border: 4px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 0 4px #c98a2e, 0 8px 22px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.hg-ost__loupe-bouton {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 999px;
+  background: var(--hg-geo-creme, #fff8e8);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+}
+
+.hg-ost__loupe-bouton[aria-pressed='true'] { background: var(--hg-geo-or, #ffd36b); }
+
+.hg-ost__preuves {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hg-ost__vignette {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 100%;
+  min-height: 50px;
+  padding: 3px;
+  overflow: hidden;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 10px;
+  background: var(--hg-geo-creme, #fff8e8);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+}
+
+.hg-ost__vignette img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hg-ost__vignette:not(.est-fermee) span {
+  position: relative;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgba(27, 29, 58, 0.82);
+  color: #fff;
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.hg-ost__vignette.est-vue { outline: 4px solid var(--hg-geo-or, #ffd36b); outline-offset: 1px; }
+
+.hg-ost__vignette.est-fermee {
+  background: repeating-linear-gradient(45deg, #3b2f7a 0 10px, #33296c 10px 20px);
+  color: #fff;
+}
+
+.hg-ost__vignette.est-fermee:not(:disabled):hover { background: repeating-linear-gradient(45deg, #5a45c4 0 10px, #4c3aa8 10px 20px); }
+.hg-ost__vignette.est-fermee:disabled { opacity: 0.6; cursor: default; }
+.hg-ost__vignette small { color: var(--hg-geo-or, #ffd36b); font-size: 16px; font-weight: 900; }
+.hg-ost__cadenas { font-size: 20px; line-height: 1; }
+
+.hg-ost__enquete {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hg-ost__enquete .hg-carte { width: min(100%, calc((var(--hg-geo-libre) - 24px) * 1.92)); }
+
+.hg-ost__etapes {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.hg-ost__etape {
+  padding: 1px 10px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  background: rgba(14, 12, 44, 0.78);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.hg-ost__etape.est-active {
+  border-color: var(--hg-geo-encre, #1b1d3a);
+  background: var(--hg-geo-or, #ffd36b);
+  color: var(--hg-geo-encre, #1b1d3a);
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-ost__etape.est-faite { border-color: var(--hg-geo-vert, #2fd27a); color: #b7ffd6; }
+.hg-ost__etape.est-faite::before { content: '✓ '; }
+
+.hg-ost__legende {
+  display: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hg-ost__region {
+  min-height: 44px;
+  padding: 4px 12px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 999px;
+  background: var(--hg-geo-region, #fff);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+}
+
+.hg-ost__region:hover { transform: translateY(-2px); }
+.hg-ost__region.est-faux { background: var(--hg-geo-rouge, #ff4d6d); color: #fff; animation: hg-geo-secoue 0.4s ease; }
+.hg-ost__region.est-montre { outline: 4px solid var(--hg-geo-or, #ffd36b); outline-offset: 2px; }
+
+
+
+/* ---- La consigne devient la ligne de Salim (10/10/2026, « ça déborde ») : une ligne, qui suit l'étape. */
+.hg-geo__consigne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.hg-geo__consigne.est-bon { background: #e6ffef; }
+.hg-geo__consigne.est-faux { background: #fff0f2; }
+
+.hg-geo__salim-mini {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 50%;
+  background: #ffe6a8;
+  object-fit: cover;
+  object-position: top;
+}
+
+/* Les régions, en pastilles posées sur la carte : de vrais boutons. */
+.hg-carte__pastilles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hg-carte__pastille {
+  position: absolute;
+  max-width: 150px;
+  min-height: 44px;
+  padding: 3px 10px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 999px;
+  background: var(--hg-geo-region, #fff);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: normal;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s ease;
+}
+
+.hg-carte__pastille:hover,
+.hg-carte__pastille:focus-visible { transform: translate(-50%, -50%) scale(1.08); }
+.hg-carte__pastille:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.hg-carte__pastille.est-faux { background: var(--hg-geo-rouge, #ff4d6d); color: #fff; }
+.hg-carte__pastille.est-montre { outline: 4px solid #ff5fd2; outline-offset: 2px; }
+
+/* L'indice de Salim, en haut à gauche de la preuve. */
+.hg-ost__aide {
+  position: absolute;
+  top: 34px;
+  left: 18px;
+  min-height: 44px;
+  padding: 4px 12px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 999px;
+  background: #ffe9a0;
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 2px 2px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+}
+
+.hg-ost__aide:disabled { opacity: 0.7; cursor: default; }
+
+/* Le verdict, posé sur le bas de la preuve : « Dossier suivant » toujours visible. */
+.hg-ost__revelation {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--hg-geo-encre, #1b1d3a);
+  box-shadow: 3px 3px 0 var(--hg-geo-encre, #1b1d3a);
+  animation: hg-geo-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.hg-ost__revelation p { flex: 1; margin: 0; font-size: 16px; font-weight: 700; line-height: 1.25; }
+.hg-ost__revelation .hg-geo__bouton { flex: none; }
+
+@media (max-width: 760px) {
+  .hg-carte__pastilles { display: none; }
+  .hg-ost__chemise { padding-top: 8px; }
+  .hg-ost__chemise-titre { position: static; flex-wrap: wrap; margin: 0 0 6px; }
+  .hg-ost__aide { top: 46px; }
+  .hg-ost__vignette { min-height: 60px; }
+  .hg-ost__vignette:not(.est-fermee) span { align-self: stretch; text-align: center; overflow-wrap: anywhere; }
+  .hg-ost__legende { display: flex; }
+  .hg-ost__revelation { position: static; margin-top: 8px; flex-wrap: wrap; }
+}
+
+/* ================================================================ Enquête sur la carte */
+.hg-enquete__choix {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.hg-enquete__carte-choix {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  padding: 0 0 12px;
+  overflow: hidden;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 18px;
+  background: var(--hg-geo-creme, #fff8e8);
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow: 5px 5px 0 var(--hg-geo-encre, #1b1d3a);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.hg-enquete__carte-choix:hover { transform: translateY(-4px) rotate(-1deg); }
+.hg-enquete__carte-choix img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 3px solid var(--hg-geo-encre, #1b1d3a); }
+.hg-enquete__carte-choix strong { padding: 0 10px; font-size: 21px; font-weight: 900; }
+.hg-enquete__carte-choix span { padding: 0 10px; }
+
+.hg-enquete__table {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+  gap: 16px;
+  align-items: start;
+  width: 100%;
+}
+
+.hg-enquete__indices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-height: calc(var(--hg-geo-libre) - 16px);
+}
+
+.hg-enquete__deja {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 8px 12px 8px 30px;
+  border-radius: 12px;
+  background: rgba(14, 12, 44, 0.8);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.hg-enquete__essais {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hg-enquete__carte { min-width: 0; }
+.hg-enquete__carte .hg-carte { width: min(100%, calc((var(--hg-geo-libre) - 24px) * 1.92)); }
+
+.hg-enquete__revelation {
+  overflow: hidden;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 18px;
+  background: var(--hg-geo-creme, #fff8e8);
+  color: var(--hg-geo-encre, #1b1d3a);
+  box-shadow: 5px 5px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-enquete__revelation-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: calc(var(--hg-geo-libre) - 170px);
+  object-fit: cover;
+  border-bottom: 3px solid var(--hg-geo-encre, #1b1d3a);
+  animation: hg-geo-devoile 1s ease-out both;
+}
+
+.hg-enquete__revelation-texte { padding: 8px 14px 12px; }
+.hg-enquete__revelation-texte h3 { margin: 0; font-size: 22px; font-weight: 900; }
+.hg-enquete__revelation-texte p { margin: 2px 0 8px; font-size: 16px; line-height: 1.35; }
+.hg-enquete__revelation-titre { color: #1d8a4e; font-weight: 900; text-transform: uppercase; }
+.hg-enquete__revelation.est-montre .hg-enquete__revelation-titre { color: #2a5bd7; }
+
+/* ================================================================ Le grand jeu de géo */
+.hg-gjg__question {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.hg-gjg__sablier {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #1b1d3a 0 52%, transparent 53%),
+    conic-gradient(var(--hg-geo-or, #ffd36b) calc(var(--hg-geo-part, 1) * 360deg), rgba(255, 255, 255, 0.2) 0);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 3px 3px 0 var(--hg-geo-encre, #1b1d3a);
+}
+
+.hg-gjg__sablier.est-presse {
+  background:
+    radial-gradient(circle, #5a0f22 0 52%, transparent 53%),
+    conic-gradient(#ff4d6d calc(var(--hg-geo-part, 1) * 360deg), rgba(255, 255, 255, 0.2) 0);
+  animation: hg-geo-pouls 0.45s ease-in-out infinite alternate;
+}
+
+.hg-gjg__cible {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  padding: 6px 20px;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--hg-geo-encre, #1b1d3a);
+  box-shadow: 4px 4px 0 var(--hg-geo-encre, #1b1d3a);
+  animation: hg-geo-pop 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.hg-gjg__sorte { color: #6a3cff; font-size: 16px; font-weight: 900; text-transform: uppercase; }
+.hg-gjg__trouve { font-size: clamp(19px, 2.4vw, 26px); font-weight: 700; }
+.hg-gjg__trouve strong { font-weight: 900; }
+
+.hg-gjg__bonus {
+  position: absolute;
+  right: 0;
+  top: -6px;
+  padding: 2px 10px;
+  border: 2px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 999px;
+  background: #7ef0b0;
+  color: var(--hg-geo-encre, #1b1d3a);
+  font-size: 16px;
+  font-weight: 900;
+  animation: hg-geo-pop 0.4s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.hg-gjg .hg-carte { width: min(100%, calc((var(--hg-geo-libre) - 118px) * 1.92)); }
+
+/* Ici, le verdict se voit : posé sur le bas de la carte, en grand. */
+.hg-gjg .hg-gjg__verdict.est-visible {
+  left: 12px;
+  right: 64px;
+  bottom: 10px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  height: auto;
+  padding: 6px 16px;
+  overflow: visible;
+  clip: auto;
+  border: 3px solid var(--hg-geo-encre, #1b1d3a);
+  border-radius: 14px;
+  background: rgba(14, 12, 44, 0.9);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+  white-space: normal;
+  margin-inline: auto;
+  pointer-events: none;
+}
+
+.hg-gjg__verdict.est-bon { color: #7ef0b0; border-color: #1d8a4e; }
+.hg-gjg__verdict.est-faux { color: #ffb3c0; }
+
+/* ================================================================ petits écrans */
+@media (max-width: 900px) {
+  .hg-ost__table,
+  .hg-enquete__table { grid-template-columns: minmax(0, 1fr); }
+  .hg-ost__enquete { order: -1; }
+  .hg-ost__enquete .hg-carte,
+  .hg-enquete__carte .hg-carte,
+  .hg-gjg .hg-carte { width: 100%; }
+  .hg-ost__niveaux,
+  .hg-enquete__choix { grid-template-columns: minmax(0, 1fr); }
+  .hg-ost__preuve-image { max-height: none; }
+}
+
+@media (max-width: 480px) {
+  .hg-carte__cadre { border-radius: 12px; box-shadow: 3px 3px 0 var(--hg-geo-encre, #1b1d3a); }
+  .hg-carte__zoom { top: auto; bottom: 4px; right: 4px; gap: 4px; flex-direction: row; }
+  .hg-gjg .hg-gjg__verdict.est-visible { right: 12px; }
+  .hg-carte__coord { left: 4px; bottom: 4px; }
+  .hg-geo__salim { width: 48px; height: 48px; }
+  .hg-geo__boussole-cadran { width: 76px; height: 76px; }
+  .hg-gjg__question { gap: 8px; }
+  .hg-enquete__carte-choix { flex-direction: row; align-items: center; padding: 0; }
+  .hg-enquete__carte-choix img { width: 40%; border-bottom: 0; border-right: 3px solid var(--hg-geo-encre, #1b1d3a); }
+}
+
+/* ================================================================ les animations */
+@keyframes hg-geo-houle { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes hg-geo-eclat { 0% { fill: #fff; } 100% { fill: var(--hg-geo-vert, #2fd27a); } }
+@keyframes hg-geo-clignote { from { fill: #ff5fd2; } to { fill: #fff; } }
+@keyframes hg-geo-pointilles { to { stroke-dashoffset: -28; } }
+@keyframes hg-geo-chute {
+  0% { transform: translateY(-60px); opacity: 0; }
+  60% { transform: translateY(4px); opacity: 1; }
+  100% { transform: translateY(0); }
+}
+@keyframes hg-geo-onde {
+  from { transform: scale(0.6); opacity: 1; }
+  to { transform: scale(3.2); opacity: 0; }
+}
+@keyframes hg-geo-pouls { from { transform: scale(0.9); } to { transform: scale(1.12); } }
+@keyframes hg-geo-respire { from { opacity: 0.5; } to { opacity: 1; } }
+@keyframes hg-geo-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes hg-geo-cherche { from { transform: rotate(-35deg); } to { transform: rotate(35deg); } }
+@keyframes hg-geo-brule { from { fill: #c98a2e; } to { fill: #ff7a3c; } }
+@keyframes hg-geo-tampon {
+  0% { transform: rotate(-12deg) scale(2.4); opacity: 0; }
+  70% { transform: rotate(-12deg) scale(0.92); opacity: 1; }
+  100% { transform: rotate(-12deg) scale(1); opacity: 1; }
+}
+@keyframes hg-geo-apparait { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hg-geo-devoile {
+  from { clip-path: circle(0% at 50% 50%); }
+  to { clip-path: circle(75% at 50% 50%); }
+}
+@keyframes hg-geo-secoue {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+/* Tout mouvement coupé quand l'enfant (ou sa machine) le demande. */
+@media (prefers-reduced-motion: reduce) {
+  .hg-ost *,
+  .hg-enquete *,
+  .hg-gjg *,
+  .hg-ost *::before,
+  .hg-enquete *::before,
+  .hg-gjg *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.hg-geo__boussole-essais { color: rgba(255, 255, 255, 0.75); font-size: 16px; font-weight: 700; }

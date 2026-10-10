@@ -82,7 +82,7 @@ process.env.NODE_ENV ??= 'production';
 // qui importe `outils.js`. Tous doivent exister dans l'atelier avant le
 // premier `require`. On transpile donc tout `lib/jeux` et `lib/jeux/college` :
 // un fichier transpilé que personne ne requiert ne coûte rien.
-['lib/jeux', 'lib/jeux/college', 'lib/jeux/lycee'].forEach((dossier) => fs
+['lib/jeux', 'lib/jeux/college', 'lib/jeux/lycee', 'lib/jeux/bonus'].forEach((dossier) => fs
   .readdirSync(path.join(racine, 'src', dossier))
   .filter((f) => f.endsWith('.js'))
   .forEach((f) => transpiler(`${dossier}/${f}`)));
@@ -96,7 +96,9 @@ const { CLASSES_DU_CATALOGUE } = require(transpiler('lib/jeux/frise.js'));
 // coffre des centaines » au CE1 devient « Les grands nombres » au CM2), et
 // c'est le couple que le professeur doit nommer.
 // Les voies du lycée ont leurs propres classes de programme (07/10/2026).
-const lignes = CLASSES_DU_CATALOGUE.flatMap((code) => jeuxDeLaClasse(code).map((jeu) => ({
+// LES JEUX BONUS RESTENT DANS L'APPLI (09/10/2026) : sans compétence, le
+// professeur n'a aucune raison de les proposer en fin de cours.
+const lignes = CLASSES_DU_CATALOGUE.flatMap((code) => jeuxDeLaClasse(code).filter((jeu) => !jeu.bonus).map((jeu) => ({
   classe: code,
   cle: jeu.cle,
   titre: jeu.titre,

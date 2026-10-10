@@ -1,0 +1,757 @@
+/* --- DÉTECTIVE DE L'HISTOIRE (10/10/2026) : « L'image qui ment » (.hg-loupe…)
+   et « Mythe ou Histoire » (.hg-mythe…), et ce qu'ils partagent
+   (.hg-histoire-…) : la bulle de Salim, le tampon, les boutons.
+   STYLE MANGA, comme tout Mimia : contours noirs épais, ombres décalées de
+   case de BD, trames de points, tampons qui frappent avec des traits de
+   vitesse. Aucun mouvement sous `prefers-reduced-motion` (en bas). */
+
+/* ------------------------------------------------------------ communs */
+
+.hg-histoire-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.hg-histoire-bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 8px 16px;
+  border: 3px solid #1b1d3a;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 0 #1b1d3a;
+  color: #1b1d3a;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.hg-histoire-bouton:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 #1b1d3a; }
+.hg-histoire-bouton:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #1b1d3a; }
+.hg-histoire-bouton:disabled { opacity: 0.55; cursor: default; }
+.hg-histoire-bouton:focus-visible { outline: 4px solid #ffd36b; outline-offset: 3px; }
+
+.hg-histoire-bouton--indice { background: linear-gradient(180deg, #fff3b0, #ffd36b); }
+.hg-histoire-bouton--montre { background: linear-gradient(180deg, #ffe3ec, #ffc2d4); }
+.hg-histoire-bouton--suite {
+  background: linear-gradient(180deg, #6fa0ff, #3b5bff);
+  color: #fff;
+  font-size: 18px;
+  text-shadow: 0 2px 0 rgba(27, 29, 58, 0.45);
+}
+
+/* La bulle de Salim : son portrait, et une bulle de manga au bord épais. */
+.hg-histoire-salim {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: hg-histoire-bulle 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.hg-histoire-salim__portrait {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #1b1d3a;
+  border-radius: 50%;
+  background: #2a1d7a;
+  box-shadow: 0 3px 0 #1b1d3a;
+  object-fit: cover;
+}
+
+.hg-histoire-salim__bulle {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px 12px;
+  border: 3px solid var(--hg-bord, #6b4cff);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle, rgba(27, 29, 58, 0.07) 1px, transparent 1.6px) 0 0 / 9px 9px,
+    #fff;
+  box-shadow: 4px 4px 0 #1b1d3a;
+  color: #1b1d3a;
+  font-size: 16.5px;
+  line-height: 1.45;
+}
+
+.hg-histoire-salim__bulle::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: -14px;
+  border-width: 9px 14px 9px 0;
+  border-style: solid;
+  border-color: transparent var(--hg-bord, #6b4cff) transparent transparent;
+}
+
+.hg-histoire-salim__bulle p { margin: 0; }
+.hg-histoire-salim__bulle p + p { margin-top: 8px; }
+
+.hg-histoire-salim__nom {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--hg-bord, #6b4cff);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hg-histoire-salim--bien { --hg-bord: #1d9b5b; }
+.hg-histoire-salim--mal { --hg-bord: #d93a55; }
+.hg-histoire-salim--indice { --hg-bord: #d99a00; }
+
+/* Le tampon : il tombe de haut, frappe, et des traits de vitesse éclatent autour. */
+.hg-histoire-tampon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  animation: hg-histoire-tampon 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.hg-histoire-tampon::before {
+  content: '';
+  position: absolute;
+  inset: -60% -25%;
+  z-index: -1;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.85) 0deg 3deg, transparent 3deg 14deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 52%, #000 56%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 52%, #000 56%, transparent 100%);
+  animation: hg-histoire-eclat 0.6s ease-out 0.15s both;
+}
+
+.hg-histoire-tampon__encre {
+  padding: 6px 18px;
+  border: 6px double var(--hg-encre, #e0213f);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--hg-encre, #e0213f);
+  font-size: clamp(22px, 4.4vw, 44px);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.hg-histoire-tampon--vert { --hg-encre: #16874f; }
+
+/* Le petit tampon de « L'image qui ment » : à l'écart de l'intrus, à la
+   taille de la scène (unités de conteneur, voir .hg-loupe__cadre). */
+.hg-histoire-tampon--petit .hg-histoire-tampon__encre {
+  padding: 3px 12px;
+  border-width: 5px;
+  font-size: max(16px, 3.3cqw);
+}
+.hg-histoire-tampon--rouge { --hg-encre: #e0213f; }
+
+@keyframes hg-histoire-tampon {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-24deg) scale(2.6); }
+  60% { opacity: 1; transform: translate(-50%, -50%) rotate(-10deg) scale(0.92); }
+  100% { opacity: 1; transform: translate(-50%, -50%) rotate(-12deg) scale(1); }
+}
+
+@keyframes hg-histoire-eclat {
+  0% { opacity: 0; transform: scale(0.6); }
+  40% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+
+@keyframes hg-histoire-bulle {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  100% { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------------- l'image qui ment */
+
+.hg-loupe__plateau {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 390px);
+  gap: 18px;
+  align-items: start;
+  width: min(100%, 1240px);
+}
+
+.hg-loupe__scene {
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  aspect-ratio: 1672 / 941;
+  border: 4px solid #1b1d3a;
+  border-radius: 16px;
+  background: #1b1d3a;
+  box-shadow: 6px 6px 0 #1b1d3a, 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.hg-loupe__cadre {
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.hg-loupe__scene.est-active .hg-loupe__cadre { touch-action: none; cursor: zoom-in; }
+.hg-loupe__scene.a-sa-loupe .hg-loupe__cadre { cursor: none; }
+.hg-loupe__cadre:focus-visible { outline: 4px solid #ffd36b; outline-offset: 2px; }
+
+.hg-loupe__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* La loupe : un verre cerclé de laiton, son manche, et une croix au centre. */
+.hg-loupe__verre {
+  position: absolute;
+  z-index: 6;
+  border: 5px solid #d9a441;
+  border-radius: 50%;
+  background-color: #1b1d3a;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 0 0 3px #1b1d3a,
+    0 12px 26px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.5),
+    inset 10px 10px 24px rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.hg-loupe__verre::after {
+  content: '';
+  position: absolute;
+  right: -30px;
+  bottom: -40px;
+  width: 16px;
+  height: 52px;
+  border: 3px solid #1b1d3a;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #7a4a1c, #b5772f, #7a4a1c);
+  transform: rotate(-45deg);
+  transform-origin: top center;
+}
+
+.hg-loupe__croix {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  background:
+    linear-gradient(#fff, #fff) center / 2px 100% no-repeat,
+    linear-gradient(#fff, #fff) center / 100% 2px no-repeat;
+  filter: drop-shadow(0 0 1.5px #1b1d3a) drop-shadow(0 0 1px #1b1d3a);
+}
+
+/* Le cercle de la fin, autour de l'intrus : il se dessine en rebondissant. */
+.hg-loupe__cercle {
+  position: absolute;
+  z-index: 5;
+  aspect-ratio: 1;
+  border: 5px solid #ff2e55;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #fff, 0 0 22px 4px rgba(255, 46, 85, 0.8), inset 0 0 0 3px #fff;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: hg-loupe-cercle 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both, hg-loupe-pulse 1.4s ease-in-out 0.6s infinite alternate;
+}
+
+.hg-loupe__cercle--second { border-color: #ff9d1c; box-shadow: 0 0 0 3px #fff, 0 0 22px 4px rgba(255, 157, 28, 0.8), inset 0 0 0 3px #fff; }
+
+@keyframes hg-loupe-cercle {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes hg-loupe-pulse {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.35); }
+}
+
+/* Une fausse accusation (✗, qui s'efface) ; un leurre (?, qui reste). */
+.hg-loupe__marque {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  color: #ff2e55;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 4px 8px rgba(0, 0, 0, 0.5);
+  animation: hg-loupe-faux 1.4s ease-out both;
+}
+
+.hg-loupe__marque--leurre {
+  color: #ffb800;
+  text-shadow: -2px -2px 0 #1b1d3a, 2px -2px 0 #1b1d3a, -2px 2px 0 #1b1d3a, 2px 2px 0 #1b1d3a;
+  animation: hg-loupe-leurre 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+@keyframes hg-loupe-faux {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(-8deg); }
+  25% { transform: translate(-50%, -50%) scale(1) rotate(8deg); }
+  35% { transform: translate(-50%, -50%) rotate(0); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateY(-10px); }
+}
+
+@keyframes hg-loupe-leurre {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* LA COLONNE DU CARNET N'A PAS DE HAUTEUR À ELLE (Camara, 10/10/2026 : « ça
+   déborde ») : elle prend celle de la rangée, donc de la scène, et le carnet
+   s'y pose en absolu ; un texte trop long défile DANS le carnet. Pareil pour
+   le pupitre de « Mythe ou Histoire ». Sur un écran étroit, tout s'empile. */
+.hg-loupe__colonne,
+.hg-mythe__colonne {
+  position: relative;
+  align-self: stretch;
+  min-height: 0;
+}
+
+.hg-loupe__colonne > .hg-loupe__carnet,
+.hg-mythe__colonne > .hg-mythe__pupitre {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Le carnet du détective : une case de manga sur papier, ombre décalée. */
+.hg-loupe__carnet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 4px solid #1b1d3a;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle, rgba(107, 76, 255, 0.12) 1.2px, transparent 1.8px) 0 0 / 11px 11px,
+    #fffaf0;
+  box-shadow: 6px 6px 0 #1b1d3a;
+  color: #1b1d3a;
+}
+
+.hg-loupe__carnet > * { flex: none; }
+
+.hg-loupe__fiche { display: flex; flex-direction: column; gap: 4px; }
+
+.hg-loupe__titre-scene {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.hg-loupe__epoque {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px 10px;
+  border: 2px solid #1b1d3a;
+  border-radius: 8px;
+  background: #ffd36b;
+  font-size: 16px;
+  font-weight: 800;
+  transform: rotate(-1.5deg);
+}
+
+.hg-loupe__loupes { display: flex; gap: 4px; margin: 0; font-size: 24px; }
+.hg-loupe__jeton { transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease; }
+.hg-loupe__jeton.est-perdu { filter: grayscale(1); opacity: 0.3; transform: rotate(-30deg) scale(0.85); }
+
+.hg-loupe__verdict {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.hg-loupe__verdict:empty { display: none; }
+.hg-loupe__verdict.est-trouve { color: #16874f; }
+
+.hg-loupe__aides { display: flex; gap: 8px; }
+.hg-loupe__aides .hg-histoire-bouton { flex: 1; padding: 6px 10px; font-size: 16px; }
+
+.hg-loupe__rangee {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+/* Le dossier, petit bouton de l'en-tête à côté du score. */
+.hg-loupe__dossier-bouton {
+  min-height: 44px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.hg-loupe__dossier-bouton:hover { transform: translateY(-2px); }
+.hg-loupe__dossier-bouton:focus-visible { outline: 4px solid #ffd36b; outline-offset: 3px; }
+
+/* Dans le carnet, la bulle de Salim se fait compacte : le portrait plus petit. */
+.hg-loupe__salim .hg-histoire-salim__portrait { width: 44px; height: 44px; }
+.hg-loupe__salim .hg-histoire-salim__bulle { padding: 8px 12px 10px; font-size: 16px; line-height: 1.4; }
+.hg-loupe__salim .hg-histoire-salim__bulle::before { top: 12px; }
+
+/* Le dossier d'enquête : une chemise cartonnée pleine de photos épinglées. */
+.hg-loupe-dossier {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(8, 10, 40, 0.72);
+}
+
+.hg-loupe-dossier__chemise {
+  width: min(100%, 980px);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  padding: 16px;
+  border: 4px solid #1b1d3a;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 120px),
+    #e9c98b;
+  box-shadow: 8px 8px 0 #1b1d3a;
+  color: #1b1d3a;
+  animation: hg-histoire-bulle 0.3s ease-out both;
+}
+
+.hg-loupe-dossier__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+}
+
+.hg-loupe-dossier__titre { margin: 0; font-size: 24px; font-weight: 900; }
+.hg-loupe-dossier__titre:focus { outline: none; }
+.hg-loupe-dossier__compte { flex: 1; margin: 0; font-size: 16px; font-weight: 700; }
+
+.hg-loupe-dossier__fiches {
+  display: grid;
+  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hg-loupe-dossier__fiche {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 8px;
+  border: 2px solid #1b1d3a;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 3px 3px 0 rgba(27, 29, 58, 0.6);
+  font-size: 16px;
+  transform: rotate(-1.2deg);
+}
+
+.hg-loupe-dossier__fiche:nth-child(even) { transform: rotate(1.4deg); }
+
+.hg-loupe-dossier__vignette {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.hg-loupe-dossier__nom { font-weight: 800; line-height: 1.2; }
+.hg-loupe-dossier__intrus { color: #a3102c; font-weight: 700; line-height: 1.2; }
+.hg-loupe-dossier__etoile { color: #d99a00; }
+
+.hg-loupe-dossier__fiche.est-scellee {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: none;
+}
+
+.hg-loupe-dossier__fiche.est-scellee .hg-loupe-dossier__nom { color: rgba(27, 29, 58, 0.55); font-weight: 700; }
+
+.hg-loupe-dossier__scelle {
+  display: grid;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  border-radius: 3px;
+  background: repeating-linear-gradient(135deg, rgba(27, 29, 58, 0.06) 0 8px, transparent 8px 16px);
+  color: rgba(27, 29, 58, 0.45);
+  font-size: 40px;
+  font-weight: 900;
+}
+
+/* ------------------------------------------------------- mythe ou histoire */
+
+.hg-mythe__plateau {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(290px, 1fr);
+  gap: 0 6px;
+  align-items: start;
+  width: min(100%, 1240px);
+}
+
+.hg-mythe__tableau {
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 4px solid #1b1d3a;
+  border-radius: 16px;
+  background: #1b1d3a;
+  box-shadow: 6px 6px 0 #1b1d3a, 0 0 0 2px rgba(255, 255, 255, 0.35);
+  animation: hg-mythe-entree 0.45s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.hg-mythe__image { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.hg-mythe__tableau.est-tamponne .hg-mythe__image { filter: saturate(0.75) brightness(0.92); transition: filter 0.4s ease; }
+
+.hg-mythe__minuteur {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 3px solid #1b1d3a;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, #fff 72%, transparent 74% 100%),
+    conic-gradient(#3b5bff calc(var(--part) * 360deg), rgba(27, 29, 58, 0.2) 0);
+  color: #1b1d3a;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.hg-mythe__minuteur.est-presse {
+  background:
+    radial-gradient(closest-side, #fff 72%, transparent 74% 100%),
+    conic-gradient(#e0213f calc(var(--part) * 360deg), rgba(27, 29, 58, 0.2) 0);
+  color: #e0213f;
+  animation: hg-mythe-presse 0.6s ease-in-out infinite alternate;
+}
+
+/* Les marges gardent visibles la pointe de la bulle et les ombres décalées, qu'un défilement couperait. */
+.hg-mythe__pupitre { display: flex; flex-direction: column; gap: 10px; padding: 0 8px 8px 24px; }
+.hg-mythe__pupitre > * { flex: none; }
+
+/* L'affirmation dans une bulle de manga, la pointe vers l'image. */
+.hg-mythe__affirmation {
+  position: relative;
+  margin: 0;
+  padding: 16px 20px;
+  border: 4px solid #1b1d3a;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle, rgba(27, 29, 58, 0.08) 1.2px, transparent 1.8px) 0 0 / 10px 10px,
+    #fff;
+  box-shadow: 5px 5px 0 #1b1d3a;
+  color: #1b1d3a;
+  font-size: clamp(19px, 1.9vw, 23px);
+  font-weight: 800;
+  line-height: 1.35;
+  animation: hg-histoire-bulle 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.hg-mythe__affirmation p { margin: 0; }
+
+/* Une fois tranché, l'affirmation se resserre : place à l'explication. */
+.hg-mythe__affirmation.est-tranchee { padding: 10px 16px; font-size: 17px; animation: none; }
+.hg-mythe__affirmation.est-tranchee::before { top: 16px; }
+.hg-mythe__affirmation.est-tranchee::after { top: 20px; }
+
+.hg-mythe__affirmation::before,
+.hg-mythe__affirmation::after {
+  content: '';
+  position: absolute;
+  top: 26px;
+  border-style: solid;
+}
+
+.hg-mythe__affirmation::before { left: -22px; border-width: 12px 22px 12px 0; border-color: transparent #1b1d3a transparent transparent; }
+.hg-mythe__affirmation::after { left: -14px; top: 30px; border-width: 8px 15px 8px 0; border-color: transparent #fff transparent transparent; }
+
+.hg-mythe__choix { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.hg-mythe__bouton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 96px;
+  padding: 10px 8px;
+  border: 4px solid #1b1d3a;
+  border-radius: 18px;
+  box-shadow: 0 6px 0 #1b1d3a;
+  color: #fff;
+  font: inherit;
+  text-shadow: 0 2px 0 rgba(27, 29, 58, 0.5);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.3s ease, filter 0.3s ease;
+}
+
+.hg-mythe__bouton--histoire { background: linear-gradient(180deg, #4fd99a, #16874f); }
+.hg-mythe__bouton--mythe { background: linear-gradient(180deg, #c48cff, #7b2ff7); }
+
+.hg-mythe__bouton:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 9px 0 #1b1d3a; }
+.hg-mythe__bouton:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 2px 0 #1b1d3a; }
+.hg-mythe__bouton:focus-visible { outline: 4px solid #ffd36b; outline-offset: 3px; }
+.hg-mythe__bouton:disabled { cursor: default; }
+.hg-mythe__bouton:disabled:not(.est-juste) { opacity: 0.45; filter: grayscale(0.6); }
+.hg-mythe__bouton.est-juste { box-shadow: 0 6px 0 #1b1d3a, 0 0 0 4px #fff, 0 0 26px 6px rgba(255, 211, 107, 0.85); }
+.hg-mythe__bouton.est-choisi:not(.est-juste) { animation: hg-mythe-non 0.45s ease-in-out both; }
+
+.hg-mythe__icone { font-size: 30px; line-height: 1; }
+
+
+.hg-mythe__mot { font-size: 25px; font-weight: 900; letter-spacing: 0.02em; }
+.hg-mythe__precision { font-size: 16px; font-weight: 700; opacity: 0.95; }
+
+.hg-mythe__verdict {
+  margin: 0;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 900;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.hg-mythe__verdict:empty { display: none; }
+.hg-mythe__verdict.est-juste { color: #8dffc2; }
+.hg-mythe__verdict.est-faux { color: #ffb0bd; }
+
+/* Le mot clé, surligné au feutre jaune : le trait passe de gauche à droite. */
+.hg-mythe__mot-cle {
+  padding: 0 2px;
+  background: linear-gradient(transparent 42%, #ffe066 42%, #ffe066 92%, transparent 92%) no-repeat 0 0 / 100% 100%;
+  color: inherit;
+  font-weight: 900;
+  animation: hg-mythe-feutre 0.7s ease-out 0.3s both;
+}
+
+@keyframes hg-mythe-feutre {
+  0% { background-size: 0% 100%; }
+  100% { background-size: 100% 100%; }
+}
+
+@keyframes hg-mythe-entree {
+  0% { opacity: 0; transform: translateX(-24px) rotate(-1deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes hg-mythe-non {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+@keyframes hg-mythe-presse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+/* ------------------------------------------------------- tailles d'écran */
+
+/* Sur un grand écran, l'image se règle sur la hauteur libre (voir `.bonus`),
+   à 90 % : à 1400 × 750 et au zoom 1,25, la partie entière (en-tête, consigne,
+   scène, carnet) tient alors sous la barre du site sans que le zoom baisse. */
+@media (min-width: 1100px) {
+  .hg-loupe__scene { width: min(100%, calc(var(--libre, 420px) * 0.9 * 1.7768)); }
+  .hg-mythe__tableau { width: min(100%, calc(var(--libre, 420px) * 0.9 * 1.7778)); }
+}
+
+/* Plus étroit : la scène, puis le carnet dessous. */
+@media (max-width: 900px) {
+  .hg-loupe__plateau,
+  .hg-mythe__plateau { grid-template-columns: minmax(0, 1fr); }
+  .hg-mythe__affirmation::before,
+  .hg-mythe__affirmation::after { display: none; }
+  .hg-loupe__colonne > .hg-loupe__carnet,
+  .hg-mythe__colonne > .hg-mythe__pupitre { position: static; overflow: visible; }
+  .hg-mythe__plateau { row-gap: 14px; }
+  .hg-mythe__pupitre { padding: 0 6px 6px 0; }
+}
+
+@media (max-width: 480px) {
+  .hg-loupe__carnet { padding: 12px; }
+  .hg-loupe__aides { flex-direction: column; }
+  .hg-mythe__bouton { min-height: 84px; }
+  .hg-mythe__mot { font-size: 22px; }
+  .hg-histoire-salim__portrait { width: 48px; height: 48px; }
+  .hg-loupe-dossier__fiches { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
+/* ------------------------------------------------------- sans mouvement */
+
+@media (prefers-reduced-motion: reduce) {
+  .hg-histoire-salim,
+  .hg-histoire-tampon,
+  .hg-histoire-tampon::before,
+  .hg-loupe__cercle,
+  .hg-loupe__marque,
+  .hg-loupe-dossier__chemise,
+  .hg-mythe__tableau,
+  .hg-mythe__affirmation,
+  .hg-mythe__bouton,
+  .hg-mythe__minuteur,
+  .hg-mythe__mot-cle { animation: none; }
+
+  .hg-histoire-tampon::before { display: none; }
+  .hg-loupe__marque--faux { opacity: 1; }
+
+  .hg-histoire-bouton,
+  .hg-loupe__jeton,
+  .hg-mythe__bouton,
+  .hg-mythe__tableau.est-tamponne .hg-mythe__image { transition: none; }
+
+  .hg-histoire-bouton:hover:not(:disabled),
+  .hg-histoire-bouton:active:not(:disabled),
+  .hg-mythe__bouton:hover:not(:disabled),
+  .hg-mythe__bouton:active:not(:disabled) { transform: none; }
+}

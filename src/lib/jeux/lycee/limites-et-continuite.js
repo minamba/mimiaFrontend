@@ -29,6 +29,12 @@
  *
  * Tout ce qui varie (les nombres, les fonctions) est dans `question` et les
  * libellés ; PHRASES est fixe, sans aucun chiffre.
+ *
+ * LE DESSIN (09/10/2026) : le théorème des valeurs intermédiaires porte un
+ * `visuel`, le tableau de variations dessiné (la courbe passe par les valeurs
+ * du tableau) — sans la droite y = k, qui ferait compter les solutions à
+ * l'œil. Rien ailleurs : les opérations sont des limites sans fonction, et la
+ * courbe d'un polynôme, d'un quotient ou de qⁿ montrerait la limite cherchée.
  */
 
 import { bilan as bilanCommun, outils } from '../outils.js';
@@ -101,7 +107,7 @@ const memes = (u, v) => (typeof u === 'number' && typeof v === 'number' ? proche
  * Chaque candidat est [libellé, valeur] ; un piège est [libellé, valeur, phrase].
  */
 function manche(t, {
-  consigne, question, bonne, pieges = [], voisins = [], aide,
+  consigne, question, bonne, pieges = [], voisins = [], aide, visuel,
 }) {
   const liste = [bonne];
   const table = {};
@@ -121,6 +127,7 @@ function manche(t, {
     pieges: table,
   };
   if (aide) m.aide = aide;
+  if (visuel) m.visuel = visuel;
   return m;
 }
 
@@ -332,6 +339,10 @@ function tvi(t) {
   const auxBornes = entre(ys[0], ys[morceaux]) ? 1 : 0;
   const lignes = sens.map((m, i) => `f ${m ? 'croît' : 'décroît'} de ${entier(ys[i])} à ${entier(ys[i + 1])} sur [${entier(xs[i])} ; ${entier(xs[i + 1])}]`);
   const nombre = (v) => [`${v}`, v];
+  // Le dessin : la courbe passe par les valeurs du tableau, monotone entre deux.
+  // La fenêtre contient aussi k, pour qu'on puisse le placer soi-même.
+  const lo = Math.min(min, k);
+  const hi = Math.max(max, k);
   return manche(t, {
     consigne: 'tvi',
     question: `f est continue sur [${entier(xs[0])} ; ${entier(xs[morceaux])}].\n${lignes.join(',\npuis ')}.\nNombre de solutions de f(x) = ${entier(k)} ?`,
@@ -339,6 +350,14 @@ function tvi(t) {
     pieges: [[...nombre(uneSeule), 'tvi-chaque-intervalle'], [...nombre(auxBornes), 'tvi-extremites']],
     voisins: [0, 1, 2, 3].map(nombre),
     aide: 'tvi-regle',
+    visuel: {
+      type: 'courbe',
+      fenetre: {
+        xmin: xs[0] - 1, xmax: xs[morceaux] + 1, ymin: Math.min(0, lo) - 1, ymax: Math.max(0, hi) + 1,
+      },
+      // Sans étiquette : le dessinateur la pose en bout de fenêtre, là où f n'est pas définie.
+      fonctions: [{ forme: 'morceaux', points: xs.map((x, i) => [x, ys[i]]) }],
+    },
   });
 }
 

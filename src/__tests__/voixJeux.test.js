@@ -33,7 +33,8 @@ const inventaire = toutesLesRepliques();
 
 describe('ce qui est dit est ce qui est écrit', () => {
   it('chaque jeu du catalogue a un professeur qui parle', () => {
-    JEUX.forEach((jeu) => expect(PROFESSEUR_PAR_MATIERE[jeu.matiereCode]).toBeTruthy());
+    // Un jeu bonus (09/10/2026) choisit sa voix lui-même : Nora pour le calcul, Adrien pour les mots.
+    JEUX.filter((jeu) => !jeu.bonus).forEach((jeu) => expect(PROFESSEUR_PAR_MATIERE[jeu.matiereCode]).toBeTruthy());
   });
 
   it('les clés sont uniques, et font des noms de fichier sûrs', () => {

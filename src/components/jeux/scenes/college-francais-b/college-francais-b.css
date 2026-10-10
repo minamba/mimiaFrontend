@@ -1,0 +1,4305 @@
+/* ==================================================================
+   LES SCÈNES DU GROUPE « COLLEGE-FRANCAIS-B » (09/10/2026)
+   Treize jeux de français du collège, un univers chacun. Toutes les
+   classes et les animations sont préfixées `sc-<clé du jeu>` : App.css est
+   global, et des noms courts y sont déjà pris. Tout mouvement s'arrête sous
+   `prefers-reduced-motion` (fin de chaque section).
+   ================================================================== */
+
+/* ------------------------------------------------------------------
+   LES ACCORDS — le jardin des carillons
+   ------------------------------------------------------------------ */
+.sc-les-accords-college {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-les-accords-college__glycine {
+  display: block;
+  width: 100%;
+  height: 54px;
+  overflow: hidden;
+}
+
+.sc-les-accords-college__grappe {
+  animation: sc-les-accords-college-balance 3.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.6s);
+}
+
+.sc-les-accords-college__petales {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-les-accords-college__petale {
+  position: absolute;
+  top: -10px;
+  left: calc(8% + var(--n) * 16%);
+  width: 10px;
+  height: 7px;
+  border-radius: 60% 0 60% 0;
+  background: #d9b8ff;
+  opacity: 0;
+  animation: sc-les-accords-college-petale 9s linear infinite;
+  animation-delay: calc(var(--n) * 1.4s);
+}
+
+.sc-les-accords-college__plaque {
+  position: relative;
+  width: 100%;
+  padding: 16px 22px;
+  border: 3px solid #6b3f1f;
+  border-radius: 14px;
+  background:
+    repeating-linear-gradient(90deg, rgba(120, 72, 30, 0.07) 0 3px, transparent 3px 26px),
+    linear-gradient(180deg, #fff6e2, #f3dfb6);
+  box-shadow: 0 10px 24px rgba(30, 12, 40, 0.4), inset 0 0 0 3px rgba(255, 255, 255, 0.5);
+  transform-origin: 50% -30px;
+  animation: sc-les-accords-college-plaque 5s ease-in-out infinite alternate;
+}
+
+/* Les deux cordes qui pendent la plaque à la poutre de glycine. */
+.sc-les-accords-college__cordes::before,
+.sc-les-accords-college__cordes::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  width: 3px;
+  height: 40px;
+  background: #6b3f1f;
+}
+
+.sc-les-accords-college__cordes::before { left: 14%; }
+.sc-les-accords-college__cordes::after { right: 14%; }
+
+.sc-les-accords-college__phrase {
+  margin: 0;
+  color: #2a1606;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.sc-les-accords-college__trou {
+  display: inline-block;
+  min-width: 3.2em;
+  margin: 0 3px;
+  padding: 0 6px;
+  border-bottom: 3px dashed #b0562a;
+  border-radius: 6px;
+  background: rgba(255, 216, 107, 0.4);
+  color: #8a4a12;
+  text-align: center;
+  animation: sc-les-accords-college-lueur 2.4s ease-in-out infinite alternate;
+}
+
+.sc-les-accords-college__infinitif {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 10px;
+  border-radius: 4px 4px 4px 14px;
+  background: #fff;
+  box-shadow: 0 2px 0 #c9a26a;
+  color: #6b3f1f;
+  font-size: 18px;
+  font-style: italic;
+}
+
+/* Après : la phrase qui sonne juste. */
+.sc-les-accords-college__resonance {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.sc-les-accords-college__juste {
+  margin: 0;
+  padding: 10px 18px;
+  border: 3px solid #e0a82e;
+  border-radius: 14px;
+  background: #2b1840;
+  color: #fff7e0;
+  font-size: 20px;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 0 22px rgba(255, 200, 80, 0.5);
+  animation: sc-les-accords-college-apparait 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.sc-les-accords-college__titre {
+  display: block;
+  color: #ffd86b;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sc-les-accords-college__or {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ffe7a0, #ffc94a);
+  color: #4a2604;
+  animation: sc-les-accords-college-tinte 0.9s ease-out 0.3s both;
+}
+
+.sc-les-accords-college__secret {
+  margin: 0;
+  max-width: 40em;
+  padding: 7px 16px;
+  border-radius: 4px 4px 14px 4px;
+  background: #fffaf0;
+  color: #3a2410;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 4px 0 #d9c9a3;
+  animation: sc-les-accords-college-apparait 0.5s ease-out 0.5s both;
+}
+
+.sc-les-accords-college__notes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sc-les-accords-college__note {
+  position: absolute;
+  bottom: 40%;
+  left: calc(12% + var(--n) * 18%);
+  color: #ffd86b;
+  font-size: 26px;
+  text-shadow: 0 0 8px rgba(255, 200, 80, 0.9);
+  opacity: 0;
+  animation: sc-les-accords-college-note 2.6s ease-out infinite;
+  animation-delay: calc(var(--n) * 0.45s);
+}
+
+/* Les réponses : les tubes du carillon, pendus à la poutre. */
+.sc-les-accords-college__carillon {
+  position: relative;
+  width: min(100%, 720px);
+  margin: 0 auto;
+  padding-top: 10px;
+}
+
+.sc-les-accords-college__poutre {
+  position: absolute;
+  top: 0;
+  left: 4%;
+  right: 4%;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #8a5a2b, #5b3a1a);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+}
+
+.sc-les-accords-college__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-les-accords-college__reponse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  transform-origin: 50% 0;
+  animation: sc-les-accords-college-oscille 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-les-accords-college__dessin { display: block; line-height: 0; }
+
+.sc-les-accords-college__libelle {
+  min-width: 96px;
+  margin-top: -2px;
+  padding: 8px 14px 10px;
+  border-radius: 3px 3px 10px 10px;
+  background: #fffaf0;
+  box-shadow: 0 5px 0 #d6b98a, 0 8px 14px rgba(0, 0, 0, 0.3);
+  color: #2a1606;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.sc-les-accords-college__reponse:hover:not(:disabled) { animation: sc-les-accords-college-tinte 0.5s ease-in-out infinite; }
+.sc-les-accords-college__reponse:focus-visible .sc-les-accords-college__libelle { outline: 3px solid #ffd86b; outline-offset: 3px; }
+
+.sc-les-accords-college__reponse.est-fausse { cursor: default; animation: none; filter: grayscale(0.9); opacity: 0.6; }
+.sc-les-accords-college__reponse.est-fausse .sc-les-accords-college__libelle { background: #ffe1dc; color: #8a2a1c; text-decoration: line-through; box-shadow: none; }
+
+@keyframes sc-les-accords-college-balance {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg); }
+}
+
+@keyframes sc-les-accords-college-petale {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  10% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-40px, 330px) rotate(300deg); }
+}
+
+@keyframes sc-les-accords-college-plaque {
+  from { transform: rotate(-0.6deg); }
+  to { transform: rotate(0.6deg); }
+}
+
+@keyframes sc-les-accords-college-lueur {
+  from { box-shadow: 0 0 0 rgba(255, 200, 80, 0); }
+  to { box-shadow: 0 0 14px rgba(255, 200, 80, 0.85); }
+}
+
+@keyframes sc-les-accords-college-oscille {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+@keyframes sc-les-accords-college-tinte {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes sc-les-accords-college-apparait {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-les-accords-college-note {
+  0% { opacity: 0; transform: translateY(0) rotate(-10deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-90px) rotate(15deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-les-accords-college__phrase { font-size: 18px; }
+  .sc-les-accords-college__libelle { min-width: 76px; font-size: 17px; }
+  .sc-les-accords-college__reponses { gap: 8px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-les-accords-college__grappe,
+  .sc-les-accords-college__petale,
+  .sc-les-accords-college__plaque,
+  .sc-les-accords-college__trou,
+  .sc-les-accords-college__juste,
+  .sc-les-accords-college__or,
+  .sc-les-accords-college__secret,
+  .sc-les-accords-college__note,
+  .sc-les-accords-college__reponse,
+  .sc-les-accords-college__reponse:hover:not(:disabled) { animation: none; }
+  .sc-les-accords-college__petale,
+  .sc-les-accords-college__note { display: none; }
+}
+
+/* ------------------------------------------------------------------
+   COMME UNE IMAGE — la crique aux coquillages
+   ------------------------------------------------------------------ */
+.sc-comme-une-image-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-comme-une-image-college__crique {
+  display: block;
+  width: 100%;
+  height: 80px;
+  border-radius: 18px 18px 0 0;
+}
+
+.sc-comme-une-image-college__soleil { animation: sc-comme-une-image-college-soleil 6s ease-in-out infinite alternate; }
+.sc-comme-une-image-college__mouette { animation: sc-comme-une-image-college-mouette 14s linear infinite; }
+.sc-comme-une-image-college__vague { animation: sc-comme-une-image-college-vague 5s ease-in-out infinite alternate; }
+.sc-comme-une-image-college__vague--loin { animation-duration: 7s; animation-direction: alternate-reverse; opacity: 0.8; }
+
+/* Le sable mouillé, et le message tiré de la bouteille. */
+.sc-comme-une-image-college__sable {
+  width: 100%;
+  margin-top: -10px;
+  padding: 12px 14px 14px;
+  border-radius: 0 0 18px 18px;
+  background:
+    radial-gradient(circle at 12% 70%, rgba(255, 255, 255, 0.5) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 30%, rgba(255, 255, 255, 0.4) 0 2px, transparent 3px),
+    linear-gradient(180deg, #d9b98a, #e9cf9f);
+  box-shadow: 0 12px 26px rgba(40, 20, 60, 0.35);
+}
+
+.sc-comme-une-image-college__message {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #fffdf4, #f6ead0);
+  box-shadow: 0 4px 0 #cdb383, 0 6px 14px rgba(0, 0, 0, 0.2);
+  transform: rotate(-0.6deg);
+}
+
+/* La bouteille, en CSS : un goulot, un bouchon, un reflet. */
+.sc-comme-une-image-college__bouteille {
+  flex: none;
+  position: relative;
+  width: 26px;
+  height: 52px;
+  border-radius: 9px 9px 11px 11px;
+  background: linear-gradient(90deg, #4fa88f, #8fe0c8 40%, #3e8b75);
+  opacity: 0.9;
+  animation: sc-comme-une-image-college-roule 4s ease-in-out infinite alternate;
+}
+
+.sc-comme-une-image-college__bouteille::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: -12px;
+  width: 10px;
+  height: 14px;
+  border-radius: 3px;
+  background: #a8754a;
+}
+
+.sc-comme-une-image-college__phrase {
+  flex: 1;
+  margin: 0;
+  color: #2a2040;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.sc-comme-une-image-college__eclat {
+  padding: 0 5px;
+  border-radius: 8px;
+  background: #ffe08a;
+  color: #4a2604;
+  font-style: normal;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px #e0a82e;
+  animation: sc-comme-une-image-college-eclat 1.2s ease-out both;
+}
+
+/* Après : l'image démontée. */
+.sc-comme-une-image-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-comme-une-image-college__galets {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* La corde qui relie les galets. */
+.sc-comme-une-image-college__galets::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  border-top: 3px dashed #8a6a3a;
+}
+
+.sc-comme-une-image-college__galet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 120px;
+  padding: 10px 18px;
+  border-radius: 46% 54% 50% 50% / 58% 52% 48% 42%;
+  background: radial-gradient(circle at 30% 25%, #ffffff, #d7d2c8 55%, #a59f94);
+  color: #2a2040;
+  font-size: 18px;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+  animation: sc-comme-une-image-college-galet 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(var(--n) * 0.25s);
+}
+
+.sc-comme-une-image-college__galet.est-cible {
+  background: radial-gradient(circle at 30% 25%, #fff8d6, #ffd86b 55%, #d99a1c);
+  box-shadow: 0 0 0 4px #fff, 0 0 22px rgba(255, 200, 80, 0.9);
+}
+
+.sc-comme-une-image-college__nom {
+  color: #5b4a6a;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sc-comme-une-image-college__figure {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  animation: sc-comme-une-image-college-galet 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.sc-comme-une-image-college__tableau { width: 130px; height: 50px; overflow: visible; }
+.sc-comme-une-image-college__nom-figure { color: #6a1f63; font-size: 24px; }
+
+.sc-comme-une-image-college__pont {
+  stroke-dasharray: 100;
+  animation: sc-comme-une-image-college-trace 1.2s ease-out both;
+}
+
+.sc-comme-une-image-college__fond-a { animation: sc-comme-une-image-college-fond-a 3s ease-in-out infinite alternate; }
+.sc-comme-une-image-college__fond-b { animation: sc-comme-une-image-college-fond-b 3s ease-in-out infinite alternate; }
+
+.sc-comme-une-image-college__visage {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-comme-une-image-college-visage 1.6s ease-in-out infinite alternate;
+}
+
+.sc-comme-une-image-college__enfle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-comme-une-image-college-enfle 1.4s ease-in-out infinite alternate;
+}
+
+.sc-comme-une-image-college__indice {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a2040;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Les réponses : des coquillages nacrés. */
+.scene__carte--objet.objet--sc-comme-une-image-college {
+  overflow: visible;
+  min-width: 140px;
+  padding: 18px 28px 14px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 18px 18px / 70% 70% 18px 18px;
+  color: #3a1f4a;
+  text-shadow: none;
+  background:
+    repeating-conic-gradient(from -60deg at 50% 100%, rgba(255, 255, 255, 0) 0 9deg, rgba(255, 255, 255, 0.45) 9deg 11deg),
+    radial-gradient(circle at 50% 100%, #fff 0 8%, var(--c1) 45%, #fde3ef 100%);
+}
+
+/* La charnière du coquillage. */
+.scene__carte--objet.objet--sc-comme-une-image-college::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 30px;
+  height: 12px;
+  border-radius: 0 0 8px 8px;
+  background: var(--c2);
+  transform: translateX(-50%);
+}
+
+.scene__carte--objet.objet--sc-comme-une-image-college .objet__eclat { display: none; }
+.scene__carte--objet.objet--sc-comme-une-image-college.est-fausse { color: #fff; background: linear-gradient(150deg, #9aa3b5, #5d6577); }
+
+@keyframes sc-comme-une-image-college-soleil {
+  from { transform: translateY(0); }
+  to { transform: translateY(6px); }
+}
+
+@keyframes sc-comme-une-image-college-mouette {
+  from { transform: translateX(-80px); }
+  to { transform: translateX(900px); }
+}
+
+@keyframes sc-comme-une-image-college-vague {
+  from { transform: translateX(0); }
+  to { transform: translateX(36px); }
+}
+
+@keyframes sc-comme-une-image-college-roule {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(10deg); }
+}
+
+@keyframes sc-comme-une-image-college-eclat {
+  from { box-shadow: 0 0 0 14px rgba(224, 168, 46, 0); }
+  to { box-shadow: 0 0 0 3px #e0a82e; }
+}
+
+@keyframes sc-comme-une-image-college-galet {
+  from { opacity: 0; transform: translateY(18px) scale(0.8); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-comme-une-image-college-trace {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes sc-comme-une-image-college-fond-a {
+  0%, 30% { opacity: 1; }
+  70%, 100% { opacity: 0; }
+}
+
+@keyframes sc-comme-une-image-college-fond-b {
+  0%, 30% { opacity: 0; }
+  70%, 100% { opacity: 1; }
+}
+
+@keyframes sc-comme-une-image-college-visage {
+  from { transform: rotate(-8deg); }
+  to { transform: rotate(8deg); }
+}
+
+@keyframes sc-comme-une-image-college-enfle {
+  from { transform: scale(0.7); }
+  to { transform: scale(1.25); }
+}
+
+@media (max-width: 620px) {
+  .sc-comme-une-image-college__phrase { font-size: 18px; }
+  .sc-comme-une-image-college__galet { min-width: 96px; font-size: 16px; }
+  .scene__carte--objet.objet--sc-comme-une-image-college { min-width: 110px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-comme-une-image-college__soleil,
+  .sc-comme-une-image-college__mouette,
+  .sc-comme-une-image-college__vague,
+  .sc-comme-une-image-college__bouteille,
+  .sc-comme-une-image-college__eclat,
+  .sc-comme-une-image-college__galet,
+  .sc-comme-une-image-college__figure,
+  .sc-comme-une-image-college__pont,
+  .sc-comme-une-image-college__fond-a,
+  .sc-comme-une-image-college__fond-b,
+  .sc-comme-une-image-college__visage,
+  .sc-comme-une-image-college__enfle,
+  .scene__carte--objet.objet--sc-comme-une-image-college { animation: none; }
+  .sc-comme-une-image-college__fond-a { opacity: 0.4; }
+}
+
+/* ------------------------------------------------------------------
+   POÈME, THÉÂTRE OU RÉCIT ? — le théâtre de plein air
+   ------------------------------------------------------------------ */
+.sc-poeme-theatre-college {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+/* Le cadre de scène : velours, lambrequin, toile de fond étoilée. */
+.sc-poeme-theatre-college__cadre {
+  position: relative;
+  width: 100%;
+  padding: 34px 46px 26px;
+  overflow: hidden;
+  border: 4px solid #c9962b;
+  border-radius: 16px 16px 8px 8px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 65% 18%, rgba(255, 255, 255, 0.6) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 60%, rgba(255, 255, 255, 0.5) 0 1px, transparent 2px),
+    linear-gradient(180deg, #1c2452 0%, #3a2a6a 70%, #6b3f1f 70.5%, #8a5a2b 100%);
+  box-shadow: 0 14px 30px rgba(20, 0, 10, 0.5);
+}
+
+.sc-poeme-theatre-college__lambrequin {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  background:
+    radial-gradient(circle at 50% 0, #a3122a 0 18px, transparent 19px) 0 0 / 40px 26px repeat-x,
+    linear-gradient(180deg, #7a0c1e 0 10px, transparent 10px);
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.4));
+}
+
+.sc-poeme-theatre-college__rideau {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: repeating-linear-gradient(90deg, #8a0f22 0 6px, #c21d36 6px 12px, #6d0a1a 12px 16px);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+  animation: sc-poeme-theatre-college-ondule 4s ease-in-out infinite alternate;
+  transition: width 1.2s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.sc-poeme-theatre-college__rideau--gauche { left: 0; border-radius: 0 0 60% 0; transform-origin: 0 0; }
+.sc-poeme-theatre-college__rideau--droite { right: 0; border-radius: 0 0 0 60%; transform-origin: 100% 0; animation-delay: -2s; }
+
+/* Ouvert : les rideaux se replient tout contre le cadre. */
+.sc-poeme-theatre-college.est-ouvert .sc-poeme-theatre-college__rideau { width: 18px; }
+
+.sc-poeme-theatre-college__lune {
+  position: absolute;
+  top: 30px;
+  right: 58px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fffbe6, #e8e0b8);
+  box-shadow: 0 0 22px rgba(255, 250, 220, 0.8);
+  animation: sc-poeme-theatre-college-lune 6s ease-in-out infinite alternate;
+}
+
+.sc-poeme-theatre-college__page {
+  position: relative;
+  z-index: 1;
+  padding: 12px 18px;
+  border-radius: 4px;
+  background: #fffaf0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+  color: #2a1030;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+}
+
+.sc-poeme-theatre-college__ligne { display: block; }
+.sc-poeme-theatre-college__ligne.est-vide { height: 6px; }
+
+.sc-poeme-theatre-college__perso {
+  color: #8a0f22;
+  font-family: "Outfit", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+}
+
+.sc-poeme-theatre-college__projecteur {
+  padding: 0 3px;
+  border-radius: 4px;
+  background: radial-gradient(ellipse at center, rgba(255, 236, 140, 0.95), rgba(255, 220, 110, 0.55));
+  color: inherit;
+  box-shadow: 0 0 14px rgba(255, 210, 90, 0.75);
+  animation: sc-poeme-theatre-college-halo 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes sc-poeme-theatre-college-halo {
+  from { box-shadow: 0 0 6px rgba(255, 210, 90, 0.45); }
+  to { box-shadow: 0 0 18px rgba(255, 210, 90, 0.95); }
+}
+
+.sc-poeme-theatre-college__signet {
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-left: 5px solid #c9962b;
+  border-radius: 0 8px 8px 0;
+  background: #f3e6c8;
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+}
+
+.sc-poeme-theatre-college__rampe {
+  position: absolute;
+  z-index: 3;
+  left: 50px;
+  right: 50px;
+  bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sc-poeme-theatre-college__rampe span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff6c9, #ffb02e);
+  box-shadow: 0 0 12px 4px rgba(255, 180, 60, 0.7);
+  animation: sc-poeme-theatre-college-flamme 1.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.4s);
+}
+
+/* Après : la petite scène jouée, ou le programme du soir. */
+.sc-poeme-theatre-college__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-poeme-theatre-college__petite-scene,
+.sc-poeme-theatre-college__programme {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 18px;
+  border: 3px solid #c9962b;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2b1a4a, #3a2a6a);
+  color: #fff7e0;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  animation: sc-poeme-theatre-college-leve 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.sc-poeme-theatre-college__petite-scene svg { width: 200px; height: 84px; overflow: visible; }
+
+.sc-poeme-theatre-college__mot { color: #ffd86b; font-size: 24px; }
+
+.sc-poeme-theatre-college__programme { flex-direction: column; gap: 4px; background: #fffaf0; color: #2a1030; }
+.sc-poeme-theatre-college__programme .sc-poeme-theatre-college__mot { color: #8a0f22; font-size: 22px; text-align: center; }
+.sc-poeme-theatre-college__programme-titre { font-family: Georgia, serif; font-size: 16px; font-style: italic; letter-spacing: 0.2em; text-transform: uppercase; }
+.sc-poeme-theatre-college__actes { display: flex; gap: 12px; color: #8a6a3a; font-size: 16px; }
+
+.sc-poeme-theatre-college__bulle-a { animation: sc-poeme-theatre-college-bulle 2.4s ease-in-out infinite; }
+.sc-poeme-theatre-college__bulle-b { animation: sc-poeme-theatre-college-bulle 2.4s ease-in-out -1.2s infinite; }
+.sc-poeme-theatre-college__rouleau { transform-box: fill-box; transform-origin: left center; animation: sc-poeme-theatre-college-deroule 1.4s ease-out both; }
+.sc-poeme-theatre-college__douche { animation: sc-poeme-theatre-college-projecteur 2s ease-in-out infinite alternate; }
+.sc-poeme-theatre-college__sourd { opacity: 0.55; }
+.sc-poeme-theatre-college__vers-public { animation: sc-poeme-theatre-college-pointilles 1s linear infinite; }
+.sc-poeme-theatre-college__note { transform-box: fill-box; transform-origin: center; animation: sc-poeme-theatre-college-leve 0.8s ease-out both; }
+
+.sc-poeme-theatre-college__regle {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a1030;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Les réponses : des billets de théâtre, dentelés. */
+.scene__carte--objet.objet--sc-poeme-theatre-college {
+  overflow: visible;
+  min-width: 150px;
+  padding: 14px 30px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff7e0;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  background:
+    linear-gradient(90deg, transparent 0 22px, rgba(255, 255, 255, 0.35) 22px 24px, transparent 24px),
+    linear-gradient(160deg, #c21d36, #7a0c1e);
+  -webkit-mask: radial-gradient(circle at 0 50%, transparent 10px, #000 10.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 10px, #000 10.5px) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle at 0 50%, transparent 10px, #000 10.5px) left / 51% 100% no-repeat, radial-gradient(circle at 100% 50%, transparent 10px, #000 10.5px) right / 51% 100% no-repeat;
+}
+
+.scene__carte--objet.objet--sc-poeme-theatre-college::before {
+  content: "";
+  position: absolute;
+  inset: 5px 14px;
+  border: 2px dashed rgba(255, 216, 107, 0.7);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.scene__carte--objet.objet--sc-poeme-theatre-college.est-fausse { background: linear-gradient(150deg, #9aa3b5, #5d6577); }
+
+@keyframes sc-poeme-theatre-college-ondule {
+  from { transform: skewX(-2deg); }
+  to { transform: skewX(2deg); }
+}
+
+@keyframes sc-poeme-theatre-college-lune {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px); }
+}
+
+@keyframes sc-poeme-theatre-college-projecteur {
+  from { opacity: 0.75; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-poeme-theatre-college-flamme {
+  from { opacity: 0.65; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes sc-poeme-theatre-college-leve {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-poeme-theatre-college-bulle {
+  0%, 100% { opacity: 0.25; }
+  30%, 60% { opacity: 1; }
+}
+
+@keyframes sc-poeme-theatre-college-deroule {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes sc-poeme-theatre-college-pointilles {
+  to { stroke-dashoffset: -8; }
+}
+
+@media (max-width: 620px) {
+  .sc-poeme-theatre-college__cadre { padding: 30px 26px 24px; }
+  .sc-poeme-theatre-college__rideau { width: 22px; }
+  .sc-poeme-theatre-college__page { font-size: 16px; padding: 10px 12px; }
+  .sc-poeme-theatre-college__petite-scene { flex-direction: column; gap: 4px; }
+  .sc-poeme-theatre-college__lune { right: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-poeme-theatre-college__rideau,
+  .sc-poeme-theatre-college__lune,
+  .sc-poeme-theatre-college__projecteur,
+  .sc-poeme-theatre-college__rampe span,
+  .sc-poeme-theatre-college__petite-scene,
+  .sc-poeme-theatre-college__programme,
+  .sc-poeme-theatre-college__bulle-a,
+  .sc-poeme-theatre-college__bulle-b,
+  .sc-poeme-theatre-college__rouleau,
+  .sc-poeme-theatre-college__douche,
+  .sc-poeme-theatre-college__vers-public,
+  .sc-poeme-theatre-college__note { animation: none; }
+  .sc-poeme-theatre-college__rideau { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   POURQUOI ON RIT ? — la cuisine en folie
+   ------------------------------------------------------------------ */
+.sc-pourquoi-on-rit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-pourquoi-on-rit__etagere {
+  display: block;
+  width: min(100%, 560px);
+  height: 96px;
+  overflow: visible;
+}
+
+.sc-pourquoi-on-rit__pile { transform-box: fill-box; transform-origin: 50% 100%; animation: sc-pourquoi-on-rit-vacille 2.2s ease-in-out infinite alternate; }
+.sc-pourquoi-on-rit__bol-3 { transform-box: fill-box; transform-origin: 50% 100%; animation: sc-pourquoi-on-rit-vacille 1.3s ease-in-out infinite alternate-reverse; }
+.sc-pourquoi-on-rit__orange { transform-box: fill-box; transform-origin: center; animation: sc-pourquoi-on-rit-roule 5s ease-in-out infinite alternate; }
+.sc-pourquoi-on-rit__vapeur { animation: sc-pourquoi-on-rit-vapeur 2.4s ease-in-out infinite; }
+
+/* Après la réponse : la pile s'effondre, bol par bol. */
+.sc-pourquoi-on-rit__etagere.est-tombee .sc-pourquoi-on-rit__bol-4 { transform-box: fill-box; animation: sc-pourquoi-on-rit-chute 0.9s cubic-bezier(0.5, 0, 0.7, 0.4) both; }
+.sc-pourquoi-on-rit__etagere.est-tombee .sc-pourquoi-on-rit__bol-3 { animation: sc-pourquoi-on-rit-chute 0.9s cubic-bezier(0.5, 0, 0.7, 0.4) 0.15s both; }
+.sc-pourquoi-on-rit__etagere.est-tombee .sc-pourquoi-on-rit__bol-2 { transform-box: fill-box; animation: sc-pourquoi-on-rit-glisse 0.8s ease-out 0.3s both; }
+
+.sc-pourquoi-on-rit__mur {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px) 0 0 / 34px 34px,
+    linear-gradient(0deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px) 0 0 / 34px 34px,
+    linear-gradient(180deg, #4fc4bd, #2e9e98);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
+}
+
+.sc-pourquoi-on-rit__fiche {
+  position: relative;
+  padding: 12px 20px 14px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 27px, rgba(58, 111, 176, 0.18) 27px 28px),
+    #fffdf6;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+  transform: rotate(-0.8deg);
+}
+
+.sc-pourquoi-on-rit__punaise {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8a8a, #c0392b);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.sc-pourquoi-on-rit__entete {
+  display: block;
+  margin-bottom: 4px;
+  color: #c0392b;
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sc-pourquoi-on-rit__texte {
+  margin: 0;
+  color: #2a1606;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  white-space: pre-line;
+}
+
+/* Après : les rires, et le comique trouvé. */
+.sc-pourquoi-on-rit__explication {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.sc-pourquoi-on-rit__rires {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.sc-pourquoi-on-rit__rires span {
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #ffd43b;
+  color: #6a1f00;
+  font-size: 18px;
+  font-weight: 900;
+  opacity: 0;
+  animation: sc-pourquoi-on-rit-ha 1.8s ease-out both;
+  animation-delay: calc(0.4s + var(--n) * 0.3s);
+}
+
+.sc-pourquoi-on-rit__verdict {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 20px;
+  border: 3px solid #ffd43b;
+  border-radius: 16px;
+  background: #fffdf6;
+  color: #c0392b;
+  font-size: 24px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+  animation: sc-pourquoi-on-rit-pop 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.sc-pourquoi-on-rit__tableau { width: 156px; height: 92px; overflow: visible; }
+.sc-pourquoi-on-rit__glisse { transform-box: fill-box; transform-origin: 50% 100%; animation: sc-pourquoi-on-rit-patatras 1.8s ease-in-out infinite; }
+.sc-pourquoi-on-rit__lettre { animation: sc-pourquoi-on-rit-saute 0.9s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.25s); }
+.sc-pourquoi-on-rit__masque-a { animation: sc-pourquoi-on-rit-echange-a 2.4s ease-in-out infinite; }
+.sc-pourquoi-on-rit__masque-b { animation: sc-pourquoi-on-rit-echange-b 2.4s ease-in-out infinite; }
+.sc-pourquoi-on-rit__nez { transform-box: fill-box; transform-origin: center; animation: sc-pourquoi-on-rit-nez 1.4s ease-in-out infinite alternate; }
+.sc-pourquoi-on-rit__loupe { animation: sc-pourquoi-on-rit-loupe 2s ease-in-out infinite alternate; }
+.sc-pourquoi-on-rit__echo { opacity: 0; animation: sc-pourquoi-on-rit-echo 2.4s ease-out infinite; animation-delay: calc(var(--n) * 0.5s); }
+
+.sc-pourquoi-on-rit__regle {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a1606;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Les réponses : des bocaux d'épices sur une étagère. */
+.sc-pourquoi-on-rit__placard {
+  position: relative;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding-bottom: 12px;
+}
+
+.sc-pourquoi-on-rit__planche {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: 0;
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #a8754a, #6b3f1f);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35);
+}
+
+.sc-pourquoi-on-rit__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 10px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-pourquoi-on-rit__reponse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: "Outfit", sans-serif;
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  animation: sc-pourquoi-on-rit-gigote 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.9s);
+}
+
+.sc-pourquoi-on-rit__dessin { display: block; align-self: stretch; line-height: 0; }
+
+/* Le verre du bocal, son étiquette de papier, et les épices au fond. */
+.sc-pourquoi-on-rit__libelle {
+  --epice: #e0335e;
+  min-width: 150px;
+  padding: 12px 16px 30px;
+  border: 3px solid #5a8aa8;
+  border-radius: 10px 10px 22px 22px;
+  background:
+    radial-gradient(circle at 15% 88%, var(--epice) 0 5px, transparent 6px),
+    radial-gradient(circle at 32% 92%, var(--epice) 0 6px, transparent 7px),
+    radial-gradient(circle at 50% 86%, var(--epice) 0 5px, transparent 6px),
+    radial-gradient(circle at 68% 92%, var(--epice) 0 6px, transparent 7px),
+    radial-gradient(circle at 85% 87%, var(--epice) 0 5px, transparent 6px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.7) 0 8%, transparent 8% 92%, rgba(255, 255, 255, 0.5) 92%),
+    rgba(220, 245, 255, 0.92);
+  color: #2a1606;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
+}
+
+.sc-pourquoi-on-rit__reponses li:nth-child(4n + 2) .sc-pourquoi-on-rit__libelle { --epice: #2a7fd4; }
+.sc-pourquoi-on-rit__reponses li:nth-child(4n + 3) .sc-pourquoi-on-rit__libelle { --epice: #17a868; }
+.sc-pourquoi-on-rit__reponses li:nth-child(4n + 4) .sc-pourquoi-on-rit__libelle { --epice: #f0a019; }
+
+.sc-pourquoi-on-rit__reponse:hover:not(:disabled) { animation: sc-pourquoi-on-rit-vacille 0.25s ease-in-out infinite alternate; }
+.sc-pourquoi-on-rit__reponse:focus-visible .sc-pourquoi-on-rit__libelle { outline: 3px solid #ffd43b; outline-offset: 3px; }
+
+.sc-pourquoi-on-rit__reponse.est-fausse { cursor: default; animation: none; filter: grayscale(0.9); opacity: 0.6; }
+.sc-pourquoi-on-rit__reponses li .sc-pourquoi-on-rit__reponse.est-fausse .sc-pourquoi-on-rit__libelle { background: #ffe1dc; color: #8a2a1c; text-decoration: line-through; }
+
+@keyframes sc-pourquoi-on-rit-vacille {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg); }
+}
+
+@keyframes sc-pourquoi-on-rit-roule {
+  from { transform: translateX(-30px) rotate(-200deg); }
+  to { transform: translateX(40px) rotate(200deg); }
+}
+
+@keyframes sc-pourquoi-on-rit-vapeur {
+  0% { opacity: 0; transform: translateY(6px); }
+  40% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@keyframes sc-pourquoi-on-rit-chute {
+  0% { transform: none; }
+  100% { transform: translate(60px, 40px) rotate(160deg); opacity: 0.85; }
+}
+
+@keyframes sc-pourquoi-on-rit-glisse {
+  from { transform: none; }
+  to { transform: translateX(-14px) rotate(-12deg); }
+}
+
+@keyframes sc-pourquoi-on-rit-ha {
+  0% { opacity: 0; transform: translateY(20px) scale(0.6); }
+  30% { opacity: 1; transform: translateY(0) scale(1.1); }
+  100% { opacity: 1; transform: translateY(-6px) scale(1); }
+}
+
+@keyframes sc-pourquoi-on-rit-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-pourquoi-on-rit-patatras {
+  0%, 30% { transform: rotate(0); }
+  60%, 100% { transform: rotate(-80deg) translateY(6px); }
+}
+
+@keyframes sc-pourquoi-on-rit-saute {
+  from { transform: translateY(3px); }
+  to { transform: translateY(-5px); }
+}
+
+@keyframes sc-pourquoi-on-rit-echange-a {
+  0%, 30% { transform: translateX(0); }
+  50%, 80% { transform: translateX(52px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes sc-pourquoi-on-rit-echange-b {
+  0%, 30% { transform: translateX(0); }
+  50%, 80% { transform: translateX(-52px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes sc-pourquoi-on-rit-nez {
+  from { transform: scale(1); }
+  to { transform: scale(1.9); }
+}
+
+@keyframes sc-pourquoi-on-rit-loupe {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-26px, 6px); }
+}
+
+@keyframes sc-pourquoi-on-rit-echo {
+  0% { opacity: 0; }
+  15%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes sc-pourquoi-on-rit-gigote {
+  0%, 70%, 100% { transform: rotate(0); }
+  76% { transform: rotate(-3deg); }
+  84% { transform: rotate(3deg); }
+  92% { transform: rotate(-1.5deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-pourquoi-on-rit__texte { font-size: 17px; }
+  .sc-pourquoi-on-rit__libelle { min-width: 104px; font-size: 16px; }
+  .sc-pourquoi-on-rit__verdict { font-size: 20px; flex-direction: column; gap: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-pourquoi-on-rit__pile,
+  .sc-pourquoi-on-rit__bol-2,
+  .sc-pourquoi-on-rit__bol-3,
+  .sc-pourquoi-on-rit__bol-4,
+  .sc-pourquoi-on-rit__orange,
+  .sc-pourquoi-on-rit__vapeur,
+  .sc-pourquoi-on-rit__etagere.est-tombee .sc-pourquoi-on-rit__bol-2,
+  .sc-pourquoi-on-rit__etagere.est-tombee .sc-pourquoi-on-rit__bol-3,
+  .sc-pourquoi-on-rit__etagere.est-tombee .sc-pourquoi-on-rit__bol-4,
+  .sc-pourquoi-on-rit__rires span,
+  .sc-pourquoi-on-rit__verdict,
+  .sc-pourquoi-on-rit__glisse,
+  .sc-pourquoi-on-rit__lettre,
+  .sc-pourquoi-on-rit__masque-a,
+  .sc-pourquoi-on-rit__masque-b,
+  .sc-pourquoi-on-rit__nez,
+  .sc-pourquoi-on-rit__loupe,
+  .sc-pourquoi-on-rit__echo,
+  .sc-pourquoi-on-rit__reponse,
+  .sc-pourquoi-on-rit__reponse:hover:not(:disabled) { animation: none; }
+  .sc-pourquoi-on-rit__rires span,
+  .sc-pourquoi-on-rit__echo { opacity: 1; }
+}
+
+/* ------------------------------------------------------------------
+   LE CHEVALIER — la cour de la Table ronde
+   ------------------------------------------------------------------ */
+.sc-le-chevalier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 800px);
+  margin: 0 auto;
+}
+
+/* La hampe qui porte la bannière. */
+.sc-le-chevalier__hampes {
+  width: calc(100% - 20px);
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #a8754a, #5b3a1a);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.sc-le-chevalier__hampes::before,
+.sc-le-chevalier__hampes::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffe7a0, #c9962b);
+}
+
+.sc-le-chevalier__hampes::before { left: 0; }
+.sc-le-chevalier__hampes::after { right: 0; }
+
+.sc-le-chevalier__banniere {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% - 40px);
+  margin-top: -10px;
+  padding: 16px 22px 26px;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.18)),
+    linear-gradient(180deg, #24603f, #1a4a30);
+  border: 3px solid #c9c9c9;
+  border-top: 0;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), 75% 100%, 50% calc(100% - 16px), 25% 100%, 0 calc(100% - 16px));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.4);
+  transform-origin: 50% 0;
+  animation: sc-le-chevalier-flotte 4.5s ease-in-out infinite alternate;
+}
+
+.sc-le-chevalier__arbre { flex: none; width: 46px; height: 50px; }
+
+.sc-le-chevalier__texte {
+  flex: 1;
+  margin: 0;
+  color: #fbf7e8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  line-height: 1.45;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.sc-le-chevalier__texte .college__designe { color: #ffd86b; }
+
+/* Après : l'épée levée, l'écu, et le parchemin. */
+.sc-le-chevalier__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-le-chevalier__trophee {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 22px;
+  border-radius: 18px;
+  background: radial-gradient(ellipse at center, rgba(255, 246, 200, 0.95), rgba(255, 255, 255, 0.9) 70%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.sc-le-chevalier__epee-levee {
+  width: 28px;
+  height: 106px;
+  transform: rotate(180deg);
+  filter: drop-shadow(0 0 8px rgba(255, 230, 140, 0.9));
+  animation: sc-le-chevalier-tiree 1s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.sc-le-chevalier__ecu {
+  width: 80px;
+  height: 94px;
+  animation: sc-le-chevalier-ecu 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) 0.4s both;
+}
+
+.sc-le-chevalier__flamme { transform-box: fill-box; transform-origin: 50% 100%; animation: sc-le-chevalier-flamme 0.8s ease-in-out infinite alternate; }
+
+.sc-le-chevalier__devise { color: #1a4a30; font-family: Georgia, serif; font-size: 24px; }
+
+.sc-le-chevalier__parchemin {
+  max-width: 40em;
+  margin: 0;
+  padding: 9px 20px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e9d6a8, #fbf1d6 12%, #fbf1d6 88%, #e9d6a8);
+  color: #3a2410;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  animation: sc-le-chevalier-deroule 0.8s ease-out 0.6s both;
+}
+
+/* Les réponses : une épée plantée dans chaque pierre. */
+.sc-le-chevalier__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 12px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-le-chevalier__reponse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: Georgia, serif;
+  cursor: pointer;
+}
+
+.sc-le-chevalier__dessin { position: relative; z-index: 0; display: block; height: 84px; line-height: 0; overflow: visible; }
+
+.sc-le-chevalier__lame {
+  width: 30px;
+  height: 114px;
+  transition: transform 0.25s ease;
+}
+
+/* Le reflet qui court sur la lame, de temps en temps. */
+.sc-le-chevalier__dessin::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 30px;
+  height: 18px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  opacity: 0;
+  animation: sc-le-chevalier-reflet 4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 1.2s);
+}
+
+.sc-le-chevalier__libelle {
+  position: relative;
+  z-index: 1;
+  min-width: 150px;
+  max-width: 18em;
+  padding: 18px 22px 14px;
+  border-radius: 40% 46% 10px 10px / 30% 34% 10px 10px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.25) 0 6px, transparent 7px),
+    radial-gradient(circle at 75% 65%, rgba(0, 0, 0, 0.12) 0 9px, transparent 10px),
+    linear-gradient(180deg, #b9b6ad, #8d8a82);
+  color: #1d1a14;
+  font-size: 19px;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.15), 0 8px 12px rgba(0, 0, 0, 0.35);
+}
+
+.sc-le-chevalier__reponse:hover:not(:disabled) .sc-le-chevalier__lame,
+.sc-le-chevalier__reponse:focus-visible .sc-le-chevalier__lame { transform: translateY(-10px); }
+.sc-le-chevalier__reponse:focus-visible .sc-le-chevalier__libelle { outline: 3px solid #ffd86b; outline-offset: 3px; }
+
+/* La mauvaise pierre se fend, l'épée reste coincée. */
+.sc-le-chevalier__reponse.est-fausse { cursor: default; opacity: 0.65; filter: grayscale(0.7); animation: sc-le-chevalier-coince 0.45s ease-in-out; }
+.sc-le-chevalier__reponse.est-fausse .sc-le-chevalier__libelle {
+  color: #6a2a1c;
+  text-decoration: line-through;
+  background:
+    linear-gradient(62deg, transparent 47%, rgba(30, 30, 40, 0.7) 48% 50%, transparent 51%),
+    linear-gradient(180deg, #b9b6ad, #8d8a82);
+}
+
+@keyframes sc-le-chevalier-flotte {
+  0% { transform: skewY(0) scaleY(1); }
+  50% { transform: skewY(0.8deg) scaleY(1.01); }
+  100% { transform: skewY(-0.8deg) scaleY(1); }
+}
+
+@keyframes sc-le-chevalier-tiree {
+  from { opacity: 0.4; transform: rotate(180deg) translateY(40px); }
+  to { opacity: 1; transform: rotate(180deg) translateY(0); }
+}
+
+@keyframes sc-le-chevalier-ecu {
+  from { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-le-chevalier-flamme {
+  from { transform: scaleY(0.85); }
+  to { transform: scaleY(1.15); }
+}
+
+@keyframes sc-le-chevalier-deroule {
+  from { opacity: 0; clip-path: inset(0 50%); }
+  to { opacity: 1; clip-path: inset(0 0); }
+}
+
+@keyframes sc-le-chevalier-reflet {
+  0%, 70%, 100% { opacity: 0; transform: translateY(-24px); }
+  80% { opacity: 1; }
+  90% { opacity: 0; transform: translateY(14px); }
+}
+
+@keyframes sc-le-chevalier-coince {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@media (max-width: 620px) {
+  .sc-le-chevalier__banniere { width: 100%; padding: 12px 14px 24px; }
+  .sc-le-chevalier__arbre { display: none; }
+  .sc-le-chevalier__texte { font-size: 18px; }
+  .sc-le-chevalier__libelle { min-width: 100px; font-size: 16px; }
+  .sc-le-chevalier__trophee { gap: 10px; padding: 6px 12px; }
+  .sc-le-chevalier__devise { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-le-chevalier__banniere,
+  .sc-le-chevalier__epee-levee,
+  .sc-le-chevalier__ecu,
+  .sc-le-chevalier__flamme,
+  .sc-le-chevalier__parchemin,
+  .sc-le-chevalier__dessin::after,
+  .sc-le-chevalier__reponse.est-fausse { animation: none; }
+  .sc-le-chevalier__lame { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   LE COMPTEUR DE SYLLABES — la passerelle aux lanternes
+   ------------------------------------------------------------------ */
+.sc-compteur-de-syllabes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 840px);
+  margin: 0 auto;
+}
+
+.sc-compteur-de-syllabes__clochettes {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.sc-compteur-de-syllabes__clochette {
+  animation: sc-compteur-de-syllabes-tinte 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.7s);
+}
+
+.sc-compteur-de-syllabes__petales {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-compteur-de-syllabes__petales span {
+  position: absolute;
+  top: 20%;
+  left: -12px;
+  width: 9px;
+  height: 6px;
+  border-radius: 60% 0 60% 0;
+  background: #c9a7ff;
+  opacity: 0;
+  animation: sc-compteur-de-syllabes-petale 11s linear infinite;
+  animation-delay: calc(var(--n) * 2.1s);
+}
+
+.sc-compteur-de-syllabes__passerelle {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Les bambous qui tiennent le rouleau. */
+.sc-compteur-de-syllabes__bambou {
+  flex: none;
+  width: 16px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, transparent 0 30%, #4f6a1f 30% 32%, transparent 32% 64%, #4f6a1f 64% 66%, transparent 66%),
+    linear-gradient(90deg, #7a9a3a, #b7cf6a 45%, #6a8a2a);
+}
+
+.sc-compteur-de-syllabes__rouleau {
+  position: relative;
+  flex: 1;
+  padding: 14px 20px;
+  border-top: 8px solid #6b3f1f;
+  border-bottom: 8px solid #6b3f1f;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fffaf0, #f4ead4);
+  box-shadow: 0 10px 22px rgba(30, 10, 50, 0.4);
+}
+
+.sc-compteur-de-syllabes__texte {
+  margin: 0;
+  color: #2a1a3a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-line;
+}
+
+/* Le compteur de bois. */
+.sc-compteur-de-syllabes__compteur {
+  display: inline-grid;
+  place-items: center;
+  min-width: 46px;
+  height: 40px;
+  padding: 0 8px;
+  border: 3px solid #6b3f1f;
+  border-radius: 10px;
+  background: #2a1a10;
+  color: #ffd86b;
+  font-family: "Courier New", monospace;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+}
+
+.sc-compteur-de-syllabes__rouleau > .sc-compteur-de-syllabes__compteur {
+  position: absolute;
+  right: -6px;
+  top: -22px;
+  transform: rotate(4deg);
+}
+
+.sc-compteur-de-syllabes__compteur strong { animation: sc-compteur-de-syllabes-tic 0.3s cubic-bezier(0.2, 1.6, 0.4, 1); }
+
+/* Après : les lanternes qui s'allument, syllabe par syllabe. */
+.sc-compteur-de-syllabes__allumage,
+.sc-compteur-de-syllabes__rimes,
+.sc-compteur-de-syllabes__strophes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(30, 20, 60, 0.82);
+}
+
+.sc-compteur-de-syllabes__lanternes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-compteur-de-syllabes__lanterne {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  padding: 6px 7px 7px;
+  border-top: 4px solid #3a2410;
+  border-bottom: 4px solid #3a2410;
+  border-radius: 12px;
+  background: #5a4a6a;
+  color: #d8cfe6;
+  transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+}
+
+.sc-compteur-de-syllabes__lanterne.est-allumee {
+  background: radial-gradient(circle at 50% 45%, #fff6c9, #ffc96b 70%, #f09a2e);
+  color: #3a1a06;
+  box-shadow: 0 0 16px rgba(255, 190, 80, 0.9);
+  animation: sc-compteur-de-syllabes-allume 0.4s ease-out;
+}
+
+.sc-compteur-de-syllabes__rang { font-size: 12px; font-weight: 800; opacity: 0.7; }
+.sc-compteur-de-syllabes__syllabe { font-family: Georgia, serif; font-size: 18px; font-weight: 700; white-space: pre; }
+.sc-compteur-de-syllabes__muette { color: #8a7a9a; font-weight: 400; text-decoration: line-through; }
+
+.sc-compteur-de-syllabes__total {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: #fff7e0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.sc-compteur-de-syllabes__total.est-fini > span { animation: sc-compteur-de-syllabes-tic 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.sc-compteur-de-syllabes__strophes .sc-compteur-de-syllabes__total { color: #ffd86b; }
+
+.sc-compteur-de-syllabes__note {
+  margin: 0;
+  color: #e8def5;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Après les rimes : les lettres A et B. */
+.sc-compteur-de-syllabes__quatrain {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-compteur-de-syllabes__vers-rime {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 3px 0;
+  padding: 3px 6px 3px 12px;
+  border-left: 6px solid var(--couleur);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #2a1a3a;
+  font-family: Georgia, serif;
+  font-size: 17px;
+  animation: sc-compteur-de-syllabes-glisse 0.5s ease-out both;
+  animation-delay: calc(var(--n) * 0.35s);
+}
+
+.sc-compteur-de-syllabes__vers-rime--A { --couleur: #e0335e; }
+.sc-compteur-de-syllabes__vers-rime--B { --couleur: #2a7fd4; }
+
+.sc-compteur-de-syllabes__lettre {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--couleur);
+  color: #fff;
+  font-size: 18px;
+}
+
+/* Après une strophe : les vers en blocs. */
+.sc-compteur-de-syllabes__blocs { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+.sc-compteur-de-syllabes__bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  animation: sc-compteur-de-syllabes-glisse 0.5s ease-out both;
+  animation-delay: calc(var(--n) * 0.3s);
+}
+
+.sc-compteur-de-syllabes__bloc span {
+  width: 64px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ffd86b, #ffb02e);
+  box-shadow: 0 0 6px rgba(255, 190, 80, 0.7);
+}
+
+/* Les réponses : des lanternes de papier. */
+.scene__carte--objet.objet--sc-compteur-de-syllabes {
+  overflow: visible;
+  min-width: 104px;
+  padding: 16px 26px;
+  border: 0;
+  border-top: 7px solid #3a2410;
+  border-bottom: 7px solid #3a2410;
+  border-radius: 30px;
+  color: #3a1a06;
+  text-shadow: none;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 12px, rgba(160, 80, 20, 0.25) 12px 13px),
+    radial-gradient(circle at 50% 45%, #fff6c9, #ffc96b 70%, #f09a2e);
+  box-shadow: 0 0 18px rgba(255, 180, 60, 0.6);
+}
+
+/* Le cordon qui pend la lanterne. */
+.scene__carte--objet.objet--sc-compteur-de-syllabes::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -18px;
+  width: 2px;
+  height: 11px;
+  background: #3a2410;
+}
+
+.scene__carte--objet.objet--sc-compteur-de-syllabes .objet__eclat { display: none; }
+.scene__carte--objet.objet--sc-compteur-de-syllabes.est-fausse { color: #fff; background: linear-gradient(150deg, #9aa3b5, #5d6577); box-shadow: none; }
+
+@keyframes sc-compteur-de-syllabes-tinte {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg); }
+}
+
+@keyframes sc-compteur-de-syllabes-petale {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  10% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(900px, 120px) rotate(400deg); }
+}
+
+@keyframes sc-compteur-de-syllabes-tic {
+  from { transform: scale(1.6); }
+  to { transform: scale(1); }
+}
+
+@keyframes sc-compteur-de-syllabes-allume {
+  from { transform: scale(0.85); }
+  to { transform: scale(1); }
+}
+
+@keyframes sc-compteur-de-syllabes-glisse {
+  from { opacity: 0; transform: translateX(-14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 620px) {
+  .sc-compteur-de-syllabes__texte { font-size: 18px; }
+  .sc-compteur-de-syllabes__bambou { width: 10px; }
+  .sc-compteur-de-syllabes__rouleau { padding: 12px 12px; }
+  .sc-compteur-de-syllabes__lanterne { min-width: 38px; padding: 5px 4px; }
+  .sc-compteur-de-syllabes__syllabe { font-size: 16px; }
+  .sc-compteur-de-syllabes__vers-rime { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-compteur-de-syllabes__clochette,
+  .sc-compteur-de-syllabes__petales span,
+  .sc-compteur-de-syllabes__compteur strong,
+  .sc-compteur-de-syllabes__lanterne.est-allumee,
+  .sc-compteur-de-syllabes__total.est-fini > span,
+  .sc-compteur-de-syllabes__vers-rime,
+  .sc-compteur-de-syllabes__bloc { animation: none; }
+  .sc-compteur-de-syllabes__petales span { display: none; }
+  .sc-compteur-de-syllabes__lanterne { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   QUEL REGISTRE ? — la ville sous l'orage
+   ------------------------------------------------------------------ */
+.sc-quel-registre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 840px);
+  margin: 0 auto;
+}
+
+.sc-quel-registre__ciel {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(180deg, #3a0f2a, #8a1f2a 70%, #c9462a);
+  transition: background 1.2s ease;
+}
+
+.sc-quel-registre__ville { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.sc-quel-registre__eclair { opacity: 0; animation: sc-quel-registre-eclair 7s linear infinite; }
+.sc-quel-registre__fenetre { animation: sc-quel-registre-fenetre 3s ease-in-out infinite alternate; }
+.sc-quel-registre__fenetre:nth-child(odd) { animation-delay: -1.5s; }
+
+.sc-quel-registre__pluie {
+  position: absolute;
+  inset: -80px 0 0;
+  background: repeating-linear-gradient(105deg, transparent 0 14px, rgba(200, 220, 255, 0.35) 14px 15px, transparent 15px 31px);
+  animation: sc-quel-registre-pluie 0.9s linear infinite;
+  pointer-events: none;
+}
+
+/* Le ciel de chaque registre, une fois la réponse donnée. */
+.sc-quel-registre__humeur { position: absolute; inset: 0; animation: sc-quel-registre-humeur 1.2s ease-out both; }
+.sc-quel-registre__ciel--comique { background: linear-gradient(180deg, #ffd43b, #ff9a1f); }
+.sc-quel-registre__ciel--comique .sc-quel-registre__humeur {
+  background:
+    radial-gradient(circle at 10% 30%, #e0335e 0 4px, transparent 5px),
+    radial-gradient(circle at 30% 60%, #2a7fd4 0 4px, transparent 5px),
+    radial-gradient(circle at 55% 25%, #17a868 0 4px, transparent 5px),
+    radial-gradient(circle at 75% 55%, #8a45e6 0 4px, transparent 5px),
+    radial-gradient(circle at 90% 20%, #e0335e 0 4px, transparent 5px);
+  background-size: 160px 80px;
+  animation: sc-quel-registre-confettis 3s linear infinite;
+}
+
+.sc-quel-registre__ciel--tragique { background: linear-gradient(180deg, #0a0006, #5a0010); }
+.sc-quel-registre__ciel--tragique .sc-quel-registre__eclair { fill: #ff4a4a; animation-duration: 2.4s; }
+
+.sc-quel-registre__ciel--pathetique { background: linear-gradient(180deg, #22324a, #4a6a8a); }
+.sc-quel-registre__ciel--pathetique .sc-quel-registre__humeur {
+  background: radial-gradient(ellipse at 50% 30%, rgba(160, 200, 255, 0.9) 0 2px, transparent 3px) 0 0 / 28px 22px;
+  animation: sc-quel-registre-larmes 1.6s linear infinite;
+}
+
+.sc-quel-registre__ciel--lyrique { background: linear-gradient(180deg, #ff9ab5, #ffd2a1); }
+.sc-quel-registre__ciel--lyrique .sc-quel-registre__humeur {
+  background:
+    radial-gradient(circle at 80% 30%, #fff6c9 0 18px, rgba(255, 246, 201, 0.4) 19px 30px, transparent 31px),
+    radial-gradient(circle at 20% 40%, #e0335e 0 5px, transparent 6px),
+    radial-gradient(circle at 40% 20%, #e0335e 0 4px, transparent 5px);
+  animation: sc-quel-registre-respire 2s ease-in-out infinite alternate;
+}
+
+.sc-quel-registre__ciel--fantastique { background: linear-gradient(180deg, #0f2a22, #3a5a4a); }
+.sc-quel-registre__ciel--fantastique .sc-quel-registre__humeur {
+  background:
+    radial-gradient(ellipse at 30% 50%, #b8ff6a 0 3px, transparent 4px),
+    radial-gradient(ellipse at 34% 50%, #b8ff6a 0 3px, transparent 4px),
+    linear-gradient(0deg, rgba(220, 240, 230, 0.55), transparent 70%);
+  animation: sc-quel-registre-yeux 3s ease-in-out infinite;
+}
+
+.sc-quel-registre__ciel--realiste { background: linear-gradient(180deg, #8a6a4a, #c9a77a); filter: sepia(0.4); }
+.sc-quel-registre__ciel--realiste .sc-quel-registre__humeur {
+  background:
+    conic-gradient(from 0deg at 85% 45%, #3a2410 0 2deg, transparent 2deg 360deg),
+    radial-gradient(circle at 85% 45%, #fff8e0 0 22px, #3a2410 23px 25px, transparent 26px);
+}
+
+.sc-quel-registre__ciel--merveilleux { background: linear-gradient(180deg, #2a1a6a, #8a45e6); }
+.sc-quel-registre__ciel--merveilleux .sc-quel-registre__humeur {
+  background:
+    radial-gradient(circle at 15% 25%, #fff 0 2px, transparent 3px),
+    radial-gradient(circle at 45% 15%, #ffe08a 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 35%, #fff 0 2px, transparent 3px),
+    radial-gradient(circle at 88% 18%, #ffe08a 0 3px, transparent 4px);
+  animation: sc-quel-registre-scintille 1.4s ease-in-out infinite alternate;
+}
+
+/* La rue : le réverbère, et la page du vieux livre. */
+.sc-quel-registre__rue {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 0 0 18px 18px;
+  background:
+    radial-gradient(ellipse at 6% 20%, rgba(255, 200, 100, 0.5), transparent 40%),
+    repeating-linear-gradient(90deg, #2a1e26 0 38px, #1f161c 38px 40px),
+    #2a1e26;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.45);
+}
+
+.sc-quel-registre__reverbere {
+  flex: none;
+  position: relative;
+  width: 22px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, transparent 0 34px, #111 34px);
+  background-size: 6px 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.sc-quel-registre__reverbere::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 22px;
+  height: 28px;
+  border-radius: 6px 6px 3px 3px;
+  background: radial-gradient(circle at 50% 55%, #fff3c4, #ffb02e 70%);
+  box-shadow: 0 0 22px 8px rgba(255, 190, 80, 0.55);
+  animation: sc-quel-registre-fenetre 2.4s ease-in-out infinite alternate;
+}
+
+.sc-quel-registre__livre {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 4px 12px 12px 4px;
+  background:
+    linear-gradient(90deg, rgba(120, 80, 40, 0.25), transparent 6%),
+    linear-gradient(180deg, #fbf3dc, #efdfb8);
+  box-shadow: inset 6px 0 0 #8a5a2b, 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+.sc-quel-registre__texte {
+  margin: 0;
+  color: #2a1a10;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+/* Après. */
+.sc-quel-registre__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.sc-quel-registre__sceau {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 26px;
+  border: 3px solid #c9962b;
+  border-radius: 14px;
+  background: #2a1a30;
+  color: #ffd86b;
+  font-family: Georgia, serif;
+  font-size: 24px;
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  animation: sc-quel-registre-sceau 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.sc-quel-registre__sceau-titre { color: #e8d8c0; font-size: 16px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+.sc-quel-registre__regle {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a1a10;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* LE CADRAN DES REGISTRES. */
+.sc-quel-registre__cadran {
+  --rayon: 136px;
+  position: relative;
+  width: min(100%, 420px);
+  height: 190px;
+  margin: 0 auto;
+}
+
+.sc-quel-registre__fond-cadran {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 150px;
+  height: 78px;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.4));
+}
+
+.sc-quel-registre__aiguille {
+  transform-origin: 100px 100px;
+  transform: rotate(var(--a));
+  transition: transform 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.sc-quel-registre__aiguille.est-libre { animation: sc-quel-registre-hesite 2.6s ease-in-out infinite; }
+
+.sc-quel-registre__secteurs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-quel-registre__secteurs > li {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 0;
+  height: 0;
+  transform: rotate(var(--a)) translateY(calc(-1 * var(--rayon))) rotate(calc(-1 * var(--a)));
+}
+
+.sc-quel-registre__secteur {
+  --flamme: #ffc96b;
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 128px;
+  padding: 10px 14px;
+  border: 3px solid #c9962b;
+  border-radius: 999px;
+  background: #fbf3dc;
+  color: #2a1a10;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sc-quel-registre__secteur:hover:not(:disabled),
+.sc-quel-registre__secteur:focus-visible {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 0 0 4px rgba(255, 216, 107, 0.6), 0 6px 12px rgba(0, 0, 0, 0.35);
+  outline: none;
+}
+
+/* Chaque registre a sa flamme : une couleur, pas une réponse. */
+.sc-quel-registre__flamme {
+  flex: none;
+  width: 14px;
+  height: 20px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 50% 70%, #fff, var(--flamme) 60%);
+  box-shadow: 0 0 8px var(--flamme);
+  animation: sc-quel-registre-flamme 1.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.4s);
+}
+
+.sc-quel-registre__secteur--comique { --flamme: #ffd43b; }
+.sc-quel-registre__secteur--tragique { --flamme: #d0102a; }
+.sc-quel-registre__secteur--pathetique { --flamme: #6aa8ff; }
+.sc-quel-registre__secteur--lyrique { --flamme: #ff6a9a; }
+.sc-quel-registre__secteur--fantastique { --flamme: #8aff6a; }
+.sc-quel-registre__secteur--realiste { --flamme: #b98a5a; }
+.sc-quel-registre__secteur--merveilleux { --flamme: #b98aff; }
+
+.sc-quel-registre__secteur.est-fausse {
+  cursor: default;
+  background: #ffe1dc;
+  color: #8a2a1c;
+  text-decoration: line-through;
+  opacity: 0.7;
+  filter: grayscale(0.6);
+}
+
+/* Les enseignes des réverbères (le doute, la nouvelle). */
+.sc-quel-registre__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-quel-registre__reponse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 19em;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  transform-origin: 50% 0;
+  animation: sc-quel-registre-grince 3.4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.2s);
+}
+
+.sc-quel-registre__dessin { display: block; }
+
+.sc-quel-registre__potence {
+  display: block;
+  width: 70px;
+  height: 14px;
+  border-top: 4px solid #111;
+  background: linear-gradient(90deg, transparent 0 14px, #111 14px 16px, transparent 16px 54px, #111 54px 56px, transparent 56px);
+}
+
+.sc-quel-registre__libelle {
+  padding: 10px 16px;
+  border: 3px solid #c9962b;
+  border-radius: 8px;
+  background: #2a1a30;
+  color: #ffe7b0;
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.sc-quel-registre__reponse:hover:not(:disabled) .sc-quel-registre__libelle { background: #3a2440; box-shadow: 0 0 14px rgba(255, 200, 100, 0.6); }
+.sc-quel-registre__reponse:focus-visible .sc-quel-registre__libelle { outline: 3px solid #ffd86b; outline-offset: 3px; }
+
+.sc-quel-registre__reponse.est-fausse { cursor: default; animation: none; opacity: 0.6; filter: grayscale(0.8); }
+.sc-quel-registre__reponse.est-fausse .sc-quel-registre__libelle { background: #ffe1dc; color: #8a2a1c; text-decoration: line-through; }
+
+@keyframes sc-quel-registre-eclair {
+  0%, 88%, 92%, 100% { opacity: 0; }
+  89%, 91% { opacity: 1; }
+}
+
+@keyframes sc-quel-registre-fenetre {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-quel-registre-pluie {
+  from { transform: translateY(0); }
+  to { transform: translateY(40px); }
+}
+
+@keyframes sc-quel-registre-humeur {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-quel-registre-confettis {
+  from { background-position: 0 -80px; }
+  to { background-position: 40px 80px; }
+}
+
+@keyframes sc-quel-registre-larmes {
+  from { background-position: 0 0; }
+  to { background-position: 0 44px; }
+}
+
+@keyframes sc-quel-registre-respire {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-quel-registre-yeux {
+  0%, 40%, 100% { opacity: 1; }
+  45%, 50% { opacity: 0.1; }
+}
+
+@keyframes sc-quel-registre-scintille {
+  from { opacity: 0.4; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-quel-registre-sceau {
+  from { opacity: 0; transform: scale(1.6) rotate(-6deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-quel-registre-hesite {
+  0%, 100% { transform: rotate(-24deg); }
+  50% { transform: rotate(24deg); }
+}
+
+@keyframes sc-quel-registre-flamme {
+  from { transform: scale(0.85); }
+  to { transform: scale(1.12); }
+}
+
+@keyframes sc-quel-registre-grince {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-quel-registre__texte { font-size: 17px; }
+  .sc-quel-registre__rue { padding: 10px; }
+  .sc-quel-registre__reverbere { display: none; }
+  .sc-quel-registre__cadran { --rayon: 104px; height: 166px; }
+  .sc-quel-registre__fond-cadran { width: 116px; height: 61px; }
+  .sc-quel-registre__secteur { min-width: 104px; padding: 8px 10px; font-size: 16px; }
+  .sc-quel-registre__libelle { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-quel-registre__eclair,
+  .sc-quel-registre__fenetre,
+  .sc-quel-registre__pluie,
+  .sc-quel-registre__humeur,
+  .sc-quel-registre__ciel--comique .sc-quel-registre__humeur,
+  .sc-quel-registre__ciel--pathetique .sc-quel-registre__humeur,
+  .sc-quel-registre__ciel--lyrique .sc-quel-registre__humeur,
+  .sc-quel-registre__ciel--fantastique .sc-quel-registre__humeur,
+  .sc-quel-registre__ciel--merveilleux .sc-quel-registre__humeur,
+  .sc-quel-registre__reverbere::before,
+  .sc-quel-registre__sceau,
+  .sc-quel-registre__aiguille.est-libre,
+  .sc-quel-registre__flamme,
+  .sc-quel-registre__reponse { animation: none; }
+  .sc-quel-registre__ciel,
+  .sc-quel-registre__aiguille,
+  .sc-quel-registre__secteur { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   INFO OU OPINION ? — le plateau du journal télévisé
+   ------------------------------------------------------------------ */
+.sc-info-ou-opinion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 840px);
+  margin: 0 auto;
+}
+
+.sc-info-ou-opinion__ecran {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 0 0 34px;
+  border: 4px solid #2a2f3a;
+  border-radius: 16px;
+  background: #121828;
+  box-shadow: 0 0 0 3px rgba(255, 180, 80, 0.4), 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+.sc-info-ou-opinion__baie { display: block; width: 100%; height: 60px; }
+.sc-info-ou-opinion__soleil { animation: sc-info-ou-opinion-soleil 8s ease-in-out infinite alternate; }
+.sc-info-ou-opinion__lumiere { animation: sc-info-ou-opinion-lumiere 2.4s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.5s); }
+
+.sc-info-ou-opinion__direct {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: #d0102a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sc-info-ou-opinion__point {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  animation: sc-info-ou-opinion-clignote 1.2s steps(2, jump-none) infinite;
+}
+
+.sc-info-ou-opinion__depeche {
+  position: relative;
+  margin: -14px 16px 0;
+  padding: 12px 18px 14px;
+  border-left: 8px solid #2a7fd4;
+  border-right: 8px solid #ff7a1f;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+.sc-info-ou-opinion__depeche.est-glissable { cursor: grab; }
+.sc-info-ou-opinion__depeche.est-glissable:active { cursor: grabbing; }
+
+.sc-info-ou-opinion__agence {
+  display: block;
+  color: #5a6070;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sc-info-ou-opinion__texte {
+  margin: 0;
+  color: #121828;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.sc-info-ou-opinion__bandeau {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #2a7fd4, #1c2346 50%, #ff7a1f);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 26px;
+  white-space: nowrap;
+}
+
+.sc-info-ou-opinion__bandeau span { display: inline-block; padding-left: 100%; animation: sc-info-ou-opinion-defile 18s linear infinite; }
+
+/* Après. */
+.sc-info-ou-opinion__explication {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-info-ou-opinion__tampon {
+  padding: 4px 18px;
+  border: 4px solid currentColor;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  font-family: "Courier New", monospace;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-6deg);
+  animation: sc-info-ou-opinion-tampon 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.sc-info-ou-opinion__tampon--info { color: #1f5fa8; }
+.sc-info-ou-opinion__tampon--opinion { color: #d45a00; }
+
+.sc-info-ou-opinion__verdict {
+  padding: 4px 18px;
+  border-radius: 12px;
+  background: #121828;
+  color: #fff;
+  font-size: 20px;
+}
+
+.sc-info-ou-opinion__regle,
+.sc-info-ou-opinion__surligne,
+.sc-info-ou-opinion__neutre {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #121828;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sc-info-ou-opinion__surligne { font-size: 20px; }
+
+.sc-info-ou-opinion__feutre {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ffb35a 0 100%) no-repeat 0 50% / 100% 80%;
+  color: #121828;
+  animation: sc-info-ou-opinion-feutre 0.8s ease-out 0.2s both;
+}
+
+.sc-info-ou-opinion__neutre { animation: sc-info-ou-opinion-monte 0.5s ease-out 0.8s both; }
+.sc-info-ou-opinion__neutre-titre { display: block; color: #1f5fa8; font-size: 16px; }
+
+.sc-info-ou-opinion__fiche {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 22px;
+  border-left: 6px solid #2a7fd4;
+  border-radius: 6px;
+  background: #fff;
+  color: #121828;
+  font-size: 21px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  animation: sc-info-ou-opinion-monte 0.5s ease-out both;
+}
+
+.sc-info-ou-opinion__fiche-titre { color: #5a6070; font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* Les pupitres de l'info et de l'opinion. */
+.sc-info-ou-opinion__studio { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+
+.sc-info-ou-opinion__aide {
+  margin: 0;
+  padding: 2px 12px;
+  border-radius: 10px;
+  background: rgba(18, 24, 40, 0.75);
+  color: #fff;
+  font-size: 16px;
+}
+
+.sc-info-ou-opinion__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-info-ou-opinion__reponse {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  font-family: "Outfit", sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sc-info-ou-opinion__dessin { display: block; line-height: 0; }
+
+/* Le pupitre : un bureau de plateau, éclairé par-dessous. */
+.sc-info-ou-opinion__pupitres .sc-info-ou-opinion__reponse {
+  min-width: 210px;
+  padding: 16px 22px;
+  border-radius: 20px 20px 8px 8px;
+  color: #fff;
+  font-size: 21px;
+  font-weight: 800;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35), 0 0 22px rgba(255, 255, 255, 0.25);
+  animation: sc-info-ou-opinion-pupitre 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.5s);
+}
+
+.sc-info-ou-opinion__pupitres li:first-child .sc-info-ou-opinion__reponse { background: linear-gradient(180deg, #4aa0f0, #1f5fa8); }
+.sc-info-ou-opinion__pupitres li:last-child .sc-info-ou-opinion__reponse { background: linear-gradient(180deg, #ffa24a, #d45a00); }
+
+/* Le micro : bonnette et fil, le libellé en carton de plateau. */
+.sc-info-ou-opinion__micros .sc-info-ou-opinion__reponse {
+  max-width: 20em;
+  padding: 8px 16px 8px 10px;
+  border-radius: 14px;
+  background: #fff;
+  color: #121828;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 5px 0 #b8c2d4, 0 8px 14px rgba(0, 0, 0, 0.3);
+  animation: sc-info-ou-opinion-tend 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.9s);
+}
+
+.sc-info-ou-opinion__reponse:hover:not(:disabled),
+.sc-info-ou-opinion__reponse:focus-visible { transform: translateY(-4px) scale(1.04); outline: 3px solid #ffd86b; outline-offset: 3px; }
+
+.sc-info-ou-opinion__reponse.est-fausse,
+.sc-info-ou-opinion__pupitres li .sc-info-ou-opinion__reponse.est-fausse {
+  cursor: default;
+  animation: none;
+  background: #ffe1dc;
+  color: #8a2a1c;
+  text-decoration: line-through;
+  box-shadow: none;
+  opacity: 0.7;
+  filter: grayscale(0.7);
+}
+
+@keyframes sc-info-ou-opinion-soleil {
+  from { transform: translateY(0); }
+  to { transform: translateY(8px); }
+}
+
+@keyframes sc-info-ou-opinion-lumiere {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-info-ou-opinion-clignote {
+  0% { opacity: 1; }
+  100% { opacity: 0.2; }
+}
+
+@keyframes sc-info-ou-opinion-defile {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes sc-info-ou-opinion-tampon {
+  from { opacity: 0; transform: rotate(-6deg) scale(2.4); }
+  to { opacity: 1; transform: rotate(-6deg) scale(1); }
+}
+
+@keyframes sc-info-ou-opinion-feutre {
+  from { background-size: 0 80%; }
+  to { background-size: 100% 80%; }
+}
+
+@keyframes sc-info-ou-opinion-monte {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-info-ou-opinion-pupitre {
+  from { box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35), 0 0 10px rgba(255, 255, 255, 0.15); }
+  to { box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35), 0 0 26px rgba(255, 255, 255, 0.45); }
+}
+
+@keyframes sc-info-ou-opinion-tend {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
+@media (max-width: 620px) {
+  .sc-info-ou-opinion__texte { font-size: 18px; }
+  .sc-info-ou-opinion__depeche { margin: -14px 8px 0; padding: 10px 12px; }
+  .sc-info-ou-opinion__pupitres .sc-info-ou-opinion__reponse { min-width: 150px; padding: 12px 14px; font-size: 18px; }
+  .sc-info-ou-opinion__micros .sc-info-ou-opinion__reponse { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-info-ou-opinion__soleil,
+  .sc-info-ou-opinion__lumiere,
+  .sc-info-ou-opinion__point,
+  .sc-info-ou-opinion__bandeau span,
+  .sc-info-ou-opinion__tampon,
+  .sc-info-ou-opinion__feutre,
+  .sc-info-ou-opinion__neutre,
+  .sc-info-ou-opinion__fiche,
+  .sc-info-ou-opinion__pupitres .sc-info-ou-opinion__reponse,
+  .sc-info-ou-opinion__micros .sc-info-ou-opinion__reponse { animation: none; }
+  .sc-info-ou-opinion__bandeau span { padding-left: 12px; }
+  .sc-info-ou-opinion__reponse { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   SI J'ÉTAIS… — les ponts suspendus au-dessus des nuages
+   ------------------------------------------------------------------ */
+.sc-si-j-etais {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.sc-si-j-etais__panneau {
+  position: relative;
+  width: min(100%, 760px);
+  padding: 12px 22px;
+  border: 3px solid #5b3a1a;
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(0deg, rgba(90, 50, 20, 0.08) 0 2px, transparent 2px 12px),
+    linear-gradient(180deg, #f7e2bc, #e6c690);
+  box-shadow: 0 10px 22px rgba(60, 30, 90, 0.35);
+}
+
+.sc-si-j-etais__piquet {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: 12px;
+  height: 14px;
+  background: #5b3a1a;
+  transform: translateX(-50%);
+}
+
+.sc-si-j-etais__texte {
+  margin: 0;
+  color: #2a1606;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Le chantier : le pont à compléter, dans les nuages mauves. */
+.sc-si-j-etais__chantier,
+.sc-si-j-etais__traversee {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 10px 10px 12px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #8a6ad8, #e6a8d8 70%, #ffd2c4);
+  box-shadow: 0 10px 22px rgba(60, 30, 90, 0.3);
+}
+
+.sc-si-j-etais__nuages {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sc-si-j-etais__nuages span {
+  position: absolute;
+  top: calc(30% + var(--n) * 22%);
+  left: -30%;
+  width: 180px;
+  height: 36px;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.55);
+  filter: blur(2px);
+  animation: sc-si-j-etais-nuage 22s linear infinite;
+  animation-delay: calc(var(--n) * -7s);
+}
+
+.sc-si-j-etais__pont {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.sc-si-j-etais__falaise {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 10px 34px;
+  background:
+    linear-gradient(180deg, #6fb04a 0 10px, transparent 10px),
+    linear-gradient(180deg, #a89a8a, #7a6a5a);
+}
+
+.sc-si-j-etais__falaise--gauche { clip-path: polygon(0 0, 100% 0, 92% 60%, 70% 100%, 20% 88%, 6% 60%); border-radius: 12px 0 0 0; }
+.sc-si-j-etais__falaise--droite { clip-path: polygon(0 0, 100% 0, 94% 60%, 80% 88%, 30% 100%, 8% 60%); border-radius: 0 12px 0 0; }
+
+.sc-si-j-etais__rive {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #2a1606;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.sc-si-j-etais__temps {
+  align-self: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #2a1a4a;
+  color: #ffe08a;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  animation: sc-si-j-etais-temps 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) 1.2s both;
+}
+
+.sc-si-j-etais__verbe {
+  padding: 0 4px;
+  border-radius: 5px;
+  background: #ffe08a;
+  color: #4a2604;
+  font-weight: 800;
+}
+
+/* La travée : deux cordes, des planches, et la case du milieu. */
+.sc-si-j-etais__travee {
+  position: relative;
+  /* Devant les falaises (10/10/2026) : la falaise de droite vient après dans le
+     DOM et cachait le voyageur à l'arrivée (Camara : « il passe derrière »).
+     Les cordes s'accrochent au bord herbeux, pas sous lui. */
+  z-index: 1;
+  flex: 0 0 170px;
+  height: 70px;
+  margin-top: 6px;
+}
+
+.sc-si-j-etais__cordes {
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: 0;
+  height: 40px;
+  border-bottom: 3px solid #5b3a1a;
+  border-radius: 0 0 50% 50%;
+}
+
+.sc-si-j-etais__planches {
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: 30px;
+  height: 22px;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background: repeating-linear-gradient(90deg, #8a5a2b 0 12px, transparent 12px 15px);
+  -webkit-mask: linear-gradient(90deg, #000 0 32%, transparent 32% 68%, #000 68%);
+  mask: linear-gradient(90deg, #000 0 32%, transparent 32% 68%, #000 68%);
+}
+
+.sc-si-j-etais__case {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  display: grid;
+  place-items: center;
+  min-width: 46px;
+  height: 40px;
+  padding: 0 6px;
+  border: 3px dashed #fff;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  transform: translateX(-50%);
+  animation: sc-si-j-etais-attend 1.6s ease-in-out infinite alternate;
+}
+
+.sc-si-j-etais__case.est-posee {
+  border: 3px solid #5b3a1a;
+  background: linear-gradient(180deg, #c98a4a, #8a5a2b);
+  animation: sc-si-j-etais-pose 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.sc-si-j-etais__voyageur {
+  position: absolute;
+  left: -14%;
+  top: -22px;
+  width: 22px;
+  height: 36px;
+  overflow: visible;
+  animation: sc-si-j-etais-traverse 5s linear 0.6s infinite;
+}
+
+/* La marche : le corps rebondit à chaque pas, bras et jambes en opposition. */
+.sc-si-j-etais__corps { animation: sc-si-j-etais-rebond 0.44s ease-in-out infinite; }
+.sc-si-j-etais__jambe,
+.sc-si-j-etais__bras { transform-box: view-box; }
+.sc-si-j-etais__jambe { transform-origin: 10px 23px; animation: sc-si-j-etais-pas 0.44s ease-in-out infinite alternate; }
+.sc-si-j-etais__jambe--d { animation-direction: alternate-reverse; }
+.sc-si-j-etais__bras { transform-origin: 10px 14px; animation: sc-si-j-etais-pas 0.44s ease-in-out infinite alternate-reverse; }
+.sc-si-j-etais__bras--d { animation-direction: alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .sc-si-j-etais__corps,
+  .sc-si-j-etais__jambe,
+  .sc-si-j-etais__bras { animation: none; }
+}
+
+.sc-si-j-etais__aide {
+  position: relative;
+  margin: 0;
+  padding: 2px 12px;
+  border-radius: 10px;
+  background: rgba(42, 26, 74, 0.75);
+  color: #fff;
+  font-size: 16px;
+}
+
+/* Les planches qui flottent. */
+.sc-si-j-etais__planches-libres,
+.sc-si-j-etais__ponts {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-si-j-etais__planche {
+  min-width: 120px;
+  padding: 10px 20px;
+  border: 3px solid #5b3a1a;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(0deg, rgba(60, 30, 10, 0.12) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #d9a36a, #a8703a);
+  color: #2a1606;
+  font-family: "Outfit", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  cursor: grab;
+  box-shadow: 0 6px 10px rgba(40, 20, 60, 0.35);
+  animation: sc-si-j-etais-flotte 3.4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-si-j-etais__planche:active { cursor: grabbing; }
+
+/* Les trois ponts entiers : on choisit celui qui tient. */
+.sc-si-j-etais__ponts { flex-direction: column; align-items: stretch; width: min(100%, 760px); margin: 0 auto; }
+
+.sc-si-j-etais__passerelle {
+  position: relative;
+  width: 100%;
+  padding: 18px 18px 10px;
+  border: 0;
+  border-bottom: 8px solid #5b3a1a;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, rgba(60, 30, 10, 0.25) 0 2px, transparent 2px 26px),
+    linear-gradient(180deg, #e6c690, #c98a4a);
+  color: #2a1606;
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 10px rgba(40, 20, 60, 0.35);
+  transform-origin: 50% 0;
+  animation: sc-si-j-etais-balance 4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.3s);
+}
+
+.sc-si-j-etais__corde-haute {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 4px;
+  height: 8px;
+  border-top: 3px solid #5b3a1a;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+.sc-si-j-etais__planche:hover:not(:disabled),
+.sc-si-j-etais__passerelle:hover:not(:disabled),
+.sc-si-j-etais__planche:focus-visible,
+.sc-si-j-etais__passerelle:focus-visible { outline: 3px solid #ffe08a; outline-offset: 3px; filter: brightness(1.08); }
+
+/* Un mauvais pont se rompt ; une mauvaise planche se fend. */
+.sc-si-j-etais__planche.est-fausse,
+.sc-si-j-etais__passerelle.est-fausse {
+  cursor: default;
+  animation: none;
+  background: #ffe1dc;
+  color: #8a2a1c;
+  text-decoration: line-through;
+  opacity: 0.7;
+  filter: grayscale(0.6);
+}
+
+.sc-si-j-etais__passerelle.est-fausse { clip-path: polygon(0 0, 46% 0, 50% 60%, 54% 0, 100% 0, 100% 100%, 0 100%); transform: rotate(1deg); }
+
+.sc-si-j-etais__regle {
+  position: relative;
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a1606;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sc-si-j-etais__systeme { padding: 6px 16px; border-radius: 12px; background: #fff; color: #2a1a4a; font-size: 20px; }
+
+@keyframes sc-si-j-etais-nuage {
+  from { transform: translateX(0); }
+  to { transform: translateX(1300px); }
+}
+
+@keyframes sc-si-j-etais-temps {
+  from { opacity: 0; transform: translateY(10px) scale(0.8); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-si-j-etais-attend {
+  from { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+  to { box-shadow: 0 0 14px rgba(255, 255, 255, 0.9); }
+}
+
+@keyframes sc-si-j-etais-pose {
+  from { transform: translateX(-50%) translateY(-30px) rotate(-12deg); opacity: 0; }
+  to { transform: translateX(-50%); opacity: 1; }
+}
+
+/* Le trajet suit la courbe du pont : haut sur les rives, plus bas au milieu. */
+@keyframes sc-si-j-etais-traverse {
+  0% { left: -14%; top: -22px; opacity: 0; }
+  8% { opacity: 1; }
+  50% { top: -8px; }
+  84% { opacity: 1; }
+  92%, 100% { left: 100%; top: -22px; opacity: 0; }
+}
+
+@keyframes sc-si-j-etais-rebond {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+
+@keyframes sc-si-j-etais-pas {
+  from { transform: rotate(-22deg); }
+  to { transform: rotate(22deg); }
+}
+
+@keyframes sc-si-j-etais-flotte {
+  from { transform: translateY(-3px) rotate(-1.5deg); }
+  to { transform: translateY(4px) rotate(1.5deg); }
+}
+
+@keyframes sc-si-j-etais-balance {
+  from { transform: rotate(-0.6deg); }
+  to { transform: rotate(0.6deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-si-j-etais__texte { font-size: 18px; }
+  .sc-si-j-etais__travee { flex-basis: 74px; }
+  .sc-si-j-etais__rive { padding: 6px; font-size: 16px; }
+  .sc-si-j-etais__falaise { padding: 8px 6px 28px; }
+  .sc-si-j-etais__planche { min-width: 96px; font-size: 17px; }
+  .sc-si-j-etais__passerelle { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-si-j-etais__nuages span,
+  .sc-si-j-etais__temps,
+  .sc-si-j-etais__case,
+  .sc-si-j-etais__case.est-posee,
+  .sc-si-j-etais__planche,
+  .sc-si-j-etais__passerelle { animation: none; }
+  .sc-si-j-etais__voyageur { animation: none; left: 40%; }
+}
+
+/* ------------------------------------------------------------------
+   SÛR OU PAS SÛR ? — le phare dans la brume
+   ------------------------------------------------------------------ */
+.sc-sur-ou-pas-sur {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 820px);
+  margin: 0 auto;
+}
+
+.sc-sur-ou-pas-sur__mer {
+  position: relative;
+  width: 100%;
+  height: 90px;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(180deg, #4a4a7a, #c98a6a 70%, #ffc98a);
+}
+
+.sc-sur-ou-pas-sur__decor { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.sc-sur-ou-pas-sur__faisceau {
+  transform-origin: 62px 22px;
+  animation: sc-sur-ou-pas-sur-balaie 6s ease-in-out infinite alternate;
+}
+
+.sc-sur-ou-pas-sur__lampe { animation: sc-sur-ou-pas-sur-lampe 1.5s ease-in-out infinite alternate; }
+.sc-sur-ou-pas-sur__houle { animation: sc-sur-ou-pas-sur-houle 4s ease-in-out infinite alternate; }
+
+.sc-sur-ou-pas-sur__brume { position: absolute; inset: 0; pointer-events: none; transition: opacity 1.4s ease; }
+
+.sc-sur-ou-pas-sur__brume span {
+  position: absolute;
+  top: calc(20% + var(--n) * 22%);
+  left: calc(20% + var(--n) * 25%);
+  width: 220px;
+  height: 30px;
+  border-radius: 40px;
+  background: rgba(240, 236, 245, 0.6);
+  filter: blur(6px);
+  animation: sc-sur-ou-pas-sur-derive 9s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -3s);
+}
+
+/* Après : la certitude lève la brume, le doute l'épaissit, le jugement hisse un cœur. */
+.sc-sur-ou-pas-sur__mer--certitude { background: linear-gradient(180deg, #3a7ad8, #8ac4f0 70%, #fff1b8); }
+.sc-sur-ou-pas-sur__mer--certitude .sc-sur-ou-pas-sur__brume { opacity: 0; }
+.sc-sur-ou-pas-sur__mer--certitude .sc-sur-ou-pas-sur__faisceau { fill: rgba(255, 244, 180, 0.85); animation: none; }
+
+.sc-sur-ou-pas-sur__mer--doute .sc-sur-ou-pas-sur__brume span { background: rgba(240, 236, 245, 0.9); height: 46px; width: 320px; }
+
+.sc-sur-ou-pas-sur__questions span {
+  position: absolute;
+  top: 18%;
+  left: calc(35% + var(--n) * 18%);
+  color: #4a3a6a;
+  font-size: 30px;
+  font-weight: 900;
+  animation: sc-sur-ou-pas-sur-flotte 2.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.8s);
+}
+
+.sc-sur-ou-pas-sur__fanion {
+  position: absolute;
+  top: 8px;
+  left: 82px;
+  padding: 2px 10px 2px 6px;
+  border-radius: 2px 14px 14px 2px;
+  background: #e0335e;
+  color: #fff;
+  font-size: 22px;
+  animation: sc-sur-ou-pas-sur-hisse 1s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.sc-sur-ou-pas-sur__carnet {
+  position: relative;
+  width: 100%;
+  padding: 14px 20px 14px 42px;
+  border-radius: 0 0 18px 18px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 29px, rgba(42, 95, 138, 0.2) 29px 30px),
+    #fdfaf2;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+
+.sc-sur-ou-pas-sur__spirale {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  bottom: 10px;
+  width: 14px;
+  background: radial-gradient(circle at 50% 50%, #8a8a9a 0 4px, transparent 5px) 0 0 / 14px 16px repeat-y;
+}
+
+.sc-sur-ou-pas-sur__texte {
+  margin: 0;
+  color: #1c2a3a;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Après. */
+.sc-sur-ou-pas-sur__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.sc-sur-ou-pas-sur__verdict {
+  padding: 6px 20px;
+  border-radius: 14px;
+  background: #1c2a3a;
+  color: #fff1b8;
+  font-size: 22px;
+  text-align: center;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  animation: sc-sur-ou-pas-sur-hisse 0.6s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+.sc-sur-ou-pas-sur__verdict--doute { background: #6a6a8a; color: #fff; }
+.sc-sur-ou-pas-sur__verdict--jugement { background: #e0335e; color: #fff; }
+
+.sc-sur-ou-pas-sur__regle,
+.sc-sur-ou-pas-sur__allume {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1c2a3a;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sc-sur-ou-pas-sur__allume { font-size: 20px; background: #1c2a3a; color: #dfe6f0; }
+
+.sc-sur-ou-pas-sur__faisceau-mot {
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #fff1b8;
+  color: #1c2a3a;
+  box-shadow: 0 0 18px 6px rgba(255, 240, 170, 0.8);
+  animation: sc-sur-ou-pas-sur-allume 1s ease-out both;
+}
+
+.sc-sur-ou-pas-sur__titre { display: block; color: #2a5f8a; }
+
+/* L'échelle du phare : de la pleine lumière à la brume. */
+.sc-sur-ou-pas-sur__echelle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(100%, 680px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-sur-ou-pas-sur__cran {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  color: #1c2a3a;
+  font-size: 17px;
+  font-weight: 600;
+  animation: sc-sur-ou-pas-sur-glisse 0.5s ease-out both;
+  animation-delay: calc(var(--n) * 0.3s);
+}
+
+.sc-sur-ou-pas-sur__cran--certain { background: linear-gradient(90deg, #fff1b8, #fffbe6); }
+.sc-sur-ou-pas-sur__cran--probable { background: linear-gradient(90deg, #e6e0d0, #f6f3ea); }
+.sc-sur-ou-pas-sur__cran--possible { background: linear-gradient(90deg, #c8c8d8, #e8e8f0); color: #4a4a6a; }
+.sc-sur-ou-pas-sur__cran.est-bonne { box-shadow: 0 0 0 3px #2a5f8a, 0 0 16px rgba(255, 240, 170, 0.9); }
+
+.sc-sur-ou-pas-sur__niveau {
+  flex: none;
+  min-width: 82px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1c2a3a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Les réponses : des bouées rouges et blanches. */
+.scene__carte--objet.objet--sc-sur-ou-pas-sur {
+  overflow: visible;
+  min-width: 130px;
+  padding: 16px 26px;
+  border: 3px solid #8a1020;
+  border-radius: 40px;
+  color: #1c2a3a;
+  text-shadow: none;
+  background: linear-gradient(180deg, #d0102a 0 18%, #fff 18% 82%, #d0102a 82%);
+  animation-name: sc-sur-ou-pas-sur-bouee;
+}
+
+/* Le reflet de la bouée dans l'eau. */
+.scene__carte--objet.objet--sc-sur-ou-pas-sur::before {
+  content: "";
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  bottom: -12px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(42, 95, 138, 0.45);
+  filter: blur(2px);
+}
+
+.scene__carte--objet.objet--sc-sur-ou-pas-sur .objet__eclat { display: none; }
+.scene__carte--objet.objet--sc-sur-ou-pas-sur.est-fausse { color: #fff; border-color: #5d6577; background: linear-gradient(150deg, #9aa3b5, #5d6577); }
+
+@keyframes sc-sur-ou-pas-sur-balaie {
+  from { transform: rotate(-10deg); }
+  to { transform: rotate(14deg); }
+}
+
+@keyframes sc-sur-ou-pas-sur-lampe {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-sur-ou-pas-sur-houle {
+  from { transform: translateX(0); }
+  to { transform: translateX(-30px); }
+}
+
+@keyframes sc-sur-ou-pas-sur-derive {
+  from { transform: translateX(-60px); }
+  to { transform: translateX(60px); }
+}
+
+@keyframes sc-sur-ou-pas-sur-flotte {
+  from { transform: translateY(0) rotate(-8deg); }
+  to { transform: translateY(-10px) rotate(8deg); }
+}
+
+@keyframes sc-sur-ou-pas-sur-hisse {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-sur-ou-pas-sur-allume {
+  from { box-shadow: 0 0 0 0 rgba(255, 240, 170, 0); }
+  to { box-shadow: 0 0 18px 6px rgba(255, 240, 170, 0.8); }
+}
+
+@keyframes sc-sur-ou-pas-sur-glisse {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-sur-ou-pas-sur-bouee {
+  0% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-6px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(-1deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-sur-ou-pas-sur__texte { font-size: 18px; }
+  .sc-sur-ou-pas-sur__carnet { padding-left: 32px; }
+  .sc-sur-ou-pas-sur__cran { font-size: 16px; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .scene__carte--objet.objet--sc-sur-ou-pas-sur { min-width: 100px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-sur-ou-pas-sur__faisceau,
+  .sc-sur-ou-pas-sur__lampe,
+  .sc-sur-ou-pas-sur__houle,
+  .sc-sur-ou-pas-sur__brume span,
+  .sc-sur-ou-pas-sur__questions span,
+  .sc-sur-ou-pas-sur__fanion,
+  .sc-sur-ou-pas-sur__verdict,
+  .sc-sur-ou-pas-sur__faisceau-mot,
+  .sc-sur-ou-pas-sur__cran,
+  .scene__carte--objet.objet--sc-sur-ou-pas-sur { animation: none; }
+  .sc-sur-ou-pas-sur__brume { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   LA CHASSE AUX FAUTES — le patio aux azulejos
+   ------------------------------------------------------------------ */
+.sc-chasse-aux-fautes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.sc-chasse-aux-fautes__patio {
+  width: 100%;
+  padding: 14px 12px;
+  border: 4px solid #fff;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 0 0, #1f4fa8 0 10px, transparent 11px) 0 0 / 44px 44px,
+    radial-gradient(circle at 100% 100%, #1f4fa8 0 10px, transparent 11px) 0 0 / 44px 44px,
+    radial-gradient(circle at 50% 50%, #c0392b 0 3px, transparent 4px) 0 0 / 44px 44px,
+    #e9f0fb;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
+}
+
+.sc-chasse-aux-fautes__rangee {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 6px;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Un carreau : blanc au centre, liseré bleu, fleurs aux coins. */
+.sc-chasse-aux-fautes__carreau {
+  position: relative;
+  display: inline-block;
+  min-width: 2.2em;
+  padding: 10px 10px;
+  border: 3px solid #1f4fa8;
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 0 0, #5a8ad8 0 6px, transparent 7px),
+    radial-gradient(circle at 100% 0, #5a8ad8 0 6px, transparent 7px),
+    radial-gradient(circle at 0 100%, #5a8ad8 0 6px, transparent 7px),
+    radial-gradient(circle at 100% 100%, #5a8ad8 0 6px, transparent 7px),
+    #fff;
+  color: #10306a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 3px 0 #b8c8e8;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.sc-chasse-aux-fautes__carreau.est-trou {
+  border-style: dashed;
+  background: #fff8e0;
+  color: #b0562a;
+  animation: sc-chasse-aux-fautes-trou 1.6s ease-in-out infinite alternate;
+}
+
+/* Le carreau rouge, comme sur la couverture. */
+.sc-chasse-aux-fautes__carreau.est-rouge {
+  border-color: #8a1020;
+  background:
+    radial-gradient(circle at 0 0, #ff9a8a 0 6px, transparent 7px),
+    radial-gradient(circle at 100% 0, #ff9a8a 0 6px, transparent 7px),
+    radial-gradient(circle at 0 100%, #ff9a8a 0 6px, transparent 7px),
+    radial-gradient(circle at 100% 100%, #ff9a8a 0 6px, transparent 7px),
+    #c0392b;
+  color: #fff;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  animation: sc-chasse-aux-fautes-rougit 0.6s ease-out both;
+}
+
+.sc-chasse-aux-fautes__carreau.est-juste {
+  border-color: #17734a;
+  background: #d6f5e1;
+  color: #0b4e2e;
+  box-shadow: 0 0 0 3px rgba(46, 158, 91, 0.35);
+}
+
+.sc-chasse-aux-fautes__carreau.est-retourne { animation: sc-chasse-aux-fautes-retourne 0.8s ease-out 0.2s both; }
+.sc-chasse-aux-fautes__carreau.est-terne { opacity: 0.75; }
+
+/* La loupe qui relit, d'un bout à l'autre, sans jamais s'arrêter. */
+.sc-chasse-aux-fautes__loupe {
+  position: absolute;
+  top: -14px;
+  left: 0;
+  width: 46px;
+  height: 46px;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35));
+  animation: sc-chasse-aux-fautes-loupe 9s ease-in-out infinite alternate;
+}
+
+/* Après. */
+.sc-chasse-aux-fautes__correction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-chasse-aux-fautes__retourne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.sc-chasse-aux-fautes__retourne .sc-chasse-aux-fautes__carreau.est-juste { animation: sc-chasse-aux-fautes-retourne 0.8s ease-out 0.5s both; }
+.sc-chasse-aux-fautes__fleche { color: #1f4fa8; font-size: 26px; font-weight: 900; }
+
+.sc-chasse-aux-fautes__comparaison {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(233, 240, 251, 0.95);
+}
+
+.sc-chasse-aux-fautes__barree { opacity: 0.9; }
+.sc-chasse-aux-fautes__comparaison .sc-chasse-aux-fautes__carreau { font-size: 17px; padding: 7px 7px; }
+
+.sc-chasse-aux-fautes__methode {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #10306a;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Les réponses : des carreaux à retourner. */
+.sc-chasse-aux-fautes__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-chasse-aux-fautes__reponses--phrases { flex-direction: column; align-items: stretch; width: min(100%, 760px); margin: 0 auto; }
+
+.sc-chasse-aux-fautes__reponse {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 96px;
+  min-height: 84px;
+  padding: 14px 16px;
+  border: 4px solid #1f4fa8;
+  border-radius: 6px;
+  background: #fff;
+  color: #10306a;
+  font-family: Georgia, serif;
+  font-size: 21px;
+  font-weight: 700;
+  cursor: zoom-in;
+  box-shadow: 0 6px 0 #10306a, 0 10px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+  animation: sc-chasse-aux-fautes-pose 3.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.2s);
+}
+
+.sc-chasse-aux-fautes__reponses--phrases .sc-chasse-aux-fautes__reponse { min-height: 0; padding: 12px 16px; font-size: 18px; }
+
+/* Le motif de l'azulejo, sous le mot. */
+.sc-chasse-aux-fautes__motif {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 0 0, #5a8ad8 0 14px, transparent 15px),
+    radial-gradient(circle at 100% 0, #5a8ad8 0 14px, transparent 15px),
+    radial-gradient(circle at 0 100%, #5a8ad8 0 14px, transparent 15px),
+    radial-gradient(circle at 100% 100%, #5a8ad8 0 14px, transparent 15px),
+    radial-gradient(circle at 50% 50%, rgba(31, 79, 168, 0.12) 0 36%, transparent 37%);
+  pointer-events: none;
+}
+
+.sc-chasse-aux-fautes__libelle { position: relative; padding: 2px 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.85); }
+
+.sc-chasse-aux-fautes__reponse:hover:not(:disabled),
+.sc-chasse-aux-fautes__reponse:focus-visible { transform: translateY(-4px) rotateX(18deg); outline: 3px solid #ffd86b; outline-offset: 3px; }
+
+/* Un mauvais carreau se fêle. */
+.sc-chasse-aux-fautes__reponse.est-fausse {
+  cursor: default;
+  animation: none;
+  border-color: #8a8a9a;
+  background: #ffe1dc;
+  color: #8a2a1c;
+  text-decoration: line-through;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.sc-chasse-aux-fautes__reponse.est-fausse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(62deg, transparent 47%, rgba(30, 30, 40, 0.6) 48% 50%, transparent 51%),
+    linear-gradient(-40deg, transparent 56%, rgba(30, 30, 40, 0.45) 57% 58.5%, transparent 59.5%);
+  pointer-events: none;
+}
+
+@keyframes sc-chasse-aux-fautes-trou {
+  from { box-shadow: 0 3px 0 #b8c8e8; }
+  to { box-shadow: 0 0 12px rgba(255, 180, 80, 0.9); }
+}
+
+@keyframes sc-chasse-aux-fautes-rougit {
+  from { transform: scale(1.3); }
+  to { transform: scale(1); }
+}
+
+@keyframes sc-chasse-aux-fautes-retourne {
+  from { transform: rotateY(90deg); }
+  to { transform: rotateY(0); }
+}
+
+@keyframes sc-chasse-aux-fautes-loupe {
+  from { left: 0; }
+  to { left: calc(100% - 46px); }
+}
+
+@keyframes sc-chasse-aux-fautes-pose {
+  from { transform: translateY(0) rotate(-1deg); }
+  to { transform: translateY(-4px) rotate(1deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-chasse-aux-fautes__carreau { font-size: 17px; padding: 8px 6px; }
+  .sc-chasse-aux-fautes__comparaison .sc-chasse-aux-fautes__carreau { font-size: 16px; padding: 6px 4px; }
+  .sc-chasse-aux-fautes__reponse { min-width: 84px; min-height: 70px; font-size: 18px; }
+  .sc-chasse-aux-fautes__reponses--phrases .sc-chasse-aux-fautes__reponse { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-chasse-aux-fautes__carreau,
+  .sc-chasse-aux-fautes__reponse { transition: none; }
+  .sc-chasse-aux-fautes__carreau.est-trou,
+  .sc-chasse-aux-fautes__carreau.est-rouge,
+  .sc-chasse-aux-fautes__carreau.est-retourne,
+  .sc-chasse-aux-fautes__retourne .sc-chasse-aux-fautes__carreau.est-juste,
+  .sc-chasse-aux-fautes__reponse { animation: none; }
+  .sc-chasse-aux-fautes__loupe { display: none; }
+}
+
+/* ------------------------------------------------------------------
+   THÈSE, ARGUMENT OU EXEMPLE ? — l'agora de pierre
+   ------------------------------------------------------------------ */
+.sc-these-argument-exemple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+/* Les gradins de l'amphithéâtre, en arc au-dessus de la tablette. */
+.sc-these-argument-exemple__gradins {
+  display: block;
+  width: 100%;
+  height: 26px;
+  margin-bottom: -6px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background:
+    repeating-linear-gradient(180deg, #e8dcc0 0 6px, #c9b996 6px 8px),
+    #e8dcc0;
+  box-shadow: inset 0 -4px 0 #2c7a50;
+}
+
+.sc-these-argument-exemple__tablette {
+  width: 100%;
+  padding: 14px 20px;
+  border: 3px solid #a8987a;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 12% 30%, rgba(0, 0, 0, 0.05) 0 12px, transparent 13px),
+    radial-gradient(circle at 80% 70%, rgba(0, 0, 0, 0.05) 0 16px, transparent 17px),
+    linear-gradient(180deg, #f3ecdc, #e2d6bc);
+  box-shadow: inset 0 0 0 5px rgba(44, 122, 80, 0.25), 0 12px 24px rgba(0, 0, 0, 0.3);
+  color: #2a2418;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.sc-these-argument-exemple__ligne { display: block; }
+.sc-these-argument-exemple__ligne.est-vide { height: 4px; }
+
+/* La phrase indiquée : un bloc de pierre gravé, qu'on peut prendre. */
+.sc-these-argument-exemple__bloc {
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 3px solid #2c7a50;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #d9e8dc, #b9d4c0);
+  font-weight: 700;
+  box-shadow: 0 4px 0 #1f5a3a;
+}
+
+.sc-these-argument-exemple__bloc.est-glissable { cursor: grab; animation: sc-these-argument-exemple-souleve 2.6s ease-in-out infinite alternate; }
+.sc-these-argument-exemple__bloc.est-glissable:active { cursor: grabbing; }
+
+/* Le chantier : la tour à remplir, ou l'arche à fermer. */
+.sc-these-argument-exemple__chantier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.sc-these-argument-exemple__aide {
+  margin: 0;
+  padding: 2px 12px;
+  border-radius: 10px;
+  background: rgba(31, 90, 58, 0.85);
+  color: #fff;
+  font-size: 16px;
+}
+
+.sc-these-argument-exemple__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-these-argument-exemple__reponse {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  font-family: Georgia, serif;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-these-argument-exemple__reponse:hover:not(:disabled),
+.sc-these-argument-exemple__reponse:focus-visible { transform: translateY(-3px); filter: brightness(1.08); outline: 3px solid #ffd86b; outline-offset: 3px; }
+
+/* La tour : trois étages superposés, le sommet en haut. */
+.sc-these-argument-exemple__tour { flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 0; }
+
+.sc-these-argument-exemple__tour .sc-these-argument-exemple__reponse {
+  width: 280px;
+  min-height: 50px;
+  padding: 10px 16px;
+  border: 3px solid #8a7a5a;
+  background: linear-gradient(180deg, #efe4c8, #d4c49e);
+  color: #1f3a2a;
+  font-size: 19px;
+  font-weight: 700;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.sc-these-argument-exemple__tour li:first-child .sc-these-argument-exemple__reponse {
+  width: 300px;
+  padding-top: 26px;
+  clip-path: polygon(50% 0, 100% 46%, 100% 100%, 0 100%, 0 46%);
+  background: linear-gradient(180deg, #ffe7a0, #e0b84a);
+}
+
+.sc-these-argument-exemple__tour li:nth-child(2) .sc-these-argument-exemple__reponse {
+  width: 220px;
+  min-height: 70px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 3px, transparent 3px 22px),
+    linear-gradient(180deg, #f3ecdc, #d9ccb0);
+}
+
+.sc-these-argument-exemple__tour li:last-child .sc-these-argument-exemple__reponse {
+  width: 320px;
+  background: linear-gradient(180deg, #b9ad92, #8f8468);
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* L'arche du connecteur. */
+.sc-these-argument-exemple__arche {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+.sc-these-argument-exemple__pilier {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 3px solid #a8987a;
+  background: linear-gradient(180deg, #f3ecdc, #d9ccb0);
+  color: #2a2418;
+  font-family: Georgia, serif;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.sc-these-argument-exemple__pilier:first-child { border-radius: 40px 0 0 6px; text-align: right; }
+.sc-these-argument-exemple__pilier:last-child { border-radius: 0 40px 6px 0; text-align: left; }
+
+.sc-these-argument-exemple__cle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 96px;
+  min-height: 58px;
+  margin-bottom: 18px;
+  padding: 6px 12px;
+  border: 3px dashed #2c7a50;
+  clip-path: polygon(0 0, 100% 0, 86% 100%, 14% 100%);
+  background: rgba(255, 255, 255, 0.7);
+  color: #1f5a3a;
+  font-size: 22px;
+  font-weight: 900;
+  animation: sc-these-argument-exemple-attend 1.6s ease-in-out infinite alternate;
+}
+
+.sc-these-argument-exemple__cle.est-posee {
+  border-style: solid;
+  background: linear-gradient(180deg, #ffe7a0, #e0b84a);
+  color: #2a2418;
+  font-size: 19px;
+  animation: sc-these-argument-exemple-pose 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.sc-these-argument-exemple__cles .sc-these-argument-exemple__reponse {
+  min-width: 120px;
+  padding: 12px 22px;
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+  background: linear-gradient(180deg, #efe4c8, #c9b996);
+  color: #1f3a2a;
+  font-size: 19px;
+  font-weight: 800;
+  cursor: grab;
+  animation: sc-these-argument-exemple-souleve 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+}
+
+/* Les frontons de la thèse. */
+.sc-these-argument-exemple__frontons { flex-direction: column; align-items: stretch; width: min(100%, 720px); margin: 0 auto; }
+
+.sc-these-argument-exemple__frontons .sc-these-argument-exemple__reponse {
+  width: 100%;
+  padding: 22px 22px 12px;
+  clip-path: polygon(6% 30%, 50% 0, 94% 30%, 100% 30%, 100% 100%, 0 100%, 0 30%);
+  background: linear-gradient(180deg, #f3ecdc, #d4c49e);
+  color: #1f3a2a;
+  font-size: 18px;
+  font-weight: 700;
+  border-bottom: 5px solid #2c7a50;
+}
+
+.sc-these-argument-exemple__reponse.est-fausse,
+.sc-these-argument-exemple__tour li .sc-these-argument-exemple__reponse.est-fausse,
+.sc-these-argument-exemple__cles li .sc-these-argument-exemple__reponse.est-fausse,
+.sc-these-argument-exemple__frontons li .sc-these-argument-exemple__reponse.est-fausse {
+  cursor: default;
+  animation: none;
+  background: #ffe1dc;
+  color: #8a2a1c;
+  text-decoration: line-through;
+  text-shadow: none;
+  opacity: 0.7;
+  filter: grayscale(0.6);
+}
+
+/* Après : la tour montée, étage par étage, depuis la fondation. */
+.sc-these-argument-exemple__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sc-these-argument-exemple__tour--montee { display: flex; width: min(100%, 720px); margin: 0; padding: 0; list-style: none; }
+
+.sc-these-argument-exemple__etage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 3px solid #8a7a5a;
+  background: linear-gradient(180deg, #f3ecdc, #d9ccb0);
+  color: #2a2418;
+  font-size: 16px;
+  animation: sc-these-argument-exemple-monte 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  animation-delay: calc(var(--n) * 0.4s);
+}
+
+.sc-these-argument-exemple__etage--these { width: 92%; border-radius: 30px 30px 4px 4px; background: linear-gradient(180deg, #ffe7a0, #e8c96a); }
+.sc-these-argument-exemple__etage--argument { width: 84%; }
+.sc-these-argument-exemple__etage--exemple { background: linear-gradient(180deg, #c9bd9e, #a89a7a); }
+.sc-these-argument-exemple__etage.est-indiquee { box-shadow: 0 0 0 4px #2c7a50, 0 0 18px rgba(44, 122, 80, 0.6); }
+
+.sc-these-argument-exemple__role {
+  flex: none;
+  min-width: 108px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #1f5a3a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.sc-these-argument-exemple__phrase { font-family: Georgia, serif; }
+
+.sc-these-argument-exemple__lien {
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: #1f5a3a;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  animation: sc-these-argument-exemple-monte 0.5s ease-out 0.5s both;
+}
+
+.sc-these-argument-exemple__temple { display: flex; flex-direction: column; align-items: center; width: min(100%, 680px); }
+
+.sc-these-argument-exemple__fronton {
+  width: 100%;
+  padding: 26px 22px 10px;
+  clip-path: polygon(6% 34%, 50% 0, 94% 34%, 100% 34%, 100% 100%, 0 100%, 0 34%);
+  background: linear-gradient(180deg, #ffe7a0, #e0b84a);
+  color: #2a2418;
+  font-family: Georgia, serif;
+  font-size: 19px;
+  text-align: center;
+  animation: sc-these-argument-exemple-pose 0.7s cubic-bezier(0.3, 1.4, 0.5, 1) 0.9s both;
+}
+
+.sc-these-argument-exemple__colonnes { display: flex; justify-content: space-around; width: 86%; }
+
+.sc-these-argument-exemple__colonnes span {
+  width: 26px;
+  height: 46px;
+  background: repeating-linear-gradient(90deg, #efe4c8 0 4px, #d4c49e 4px 7px);
+  animation: sc-these-argument-exemple-monte 0.5s ease-out both;
+  animation-delay: calc(var(--n) * 0.2s);
+}
+
+.sc-these-argument-exemple__socle {
+  width: 100%;
+  padding: 4px 10px;
+  background: #a89a7a;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sc-these-argument-exemple__regle {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a2418;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes sc-these-argument-exemple-souleve {
+  from { transform: translateY(0); box-shadow: 0 4px 0 #1f5a3a; }
+  to { transform: translateY(-3px); box-shadow: 0 7px 0 #1f5a3a; }
+}
+
+@keyframes sc-these-argument-exemple-attend {
+  from { box-shadow: none; opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-these-argument-exemple-pose {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-these-argument-exemple-monte {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 620px) {
+  .sc-these-argument-exemple__tablette { font-size: 16px; padding: 10px 12px; }
+  .sc-these-argument-exemple__tour .sc-these-argument-exemple__reponse { width: 220px; font-size: 17px; }
+  .sc-these-argument-exemple__tour li:first-child .sc-these-argument-exemple__reponse { width: 240px; }
+  .sc-these-argument-exemple__tour li:nth-child(2) .sc-these-argument-exemple__reponse { width: 180px; }
+  .sc-these-argument-exemple__tour li:last-child .sc-these-argument-exemple__reponse { width: 260px; }
+  .sc-these-argument-exemple__pilier { padding: 8px; font-size: 16px; }
+  .sc-these-argument-exemple__cle { min-width: 70px; }
+  .sc-these-argument-exemple__etage { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .sc-these-argument-exemple__frontons .sc-these-argument-exemple__reponse { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-these-argument-exemple__bloc.est-glissable,
+  .sc-these-argument-exemple__cle,
+  .sc-these-argument-exemple__cle.est-posee,
+  .sc-these-argument-exemple__cles .sc-these-argument-exemple__reponse,
+  .sc-these-argument-exemple__etage,
+  .sc-these-argument-exemple__lien,
+  .sc-these-argument-exemple__fronton,
+  .sc-these-argument-exemple__colonnes span { animation: none; }
+  .sc-these-argument-exemple__reponse { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   CE QUI N'EST PAS DIT — la maison aux paravents
+   ------------------------------------------------------------------ */
+.sc-ce-qui-n-est-pas-dit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 840px);
+  margin: 0 auto;
+}
+
+.sc-ce-qui-n-est-pas-dit__erables {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sc-ce-qui-n-est-pas-dit__feuille {
+  position: absolute;
+  top: -24px;
+  left: calc(6% + var(--n) * 21%);
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  animation: sc-ce-qui-n-est-pas-dit-tombe 10s linear infinite;
+  animation-delay: calc(var(--n) * 2s);
+}
+
+.sc-ce-qui-n-est-pas-dit__veranda {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 130px;
+  padding: 16px 16px 22px;
+  border-radius: 16px;
+  background:
+    linear-gradient(0deg, #5a3418 0 14px, transparent 14px),
+    linear-gradient(180deg, #2a1a30, #6a3a3a 60%, #c96a3a);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
+}
+
+/* Le paravent : papier, croisillons, une ombre qui passe derrière. */
+.sc-ce-qui-n-est-pas-dit__shoji {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  width: 110px;
+  overflow: hidden;
+  border: 5px solid #4a2a14;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, transparent 0 calc(33% - 2px), #4a2a14 calc(33% - 2px) 33%, transparent 33% calc(66% - 2px), #4a2a14 calc(66% - 2px) 66%, transparent 66%),
+    linear-gradient(180deg, transparent 0 calc(25% - 2px), #4a2a14 calc(25% - 2px) 25%, transparent 25% calc(50% - 2px), #4a2a14 calc(50% - 2px) 50%, transparent 50% calc(75% - 2px), #4a2a14 calc(75% - 2px) 75%, transparent 75%),
+    linear-gradient(180deg, #fff1d6, #ffd8a8);
+}
+
+.sc-ce-qui-n-est-pas-dit__ombre {
+  position: absolute;
+  bottom: 0;
+  left: -40px;
+  width: 34px;
+  height: 80%;
+  border-radius: 50% 50% 8px 8px / 26% 26% 8px 8px;
+  background: radial-gradient(circle at 50% 14%, rgba(40, 20, 30, 0.55) 0 12px, transparent 13px), linear-gradient(180deg, transparent 0 28%, rgba(40, 20, 30, 0.5) 28%);
+  filter: blur(1.5px);
+  animation: sc-ce-qui-n-est-pas-dit-ombre 12s ease-in-out infinite;
+}
+
+.sc-ce-qui-n-est-pas-dit__bulle {
+  position: relative;
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 22px;
+  background: #fffdf6;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.sc-ce-qui-n-est-pas-dit__bulle::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 40%;
+  border: 9px solid transparent;
+  border-right: 14px solid #fffdf6;
+}
+
+.sc-ce-qui-n-est-pas-dit__texte {
+  margin: 0;
+  color: #2a1a20;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* La lanterne de pierre, et sa flamme qui vacille. */
+.sc-ce-qui-n-est-pas-dit__lanterne-pierre {
+  position: relative;
+  flex: none;
+  align-self: flex-end;
+  width: 34px;
+  height: 64px;
+  background:
+    linear-gradient(180deg, #6a6a6a 0 10px, transparent 10px),
+    linear-gradient(90deg, transparent 0 8px, #8a8a8a 8px 26px, transparent 26px) 0 36px / 100% 28px no-repeat;
+}
+
+.sc-ce-qui-n-est-pas-dit__lanterne-pierre::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 10px;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #6a6a6a;
+  background: radial-gradient(circle, #fff3c4, #ffb02e 70%);
+  box-shadow: 0 0 18px 6px rgba(255, 180, 60, 0.55);
+  animation: sc-ce-qui-n-est-pas-dit-vacille 1.6s ease-in-out infinite alternate;
+}
+
+/* Après. */
+.sc-ce-qui-n-est-pas-dit__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* La pièce derrière le paravent : les battants s'écartent. */
+.sc-ce-qui-n-est-pas-dit__piece {
+  position: relative;
+  width: min(100%, 640px);
+  overflow: hidden;
+  border: 5px solid #4a2a14;
+  border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 60%, #fff6d6, #ffcf8a 70%, #e09a4a);
+}
+
+.sc-ce-qui-n-est-pas-dit__secret {
+  margin: 0;
+  padding: 16px 24px;
+  color: #3a1a0a;
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-ce-qui-n-est-pas-dit-apparait 0.6s ease-out 0.7s both;
+}
+
+.sc-ce-qui-n-est-pas-dit__titre {
+  display: block;
+  color: #8a3a1a;
+  font-family: "Outfit", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.sc-ce-qui-n-est-pas-dit__battant {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background:
+    linear-gradient(90deg, transparent 0 48%, #4a2a14 48% 52%, transparent 52%),
+    linear-gradient(180deg, transparent 0 48%, #4a2a14 48% 52%, transparent 52%),
+    #fff1d6;
+  border: 3px solid #4a2a14;
+}
+
+.sc-ce-qui-n-est-pas-dit__battant--gauche { left: 0; animation: sc-ce-qui-n-est-pas-dit-ouvre-g 1s ease-in-out 0.2s both; }
+.sc-ce-qui-n-est-pas-dit__battant--droite { right: 0; animation: sc-ce-qui-n-est-pas-dit-ouvre-d 1s ease-in-out 0.2s both; }
+
+.sc-ce-qui-n-est-pas-dit__face-a-face {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+
+.sc-ce-qui-n-est-pas-dit__volet {
+  flex: 1 1 0;
+  margin: 0;
+  padding: 10px 14px;
+  border: 4px solid #4a2a14;
+  border-radius: 6px;
+  background: #fff1d6;
+  color: #2a1a20;
+  font-size: 17px;
+  text-align: center;
+  animation: sc-ce-qui-n-est-pas-dit-apparait 0.5s ease-out both;
+}
+
+.sc-ce-qui-n-est-pas-dit__signe {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #2e9e5b;
+  color: #fff;
+  font-size: 30px;
+  animation: sc-ce-qui-n-est-pas-dit-signe 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s both;
+}
+
+.sc-ce-qui-n-est-pas-dit__signe.est-contraire { background: #c0392b; }
+
+.sc-ce-qui-n-est-pas-dit__verdict {
+  padding: 4px 18px;
+  border-radius: 12px;
+  background: #2a1a30;
+  color: #ffd8a8;
+  font-size: 22px;
+}
+
+.sc-ce-qui-n-est-pas-dit__lanterne {
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: #2a1a30;
+  color: #f0e6f0;
+  font-size: 21px;
+  text-align: center;
+}
+
+.sc-ce-qui-n-est-pas-dit__lueur {
+  padding: 0 5px;
+  border-radius: 6px;
+  background: #ffd8a8;
+  color: #2a1a20;
+  box-shadow: 0 0 18px 6px rgba(255, 180, 60, 0.7);
+  animation: sc-ce-qui-n-est-pas-dit-lueur 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-lueur {
+  from { box-shadow: 0 0 8px 2px rgba(255, 180, 60, 0.45); }
+  to { box-shadow: 0 0 20px 7px rgba(255, 180, 60, 0.85); }
+}
+
+.sc-ce-qui-n-est-pas-dit__regle {
+  max-width: 40em;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2a1a20;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Les réponses : des panneaux de papier coulissants. */
+.sc-ce-qui-n-est-pas-dit__reponses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-ce-qui-n-est-pas-dit__reponse {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 220px;
+  min-height: 120px;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 6px solid #4a2a14;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fff6e2, #ffe2b8);
+  color: #2a1a20;
+  font-family: "Outfit", sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+  transition: transform 0.35s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
+
+.sc-ce-qui-n-est-pas-dit__paire .sc-ce-qui-n-est-pas-dit__reponse { width: 180px; font-size: 21px; }
+
+.sc-ce-qui-n-est-pas-dit__dessin { position: absolute; inset: 0; }
+
+.sc-ce-qui-n-est-pas-dit__croisillons {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 calc(50% - 2px), rgba(74, 42, 20, 0.35) calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px)),
+    linear-gradient(180deg, transparent 0 calc(33% - 2px), rgba(74, 42, 20, 0.35) calc(33% - 2px) 33%, transparent 33% calc(66% - 2px), rgba(74, 42, 20, 0.35) calc(66% - 2px) 66%, transparent 66%);
+}
+
+.sc-ce-qui-n-est-pas-dit__libelle {
+  position: relative;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 250, 238, 0.92);
+}
+
+/* Au survol, le panneau s'entrouvre et laisse filer la lumière. */
+.sc-ce-qui-n-est-pas-dit__reponse:hover:not(:disabled),
+.sc-ce-qui-n-est-pas-dit__reponse:focus-visible {
+  transform: translateX(8px);
+  box-shadow: -10px 0 16px rgba(255, 190, 80, 0.7), 0 8px 16px rgba(0, 0, 0, 0.35);
+  outline: 3px solid #ffd86b;
+  outline-offset: 3px;
+}
+
+/* Un mauvais panneau se déchire. */
+.sc-ce-qui-n-est-pas-dit__reponse.est-fausse {
+  cursor: default;
+  background: #ffe1dc;
+  color: #8a2a1c;
+  text-decoration: line-through;
+  opacity: 0.7;
+  filter: grayscale(0.5);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 60% 100%, 55% 84%, 58% 74%, 50% 66%, 45% 100%, 0 100%);
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-tombe {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  10% { opacity: 0.95; }
+  100% { opacity: 0; transform: translate(-50px, 260px) rotate(360deg); }
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-ombre {
+  0%, 10% { left: -40px; }
+  45%, 55% { left: 40px; }
+  90%, 100% { left: 130px; }
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-vacille {
+  from { opacity: 0.8; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-apparait {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-ouvre-g {
+  from { transform: translateX(0); }
+  to { transform: translateX(-92%); }
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-ouvre-d {
+  from { transform: translateX(0); }
+  to { transform: translateX(92%); }
+}
+
+@keyframes sc-ce-qui-n-est-pas-dit-signe {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 620px) {
+  .sc-ce-qui-n-est-pas-dit__shoji,
+  .sc-ce-qui-n-est-pas-dit__lanterne-pierre { display: none; }
+  .sc-ce-qui-n-est-pas-dit__texte { font-size: 18px; }
+  .sc-ce-qui-n-est-pas-dit__veranda { min-height: 0; padding: 12px 10px 20px; }
+  .sc-ce-qui-n-est-pas-dit__bulle::before { display: none; }
+  .sc-ce-qui-n-est-pas-dit__reponse { width: 100%; min-height: 70px; font-size: 16px; }
+  .sc-ce-qui-n-est-pas-dit__reponses > li { width: 100%; }
+  .sc-ce-qui-n-est-pas-dit__paire > li { width: auto; }
+  .sc-ce-qui-n-est-pas-dit__paire .sc-ce-qui-n-est-pas-dit__reponse { width: 140px; font-size: 18px; }
+  .sc-ce-qui-n-est-pas-dit__face-a-face { flex-direction: column; }
+  .sc-ce-qui-n-est-pas-dit__secret { font-size: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-ce-qui-n-est-pas-dit__feuille { display: none; animation: none; }
+  .sc-ce-qui-n-est-pas-dit__ombre,
+  .sc-ce-qui-n-est-pas-dit__lanterne-pierre::before,
+  .sc-ce-qui-n-est-pas-dit__secret,
+  .sc-ce-qui-n-est-pas-dit__volet,
+  .sc-ce-qui-n-est-pas-dit__signe,
+  .sc-ce-qui-n-est-pas-dit__lueur { animation: none; }
+  .sc-ce-qui-n-est-pas-dit__battant { animation: none; display: none; }
+  .sc-ce-qui-n-est-pas-dit__reponse { transition: none; }
+}

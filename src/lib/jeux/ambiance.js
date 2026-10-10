@@ -39,9 +39,13 @@ function ecrireCoupee(valeur) {
   } catch { /* sans stockage, le choix vaut pour la partie en cours */ }
 }
 
-/** L'adresse de l'ambiance d'une histoire. */
+/**
+ * L'adresse de l'ambiance d'une histoire — ou d'un jeu bonus (10/10/2026) :
+ * sans classe, un seul son par jeu, `<clé>.mp3`.
+ */
 export function adresseAmbiance(cle, classe) {
-  return `${process.env.PUBLIC_URL || ''}/sons/ambiances/${cle}-${String(classe).toLowerCase()}.mp3`;
+  const nom = classe === undefined ? cle : `${cle}-${String(classe).toLowerCase()}`;
+  return `${process.env.PUBLIC_URL || ''}/sons/ambiances/${nom}.mp3`;
 }
 
 /** Les bornes de la boucle : on saute le vide que le MP3 ajoute à ses deux bouts. */
@@ -98,6 +102,11 @@ export const DERNIERE_MINUTE_MS = 60000;
  */
 export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MINUTE_MS } = {}) {
   const [coupee, setCoupee] = useState(lireCoupee);
+  // Le son est-il là ? Un jeu bonus n'affiche son bouton qu'une fois le fichier chargé.
+  const [disponible, setDisponible] = useState(false);
+  // L'adresse dont le fichier manque (10/10/2026) : un jeu à une ambiance PAR
+  // IMAGE s'en sert pour retomber sur l'ambiance du jeu quand l'image n'a pas la sienne.
+  const [absente, setAbsente] = useState(null);
   const gain = useRef(null);
   const parle = useRef(false);
   const musique = useRef(null);
@@ -137,6 +146,7 @@ export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MI
       }))
       .then((tampon) => {
         if (fini) return;
+        setDisponible(true);
         const { debut, fin } = bornesDeBoucle(tampon.getChannelData(0), tampon.sampleRate);
         source = ctx.createBufferSource();
         source.buffer = tampon;
@@ -157,7 +167,10 @@ export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MI
         g.gain.setTargetAtTime(cible(), ctx.currentTime, 0.7);
       })
       // Pas d'ambiance pour cette histoire : le jeu reste silencieux, et la console le dit.
-      .catch((e) => { console.info(`Ambiance : aucune pour ${url} (${e?.message ?? e})`); });
+      .catch((e) => {
+        console.info(`Ambiance : aucune pour ${url} (${e?.message ?? e})`);
+        if (!fini) setAbsente(url);
+      });
 
     return () => {
       fini = true;
@@ -235,5 +248,7 @@ export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MI
     });
   }, []);
 
-  return { coupee, basculer };
+  return {
+    coupee, basculer, disponible, absente,
+  };
 }

@@ -14,6 +14,12 @@
  *     somme des deux angles donnée comme réponse, l'angle au sommet recopié ;
  *   - LE TRIANGLE CONSTRUCTIBLE (2) : l'inégalité triangulaire, avec le cas
  *     limite du triangle aplati.
+ *
+ * LE DESSIN (09/10/2026) : l'angle égal porte un `visuel`, les deux droites
+ * et leur sécante (penchées l'une vers l'autre si elles ne sont pas
+ * parallèles), l'angle donné au premier croisement, le demandé en « ? » au
+ * second ; la somme des angles, le triangle avec ses angles connus et « ? ».
+ * Pas le triangle « constructible » : le dessiner donnerait la réponse.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -53,6 +59,28 @@ const CONSTRUCTIBLE = {
   non: 'Non, impossible',
 };
 
+/**
+ * Les coins marqués sur la sécante du dessin, qui descend vers la droite : aux
+ * deux croisements, « se » et « no » sont aigus, « ne » et « so » obtus. On
+ * prend ceux qui ont l'allure de l'angle donné. Alternes-internes : entre les
+ * droites (sous la 1re, au-dessus de la 2de), de part et d'autre de la sécante ;
+ * correspondants : le même coin aux deux croisements.
+ */
+const COINS = {
+  'alterne-interne': { aigu: ['se', 'no'], obtus: ['so', 'ne'] },
+  correspondant: { aigu: ['se', 'se'], obtus: ['ne', 'ne'] },
+};
+
+function secante(x, sorte, paralleles) {
+  const [c1, c2] = COINS[sorte][x < 90 ? 'aigu' : 'obtus'];
+  return {
+    type: 'figure',
+    forme: 'secante',
+    angles: [{ point: 1, coin: c1, valeur: deg(x) }, { point: 2, coin: c2, valeur: '?' }],
+    ...(paralleles ? {} : { paralleles: false }),
+  };
+}
+
 function cinquieme({ entre, au, melanger }) {
   const liste = [];
 
@@ -62,24 +90,31 @@ function cinquieme({ entre, au, melanger }) {
     let x = entre(20, 160);
     while (x >= 85 && x <= 95) x = entre(20, 160);
     const sorte = au(['alterne-interne', 'correspondant']);
+    const visuel = secante(x, sorte, i !== nonParallele);
     if (i === nonParallele) {
-      liste.push(monter(
-        melanger,
-        'angle-egal',
-        `Deux droites NON parallèles, une sécante. Un angle mesure ${x}°. Son angle ${sorte} mesure ?`,
-        ON_NE_SAIT_PAS,
-        [[deg(x), 'paralleles-d-abord'], [deg(180 - x), 'paralleles-d-abord']],
-        (k) => deg(x + 10 * k),
-      ));
+      liste.push({
+        ...monter(
+          melanger,
+          'angle-egal',
+          `Deux droites NON parallèles, une sécante. Un angle mesure ${x}°. Son angle ${sorte} mesure ?`,
+          ON_NE_SAIT_PAS,
+          [[deg(x), 'paralleles-d-abord'], [deg(180 - x), 'paralleles-d-abord']],
+          (k) => deg(x + 10 * k),
+        ),
+        visuel,
+      });
     } else {
-      liste.push(monter(
-        melanger,
-        'angle-egal',
-        `Deux droites parallèles, une sécante. Un angle mesure ${x}°. Son angle ${sorte} mesure ?`,
-        deg(x),
-        [[deg(180 - x), 'angles-egaux'], ...(x < 90 ? [[deg(90 - x), 'pas-complementaires']] : [])],
-        (k) => deg(x + 10 * k),
-      ));
+      liste.push({
+        ...monter(
+          melanger,
+          'angle-egal',
+          `Deux droites parallèles, une sécante. Un angle mesure ${x}°. Son angle ${sorte} mesure ?`,
+          deg(x),
+          [[deg(180 - x), 'angles-egaux'], ...(x < 90 ? [[deg(90 - x), 'pas-complementaires']] : [])],
+          (k) => deg(x + 10 * k),
+        ),
+        visuel,
+      });
     }
   }
 
@@ -90,14 +125,17 @@ function cinquieme({ entre, au, melanger }) {
       let s = 2 * entre(10, 70);
       while (s === 60) s = 2 * entre(10, 70);
       const base = (180 - s) / 2;
-      liste.push(monter(
-        melanger,
-        'somme-triangle',
-        `Triangle ABC isocèle en A, angle A = ${s}°. Angle B = ?`,
-        deg(base),
-        [[deg(180 - s), 'isocele-partage'], [deg(s), 'isocele-base']],
-        (k) => deg(base + 5 * k),
-      ));
+      liste.push({
+        ...monter(
+          melanger,
+          'somme-triangle',
+          `Triangle ABC isocèle en A, angle A = ${s}°. Angle B = ?`,
+          deg(base),
+          [[deg(180 - s), 'isocele-partage'], [deg(s), 'isocele-base']],
+          (k) => deg(base + 5 * k),
+        ),
+        visuel: { type: 'figure', forme: 'triangle-quelconque', angle: { A: deg(s), B: '?' } },
+      });
     } else {
       let a = entre(25, 85);
       let b = entre(25, 85);
@@ -106,14 +144,17 @@ function cinquieme({ entre, au, melanger }) {
         b = entre(25, 85);
       }
       const c = 180 - a - b;
-      liste.push(monter(
-        melanger,
-        'somme-triangle',
-        `Triangle ABC : angle A = ${a}°, angle B = ${b}°. Angle C = ?`,
-        deg(c),
-        [[deg(360 - a - b), 'somme-cent-quatre-vingts'], [deg(a + b), 'soustraire-de-la-somme']],
-        (k) => deg(c + 10 * k),
-      ));
+      liste.push({
+        ...monter(
+          melanger,
+          'somme-triangle',
+          `Triangle ABC : angle A = ${a}°, angle B = ${b}°. Angle C = ?`,
+          deg(c),
+          [[deg(360 - a - b), 'somme-cent-quatre-vingts'], [deg(a + b), 'soustraire-de-la-somme']],
+          (k) => deg(c + 10 * k),
+        ),
+        visuel: { type: 'figure', forme: 'triangle-quelconque', angle: { A: deg(a), B: deg(b), C: '?' } },
+      });
     }
   }
 

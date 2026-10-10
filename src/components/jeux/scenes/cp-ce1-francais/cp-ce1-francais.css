@@ -1,0 +1,1695 @@
+/* ================================================================
+   LES JEUX DE LECTURE DU CP ET DU CE1 — UN UNIVERS PAR JEU (09/10/2026)
+   Camara : « fais la même chose avec les jeux du CP, CE1, CE2 ». Sept
+   écrans : la pêche aux sons, l'atelier des syllabes, les mots éclair,
+   un ou des ?, le détective du verbe, la phrase qui dit non, la roue des
+   verbes. Chacun garde sa mécanique ; on ajoute le décor de sa couverture,
+   une mascotte qui réagit et la fête de la réussite.
+   Toutes les classes sont préfixées : `sc-cp-ce1-francais` pour les
+   briques communes, `sc-<clé du jeu>` pour le reste. Les classes de
+   l'écran (`.peche__lettre`, `.detective__phrase`…) ne sont restylées
+   qu'à travers la classe du jeu.
+   ================================================================ */
+
+/* ---------- LES BRIQUES COMMUNES ---------- */
+
+.jeu.sc-cp-ce1-francais { isolation: isolate; }
+
+/* LE DÉCOR, DERRIÈRE LE JEU : jamais devant, jamais cliquable. */
+.sc-cp-ce1-francais > .sc-cp-ce1-francais__decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-cp-ce1-francais__decor svg { display: block; overflow: visible; }
+
+/* LA MASCOTTE, en bas à droite. Elle ne prend jamais le doigt. */
+.sc-cp-ce1-francais__mascotte {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  z-index: 2;
+  width: clamp(96px, 11vw, 140px);
+  pointer-events: none;
+}
+
+.sc-cp-ce1-francais__mascotte svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
+}
+
+.sc-cp-ce1-francais__pose {
+  transform-origin: 50% 100%;
+  animation: sc-cp-ce1-francais-respire 3.2s ease-in-out infinite;
+}
+
+.sc-cp-ce1-francais__pose.est-bravo {
+  animation:
+    sc-cp-ce1-francais-saut 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 3,
+    sc-cp-ce1-francais-respire 3.2s ease-in-out 1.8s infinite;
+}
+
+.sc-cp-ce1-francais__pose.est-encourage {
+  animation:
+    sc-cp-ce1-francais-hoche 0.55s ease-in-out 2,
+    sc-cp-ce1-francais-respire 3.2s ease-in-out 1.1s infinite;
+}
+
+.sc-cp-ce1-francais__pose.est-eclair {
+  animation:
+    sc-cp-ce1-francais-frisson 0.12s linear 8,
+    sc-cp-ce1-francais-respire 3.2s ease-in-out 1s infinite;
+}
+
+@keyframes sc-cp-ce1-francais-respire {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-5px) scale(1.02, 0.98); }
+}
+
+@keyframes sc-cp-ce1-francais-saut {
+  0% { transform: translateY(0) scale(1.1, 0.88); }
+  40% { transform: translateY(-36px) scale(0.94, 1.08) rotate(-6deg); }
+  70% { transform: translateY(-10px) rotate(4deg); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+@keyframes sc-cp-ce1-francais-hoche {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-9deg); }
+  70% { transform: rotate(7deg); }
+}
+
+@keyframes sc-cp-ce1-francais-frisson {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px) rotate(-2deg); }
+  75% { transform: translateX(3px) rotate(2deg); }
+}
+
+/* LA BOUCHE : un sourire en attendant, grande ouverte quand on fête. */
+.sc-cp-ce1-francais__bouche { opacity: 0; }
+[data-humeur="bravo"] .sc-cp-ce1-francais__bouche { opacity: 1; }
+[data-humeur="bravo"] .sc-cp-ce1-francais__sourire { opacity: 0; }
+
+/* LES YEUX CLIGNENT, de temps en temps. */
+.sc-cp-ce1-francais__cligne {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-cp-ce1-francais-cligne 4.2s infinite;
+  animation-delay: var(--decalage, 0s);
+}
+
+@keyframes sc-cp-ce1-francais-cligne {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+/* LES ÉTOILES DE LA RÉUSSITE, qui montent autour de la mascotte. */
+.sc-cp-ce1-francais__aureole { position: absolute; inset: 0; }
+
+.sc-cp-ce1-francais__etoile {
+  position: absolute;
+  left: calc(4% + var(--n) * 24%);
+  top: 18%;
+  width: 24px;
+  height: 24px;
+  background: #ffd23f;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  opacity: 0;
+  animation: sc-cp-ce1-francais-monte 1.5s ease-out calc(var(--n) * 0.16s) both;
+}
+
+.sc-cp-ce1-francais__etoile:nth-child(even) { background: #fff3b0; width: 18px; height: 18px; }
+
+@keyframes sc-cp-ce1-francais-monte {
+  0% { opacity: 0; transform: translateY(14px) scale(0.3) rotate(0); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-80px) scale(1.15) rotate(170deg); }
+}
+
+/* LE CŒUR DE L'ENCOURAGEMENT : jamais de moquerie, un cœur qui flotte. */
+.sc-cp-ce1-francais__coeur {
+  position: absolute;
+  left: 8%;
+  top: 4%;
+  width: 26px;
+  height: 24px;
+  background: #ff6b8a;
+  clip-path: path("M13 23 C6 17 1 12.5 1 7.5 C1 3.8 3.8 1 7.4 1 C9.8 1 11.8 2.3 13 4.2 C14.2 2.3 16.2 1 18.6 1 C22.2 1 25 3.8 25 7.5 C25 12.5 20 17 13 23 Z");
+  animation: sc-cp-ce1-francais-coeur 1.8s ease-out both;
+}
+
+@keyframes sc-cp-ce1-francais-coeur {
+  0% { opacity: 0; transform: translateY(10px) scale(0.4); }
+  25% { opacity: 1; transform: translateY(0) scale(1.2); }
+  45% { transform: scale(0.95); }
+  65% { transform: scale(1.1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(1); }
+}
+
+/* LA FÊTE : une gerbe d'éclats qui part du milieu du jeu, une seule fois. */
+.sc-cp-ce1-francais__fete {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sc-cp-ce1-francais__flash {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 60px;
+  height: 60px;
+  margin: -30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.85), rgba(255, 226, 120, 0.45) 45%, transparent 70%);
+  opacity: 0;
+  animation: sc-cp-ce1-francais-flash 0.9s ease-out both;
+}
+
+@keyframes sc-cp-ce1-francais-flash {
+  0% { opacity: 0; transform: scale(0.2); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: scale(8); }
+}
+
+.sc-cp-ce1-francais__eclat {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 20px;
+  height: 20px;
+  margin: -10px;
+  background: var(--teinte);
+  opacity: 0;
+  animation: sc-cp-ce1-francais-eclat 1.5s cubic-bezier(0.15, 0.7, 0.3, 1) var(--delai) both;
+}
+
+@keyframes sc-cp-ce1-francais-eclat {
+  0% { opacity: 0; transform: rotate(var(--angle)) translateX(0) scale(0.4); }
+  12% { opacity: 1; }
+  65% { opacity: 1; transform: rotate(var(--angle)) translateX(var(--dist)) rotate(var(--tour)) scale(1.1); }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateX(calc(var(--dist) * 1.15)) rotate(var(--tour)) scale(0.7); }
+}
+
+.sc-cp-ce1-francais__eclat--etoile {
+  width: 24px;
+  height: 24px;
+  margin: -12px;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.sc-cp-ce1-francais__eclat--bulle {
+  width: 26px;
+  height: 26px;
+  margin: -13px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #fff 0 16%, rgba(255, 255, 255, 0.2) 40%, rgba(150, 215, 255, 0.35));
+}
+
+.sc-cp-ce1-francais__eclat--note {
+  width: 30px;
+  height: 34px;
+  margin: -17px -15px;
+  background: none;
+}
+
+.sc-cp-ce1-francais__eclat--note::before {
+  content: "\266A";
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--teinte);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.sc-cp-ce1-francais__eclat--eclair {
+  width: 20px;
+  height: 30px;
+  margin: -15px -10px;
+  background: #ffd23f;
+  clip-path: polygon(60% 0, 0 58%, 42% 58%, 30% 100%, 100% 38%, 56% 38%);
+  filter: drop-shadow(0 0 6px rgba(255, 230, 120, 0.9));
+}
+
+.sc-cp-ce1-francais__eclat--eclair:nth-child(3n) { background: #fff; }
+
+.sc-cp-ce1-francais__eclat--confetti {
+  width: 11px;
+  height: 18px;
+  margin: -9px -6px;
+  border-radius: 3px;
+}
+
+.sc-cp-ce1-francais__eclat--petale {
+  width: 16px;
+  height: 22px;
+  margin: -11px -8px;
+  border-radius: 80% 0 80% 0;
+  background: #ffe3ec;
+  border: 1.5px solid var(--teinte);
+}
+
+@media (max-width: 900px) {
+  /* SUR UN PETIT ÉCRAN, la mascotte a sa bande à elle, sous le jeu. */
+  .jeu.sc-cp-ce1-francais { padding-bottom: 104px; }
+
+  .sc-cp-ce1-francais__mascotte { width: 84px; right: 8px; bottom: 8px; }
+}
+
+/* ---------- LA PÊCHE AUX SONS ---------- */
+
+.sc-peche-aux-sons__surface {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: -8px;
+  height: 40px;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+  animation: sc-peche-aux-sons-houle 6s ease-in-out infinite alternate;
+}
+
+@keyframes sc-peche-aux-sons-houle {
+  from { transform: translateX(-3%) scaleY(1); }
+  to { transform: translateX(3%) scaleY(1.3); }
+}
+
+.sc-peche-aux-sons__rayon {
+  position: absolute;
+  top: -10%;
+  left: calc(14% + var(--n) * 21%);
+  width: 8%;
+  height: 120%;
+  background: linear-gradient(180deg, rgba(255, 255, 220, 0.34), rgba(255, 255, 220, 0) 72%);
+  filter: blur(3px);
+  transform-origin: top;
+  animation: sc-peche-aux-sons-rayon 7s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -1.7s);
+}
+
+@keyframes sc-peche-aux-sons-rayon {
+  from { opacity: 0.35; transform: skewX(-14deg) translateX(0); }
+  to { opacity: 0.95; transform: skewX(-8deg) translateX(16px); }
+}
+
+.sc-peche-aux-sons__banc {
+  position: absolute;
+  width: 130px;
+  fill: rgba(14, 50, 96, 0.5);
+  transform: scaleX(-1);
+  animation: sc-peche-aux-sons-banc 34s linear infinite;
+}
+
+.sc-peche-aux-sons__banc--a { top: 24%; animation-delay: -6s; }
+
+.sc-peche-aux-sons__banc--b {
+  top: 56%;
+  width: 90px;
+  fill: rgba(14, 50, 96, 0.35);
+  animation-duration: 46s;
+  animation-delay: -30s;
+}
+
+@keyframes sc-peche-aux-sons-banc {
+  from { left: -160px; }
+  to { left: calc(100% + 40px); }
+}
+
+.sc-peche-aux-sons__bulle {
+  position: absolute;
+  bottom: -30px;
+  left: var(--x);
+  width: var(--taille);
+  height: var(--taille);
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.9) 0 14%, rgba(255, 255, 255, 0.12) 40%, rgba(170, 225, 255, 0.18));
+  animation: sc-peche-aux-sons-bulle var(--duree) linear var(--delai) infinite;
+}
+
+@keyframes sc-peche-aux-sons-bulle {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 0.9; }
+  50% { transform: translate(12px, -380px); }
+  100% { transform: translate(-6px, -780px); opacity: 0.15; }
+}
+
+.sc-peche-aux-sons__ligne {
+  position: absolute;
+  top: -4px;
+  right: 24%;
+  width: 30px;
+  transform-origin: 50% 0;
+  animation: sc-peche-aux-sons-ligne 3.6s ease-in-out infinite;
+}
+
+@keyframes sc-peche-aux-sons-ligne {
+  0%, 100% { transform: rotate(3deg) translateY(0); }
+  50% { transform: rotate(-3deg) translateY(6px); }
+}
+
+.sc-peche-aux-sons__algue {
+  position: absolute;
+  bottom: -8px;
+  width: 64px;
+  height: 180px;
+}
+
+.sc-peche-aux-sons__algue--g { left: 1%; }
+.sc-peche-aux-sons__algue--d { right: 17%; transform: scaleX(-1); }
+
+.sc-peche-aux-sons__brin {
+  fill: none;
+  stroke: #2f9e5a;
+  stroke-width: 9;
+  stroke-linecap: round;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-peche-aux-sons-algue 4.5s ease-in-out infinite alternate;
+}
+
+.sc-peche-aux-sons__brin--b { stroke: #46b86b; animation-duration: 5.4s; animation-delay: -2s; }
+.sc-peche-aux-sons__brin--c { stroke: #7fd18a; stroke-width: 7; animation-duration: 3.8s; animation-delay: -1s; }
+
+@keyframes sc-peche-aux-sons-algue {
+  from { transform: skewX(-8deg); }
+  to { transform: skewX(8deg); }
+}
+
+/* LE COFFRE DE LA MANCHE : il s'ouvre sur la belle pêche. */
+.sc-peche-aux-sons__coffre {
+  position: absolute;
+  left: 22%;
+  bottom: 2px;
+  width: 104px;
+}
+
+.sc-peche-aux-sons__couvercle {
+  transform-box: fill-box;
+  transform-origin: 0 100%;
+  transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.sc-peche-aux-sons__coffre.est-ouvert .sc-peche-aux-sons__couvercle { transform: translate(-4px, -8px) rotate(-38deg); }
+
+.sc-peche-aux-sons__or {
+  fill: #ffd23f;
+  stroke: #b88a00;
+  stroke-width: 2;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.3s 0.2s, transform 0.5s 0.2s;
+}
+
+.sc-peche-aux-sons__coffre.est-ouvert .sc-peche-aux-sons__or { opacity: 1; transform: translateY(0); }
+
+.sc-peche-aux-sons__brille {
+  fill: #fff8c4;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.sc-peche-aux-sons__coffre.est-ouvert .sc-peche-aux-sons__brille {
+  animation: sc-peche-aux-sons-brille 0.9s ease-in-out 0.4s infinite alternate;
+}
+
+@keyframes sc-peche-aux-sons-brille {
+  from { opacity: 0.2; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+/* LA LETTRE DU SON DANS UNE GRANDE BULLE, comme « ou » et « on » sur la couverture. */
+.sc-peche-aux-sons .peche__lettre {
+  display: grid;
+  place-items: center;
+  min-width: 112px;
+  height: 112px;
+  padding: 0 22px 8px;
+  border: 4px solid rgba(255, 255, 255, 0.95);
+  border-radius: 56px;
+  background: radial-gradient(circle at 32% 26%, #fff 0 12%, #eef9ff 30%, #c9ebff 68%, #9ad6ff);
+  color: #6a1fb0;
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.22),
+    0 10px 22px rgba(0, 0, 0, 0.3),
+    inset -8px -10px 18px rgba(80, 150, 220, 0.35);
+  animation:
+    sc-peche-aux-sons-arrivee 0.6s cubic-bezier(0.3, 1.5, 0.5, 1),
+    sc-peche-aux-sons-flotte 3.4s ease-in-out 0.6s infinite;
+}
+
+@keyframes sc-peche-aux-sons-arrivee {
+  from { transform: translateY(60px) scale(0.3); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes sc-peche-aux-sons-flotte {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-6px) scale(1.03, 0.97); }
+}
+
+/* LES POISSONS-CLOWNS : deux rayures blanches cerclées de nuit. */
+.sc-peche-aux-sons__rayure { fill: #fff; stroke: #1b2a4a; stroke-width: 2.5; stroke-linejoin: round; }
+
+/* LA TORTUE : elle pivote sur elle-même pour la pirouette. */
+.sc-cp-ce1-francais__mascotte--tortue .sc-cp-ce1-francais__pose { transform-origin: 50% 55%; }
+
+.sc-cp-ce1-francais__mascotte--tortue .sc-cp-ce1-francais__pose.est-bravo {
+  animation:
+    sc-peche-aux-sons-pirouette 1.1s ease-in-out,
+    sc-cp-ce1-francais-respire 3.2s ease-in-out 1.2s infinite;
+}
+
+@keyframes sc-peche-aux-sons-pirouette {
+  0% { transform: translateY(0) rotate(0); }
+  45% { transform: translateY(-42px) rotate(-200deg); }
+  85% { transform: translateY(-6px) rotate(-360deg); }
+  100% { transform: translateY(0) rotate(-360deg); }
+}
+
+.sc-peche-aux-sons__palme {
+  transform-box: fill-box;
+  animation: sc-peche-aux-sons-palme 1.6s ease-in-out infinite alternate;
+}
+
+.sc-peche-aux-sons__palme--avant { transform-origin: 80% 10%; }
+.sc-peche-aux-sons__palme--arriere { transform-origin: 10% 10%; animation-delay: -0.8s; }
+[data-humeur="bravo"] .sc-peche-aux-sons__palme { animation-duration: 0.3s; }
+
+@keyframes sc-peche-aux-sons-palme {
+  from { transform: rotate(-12deg); }
+  to { transform: rotate(14deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-peche-aux-sons__coffre { width: 72px; left: 4%; }
+  .sc-peche-aux-sons__algue--d { display: none; }
+  .sc-peche-aux-sons .peche__lettre { min-width: 92px; height: 92px; font-size: 48px; }
+}
+
+/* ---------- L'ATELIER DES SYLLABES ---------- */
+
+.sc-atelier-syllabes__lampe {
+  position: absolute;
+  top: 0;
+  width: 70px;
+  height: 180px;
+  transform-origin: 50% 0;
+  animation: sc-atelier-syllabes-balance 6s ease-in-out infinite alternate;
+}
+
+.sc-atelier-syllabes__lampe::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 30px;
+  background: #3a2a1a;
+}
+
+.sc-atelier-syllabes__lampe--g { left: 18%; }
+.sc-atelier-syllabes__lampe--d { right: 18%; animation-delay: -3s; }
+
+.sc-atelier-syllabes__abat-jour {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  width: 54px;
+  height: 28px;
+  margin-left: -27px;
+  border-radius: 30px 30px 6px 6px;
+  background: linear-gradient(#3a3a46, #22222a);
+}
+
+.sc-atelier-syllabes__lumiere {
+  position: absolute;
+  top: 54px;
+  left: 50%;
+  width: 170px;
+  height: 130px;
+  margin-left: -85px;
+  background: radial-gradient(ellipse at 50% 0, rgba(255, 230, 150, 0.6), rgba(255, 230, 150, 0) 72%);
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+  animation: sc-atelier-syllabes-lumiere 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes sc-atelier-syllabes-balance {
+  from { transform: rotate(-2.5deg); }
+  to { transform: rotate(2.5deg); }
+}
+
+@keyframes sc-atelier-syllabes-lumiere {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+.sc-atelier-syllabes__disque {
+  position: absolute;
+  left: 3%;
+  top: 16%;
+  width: 74px;
+  animation: sc-atelier-syllabes-tourne 5s linear infinite;
+}
+
+@keyframes sc-atelier-syllabes-tourne {
+  to { transform: rotate(360deg); }
+}
+
+.sc-atelier-syllabes__note {
+  position: absolute;
+  left: var(--x);
+  bottom: -50px;
+  width: 30px;
+  opacity: 0;
+  animation: sc-atelier-syllabes-note var(--duree) linear var(--delai) infinite;
+}
+
+@keyframes sc-atelier-syllabes-note {
+  0% { transform: translate(0, 0) rotate(-10deg); opacity: 0; }
+  12% { opacity: 0.9; }
+  35% { transform: translate(16px, -230px) rotate(10deg); }
+  65% { transform: translate(-14px, -460px) rotate(-8deg); }
+  100% { transform: translate(8px, -720px) rotate(6deg); opacity: 0; }
+}
+
+.sc-atelier-syllabes__xylo {
+  position: absolute;
+  left: 2%;
+  bottom: 8px;
+  width: 150px;
+}
+
+.sc-atelier-syllabes__lame { transform-box: fill-box; transform-origin: center; }
+
+.sc-atelier-syllabes__xylo.est-joue .sc-atelier-syllabes__lame {
+  animation: sc-atelier-syllabes-lame 0.32s ease-in-out calc(0.2s + var(--n) * 0.16s) 2 alternate;
+}
+
+@keyframes sc-atelier-syllabes-lame {
+  to { transform: translateY(-6px) scale(1.08); filter: brightness(1.5) drop-shadow(0 0 6px #fff); }
+}
+
+.sc-atelier-syllabes__baguette {
+  transform-box: fill-box;
+  transform-origin: 100% 0;
+  animation: sc-atelier-syllabes-tape 2.4s ease-in-out infinite;
+}
+
+.sc-atelier-syllabes__xylo.est-joue .sc-atelier-syllabes__baguette { animation-duration: 0.32s; }
+
+@keyframes sc-atelier-syllabes-tape {
+  0%, 70%, 100% { transform: rotate(0); }
+  80% { transform: rotate(-14deg); }
+  88% { transform: rotate(4deg); }
+}
+
+/* LA FUMÉE DE LA LOCO : trois bouffées qui montent. */
+.sc-atelier-syllabes__fumee {
+  position: absolute;
+  left: 14px;
+  top: -30px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  animation: sc-atelier-syllabes-fumee 2.4s ease-out calc(var(--n) * 0.8s) infinite;
+}
+
+@keyframes sc-atelier-syllabes-fumee {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  20% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate(-26px, -46px) scale(1.8); }
+}
+
+.sc-atelier-syllabes.est-fete .sc-atelier-syllabes__fumee { animation-duration: 0.9s; }
+
+/* LES CARTES DE SYLLABES DE LA COUVERTURE : chacune sa couleur, un peu de travers. */
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(6n+1) .syllabes__etiquette:not(.est-posee) { color: #d9372a; }
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(6n+2) .syllabes__etiquette:not(.est-posee) { color: #22883a; }
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(6n+3) .syllabes__etiquette:not(.est-posee) { color: #d4670a; }
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(6n+4) .syllabes__etiquette:not(.est-posee) { color: #8a2fb8; }
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(6n+5) .syllabes__etiquette:not(.est-posee) { color: #1d5fc4; }
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(6n) .syllabes__etiquette:not(.est-posee) { color: #0f7f78; }
+
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(odd) .syllabes__etiquette { rotate: -2deg; }
+.sc-atelier-syllabes .syllabes__place-etiquette:nth-child(even) .syllabes__etiquette { rotate: 2deg; }
+
+.sc-atelier-syllabes .syllabes__etiquette:not(.est-posee) {
+  background: #fff;
+  box-shadow: 0 5px 0 #d4c6a6, 0 10px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* LE TRAIN CHANTE LE MOT : chaque wagon saute à son tour, comme on frappe les syllabes. */
+.sc-atelier-syllabes.est-fete .syllabes__place {
+  animation: sc-atelier-syllabes-chante 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) calc(0.2s + var(--n) * 0.38s) both;
+}
+
+@keyframes sc-atelier-syllabes-chante {
+  0%, 100% { transform: translateY(0) scale(1); }
+  45% { transform: translateY(-18px) scale(1.1); }
+}
+
+.sc-atelier-syllabes .syllabes__mot-lu { animation: sc-atelier-syllabes-mot 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+
+@keyframes sc-atelier-syllabes-mot {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.sc-atelier-syllabes__crochet {
+  transform-box: fill-box;
+  transform-origin: 0 0;
+  animation: sc-atelier-syllabes-mesure 0.9s ease-in-out infinite alternate;
+}
+
+[data-humeur="bravo"] .sc-atelier-syllabes__crochet { animation-duration: 0.25s; }
+
+@keyframes sc-atelier-syllabes-mesure {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(10deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-atelier-syllabes__xylo { width: 100px; }
+  .sc-atelier-syllabes__disque { display: none; }
+}
+
+/* ---------- LES MOTS ÉCLAIR ---------- */
+
+.sc-mots-eclair__trainee {
+  position: absolute;
+  top: var(--y);
+  left: -40%;
+  width: 36%;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent, rgba(140, 220, 255, 0.85), #fff);
+  box-shadow: 0 0 10px rgba(140, 220, 255, 0.8);
+  opacity: 0;
+  animation: sc-mots-eclair-trainee var(--duree) cubic-bezier(0.6, 0, 0.4, 1) var(--delai) infinite;
+}
+
+@keyframes sc-mots-eclair-trainee {
+  0% { transform: translateX(0); opacity: 0; }
+  10% { opacity: 0.9; }
+  60% { transform: translateX(400%); opacity: 0; }
+  100% { transform: translateX(400%); opacity: 0; }
+}
+
+/* DES CARTES QUI FILENT, BLANCHES : deux traits gris, jamais un mot. */
+.sc-mots-eclair__carte-volante {
+  position: absolute;
+  top: var(--y);
+  left: -130px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  width: 92px;
+  height: 52px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #fffdf6;
+  box-shadow: -24px 0 16px -8px rgba(160, 220, 255, 0.55), 0 6px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0.85;
+  transform: rotate(var(--angle));
+  animation: sc-mots-eclair-vole var(--duree) linear var(--delai) infinite;
+}
+
+.sc-mots-eclair__carte-volante > span { height: 6px; border-radius: 3px; background: #b9c6d8; }
+.sc-mots-eclair__carte-volante > span + span { width: 60%; }
+
+@keyframes sc-mots-eclair-vole {
+  0% { left: -130px; transform: translateY(0) rotate(var(--angle)); }
+  50% { transform: translateY(-18px) rotate(calc(var(--angle) * -1)); }
+  100% { left: calc(100% + 30px); transform: translateY(0) rotate(var(--angle)); }
+}
+
+.sc-mots-eclair__boulon {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 34px;
+  opacity: 0.15;
+  filter: drop-shadow(0 0 8px rgba(255, 220, 90, 0.9));
+  animation: sc-mots-eclair-boulon 3.2s steps(1) var(--delai) infinite;
+}
+
+@keyframes sc-mots-eclair-boulon {
+  0%, 70%, 100% { opacity: 0.15; transform: scale(0.9); }
+  73% { opacity: 1; transform: scale(1.15); }
+  77% { opacity: 0.35; }
+  81% { opacity: 1; transform: scale(1.05); }
+  86% { opacity: 0.2; }
+}
+
+.sc-mots-eclair__decor.est-eclair .sc-mots-eclair__boulon { animation: sc-mots-eclair-boulon-fort 0.3s steps(1) 3; }
+
+@keyframes sc-mots-eclair-boulon-fort {
+  0% { opacity: 1; transform: scale(1.25); }
+  50% { opacity: 0.3; transform: scale(1); }
+}
+
+.sc-mots-eclair__lampe { position: absolute; left: 0; top: 46px; width: 110px; }
+
+.sc-mots-eclair__ampoule {
+  filter: drop-shadow(0 0 10px #fff3b0);
+  animation: sc-mots-eclair-ampoule 3s ease-in-out infinite alternate;
+}
+
+@keyframes sc-mots-eclair-ampoule {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+
+.sc-mots-eclair__chrono { position: absolute; right: 2%; top: 36%; width: 70px; }
+
+.sc-mots-eclair__aiguille {
+  transform-box: view-box;
+  transform-origin: 40px 50px;
+  animation: sc-mots-eclair-aiguille 12s linear infinite;
+}
+
+@keyframes sc-mots-eclair-aiguille {
+  to { transform: rotate(360deg); }
+}
+
+/* LE MOT PASSE : la pièce s'illumine d'un coup. */
+.sc-mots-eclair__flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 38%, rgba(255, 255, 230, 0.9), rgba(255, 240, 150, 0.35) 40%, transparent 75%);
+  opacity: 0;
+  animation: sc-mots-eclair-flash 0.7s ease-out both;
+}
+
+@keyframes sc-mots-eclair-flash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.sc-mots-eclair .eclair__cadre--eclair .eclair__mot { animation: sc-mots-eclair-mot 0.25s ease-out both; }
+
+@keyframes sc-mots-eclair-mot {
+  from { transform: scale(1.5); filter: blur(4px); }
+  to { transform: scale(1); filter: blur(0); }
+}
+
+/* LES CARTES ARRIVENT EN FILANT, comme sur la couverture. */
+.sc-mots-eclair .eclair__cartes > li { animation: sc-mots-eclair-arrivee 0.5s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+.sc-mots-eclair .eclair__cartes > li:nth-child(2) { animation-delay: 0.1s; }
+.sc-mots-eclair .eclair__cartes > li:nth-child(3) { animation-delay: 0.2s; }
+.sc-mots-eclair .eclair__cartes > li:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes sc-mots-eclair-arrivee {
+  from { opacity: 0; transform: translateX(-120px) rotate(-14deg); filter: blur(3px); }
+  to { opacity: 1; transform: translateX(0) rotate(0); filter: blur(0); }
+}
+
+.sc-mots-eclair .eclair__cartes > li:nth-child(odd) .eclair__carte { rotate: -3deg; }
+.sc-mots-eclair .eclair__cartes > li:nth-child(even) .eclair__carte { rotate: 2deg; }
+.sc-mots-eclair .eclair__carte:not(.est-fausse):not(.est-bonne) { color: #1d4fb8; }
+
+.sc-mots-eclair__etincelles { animation: sc-mots-eclair-crepite 0.9s steps(1) infinite; }
+
+@keyframes sc-mots-eclair-crepite {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.1; }
+  60% { opacity: 0.8; }
+}
+
+@media (max-width: 620px) {
+  .sc-mots-eclair__chrono,
+  .sc-mots-eclair__lampe { display: none; }
+}
+
+/* ---------- UN OU DES ? ---------- */
+
+.sc-un-ou-des__guirlande {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 58px;
+}
+
+.sc-un-ou-des__fanion {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: sc-un-ou-des-fanion 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.35s);
+}
+
+@keyframes sc-un-ou-des-fanion {
+  from { transform: rotate(-7deg); }
+  to { transform: rotate(7deg); }
+}
+
+.sc-un-ou-des__scintille {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 22px;
+  height: 22px;
+  background: #fff3b0;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  animation: sc-un-ou-des-scintille 2.4s ease-in-out var(--delai) infinite;
+}
+
+@keyframes sc-un-ou-des-scintille {
+  0%, 100% { opacity: 0.2; transform: scale(0.5) rotate(0); }
+  50% { opacity: 1; transform: scale(1.1) rotate(45deg); }
+}
+
+.sc-un-ou-des__robot { position: absolute; left: 3%; top: 22%; width: 56px; }
+
+.sc-un-ou-des__antenne { animation: sc-un-ou-des-antenne 1.2s steps(1) infinite; }
+
+@keyframes sc-un-ou-des-antenne {
+  50% { fill: #ffe14d; }
+}
+
+.sc-un-ou-des__cubes { position: absolute; left: 2%; bottom: 4px; width: 96px; }
+
+.sc-un-ou-des__cube-haut {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-un-ou-des-cube 3s ease-in-out infinite;
+}
+
+@keyframes sc-un-ou-des-cube {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(4deg); }
+}
+
+.sc-un-ou-des__ballon {
+  position: absolute;
+  left: 15%;
+  bottom: 6px;
+  width: 46px;
+  animation: sc-un-ou-des-rebond 1.6s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+@keyframes sc-un-ou-des-rebond {
+  0%, 100% { transform: translateY(0) scale(1.12, 0.86); }
+  12% { transform: translateY(-8px) scale(1, 1); }
+  50% { transform: translateY(-70px) scale(0.96, 1.04); }
+  88% { transform: translateY(-8px) scale(1, 1); }
+}
+
+.sc-un-ou-des__voiture {
+  position: absolute;
+  bottom: 2px;
+  left: -100px;
+  width: 78px;
+  animation: sc-un-ou-des-roule 22s linear infinite;
+}
+
+@keyframes sc-un-ou-des-roule {
+  from { left: -100px; }
+  to { left: calc(100% + 20px); }
+}
+
+.sc-un-ou-des__roue {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-un-ou-des-tourne 0.8s linear infinite;
+}
+
+@keyframes sc-un-ou-des-tourne {
+  to { transform: rotate(360deg); }
+}
+
+/* LA CARTE DE LA COUVERTURE : blanche, aux coins ronds, posée de travers. */
+.sc-un-ou-des .unoudes__image {
+  border: 4px solid #fff;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #fff, #fff6e6);
+  box-shadow: 0 0 0 3px #e2cfa8, 0 12px 26px rgba(0, 0, 0, 0.32);
+  rotate: -2deg;
+  animation: sc-un-ou-des-carte 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+@keyframes sc-un-ou-des-carte {
+  from { opacity: 0; transform: translateY(-40px) rotate(-12deg) scale(0.7); }
+  to { opacity: 1; transform: none; }
+}
+
+.sc-un-ou-des .unoudes__image > span {
+  display: inline-block;
+  animation: sc-un-ou-des-jouet 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--n, 0) * -0.45s);
+}
+
+@keyframes sc-un-ou-des-jouet {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-4px) rotate(-3deg); }
+}
+
+/* LA FÊTE : les jouets de la carte sautent, l'un après l'autre. */
+.sc-un-ou-des.est-fete .unoudes__image > span {
+  animation: sc-un-ou-des-hop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) calc(var(--n, 0) * 0.18s) 2 both;
+}
+
+@keyframes sc-un-ou-des-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-22px) scale(1.15) rotate(8deg); }
+}
+
+.sc-un-ou-des .unoudes__s { display: inline-block; animation: sc-un-ou-des-s 0.6s ease-in-out 0.3s 3 alternate; }
+
+@keyframes sc-un-ou-des-s {
+  to { transform: scale(1.35) rotate(-6deg); box-shadow: 0 0 14px #ffd23f; }
+}
+
+.sc-un-ou-des__bras {
+  transform-box: fill-box;
+  transform-origin: 50% 12%;
+  animation: sc-un-ou-des-bras 2.6s ease-in-out infinite alternate;
+}
+
+.sc-un-ou-des__bras--d { animation-delay: -1.3s; }
+
+@keyframes sc-un-ou-des-bras {
+  from { transform: rotate(-6deg); }
+  to { transform: rotate(6deg); }
+}
+
+[data-humeur="bravo"] .sc-un-ou-des__bras--g { animation: none; transform: rotate(150deg); }
+[data-humeur="bravo"] .sc-un-ou-des__bras--d { animation: none; transform: rotate(-150deg); }
+
+.sc-un-ou-des__tete { transform-box: fill-box; transform-origin: 50% 100%; }
+[data-humeur="encourage"] .sc-un-ou-des__tete { animation: sc-un-ou-des-penche 1.2s ease-in-out both; }
+
+@keyframes sc-un-ou-des-penche {
+  0%, 100% { transform: rotate(0); }
+  35%, 70% { transform: rotate(-12deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-un-ou-des__robot,
+  .sc-un-ou-des__cubes { display: none; }
+}
+
+/* ---------- LE DÉTECTIVE DU VERBE ---------- */
+
+.sc-detective-du-verbe__lune {
+  position: absolute;
+  left: 13%;
+  top: 6%;
+  width: 120px;
+  height: 120px;
+  margin: -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 235, 255, 0.5), transparent 65%);
+  animation: sc-detective-du-verbe-luit 5s ease-in-out infinite alternate;
+}
+
+.sc-detective-du-verbe__lanterne {
+  position: absolute;
+  left: 84.5%;
+  top: 55%;
+  width: 110px;
+  height: 110px;
+  margin: -55px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 190, 90, 0.6), transparent 65%);
+  animation: sc-detective-du-verbe-vacille 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes sc-detective-du-verbe-luit {
+  from { opacity: 0.5; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes sc-detective-du-verbe-vacille {
+  0% { opacity: 0.55; transform: scale(0.95); }
+  40% { opacity: 0.9; }
+  60% { opacity: 0.7; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* LE CÔNE DE LA LAMPE DE BUREAU, qui se balance à peine. */
+.sc-detective-du-verbe__cone {
+  position: absolute;
+  left: 22%;
+  top: 36%;
+  width: 34%;
+  height: 70%;
+  background: radial-gradient(ellipse at 15% 0, rgba(255, 214, 140, 0.42), rgba(255, 214, 140, 0) 72%);
+  clip-path: polygon(6% 0, 22% 0, 100% 100%, 0 100%);
+  transform-origin: 14% 0;
+  animation: sc-detective-du-verbe-lampe 7s ease-in-out infinite alternate;
+}
+
+@keyframes sc-detective-du-verbe-lampe {
+  from { transform: rotate(-3deg); opacity: 0.75; }
+  to { transform: rotate(3deg); opacity: 1; }
+}
+
+.sc-detective-du-verbe__poussiere {
+  position: absolute;
+  left: var(--x);
+  top: 40%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 236, 190, 0.95);
+  box-shadow: 0 0 6px rgba(255, 220, 150, 0.9);
+  opacity: 0;
+  animation: sc-detective-du-verbe-poussiere var(--duree) ease-in-out var(--delai) infinite;
+}
+
+@keyframes sc-detective-du-verbe-poussiere {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 1; }
+  50% { transform: translate(24px, 90px); }
+  80% { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(-6px, 200px); }
+}
+
+.sc-detective-du-verbe__question {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  animation: sc-detective-du-verbe-question 6s ease-in-out var(--delai) infinite;
+}
+
+.sc-detective-du-verbe__question::before {
+  content: "?";
+  font-family: 'Lilita One', var(--display);
+  font-size: 46px;
+  color: rgba(255, 228, 160, 0.7);
+  text-shadow: 0 0 12px rgba(255, 200, 100, 0.6);
+}
+
+@keyframes sc-detective-du-verbe-question {
+  0%, 100% { transform: translateY(0) rotate(-8deg); opacity: 0.5; }
+  50% { transform: translateY(-14px) rotate(8deg); opacity: 1; }
+}
+
+/* LES EMPREINTES QUI AVANCENT, en bas, comme sur la carte de la couverture. */
+.sc-detective-du-verbe__piste {
+  position: absolute;
+  left: 4%;
+  right: 20%;
+  bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  height: 46px;
+}
+
+.sc-detective-du-verbe__pas {
+  width: 18px;
+  height: 30px;
+  fill: rgba(40, 24, 10, 0.8);
+  rotate: 80deg;
+  opacity: 0;
+  animation: sc-detective-du-verbe-pas 8s linear calc(var(--n) * 0.6s) infinite;
+}
+
+.sc-detective-du-verbe__pas.est-droit { translate: 0 14px; }
+
+@keyframes sc-detective-du-verbe-pas {
+  0% { opacity: 0; }
+  4% { opacity: 0.9; }
+  55% { opacity: 0.9; }
+  70%, 100% { opacity: 0; }
+}
+
+/* L'AFFAIRE EST RÉSOLUE : le tampon tombe. */
+.sc-detective-du-verbe__tampon {
+  position: absolute;
+  right: 160px;
+  bottom: 22px;
+  width: 96px;
+  opacity: 0.9;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+  animation: sc-detective-du-verbe-tampon 0.5s cubic-bezier(0.5, 0, 0.6, 1.6) both;
+}
+
+@keyframes sc-detective-du-verbe-tampon {
+  from { opacity: 0; transform: scale(2.6) rotate(-40deg); }
+  to { opacity: 0.9; transform: scale(1) rotate(-12deg); }
+}
+
+/* LA PHRASE, CARTE DE L'ENQUÊTE : papier ancien, punaise rouge. */
+.sc-detective-du-verbe .detective__phrase {
+  position: relative;
+  border: 2px solid #d9c49a;
+  border-radius: 6px 18px 8px 20px;
+  background: linear-gradient(180deg, #fbf3dc, #f1e2bb);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4), inset 0 0 40px rgba(160, 120, 60, 0.25);
+}
+
+.sc-detective-du-verbe .detective__phrase::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8a8a, #c62828 60%, #7f1515);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* LE VERBE ENTOURÉ DE ROUGE, LE SUJET DE BLEU — un trait à main levée. */
+.sc-detective-du-verbe .detective__mot.est-verbe::before,
+.sc-detective-du-verbe .detective__mot.est-sujet::before {
+  content: "";
+  position: absolute;
+  inset: -10px -12px;
+  border: 3.5px solid #d62828;
+  border-radius: 50% 46% 52% 48%;
+  pointer-events: none;
+  animation: sc-detective-du-verbe-entoure 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.sc-detective-du-verbe .detective__mot.est-sujet::before { border-color: #1d6fb8; }
+
+@keyframes sc-detective-du-verbe-entoure {
+  from { opacity: 0; transform: scale(1.6) rotate(-30deg); }
+  to { opacity: 1; transform: scale(1) rotate(-4deg); }
+}
+
+.sc-detective-du-verbe__oeil {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-cp-ce1-francais-cligne 4.6s infinite;
+}
+
+.sc-detective-du-verbe__regard { animation: sc-detective-du-verbe-fouille 6s ease-in-out infinite; }
+
+@keyframes sc-detective-du-verbe-fouille {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-8px, 1px); }
+  40% { transform: translate(-8px, 1px); }
+  60% { transform: translate(8px, -2px); }
+  80% { transform: translate(8px, -2px); }
+}
+
+.sc-detective-du-verbe__oeil-rieur { opacity: 0; }
+[data-humeur="bravo"] .sc-detective-du-verbe__oeil-rieur { opacity: 1; }
+[data-humeur="bravo"] .sc-detective-du-verbe__oeil { opacity: 0; }
+
+@media (max-width: 620px) {
+  .sc-detective-du-verbe__tampon { right: 96px; bottom: 14px; width: 70px; }
+  .sc-detective-du-verbe__cone { display: none; }
+}
+
+/* ---------- LA PHRASE QUI DIT NON ---------- */
+
+.sc-phrase-qui-dit-non__nuage {
+  position: absolute;
+  left: -170px;
+  width: 140px;
+  height: 42px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.85);
+  animation: sc-phrase-qui-dit-non-nuage 70s linear infinite;
+}
+
+.sc-phrase-qui-dit-non__nuage::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: -22px;
+  width: 64px;
+  height: 52px;
+  border-radius: 50%;
+  background: inherit;
+}
+
+.sc-phrase-qui-dit-non__nuage--a { top: 5%; animation-delay: -18s; }
+.sc-phrase-qui-dit-non__nuage--b { top: 15%; width: 100px; animation-duration: 95s; animation-delay: -60s; opacity: 0.8; }
+
+@keyframes sc-phrase-qui-dit-non-nuage {
+  from { left: -170px; }
+  to { left: calc(100% + 30px); }
+}
+
+/* LA LANTERNE DU PORTIQUE : sa flamme vacille. */
+.sc-phrase-qui-dit-non__halo {
+  position: absolute;
+  left: 69.5%;
+  top: 11%;
+  width: 150px;
+  height: 150px;
+  margin: -75px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 210, 110, 0.7), rgba(255, 190, 80, 0) 65%);
+  animation: sc-detective-du-verbe-vacille 1.6s ease-in-out infinite alternate;
+}
+
+.sc-phrase-qui-dit-non__papillon {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 40px;
+  animation: sc-phrase-qui-dit-non-vol 14s ease-in-out var(--delai) infinite;
+}
+
+@keyframes sc-phrase-qui-dit-non-vol {
+  0%, 100% { transform: translate(0, 0) rotate(-6deg); }
+  25% { transform: translate(60px, -30px) rotate(8deg); }
+  50% { transform: translate(20px, -60px) rotate(-4deg); }
+  75% { transform: translate(-40px, -20px) rotate(6deg); }
+}
+
+.sc-phrase-qui-dit-non__aile {
+  transform-box: view-box;
+  transform-origin: 20px 15px;
+  animation: sc-phrase-qui-dit-non-bat 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-bat {
+  to { transform: scaleX(0.3); }
+}
+
+.sc-phrase-qui-dit-non__fleur {
+  position: absolute;
+  left: var(--x);
+  bottom: -4px;
+  width: 30px;
+  transform-origin: 50% 100%;
+  animation: sc-phrase-qui-dit-non-fleur 3.4s ease-in-out var(--delai) infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-fleur {
+  from { transform: rotate(-7deg); }
+  to { transform: rotate(7deg); }
+}
+
+/* LA PHRASE, BULLE DE PAROLE de la couverture : crème, bord sombre, une pointe. */
+.sc-phrase-qui-dit-non .non__phrase { position: relative; border-radius: 26px; background: #fffaf0; }
+.sc-phrase-qui-dit-non .non__phrase:not(.est-fautive) { border-color: #3b2a1a; }
+
+.sc-phrase-qui-dit-non .non__phrase::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  bottom: -20px;
+  width: 26px;
+  height: 22px;
+  background: #fffaf0;
+  border-left: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  color: #3b2a1a;
+  transform: skewX(30deg);
+  border-bottom-left-radius: 6px;
+}
+
+.sc-phrase-qui-dit-non .non__phrase.est-fautive::after { color: var(--danger); }
+
+/* « NE » ET « PAS » EN ROUGE dans la phrase écrite, comme dans les bulles de la couverture. */
+.sc-phrase-qui-dit-non__rouge {
+  display: inline-block;
+  color: #e5383b;
+  font-weight: 700;
+  animation: sc-phrase-qui-dit-non-rouge 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.2s both;
+}
+
+@keyframes sc-phrase-qui-dit-non-rouge {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* LES ÉTIQUETTES « NE » ET « N’ » : des poteaux indicateurs en bois. */
+.sc-phrase-qui-dit-non .non__etiquette.scene__carte {
+  min-height: 60px;
+  border: 3px solid #7a4a22;
+  border-radius: 10px 26px 26px 10px;
+  background: linear-gradient(180deg, #f0cf9c, #dca866);
+  color: #3b2412;
+  box-shadow: 0 5px 0 #7a4a22, 0 10px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sc-phrase-qui-dit-non .non__etiquette.scene__carte.est-choisie {
+  outline: 4px solid #ffd23f;
+  outline-offset: 2px;
+}
+
+.sc-phrase-qui-dit-non__queue {
+  transform-box: fill-box;
+  transform-origin: 0 100%;
+  animation: sc-phrase-qui-dit-non-queue 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-queue {
+  from { transform: rotate(-10deg); }
+  to { transform: rotate(10deg); }
+}
+
+/* LE PANNEAU ROUGE : caché, il jaillit quand la phrase dit non. */
+.sc-phrase-qui-dit-non__panneau {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: translateY(30px) scale(0.5);
+  transition: opacity 0.2s, transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+[data-humeur="bravo"] .sc-phrase-qui-dit-non__panneau {
+  opacity: 1;
+  transform: none;
+  animation: sc-phrase-qui-dit-non-agite 0.4s ease-in-out 0.4s 4 alternate;
+}
+
+@keyframes sc-phrase-qui-dit-non-agite {
+  from { transform: rotate(-8deg); }
+  to { transform: rotate(8deg); }
+}
+
+.sc-phrase-qui-dit-non__non {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  fill: #fff;
+}
+
+.sc-phrase-qui-dit-non__tete { transform-box: fill-box; transform-origin: 50% 90%; }
+[data-humeur="bravo"] .sc-phrase-qui-dit-non__tete { animation: sc-phrase-qui-dit-non-secoue 0.28s ease-in-out 0.3s 6 alternate; }
+[data-humeur="encourage"] .sc-phrase-qui-dit-non__tete { animation: sc-un-ou-des-penche 1.2s ease-in-out both; }
+
+@keyframes sc-phrase-qui-dit-non-secoue {
+  from { transform: rotate(-9deg); }
+  to { transform: rotate(9deg); }
+}
+
+/* ---------- LA ROUE DES VERBES ---------- */
+
+.sc-roue-des-verbes .sc-roue-des-verbes__scene { gap: 18px 26px; }
+
+.sc-roue-des-verbes__guirlande {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: space-around;
+  height: 40px;
+  border-top: 3px solid rgba(122, 74, 34, 0.9);
+  pointer-events: none;
+}
+
+.sc-roue-des-verbes__guirlande > span {
+  width: 26px;
+  height: 30px;
+  background: #e5533d;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: 50% 0;
+  animation: sc-un-ou-des-fanion 2.6s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.3s);
+}
+
+.sc-roue-des-verbes__guirlande > span:nth-child(4n+2) { background: #f7d038; }
+.sc-roue-des-verbes__guirlande > span:nth-child(4n+3) { background: #1e88e5; }
+.sc-roue-des-verbes__guirlande > span:nth-child(4n) { background: #43a047; }
+
+.sc-roue-des-verbes__roue {
+  width: 260px;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.4));
+}
+
+/* LA ROUE FAIT PLUSIEURS TOURS, puis s'arrête sur le pronom de la manche. */
+.sc-roue-des-verbes__elan {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  animation: sc-roue-des-verbes-elan 1.7s cubic-bezier(0.15, 0.75, 0.25, 1) both;
+}
+
+@keyframes sc-roue-des-verbes-elan {
+  from { transform: rotate(-900deg); }
+  to { transform: rotate(0); }
+}
+
+.sc-roue-des-verbes__manche {
+  transform-box: view-box;
+  transform-origin: 77px 76px;
+  animation: sc-roue-des-verbes-levier 0.9s ease-in-out both;
+}
+
+@keyframes sc-roue-des-verbes-levier {
+  0% { transform: rotate(0); }
+  30% { transform: rotate(75deg); }
+  100% { transform: rotate(0); }
+}
+
+.sc-roue-des-verbes__part { stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.5; }
+
+.sc-roue-des-verbes__part.est-tiree {
+  stroke: #fff6c2;
+  stroke-width: 3.5;
+  filter: brightness(1.15);
+}
+
+.sc-roue-des-verbes__pronom {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 2.2px;
+}
+
+.sc-roue-des-verbes__ampoule {
+  fill: #ffe9a8;
+  animation: sc-roue-des-verbes-ampoule 1.4s steps(1) infinite;
+}
+
+.sc-roue-des-verbes__ampoule.est-b { animation-delay: -0.7s; }
+
+@keyframes sc-roue-des-verbes-ampoule {
+  0% { fill: #ffe9a8; }
+  50% { fill: #fff8de; filter: drop-shadow(0 0 3px #ffe680); }
+}
+
+/* LA RÉPONSE DONNÉE : les ampoules s'allument en farandole. */
+.sc-roue-des-verbes__roue.est-gagnee .sc-roue-des-verbes__ampoule {
+  animation: sc-roue-des-verbes-farandole 0.9s linear infinite;
+  animation-delay: calc(var(--n) * 0.056s);
+}
+
+@keyframes sc-roue-des-verbes-farandole {
+  0%, 30% { fill: #fff; filter: drop-shadow(0 0 5px #ffd23f); }
+  31%, 100% { fill: #c98a12; filter: none; }
+}
+
+.sc-roue-des-verbes__fleche {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: sc-roue-des-verbes-cliquet 0.14s ease-in-out 1.2s 4 alternate;
+}
+
+@keyframes sc-roue-des-verbes-cliquet {
+  from { transform: rotate(0); }
+  to { transform: rotate(-10deg); }
+}
+
+/* LA CARTE DU VERBE : un panneau de bois, l'intérieur crème. */
+.sc-roue-des-verbes .sc-roue-des-verbes__carte {
+  border: 5px solid #7a4a22;
+  background: #fff8e6;
+  box-shadow: 0 0 0 3px #e3b33e, 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+.sc-roue-des-verbes__moment {
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  vertical-align: -5px;
+}
+
+.sc-roue-des-verbes__forme { white-space: nowrap; }
+
+/* LA TERMINAISON S'ALLUME : c'est elle qui change avec le pronom. */
+.sc-roue-des-verbes__fin {
+  display: inline-block;
+  padding: 0 3px;
+  border-radius: 6px;
+  background: #ffe8a3;
+  color: #c62828;
+  animation: sc-roue-des-verbes-fin 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.15s both;
+}
+
+.sc-roue-des-verbes__fin--entiere { color: #7a1f12; }
+
+@keyframes sc-roue-des-verbes-fin {
+  from { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.25); opacity: 1; }
+  to { transform: scale(1); }
+}
+
+/* LES TICKETS DE MANÈGE, suspendus à leur fil. */
+.sc-roue-des-verbes__tickets {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 24px;
+  margin: 4px 0 0;
+  padding: 14px 10px 6px;
+  list-style: none;
+}
+
+.sc-roue-des-verbes__tickets::before {
+  content: "";
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  top: 4px;
+  height: 3px;
+  border-radius: 3px;
+  background: #7a4a22;
+}
+
+.sc-roue-des-verbes__fil {
+  position: relative;
+  padding-top: 18px;
+  transform-origin: 50% 0;
+  animation:
+    sc-roue-des-verbes-arrivee 0.45s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.3s + var(--i) * 0.1s) both,
+    sc-roue-des-verbes-balance 3.2s ease-in-out calc(0.8s + var(--i) * 0.4s) infinite alternate;
+}
+
+.sc-roue-des-verbes__fil::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: #7a4a22;
+}
+
+@keyframes sc-roue-des-verbes-arrivee {
+  from { opacity: 0; transform: translateY(-30px) rotate(-10deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-roue-des-verbes-balance {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+.sc-roue-des-verbes__ticket {
+  position: relative;
+  min-width: 130px;
+  min-height: 64px;
+  padding: 10px 28px;
+  border: none;
+  background:
+    radial-gradient(circle at 0 50%, transparent 10px, #ffd23f 11px) left / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 50%, transparent 10px, #ffd23f 11px) right / 51% 100% no-repeat;
+  font-family: 'Outfit', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #7a1f12;
+  cursor: pointer;
+  filter: drop-shadow(0 5px 0 #c98a12) drop-shadow(0 8px 10px rgba(0, 0, 0, 0.3));
+  transition: transform 0.15s ease;
+}
+
+.sc-roue-des-verbes__ticket::after {
+  content: "";
+  position: absolute;
+  inset: 7px 18px;
+  border: 2px dashed rgba(122, 31, 18, 0.45);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.sc-roue-des-verbes__ticket:hover:not(:disabled) { transform: translateY(-3px) rotate(-2deg); }
+.sc-roue-des-verbes__ticket:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* UN TICKET FAUX : barré et terni, jamais la couleur seule. */
+.sc-roue-des-verbes__ticket.est-faux {
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+  opacity: 0.5;
+  filter: grayscale(0.85);
+  cursor: default;
+  animation: sc-roue-des-verbes-tremble 0.45s ease-in-out;
+}
+
+@keyframes sc-roue-des-verbes-tremble {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.sc-roue-des-verbes__rayons {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+}
+
+.sc-roue-des-verbes__verre { transition: fill 0.3s; }
+
+[data-humeur="bravo"] .sc-roue-des-verbes__rayons {
+  opacity: 1;
+  animation: sc-roue-des-verbes-rayons 4s linear infinite;
+}
+
+[data-humeur="bravo"] .sc-roue-des-verbes__verre {
+  fill: #ffe14d;
+  filter: drop-shadow(0 0 12px #ffd23f);
+}
+
+@keyframes sc-roue-des-verbes-rayons {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 620px) {
+  .sc-roue-des-verbes__roue { width: 210px; }
+  .sc-roue-des-verbes__ticket { min-width: 100px; font-size: 25px; padding: 8px 22px; }
+}
+
+/* ---------- MOUVEMENT RÉDUIT : tout s'arrête, rien ne se perd ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-cp-ce1-francais *,
+  .sc-cp-ce1-francais *::before,
+  .sc-cp-ce1-francais *::after,
+  .sc-cp-ce1-francais__mascotte *,
+  .sc-cp-ce1-francais__decor * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Les éclats de la fête n'ont plus de chemin : on ne les montre pas. */
+  .sc-cp-ce1-francais__fete,
+  .sc-cp-ce1-francais__aureole,
+  .sc-cp-ce1-francais__coeur,
+  .sc-mots-eclair__flash,
+  .sc-atelier-syllabes__fumee,
+  .sc-mots-eclair__trainee,
+  .sc-mots-eclair__carte-volante,
+  .sc-peche-aux-sons__bulle,
+  .sc-atelier-syllabes__note { display: none; }
+
+  /* Ce qui n'apparaissait qu'au bout d'une animation reste visible, immobile. */
+  .sc-detective-du-verbe__pas { opacity: 0.7; }
+  .sc-un-ou-des__voiture { left: 30%; }
+  .sc-phrase-qui-dit-non__nuage--a { left: 20%; }
+  .sc-phrase-qui-dit-non__nuage--b { left: 60%; }
+  .sc-peche-aux-sons__banc--a { left: 8%; }
+  .sc-peche-aux-sons__banc--b { left: 60%; }
+}

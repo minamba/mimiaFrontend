@@ -9,8 +9,16 @@ import {
 import { DEFI } from '../../lib/jeux/coeurs';
 import { useJeuOuvert } from '../../lib/jeux/contexteJeu';
 import { IMAGES_SECONDAIRE } from '../../lib/jeux/imagesSecondaire.js';
+import { SCENES } from './scenes';
 import useAmbiance, { DERNIERE_MINUTE_MS, adresseAmbiance } from '../../lib/jeux/ambiance.js';
+import { REPERES_ESCAPE } from '../../lib/jeux/reperesEscape.js';
+import { bruitage } from '../../lib/jeux/bruitages';
+import { repliquesEscape, sansRang } from '../../lib/jeux/escapeTextes.js';
+import useVoixJeu from '../../lib/jeux/voix/useVoixJeu';
 import jeuSimple from './JeuSimple';
+import {
+  classeQuestion, designer, question, questionFrancais,
+} from './scenes/base';
 
 /**
  * LES ÉCRANS DES JEUX DU COLLÈGE — voir `lib/jeux/college/index.js`.
@@ -22,35 +30,6 @@ import jeuSimple from './JeuSimple';
  * LA QUESTION GARDE SES RETOURS À LA LIGNE : un programme du robot, un
  * tableau de valeurs, un extrait de texte s'écrivent sur plusieurs lignes.
  */
-/**
- * LES QUESTIONS SUR PLUSIEURS LIGNES S'ALIGNENT À GAUCHE, et le CODE garde ses
- * espaces de début de ligne (07/10/2026) : en Python, l'indentation fait
- * partie du programme — « pre-line » l'effaçait, et une boucle devenait
- * illisible. Est du code une question dont une ligne commence par des
- * espaces, ou qui porte un mot-clé de programme.
- */
-function classeQuestion(texte) {
-  const q = String(texte ?? '');
-  const lignes = q.includes('\n');
-  const code = lignes && (/\n[ \t\u00a0]+\S/.test(q) || /\b(def|for|while|print|range|append)\b/.test(q));
-  return `phrase-a-trou college__question${lignes ? ' college__question--lignes' : ''}${code ? ' college__question--code' : ''}`;
-}
-
-const question = (m) => <p className={classeQuestion(m.question)}>{m.question}</p>;
-
-/**
- * EN FRANÇAIS, LE MOT À ANALYSER EST ENTRE CROCHETS dans la question
- * (« Le chat [mange] la souris. ») : on le souligne au lieu de montrer les
- * crochets. Pas en maths, où [AB] est un segment et doit rester écrit tel quel.
- */
-function designer(texte) {
-  return String(texte).split(/(\[[^\]]+\])/).map((morceau, i) => (/^\[[^\]]+\]$/.test(morceau)
-    // eslint-disable-next-line react/no-array-index-key
-    ? <strong key={i} className="college__designe">{morceau.slice(1, -1)}</strong>
-    : morceau));
-}
-
-const questionFrancais = (m) => <p className={classeQuestion(m.question)}>{designer(m.question)}</p>;
 
 /**
  * LE CODE DU CADENAS, case par case : les pièces déjà trouvées, celle de
@@ -97,7 +76,7 @@ const PartieEscape = createContext(null);
  * au dernier cœur ; en tranquille, il affiche « Temps écoulé » et l'élève
  * finit quand même.
  */
-function useCompteARebours(m, termine, duree) {
+function useCompteARebours(m, termine, duree, attente = false) {
   const partie = useContext(PartieEscape);
 
   if (m.cadenas.avant.length === 0 && partie.premiere !== m) {
@@ -106,6 +85,8 @@ function useCompteARebours(m, termine, duree) {
     partie.fin = null;
     partie.signale = false;
   }
+  // Tant que la mission s'affiche, le temps ne court pas : le départ recule avec l'horloge.
+  if (attente) partie.debut = Date.now();
   const derniere = m.cadenas.avant.length === m.cadenas.total - 1;
   if (derniere && termine && partie.fin == null) partie.fin = Date.now();
   const arrete = partie.fin != null;
@@ -186,15 +167,6 @@ function Duree({ duree }) {
 }
 
 /**
- * LA SCÈNE D'UN ESCAPE GAME : le décor et la mission avant le premier cadenas,
- * le compte à rebours, le récit de l'étape, sa question, le code qui se
- * remplit — et, le dernier cadenas ouvert, ce que l'élève a sauvé, et en
- * combien de temps.
- *
- * L'ANNONCE DU CHRONO EST AFFICHÉE, JAMAIS DITE : ses mots dépendent du mode
- * et de la classe, et une phrase dite doit être fixe pour être enregistrée.
- */
-/**
  * L'AMBIANCE DE L'HISTOIRE (09/10/2026) : une boucle de bruits naturels qui joue
  * tant que la partie dure, et le bouton qui la coupe — voir `lib/jeux/ambiance.js`.
  */
@@ -214,39 +186,252 @@ function Ambiance({ url, finale, resteMs: reste }) {
   );
 }
 
-function SceneEscape({
-  m, termine, intro, fin, duree, francais, ambiance,
-}) {
-  const { mode } = useJeuOuvert();
-  const premiere = m.cadenas.avant.length === 0;
-  const derniere = m.cadenas.avant.length === m.cadenas.total - 1;
-  const { partie, reste, arrete } = useCompteARebours(m, termine, duree);
-  // La dernière minute d'une partie en cours : la musique de fin remplace l'ambiance.
-  const finale = !arrete && reste > 0 && reste <= DERNIERE_MINUTE_MS;
+/**
+ * LE RÉCIT QUI S'ÉCRIT À LA MACHINE — l'énigme se dévoile lettre à lettre,
+ * comme dans les escape games en ligne que Camara a montrés (09/10/2026). Un
+ * clic l'écrit d'un coup ; un lecteur d'écran lit tout le texte dès le début ;
+ * qui a demandé moins d'animations à son système l'a d'emblée en entier.
+ */
+const sansAnimation = () => typeof window === 'undefined'
+  || typeof window.matchMedia !== 'function'
+  || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function Machine({ texte, className = 'exploration__recit' }) {
+  const t = String(texte ?? '');
+  const [n, setN] = useState(() => (sansAnimation() ? t.length : 0));
+  useEffect(() => {
+    if (sansAnimation()) {
+      setN(t.length);
+      return undefined;
+    }
+    setN(0);
+    const id = setInterval(() => setN((k) => {
+      if (k >= t.length) {
+        clearInterval(id);
+        return k;
+      }
+      return k + 2;
+    }), 28);
+    return () => clearInterval(id);
+  }, [t]);
+  const fini = n >= t.length;
+  // Écrit en entier : le texte une seule fois, sans le double réservé au lecteur d'écran.
+  if (fini) return <p className={className}>{t}</p>;
   return (
-    <div className="escape">
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
+    <p className={className} onClick={() => setN(t.length)}>
+      <span className="visuellement-cache">{t}</span>
+      <span aria-hidden="true">
+        {t.slice(0, n)}
+        {!fini && <span className="exploration__curseur" />}
+      </span>
+    </p>
+  );
+}
+
+/**
+ * Faute de repères pour un décor : six places réparties dans la salle, et la
+ * porte au fond. Ne devrait servir que le temps de repérer un décor nouveau.
+ */
+const PLACES_PAR_DEFAUT = [
+  { x: 16, y: 56, nom: 'le coin de gauche' },
+  { x: 32, y: 38, nom: 'le mur du fond, à gauche' },
+  { x: 48, y: 66, nom: 'le centre de la salle' },
+  { x: 66, y: 40, nom: 'le mur du fond, à droite' },
+  { x: 84, y: 58, nom: 'le coin de droite' },
+  { x: 30, y: 78, nom: 'le sol, devant toi' },
+];
+const PORTE_PAR_DEFAUT = { x: 50, y: 28, nom: 'la porte' };
+
+/** L'inventaire : chaque cadenas ouvert y range sa pièce, et l'objet où on l'a trouvée. */
+function Inventaire({ objets, pieces, total }) {
+  return (
+    <aside className="exploration__inventaire" aria-label={`Inventaire : ${pieces.length} pièce${pieces.length > 1 ? 's' : ''} sur ${total}`}>
+      <p className="exploration__inventaire-titre">Inventaire</p>
+      <ol className="exploration__cases">
+        {Array.from({ length: total }, (_, i) => (
+          <li
+            // eslint-disable-next-line react/no-array-index-key
+            key={i}
+            className={`exploration__case${i < pieces.length ? ' est-pleine' : ''}${i === pieces.length - 1 ? ' est-nouvelle' : ''}`}
+          >
+            {i < pieces.length ? (
+              <>
+                <span className="exploration__lettre">{pieces[i]}</span>
+                <span className="exploration__provenance">{objets[i]?.nom}</span>
+              </>
+            ) : <span className="exploration__vide" aria-hidden="true">?</span>}
+          </li>
+        ))}
+      </ol>
+    </aside>
+  );
+}
+
+/**
+ * LA SALLE À FOUILLER — Camara, le 09/10/2026, captures d'escape games en
+ * ligne à l'appui : « des mouvements dans des pièces, des choses à
+ * sélectionner ». Le décor de l'histoire devient une salle : six objets réels
+ * y sont repérés (`reperesEscape.js`), un par cadenas. Celui du cadenas en
+ * cours brille ; un clic zoome sur lui et ouvre son énigme, dont le récit
+ * s'écrit à la machine. Chaque cadenas ouvert range sa pièce dans
+ * l'inventaire ; les six ouverts, la porte s'éclaire et l'on sort.
+ *
+ * DANS L'ORDRE DU RÉCIT, un objet après l'autre : les étapes se suivent dans
+ * l'histoire, et la voix dit « le premier cadenas », « le deuxième »… Les
+ * objets suivants restent visibles, fermés : on voit ce qui reste à fouiller.
+ *
+ * LA MISSION D'ABORD : l'intro de l'histoire et la règle du chrono, sur une
+ * carte. Le compte à rebours ne part qu'au clic sur « Commencer l'enquête ».
+ */
+function SalleEscape({
+  etat, histoire, duree, ambiance, image, reperes, module, niveau,
+}) {
+  const {
+    courante: m, manche, termine, enquete, ouvrir, enigme, sortie, sortir,
+  } = etat;
+  const { mode } = useJeuOuvert();
+  const [commence, setCommence] = useState(false);
+  const mission = !commence && manche === 0 && !enquete;
+  const { partie, reste, arrete } = useCompteARebours(m, termine, duree, mission);
+
+  // LA MISSION EST LUE — Camara, le 09/10/2026 : l'intro de l'histoire, puis
+  // l'annonce du chrono. « Commencer l'enquête » coupe la lecture : la voix de
+  // l'énigme prend la suite (`JeuDeChoix`).
+  const voixMission = useVoixJeu(module.FAMILLE.matiereCode);
+  const { dire: direMission, arreter: arreterMission } = voixMission;
+  const defi = mode === DEFI;
+  useEffect(() => {
+    if (!mission) return;
+    const cle = module.FAMILLE.cle;
+    direMission([
+      ...(histoire.intro ? [repliquesEscape.intro(cle, module, niveau)] : []),
+      repliquesEscape.annonce(cle, duree / 60, defi),
+    ]);
+    // Une fois, à l'ouverture de la mission.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mission]);
+  const finale = !arrete && reste > 0 && reste <= DERNIERE_MINUTE_MS;
+
+  const objets = reperes?.objets?.length === m.cadenas.total ? reperes.objets : PLACES_PAR_DEFAUT;
+  const porte = reperes?.porte ?? PORTE_PAR_DEFAUT;
+  const ici = objets[manche] ?? objets[0];
+  const pieces = [...m.cadenas.avant, ...(termine ? [m.cadenas.piece] : [])];
+
+  const fouiller = () => {
+    bruitage('selection');
+    ouvrir();
+  };
+  const franchir = () => {
+    bruitage('selection');
+    sortir();
+  };
+
+  return (
+    <div className={`exploration${enquete ? ' est-en-enquete' : ''}${mission ? ' est-en-mission' : ''}`}>
       <div className="escape__barre">
         <Chrono m={m} termine={termine} duree={duree} partie={partie} reste={reste} arrete={arrete} />
         <Ambiance url={ambiance} finale={finale} resteMs={reste} />
       </div>
-      {premiere && intro && <p className="escape__intro">{intro}</p>}
-      {premiere && (
-        <p className="escape__annonce">
-          {`Tu as ${duree / 60} minutes pour ouvrir les six cadenas. `}
-          {mode === DEFI ? 'À zéro, l’alarme gagne !' : 'À zéro, tu pourras quand même finir.'}
-        </p>
-      )}
-      <p className="escape__recit">{m.recit}</p>
-      <p className={classeQuestion(m.question)}>{francais ? designer(m.question) : m.question}</p>
-      <Cadenas cadenas={m.cadenas} ouvert={termine} />
-      {derniere && termine && fin && <p className="escape__fin" role="status">{fin}</p>}
-      {derniere && termine && <Duree duree={duree} />}
+
+      <div className="exploration__corps">
+        <div className="exploration__piece" style={image ? { backgroundImage: `url(${image})` } : undefined}>
+          <span className="exploration__poussiere" aria-hidden="true" />
+          {objets.map((o, i) => {
+            const etatObjet = i < pieces.length ? 'fouille' : (i === manche && !sortie ? 'a-fouiller' : 'ferme');
+            const actif = etatObjet === 'a-fouiller' && !enquete && !mission;
+            return (
+              <button
+                // eslint-disable-next-line react/no-array-index-key
+                key={i}
+                type="button"
+                className={`exploration__objet est-${etatObjet}`}
+                style={{ left: `${o.x}%`, top: `${o.y}%` }}
+                onClick={actif ? fouiller : undefined}
+                disabled={!actif}
+                aria-label={etatObjet === 'a-fouiller' ? `Fouiller ${o.nom}` : `${o.nom} : ${etatObjet === 'fouille' ? 'cadenas ouvert' : 'pas encore'}`}
+              >
+                <span className="exploration__icone" aria-hidden="true">
+                  {etatObjet === 'fouille' ? '✓' : (etatObjet === 'a-fouiller' ? '🔍' : '🔒')}
+                </span>
+                {etatObjet === 'a-fouiller' && <span className="exploration__etiquette" aria-hidden="true">{o.nom}</span>}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            className={`exploration__porte${sortie ? ' est-ouverte' : ''}`}
+            style={{ left: `${porte.x}%`, top: `${porte.y}%` }}
+            onClick={sortie ? franchir : undefined}
+            disabled={!sortie}
+            aria-label={sortie ? `Sortir par ${porte.nom}` : `${porte.nom} : fermée par six cadenas`}
+          >
+            <span aria-hidden="true">{sortie ? '🚪' : '🔐'}</span>
+          </button>
+
+          {sortie && (
+            <div className="exploration__sortie" role="status">
+              <Cadenas cadenas={m.cadenas} ouvert />
+              {histoire.fin && <p className="escape__fin">{histoire.fin}</p>}
+              <Duree duree={duree} />
+              <button type="button" className="btn btn--principal" onClick={franchir}>
+                {`Sortir par ${porte.nom}`}
+              </button>
+            </div>
+          )}
+
+          {/* Les fiches s'ouvrent dans la salle, centrées sur elle. */}
+          {mission && (
+            <div className="exploration__voile">
+              <div className="exploration__fiche exploration__fiche--mission">
+                <p className="exploration__titre">{histoire.titre}</p>
+                {histoire.intro && <Machine texte={histoire.intro} />}
+                <p className="escape__annonce">
+                  {`Tu as ${duree / 60} minutes pour ouvrir les six cadenas. `}
+                  {mode === DEFI ? 'À zéro, l’alarme gagne !' : 'À zéro, tu pourras quand même finir.'}
+                </p>
+                <p className="exploration__conseil">Fouille la salle : l’objet qui brille cache le premier cadenas.</p>
+                <button
+                  type="button"
+                  className="btn btn--principal"
+                  onClick={() => {
+                    bruitage('selection');
+                    arreterMission();
+                    setCommence(true);
+                  }}
+                >
+                  Commencer l’enquête
+                </button>
+              </div>
+            </div>
+          )}
+          {enigme && (
+            <div className="exploration__voile exploration__voile--enigme" style={{ '--ox': `${ici.x}%`, '--oy': `${ici.y}%` }}>
+              <div className="exploration__fiche" role="dialog" aria-modal="true" aria-label={`Le cadenas caché dans ${ici.nom}`}>
+                <p className="exploration__lieu">
+                  <span className="exploration__numero">{String(manche + 1).padStart(2, '0')}</span>
+                  {ici.nom}
+                </p>
+                {enigme}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Inventaire objets={objets} pieces={pieces} total={m.cadenas.total} />
+      </div>
+
+
     </div>
   );
 }
 
-const sceneEscape = ({ intro, fin }, francais, duree, ambiance) => (m, termine) => (
-  <SceneEscape m={m} termine={termine} intro={intro} fin={fin} duree={duree} francais={francais} ambiance={ambiance} />
+/** Dans la salle, l'énigme : le récit de l'objet, à la machine, puis la question. */
+const enigmeEscape = (francais) => (m) => (
+  <div className="exploration__enigme">
+    <Machine texte={sansRang(m.recit)} />
+    <p className={classeQuestion(m.question)}>{francais ? designer(m.question) : m.question}</p>
+  </div>
 );
 
 /**
@@ -262,9 +447,28 @@ function ecranDuModule(module) {
     module,
     prefixe: cle,
     classe: `jeu--college jeu--${cle}${module.ESCAPE ? ' jeu--escape' : ''}`,
-    rendreQuestion: module.ESCAPE
-      ? sceneEscape(module.PAR_CLASSE[niveau], francais, dureeEscape(niveau), adresseAmbiance(cle, niveau))
-      : (francais ? questionFrancais : question),
+    rendreQuestion: module.ESCAPE ? enigmeEscape(francais) : (SCENES[cle]?.question ?? (francais ? questionFrancais : question)),
+    // UNE SCÈNE PROPRE AU JEU (09/10/2026) : voir `scenes/index.js`.
+    rendreApres: SCENES[cle]?.apres,
+    objets: SCENES[cle]?.objets,
+    rendreLesChoix: SCENES[cle]?.choix,
+    // UN ESCAPE GAME SE JOUE DANS SA SALLE (09/10/2026) : voir `SalleEscape`.
+    // L'annonce du chrono y est affichée, jamais dite : ses mots dépendent du
+    // mode et de la classe, et une phrase dite doit être fixe pour être enregistrée.
+    salle: module.ESCAPE
+      ? (etat) => (
+        <SalleEscape
+          etat={etat}
+          histoire={module.PAR_CLASSE[niveau]}
+          module={module}
+          niveau={niveau}
+          duree={dureeEscape(niveau)}
+          ambiance={adresseAmbiance(cle, niveau)}
+          image={IMAGES_SECONDAIRE[`${cle}|${niveau}`]?.fond}
+          reperes={REPERES_ESCAPE[`${cle}|${niveau}`]}
+        />
+      )
+      : undefined,
     niveau,
     // Le fond peint de ce jeu dans cette classe, s'il existe (08/10/2026).
     fond: IMAGES_SECONDAIRE[`${cle}|${niveau}`]?.fond,

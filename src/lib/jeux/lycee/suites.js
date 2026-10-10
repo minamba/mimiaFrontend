@@ -20,6 +20,14 @@
  *     q − 1 oubliée ;
  *   - le sens de variation. PIÈGES : un premier terme négatif (q = 2 et u₀ < 0
  *     donne une suite DÉCROISSANTE), une raison négative.
+ *
+ * LE DESSIN (09/10/2026) : les termes généraux portent un `visuel`, le terme
+ * donné et les deux suivants placés (on voit qu'on ajoute, ou qu'on multiplie,
+ * à chaque pas) — jamais le terme cherché ; la raison, les deux termes de la
+ * question ; la somme arithmétique, tous les termes de u₀ à uₙ. Rien pour la
+ * récurrence (chaque terme placé serait une étape du calcul demandé), ni pour
+ * la nature et le sens de variation : les termes dessinés donneraient la
+ * réponse d'un coup d'œil. Rien non plus pour les formules en n.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -102,7 +110,7 @@ const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
 
 /** Une manche : la bonne réponse, ses pièges nommés (jamais justes), des voisins s'il en manque. */
 function manche(melanger, {
-  consigne, question, bonne, pieges = [], voisin,
+  consigne, question, bonne, pieges = [], voisin, visuel,
 }) {
   const b = String(bonne);
   const valides = pieges.filter(([v]) => v !== null && v !== undefined && String(v) !== b);
@@ -112,8 +120,29 @@ function manche(melanger, {
     const c = String(v);
     if (liste.includes(c) && !(c in table)) table[c] = phrase;
   });
-  return {
+  const m = {
     consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table,
+  };
+  if (visuel) m.visuel = visuel;
+  return m;
+}
+
+/** Un repère qui part du rang 0, jusqu'au rang xmax, et montre ces valeurs et l'axe. */
+function repere(xmax, valeurs) {
+  const lo = Math.min(0, ...valeurs);
+  const hi = Math.max(0, ...valeurs);
+  const air = Math.max(1, (hi - lo) * 0.12);
+  return {
+    xmin: -0.5, xmax, ymin: Math.floor(lo - air), ymax: Math.ceil(hi + air),
+  };
+}
+
+/** Le dessin : des termes placés, chacun avec son nom (u₃…). */
+function places(termes) {
+  return {
+    type: 'courbe',
+    fenetre: repere(Math.max(...termes.map(([n]) => n)) + 1, termes.map(([, v]) => v)),
+    points: termes.map(([n, v]) => ({ x: n, y: v, etiquette: u(n) })),
   };
 }
 
@@ -188,6 +217,7 @@ function arithmetique({ au, entre, melanger }) {
     bonne: nb(bonne),
     pieges: [[nb(decale), 'premier-rang'], [nb((n - p) * r), 'terme-initial']],
     voisin: (j) => nb(bonne + j * r * 2),
+    visuel: places([0, 1, 2].map((j) => [p + j, up + j * r])),
   });
 }
 
@@ -208,6 +238,7 @@ function geometrique({ au, entre, melanger }) {
       [nb(up * q ** (e + (p === 1 ? 1 : -1))), 'premier-rang'],
     ]),
     voisin: (j) => nb(bonne * (j + 1) + j),
+    visuel: places([0, 1, 2].map((j) => [p + j, up * q ** j])),
   });
 }
 
@@ -227,6 +258,7 @@ function raison({ au, entre, melanger }) {
       bonne: nb(r),
       pieges: [[nb(uj - ui), 'raison-ecart-rangs'], [fr(d, uj - ui), 'raison-inverse-arithmetique']],
       voisin: (j) => nb(r + j),
+      visuel: places([[i, ui], [i + d, uj]]),
     });
   }
   const i = entre(0, 6);
@@ -239,6 +271,7 @@ function raison({ au, entre, melanger }) {
     bonne: nb(q),
     pieges: [[nb(un * q - un), 'raison-quotient'], [fr(1, q), 'raison-inverse-geometrique']],
     voisin: (j) => nb(q + (q > 0 ? j : -j)),
+    visuel: places([[i, un], [i + 1, un * q]]),
   });
 }
 
@@ -341,12 +374,15 @@ function somme({ au, entre, melanger }) {
   const n = entre(9, 19);
   const un = u0 + n * r;
   const bonne = ((n + 1) * (u0 + un)) / 2;
+  // Le dessin : tous les termes, de u₀ à uₙ — on les compte, on voit le premier et le dernier.
+  const termes = Array.from({ length: n + 1 }, (_, k) => u0 + k * r);
   return manche(melanger, {
     consigne: 'somme',
     question: `(uₙ) est arithmétique, ${u(0)} = ${u0} et r = ${r}. ${u(0)} + ${u(1)} + … + ${u(n)} = ?`,
     bonne: nb(bonne),
     pieges: [[nb((n * (u0 + un)) / 2), 'nombre-de-termes'], [nb((n + 1) * (u0 + un)), 'somme-moitie']],
     voisin: (j) => nb(bonne + 5 * j),
+    visuel: { type: 'courbe', fenetre: repere(n + 1, termes), suite: termes },
   });
 }
 

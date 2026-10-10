@@ -24,6 +24,13 @@
  *     base ; par le sommet et l'axe d'un cône, un triangle ;
  *   - FACES, ARÊTES, SOMMETS D'UNE PYRAMIDE : LES PIÈGES, oublier la base,
  *     oublier le sommet, ne compter que les arêtes de la base.
+ *
+ * LE VISUEL (09/10/2026) : seuls les calculs de volume (pyramide à base carrée
+ * ou rectangulaire, cône donné par son diamètre, coté de bord à bord) portent
+ * un `visuel` (voir `lib/jeux/visuels.js`), avec les cotes de l'énoncé. Le
+ * reste se lit sans dessin, et c'est voulu : montrer le solide donnerait la
+ * réponse d'un patron ou d'un portrait, et les comptes portent sur des solides
+ * sans mesures.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -48,9 +55,12 @@ export const MANCHES = 8;
 
 const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
 
-/** Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent. */
+/**
+ * Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent.
+ * Le `visuel`, s'il y en a un, passe tel quel : il ne tire rien au hasard.
+ */
 function manche(melanger, {
-  consigne, question, bonne, pieges = [], voisin,
+  consigne, question, bonne, pieges = [], voisin, visuel,
 }) {
   const b = String(bonne);
   const valides = pieges.filter(([v]) => v !== null && String(v) !== b);
@@ -61,7 +71,7 @@ function manche(melanger, {
     if (liste.includes(c) && !(c in table)) table[c] = phrase;
   });
   return {
-    consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table,
+    consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table, ...(visuel ? { visuel } : {}),
   };
 }
 
@@ -146,6 +156,7 @@ function volume4(sorte, { entre, melanger }) {
       bonne: `${v}π`,
       pieges: [[`${r * r * h}π`, 'oublier-le-tiers'], [`${4 * v}π`, 'rayon-ou-diametre']],
       voisin: (k) => `${v + k}π`,
+      visuel: { type: 'solide', forme: 'cone', cotes: { diametre: `${2 * r} cm`, hauteur: `${h} cm` } },
     });
   }
   let lo;
@@ -163,6 +174,13 @@ function volume4(sorte, { entre, melanger }) {
     bonne: (lo * l * h) / 3,
     pieges: [[lo * l * h, 'oublier-le-tiers'], [(lo * l * h) / 2, 'tiers-pas-moitie']],
     voisin: (k) => (lo * l * h) / 3 + k,
+    visuel: {
+      type: 'solide',
+      forme: 'pyramide',
+      cotes: sorte === 'carree'
+        ? { cote: `${lo} cm`, hauteur: `${h} cm` }
+        : { longueur: `${lo} cm`, largeur: `${l} cm`, hauteur: `${h} cm` },
+    },
   });
 }
 

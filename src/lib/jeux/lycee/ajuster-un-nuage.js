@@ -25,6 +25,13 @@
  *   - INTERPOLATION OU EXTRAPOLATION ;
  *   - LA PRÉVISION LA PLUS FIABLE (Tle) : à l'intérieur des relevés, pas au-delà ;
  *   - LA PRÉVISION LOINTAINE : fragile, jamais exacte.
+ *
+ * LE DESSIN (09/10/2026) : le point moyen porte un `visuel`, le nuage des
+ * relevés du tableau (sans G, qu'on cherche) ; le coefficient directeur, les
+ * points G et P et la droite qui les joint ; la prévision et le seuil, la
+ * droite d'ajustement de la question. Rien pour l'ordonnée à l'origine (la
+ * droite couperait l'axe juste à la valeur cherchée), ni pour les questions
+ * de fiabilité, qui n'ont pas de relevés à placer.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -72,7 +79,7 @@ const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
 
 /** Une manche à choix : la bonne réponse, ses pièges nommés, des voisins si deux se confondent. */
 function manche(melanger, {
-  consigne, question, bonne, pieges = [], voisin,
+  consigne, question, bonne, pieges = [], voisin, visuel,
 }) {
   const b = String(bonne);
   const valides = pieges.filter(([v]) => v !== null && v !== undefined && String(v) !== b);
@@ -82,10 +89,33 @@ function manche(melanger, {
     const c = String(v);
     if (liste.includes(c) && !(c in table)) table[c] = phrase;
   });
-  return {
+  const m = {
     consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table,
   };
+  if (visuel) m.visuel = visuel;
+  return m;
 }
+
+/**
+ * Le dessin : un repère de x = 0 à xmax qui contient ces ordonnées, avec de
+ * l'air. Le zéro des y n'y est pas forcé : des relevés de 60 à 90 resteraient
+ * écrasés en haut d'un repère qui partirait de 0.
+ */
+function repere(xmax, ys, extra = {}) {
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const air = Math.max(2, (hi - lo) * 0.15);
+  return {
+    type: 'courbe',
+    fenetre: {
+      xmin: 0, xmax, ymin: Math.floor(lo - air), ymax: Math.ceil(hi + air),
+    },
+    ...extra,
+  };
+}
+
+/** La droite y = ax + b dans un repère de 0 à xmax, ses deux bouts en vue. */
+const avecDroite = (a, b, xmax, ys = [], extra = {}) => repere(xmax, [b, a * xmax + b, ...ys], { droite: { a, b }, ...extra });
 
 const SERIES = [
   { titre: 'Chiffre d’affaires d’un garage (k€)', monte: true },
@@ -120,6 +150,7 @@ function pointMoyen(t) {
     bonne: point('G', xm, ym),
     pieges: t.melanger([[point('G', xm, milieu), 'moyenne-pas-milieu'], [point('G', ym, xm), 'coordonnees-ordre']]),
     voisin: (k) => point('G', xm, ym + k),
+    visuel: repere(n + 1, ys, { nuage: xs.map((x, i) => [x, ys[i]]) }),
   });
 }
 
@@ -138,6 +169,10 @@ function coefficient(t) {
     bonne: nb(dy / dx),
     pieges: t.melanger([[nb(dx / dy), 'coefficient-directeur'], [nb(dy), 'diviser-par-ecart']]),
     voisin: (k) => nb(dy / dx + k),
+    // La droite par G et P : y = yG + a (x − xG).
+    visuel: avecDroite(dy / dx, yg - (dy / dx) * xg, xg + dx + 1, [yg, yg + dy], {
+      points: [{ x: xg, y: yg, etiquette: 'G' }, { x: xg + dx, y: yg + dy, etiquette: 'P' }],
+    }),
   });
 }
 
@@ -173,6 +208,8 @@ function prevision(t) {
     bonne: nb(valeur(rang)),
     pieges: t.melanger([[nb(valeur(rang - 1)), 'rang-de-l-annee'], [nb(b * rang + a), 'coefficient-et-ordonnee']]),
     voisin: (k) => nb(valeur(rang) + k),
+    // Toujours jusqu'à x = 11 : une fenêtre taillée sur le rang le soufflerait.
+    visuel: avecDroite(a, b, 11),
   });
 }
 
@@ -188,6 +225,8 @@ function seuil(t) {
     bonne: nb(x0),
     pieges: t.melanger([[nb(a * y + b), 'equation-inverse'], [nb((y + b) / a), 'isoler-x']]),
     voisin: (k) => nb(x0 + k),
+    // Toujours jusqu'à x = 20 : une fenêtre taillée sur x0 soufflerait la réponse.
+    visuel: avecDroite(a, b, 20),
   });
 }
 

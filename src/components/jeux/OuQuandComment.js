@@ -2,10 +2,16 @@ import * as oqc from '../../lib/jeux/ouQuandComment';
 import { repliquesComplements } from '../../lib/jeux/voix/repliques';
 import JeuDeChoix from './JeuDeChoix';
 import ComplementsCM1 from './ComplementsCM1';
+import { sceneDe } from './scenes/ce2-francais';
+
+const SCENE = sceneDe('ou-quand-comment');
 
 /**
  * OÙ, QUAND, COMMENT ?, À L'ÉCRAN — la phrase, le groupe surligné, trois
- * questions. Toute la règle vit dans `ouQuandComment.js`.
+ * questions. Toute la règle vit dans `ouQuandComment.js`. L'univers de la
+ * couverture (le tableau à la craie, la lanterne, les trois cercles de craie
+ * qu'on touche ou qu'on glisse sur le groupe) vit dans
+ * `scenes/ce2-francais/Tableau.js` (09/10/2026).
  */
 const REGLE = {
   MANCHES: oqc.MANCHES,
@@ -16,6 +22,7 @@ const REGLE = {
   verdict: oqc.verdict,
   erreur: (p, type) => repliquesComplements.indice(type),
   aide: (p) => repliquesComplements.indice(p.type),
+  rendreLesChoix: SCENE.choix,
 };
 
 function OuQuandCommentAvantCM1(props) {
@@ -24,13 +31,8 @@ function OuQuandCommentAvantCM1(props) {
       {...props}
       regle={REGLE}
       classe="jeu--complements"
-      rendreQuestion={(p, termine) => (
-        <p className="phrase-a-trou">
-          {p.avant}{p.avant && ' '}
-          <mark className={`complement${termine ? ` complement--${p.type}` : ''}`}>{p.groupe}</mark>
-          {p.apres.startsWith(',') || p.apres === '.' ? '' : ' '}{p.apres}
-        </p>
-      )}
+      // La phrase et son groupe surligné, sur le tableau : voir la scène.
+      rendreQuestion={SCENE.question}
     />
   );
 }

@@ -35,9 +35,18 @@
  *     signe du trinôme, oublier un changement de sens ;
  *   - EXPLOITER UN TABLEAU DE VARIATIONS : LES PIÈGES, prendre l'extremum
  *     local pour l'extremum de l'intervalle, donner la position.
+ *
+ * LE DESSIN (09/10/2026) : la plupart des manches portent un `visuel` (voir
+ * `lib/jeux/visuels.js`), construit avec les valeurs mêmes de la question et
+ * sans aucun tirage — la même graine redonne la même partie. La courbe décrite
+ * en mots, le tableau de variations et la tangente sont dessinés (les lire,
+ * c'est le but) ; le tableau de valeurs devient un nuage de points ; pour un
+ * calcul (le nombre dérivé, le bénéfice), on montre la courbe sans marquer la
+ * réponse. Les dérivées à écrire n'ont pas de dessin : ce sont des calculs.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
+import { valeur as ordonneeEn } from '../visuels.js';
 
 export const FAMILLE = { cle: 'lire-un-graphique', titre: 'Lire un graphique', matiereCode: 'MATHS' };
 
@@ -114,6 +123,54 @@ function manche(melanger, {
 const intervalle = (a, b) => `[${nb(a)} ; ${nb(b)}]`;
 const point = (x, y) => `(${nb(x)} ; ${nb(y)})`;
 
+/* ------------------------------------------------------------ les dessins */
+
+// « + 0 » : jamais de −0, qu’un aller-retour JSON ne redonnerait pas.
+const arrondi = (x) => Math.round(x * 100) / 100 + 0;
+
+/** [a, b, c] (du plus haut degré au plus bas, comme `poly`) → la fonction dessinée. */
+const trace = (coefs, etiquette) => ({ forme: 'poly', coefs: [...coefs].reverse().map((c) => c + 0), ...(etiquette ? { etiquette } : {}) });
+
+/** Une fenêtre qui montre les fonctions sur [xmin ; xmax], les ordonnées `ys` et l'axe des x, avec de l'air. */
+function fenetre(xmin, xmax, fonctions, ys = []) {
+  const vus = [0, ...ys];
+  fonctions.forEach((f) => {
+    for (let i = 0; i <= 48; i += 1) {
+      const y = ordonneeEn(f, xmin + ((xmax - xmin) * i) / 48);
+      if (Number.isFinite(y)) vus.push(y);
+    }
+  });
+  const bas = Math.min(...vus);
+  const haut = Math.max(...vus);
+  const air = Math.max((haut - bas) * 0.1, 0.5);
+  return {
+    xmin: arrondi(xmin), xmax: arrondi(xmax), ymin: arrondi(bas - air), ymax: arrondi(haut + air),
+  };
+}
+
+/** Un dessin de courbes : la fenêtre se cale sur les fonctions et les points marqués. */
+const dessin = (xmin, xmax, fonctions, autres = {}) => ({
+  type: 'courbe',
+  fenetre: fenetre(xmin, xmax, fonctions, (autres.points ?? []).map((p) => p.y)),
+  fonctions,
+  ...autres,
+});
+
+/** Une ligne brisée par des points, chacun marqué de ses coordonnées (de la place à droite pour les écrire). */
+function lignePointee(xs, ys) {
+  const xmax = xs[xs.length - 1];
+  return dessin(-0.5, xmax * 1.3 + 1, [{ forme: 'morceaux', points: xs.map((x, i) => [x, ys[i]]) }], {
+    points: xs.map((x, i) => ({ x, y: ys[i], etiquette: point(x, ys[i]) })),
+  });
+}
+
+/** Le tableau de valeurs en nuage de points : l'image se lit à la verticale de x. */
+const nuageDuTableau = (xs, ys) => ({
+  type: 'courbe',
+  fenetre: fenetre(xs[0] - 1, xs[xs.length - 1] + 1, [], ys),
+  nuage: xs.map((x, i) => [x, ys[i]]),
+});
+
 /* ------------------------------------------------------------- 2de pro */
 
 const TABLEAUX = [
@@ -144,13 +201,14 @@ function image2(t) {
     ys[j] = xs[i];
   } while (i === j || new Set(ys).size < 6 || xs[j] === ys[i]);
   const voisine = i === 5 ? ys[4] : ys[i + 1];
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'image',
     question: `${tableau(t.au(TABLEAUX), xs, ys)}\nImage de ${nb(xs[i])} par f ?`,
     bonne: nb(ys[i]),
     pieges: t.melanger([[nb(xs[j]), 'image-pas-antecedent'], [nb(voisine), 'colonne-voisine']]),
     voisin: (k) => nb(ys[i] + k),
   });
+  return { ...m, visuel: nuageDuTableau(xs, ys) };
 }
 
 function antecedent2(t) {
@@ -165,13 +223,14 @@ function antecedent2(t) {
     ys[j] = xs[m];
   } while (j === m || new Set(ys).size < 6 || ys[m] === xs[j]);
   const voisine = j === 0 ? xs[1] : xs[j - 1];
-  return manche(t.melanger, {
+  const resultat = manche(t.melanger, {
     consigne: 'antecedent',
     question: `${tableau(t.au(TABLEAUX), xs, ys)}\nAntécédent de ${nb(ys[j])} par f ?`,
     bonne: nb(xs[j]),
     pieges: t.melanger([[nb(ys[m]), 'antecedent-pas-image'], [nb(voisine), 'colonne-voisine']]),
     voisin: (k) => nb(xs[(j + k + 1) % 6]),
   });
+  return { ...resultat, visuel: nuageDuTableau(xs, ys) };
 }
 
 const COURBES = [
@@ -204,7 +263,7 @@ function courbe(t) {
   const texte = `${t.au(COURBES)}\nLa courbe de f part du point ${point(0, y0)}, ${premier} jusqu’au point ${point(x1, y1)}, `
     + `puis ${second} jusqu’au point ${point(x2, y2)}.`;
   return {
-    x1, x2, y0, y1, y2, bosse, texte,
+    x1, x2, y0, y1, y2, bosse, texte, visuel: lignePointee([0, x1, x2], [y0, y1, y2]),
   };
 }
 
@@ -216,7 +275,7 @@ function croissance2(t) {
   const demandePremier = croissante === premierMonte;
   const [a, b, ya, yb] = demandePremier ? [0, c.x1, c.y0, c.y1] : [c.x1, c.x2, c.y1, c.y2];
   const [autreA, autreB] = demandePremier ? [c.x1, c.x2] : [0, c.x1];
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'croissance',
     question: `${c.texte}\nSur quel intervalle f est-elle ${croissante ? 'croissante' : 'décroissante'} ?`,
     bonne: intervalle(a, b),
@@ -226,6 +285,7 @@ function croissance2(t) {
     ]),
     voisin: (k) => intervalle(0, c.x2 + k),
   });
+  return { ...m, visuel: c.visuel };
 }
 
 function extremum2(t) {
@@ -239,25 +299,27 @@ function extremum2(t) {
   const auTournant = maximum === c.bosse;
   const pieges = [[nb(position), 'valeur-ou-position']];
   if (!auTournant) pieges.push([nb(c.y1), 'tournant-pas-extremum']);
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'extremum',
     question: `${c.texte}\n${maximum ? 'Maximum' : 'Minimum'} de f sur ${intervalle(0, c.x2)} ?`,
     bonne: nb(valeur),
     pieges: t.melanger(pieges),
     voisin: (k) => nb(valeur + (maximum ? k : -k)),
   });
+  return { ...m, visuel: c.visuel };
 }
 
 function atteint2(t) {
   const c = courbe(t);
   const maximum = c.bosse;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'atteint',
     question: `${c.texte}\nPour quelle valeur de x f est-elle ${maximum ? 'maximale' : 'minimale'} ?`,
     bonne: nb(c.x1),
     pieges: [[nb(c.y1), 'valeur-ou-position']],
     voisin: (k) => nb(c.x1 + k),
   });
+  return { ...m, visuel: c.visuel };
 }
 
 /* ------------------------------------------------------------- 1re pro */
@@ -300,13 +362,22 @@ function tangente1(t) {
     ya = t.entre(-5, 15);
   } while (Math.abs(dx) === Math.abs(dy) || !decimalExact(dy, dx) || !decimalExact(dx, dy) || ya * dx === dy);
   const pente = dy / dx;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'tangente',
     question: `La tangente à la courbe de f au point A d’abscisse ${nb(xa)} passe par A${point(xa, ya)} et B${point(xa + dx, ya + dy)}.\nf′(${nb(xa)}) = ?`,
     bonne: nb(pente),
     pieges: t.melanger([[nb(dx / dy), 'coefficient-directeur'], [nb(ya), 'nombre-derive-pente']]),
     voisin: (k) => nb(pente + k),
   });
+  // La courbe de f n'est pas donnée : une parabole qui touche la tangente en A,
+  // ya + pente(x − xa) + (x − xa)²/2, pour voir ce que « tangente » veut dire.
+  return {
+    ...m,
+    visuel: dessin(xa - 2, xa + dx + 1.5, [trace([0.5, pente - xa, ya - pente * xa + (xa * xa) / 2])], {
+      points: [{ x: xa, y: ya, etiquette: 'A' }, { x: xa + dx, y: ya + dy, etiquette: 'B' }],
+      tangente: { x: xa, y: ya, pente },
+    }),
+  };
 }
 
 const SENS = {
@@ -342,13 +413,19 @@ function sensVariation1(t) {
     bonne = positive ? SENS.monte : SENS.descend;
     pieges = [[positive ? SENS.descend : SENS.monte, 'signe-derivee'], [a > 0 ? SENS.creux : SENS.bosse, 'racine-hors-intervalle']];
   }
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'sens-variation',
     question: `f′(x) = ${poly([a, -a * r])} sur ${intervalle(lo, hi)}.\nSens de variation de f ?`,
     bonne,
     pieges,
     voisin: () => Object.values(SENS).find((s) => s !== bonne && !pieges.some(([p]) => p === s)),
   });
+  // La droite de f′ sur l'intervalle seul : son signe s'y lit, et sa racine
+  // n'y paraît que si elle est dedans.
+  return {
+    ...m,
+    visuel: dessin(lo, hi, [trace([a, -a * r], 'f′')], dedans ? { points: [{ x: r, y: 0 }] } : {}),
+  };
 }
 
 function sommet1(valeurDemandee, t) {
@@ -359,22 +436,26 @@ function sommet1(valeurDemandee, t) {
   const c = -t.entre(Math.ceil(haut / 10), Math.floor((haut * 8) / 10));
   const benefice = (x) => a * x * x + b * x + c;
   const question = `B(x) = ${poly([a, b, c])} est le bénéfice (en €) pour x objets fabriqués par jour, x entre 0 et ${2 * x0}.\n`;
+  // La parabole du bénéfice, sans marquer son sommet : c'est lui qu'on calcule.
+  const visuel = dessin(0, 2 * x0, [trace([a, b, c])]);
   if (valeurDemandee) {
-    return manche(t.melanger, {
+    const m = manche(t.melanger, {
       consigne: 'sommet-valeur',
       question: `${question}Bénéfice maximal (en €) ?`,
       bonne: nb(benefice(x0)),
       pieges: t.melanger([[nb(x0), 'valeur-ou-position'], [nb(a * a * x0 * x0 + b * x0 + c), 'priorite-carre']]),
       voisin: (k) => nb(benefice(x0) + 10 * k),
     });
+    return { ...m, visuel };
   }
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'sommet',
     question: `${question}Pour quel nombre x d’objets le bénéfice est-il maximal ?`,
     bonne: nb(x0),
     pieges: t.melanger([[nb(2 * x0), 'derivee-oubli-facteur'], [nb(benefice(x0)), 'valeur-ou-position']]),
     voisin: (k) => nb(x0 + k),
   });
+  return { ...m, visuel };
 }
 
 /* ------------------------------------------------------------- Tle pro */
@@ -416,13 +497,21 @@ function nombreDerive3(t) {
     image = a * x0 ** 3 + b * x0 * x0 + c * x0 + d;
     oubli = a * x0 * x0 + b * x0 + c;
   } while (new Set([juste, image, oubli]).size < 3);
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'nombre-derive',
     question: `f(x) = ${poly([a, b, c, d])}\nf′(${nb(x0)}) = ?`,
     bonne: nb(juste),
     pieges: t.melanger([[nb(image), 'calculer-f-prime'], [nb(oubli), 'derivee-oubli-facteur']]),
     voisin: (k) => nb(juste + k),
   });
+  // Le nombre dérivé, c'est la pente de la tangente en A — pas la hauteur de A.
+  return {
+    ...m,
+    visuel: dessin(x0 - 2, x0 + 2, [trace([a, b, c, d])], {
+      points: [{ x: x0, y: image, etiquette: 'A' }],
+      tangente: { x: x0, y: image, pente: juste },
+    }),
+  };
 }
 
 /** « x − 2 », « x + 4 », « x » pour la racine 0. */
@@ -450,7 +539,7 @@ function variations3(t) {
   if (k === 1) coef = '';
   if (k === -1) coef = '−';
   const bonne = k > 0 ? FLECHES.plusMoinsPlus : FLECHES.moinsPlusMoins;
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'variations-trinome',
     question: `f′(x) = ${coef}${produit} sur ${intervalle(lo, hi)}.\nVariations de f, de gauche à droite ?`,
     bonne,
@@ -460,6 +549,13 @@ function variations3(t) {
     ],
     voisin: () => (k > 0 ? FLECHES.descendMonte : FLECHES.monteDescend),
   });
+  // La parabole de f′ sur l'intervalle, ses deux racines marquées : son signe se lit.
+  return {
+    ...m,
+    visuel: dessin(lo, hi, [trace([k, -k * (r1 + r2), k * r1 * r2], 'f′')], {
+      points: [{ x: r1, y: 0 }, { x: r2, y: 0 }],
+    }),
+  };
 }
 
 const VARIATIONS = [
@@ -489,13 +585,15 @@ function exploiter3(t) {
   const fleches = monteDabord ? ['↗', '↘', '↗'] : ['↘', '↗', '↘'];
   const ligne = xs.map((x, i) => `f(${nb(x)}) = ${nb(vs[i])}`)
     .reduce((s, morceau, i) => (i === 0 ? morceau : `${s} ${fleches[i - 1]} ${morceau}`), '');
-  return manche(t.melanger, {
+  const m = manche(t.melanger, {
     consigne: 'exploiter-variations',
     question: `${t.au(VARIATIONS)}\nTableau de variations de f sur ${intervalle(0, xs[3])} :\n${ligne}\n${maximum ? 'Maximum' : 'Minimum'} de f sur ${intervalle(0, xs[3])} ?`,
     bonne: nb(valeur),
     pieges: t.melanger([[nb(autre), 'comparer-extremums'], [nb(xs[vs.indexOf(valeur)]), 'valeur-ou-position']]),
     voisin: (k) => nb(valeur + (maximum ? k : -k)),
   });
+  // Le tableau de variations dessiné : des segments entre les valeurs données.
+  return { ...m, visuel: lignePointee(xs, vs) };
 }
 
 /* ------------------------------------------------------------ la partie */

@@ -14,6 +14,13 @@
  *   3e (3 + 3 + 2) — Thalès (triangle ou papillon) ; la réciproque, avec le
  *        piège des différences égales qui ne font pas des rapports égaux ;
  *        l'agrandissement : aires × k², volumes × k³.
+ *
+ * LE DESSIN (09/10/2026) : la photo agrandie porte un `visuel` (le rectangle
+ * agrandi, sa longueur en « ? ») ; les milieux, la proportionnalité et
+ * Thalès aussi (la figure de Thalès, en triangle ou en papillon, avec les
+ * lettres et les longueurs de la question). Pas de dessin pour « (IJ) est
+ * parallèle à ? » ni pour la réciproque : il montrerait le parallélisme qu'on
+ * demande ; ni pour l'agrandissement (aucune figure précise).
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -60,6 +67,14 @@ function monter(melanger, consigne, question, bonne, pieges, voisin) {
   };
 }
 
+/**
+ * La figure de Thalès : `noms` [A, B, C, M, N] dans l'ordre du dessin (les
+ * milieux I et J à la place de M et N), `cotes` aux places AM, AB… du dessin.
+ */
+const figureThales = (noms, cotes, papillon = false) => ({
+  type: 'figure', forme: 'thales', cotes, noms, ...(papillon ? { papillon: true } : {}),
+});
+
 /** Un piège de longueur, seulement s'il est positif et s'écrit proprement. */
 const piegeCm = (x, phrase) => (x > 0 && net(x) ? [[`${nb(x)} cm`, phrase]] : []);
 
@@ -78,18 +93,26 @@ function milieux(o, sorte) {
       pieges: { [`(${A}${B})`]: 'milieux-troisieme-cote', [`(${A}${C})`]: 'milieux-troisieme-cote' },
     };
   }
+  // Le dessin des milieux (sauf pour « parallèle à ? » : il montrerait la réponse).
+  const noms = [A, B, C, 'I', 'J'];
   if (sorte === 'cote') {
     const bc = entre(4, 30);
-    return monter(melanger, 'milieux', `${intro} ${B}${C} = ${bc} cm. IJ = ?`, `${nb(bc / 2)} cm`, [
-      [`${nb(bc * 2)} cm`, 'milieux-moitie'],
-      [`${nb(bc)} cm`, 'milieux-moitie'],
-    ], (k) => `${nb(bc / 2 + k)} cm`);
+    return {
+      ...monter(melanger, 'milieux', `${intro} ${B}${C} = ${bc} cm. IJ = ?`, `${nb(bc / 2)} cm`, [
+        [`${nb(bc * 2)} cm`, 'milieux-moitie'],
+        [`${nb(bc)} cm`, 'milieux-moitie'],
+      ], (k) => `${nb(bc / 2 + k)} cm`),
+      visuel: figureThales(noms, { BC: `${bc} cm`, MN: '?' }),
+    };
   }
   const ij = entre(2, 15);
-  return monter(melanger, 'milieux', `${intro} IJ = ${ij} cm. ${B}${C} = ?`, `${nb(ij * 2)} cm`, [
-    [`${nb(ij / 2)} cm`, 'milieux-moitie'],
-    [`${nb(ij)} cm`, 'milieux-moitie'],
-  ], (k) => `${nb(ij * 2 + k)} cm`);
+  return {
+    ...monter(melanger, 'milieux', `${intro} IJ = ${ij} cm. ${B}${C} = ?`, `${nb(ij * 2)} cm`, [
+      [`${nb(ij / 2)} cm`, 'milieux-moitie'],
+      [`${nb(ij)} cm`, 'milieux-moitie'],
+    ], (k) => `${nb(ij * 2 + k)} cm`),
+    visuel: figureThales(noms, { MN: `${ij} cm`, BC: '?' }),
+  };
 }
 
 function proportionnalite(o) {
@@ -100,7 +123,7 @@ function proportionnalite(o) {
   const u = entre(1, 4);
   const [am, ab, bc] = [p * t, q * t, q * u];
   const mn = p * u;
-  return monter(
+  const manche = monter(
     melanger,
     'proportionnalite',
     `Dans ${A}${B}${C}, M est sur [${A}${B}], N sur [${A}${C}] et (MN) // (${B}${C}). ${A}M = ${am} cm, ${A}${B} = ${ab} cm, ${B}${C} = ${bc} cm. MN = ?`,
@@ -111,6 +134,12 @@ function proportionnalite(o) {
     ],
     (k) => `${nb(mn + k)} cm`,
   );
+  return {
+    ...manche,
+    visuel: figureThales([A, B, C, 'M', 'N'], {
+      AM: `${am} cm`, AB: `${ab} cm`, BC: `${bc} cm`, MN: '?',
+    }),
+  };
 }
 
 function photo(o) {
@@ -118,17 +147,21 @@ function photo(o) {
   const k = au([2, 3, 4, 1.5, 2.5]);
   const l = 2 * entre(2, 6);
   const L = l + entre(2, 6);
-  return monter(
-    melanger,
-    'photo',
-    `Une photo de ${l} cm sur ${L} cm est agrandie : ses ${l} cm deviennent ${nb(l * k)} cm. Et ses ${L} cm ?`,
-    `${nb(L * k)} cm`,
-    [
-      ...piegeCm(L + l * k - l, 'additif-pas-proportionnel'),
-      ...piegeCm(L / k, 'rapport-inverse'),
-    ],
-    (j) => `${nb(L * k + j)} cm`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'photo',
+      `Une photo de ${l} cm sur ${L} cm est agrandie : ses ${l} cm deviennent ${nb(l * k)} cm. Et ses ${L} cm ?`,
+      `${nb(L * k)} cm`,
+      [
+        ...piegeCm(L + l * k - l, 'additif-pas-proportionnel'),
+        ...piegeCm(L / k, 'rapport-inverse'),
+      ],
+      (j) => `${nb(L * k + j)} cm`,
+    ),
+    // La photo agrandie : sa largeur connue, sa longueur (L > l) cherchée.
+    visuel: { type: 'figure', forme: 'rectangle', cotes: { longueur: '?', largeur: `${nb(l * k)} cm` } },
+  };
 }
 
 function quatrieme(o) {
@@ -146,19 +179,27 @@ function thales(o) {
   const [p, q] = au(RAPPORTS);
   const [t, u, v] = [entre(1, 3), entre(1, 3), entre(1, 4)];
   const [am, ab, an, ac, mn, bc] = [p * t, q * t, p * u, q * u, p * v, q * v];
-  const figure = au(['triangle', 'papillon']) === 'triangle'
+  const enTriangle = au(['triangle', 'papillon']) === 'triangle';
+  const figure = enTriangle
     ? 'M est sur [AB], N sur [AC] et (MN) // (BC).'
     : 'Les droites (BM) et (CN) se coupent en A, et (MN) // (BC).';
+  const avecDessin = (manche, cotes) => ({
+    ...manche, visuel: figureThales(['A', 'B', 'C', 'M', 'N'], cotes, !enTriangle),
+  });
   if (au(['AC', 'MN']) === 'AC') {
-    return monter(melanger, 'thales', `${figure} AM = ${am} cm, AB = ${ab} cm, AN = ${an} cm. AC = ?`, `${nb(ac)} cm`, [
+    return avecDessin(monter(melanger, 'thales', `${figure} AM = ${am} cm, AB = ${ab} cm, AN = ${an} cm. AC = ?`, `${nb(ac)} cm`, [
       ...piegeCm(an + (ab - am), 'additif-pas-proportionnel'),
       ...piegeCm((an * am) / ab, 'rapport-inverse'),
-    ], (k) => `${nb(ac + k)} cm`);
+    ], (k) => `${nb(ac + k)} cm`), {
+      AM: `${am} cm`, AB: `${ab} cm`, AN: `${an} cm`, AC: '?',
+    });
   }
-  return monter(melanger, 'thales', `${figure} AM = ${am} cm, AB = ${ab} cm, BC = ${bc} cm. MN = ?`, `${nb(mn)} cm`, [
+  return avecDessin(monter(melanger, 'thales', `${figure} AM = ${am} cm, AB = ${ab} cm, BC = ${bc} cm. MN = ?`, `${nb(mn)} cm`, [
     ...piegeCm(bc - (ab - am), 'additif-pas-proportionnel'),
     ...piegeCm((bc * ab) / am, 'rapport-inverse'),
-  ], (k) => `${nb(mn + k)} cm`);
+  ], (k) => `${nb(mn + k)} cm`), {
+    AM: `${am} cm`, AB: `${ab} cm`, BC: `${bc} cm`, MN: '?',
+  });
 }
 
 export const RECIPROQUE = { oui: 'Oui', non: 'Non', inconnu: 'On ne peut pas savoir' };

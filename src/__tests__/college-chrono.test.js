@@ -3,7 +3,9 @@
  * À zéro : en défi, la page reçoit la fin de partie ; en tranquille, l'élève
  * finit quand même. Une durée par classe.
  */
-import { act, render, screen } from '@testing-library/react';
+import {
+  act, fireEvent, render, screen,
+} from '@testing-library/react';
 import {
   DUREE_ESCAPE, cadran, dureeEscape, enMinutes, resteMs,
 } from '../lib/jeux/college/chrono.js';
@@ -54,28 +56,37 @@ describe('le chrono, à l’écran', () => {
     );
     return terminerDefi;
   };
+  // La salle d'abord : le chrono ne part qu'au clic sur « Commencer l'enquête ».
+  const commencer = () => fireEvent.click(screen.getByRole('button', { name: 'Commencer l’enquête' }));
 
   it('annonce la durée et la règle du mode, et part de la durée de la classe', () => {
     jouer(TRANQUILLE);
     expect(screen.getByText(/Tu as 5 minutes pour ouvrir les six cadenas/)).toBeInTheDocument();
     expect(screen.getByText(/tu pourras quand même finir/)).toBeInTheDocument();
     expect(screen.getByRole('timer')).toHaveTextContent('5:00');
+    // Tant que la mission s'affiche, le temps ne court pas.
+    act(() => { jest.advanceTimersByTime(30000); });
+    expect(screen.getByRole('timer')).toHaveTextContent('5:00');
+    commencer();
     act(() => { jest.advanceTimersByTime(61000); });
     expect(screen.getByRole('timer')).toHaveTextContent('3:59');
   });
 
   it('en tranquille, à zéro : « temps écoulé », et la partie continue', () => {
     const terminerDefi = jouer(TRANQUILLE);
+    commencer();
     act(() => { jest.advanceTimersByTime(5 * 60 * 1000 + 500); });
     expect(screen.getByRole('timer')).toHaveTextContent('0:00');
     expect(screen.getByText(/Temps écoulé : finis quand même/)).toBeInTheDocument();
     expect(terminerDefi).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /^Fouiller / }));
     expect(screen.getByRole('list', { name: 'Choisis ta réponse' })).toBeInTheDocument();
   });
 
   it('en défi, à zéro : la page reçoit la fin, une seule fois, avec les cadenas ouverts', () => {
     const terminerDefi = jouer(DEFI);
     expect(screen.getByText(/l’alarme gagne/)).toBeInTheDocument();
+    commencer();
     act(() => { jest.advanceTimersByTime(5 * 60 * 1000 + 500); });
     act(() => { jest.advanceTimersByTime(2000); });
     expect(terminerDefi).toHaveBeenCalledTimes(1);

@@ -9,6 +9,8 @@ import decor from '../../assets/Jeux/CP/syllabe.webp';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/cp-ce1-francais/communs';
+import { DecorStudio, NoteDo } from './scenes/cp-ce1-francais/Syllabes';
 
 /**
  * L'ATELIER DES SYLLABES, À L'ÉCRAN.
@@ -27,6 +29,12 @@ import { bruitage } from '../../lib/jeux/bruitages';
  *
  * LE DÉCOR EST UN STUDIO : le train roule sur le parquet, devant le grand
  * mur clair du milieu.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) — voir `scenes/cp-ce1-francais/Syllabes.js` :
+ * le studio de musique vit (lampes, disque, notes, xylophone), Do la note
+ * réagit, les étiquettes deviennent les cartes de couleur de la couverture,
+ * et le train bien rempli CHANTE le mot, wagon après wagon. Rien de la règle
+ * ne change : mêmes boutons, mêmes voix, même déroulé.
  */
 export default function AtelierDesSyllabes({ onQuitter, matiereCode }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -162,7 +170,11 @@ export default function AtelierDesSyllabes({ onQuitter, matiereCode }) {
   const affiche = montrer ? leMot.syllabes : dansWagons.map((e) => e?.texte ?? null);
 
   return (
-    <div className="jeu jeu--syllabes" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--syllabes sc-cp-ce1-francais sc-atelier-syllabes${juste ? ' est-fete' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorStudio joue={juste} />
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
         {manches.map((m, i) => (
@@ -205,13 +217,14 @@ export default function AtelierDesSyllabes({ onQuitter, matiereCode }) {
       <ol className="syllabes__train" aria-label="Le train des syllabes">
         <li className="syllabes__loco" aria-hidden="true">
           <span className="syllabes__cheminee" />
+          {[0, 1, 2].map((n) => <span key={n} className="sc-atelier-syllabes__fumee" style={{ '--n': n }} />)}
         </li>
         {affiche.map((texte, i) => {
           const fautif = resultat?.sens === 'faux' && resultat.erreurs.includes(i) && !montrer;
           return (
             // Un wagon par syllabe, et l'ordre compte : la clé est la place.
             // eslint-disable-next-line react/no-array-index-key
-            <li key={i} className="syllabes__place">
+            <li key={i} className="syllabes__place" style={{ '--n': i }}>
               <button
                 type="button"
                 className={`syllabes__wagon${texte ? ' est-plein' : ''}${fautif ? ' est-fautif' : ''}${juste || montrer ? ' est-juste' : ''}`}
@@ -292,6 +305,9 @@ export default function AtelierDesSyllabes({ onQuitter, matiereCode }) {
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+
+      <NoteDo humeur={humeurDe({ reussi: juste, faute: Boolean(resultat) || montrer })} declic={ratees} />
+      {juste && <Fete forme="note" />}
     </div>
   );
 }

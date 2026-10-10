@@ -22,7 +22,7 @@ import Etincelle from './Etincelle';
  * celui qui s'est surestimé. Sans elle, il ne lui resterait qu'à quitter.
  */
 export default function FinDuDefi({
-  coeursMax, reussies, questions, onRefaire, onTranquille, onQuitter, raison, total,
+  coeursMax, reussies, questions, onRefaire, onTranquille, onQuitter, raison, total, unite,
 }) {
   // LE COMPTE À REBOURS D'UN ESCAPE GAME finit aussi un défi (07/10/2026) :
   // ni cœurs noirs ni astuce de cœurs, mais les cadenas ouverts. L'alarme qui
@@ -35,7 +35,11 @@ export default function FinDuDefi({
 
   // LE SCORE EST DÉJÀ DIT EN GRAND : la phrase dit autre chose — combien de
   // temps il a tenu, et comment tenir plus longtemps la prochaine fois.
-  const mot = temps
+  // UN JEU BONUS (09/10/2026) compte ce qu'il a trouvé (`unite`) : pas d'alarme ni de cadenas.
+  const pluriel = (n, u) => (n > 1 ? u.split(' ').map((m) => `${m}s`).join(' ') : u);
+  const mot = temps && unite
+    ? 'La montre a gagné cette fois. Astuce : en mode tranquille, prends ton temps, puis bats ton record.'
+    : temps
     ? 'L’alarme a gagné cette fois. Astuce : en mode tranquille, tu peux finir même après zéro, et repérer les cadenas qui te prennent du temps.'
     : reussies === 0
     ? 'Chaque question t’a appris quelque chose. Astuce : deux bonnes réponses d’affilée te rendent un cœur.'
@@ -82,7 +86,7 @@ export default function FinDuDefi({
         <strong>{temps ? questions : reussies}</strong>
         {temps ? (
           <span>
-            cadenas ouvert{questions > 1 ? 's' : ''}
+            {unite ? pluriel(questions, unite) : `cadenas ouvert${questions > 1 ? 's' : ''}`}
             <br />
             sur {total}
           </span>

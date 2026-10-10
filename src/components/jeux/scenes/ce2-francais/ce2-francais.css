@@ -1,0 +1,2034 @@
+/* ===========================================================================
+   LES SCÈNES DES JEUX DE FRANÇAIS DU CE1 ET DU CE2 SUR `JeuDeChoix` (09/10/2026)
+   Voir `scenes/ce2-francais/*.js`. Chaque jeu a son préfixe :
+   `.sc-ou-quand-comment` (le tableau à la craie), `.sc-sujet-qui-s-eloigne`
+   (le chemin du sujet), `.sc-a-ou-a` (les post-it du CE1, la craie du CE2),
+   `.sc-types-de-phrases` (la loupe au carrefour), `.sc-contraires-et-jumeaux`
+   (le carrefour des panneaux) ; les briques partagées (la fête, le glisser,
+   le fil) portent `.sc-ce2-francais`. Aucune classe existante n'est stylée en
+   dehors de nos propres classes parentes.
+   =========================================================================== */
+
+/* ------------------------------------------------ LES BRIQUES PARTAGÉES */
+
+/* La fête de la bonne réponse : des éclats qui partent en étoile, une fois. */
+.sc-ce2-francais__fete {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.sc-ce2-francais__eclat {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  background: #ffd43b;
+  animation: sc-ce2-francais-eclat 1.2s cubic-bezier(0.2, 0.8, 0.3, 1) calc(var(--i, 0) * 35ms) both;
+}
+
+.sc-ce2-francais__eclat:nth-child(4n + 2) { background: #4dabf7; }
+.sc-ce2-francais__eclat:nth-child(4n + 3) { background: #f783ac; }
+.sc-ce2-francais__eclat:nth-child(4n) { background: #8ce99a; }
+
+.sc-ce2-francais__fete--etoile .sc-ce2-francais__eclat {
+  clip-path: polygon(50% 0, 62% 36%, 100% 38%, 70% 60%, 80% 100%, 50% 76%, 20% 100%, 30% 60%, 0 38%, 38% 36%);
+  width: 22px;
+  height: 22px;
+}
+
+.sc-ce2-francais__fete--craie .sc-ce2-francais__eclat { width: 22px; height: 7px; border-radius: 4px; }
+.sc-ce2-francais__fete--papier .sc-ce2-francais__eclat { width: 18px; height: 18px; border-radius: 2px 2px 8px 2px; }
+.sc-ce2-francais__fete--fleur .sc-ce2-francais__eclat { border-radius: 50%; box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.85); }
+.sc-ce2-francais__fete--feuille .sc-ce2-francais__eclat { width: 20px; height: 12px; border-radius: 0 100% 0 100%; background: #69db7c; }
+.sc-ce2-francais__fete--feuille .sc-ce2-francais__eclat:nth-child(3n) { background: #f08c00; }
+
+@keyframes sc-ce2-francais-eclat {
+  0% { opacity: 1; transform: rotate(var(--angle)) translateY(0) scale(0.4); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateY(-170px) scale(1) rotate(220deg); }
+}
+
+/* Glisser : l'objet suit le doigt, la cible s'allume quand il la survole. */
+.sc-ce2-francais--glisse {
+  position: relative;
+  z-index: 30;
+  cursor: grabbing;
+  animation: none !important;
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.4));
+}
+
+.sc-ce2-francais--survolee {
+  outline: 4px dashed #ffd43b;
+  outline-offset: 5px;
+  border-radius: 8px;
+}
+
+/* Le fil entre deux mots : un trait qui se trace, une flèche au bout. */
+.sc-ce2-francais__fil {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sc-ce2-francais__fil-trait {
+  fill: none;
+  stroke: #e5383b;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: sc-ce2-francais-trace 0.9s ease-out 0.5s both;
+}
+
+.sc-ce2-francais__fil-bout {
+  fill: #e5383b;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-ce2-francais-bout 0.3s ease-out 1.3s both;
+}
+
+@keyframes sc-ce2-francais-trace {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes sc-ce2-francais-bout {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ------------------------------------------------ OÙ, QUAND, COMMENT ?
+   Le tableau à la craie, la lanterne, les trois cercles de craie. */
+.sc-ou-quand-comment {
+  --sc-oqc-ou: #ffa94d;
+  --sc-oqc-quand: #4dabf7;
+  --sc-oqc-comment: #f783ac;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding-top: 8px;
+}
+
+.sc-ou-quand-comment__teinte--ou { --sc-oqc: var(--sc-oqc-ou, #ffa94d); color: var(--sc-oqc); }
+.sc-ou-quand-comment__teinte--quand { --sc-oqc: var(--sc-oqc-quand, #4dabf7); color: var(--sc-oqc); }
+.sc-ou-quand-comment__teinte--comment { --sc-oqc: var(--sc-oqc-comment, #f783ac); color: var(--sc-oqc); }
+.sc-ou-quand-comment.est-ou { --sc-oqc: #ffa94d; }
+.sc-ou-quand-comment.est-quand { --sc-oqc: #4dabf7; }
+.sc-ou-quand-comment.est-comment { --sc-oqc: #f783ac; }
+
+.sc-ou-quand-comment__tableau {
+  position: relative;
+  width: 100%;
+  padding: 20px 64px 18px;
+  border: 10px solid #8a5a2b;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.07), transparent 60%),
+    radial-gradient(ellipse at 80% 90%, rgba(255, 255, 255, 0.05), transparent 50%),
+    #1f2b25;
+  box-shadow: inset 0 0 0 2px #5e3a17, 0 12px 24px rgba(0, 0, 0, 0.45);
+}
+
+.sc-ou-quand-comment .sc-ou-quand-comment__phrase {
+  margin: 0;
+  padding: 6px 4px;
+  background: transparent;
+  box-shadow: none;
+  color: #f6f3ea;
+  font-size: clamp(22px, 3vw, 32px);
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.sc-ou-quand-comment .sc-ou-quand-comment__groupe {
+  position: relative;
+  text-shadow: none;
+}
+
+/* La craie entoure le groupe, à la couleur de sa question. */
+.sc-ou-quand-comment.est-termine .sc-ou-quand-comment__groupe::after {
+  content: "";
+  position: absolute;
+  inset: -9px -12px;
+  border: 3px solid var(--sc-oqc, #ffd43b);
+  border-radius: 50%;
+  animation: sc-ou-quand-comment-entoure 0.6s ease-out both;
+}
+
+/* Les gribouillis de craie de la couverture. */
+.sc-ou-quand-comment__gribouillis::before,
+.sc-ou-quand-comment__gribouillis::after {
+  content: "";
+  position: absolute;
+  height: 5px;
+  border-radius: 3px;
+  opacity: 0.8;
+}
+
+.sc-ou-quand-comment__gribouillis::before { left: 14px; top: 14px; width: 34px; background: #ffe066; transform: rotate(-24deg); }
+.sc-ou-quand-comment__gribouillis::after { left: 18px; bottom: 16px; width: 28px; background: #f783ac; transform: rotate(18deg); }
+
+.sc-ou-quand-comment__ampoule {
+  position: absolute;
+  right: 12px;
+  top: 8px;
+  width: 42px;
+  animation: sc-ou-quand-comment-idee 3.2s ease-in-out infinite;
+}
+
+.sc-ou-quand-comment__ampoule svg { display: block; fill: none; stroke: #ffe066; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.sc-ou-quand-comment.est-termine .sc-ou-quand-comment__ampoule { animation: sc-ou-quand-comment-eureka 0.9s ease-in-out 2; }
+
+/* La lanterne, accrochée au coin du tableau. */
+.sc-ou-quand-comment__potence {
+  position: absolute;
+  left: -2px;
+  top: -12px;
+  width: 52px;
+  height: 80px;
+  z-index: 3;
+}
+
+.sc-ou-quand-comment__lanterne {
+  position: relative;
+  display: block;
+  width: 100%;
+  transform-origin: 50% 0;
+  animation: sc-ou-quand-comment-balance 3.6s ease-in-out infinite alternate;
+}
+
+.sc-ou-quand-comment__lanterne svg { position: relative; z-index: 1; display: block; width: 100%; }
+
+.sc-ou-quand-comment__halo {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 90px;
+  height: 90px;
+  margin: -45px 0 0 -45px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 102, 0.55), transparent 65%);
+  animation: sc-ou-quand-comment-lueur 2.4s ease-in-out infinite alternate;
+}
+
+.sc-ou-quand-comment__flamme {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: sc-ou-quand-comment-flamme 0.8s ease-in-out infinite alternate;
+}
+
+.sc-ou-quand-comment__yeux {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-ou-quand-comment-cligne 4.5s ease-in-out infinite;
+}
+
+.sc-ou-quand-comment__lanterne.est-bravo { animation: sc-ou-quand-comment-joie 0.5s ease-in-out 3, sc-ou-quand-comment-balance 3.6s ease-in-out 1.5s infinite alternate; }
+.sc-ou-quand-comment__lanterne.est-bravo .sc-ou-quand-comment__halo { width: 150px; height: 150px; margin: -75px 0 0 -75px; background: radial-gradient(circle, rgba(255, 230, 120, 0.9), transparent 65%); }
+.sc-ou-quand-comment__lanterne.est-courage { animation: sc-ou-quand-comment-vacille 0.25s ease-in-out 4, sc-ou-quand-comment-balance 3.6s ease-in-out 1s infinite alternate; }
+.sc-ou-quand-comment__lanterne.est-montre .sc-ou-quand-comment__halo { animation: none; opacity: 1; }
+
+/* Le pot de craies, posé au pied du tableau. */
+.sc-ou-quand-comment__pot {
+  position: absolute;
+  right: 18px;
+  bottom: -14px;
+  width: 44px;
+  height: 36px;
+  border-radius: 4px 4px 10px 10px;
+  background: linear-gradient(90deg, #8d969e, #d5dbe0 40%, #9aa3ab);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+.sc-ou-quand-comment__craie {
+  position: absolute;
+  bottom: 26px;
+  width: 9px;
+  height: 26px;
+  border-radius: 3px 3px 0 0;
+  transform-origin: 50% 100%;
+}
+
+.sc-ou-quand-comment__craie--rose { left: 6px; background: #f783ac; transform: rotate(-14deg); }
+.sc-ou-quand-comment__craie--jaune { left: 18px; background: #ffe066; height: 30px; }
+.sc-ou-quand-comment__craie--bleue { left: 29px; background: #74c0fc; transform: rotate(12deg); }
+
+/* L'explication, après la réponse : la flèche de craie et le dessin de la question. */
+.sc-ou-quand-comment__explication {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  margin: 10px 0 0;
+  color: #f6f3ea;
+  font-size: 17px;
+}
+
+.sc-ou-quand-comment__fleche {
+  position: relative;
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--sc-oqc, #ffd43b);
+  transform-origin: 0 50%;
+  animation: sc-ou-quand-comment-trait 0.5s ease-out 0.4s both;
+}
+
+.sc-ou-quand-comment__fleche::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-top: 4px solid var(--sc-oqc, #ffd43b);
+  border-right: 4px solid var(--sc-oqc, #ffd43b);
+  transform: rotate(45deg);
+}
+
+.sc-ou-quand-comment__medaillon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 4px 8px;
+  border: 3px solid currentColor;
+  border-radius: 999px;
+  font-size: 26px;
+  animation: sc-ou-quand-comment-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) 0.7s both;
+}
+
+.sc-ou-quand-comment__medaillon .sc-ou-quand-comment__icone { width: 44px; height: 44px; }
+.sc-ou-quand-comment__dit { max-width: 420px; text-align: left; animation: sc-ou-quand-comment-pop 0.5s ease-out 1s both; }
+
+/* Les dessins des questions, à la craie. */
+.sc-ou-quand-comment__icone {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+
+.sc-ou-quand-comment__dents { stroke-dasharray: 3.2 2.6; stroke-width: 5; }
+
+.sc-ou-quand-comment__aiguille {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.sc-ou-quand-comment__aiguille--petite { transform-origin: 0 50%; }
+
+.sc-ou-quand-comment__engrenage {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-ou-quand-comment-tourne 8s linear infinite;
+}
+
+.sc-ou-quand-comment__engrenage--petit { animation-direction: reverse; animation-duration: 5.5s; }
+
+/* Après la réponse, le dessin s'anime : l'épingle se plante, le réveil sonne, les engrenages s'emballent. */
+.sc-ou-quand-comment__medaillon .sc-ou-quand-comment__icone--ou { animation: sc-ou-quand-comment-plante 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.9s both; }
+.sc-ou-quand-comment__medaillon .sc-ou-quand-comment__icone--quand { animation: sc-ou-quand-comment-sonne 0.12s linear 1s 10; }
+.sc-ou-quand-comment__medaillon .sc-ou-quand-comment__aiguille { animation: sc-ou-quand-comment-tourne 1.2s linear 0.9s 2; }
+.sc-ou-quand-comment__medaillon .sc-ou-quand-comment__engrenage { animation-duration: 1.6s; }
+.sc-ou-quand-comment__medaillon .sc-ou-quand-comment__engrenage--petit { animation-duration: 1.1s; }
+
+/* Les trois cercles de craie : les réponses. */
+.sc-ou-quand-comment__cercles {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 22px;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.sc-ou-quand-comment__cercles > li {
+  animation: sc-ou-quand-comment-flotte 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+}
+
+.sc-ou-quand-comment__cercles > li:has(.est-fausse) { animation: none; }
+
+.sc-ou-quand-comment__cercle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 136px;
+  height: 136px;
+  padding: 0;
+  border: 4px solid var(--sc-oqc);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #33443b, #1c2621 70%);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12), 0 10px 18px rgba(0, 0, 0, 0.45);
+  font: 800 22px 'Outfit', sans-serif;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-ou-quand-comment__cercle .sc-ou-quand-comment__icone { width: 52px; height: 52px; }
+.sc-ou-quand-comment__cercle:hover:not(:disabled) { transform: scale(1.07); filter: drop-shadow(0 0 10px var(--sc-oqc)); }
+.sc-ou-quand-comment__cercle:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
+.sc-ou-quand-comment__nom { font-size: 19px; text-shadow: 0 0 2px rgba(0, 0, 0, 0.6); }
+
+.sc-ou-quand-comment__cercle.est-fausse {
+  filter: grayscale(1);
+  opacity: 0.45;
+  text-decoration: line-through;
+  cursor: default;
+}
+
+.sc-ou-quand-comment__cercle.est-fausse .sc-ou-quand-comment__engrenage { animation: none; }
+
+@keyframes sc-ou-quand-comment-balance {
+  from { transform: rotate(-7deg); }
+  to { transform: rotate(7deg); }
+}
+
+@keyframes sc-ou-quand-comment-joie {
+  0%, 100% { transform: rotate(0) scale(1); }
+  40% { transform: rotate(-14deg) scale(1.18); }
+  70% { transform: rotate(12deg) scale(1.1); }
+}
+
+@keyframes sc-ou-quand-comment-vacille {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-5deg) translateY(2px); }
+}
+
+@keyframes sc-ou-quand-comment-lueur {
+  from { opacity: 0.55; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.05); }
+}
+
+@keyframes sc-ou-quand-comment-flamme {
+  from { transform: scale(0.9, 0.95) skewX(-4deg); }
+  to { transform: scale(1.06, 1.1) skewX(4deg); }
+}
+
+@keyframes sc-ou-quand-comment-cligne {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes sc-ou-quand-comment-idee {
+  0%, 100% { opacity: 0.7; transform: rotate(-4deg); }
+  50% { opacity: 1; transform: rotate(4deg); }
+}
+
+@keyframes sc-ou-quand-comment-eureka {
+  50% { transform: scale(1.35); filter: drop-shadow(0 0 10px #ffe066); }
+}
+
+@keyframes sc-ou-quand-comment-entoure {
+  from { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-ou-quand-comment-trait {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes sc-ou-quand-comment-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.85); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-ou-quand-comment-plante {
+  from { transform: translateY(-40px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes sc-ou-quand-comment-sonne {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+@keyframes sc-ou-quand-comment-tourne {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sc-ou-quand-comment-flotte {
+  from { transform: translateY(0) rotate(-2deg); }
+  to { transform: translateY(-7px) rotate(2deg); }
+}
+
+/* ------------------------------------------------ LE SUJET QUI S'ÉLOIGNE
+   Le panneau de bois, le chemin, le petit SUJET qui court, les galets. */
+.sc-sujet-qui-s-eloigne {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.sc-sujet-qui-s-eloigne__panneau {
+  position: relative;
+  z-index: 2;
+  margin-top: 22px;
+  padding: 26px 26px 22px;
+  border: 5px solid #7a4a22;
+  border-radius: 12px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 38px, rgba(90, 50, 20, 0.28) 38px 40px),
+    linear-gradient(180deg, #e2b175, #c98f55);
+  box-shadow: inset 0 0 0 2px rgba(255, 230, 190, 0.5), 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.sc-sujet-qui-s-eloigne__corde {
+  position: absolute;
+  top: -27px;
+  width: 4px;
+  height: 27px;
+  background: #8a6a3a;
+}
+
+.sc-sujet-qui-s-eloigne__corde::after {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #6b4a24;
+}
+
+.sc-sujet-qui-s-eloigne__corde--g { left: 16%; }
+.sc-sujet-qui-s-eloigne__corde--d { right: 16%; }
+
+.sc-sujet-qui-s-eloigne .sc-sujet-qui-s-eloigne__phrase {
+  margin: 0;
+  padding: 4px 6px;
+  background: transparent;
+  box-shadow: none;
+  color: #2b1a0c;
+  font-size: clamp(22px, 3vw, 32px);
+}
+
+.sc-sujet-qui-s-eloigne .sc-sujet-qui-s-eloigne__trou {
+  line-height: 1.2;
+  border-bottom-color: #7a4a22;
+  color: #7a4a22;
+}
+
+.sc-sujet-qui-s-eloigne .sc-sujet-qui-s-eloigne__trou.est-rempli {
+  border-radius: 8px 8px 0 0;
+  border-bottom-color: #14612f;
+  background: rgba(255, 255, 255, 0.6);
+  color: #14612f;
+  animation: sc-sujet-qui-s-eloigne-pose 0.5s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+/* Le vrai sujet porte son étiquette ; l'intrus pâlit. Les lignes s'écartent pour leur laisser la place. */
+.sc-sujet-qui-s-eloigne.est-termine .sc-sujet-qui-s-eloigne__phrase { line-height: 1.9; }
+
+.sc-sujet-qui-s-eloigne .sc-sujet-qui-s-eloigne__sujet { position: relative; }
+
+.sc-sujet-qui-s-eloigne .sc-sujet-qui-s-eloigne__sujet::before {
+  content: "sujet";
+  position: absolute;
+  left: 50%;
+  top: -24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #e5383b;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  transform-origin: 50% 0;
+  animation: sc-sujet-qui-s-eloigne-accroche 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) 0.9s both;
+}
+
+.sc-sujet-qui-s-eloigne__intrus { position: relative; transition: color 0.4s ease; }
+
+.sc-sujet-qui-s-eloigne.est-termine .sc-sujet-qui-s-eloigne__intrus {
+  color: rgba(43, 26, 12, 0.5);
+  text-decoration: underline dotted rgba(43, 26, 12, 0.5);
+}
+
+.sc-sujet-qui-s-eloigne.est-termine .sc-sujet-qui-s-eloigne__intrus::after {
+  content: "pas lui !";
+  position: absolute;
+  left: 50%;
+  top: calc(100% - 4px);
+  color: #7a3b12;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: sc-sujet-qui-s-eloigne-pop 0.4s ease-out 1.3s both;
+}
+
+.sc-sujet-qui-s-eloigne__arche .sc-ce2-francais__fil-trait { stroke: #e5383b; stroke-dasharray: 6 5; animation: none; }
+.sc-sujet-qui-s-eloigne__arche { animation: sc-sujet-qui-s-eloigne-pop 0.6s ease-out 0.5s both; }
+
+/* Le paysage : montagnes, clocher, chemin pointillé, le petit SUJET qui court. */
+.sc-sujet-qui-s-eloigne__paysage {
+  position: relative;
+  width: calc(100% - 40px);
+  height: 96px;
+  margin-top: -6px;
+  overflow: hidden;
+  border-radius: 0 0 20px 20px;
+  background: linear-gradient(180deg, rgba(150, 205, 255, 0.92) 0 46%, rgba(132, 196, 98, 0.96) 46%);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sc-sujet-qui-s-eloigne__montagnes {
+  position: absolute;
+  left: 30%;
+  right: 0;
+  top: 8px;
+  height: 40px;
+  background: #8fa9c4;
+  clip-path: polygon(0 100%, 18% 30%, 30% 60%, 48% 0, 66% 55%, 80% 25%, 100% 70%, 100% 100%);
+}
+
+.sc-sujet-qui-s-eloigne__clocher {
+  position: absolute;
+  right: 18%;
+  top: 22px;
+  width: 10px;
+  height: 22px;
+  background: #f1ece2;
+  box-shadow: 14px 8px 0 4px #e8d3b8, -16px 9px 0 4px #e6c9a6;
+}
+
+.sc-sujet-qui-s-eloigne__clocher::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -10px;
+  border: 7px solid transparent;
+  border-bottom: 10px solid #4b5a7a;
+  border-top: 0;
+}
+
+.sc-sujet-qui-s-eloigne__chemin {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+}
+
+.sc-sujet-qui-s-eloigne__chemin-terre { fill: none; stroke: #ecd29c; stroke-width: 18; }
+
+.sc-sujet-qui-s-eloigne__chemin-pointilles {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-dasharray: 10 10;
+  animation: sc-sujet-qui-s-eloigne-file 1.2s linear infinite;
+}
+
+.sc-sujet-qui-s-eloigne__fleche-qui {
+  position: absolute;
+  right: 10px;
+  bottom: 34px;
+  padding: 2px 16px 2px 8px;
+  background: #e9b75e;
+  color: #3b1f08;
+  font-size: 14px;
+  font-weight: 800;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+  transform-origin: 0 50%;
+  animation: sc-sujet-qui-s-eloigne-vent 3s ease-in-out infinite alternate;
+}
+
+.sc-sujet-qui-s-eloigne__fleurs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  background:
+    radial-gradient(circle, #fff 0 3px, #ffd43b 3px 4px, transparent 5px) 0 2px / 46px 14px repeat-x,
+    radial-gradient(circle, #ffa8c5 0 3px, transparent 4px) 22px 6px / 58px 14px repeat-x;
+}
+
+.sc-sujet-qui-s-eloigne__coureur-piste {
+  position: absolute;
+  inset: 0;
+}
+
+.sc-sujet-qui-s-eloigne__coureur {
+  position: absolute;
+  left: 8%;
+  bottom: 2px;
+  width: 52px;
+  transform-origin: 50% 100%;
+  animation: sc-sujet-qui-s-eloigne-s-en-va 8s linear infinite;
+}
+
+.sc-sujet-qui-s-eloigne__coureur svg { display: block; width: 100%; }
+
+.sc-sujet-qui-s-eloigne__jambe { transform-box: fill-box; transform-origin: 50% 0; animation: sc-sujet-qui-s-eloigne-pas 0.36s ease-in-out infinite alternate; }
+.sc-sujet-qui-s-eloigne__jambe--b { animation-direction: alternate-reverse; }
+.sc-sujet-qui-s-eloigne__bras { transform-box: fill-box; transform-origin: 0 100%; }
+
+.sc-sujet-qui-s-eloigne__sac {
+  position: absolute;
+  left: 12%;
+  top: 44%;
+  padding: 0 1px;
+  border-radius: 2px;
+  background: #fff;
+  color: #244a73;
+  font-size: 7px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.sc-sujet-qui-s-eloigne__bulle-coureur {
+  position: absolute;
+  right: -10px;
+  top: -14px;
+  display: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  color: #e5383b;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Retourné, il garde son sac lisible : l'étiquette se retourne avec lui. */
+.sc-sujet-qui-s-eloigne__coureur.est-courage .sc-sujet-qui-s-eloigne__sac,
+.sc-sujet-qui-s-eloigne__coureur.est-bravo .sc-sujet-qui-s-eloigne__sac,
+.sc-sujet-qui-s-eloigne__coureur.est-montre .sc-sujet-qui-s-eloigne__sac { transform: scaleX(-1); }
+
+/* À l'erreur, il s'arrête, se retourne et fait signe : « je suis là ! ». */
+.sc-sujet-qui-s-eloigne__coureur.est-courage {
+  left: 44%;
+  bottom: 18px;
+  animation: sc-sujet-qui-s-eloigne-signe 1.4s ease-in-out both;
+}
+
+.sc-sujet-qui-s-eloigne__coureur.est-courage .sc-sujet-qui-s-eloigne__jambe { animation: none; }
+.sc-sujet-qui-s-eloigne__coureur.est-courage .sc-sujet-qui-s-eloigne__bras { animation: sc-sujet-qui-s-eloigne-salut 0.3s ease-in-out 4 alternate; }
+.sc-sujet-qui-s-eloigne__coureur.est-courage .sc-sujet-qui-s-eloigne__bulle-coureur { display: block; animation: sc-sujet-qui-s-eloigne-pop 0.3s ease-out both; }
+
+/* À la bonne réponse, il revient en courant et saute de joie. */
+.sc-sujet-qui-s-eloigne__coureur.est-bravo,
+.sc-sujet-qui-s-eloigne__coureur.est-montre {
+  left: 6%;
+  bottom: 2px;
+  width: 60px;
+  animation: sc-sujet-qui-s-eloigne-revient 1s ease-out both, sc-sujet-qui-s-eloigne-saute 0.45s ease-in-out 1s 4 alternate;
+}
+
+.sc-sujet-qui-s-eloigne__coureur.est-montre { animation: sc-sujet-qui-s-eloigne-revient 1s ease-out both; }
+.sc-sujet-qui-s-eloigne__coureur.est-bravo .sc-sujet-qui-s-eloigne__bras { animation: sc-sujet-qui-s-eloigne-salut 0.3s ease-in-out 1s 6 alternate; }
+.sc-sujet-qui-s-eloigne__coureur.est-bravo .sc-sujet-qui-s-eloigne__jambe { animation-iteration-count: 3; }
+
+/* Les galets du chemin : les réponses. */
+.sc-sujet-qui-s-eloigne__galets {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 22px;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.sc-sujet-qui-s-eloigne__galets > li {
+  animation: sc-sujet-qui-s-eloigne-roule 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.9s);
+}
+
+.sc-sujet-qui-s-eloigne__galets > li:has(.est-fausse) { animation: none; }
+
+.sc-sujet-qui-s-eloigne__galet {
+  position: relative;
+  min-width: 128px;
+  min-height: 66px;
+  padding: 12px 26px;
+  border: 3px solid #5e594f;
+  border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%;
+  background: radial-gradient(circle at 34% 28%, #fbfaf6, #c9c4b8 62%, #9b9588);
+  box-shadow: 0 6px 0 #5e594f, 0 12px 16px rgba(0, 0, 0, 0.35);
+  color: #2a2620;
+  font: 800 27px 'Outfit', sans-serif;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease;
+}
+
+.sc-sujet-qui-s-eloigne__galet--1 { border-radius: 55% 45% 52% 48% / 45% 55% 45% 55%; }
+.sc-sujet-qui-s-eloigne__galet--2 { border-radius: 42% 58% 50% 50% / 50% 50% 50% 50%; }
+.sc-sujet-qui-s-eloigne__galet:hover:not(:disabled) { transform: translateY(-4px); }
+.sc-sujet-qui-s-eloigne__galet:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
+
+.sc-sujet-qui-s-eloigne__mousse {
+  position: absolute;
+  left: 14px;
+  top: 6px;
+  width: 22px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #6fbf4a, #3f8f2a);
+  opacity: 0.85;
+}
+
+.sc-sujet-qui-s-eloigne__galet.est-fausse {
+  opacity: 0.45;
+  filter: grayscale(1);
+  text-decoration: line-through;
+  cursor: default;
+  transform: translateY(8px) rotate(-6deg);
+}
+
+@keyframes sc-sujet-qui-s-eloigne-s-en-va {
+  0% { left: 6%; bottom: 0; transform: scale(1); opacity: 0; }
+  6% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: 84%; bottom: 40px; transform: scale(0.42); opacity: 0; }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-pas {
+  from { transform: rotate(-18deg); }
+  to { transform: rotate(18deg); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-signe {
+  0% { transform: scale(0.75); }
+  30% { transform: scale(0.75) scaleX(-1); }
+  100% { transform: scale(0.75) scaleX(-1); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-salut {
+  from { transform: rotate(0); }
+  to { transform: rotate(-40deg); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-revient {
+  from { left: 70%; bottom: 34px; transform: scale(0.5) scaleX(-1); }
+  to { left: 6%; bottom: 2px; transform: scale(1) scaleX(-1); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-saute {
+  from { transform: translateY(0) scaleX(-1); }
+  to { transform: translateY(-16px) scaleX(-1); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-file {
+  to { stroke-dashoffset: -20; }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-vent {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-pose {
+  from { transform: translateY(-24px) scale(1.3); }
+  to { transform: none; }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-accroche {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-14px) rotate(-30deg); }
+  60% { opacity: 1; transform: translateX(-50%) rotate(12deg); }
+  100% { opacity: 1; transform: translateX(-50%) rotate(0); }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-pop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-sujet-qui-s-eloigne-roule {
+  from { transform: translateY(0) rotate(-2deg); }
+  to { transform: translateY(-5px) rotate(2deg); }
+}
+
+/* ------------------------------------------------ A OU À ? / SON OU SONT ?
+   Au CE1 le bureau aux post-it et sa lampe ; au CE2 la craie et le soleil. */
+.sc-a-ou-a {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: min(100%, 880px);
+  margin: 0 auto;
+}
+
+.sc-a-ou-a--ce1 { padding-right: 104px; }
+
+.sc-a-ou-a__teinte--jaune { --sc-pi: #ffe066; --sc-pi-fonce: #e8b600; }
+.sc-a-ou-a__teinte--rose { --sc-pi: #ffc0d9; --sc-pi-fonce: #e64980; }
+.sc-a-ou-a__teinte--bleu { --sc-pi: #a5d8ff; --sc-pi-fonce: #1c7ed6; }
+.sc-a-ou-a__teinte--vert { --sc-pi: #b2f2bb; --sc-pi-fonce: #2f9e44; }
+
+.sc-a-ou-a__tableau {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 30px 22px 20px;
+  border: 10px solid #a8743f;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(255, 255, 255, 0.08), transparent 55%),
+    #2f5a46;
+  box-shadow: inset 0 0 0 2px #7a4f22, 0 12px 22px rgba(0, 0, 0, 0.45);
+}
+
+.sc-a-ou-a--ce2 .sc-a-ou-a__tableau {
+  padding: 22px 84px 22px 22px;
+  background:
+    radial-gradient(ellipse at 25% 15%, rgba(255, 255, 255, 0.07), transparent 55%),
+    #1e2a25;
+}
+
+/* Les post-it punaisés au tableau, comme sur la couverture. */
+.sc-a-ou-a__deco {
+  position: absolute;
+  top: -16px;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 44px;
+  background: var(--sc-pi);
+  color: #d6336c;
+  font: 700 13px/1.05 'Outfit', sans-serif;
+  white-space: pre-line;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+  animation: sc-a-ou-a-vent 4s ease-in-out infinite alternate;
+}
+
+.sc-a-ou-a__deco--1 { left: 14px; transform: rotate(-8deg); }
+.sc-a-ou-a__deco--2 { right: 14px; transform: rotate(7deg); animation-delay: -2s; }
+
+/* La phrase : une feuille punaisée (CE1), de la craie (CE2). */
+.sc-a-ou-a .sc-a-ou-a__feuille {
+  position: relative;
+  margin: 0;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, rgba(47, 127, 176, 0.18) 31px 32px),
+    #fffdf6;
+  color: #1b2430;
+  font-size: clamp(22px, 3vw, 32px);
+  transform: rotate(-0.6deg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.sc-a-ou-a--ce1 .sc-a-ou-a__feuille::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8787, #c92a2a);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.sc-a-ou-a--ce2 .sc-a-ou-a__feuille {
+  background: transparent;
+  box-shadow: none;
+  color: #f5f1e6;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.45);
+  transform: none;
+}
+
+/* Le trou : une place de post-it (CE1), un trait de craie (CE2). */
+.sc-a-ou-a .sc-a-ou-a__trou {
+  min-width: 76px;
+  border: 3px dashed #9fb3c4;
+  border-radius: 6px;
+  background: rgba(255, 249, 196, 0.45);
+  color: #9fb3c4;
+}
+
+.sc-a-ou-a .sc-a-ou-a__trou.est-rempli {
+  border: none;
+  border-radius: 2px 2px 12px 2px;
+  background: var(--sc-pi, #ffe066);
+  color: #1b1b1b;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: rotate(-2deg);
+  animation: sc-a-ou-a-colle 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.sc-a-ou-a--ce2 .sc-a-ou-a__trou {
+  border: none;
+  border-bottom: 4px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sc-a-ou-a--ce2 .sc-a-ou-a__trou.est-rempli {
+  border-bottom: 4px solid var(--sc-pi, #ffe066);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--sc-pi, #ffe066);
+  transform: none;
+  animation: sc-a-ou-a-ecrit 0.7s steps(8, end) both;
+}
+
+/* La preuve : le mot, son remplaçant qui se pose en tournant, le verdict. */
+.sc-a-ou-a__preuve {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.sc-a-ou-a__carte {
+  padding: 4px 16px;
+  border-radius: 2px 2px 12px 2px;
+  background: var(--sc-pi, #fff);
+  color: #1b1b1b;
+  font: 800 24px 'Outfit', sans-serif;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35);
+  transform: rotate(-3deg);
+  animation: sc-a-ou-a-pop 0.4s ease-out 0.3s both;
+}
+
+.sc-a-ou-a__carte--remplacant {
+  background: #fff;
+  border: 2px dashed #495057;
+  transform: rotate(2deg);
+  animation: sc-a-ou-a-retourne 0.6s ease-out 0.8s both;
+}
+
+.sc-a-ou-a--ce2 .sc-a-ou-a__carte {
+  border: 3px solid var(--sc-pi, #f5f1e6);
+  border-radius: 10px;
+  background: transparent;
+  color: #f5f1e6;
+  box-shadow: none;
+}
+
+.sc-a-ou-a--ce2 .sc-a-ou-a__carte--remplacant { border: 3px dashed #f5f1e6; }
+
+.sc-a-ou-a__echange {
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+  animation: sc-a-ou-a-pop 0.3s ease-out 0.6s both;
+}
+
+.sc-a-ou-a__verdict {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  animation: sc-a-ou-a-tampon 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) 1.4s both;
+}
+
+.sc-a-ou-a__verdict.est-oui { background: #2e9e5b; }
+.sc-a-ou-a__verdict.est-non { background: #d8434a; }
+
+/* La lampe de bureau du CE1. */
+.sc-a-ou-a__lampe-place {
+  position: absolute;
+  right: 0;
+  bottom: -6px;
+  width: 108px;
+  height: 144px;
+  z-index: 3;
+}
+
+.sc-a-ou-a__lampe { position: relative; display: block; width: 100%; height: 100%; transform-origin: 60% 100%; }
+.sc-a-ou-a__lampe svg { position: relative; display: block; width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
+
+.sc-a-ou-a__lumiere {
+  position: absolute;
+  left: -46px;
+  top: 40px;
+  width: 100px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 60% 10%, rgba(255, 240, 170, 0.6), transparent 70%);
+  animation: sc-a-ou-a-lueur 3s ease-in-out infinite alternate;
+}
+
+.sc-a-ou-a__tete-lampe {
+  transform-box: view-box;
+  transform-origin: 58px 78px;
+  animation: sc-a-ou-a-regarde 5s ease-in-out infinite alternate;
+}
+
+.sc-a-ou-a__yeux-lampe {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-a-ou-a-cligne 4s ease-in-out infinite;
+}
+
+.sc-a-ou-a__lampe.est-bravo { animation: sc-a-ou-a-hop 0.4s ease-in-out 4 alternate; }
+.sc-a-ou-a__lampe.est-bravo .sc-a-ou-a__lumiere { opacity: 1; transform: scale(1.3); background: radial-gradient(ellipse at 60% 10%, rgba(255, 236, 140, 0.8), transparent 65%); animation: none; }
+.sc-a-ou-a__lampe.est-courage .sc-a-ou-a__tete-lampe { animation: sc-a-ou-a-hoche 0.4s ease-in-out 4 alternate; }
+.sc-a-ou-a__lampe.est-montre .sc-a-ou-a__tete-lampe { animation: none; transform: rotate(-10deg); }
+
+/* Le soleil de craie du CE2. */
+.sc-a-ou-a__soleil-place {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  width: 76px;
+  z-index: 2;
+}
+
+.sc-a-ou-a__soleil { display: block; }
+
+.sc-a-ou-a__soleil svg {
+  display: block;
+  width: 100%;
+  fill: none;
+  stroke: #ffd43b;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.sc-a-ou-a__soleil circle { fill: rgba(255, 212, 59, 0.14); }
+
+.sc-a-ou-a__rayons {
+  transform-box: view-box;
+  transform-origin: 40px 40px;
+  animation: sc-a-ou-a-tourne 22s linear infinite;
+}
+
+.sc-a-ou-a__oeil-soleil--clin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-a-ou-a-cligne 3.6s ease-in-out infinite;
+}
+
+.sc-a-ou-a__soleil.est-bravo { animation: sc-a-ou-a-rayonne 0.5s ease-in-out 3 alternate; }
+.sc-a-ou-a__soleil.est-bravo .sc-a-ou-a__rayons { animation-duration: 2s; }
+.sc-a-ou-a__soleil.est-courage { animation: sc-a-ou-a-penche 0.5s ease-in-out 2 alternate; }
+
+/* Le pot de craies du CE2. */
+.sc-a-ou-a__pot {
+  position: absolute;
+  left: 18px;
+  bottom: -12px;
+  width: 42px;
+  height: 32px;
+  border-radius: 4px 4px 10px 10px;
+  background: linear-gradient(90deg, #8d969e, #d5dbe0 40%, #9aa3ab);
+  z-index: 2;
+}
+
+.sc-a-ou-a__pot span {
+  position: absolute;
+  bottom: 24px;
+  width: 9px;
+  height: 24px;
+  border-radius: 3px 3px 0 0;
+}
+
+.sc-a-ou-a__pot span:nth-child(1) { left: 5px; background: #f783ac; transform: rotate(-12deg); }
+.sc-a-ou-a__pot span:nth-child(2) { left: 16px; background: #ffe066; height: 28px; }
+.sc-a-ou-a__pot span:nth-child(3) { left: 27px; background: #74c0fc; transform: rotate(12deg); }
+
+/* Les réponses : des post-it (CE1), des bâtons de craie (CE2). */
+.sc-a-ou-a__reponses {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 34px;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.sc-a-ou-a__reponses > li {
+  animation: sc-a-ou-a-vent 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.5s);
+}
+
+.sc-a-ou-a__reponses > li:has(.est-fausse) { animation: none; }
+
+.sc-a-ou-a__postit {
+  position: relative;
+  width: 124px;
+  min-height: 108px;
+  padding: 24px 10px 12px;
+  border: none;
+  border-radius: 2px 2px 22px 2px;
+  background: linear-gradient(160deg, var(--sc-pi) 70%, color-mix(in srgb, var(--sc-pi) 80%, #000));
+  color: #1b1b1b;
+  font: 900 42px 'Outfit', sans-serif;
+  box-shadow: 0 10px 14px rgba(0, 0, 0, 0.35);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease;
+}
+
+.sc-a-ou-a__reponses > li:nth-child(odd) .sc-a-ou-a__postit { transform: rotate(-4deg); }
+.sc-a-ou-a__reponses > li:nth-child(even) .sc-a-ou-a__postit { transform: rotate(4deg); }
+.sc-a-ou-a__reponses > li .sc-a-ou-a__postit:hover:not(:disabled) { transform: rotate(0) translateY(-6px) scale(1.05); }
+
+.sc-a-ou-a__punaise {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #74c0fc, #1864ab);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.sc-a-ou-a__craie {
+  position: relative;
+  min-width: 156px;
+  height: 64px;
+  padding: 0 30px 0 22px;
+  border: none;
+  border-radius: 10px 32px 32px 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sc-pi) 60%, #fff), var(--sc-pi) 55%, color-mix(in srgb, var(--sc-pi) 80%, #000));
+  color: #1b1b1b;
+  font: 900 32px 'Outfit', sans-serif;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.4);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease;
+}
+
+.sc-a-ou-a__craie:hover:not(:disabled) { transform: translateY(-5px) rotate(-2deg); }
+
+.sc-a-ou-a__bout {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  width: 14px;
+  height: 30px;
+  margin-top: -15px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.sc-a-ou-a__postit:focus-visible,
+.sc-a-ou-a__craie:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
+
+.sc-a-ou-a__postit.est-fausse,
+.sc-a-ou-a__craie.est-fausse {
+  opacity: 0.45;
+  filter: grayscale(1);
+  text-decoration: line-through;
+  cursor: default;
+}
+
+@keyframes sc-a-ou-a-vent {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2.5deg) translateY(-3px); }
+}
+
+@keyframes sc-a-ou-a-colle {
+  0% { transform: scale(1.5) rotate(-12deg); }
+  100% { transform: rotate(-2deg); }
+}
+
+@keyframes sc-a-ou-a-ecrit {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes sc-a-ou-a-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; }
+}
+
+@keyframes sc-a-ou-a-retourne {
+  from { opacity: 0; transform: perspective(300px) rotateY(90deg) translateX(-20px); }
+  to { opacity: 1; transform: rotate(2deg); }
+}
+
+@keyframes sc-a-ou-a-tampon {
+  from { opacity: 0; transform: scale(2.2) rotate(-20deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-a-ou-a-lueur {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-a-ou-a-regarde {
+  from { transform: rotate(-5deg); }
+  to { transform: rotate(6deg); }
+}
+
+@keyframes sc-a-ou-a-cligne {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.1); }
+}
+
+@keyframes sc-a-ou-a-hop {
+  from { transform: translateY(0) scale(1, 1); }
+  to { transform: translateY(-18px) scale(0.96, 1.05); }
+}
+
+@keyframes sc-a-ou-a-hoche {
+  from { transform: rotate(0); }
+  to { transform: rotate(10deg); }
+}
+
+@keyframes sc-a-ou-a-tourne {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sc-a-ou-a-rayonne {
+  from { transform: scale(1); filter: none; }
+  to { transform: scale(1.3); filter: drop-shadow(0 0 10px #ffd43b); }
+}
+
+@keyframes sc-a-ou-a-penche {
+  from { transform: rotate(0); }
+  to { transform: rotate(-14deg); }
+}
+
+/* ------------------------------------------------ RACONTE, QUESTION OU ORDRE ?
+   La planche du carrefour, la loupe qui cherche, le poteau de flèches. */
+.sc-types-de-phrases {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+
+.sc-types-de-phrases__lanterne {
+  position: absolute;
+  left: 4px;
+  top: -2px;
+  width: 26px;
+  height: 36px;
+  border: 3px solid #333;
+  border-radius: 6px 6px 4px 4px;
+  background: radial-gradient(circle at 50% 60%, #fff3bf, #ffb703 70%);
+  box-shadow: 0 0 18px 6px rgba(255, 196, 70, 0.55);
+  z-index: 3;
+  animation: sc-types-de-phrases-lueur 2.2s ease-in-out infinite alternate;
+}
+
+.sc-types-de-phrases__planche {
+  position: relative;
+  width: 100%;
+  margin-top: 22px;
+  padding: 48px 28px 18px;
+  border: 5px solid #7a4a22;
+  border-radius: 14px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 36px, rgba(90, 50, 20, 0.25) 36px 38px),
+    linear-gradient(180deg, #dca267, #be7f42);
+  box-shadow: inset 0 0 0 2px rgba(255, 230, 190, 0.45), 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.sc-types-de-phrases.est-termine .sc-types-de-phrases__planche { padding-bottom: 34px; }
+
+.sc-types-de-phrases__corde {
+  position: absolute;
+  top: -27px;
+  width: 4px;
+  height: 27px;
+  background: #8a6a3a;
+}
+
+.sc-types-de-phrases__corde--g { left: 18%; }
+.sc-types-de-phrases__corde--d { right: 18%; }
+
+.sc-types-de-phrases .sc-types-de-phrases__phrase {
+  margin: 0;
+  padding: 2px 6px;
+  background: transparent;
+  box-shadow: none;
+  color: #2b160a;
+  font-size: clamp(22px, 3vw, 32px);
+}
+
+.sc-types-de-phrases .sc-types-de-phrases__signe { border-bottom-color: #6b3d16; color: #6b3d16; line-height: 1.15; }
+
+.sc-types-de-phrases .sc-types-de-phrases__signe.est-rempli {
+  border-radius: 8px;
+  border-bottom-color: transparent;
+  background: #2e9e5b;
+  color: #fff;
+  animation: sc-types-de-phrases-tombe 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+/* L'indice qui s'allume sous la loupe, et son étiquette (les lignes s'écartent pour elle). */
+.sc-types-de-phrases.est-termine .sc-types-de-phrases__phrase { line-height: 1.9; }
+
+.sc-types-de-phrases .sc-types-de-phrases__indice {
+  position: relative;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: #ffd8a8;
+  color: inherit;
+  animation: sc-types-de-phrases-allume 0.6s ease-out 0.5s both;
+}
+
+.sc-types-de-phrases .sc-types-de-phrases__indice--question { background: #a5d8ff; }
+.sc-types-de-phrases .sc-types-de-phrases__indice--ordre { background: #ffc9c9; }
+.sc-types-de-phrases .sc-types-de-phrases__indice--raconte { background: rgba(255, 216, 168, 0.75); }
+
+.sc-types-de-phrases .sc-types-de-phrases__indice::after {
+  content: attr(data-dit);
+  position: absolute;
+  left: 0;
+  top: calc(100% + 2px);
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: #2b160a;
+  color: #ffe9a8;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  animation: sc-types-de-phrases-etiquette 0.4s ease-out 0.9s both;
+}
+
+/* La loupe : elle parcourt la phrase, au-dessus des mots. */
+.sc-types-de-phrases__rail {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: -38px;
+  height: 80px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.sc-types-de-phrases__loupe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64px;
+  animation: sc-types-de-phrases-balaye 9s ease-in-out infinite alternate;
+}
+
+.sc-types-de-phrases__loupe svg { display: block; width: 100%; filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35)); }
+
+.sc-types-de-phrases__pupille { animation: sc-types-de-phrases-regarde 2.2s ease-in-out infinite alternate; }
+
+.sc-types-de-phrases__paupiere {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transform: scaleY(0);
+  animation: sc-types-de-phrases-cligne 4.2s ease-in-out infinite;
+}
+
+.sc-types-de-phrases__loupe.est-courage {
+  animation:
+    sc-types-de-phrases-gratte 0.9s ease-in-out,
+    sc-types-de-phrases-balaye 9s ease-in-out 0.9s infinite alternate;
+}
+
+.sc-types-de-phrases__loupe.est-bravo,
+.sc-types-de-phrases__loupe.est-montre {
+  left: calc(100% - 64px);
+  animation: sc-types-de-phrases-arrive 0.8s ease-out both;
+}
+
+.sc-types-de-phrases__loupe.est-bravo { animation: sc-types-de-phrases-arrive 0.8s ease-out both, sc-types-de-phrases-fiere 0.4s ease-in-out 0.8s 4 alternate; }
+.sc-types-de-phrases__loupe.est-bravo .sc-types-de-phrases__paupiere { animation: sc-types-de-phrases-clin 0.6s ease-in-out 1s 2; }
+
+/* Le poteau du carrefour et ses flèches : les réponses. */
+.sc-types-de-phrases__carrefour {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: min(100%, 600px);
+  margin: 8px auto 0;
+  padding: 4px 0 10px;
+}
+
+.sc-types-de-phrases__poteau {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  bottom: 0;
+  width: 18px;
+  margin-left: -9px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(90deg, #5e3313, #a8692f 50%, #5e3313);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+}
+
+.sc-types-de-phrases__fleches {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.sc-types-de-phrases__bras {
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+  animation: sc-types-de-phrases-vent 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+}
+
+.sc-types-de-phrases__bras--gauche { translate: -30px 0; transform-origin: 100% 50%; }
+.sc-types-de-phrases__bras--droite { translate: 30px 0; transform-origin: 0 50%; }
+.sc-types-de-phrases__bras:has(.est-fausse) { animation: none; }
+
+.sc-types-de-phrases__fleche {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 290px;
+  min-height: 58px;
+  padding: 6px 40px 6px 18px;
+  border: none;
+  color: #fff;
+  font: 800 21px 'Outfit', sans-serif;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 50%, calc(100% - 28px) 100%, 0 100%);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-types-de-phrases__bras--gauche .sc-types-de-phrases__fleche {
+  padding: 6px 18px 6px 40px;
+  clip-path: polygon(28px 0, 100% 0, 100% 100%, 28px 100%, 0 50%);
+}
+
+.sc-types-de-phrases__fleche--raconte { background: linear-gradient(180deg, #ffb84d, #e8850c); }
+.sc-types-de-phrases__fleche--question { background: linear-gradient(180deg, #4dabf7, #1864ab); }
+.sc-types-de-phrases__fleche--ordre { background: linear-gradient(180deg, #ff6b6b, #c92a2a); }
+.sc-types-de-phrases__fleche:hover:not(:disabled) { transform: scale(1.05); filter: brightness(1.1); }
+.sc-types-de-phrases__fleche:focus-visible { outline: 4px solid #fff; outline-offset: -6px; }
+.sc-types-de-phrases__icone { flex: none; width: 34px; height: 34px; }
+
+.sc-types-de-phrases__fleche.est-fausse {
+  opacity: 0.5;
+  filter: grayscale(1);
+  text-decoration: line-through;
+  cursor: default;
+  transform: rotate(7deg);
+}
+
+@keyframes sc-types-de-phrases-lueur {
+  from { box-shadow: 0 0 12px 4px rgba(255, 196, 70, 0.4); }
+  to { box-shadow: 0 0 22px 8px rgba(255, 196, 70, 0.7); }
+}
+
+@keyframes sc-types-de-phrases-balaye {
+  from { left: 0; }
+  to { left: calc(100% - 64px); }
+}
+
+@keyframes sc-types-de-phrases-regarde {
+  from { transform: translateX(-4px); }
+  to { transform: translateX(3px); }
+}
+
+@keyframes sc-types-de-phrases-cligne {
+  0%, 90%, 100% { transform: scaleY(0); }
+  94% { transform: scaleY(1); }
+}
+
+@keyframes sc-types-de-phrases-clin {
+  0%, 100% { transform: scaleY(0); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes sc-types-de-phrases-gratte {
+  0%, 100% { rotate: 0deg; }
+  25% { rotate: -16deg; }
+  50% { rotate: 12deg; }
+  75% { rotate: -8deg; }
+}
+
+@keyframes sc-types-de-phrases-arrive {
+  from { left: 0; }
+  to { left: calc(100% - 64px); }
+}
+
+@keyframes sc-types-de-phrases-fiere {
+  from { scale: 1; }
+  to { scale: 1.2; }
+}
+
+@keyframes sc-types-de-phrases-tombe {
+  from { transform: translateY(-40px) scale(1.4); }
+  to { transform: none; }
+}
+
+@keyframes sc-types-de-phrases-allume {
+  from { background: transparent; }
+}
+
+@keyframes sc-types-de-phrases-etiquette {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sc-types-de-phrases-vent {
+  from { transform: rotate(-2deg); }
+  to { transform: rotate(2deg); }
+}
+
+/* ------------------------------------------------ CONTRAIRES ET JUMEAUX
+   Le carrefour des panneaux, le rouge-gorge, le chat, les pancartes. */
+.sc-contraires-et-jumeaux {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 72px 0 10px;
+}
+
+.sc-contraires-et-jumeaux__carrefour {
+  position: relative;
+  padding: 0 12px;
+}
+
+.sc-contraires-et-jumeaux__poteau {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  bottom: -14px;
+  width: 20px;
+  margin-left: -10px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(90deg, #5e3313, #a8692f 50%, #5e3313);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
+}
+
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__paire {
+  position: relative;
+  z-index: 1;
+  gap: 40px;
+  margin: 0;
+}
+
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__panneau {
+  position: relative;
+  min-width: 2.6em;
+  padding: 10px 30px;
+  border: 4px solid #7a4a22;
+  border-radius: 10px;
+  background: #dcae6a;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+  color: #2b160a;
+  font-size: clamp(26px, 3.4vw, 36px);
+  text-align: center;
+}
+
+/* La pointe des panneaux : vers la droite par défaut. */
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__panneau::after {
+  content: "";
+  position: absolute;
+  right: -19px;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border-top: 4px solid #7a4a22;
+  border-right: 4px solid #7a4a22;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+  border-radius: 0 6px 0 0;
+}
+
+/* Un contraire : le mot pointe dans l'autre sens. */
+.sc-contraires-et-jumeaux.est-contraire .sc-contraires-et-jumeaux__panneau--mot::after {
+  right: auto;
+  left: -19px;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__vide.est-vide {
+  border: 4px dashed #7a4a22;
+  background: #fff4dc;
+  color: #7a4a22;
+  box-shadow: none;
+}
+
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__vide.est-vide::after { display: none; }
+
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__vide.est-trouve {
+  color: #14612f;
+  animation: sc-contraires-et-jumeaux-cloue 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__lien {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #b0562a;
+  color: #fff;
+  font-size: 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Après la réponse : les contraires s'écartent, les jumeaux se balancent ensemble, la famille partage sa racine. */
+.sc-contraires-et-jumeaux.est-termine.est-contraire .sc-contraires-et-jumeaux__panneau--mot { animation: sc-contraires-et-jumeaux-gauche 0.7s ease-in-out 0.6s 2 alternate; }
+.sc-contraires-et-jumeaux.est-termine.est-contraire .sc-contraires-et-jumeaux__vide { animation: sc-contraires-et-jumeaux-cloue 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both, sc-contraires-et-jumeaux-droite 0.7s ease-in-out 0.6s 2 alternate; }
+.sc-contraires-et-jumeaux.est-termine.est-jumeau .sc-contraires-et-jumeaux__panneau { animation: sc-contraires-et-jumeaux-ensemble 0.6s ease-in-out 0.6s 4 alternate; }
+.sc-contraires-et-jumeaux.est-termine .sc-contraires-et-jumeaux__lien { animation: sc-contraires-et-jumeaux-bat 0.5s ease-in-out 0.6s 3 alternate; }
+.sc-contraires-et-jumeaux.est-termine.est-jumeau .sc-contraires-et-jumeaux__lien { background: #e64980; }
+.sc-contraires-et-jumeaux.est-termine.est-famille .sc-contraires-et-jumeaux__lien { background: #2f9e44; }
+
+.sc-contraires-et-jumeaux__racine {
+  border-radius: 6px;
+  background: #b2f2bb;
+  box-shadow: inset 0 -3px 0 #2f9e44;
+  color: #0b5d1e;
+  animation: sc-contraires-et-jumeaux-racine 0.6s ease-out 0.7s both;
+}
+
+/* La branche de la famille, entre les deux panneaux ; des feuilles y poussent une fois trouvée. */
+.sc-contraires-et-jumeaux__branche {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 50%;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 5px;
+  background: #7a4a22;
+  z-index: 0;
+}
+
+.sc-contraires-et-jumeaux.est-termine .sc-contraires-et-jumeaux__branche::before,
+.sc-contraires-et-jumeaux.est-termine .sc-contraires-et-jumeaux__branche::after {
+  content: "";
+  position: absolute;
+  top: -16px;
+  width: 22px;
+  height: 14px;
+  border-radius: 0 100% 0 100%;
+  background: #51cf66;
+  animation: sc-contraires-et-jumeaux-pousse 0.6s ease-out 0.8s both;
+}
+
+.sc-contraires-et-jumeaux.est-termine .sc-contraires-et-jumeaux__branche::before { left: 22%; }
+.sc-contraires-et-jumeaux.est-termine .sc-contraires-et-jumeaux__branche::after { right: 22%; transform: scaleX(-1); }
+
+/* Le rouge-gorge, perché en haut du poteau. */
+.sc-contraires-et-jumeaux__perchoir {
+  position: absolute;
+  left: 50%;
+  top: -70px;
+  width: 74px;
+  margin-left: -30px;
+  z-index: 3;
+}
+
+.sc-contraires-et-jumeaux__oiseau {
+  position: relative;
+  display: block;
+  transform-origin: 50% 100%;
+  animation: sc-contraires-et-jumeaux-penche 3.4s ease-in-out infinite;
+}
+
+.sc-contraires-et-jumeaux__oiseau svg { display: block; width: 100%; }
+.sc-contraires-et-jumeaux__aile { transform-box: fill-box; transform-origin: 80% 50%; }
+.sc-contraires-et-jumeaux__oeil-oiseau { transform-box: fill-box; transform-origin: center; animation: sc-contraires-et-jumeaux-cligne 4s ease-in-out infinite; }
+
+.sc-contraires-et-jumeaux__notes {
+  position: absolute;
+  right: -14px;
+  top: -8px;
+  color: #e64980;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.sc-contraires-et-jumeaux__notes span {
+  position: absolute;
+  opacity: 0;
+}
+
+.sc-contraires-et-jumeaux__notes span:nth-child(2) { left: 14px; color: #1c7ed6; }
+.sc-contraires-et-jumeaux__notes span:nth-child(3) { left: 26px; color: #f08c00; }
+
+.sc-contraires-et-jumeaux__oiseau.est-bravo { animation: sc-contraires-et-jumeaux-sautille 0.35s ease-in-out 6 alternate; }
+.sc-contraires-et-jumeaux__oiseau.est-bravo .sc-contraires-et-jumeaux__notes span { animation: sc-contraires-et-jumeaux-note 1.4s ease-out both; }
+.sc-contraires-et-jumeaux__oiseau.est-bravo .sc-contraires-et-jumeaux__notes span:nth-child(2) { animation-delay: 0.3s; }
+.sc-contraires-et-jumeaux__oiseau.est-bravo .sc-contraires-et-jumeaux__notes span:nth-child(3) { animation-delay: 0.6s; }
+.sc-contraires-et-jumeaux__oiseau.est-bravo .sc-contraires-et-jumeaux__aile,
+.sc-contraires-et-jumeaux__oiseau.est-courage .sc-contraires-et-jumeaux__aile { animation: sc-contraires-et-jumeaux-battement 0.18s ease-in-out 8 alternate; }
+.sc-contraires-et-jumeaux__oiseau.est-courage { animation: sc-contraires-et-jumeaux-penche 0.6s ease-in-out 2; }
+
+/* Le chat tigré sur la barrière. */
+.sc-contraires-et-jumeaux__chat {
+  position: absolute;
+  left: 4px;
+  bottom: -8px;
+  width: 84px;
+  z-index: 2;
+}
+
+.sc-contraires-et-jumeaux__chat svg { display: block; width: 100%; }
+.sc-contraires-et-jumeaux__queue { transform-box: fill-box; transform-origin: 0 100%; animation: sc-contraires-et-jumeaux-queue 2.4s ease-in-out infinite alternate; }
+.sc-contraires-et-jumeaux__yeux-chat { transform-box: fill-box; transform-origin: center; animation: sc-contraires-et-jumeaux-cligne 5s ease-in-out infinite; }
+.sc-contraires-et-jumeaux__chat.est-heureux { animation: sc-contraires-et-jumeaux-ronronne 0.3s ease-in-out 6 alternate; }
+
+/* Les pancartes plantées dans l'herbe : les réponses. */
+.sc-contraires-et-jumeaux__pancartes {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 26px;
+  margin: 10px 0 0;
+  padding: 0 0 6px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(105, 180, 70, 0.75), transparent 70%) bottom / 100% 40px no-repeat;
+}
+
+.sc-contraires-et-jumeaux__pancartes > li {
+  padding-bottom: 28px;
+  transform-origin: 50% 100%;
+  animation: sc-contraires-et-jumeaux-vent 2.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -0.95s);
+}
+
+.sc-contraires-et-jumeaux__pancartes > li:has(.est-fausse) { animation: none; }
+
+.sc-contraires-et-jumeaux__pancarte {
+  position: relative;
+  min-width: 130px;
+  min-height: 60px;
+  padding: 10px 22px;
+  border: 4px solid #7a4a22;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f6dca8, #e2b878);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+  color: #2b160a;
+  font: 800 26px 'Outfit', sans-serif;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.15s ease;
+}
+
+.sc-contraires-et-jumeaux__pancarte:hover:not(:disabled) { transform: translateY(-5px) scale(1.04); }
+.sc-contraires-et-jumeaux__pancarte:focus-visible { outline: 4px solid #fff; outline-offset: 4px; }
+
+.sc-contraires-et-jumeaux__piquet {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 10px;
+  height: 30px;
+  margin-left: -5px;
+  border-radius: 0 0 4px 4px;
+  background: #7a4a22;
+}
+
+.sc-contraires-et-jumeaux__pancarte.est-fausse {
+  opacity: 0.45;
+  filter: grayscale(1);
+  text-decoration: line-through;
+  cursor: default;
+  transform: rotate(-10deg) translateY(6px);
+}
+
+@keyframes sc-contraires-et-jumeaux-cloue {
+  0% { transform: translateY(-34px) rotate(-10deg) scale(1.25); }
+  100% { transform: none; }
+}
+
+@keyframes sc-contraires-et-jumeaux-gauche {
+  to { transform: translateX(-14px) rotate(-3deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-droite {
+  to { transform: translateX(14px) rotate(3deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-ensemble {
+  to { transform: translateY(-8px) rotate(-2deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-bat {
+  to { transform: scale(1.22); }
+}
+
+@keyframes sc-contraires-et-jumeaux-racine {
+  from { background: transparent; box-shadow: none; }
+}
+
+@keyframes sc-contraires-et-jumeaux-pousse {
+  from { opacity: 0; scale: 0; }
+  to { opacity: 1; scale: 1; }
+}
+
+@keyframes sc-contraires-et-jumeaux-penche {
+  0%, 60%, 100% { transform: rotate(0); }
+  70% { transform: rotate(-10deg); }
+  85% { transform: rotate(6deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-sautille {
+  from { transform: translateY(0); }
+  to { transform: translateY(-12px); }
+}
+
+@keyframes sc-contraires-et-jumeaux-battement {
+  from { transform: rotate(0); }
+  to { transform: rotate(-35deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-note {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(14px, -46px) rotate(18deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-cligne {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+@keyframes sc-contraires-et-jumeaux-queue {
+  from { transform: rotate(-12deg); }
+  to { transform: rotate(14deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-ronronne {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px) rotate(-3deg); }
+}
+
+@keyframes sc-contraires-et-jumeaux-vent {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+/* ------------------------------------------------ PETITS ÉCRANS (360 px)
+   Tout tient sur une colonne ; les réponses laissent la place du médaillon
+   du professeur, en bas à gauche. */
+@media (max-width: 620px) {
+  .sc-ou-quand-comment__tableau { padding: 22px 14px 16px; border-width: 7px; }
+  .sc-ou-quand-comment__potence { width: 38px; top: -16px; }
+  .sc-ou-quand-comment__ampoule { width: 30px; right: 6px; top: 4px; }
+  .sc-ou-quand-comment__pot { display: none; }
+  .sc-ou-quand-comment__cercle { width: 100px; height: 100px; }
+  .sc-ou-quand-comment__nom { font-size: 15px; }
+  .sc-ou-quand-comment__cercle .sc-ou-quand-comment__icone { width: 38px; height: 38px; }
+  .sc-ou-quand-comment__medaillon { font-size: 21px; }
+
+  .sc-sujet-qui-s-eloigne__panneau { padding: 26px 12px 20px; }
+  .sc-sujet-qui-s-eloigne__paysage { width: calc(100% - 16px); height: 80px; }
+  .sc-sujet-qui-s-eloigne__coureur { width: 42px; }
+  .sc-sujet-qui-s-eloigne__coureur.est-bravo,
+  .sc-sujet-qui-s-eloigne__coureur.est-montre { width: 46px; }
+  .sc-sujet-qui-s-eloigne__galet { min-width: 96px; padding: 10px 16px; font-size: 22px; }
+
+  .sc-a-ou-a--ce1 { padding-right: 0; padding-bottom: 54px; }
+  .sc-a-ou-a__lampe-place { width: 56px; height: 76px; bottom: -4px; }
+  .sc-a-ou-a__deco { display: none; }
+  .sc-a-ou-a__tableau { padding: 22px 12px 16px; border-width: 7px; }
+  .sc-a-ou-a--ce2 .sc-a-ou-a__tableau { padding: 44px 12px 18px; }
+  .sc-a-ou-a__soleil-place { width: 42px; top: 4px; }
+  .sc-a-ou-a__postit { width: 100px; min-height: 88px; font-size: 34px; }
+  .sc-a-ou-a__craie { min-width: 120px; height: 58px; font-size: 26px; }
+
+  .sc-types-de-phrases__planche { padding: 46px 12px 16px; }
+  .sc-types-de-phrases.est-termine .sc-types-de-phrases__planche { padding-bottom: 32px; }
+  .sc-types-de-phrases.est-termine .sc-types-de-phrases__phrase { line-height: 2.2; }
+  .sc-types-de-phrases .sc-types-de-phrases__indice::after { font-size: 12px; }
+  .sc-types-de-phrases__fleche { min-width: 0; width: 100%; font-size: 18px; }
+  .sc-types-de-phrases__bras { width: 100%; }
+  .sc-types-de-phrases__bras--gauche { translate: -8px 0; }
+  .sc-types-de-phrases__bras--droite { translate: 8px 0; }
+  .sc-types-de-phrases__fleches { width: min(100%, 320px); }
+
+  .sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__paire { gap: 24px; }
+  .sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__panneau { padding: 8px 28px; font-size: 24px; }
+  .sc-contraires-et-jumeaux .sc-contraires-et-jumeaux__lien { width: 40px; height: 40px; font-size: 22px; }
+  .sc-contraires-et-jumeaux__chat { display: none; }
+  .sc-contraires-et-jumeaux__pancarte { min-width: 96px; font-size: 21px; padding: 8px 14px; }
+
+  .sc-ou-quand-comment__cercles,
+  .sc-sujet-qui-s-eloigne__galets,
+  .sc-a-ou-a__reponses,
+  .sc-types-de-phrases__carrefour,
+  .sc-contraires-et-jumeaux__pancartes { margin-bottom: 72px; }
+}
+
+/* ------------------------------------------------ MOINS D'ANIMATIONS
+   Tout s'arrête ; les états finaux restent visibles d'emblée. */
+@media (prefers-reduced-motion: reduce) {
+  .sc-ce2-francais__fete,
+  .sc-ce2-francais__fil *,
+  .sc-ou-quand-comment,
+  .sc-ou-quand-comment *,
+  .sc-ou-quand-comment__cercles *,
+  .sc-sujet-qui-s-eloigne,
+  .sc-sujet-qui-s-eloigne *,
+  .sc-sujet-qui-s-eloigne__galets *,
+  .sc-a-ou-a,
+  .sc-a-ou-a *,
+  .sc-a-ou-a__reponses *,
+  .sc-types-de-phrases,
+  .sc-types-de-phrases *,
+  .sc-types-de-phrases__carrefour *,
+  .sc-contraires-et-jumeaux,
+  .sc-contraires-et-jumeaux *,
+  .sc-contraires-et-jumeaux__pancartes * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sc-ce2-francais__fete { display: none; }
+
+  /* Les mascottes attendent à leur place : le petit SUJET au bord du chemin, la loupe au début de la phrase. */
+  .sc-sujet-qui-s-eloigne__coureur { left: 40%; bottom: 14px; transform: scale(0.8); }
+  .sc-sujet-qui-s-eloigne__coureur.est-bravo,
+  .sc-sujet-qui-s-eloigne__coureur.est-montre { left: 6%; bottom: 2px; transform: scaleX(-1); }
+}

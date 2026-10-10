@@ -9,6 +9,8 @@ import decor from '../../assets/Jeux/CP/son.webp';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/cp-ce1-francais/communs';
+import { DecorMarin, Tortue } from './scenes/cp-ce1-francais/Peche';
 
 /**
  * LA PÊCHE AUX SONS, À L'ÉCRAN.
@@ -29,6 +31,11 @@ import { bruitage } from '../../lib/jeux/bruitages';
  *
  * LE DÉCOR EST UN FOND MARIN : les poissons nagent dans la mer elle-même,
  * sans mare dessinée par-dessus.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) — voir `scenes/cp-ce1-francais/Peche.js` :
+ * la mer vit derrière les poissons (devenus poissons-clowns), la tortue
+ * réagit, le coffre s'ouvre et les bulles jaillissent à la belle pêche. Rien
+ * de la règle ne change : mêmes boutons, mêmes voix, même déroulé.
  */
 export default function PecheAuxSons({ onQuitter, matiereCode }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -133,7 +140,11 @@ export default function PecheAuxSons({ onQuitter, matiereCode }) {
   }
 
   return (
-    <div className="jeu jeu--peche" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--peche sc-cp-ce1-francais sc-peche-aux-sons${juste ? ' est-fete' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorMarin ouvert={juste} />
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
         {manches.map((m, i) => (
@@ -146,7 +157,7 @@ export default function PecheAuxSons({ onQuitter, matiereCode }) {
 
       {/* LA LETTRE, EN GRAND : c'est la correspondance que le jeu travaille —
           le son qu'on entend, et la lettre qui l'écrit. */}
-      <p className="peche__lettre" aria-label={`Le son ${leSon.lettre}`}>{leSon.lettre}</p>
+      <p key={courante.son} className="peche__lettre" aria-label={`Le son ${leSon.lettre}`}>{leSon.lettre}</p>
 
       <p className="jeu__consigne">
         {/* Des espaces insécables dans les guillemets, à l'affichage seulement :
@@ -224,16 +235,22 @@ export default function PecheAuxSons({ onQuitter, matiereCode }) {
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+
+      <Tortue humeur={humeurDe({ reussi: juste, faute: Boolean(resultat) })} declic={ratees} />
+      {juste && <Fete forme="bulle" />}
     </div>
   );
 }
 
-/** Un poisson : un corps, une queue, un œil — l'image se pose sur le corps. */
+/** Un poisson-clown : un corps rayé, une queue, un œil — l'image se pose sur le corps. */
 function Poisson() {
   return (
     <svg className="peche__corps" viewBox="0 0 140 90" aria-hidden="true">
       <path className="peche__queue" d="M104 45 L136 20 Q128 45 136 70 Z" />
       <ellipse className="peche__chair" cx="60" cy="45" rx="54" ry="38" />
+      {/* LES RAYURES DU POISSON-CLOWN de la couverture (09/10/2026). */}
+      <path className="sc-peche-aux-sons__rayure" d="M24 15 Q31 45 24 75 L33 79 Q40 45 33 11 Z" />
+      <path className="sc-peche-aux-sons__rayure" d="M94 21 Q100 45 94 69 L101 66 Q106 45 101 24 Z" />
       <path className="peche__nageoire" d="M50 10 Q66 0 80 12 Z" />
       <circle className="peche__oeil" cx="22" cy="36" r="5" />
       <circle className="peche__reflet" cx="20.5" cy="34.5" r="1.6" />

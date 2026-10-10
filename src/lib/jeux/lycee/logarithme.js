@@ -22,6 +22,14 @@
  *
  * Toutes les valeurs sont calculées ici ; un piège qui vaudrait la bonne
  * réponse (même nombre, même fonction) est écarté avant d'être proposé.
+ *
+ * LE DESSIN (09/10/2026) : le domaine, l'équation simple et l'inéquation
+ * portent un `visuel`, la courbe de référence (ln, ou exp pour eˣ = a) dans
+ * une fenêtre fixe : on y voit que ln n'existe que pour x > 0, qu'elle croît,
+ * que eˣ reste au-dessus de l'axe. Ni droite y = k ni solution marquée : ce
+ * serait la réponse. Rien pour les propriétés, les valeurs (le point (1 ; 0)
+ * ou (e ; 1) serait la réponse), l'équation à deux logarithmes (les courbes
+ * se couperaient à la solution) ni la dérivée.
  */
 
 import { bilan as bilanCommun, outils } from '../outils.js';
@@ -81,7 +89,7 @@ const enPoints = (f) => POINTS.map(f);
  * Chaque candidat est [libellé, valeur] ; un piège est [libellé, valeur, phrase].
  */
 function manche(t, {
-  consigne, question, bonne, pieges = [], voisins = [], aide,
+  consigne, question, bonne, pieges = [], voisins = [], aide, visuel,
 }) {
   const liste = [bonne];
   const table = {};
@@ -101,8 +109,33 @@ function manche(t, {
     pieges: table,
   };
   if (aide) m.aide = aide;
+  if (visuel) m.visuel = visuel;
   return m;
 }
+
+/* ------------------------------------------------------------- le dessin */
+
+/** La courbe de ln, seule, dans une fenêtre fixe : rien n'y dépend de la question. */
+const courbeLn = () => ({
+  type: 'courbe',
+  fenetre: {
+    xmin: -1, xmax: 8, ymin: -3, ymax: 3,
+  },
+  fonctions: [{ forme: 'ln', etiquette: 'y = ln x' }],
+});
+
+/**
+ * La courbe de exp, seule, jusqu'à x = 2,3 (eˣ y vaut presque 10, le haut de
+ * la fenêtre). `dessous` descend la fenêtre pour montrer que eˣ n'atteint
+ * jamais une valeur négative.
+ */
+const courbeExp = (dessous = false) => ({
+  type: 'courbe',
+  fenetre: {
+    xmin: -3, xmax: 2.3, ymin: dessous ? -10 : -1, ymax: 10,
+  },
+  fonctions: [{ forme: 'exp', etiquette: 'y = eˣ' }],
+});
 
 const ln = (n) => [`ln ${n}`, Math.log(n)];
 const voisinsLn = (n) => [1, 2, 3].map((k) => ln(n + k));
@@ -235,6 +268,7 @@ function domaine(t) {
     bonne,
     pieges: [[...(a > 0 ? gauche : droite), 'domaine-signe'], [...ferme, 'domaine-strict']],
     voisins: [['ℝ', 'R']],
+    visuel: courbeLn(),
   });
 }
 
@@ -291,6 +325,7 @@ function equationSimple(t) {
       bonne: [`x = e${sup(k)}`, Math.exp(k)],
       pieges,
       voisins: [[`x = e${sup(k + 1)}`, Math.exp(k + 1)], [`x = ${entier(k)}`, k]],
+      visuel: courbeLn(),
     });
   }
   const a = t.entre(2, 9);
@@ -301,6 +336,7 @@ function equationSimple(t) {
       bonne: [`x = ln ${a}`, Math.log(a)],
       pieges: [[`x = e${sup(a)}`, Math.exp(a), 'reciproques']],
       voisins: [[`x = ln ${a + 1}`, Math.log(a + 1)], [`x = −ln ${a}`, -Math.log(a)]],
+      visuel: courbeExp(),
     });
   }
   return manche(t, {
@@ -308,6 +344,7 @@ function equationSimple(t) {
     question: `eˣ = −${a}\nSolution ?`,
     bonne: [AUCUNE, AUCUNE],
     pieges: [[`x = −ln ${a}`, -Math.log(a), 'exp-positive'], [`x = ln ${a}`, Math.log(a), 'exp-positive']],
+    visuel: courbeExp(true),
   });
 }
 
@@ -328,6 +365,7 @@ function inequation(t) {
         bonne: [avant, avant],
         pieges: [[`]−∞ ; ${ek}[`, `]−∞ ; ${ek}[`, 'domaine-inequation'], [apres, apres, 'sens-inequation']],
         aide: 'inequation-regle',
+        visuel: courbeLn(),
       });
     }
     return manche(t, {
@@ -336,6 +374,7 @@ function inequation(t) {
       bonne: [apres, apres],
       pieges: [[avant, avant, 'sens-inequation'], [`]${entier(k)} ; +∞[`, `]${entier(k)} ; +∞[`, 'defaire-ln']],
       aide: 'inequation-regle',
+      visuel: courbeLn(),
     });
   }
   const a = t.entre(2, 9);
@@ -348,6 +387,7 @@ function inequation(t) {
       bonne: [apres, apres],
       pieges: [[`]e${sup(a)} ; +∞[`, `]e${sup(a)} ; +∞[`, 'reciproques'], [avant, avant, 'sens-inequation']],
       aide: 'inequation-regle',
+      visuel: courbeExp(),
     });
   }
   return manche(t, {
@@ -356,6 +396,7 @@ function inequation(t) {
     bonne: [avant, avant],
     pieges: [[`]0 ; ln ${a}[`, `]0 ; ln ${a}[`, 'exp-partout'], [apres, apres, 'sens-inequation']],
     aide: 'inequation-regle',
+    visuel: courbeExp(),
   });
 }
 

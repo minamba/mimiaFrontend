@@ -1,0 +1,2621 @@
+/* ================================================================
+   LES SCÈNES DU GROUPE « LYCÉE, MATHS B » (09/10/2026) — voir
+   `groupes/lycee-maths-b.js`. Un univers par jeu, repris de sa couverture.
+   TOUTES les classes et animations sont préfixées `sc-<cle-du-jeu>` : App.css
+   est global, et des noms courts y sont déjà pris. Une classe commune
+   (`.college__question`, `.visuel-question`) n'est jamais stylée qu'à travers
+   la classe du jeu. Tout s'arrête sous `prefers-reduced-motion`.
+   ================================================================ */
+
+/* ------------------------------------------- LIMITES ET CONTINUITÉ
+   Le canyon des cascades : la stèle, la randonneuse, les radeaux. */
+.sc-limites-et-continuite {
+  display: grid;
+  grid-template-columns: minmax(200px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 900px);
+  animation: sc-limites-et-continuite-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-limites-et-continuite__canyon {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+}
+
+.sc-limites-et-continuite__nuage { animation: sc-limites-et-continuite-nuage 14s ease-in-out infinite alternate; }
+.sc-limites-et-continuite__horizon { animation: sc-limites-et-continuite-lueur 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.sc-limites-et-continuite__infini { fill: #c97b00; font: 700 13px 'Outfit', sans-serif; }
+.sc-limites-et-continuite__borne { fill: #3f3220; font: 800 7.5px 'Outfit', sans-serif; }
+.sc-limites-et-continuite__chute { animation: sc-limites-et-continuite-chute 0.7s linear infinite; }
+.sc-limites-et-continuite__ecume { animation: sc-limites-et-continuite-ecume 1.4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.sc-limites-et-continuite__randonneuse { animation: sc-limites-et-continuite-marche 0.9s ease-in-out infinite; }
+.sc-limites-et-continuite__jambes rect:first-child { animation: sc-limites-et-continuite-pas 0.9s ease-in-out infinite; transform-box: fill-box; transform-origin: top center; }
+.sc-limites-et-continuite__jambes rect:last-child { animation: sc-limites-et-continuite-pas 0.9s ease-in-out -0.45s infinite; transform-box: fill-box; transform-origin: top center; }
+
+/* La stèle de pierre, où la question est gravée. */
+.sc-limites-et-continuite__stele {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #8b7a5a;
+  border-radius: 22px 22px 10px 10px;
+  background: linear-gradient(180deg, #f5eedd 0%, #e2d6b8 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.5), 0 10px 22px rgba(0, 0, 0, 0.3);
+}
+
+.sc-limites-et-continuite .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 6px 10px;
+  background: transparent;
+  box-shadow: none;
+  color: #2b2214;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-limites-et-continuite .visuel-question { gap: 6px; }
+
+/* L'explication, une fois la réponse donnée. */
+.sc-limites-et-continuite__explication {
+  display: flex;
+  justify-content: center;
+  padding: 10px 14px;
+  border: 3px solid #2c5fd6;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1d2a3a;
+  font-size: 17px;
+  animation: sc-limites-et-continuite-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-limites-et-continuite__regle { margin: 4px 0 0; font-size: 17px; line-height: 1.35; text-align: center; }
+
+.sc-limites-et-continuite__barres { display: flex; flex-direction: column; align-items: center; }
+.sc-limites-et-continuite__barres svg { width: min(100%, 330px); height: auto; }
+.sc-limites-et-continuite__axe { stroke: #1d2a3a; stroke-width: 1.2; }
+.sc-limites-et-continuite__asymptote { stroke: #ff8a1c; stroke-width: 1.4; stroke-dasharray: 4 4; }
+.sc-limites-et-continuite__barre { opacity: 0; animation: sc-limites-et-continuite-barre 0.4s ease-out forwards; animation-delay: calc(var(--n) * 0.18s); }
+.sc-limites-et-continuite__barre .est-positive { fill: #2c5fd6; }
+.sc-limites-et-continuite__barre .est-negative { fill: #ff8a1c; }
+.sc-limites-et-continuite__barre text { fill: #1d2a3a; font: 700 10px 'Outfit', sans-serif; }
+
+.sc-limites-et-continuite__rivieres,
+.sc-limites-et-continuite__dominant {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 10px;
+}
+
+.sc-limites-et-continuite__rivieres .sc-limites-et-continuite__regle,
+.sc-limites-et-continuite__dominant .sc-limites-et-continuite__regle,
+.sc-limites-et-continuite__podium .sc-limites-et-continuite__regle,
+.sc-limites-et-continuite__tvi .sc-limites-et-continuite__regle { flex-basis: 100%; }
+
+.sc-limites-et-continuite__source,
+.sc-limites-et-continuite__lac,
+.sc-limites-et-continuite__expr,
+.sc-limites-et-continuite__geant {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 19px;
+}
+
+.sc-limites-et-continuite__source { background: #d9efff; color: #174a8c; animation: sc-limites-et-continuite-coule 0.6s ease-out both; }
+.sc-limites-et-continuite__source + .sc-limites-et-continuite__operation + .sc-limites-et-continuite__source { animation-delay: 0.25s; }
+.sc-limites-et-continuite__operation { font-size: 24px; font-weight: 900; color: #ff8a1c; }
+.sc-limites-et-continuite__fleche { font-size: 26px; font-weight: 900; color: #2c5fd6; }
+
+.sc-limites-et-continuite__lac {
+  background: linear-gradient(135deg, #5cc8d8, #2c5fd6);
+  color: #fff;
+  animation: sc-limites-et-continuite-lac 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) 0.6s both;
+}
+
+.sc-limites-et-continuite__lac.est-tourbillon { background: conic-gradient(from 0deg, #2c5fd6, #5cc8d8, #ff8a1c, #2c5fd6); }
+
+.sc-limites-et-continuite__expr { background: #eef2f7; color: #1d2a3a; font-weight: 600; }
+
+.sc-limites-et-continuite__geant {
+  background: #ffe2c2;
+  color: #a2490a;
+  font-size: 22px;
+  animation: sc-limites-et-continuite-lac 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) 0.3s both;
+}
+
+.sc-limites-et-continuite__podium {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+}
+
+.sc-limites-et-continuite__marche {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 86px;
+  padding-top: 6px;
+  border-radius: 10px 10px 0 0;
+  color: #1d2a3a;
+  font-size: 20px;
+  animation: sc-limites-et-continuite-monte 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.sc-limites-et-continuite__marche span { font-size: 28px; font-weight: 900; opacity: 0.55; }
+.sc-limites-et-continuite__marche.est-or { order: 2; height: 96px; background: linear-gradient(#ffe68a, #f0b70f); animation-delay: 0.5s; }
+.sc-limites-et-continuite__marche.est-argent { order: 1; height: 74px; background: linear-gradient(#f2f4f8, #b3bccb); animation-delay: 0.25s; }
+.sc-limites-et-continuite__marche.est-bronze { order: 3; height: 58px; background: linear-gradient(#ffcf9e, #c9772f); }
+.sc-limites-et-continuite__podium .sc-limites-et-continuite__regle { order: 4; }
+
+.sc-limites-et-continuite__tvi { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.sc-limites-et-continuite__morceau {
+  padding: 5px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  animation: sc-limites-et-continuite-coule 0.5s ease-out both;
+  animation-delay: calc(var(--n) * 0.45s);
+}
+
+.sc-limites-et-continuite__morceau.est-oui { background: #dff7e6; color: #17703a; }
+.sc-limites-et-continuite__morceau.est-non { background: #f2f2f2; color: #6a6f78; }
+
+.sc-limites-et-continuite__theoreme { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+.sc-limites-et-continuite__theoreme strong { font-size: 19px; color: #174a8c; }
+.sc-limites-et-continuite__theoreme .sc-limites-et-continuite__regle { text-align: left; max-width: 30em; }
+.sc-limites-et-continuite__mini { width: 160px; height: auto; }
+.sc-limites-et-continuite__trait { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sc-limites-et-continuite-trace 1.2s ease-out forwards; }
+.sc-limites-et-continuite__trait.est-haut { stroke: #2c5fd6; }
+.sc-limites-et-continuite__trait.est-bas { stroke: #ff8a1c; animation-delay: 0.3s; }
+.sc-limites-et-continuite__trait.est-milieu { stroke: #17703a; stroke-dasharray: 5 4; stroke-dashoffset: 0; animation: none; }
+.sc-limites-et-continuite__plafond { stroke: #ff8a1c; stroke-width: 2; stroke-dasharray: 5 4; }
+.sc-limites-et-continuite__point { fill: #2c5fd6; opacity: 0; animation: sc-limites-et-continuite-barre 0.3s ease-out forwards; animation-delay: calc(var(--n) * 0.2s); }
+
+/* Les radeaux sur la rivière : les réponses. */
+.sc-limites-et-continuite__riviere {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 24px;
+  width: min(100%, 760px);
+  padding: 18px 20px 22px;
+  overflow: hidden;
+  border: 3px solid #e9fbff;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #49c0d1 0%, #1f7f9c 100%);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3);
+}
+
+.sc-limites-et-continuite__vagues {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 18px 4px at 20px 20px, rgba(255, 255, 255, 0.55), transparent 70%) 0 0 / 70px 34px,
+    radial-gradient(ellipse 14px 3px at 50px 8px, rgba(255, 255, 255, 0.4), transparent 70%) 0 0 / 90px 30px;
+  animation: sc-limites-et-continuite-courant 9s linear infinite;
+  pointer-events: none;
+}
+
+.sc-limites-et-continuite__radeau {
+  position: relative;
+  min-width: 128px;
+  padding: 14px 24px 16px;
+  border: none;
+  background: none;
+  color: #fff;
+  font: 800 22px 'Outfit', sans-serif;
+  cursor: pointer;
+  animation:
+    sc-limites-et-continuite-arrive 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both,
+    sc-limites-et-continuite-tangue 3.4s ease-in-out infinite alternate;
+  animation-delay: calc(0.2s + var(--i) * 0.1s), calc(var(--i) * -1.1s);
+}
+
+.sc-limites-et-continuite__planches {
+  position: absolute;
+  inset: 4px 0 0;
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent 40%),
+    repeating-linear-gradient(90deg, #b9813f 0 20px, #8c5a2b 20px 22px);
+  box-shadow: 0 6px 0 #5e3a17, 0 12px 16px rgba(0, 0, 0, 0.3);
+  transition: filter 0.15s ease;
+}
+
+.sc-limites-et-continuite__libelle { position: relative; text-shadow: 0 2px 0 #3d2208, 0 0 6px rgba(0, 0, 0, 0.4); }
+.sc-limites-et-continuite__radeau:hover:not(:disabled) .sc-limites-et-continuite__planches { filter: brightness(1.15) drop-shadow(0 0 10px #fff6c9); }
+.sc-limites-et-continuite__radeau:focus-visible { outline: 4px solid #fff6c9; outline-offset: 4px; border-radius: 10px; }
+.sc-limites-et-continuite__radeau.est-fausse { cursor: default; opacity: 0.6; filter: grayscale(0.8); animation: none; }
+.sc-limites-et-continuite__radeau.est-fausse .sc-limites-et-continuite__libelle { color: #ffd2d2; text-decoration: line-through 3px #e5383b; }
+
+@media (max-width: 640px) {
+  .sc-limites-et-continuite { grid-template-columns: minmax(0, 1fr); }
+  .sc-limites-et-continuite__canyon { max-height: 120px; object-fit: cover; }
+  .sc-limites-et-continuite__radeau { min-width: 96px; padding: 12px 16px 14px; font-size: 19px; }
+}
+
+@keyframes sc-limites-et-continuite-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-limites-et-continuite-nuage { to { transform: translateX(40px); } }
+@keyframes sc-limites-et-continuite-lueur { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.25); opacity: 1; } }
+@keyframes sc-limites-et-continuite-chute { to { stroke-dashoffset: -12; } }
+@keyframes sc-limites-et-continuite-ecume { to { transform: scaleX(1.25); } }
+@keyframes sc-limites-et-continuite-marche { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.6px); } }
+@keyframes sc-limites-et-continuite-pas { 0%, 100% { transform: rotate(14deg); } 50% { transform: rotate(-14deg); } }
+@keyframes sc-limites-et-continuite-barre { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-limites-et-continuite-coule { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+@keyframes sc-limites-et-continuite-lac { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: none; } }
+@keyframes sc-limites-et-continuite-monte { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
+@keyframes sc-limites-et-continuite-trace { to { stroke-dashoffset: 0; } }
+@keyframes sc-limites-et-continuite-courant { to { background-position: 280px 0, -270px 0; } }
+@keyframes sc-limites-et-continuite-arrive { from { opacity: 0; transform: translateY(16px) scale(0.85); } to { opacity: 1; transform: none; } }
+@keyframes sc-limites-et-continuite-tangue { 0% { transform: translate(-8px, 0) rotate(-2deg); } 100% { transform: translate(8px, -5px) rotate(2deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-limites-et-continuite,
+  .sc-limites-et-continuite *,
+  .sc-limites-et-continuite__riviere,
+  .sc-limites-et-continuite__riviere * { animation: none !important; }
+  .sc-limites-et-continuite__barre,
+  .sc-limites-et-continuite__point { opacity: 1; }
+  .sc-limites-et-continuite__trait { stroke-dashoffset: 0; }
+}
+
+/* ------------------------------------------- LE LOGARITHME
+   Le palais des pavillons de cuivre : la plaque de laiton, le pavillon qui
+   chante, la règle à calcul ; les réponses en médaillons de laiton. */
+.sc-logarithme {
+  display: grid;
+  grid-template-columns: minmax(200px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 900px);
+  animation: sc-logarithme-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-logarithme__atelier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 236, 170, 0.92), rgba(120, 72, 18, 0.88));
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.sc-logarithme__pavillon { width: 100%; height: auto; overflow: visible; }
+.sc-logarithme__arcade { fill: rgba(255, 245, 210, 0.35); stroke: rgba(120, 72, 18, 0.5); stroke-width: 2; }
+.sc-logarithme__onde { fill: none; stroke: #fff3c4; stroke-width: 3; stroke-linecap: round; opacity: 0; animation: sc-logarithme-onde 2.4s ease-out infinite; animation-delay: calc(var(--n) * 0.6s); transform-box: fill-box; transform-origin: left center; }
+.sc-logarithme__regle { width: 100%; height: auto; }
+.sc-logarithme__corps { fill: #f7e7b4; stroke: #8a5a12; stroke-width: 1.5; }
+.sc-logarithme__coulisse { fill: #fff8de; stroke: #8a5a12; stroke-width: 1; }
+.sc-logarithme__reglette { animation: sc-logarithme-glisse 7s ease-in-out infinite alternate; }
+.sc-logarithme__trait { stroke: #5a3a0c; stroke-width: 1.2; }
+.sc-logarithme__chiffre { fill: #5a3a0c; font: 700 8px 'Outfit', sans-serif; }
+.sc-logarithme__chiffre.est-fin { fill: #b3260b; font-size: 11px; font-weight: 900; }
+
+/* La plaque de laiton rivetée, où la question est gravée. */
+.sc-logarithme__plaque {
+  position: relative;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 3px solid #8a5a12;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #fff6d6 0%, #f3dc9a 55%, #e5c26a 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.55), 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.sc-logarithme__rivet {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbe6, #a87414);
+}
+
+.sc-logarithme__rivet:nth-child(1) { top: 7px; left: 7px; }
+.sc-logarithme__rivet:nth-child(2) { top: 7px; right: 7px; }
+.sc-logarithme__rivet:nth-child(3) { bottom: 7px; left: 7px; }
+.sc-logarithme__rivet:nth-child(4) { bottom: 7px; right: 7px; }
+
+.sc-logarithme .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 10px;
+  background: transparent;
+  box-shadow: none;
+  color: #3b2507;
+  font-size: clamp(18px, 2.2vw, 24px);
+}
+
+.sc-logarithme__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 3px solid #b8862a;
+  border-radius: 18px;
+  background: rgba(255, 251, 238, 0.97);
+  color: #3b2507;
+  animation: sc-logarithme-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-logarithme__regle-texte { margin: 0; font-size: 18px; font-weight: 600; text-align: center; }
+.sc-logarithme__calcul { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.sc-logarithme__calcul svg { width: min(100%, 420px); height: auto; overflow: visible; }
+.sc-logarithme__longueur { opacity: 0; animation: sc-logarithme-pose 0.6s ease-out forwards; animation-delay: calc(0.3s + var(--n) * 0.7s); }
+.sc-logarithme__longueur line { stroke-width: 6; stroke-linecap: round; }
+.sc-logarithme__longueur .est-avance { stroke: #d08a12; }
+.sc-logarithme__longueur .est-recule { stroke: #b3260b; }
+.sc-logarithme__etiquette { fill: #3b2507; font: 800 10px 'Outfit', sans-serif; }
+.sc-logarithme__arrivee { fill: #b3260b; opacity: 0; transform-box: fill-box; transform-origin: center; animation: sc-logarithme-arrivee 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) forwards; animation-delay: calc(0.3s + var(--n) * 0.7s); }
+
+.sc-logarithme__lnu { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+.sc-logarithme__piece {
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: #f7e7b4;
+  font-size: 19px;
+  font-weight: 700;
+  opacity: 0;
+  animation: sc-logarithme-pose 0.5s ease-out forwards;
+  animation-delay: calc(0.2s + var(--n, 0) * 0.6s);
+}
+
+.sc-logarithme__piece.est-fin { background: #b3260b; color: #fff; }
+
+.sc-logarithme__intervalle { width: min(100%, 380px); height: auto; }
+.sc-logarithme__reelle { stroke: #3b2507; stroke-width: 2; }
+.sc-logarithme__plage { fill: #e5a52a; opacity: 0; animation: sc-logarithme-pose 0.6s ease-out 0.2s forwards; }
+.sc-logarithme__crochet { fill: none; stroke: #b3260b; stroke-width: 3; }
+.sc-logarithme__borne { fill: #3b2507; font: 800 13px 'Outfit', sans-serif; }
+
+/* Les médaillons de laiton : les réponses. La classe est doublée pour passer
+   devant les couleurs communes des objets (.scene__carte--objet). */
+.objet--sc-logarithme.objet--sc-logarithme {
+  border: 3px solid #6b4310;
+  border-radius: 999px;
+  color: #3b2507;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(107, 67, 16, 0.35) 60%, transparent 63%),
+    radial-gradient(circle at 30% 25%, #fff4c2 0%, #e2a93b 55%, #7a4a10 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.6), inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-logarithme.objet--sc-logarithme {
+  background:
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(107, 67, 16, 0.35) 60%, transparent 63%),
+    radial-gradient(circle at 30% 25%, #ffe1c4 0%, #d07b3a 55%, #6e3510 100%);
+}
+
+.objet--sc-logarithme.objet--sc-logarithme:hover:not(:disabled) { filter: brightness(1.1) drop-shadow(0 0 12px #fff1b8); }
+.scene__choix > li:nth-child(n) > .objet--sc-logarithme.objet--sc-logarithme.est-fausse { background: linear-gradient(150deg, #b9b1a0, #7c7468); color: #fff; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-logarithme { grid-template-columns: minmax(0, 1fr); }
+  .sc-logarithme__atelier { flex-direction: row; }
+  .sc-logarithme__pavillon { width: 46%; }
+  .sc-logarithme__regle { width: 54%; }
+}
+
+@keyframes sc-logarithme-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-logarithme-onde { 0% { opacity: 0.9; transform: translateX(0) scale(0.6); } 100% { opacity: 0; transform: translateX(34px) scale(1.4); } }
+@keyframes sc-logarithme-glisse { from { transform: translateX(-26px); } to { transform: translateX(26px); } }
+@keyframes sc-logarithme-pose { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes sc-logarithme-arrivee { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-logarithme,
+  .sc-logarithme * { animation: none !important; }
+  .sc-logarithme__longueur,
+  .sc-logarithme__arrivee,
+  .sc-logarithme__piece,
+  .sc-logarithme__plage { opacity: 1; }
+  .sc-logarithme__onde { opacity: 0.5; }
+}
+
+/* ------------------------------------------- PRIMITIVES ET INTÉGRALES
+   Les marais salants au couchant : le panneau blanchi de sel, les bassins
+   qui scintillent ; après la réponse, le bassin qui se remplit. */
+.sc-primitives-et-integrales {
+  display: grid;
+  grid-template-columns: minmax(200px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-primitives-et-integrales-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-primitives-et-integrales__marais {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #fffaf2;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(60, 20, 60, 0.35);
+}
+
+.sc-primitives-et-integrales__soleil { animation: sc-primitives-et-integrales-couchant 12s ease-in-out infinite alternate; }
+.sc-primitives-et-integrales__reflet { animation: sc-primitives-et-integrales-miroite 2.2s ease-in-out infinite alternate; }
+.sc-primitives-et-integrales__scintille { opacity: 0.2; animation: sc-primitives-et-integrales-scintille 3s ease-in-out infinite; animation-delay: calc(var(--n) * 0.45s); }
+.sc-primitives-et-integrales__rateau { transform-box: fill-box; transform-origin: top left; animation: sc-primitives-et-integrales-ratisse 2.6s ease-in-out infinite alternate; }
+
+/* Le panneau de bois blanchi par le sel. */
+.sc-primitives-et-integrales__panneau {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 3px solid #b48a62;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.9) 0 3px, transparent 4px),
+    radial-gradient(circle at 92% 88%, rgba(255, 255, 255, 0.9) 0 3px, transparent 4px),
+    linear-gradient(180deg, #fffaf2 0%, #f3e6d6 100%);
+  box-shadow: 0 0 0 4px rgba(242, 121, 155, 0.35), 0 10px 22px rgba(60, 20, 60, 0.35);
+}
+
+.sc-primitives-et-integrales .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #3a2440;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-primitives-et-integrales__explication {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #f2799b;
+  border-radius: 18px;
+  background: rgba(255, 252, 247, 0.97);
+  color: #3a2440;
+  animation: sc-primitives-et-integrales-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-primitives-et-integrales__regle { margin: 6px 0 0; font-size: 17px; line-height: 1.35; text-align: center; }
+
+.sc-primitives-et-integrales__bassin svg { display: block; width: 100%; height: auto; }
+.sc-primitives-et-integrales__axe { stroke: #3a2440; stroke-width: 1.5; }
+.sc-primitives-et-integrales__courbe { fill: none; stroke: #5b4b9a; stroke-width: 3; stroke-linecap: round; }
+.sc-primitives-et-integrales__borne { stroke: #3a2440; stroke-width: 1.2; stroke-dasharray: 4 4; }
+.sc-primitives-et-integrales__eau { transform-box: view-box; transform-origin: 50% 100%; animation: sc-primitives-et-integrales-remplit 1.4s ease-out both; }
+.sc-primitives-et-integrales__eau .est-positive { fill: #7cc4e6; }
+.sc-primitives-et-integrales__eau .est-negative { fill: #f2799b; }
+.sc-primitives-et-integrales__niveau { fill: rgba(91, 75, 154, 0.32); stroke: #5b4b9a; stroke-width: 2; stroke-dasharray: 6 4; opacity: 0; animation: sc-primitives-et-integrales-apparait 0.6s ease-out 1.4s forwards; }
+
+.sc-primitives-et-integrales__verif,
+.sc-primitives-et-integrales__chasles { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sc-primitives-et-integrales__chasles svg { width: min(100%, 300px); height: auto; }
+
+.sc-primitives-et-integrales__piece {
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: #ffe6ee;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  animation: sc-primitives-et-integrales-apparait 0.5s ease-out both;
+}
+
+.sc-primitives-et-integrales__piece.est-f { background: #5b4b9a; color: #fff; animation-delay: 0.6s; }
+.sc-primitives-et-integrales__derive { color: #f2799b; font-weight: 900; animation: sc-primitives-et-integrales-apparait 0.4s ease-out 0.35s both; }
+.sc-primitives-et-integrales__route { stroke: #3a2440; stroke-width: 2; }
+.sc-primitives-et-integrales__arc { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 400; stroke-dashoffset: 400; animation: sc-primitives-et-integrales-trace 0.9s ease-out forwards; }
+.sc-primitives-et-integrales__arc.est-total { stroke: #7cc4e6; }
+.sc-primitives-et-integrales__arc.est-connu { stroke: #f2799b; animation-delay: 0.5s; }
+.sc-primitives-et-integrales__arc.est-cherche { stroke: #5b4b9a; animation-delay: 1s; }
+.sc-primitives-et-integrales__jalon { fill: #fff; stroke: #3a2440; stroke-width: 2; }
+.sc-primitives-et-integrales__nombre { fill: #3a2440; font: 800 13px 'Outfit', sans-serif; }
+
+/* Les petits bassins d'eau rose : les réponses. */
+.objet--sc-primitives-et-integrales.objet--sc-primitives-et-integrales {
+  border: 4px solid #fffaf2;
+  border-radius: 10px;
+  color: #3a2440;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+  background:
+    linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 40%, transparent 50%),
+    linear-gradient(160deg, #ffd6e4 0%, #f6a9c5 50%, #c99ae6 100%);
+  box-shadow: 0 0 0 3px #d8c7b0, 0 8px 0 #c9b59a;
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-primitives-et-integrales.objet--sc-primitives-et-integrales {
+  background:
+    linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 40%, transparent 50%),
+    linear-gradient(160deg, #ffe7c4 0%, #ffb36b 55%, #f2799b 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-primitives-et-integrales.objet--sc-primitives-et-integrales.est-fausse { background: linear-gradient(150deg, #c9c3cc, #8d8592); color: #fff; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-primitives-et-integrales { grid-template-columns: minmax(0, 1fr); }
+  .sc-primitives-et-integrales__marais { max-height: 120px; }
+}
+
+@keyframes sc-primitives-et-integrales-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-primitives-et-integrales-couchant { from { transform: translateY(-6px); } to { transform: translateY(6px); } }
+@keyframes sc-primitives-et-integrales-miroite { from { opacity: 0.4; } to { opacity: 1; } }
+@keyframes sc-primitives-et-integrales-scintille { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.95; } }
+@keyframes sc-primitives-et-integrales-ratisse { from { transform: rotate(-4deg) translateX(-4px); } to { transform: rotate(4deg) translateX(6px); } }
+@keyframes sc-primitives-et-integrales-remplit { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes sc-primitives-et-integrales-apparait { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-primitives-et-integrales-trace { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-primitives-et-integrales,
+  .sc-primitives-et-integrales * { animation: none !important; }
+  .sc-primitives-et-integrales__niveau { opacity: 1; }
+  .sc-primitives-et-integrales__arc { stroke-dashoffset: 0; }
+}
+
+/* ------------------------------------------- LA LOI BINOMIALE
+   La planche de Galton du jardin d'hiver : les billes de cuivre et
+   d'argent tombent clou après clou ; on répond en lâchant sa bille dans un bac. */
+.sc-loi-binomiale {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-loi-binomiale-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-loi-binomiale__planche {
+  display: block;
+  width: 100%;
+  max-height: 230px;
+  height: auto;
+  filter: drop-shadow(0 10px 14px rgba(40, 20, 60, 0.35));
+}
+
+.sc-loi-binomiale__fond { fill: #bfe3cf; stroke: #c49a3a; stroke-width: 4; }
+.sc-loi-binomiale__entonnoir { fill: rgba(255, 255, 255, 0.7); stroke: #c49a3a; stroke-width: 2; }
+.sc-loi-binomiale__clou { fill: #e7b84a; stroke: #8a6414; stroke-width: 1; }
+.sc-loi-binomiale__bac { fill: rgba(255, 255, 255, 0.35); stroke: #c49a3a; stroke-width: 1.5; }
+.sc-loi-binomiale__tas { fill: #c9773a; opacity: 0.75; }
+.sc-loi-binomiale__bille { opacity: 0; animation: sc-loi-binomiale-chute-0 3.6s ease-in infinite; animation-delay: calc(var(--n) * 0.9s); }
+.sc-loi-binomiale__bille.est-chemin-1 { animation-name: sc-loi-binomiale-chute-1; }
+.sc-loi-binomiale__bille.est-chemin-2 { animation-name: sc-loi-binomiale-chute-2; }
+
+/* La plaque de verre cerclée de laiton. */
+.sc-loi-binomiale__plaque {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 4px solid #c49a3a;
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.97), rgba(236, 228, 250, 0.97));
+  box-shadow: 0 0 0 3px rgba(91, 47, 140, 0.35), 0 10px 22px rgba(40, 20, 60, 0.35);
+}
+
+.sc-loi-binomiale .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #2c1a44;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-loi-binomiale__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #5b2f8c;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #2c1a44;
+  animation: sc-loi-binomiale-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-loi-binomiale__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-loi-binomiale__histo,
+.sc-loi-binomiale__pascal { width: 100%; height: auto; }
+.sc-loi-binomiale__colonne rect { fill: #c9b8e3; transform-box: fill-box; transform-origin: bottom; animation: sc-loi-binomiale-pousse 0.45s ease-out both; animation-delay: calc(var(--n) * 0.06s); }
+.sc-loi-binomiale__colonne rect.est-allumee { fill: #c9773a; stroke: #7a3c10; stroke-width: 1.5; }
+.sc-loi-binomiale__colonne rect.est-barree { fill: #e6e0ee; }
+.sc-loi-binomiale__colonne text { fill: #2c1a44; font: 700 9px 'Outfit', sans-serif; }
+.sc-loi-binomiale__croix { stroke: #c0392b; stroke-width: 3; stroke-linecap: round; }
+.sc-loi-binomiale__bande { fill: rgba(196, 154, 58, 0.25); stroke: #c49a3a; stroke-dasharray: 4 3; animation: sc-loi-binomiale-apparait 0.6s ease-out 0.8s both; }
+.sc-loi-binomiale__esperance line { stroke: #5b2f8c; stroke-width: 2.5; stroke-dasharray: 5 3; }
+.sc-loi-binomiale__esperance text { fill: #5b2f8c; font: 900 11px 'Outfit', sans-serif; }
+.sc-loi-binomiale__esperance { animation: sc-loi-binomiale-apparait 0.6s ease-out 0.6s both; }
+.sc-loi-binomiale__case { fill: #6d5a86; font: 700 10px 'Outfit', sans-serif; animation: sc-loi-binomiale-apparait 0.4s ease-out both; animation-delay: calc(var(--n) * 0.12s); }
+.sc-loi-binomiale__case.est-cible { fill: #c0392b; font-size: 13px; font-weight: 900; }
+
+/* Les bacs de verre : les réponses. */
+.sc-loi-binomiale__bacs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 760px);
+  padding: 12px 16px 10px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(191, 227, 207, 0.92), rgba(140, 196, 168, 0.92));
+  box-shadow: inset 0 -8px 0 #c49a3a, 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.sc-loi-binomiale__bac-reponse {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 118px;
+  min-height: 92px;
+  padding: 26px 16px 10px;
+  border: 3px solid #c49a3a;
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0.5));
+  color: #2c1a44;
+  font: 800 21px 'Outfit', sans-serif;
+  cursor: pointer;
+  animation: sc-loi-binomiale-entre 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(0.2s + var(--i) * 0.1s);
+  transition: transform 0.15s ease;
+}
+
+.sc-loi-binomiale__goulot {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 34px;
+  height: 14px;
+  background: #c49a3a;
+  clip-path: polygon(0 0, 100% 0, 70% 100%, 30% 100%);
+  transform: translateX(-50%);
+}
+
+.sc-loi-binomiale__billes {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 6px;
+  height: 14px;
+  background:
+    radial-gradient(circle at 12% 60%, #d98a4a 0 5px, transparent 6px),
+    radial-gradient(circle at 30% 50%, #c7cdd6 0 5px, transparent 6px),
+    radial-gradient(circle at 50% 62%, #d98a4a 0 5px, transparent 6px),
+    radial-gradient(circle at 70% 48%, #c7cdd6 0 5px, transparent 6px),
+    radial-gradient(circle at 88% 60%, #d98a4a 0 5px, transparent 6px);
+  opacity: 0.85;
+}
+
+.sc-loi-binomiale__etiquette { position: relative; z-index: 1; margin-bottom: 14px; padding: 2px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.9); }
+.sc-loi-binomiale__bac-reponse:hover:not(:disabled) { transform: translateY(-5px); }
+
+/* Au survol, une bille tombe du goulot dans le bac. */
+.sc-loi-binomiale__bac-reponse:hover:not(:disabled)::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe3c4, #b8642a);
+  animation: sc-loi-binomiale-lache 0.7s ease-in infinite;
+}
+
+.sc-loi-binomiale__bac-reponse:focus-visible { outline: 4px solid #5b2f8c; outline-offset: 3px; }
+.sc-loi-binomiale__bac-reponse.est-fausse { cursor: default; opacity: 0.55; filter: grayscale(0.8); }
+.sc-loi-binomiale__bac-reponse.est-fausse .sc-loi-binomiale__etiquette { color: #c0392b; text-decoration: line-through 3px; }
+
+@media (max-width: 640px) {
+  .sc-loi-binomiale { grid-template-columns: minmax(0, 1fr); }
+  .sc-loi-binomiale__planche { max-height: 130px; }
+  .sc-loi-binomiale__bac-reponse { min-width: 92px; min-height: 80px; font-size: 18px; }
+}
+
+@keyframes sc-loi-binomiale-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-loi-binomiale-apparait { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-loi-binomiale-pousse { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes sc-loi-binomiale-lache { from { transform: translateY(0); opacity: 1; } to { transform: translateY(34px); opacity: 0; } }
+@keyframes sc-loi-binomiale-chute-0 {
+  0% { opacity: 0; transform: translate(0, 0); }
+  8% { opacity: 1; transform: translate(0, 8px); }
+  22% { transform: translate(-11px, 24px); }
+  36% { transform: translate(0, 41px); }
+  50% { transform: translate(11px, 58px); }
+  64% { transform: translate(0, 75px); }
+  78% { transform: translate(-11px, 92px); }
+  92% { opacity: 1; transform: translate(-11px, 118px); }
+  100% { opacity: 0; transform: translate(-11px, 122px); }
+}
+@keyframes sc-loi-binomiale-chute-1 {
+  0% { opacity: 0; transform: translate(0, 0); }
+  8% { opacity: 1; transform: translate(0, 8px); }
+  22% { transform: translate(11px, 24px); }
+  36% { transform: translate(22px, 41px); }
+  50% { transform: translate(11px, 58px); }
+  64% { transform: translate(22px, 75px); }
+  78% { transform: translate(33px, 92px); }
+  92% { opacity: 1; transform: translate(33px, 118px); }
+  100% { opacity: 0; transform: translate(33px, 122px); }
+}
+@keyframes sc-loi-binomiale-chute-2 {
+  0% { opacity: 0; transform: translate(0, 0); }
+  8% { opacity: 1; transform: translate(0, 8px); }
+  22% { transform: translate(-11px, 24px); }
+  36% { transform: translate(-22px, 41px); }
+  50% { transform: translate(-11px, 58px); }
+  64% { transform: translate(-22px, 75px); }
+  78% { transform: translate(-33px, 92px); }
+  92% { opacity: 1; transform: translate(-33px, 118px); }
+  100% { opacity: 0; transform: translate(-33px, 122px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-loi-binomiale,
+  .sc-loi-binomiale *,
+  .sc-loi-binomiale__bacs,
+  .sc-loi-binomiale__bacs *,
+  .sc-loi-binomiale__bac-reponse::before { animation: none !important; }
+  .sc-loi-binomiale__bille { opacity: 0; }
+}
+
+/* ------------------------------------------- LE DÉNOMBREMENT
+   La salle des joyaux : le présentoir triangulaire et ses cristaux, le
+   cartouche bordé d'or ; après la réponse, les écrins qui se multiplient. */
+.sc-denombrement {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-denombrement-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-denombrement__presentoir {
+  display: block;
+  width: 100%;
+  max-height: 230px;
+  height: auto;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 40%, #fff4e0 0%, #f0c9a0 55%, #8c1d2c 100%);
+  box-shadow: 0 0 0 3px #d9a93a, 0 10px 22px rgba(60, 10, 20, 0.4);
+}
+
+.sc-denombrement__tenture { fill: #9c1f33; }
+.sc-denombrement__cadre { fill: rgba(255, 255, 255, 0.18); }
+.sc-denombrement__barreaux { fill: none; stroke: #d9a93a; stroke-width: 3; stroke-linejoin: round; }
+.sc-denombrement__fil { stroke: #d9a93a; stroke-width: 1; }
+.sc-denombrement__coupe { fill: #d9a93a; opacity: 0.8; }
+.sc-denombrement__cristal { transform-box: fill-box; transform-origin: top center; animation: sc-denombrement-balance 3s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.37s); }
+.sc-denombrement__eclat { fill: #fff; opacity: 0; animation: sc-denombrement-eclat 2.8s ease-in-out infinite; animation-delay: calc(var(--n) * 0.31s); }
+
+/* Le cartouche bordé d'or, sur fond de velours. */
+.sc-denombrement__cartouche {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 4px double #d9a93a;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fffaf0 0%, #fbeede 100%);
+  box-shadow: 0 0 0 5px #8c1d2c, 0 12px 24px rgba(60, 10, 20, 0.4);
+}
+
+.sc-denombrement .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #3d0f18;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-denombrement__explication {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #d9a93a;
+  border-radius: 18px;
+  background: rgba(255, 250, 240, 0.97);
+  color: #3d0f18;
+  animation: sc-denombrement-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-denombrement__regle { margin: 6px 0 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-denombrement__ecrins { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.sc-denombrement__rangee { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; }
+.sc-denombrement__ligne-ecrin { display: inline-flex; align-items: center; gap: 6px; animation: sc-denombrement-pose 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both; animation-delay: calc(var(--n) * 0.25s); }
+
+.sc-denombrement__ecrin {
+  display: inline-grid;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 8px;
+  border: 2px solid #d9a93a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #b0263b, #6e1222);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25);
+}
+
+.sc-denombrement__ecrin.est-parent { background: linear-gradient(180deg, #2b6fd6, #163f86); }
+.sc-denombrement__ecrin.est-terne { opacity: 0.5; }
+.sc-denombrement__signe { font-size: 20px; font-weight: 900; color: #8c1d2c; animation: sc-denombrement-pose 0.4s ease-out both; animation-delay: calc(var(--n, 0) * 0.25s); }
+.sc-denombrement__signe.est-diviser { padding: 2px 8px; border-radius: 8px; background: #fbeede; }
+
+.sc-denombrement__tresor {
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fff1b8, #d9a93a);
+  color: #3d0f18;
+  font-size: 22px;
+  font-weight: 900;
+  animation: sc-denombrement-tresor 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  animation-delay: calc(var(--n, 0) * 0.25s);
+}
+
+/* L'arbre du modèle. */
+.sc-denombrement__arbre { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 16px; }
+.sc-denombrement__branches { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.sc-denombrement__branche { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; border-radius: 12px; opacity: 0.55; }
+.sc-denombrement__branche.est-allume { opacity: 1; background: rgba(217, 169, 58, 0.18); }
+.sc-denombrement__noeud,
+.sc-denombrement__feuille { padding: 4px 10px; border-radius: 10px; background: #f3e4d4; font-weight: 700; }
+.sc-denombrement__noeud.est-allume { background: #8c1d2c; color: #fff; }
+.sc-denombrement__feuille.est-allume { background: linear-gradient(135deg, #fff1b8, #d9a93a); animation: sc-denombrement-tresor 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 0.4s both; }
+.sc-denombrement__mot { color: #8c1d2c; font-weight: 900; }
+
+/* Les pendentifs de cristal taillé : les réponses. */
+.objet--sc-denombrement.objet--sc-denombrement {
+  border: none;
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 35%, 50% 100%, 0 35%);
+  padding: 12px 34px 30px;
+  color: #fff;
+  text-shadow: 0 2px 2px rgba(0, 0, 0, 0.45);
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.5) 0 18%, transparent 18% 50%, rgba(0, 0, 0, 0.15) 50%),
+    linear-gradient(180deg, #ff7a9a 0%, #e0245e 45%, #8c0f33 100%);
+}
+
+.scene__choix > li:nth-child(3n + 2) > .objet--sc-denombrement.objet--sc-denombrement {
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.5) 0 18%, transparent 18% 50%, rgba(0, 0, 0, 0.15) 50%),
+    linear-gradient(180deg, #8fb8ff 0%, #2b6fd6 45%, #13357a 100%);
+}
+
+.scene__choix > li:nth-child(3n) > .objet--sc-denombrement.objet--sc-denombrement {
+  color: #2a1440;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.7) 0 18%, transparent 18% 50%, rgba(0, 0, 0, 0.08) 50%),
+    linear-gradient(180deg, #ffffff 0%, #dfe7f7 45%, #a9b6d6 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-denombrement.objet--sc-denombrement.est-fausse { background: linear-gradient(150deg, #b9b4bd, #77707d); color: #fff; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-denombrement { grid-template-columns: minmax(0, 1fr); }
+  .sc-denombrement__presentoir { max-height: 130px; }
+}
+
+@keyframes sc-denombrement-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-denombrement-balance { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes sc-denombrement-eclat { 0%, 70%, 100% { opacity: 0; } 80% { opacity: 1; } }
+@keyframes sc-denombrement-pose { from { opacity: 0; transform: translateY(-14px) scale(0.8); } to { opacity: 1; transform: none; } }
+@keyframes sc-denombrement-tresor { from { opacity: 0; transform: scale(0.3) rotate(-10deg); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-denombrement,
+  .sc-denombrement * { animation: none !important; }
+}
+
+/* ------------------------------------------- LA GÉOMÉTRIE DANS L'ESPACE
+   Le chantier dans le ciel : le repère lumineux, les plans de verre, l'écran
+   de verre sombre ; après la réponse, la situation dessinée en perspective. */
+.sc-geometrie-espace {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 940px);
+  animation: sc-geometrie-espace-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-geometrie-espace__repere {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #bfe6ff;
+  border-radius: 18px;
+  box-shadow: 0 0 18px rgba(120, 210, 255, 0.55), 0 10px 22px rgba(0, 20, 60, 0.4);
+}
+
+.sc-geometrie-espace__poutre { stroke: #b5562a; stroke-width: 4; opacity: 0.55; }
+.sc-geometrie-espace__ilot { animation: sc-geometrie-espace-flotte 5s ease-in-out infinite alternate; }
+.sc-geometrie-espace__nuage { animation: sc-geometrie-espace-nuage 12s ease-in-out infinite alternate; }
+.sc-geometrie-espace__plan { stroke: #e9f8ff; stroke-width: 1.5; }
+.sc-geometrie-espace__plan.est-sol { fill: rgba(200, 240, 255, 0.45); }
+.sc-geometrie-espace__plan.est-mur { fill: rgba(170, 225, 255, 0.4); animation: sc-geometrie-espace-respire 4s ease-in-out infinite alternate; }
+.sc-geometrie-espace__plan.est-haut { fill: rgba(255, 220, 150, 0.35); stroke: #ffd27a; stroke-dasharray: 5 4; }
+.sc-geometrie-espace__axes line,
+.sc-geometrie-espace__axes path { fill: none; stroke: #ffffff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.sc-geometrie-espace__axes { filter: drop-shadow(0 0 4px #7fd8ff); animation: sc-geometrie-espace-brille 2.6s ease-in-out infinite alternate; }
+.sc-geometrie-espace__lettre { fill: #ffffff; font: 800 13px 'Outfit', sans-serif; }
+.sc-geometrie-espace__lettre.est-sombre { fill: #0d2a52; }
+.sc-geometrie-espace__origine { fill: #ffffff; filter: drop-shadow(0 0 6px #7fd8ff); animation: sc-geometrie-espace-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+/* L'écran de verre sombre, bordé de lumière. */
+.sc-geometrie-espace__ecran {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 2px solid #7fd8ff;
+  border-radius: 18px;
+  background: linear-gradient(160deg, rgba(10, 32, 70, 0.95) 0%, rgba(14, 52, 102, 0.95) 100%);
+  box-shadow: 0 0 22px rgba(127, 216, 255, 0.5), inset 0 0 30px rgba(127, 216, 255, 0.15);
+}
+
+.sc-geometrie-espace .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #eef8ff;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+
+.sc-geometrie-espace .visuel-question { color: #eef8ff; }
+
+.sc-geometrie-espace__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #7fd8ff;
+  border-radius: 18px;
+  background: rgba(245, 251, 255, 0.97);
+  color: #0d2a52;
+  animation: sc-geometrie-espace-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-geometrie-espace__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-geometrie-espace__dessin { width: min(100%, 300px); height: auto; }
+.sc-geometrie-espace__explication .sc-geometrie-espace__plan.est-sol { fill: rgba(127, 216, 255, 0.3); stroke: #3d7fd9; }
+.sc-geometrie-espace__droite,
+.sc-geometrie-espace__vecteur,
+.sc-geometrie-espace__normale { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sc-geometrie-espace-trace 0.9s ease-out forwards; }
+.sc-geometrie-espace__droite.est-d,
+.sc-geometrie-espace__vecteur.est-u { stroke: #3d7fd9; }
+.sc-geometrie-espace__droite.est-dp,
+.sc-geometrie-espace__vecteur.est-v { stroke: #e2662a; animation-delay: 0.5s; }
+.sc-geometrie-espace__vecteur.est-w { stroke: #17a868; animation-delay: 1s; }
+.sc-geometrie-espace__vecteur.est-w.est-sort { stroke: #c0392b; }
+.sc-geometrie-espace__normale { stroke: #c0392b; animation-delay: 0.3s; }
+.sc-geometrie-espace__pointe { fill: none; stroke: #0d2a52; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; animation: sc-geometrie-espace-apparait 0.4s ease-out 1s both; }
+.sc-geometrie-espace__angle-droit { fill: none; stroke: #0d2a52; stroke-width: 2; animation: sc-geometrie-espace-apparait 0.4s ease-out 1.1s both; }
+.sc-geometrie-espace__angle-droit.est-flash { stroke: #17a868; stroke-width: 3; }
+.sc-geometrie-espace__aplomb { stroke: #0d2a52; stroke-width: 1.5; stroke-dasharray: 3 3; animation: sc-geometrie-espace-apparait 0.4s ease-out 1.2s both; }
+.sc-geometrie-espace__impact { fill: #ffd27a; stroke: #c0392b; stroke-width: 2.5; transform-box: fill-box; transform-origin: center; animation: sc-geometrie-espace-impact 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 1.2s both; }
+.sc-geometrie-espace__impact.est-pose { animation-delay: 0.9s; }
+
+.sc-geometrie-espace__calculs { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.sc-geometrie-espace__calculs li { padding: 4px 10px; border-radius: 10px; background: #e3f3ff; font-size: 16px; font-weight: 700; text-align: center; animation: sc-geometrie-espace-apparait 0.4s ease-out both; animation-delay: calc(0.3s + var(--n, 0) * 0.45s); }
+
+/* Les éclats de verre : les réponses. */
+.objet--sc-geometrie-espace.objet--sc-geometrie-espace {
+  border: 2px solid #e9f8ff;
+  border-radius: 4px;
+  clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+  padding-inline: 34px;
+  color: #0d2a52;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.85) 0 22%, rgba(255, 255, 255, 0.2) 22% 60%, rgba(255, 255, 255, 0.5) 60%),
+    linear-gradient(180deg, #c9f0ff 0%, #7fd8ff 100%);
+  box-shadow: inset 0 0 12px rgba(61, 127, 217, 0.4);
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-geometrie-espace.objet--sc-geometrie-espace {
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.85) 0 22%, rgba(255, 255, 255, 0.2) 22% 60%, rgba(255, 255, 255, 0.5) 60%),
+    linear-gradient(180deg, #ffe9c9 0%, #ffc27f 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-geometrie-espace.objet--sc-geometrie-espace.est-fausse { background: linear-gradient(150deg, #c3c9d1, #8a929e); color: #fff; text-shadow: none; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-geometrie-espace { grid-template-columns: minmax(0, 1fr); }
+  .sc-geometrie-espace__repere { max-height: 130px; }
+}
+
+@keyframes sc-geometrie-espace-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-geometrie-espace-flotte { from { transform: translateY(-3px); } to { transform: translateY(4px); } }
+@keyframes sc-geometrie-espace-nuage { to { transform: translateX(26px); } }
+@keyframes sc-geometrie-espace-respire { from { opacity: 0.55; transform: translateX(-3px); } to { opacity: 1; transform: translateX(3px); } }
+@keyframes sc-geometrie-espace-brille { from { opacity: 0.75; } to { opacity: 1; } }
+@keyframes sc-geometrie-espace-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+@keyframes sc-geometrie-espace-trace { to { stroke-dashoffset: 0; } }
+@keyframes sc-geometrie-espace-apparait { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-geometrie-espace-impact { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-geometrie-espace,
+  .sc-geometrie-espace * { animation: none !important; }
+  .sc-geometrie-espace__droite,
+  .sc-geometrie-espace__vecteur,
+  .sc-geometrie-espace__normale { stroke-dashoffset: 0; }
+}
+
+/* ------------------------------------------- LA CONVEXITÉ
+   Les toits de tuiles au couchant : la bille qui roule dans le creux du toit,
+   le panneau laqué ; après la réponse, les tangentes qui se posent. */
+.sc-convexite {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-convexite-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-convexite__toits {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #fff3e0;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(90, 30, 10, 0.4);
+}
+
+.sc-convexite__soleil { animation: sc-convexite-soleil 10s ease-in-out infinite alternate; }
+.sc-convexite__rang { stroke: rgba(90, 30, 10, 0.45); stroke-width: 2; }
+.sc-convexite__faitage { fill: none; stroke: #ffd9b0; stroke-width: 3; }
+.sc-convexite__bille { fill: #2a7d8c; stroke: #fff; stroke-width: 2; animation: sc-convexite-roule 3.2s ease-in-out infinite alternate; }
+
+/* Le panneau laqué, bordé de terre cuite. */
+.sc-convexite__panneau {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 4px solid #c8582a;
+  border-radius: 22px 22px 14px 14px;
+  background: linear-gradient(180deg, #fffaf2 0%, #fbe9d6 100%);
+  box-shadow: 0 -6px 0 #a8441c, 0 10px 22px rgba(90, 30, 10, 0.4);
+}
+
+.sc-convexite .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #3d1a0a;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-convexite__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #c8582a;
+  border-radius: 18px;
+  background: rgba(255, 250, 242, 0.97);
+  color: #3d1a0a;
+  animation: sc-convexite-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-convexite__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-convexite__courbe { width: min(100%, 300px); height: auto; }
+.sc-convexite__trace { fill: none; stroke: #c8582a; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sc-convexite-trace 1s ease-out forwards; }
+.sc-convexite__tangente,
+.sc-convexite__corde { stroke-width: 3; stroke-linecap: round; opacity: 0; animation: sc-convexite-pose 0.5s ease-out forwards; animation-delay: calc(1s + var(--n) * 0.5s); }
+.sc-convexite__tangente { stroke: #2a7d8c; }
+.sc-convexite__corde { stroke: #7d6aa8; stroke-dasharray: 6 4; }
+.sc-convexite__inflexion { fill: #ffd27a; stroke: #3d1a0a; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: sc-convexite-clignote 0.9s ease-in-out 1.5s infinite alternate; }
+
+.sc-convexite__chaine { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+.sc-convexite__piece {
+  padding: 5px 12px;
+  border-radius: 12px;
+  background: #fbe2cf;
+  font-size: 18px;
+  font-weight: 700;
+  animation: sc-convexite-pose 0.5s ease-out both;
+  animation-delay: calc(var(--n, 0) * 0.6s);
+}
+
+.sc-convexite__piece.est-fin { background: #c8582a; color: #fff; }
+.sc-convexite__fleche { color: #c8582a; font-weight: 900; animation: sc-convexite-pose 0.4s ease-out both; animation-delay: calc(0.3s + var(--n, 0) * 0.6s); }
+
+/* Les tuiles de terre cuite : les réponses. */
+.objet--sc-convexite.objet--sc-convexite {
+  border: 2px solid #7a2e10;
+  border-radius: 46% 46% 10px 10px / 34% 34% 10px 10px;
+  padding: 18px 28px 12px;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(90, 30, 10, 0.7);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(90, 30, 10, 0.18) 22px 24px),
+    linear-gradient(180deg, #f6a46a 0%, #e0703a 45%, #a8441c 100%);
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.35), 0 6px 0 #7a2e10;
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-convexite.objet--sc-convexite {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(20, 60, 70, 0.18) 22px 24px),
+    linear-gradient(180deg, #6ec3cf 0%, #2a7d8c 55%, #18505a 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-convexite.objet--sc-convexite.est-fausse { background: linear-gradient(150deg, #c9bdb6, #8d817a); text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-convexite { grid-template-columns: minmax(0, 1fr); }
+  .sc-convexite__toits { max-height: 130px; }
+}
+
+@keyframes sc-convexite-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-convexite-soleil { from { transform: translateY(-4px); } to { transform: translateY(8px); } }
+@keyframes sc-convexite-roule {
+  0% { transform: translate(-50px, -6px); }
+  25% { transform: translate(-25px, -1.6px); }
+  50% { transform: translate(0, 0); }
+  75% { transform: translate(25px, -1.6px); }
+  100% { transform: translate(50px, -6px); }
+}
+@keyframes sc-convexite-trace { to { stroke-dashoffset: 0; } }
+@keyframes sc-convexite-pose { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes sc-convexite-clignote { from { transform: scale(0.8); } to { transform: scale(1.5); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-convexite,
+  .sc-convexite * { animation: none !important; }
+  .sc-convexite__trace { stroke-dashoffset: 0; }
+  .sc-convexite__tangente,
+  .sc-convexite__corde { opacity: 1; }
+}
+
+/* ------------------------------------------- LA RÉCURRENCE
+   Le palais des dominos : le pendule, la file laquée rouge et or, le rouleau ;
+   on répond en renversant un domino ; après la réponse, la file rejoue la preuve. */
+.sc-recurrence {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 940px);
+  animation: sc-recurrence-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-recurrence__file {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #d9a93a;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(60, 0, 0, 0.45);
+}
+
+.sc-recurrence__salle { fill: #7d1218; }
+.sc-recurrence__poutres { stroke: #3b0a0d; stroke-width: 6; }
+.sc-recurrence__table { fill: #3b1a0c; }
+.sc-recurrence__potence { fill: #d9a93a; }
+.sc-recurrence__tige { stroke: #d9a93a; stroke-width: 2.5; }
+.sc-recurrence__boule { fill: #1b1b1f; stroke: #d9a93a; stroke-width: 1.5; }
+.sc-recurrence__bras { transform-box: fill-box; transform-origin: top left; animation: sc-recurrence-balance 2.4s ease-in-out infinite alternate; }
+.sc-recurrence__face { fill: #141417; }
+.sc-recurrence__liseret { fill: none; stroke: #d62a2a; stroke-width: 2; }
+.sc-recurrence__point { fill: #f4e7c8; }
+.sc-recurrence__domino-deco { transform-box: fill-box; transform-origin: bottom right; animation: sc-recurrence-frisson 2.4s ease-in-out infinite; animation-delay: calc(var(--n) * 0.08s); }
+
+/* Le rouleau de papier, bordé de laque et d'or. */
+.sc-recurrence__rouleau {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 4px solid #b3141c;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(150, 100, 40, 0.18), transparent 6%, transparent 94%, rgba(150, 100, 40, 0.18)),
+    #fff8e8;
+  box-shadow: 0 0 0 3px #d9a93a, 0 10px 22px rgba(60, 0, 0, 0.45);
+}
+
+.sc-recurrence .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #2b0a0c;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+
+.sc-recurrence__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #d9a93a;
+  border-radius: 18px;
+  background: rgba(255, 248, 232, 0.97);
+  color: #2b0a0c;
+  animation: sc-recurrence-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-recurrence__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-recurrence__chaine { width: 100%; height: auto; }
+.sc-recurrence__chaine .sc-recurrence__bras { animation: none; }
+.sc-recurrence__pendule.est-lance .sc-recurrence__bras { animation: sc-recurrence-lance 0.6s ease-in both; }
+.sc-recurrence__chaine .sc-recurrence__pendule:not(.est-lance) .sc-recurrence__bras { transform: rotate(-30deg); }
+.sc-recurrence__domino { transform-box: fill-box; transform-origin: bottom right; }
+.sc-recurrence__domino.est-tombe { animation: sc-recurrence-tombe 0.35s ease-in forwards; animation-delay: calc(0.6s + var(--n) * 0.32s); }
+.sc-recurrence__domino.est-allume .sc-recurrence__liseret { stroke: #ffd24a; stroke-width: 3; }
+.sc-recurrence__etiquette { fill: #2b0a0c; font: 700 8.5px 'Outfit', sans-serif; }
+
+/* Les dominos debout : les réponses. */
+.sc-recurrence__dominos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
+  width: min(100%, 820px);
+  padding: 10px 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(125, 18, 24, 0.9), rgba(59, 26, 12, 0.95));
+  box-shadow: inset 0 -10px 0 #3b1a0c, 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.sc-recurrence__domino-reponse {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 112px;
+  max-width: 250px;
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid #d62a2a;
+  border-radius: 12px;
+  background: #141417;
+  color: #fff8e8;
+  font: 700 18px 'Outfit', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #5a0d10, 0 10px 16px rgba(0, 0, 0, 0.4);
+  transform-origin: bottom right;
+  animation: sc-recurrence-dresse 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(0.2s + var(--i) * 0.1s);
+  transition: transform 0.15s ease;
+}
+
+.sc-recurrence__points {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px 8px;
+  border-bottom: 2px solid #d9a93a;
+}
+
+.sc-recurrence__points span { width: 10px; height: 10px; border-radius: 50%; background: #f4e7c8; }
+.sc-recurrence__libelle { padding: 10px 12px 12px; line-height: 1.25; }
+.sc-recurrence__domino-reponse:hover:not(:disabled) { animation: sc-recurrence-vacille 0.5s ease-in-out infinite alternate; }
+.sc-recurrence__domino-reponse:focus-visible { outline: 4px solid #ffd24a; outline-offset: 3px; }
+.sc-recurrence__domino-reponse.est-fausse { cursor: default; opacity: 0.6; transform: rotate(8deg); animation: none; filter: grayscale(0.7); }
+.sc-recurrence__domino-reponse.est-fausse .sc-recurrence__libelle { color: #ffb3b3; text-decoration: line-through 3px #d62a2a; }
+
+@media (max-width: 640px) {
+  .sc-recurrence { grid-template-columns: minmax(0, 1fr); }
+  .sc-recurrence__file { max-height: 110px; }
+  .sc-recurrence__domino-reponse { min-width: 96px; font-size: 16px; }
+}
+
+@keyframes sc-recurrence-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-recurrence-balance { from { transform: rotate(-26deg); } to { transform: rotate(4deg); } }
+@keyframes sc-recurrence-lance { from { transform: rotate(-30deg); } to { transform: rotate(0deg); } }
+@keyframes sc-recurrence-frisson { 0%, 85%, 100% { transform: rotate(0); } 92% { transform: rotate(4deg); } }
+@keyframes sc-recurrence-tombe { to { transform: rotate(72deg); } }
+@keyframes sc-recurrence-dresse { from { opacity: 0; transform: translateY(12px) rotate(-6deg); } to { opacity: 1; transform: none; } }
+@keyframes sc-recurrence-vacille { from { transform: rotate(-2deg); } to { transform: rotate(3deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-recurrence,
+  .sc-recurrence *,
+  .sc-recurrence__dominos,
+  .sc-recurrence__dominos * { animation: none !important; }
+  .sc-recurrence__domino.est-tombe { transform: rotate(72deg); }
+}
+
+/* ------------------------------------------- LES ÉVOLUTIONS
+   La cité des turbines : la roue qui tourne, l'écran de contrôle ; on répond
+   en abaissant une manette ; après la réponse, les écluses et leurs coefficients. */
+.sc-les-evolutions {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-les-evolutions-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-les-evolutions__centrale {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #c9f6ff;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(20, 40, 80, 0.4);
+}
+
+.sc-les-evolutions__carter { fill: #2a4a6e; stroke: #c9d6e3; stroke-width: 4; }
+.sc-les-evolutions__pale { fill: #35c6ee; stroke: #0f5f84; stroke-width: 1.5; }
+.sc-les-evolutions__roue { transform-box: view-box; transform-origin: 58px 96px; animation: sc-les-evolutions-tourne 4s linear infinite; }
+.sc-les-evolutions__moyeu { fill: #e9f3fb; stroke: #0f5f84; stroke-width: 2; }
+.sc-les-evolutions__chute { animation: sc-les-evolutions-chute 0.6s linear infinite; }
+
+/* L'écran de contrôle de la centrale. */
+.sc-les-evolutions__ecran {
+  min-width: 0;
+  overflow: hidden;
+  border: 3px solid #1aa3c9;
+  border-radius: 16px;
+  background: #fbfeff;
+  box-shadow: 0 0 0 4px rgba(26, 163, 201, 0.25), 0 10px 22px rgba(20, 40, 80, 0.4);
+}
+
+.sc-les-evolutions__barre { display: flex; align-items: center; gap: 7px; padding: 6px 12px; background: linear-gradient(90deg, #1aa3c9, #0f5f84); }
+.sc-les-evolutions__barre span { width: 10px; height: 10px; border-radius: 50%; background: #8ff3a0; animation: sc-les-evolutions-led 1.6s ease-in-out infinite; }
+.sc-les-evolutions__barre span:nth-child(2) { animation-delay: 0.3s; background: #ffd27a; }
+.sc-les-evolutions__barre span:nth-child(3) { animation-delay: 0.6s; background: #ff9fb0; }
+.sc-les-evolutions__barre em { margin-left: 6px; color: #e9fbff; font-size: 14px; font-style: normal; font-weight: 800; letter-spacing: 0.04em; }
+
+.sc-les-evolutions .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 10px 14px;
+  background: transparent;
+  box-shadow: none;
+  color: #0b2d45;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-les-evolutions__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #1aa3c9;
+  border-radius: 18px;
+  background: rgba(251, 254, 255, 0.97);
+  color: #0b2d45;
+  animation: sc-les-evolutions-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-les-evolutions__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-les-evolutions__ecluses { width: 100%; height: auto; overflow: visible; }
+.sc-les-evolutions__cuve { fill: #eef6fb; stroke: #6b8aa3; stroke-width: 1.5; }
+.sc-les-evolutions__niveau { fill: #35c6ee; transform-box: fill-box; transform-origin: bottom; animation: sc-les-evolutions-monte 0.6s ease-out both; animation-delay: calc(var(--n) * 0.45s); }
+.sc-les-evolutions__valeur { fill: #0b2d45; font: 800 10px 'Outfit', sans-serif; }
+.sc-les-evolutions__operation { opacity: 0; animation: sc-les-evolutions-apparait 0.4s ease-out forwards; animation-delay: calc(var(--n) * 0.45s - 0.1s); }
+.sc-les-evolutions__operation path { fill: none; stroke: #e2662a; stroke-width: 2; stroke-dasharray: 3 3; }
+.sc-les-evolutions__operation text { fill: #b54a14; font: 900 10px 'Outfit', sans-serif; }
+.sc-les-evolutions__retour { fill: #6c5bb8; font: 800 10px 'Outfit', sans-serif; }
+
+/* Le pupitre et ses manettes : les réponses. */
+.sc-les-evolutions__pupitre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  width: min(100%, 780px);
+  padding: 14px 16px 12px;
+  border-radius: 18px 18px 26px 26px;
+  background: linear-gradient(180deg, #3a5675 0%, #23384f 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.2), 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.sc-les-evolutions__manette {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 120px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  animation: sc-les-evolutions-entre 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(0.2s + var(--i) * 0.1s);
+}
+
+.sc-les-evolutions__levier {
+  position: relative;
+  width: 8px;
+  height: 46px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #9fb3c8, #e9f3fb, #9fb3c8);
+  transform-origin: bottom center;
+  transform: rotate(-18deg);
+  transition: transform 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.sc-les-evolutions__pommeau {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd0d0, #e5383b 60%, #8c1418);
+}
+
+.sc-les-evolutions__manette:nth-child(3n + 2) .sc-les-evolutions__pommeau { background: radial-gradient(circle at 35% 30%, #d0f6ff, #1aa3c9 60%, #0f5f84); }
+.sc-les-evolutions__manette:nth-child(3n) .sc-les-evolutions__pommeau { background: radial-gradient(circle at 35% 30%, #fff1c4, #f0b70f 60%, #8a6414); }
+
+.sc-les-evolutions__plaque {
+  min-width: 110px;
+  padding: 8px 14px;
+  border: 2px solid #9fb3c8;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #f4f8fb, #d4e0ea);
+  color: #0b2d45;
+  font: 800 20px 'Outfit', sans-serif;
+  box-shadow: 0 4px 0 #7d92a6;
+}
+
+.sc-les-evolutions__manette:hover:not(:disabled) .sc-les-evolutions__levier,
+.sc-les-evolutions__manette:focus-visible .sc-les-evolutions__levier { transform: rotate(18deg); }
+.sc-les-evolutions__manette:active:not(:disabled) .sc-les-evolutions__levier { transform: rotate(40deg); }
+.sc-les-evolutions__manette:focus-visible .sc-les-evolutions__plaque { outline: 4px solid #8ff3ff; outline-offset: 2px; }
+.sc-les-evolutions__manette.est-fausse { cursor: default; opacity: 0.55; filter: grayscale(0.8); }
+.sc-les-evolutions__manette.est-fausse .sc-les-evolutions__levier { transform: rotate(-40deg); }
+.sc-les-evolutions__manette.est-fausse .sc-les-evolutions__plaque { color: #c0392b; text-decoration: line-through 3px; }
+
+@media (max-width: 640px) {
+  .sc-les-evolutions { grid-template-columns: minmax(0, 1fr); }
+  .sc-les-evolutions__centrale { max-height: 120px; }
+  .sc-les-evolutions__manette { min-width: 96px; }
+  .sc-les-evolutions__plaque { min-width: 92px; font-size: 18px; }
+}
+
+@keyframes sc-les-evolutions-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-les-evolutions-tourne { to { transform: rotate(360deg); } }
+@keyframes sc-les-evolutions-chute { to { stroke-dashoffset: -12; } }
+@keyframes sc-les-evolutions-led { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes sc-les-evolutions-monte { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes sc-les-evolutions-apparait { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-les-evolutions,
+  .sc-les-evolutions *,
+  .sc-les-evolutions__pupitre,
+  .sc-les-evolutions__pupitre * { animation: none !important; transition: none !important; }
+  .sc-les-evolutions__operation { opacity: 1; }
+}
+
+/* ------------------------------------------- FONCTIONS ET PARABOLES
+   La centrale solaire : le miroir parabolique, les rayons qui convergent
+   vers le foyer, la tablette de l'ingénieur ; les réponses en panneaux de miroir. */
+.sc-fonctions-et-paraboles {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-fonctions-et-paraboles-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-fonctions-et-paraboles__miroir {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #eaf6ff;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(10, 50, 90, 0.4);
+}
+
+.sc-fonctions-et-paraboles__dome { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 3; }
+.sc-fonctions-et-paraboles__soleil { fill: #fff3a8; filter: drop-shadow(0 0 8px #fff3a8); animation: sc-fonctions-et-paraboles-soleil 3s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.sc-fonctions-et-paraboles__tour { fill: #d4dde6; stroke: #6b7f93; stroke-width: 1.5; }
+.sc-fonctions-et-paraboles__foyer { fill: #fff6c9; stroke: #f0a019; stroke-width: 2; animation: sc-fonctions-et-paraboles-foyer 1.6s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+.sc-fonctions-et-paraboles__rayon { fill: none; stroke: #fff3a8; stroke-width: 2; stroke-dasharray: 8 6; animation: sc-fonctions-et-paraboles-rayon 1s linear infinite; animation-delay: calc(var(--n) * -0.2s); }
+.sc-fonctions-et-paraboles__parabole { fill: none; stroke: #b9d9f2; stroke-width: 7; stroke-linecap: round; filter: drop-shadow(0 2px 0 #3c6e98); }
+.sc-fonctions-et-paraboles__sol { fill: #c9d3dc; }
+.sc-fonctions-et-paraboles__rail { stroke: #6b7f93; stroke-width: 2; stroke-dasharray: 10 4; }
+
+/* La tablette de l'ingénieur. */
+.sc-fonctions-et-paraboles__tablette {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 10px solid #1d2b38;
+  border-radius: 22px;
+  background: #fbfdff;
+  box-shadow: 0 0 0 2px #4aa3f0, 0 10px 22px rgba(10, 50, 90, 0.4);
+}
+
+.sc-fonctions-et-paraboles .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #0f2a44;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-fonctions-et-paraboles__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #4aa3f0;
+  border-radius: 18px;
+  background: rgba(251, 253, 255, 0.97);
+  color: #0f2a44;
+  animation: sc-fonctions-et-paraboles-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-fonctions-et-paraboles__eclat { width: min(100%, 220px); height: auto; overflow: visible; }
+.sc-fonctions-et-paraboles__eclat .sc-fonctions-et-paraboles__parabole { stroke-width: 5; }
+.sc-fonctions-et-paraboles__rayon.est-final { stroke: #f0a019; stroke-dasharray: none; stroke-dashoffset: 0; opacity: 0; animation: sc-fonctions-et-paraboles-apparait 0.4s ease-out forwards; animation-delay: calc(var(--n) * 0.15s); }
+.sc-fonctions-et-paraboles__foyer.est-allume { animation: sc-fonctions-et-paraboles-allume 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) 0.7s both; }
+.sc-fonctions-et-paraboles__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-fonctions-et-paraboles__termes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 8px; }
+.sc-fonctions-et-paraboles__termes .sc-fonctions-et-paraboles__regle { flex-basis: 100%; font-weight: 700; }
+
+.sc-fonctions-et-paraboles__terme {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: #e5f2fd;
+  font-size: 18px;
+  font-weight: 600;
+  animation: sc-fonctions-et-paraboles-pose 0.45s ease-out both;
+  animation-delay: calc(0.5s + var(--n, 0) * 0.4s);
+}
+
+.sc-fonctions-et-paraboles__terme strong { color: #b5650a; }
+.sc-fonctions-et-paraboles__fleche { color: #4aa3f0; font-weight: 900; }
+
+/* Les panneaux de miroir : les réponses. */
+.objet--sc-fonctions-et-paraboles.objet--sc-fonctions-et-paraboles {
+  border: 3px solid #6b7f93;
+  border-radius: 10px 10px 40% 40% / 10px 10px 26px 26px;
+  color: #0f2a44;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.9) 0 18%, transparent 18% 40%, rgba(255, 255, 255, 0.45) 40% 48%, transparent 48%),
+    linear-gradient(180deg, #f4fbff 0%, #b9d9f2 60%, #7fb2dc 100%);
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-fonctions-et-paraboles.objet--sc-fonctions-et-paraboles {
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.9) 0 18%, transparent 18% 40%, rgba(255, 255, 255, 0.45) 40% 48%, transparent 48%),
+    linear-gradient(180deg, #fffbe9 0%, #ffe39a 60%, #f0b84a 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-fonctions-et-paraboles.objet--sc-fonctions-et-paraboles.est-fausse { background: linear-gradient(150deg, #c3c9d1, #8a929e); color: #fff; text-shadow: none; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-fonctions-et-paraboles { grid-template-columns: minmax(0, 1fr); }
+  .sc-fonctions-et-paraboles__miroir { max-height: 120px; }
+  .sc-fonctions-et-paraboles__tablette { border-width: 6px; }
+}
+
+@keyframes sc-fonctions-et-paraboles-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-fonctions-et-paraboles-soleil { from { transform: scale(0.92); } to { transform: scale(1.08); } }
+@keyframes sc-fonctions-et-paraboles-foyer { from { transform: scale(0.85); opacity: 0.8; } to { transform: scale(1.3); opacity: 1; } }
+@keyframes sc-fonctions-et-paraboles-rayon { to { stroke-dashoffset: -14; } }
+@keyframes sc-fonctions-et-paraboles-apparait { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-fonctions-et-paraboles-allume { from { transform: scale(0.3); fill: #fff; } to { transform: scale(1.4); fill: #ffd24a; } }
+@keyframes sc-fonctions-et-paraboles-pose { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-fonctions-et-paraboles,
+  .sc-fonctions-et-paraboles * { animation: none !important; }
+  .sc-fonctions-et-paraboles__rayon.est-final { opacity: 1; }
+}
+
+/* ------------------------------------------- INTÉRÊTS ET POURCENTAGES
+   L'atelier de la monnaie : la presse qui frappe, les piles qui montent, le
+   livre de comptes ; on glisse sa pièce dans le coffre (ou on la touche). */
+.sc-interets-et-pourcentages {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-interets-et-pourcentages-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-interets-et-pourcentages__atelier {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #f0b72f;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(60, 30, 0, 0.45);
+}
+
+.sc-interets-et-pourcentages__mur { fill: #d9b98f; }
+.sc-interets-et-pourcentages__fenetre { fill: #bfe3ff; stroke: #7a5a3a; stroke-width: 4; }
+.sc-interets-et-pourcentages__etabli { fill: #7a4a24; }
+.sc-interets-et-pourcentages__metal { fill: #5c6670; stroke: #2e353c; stroke-width: 1; }
+.sc-interets-et-pourcentages__metal.est-clair { fill: #8c98a4; }
+.sc-interets-et-pourcentages__plateau { fill: #f0b72f; stroke: #8a5a0c; stroke-width: 1; }
+.sc-interets-et-pourcentages__piston { animation: sc-interets-et-pourcentages-frappe 1.4s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
+.sc-interets-et-pourcentages__frappe { transform-box: fill-box; transform-origin: center; animation: sc-interets-et-pourcentages-eclat 1.4s ease-out infinite; }
+.sc-interets-et-pourcentages__pile { transform-box: fill-box; transform-origin: bottom; animation: sc-interets-et-pourcentages-pile 4s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.8s); }
+.sc-interets-et-pourcentages__fleau { animation: sc-interets-et-pourcentages-pese 3s ease-in-out infinite alternate; }
+
+/* Le livre de comptes, ligné, à marge rouge. */
+.sc-interets-et-pourcentages__registre {
+  min-width: 0;
+  padding: 12px 14px 12px 30px;
+  border: 3px solid #7a4a24;
+  border-radius: 6px 16px 16px 6px;
+  background:
+    linear-gradient(90deg, transparent 18px, #e5383b 18px 20px, transparent 20px),
+    repeating-linear-gradient(180deg, #fffaf0 0 27px, #d8e6f5 27px 28px);
+  box-shadow: -6px 0 0 #a86a34, 0 10px 22px rgba(60, 30, 0, 0.45);
+}
+
+.sc-interets-et-pourcentages .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 6px;
+  background: transparent;
+  box-shadow: none;
+  color: #2d1a08;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-interets-et-pourcentages__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #f0b72f;
+  border-radius: 18px;
+  background: rgba(255, 250, 240, 0.97);
+  color: #2d1a08;
+  animation: sc-interets-et-pourcentages-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-interets-et-pourcentages__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-interets-et-pourcentages__piles { width: 100%; height: auto; }
+.sc-interets-et-pourcentages__colonne rect { fill: #f0b72f; stroke: #8a5a0c; stroke-width: 1.5; transform-box: fill-box; transform-origin: bottom; animation: sc-interets-et-pourcentages-monte 0.5s ease-out both; animation-delay: calc(var(--n) * 0.3s); }
+.sc-interets-et-pourcentages__colonne rect.est-capital { fill: #c9cfd6; stroke: #5c6670; }
+.sc-interets-et-pourcentages__colonne text { fill: #2d1a08; font: 700 10px 'Outfit', sans-serif; }
+.sc-interets-et-pourcentages__marche { fill: #b3260b !important; font-weight: 900 !important; animation: sc-interets-et-pourcentages-apparait 0.4s ease-out both; animation-delay: calc(var(--n) * 0.3s + 0.3s); }
+
+.sc-interets-et-pourcentages__balance { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+
+.sc-interets-et-pourcentages__plateau-texte {
+  padding: 8px 14px;
+  border-radius: 0 0 40px 40px;
+  background: linear-gradient(180deg, #fff1c4, #f0b72f);
+  font-size: 19px;
+  font-weight: 800;
+  animation: sc-interets-et-pourcentages-apparait 0.5s ease-out both;
+}
+
+.sc-interets-et-pourcentages__plateau-texte.est-resultat { background: linear-gradient(180deg, #e7ffe9, #5fc46a); animation-delay: 0.9s; }
+.sc-interets-et-pourcentages__operation { padding: 4px 10px; border-radius: 10px; background: #2d1a08; color: #fff1c4; font-size: 18px; font-weight: 800; animation: sc-interets-et-pourcentages-apparait 0.5s ease-out 0.45s both; }
+
+/* Le comptoir : les pièces d'or et le coffre. */
+.sc-interets-et-pourcentages__comptoir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 22px;
+  width: min(100%, 820px);
+  padding: 12px 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(122, 74, 36, 0.92), rgba(84, 48, 20, 0.95));
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.15), 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.sc-interets-et-pourcentages__pieces { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+
+.sc-interets-et-pourcentages__piece {
+  min-width: 112px;
+  min-height: 64px;
+  padding: 10px 20px;
+  border: 3px solid #8a5a0c;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(138, 90, 12, 0.35) 62%, transparent 66%),
+    radial-gradient(circle at 32% 28%, #fff6cf 0%, #f0b72f 50%, #a8700e 100%);
+  color: #3d2404;
+  font: 800 20px 'Outfit', sans-serif;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: grab;
+  box-shadow: 0 5px 0 #6e4708, 0 9px 14px rgba(0, 0, 0, 0.35);
+  animation:
+    sc-interets-et-pourcentages-tombe 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both,
+    sc-interets-et-pourcentages-brille 3.6s ease-in-out infinite alternate;
+  animation-delay: calc(0.2s + var(--i) * 0.12s), calc(var(--i) * -1.2s);
+  transition: transform 0.15s ease;
+}
+
+.sc-interets-et-pourcentages__piece:nth-child(3n + 2) { background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(80, 90, 100, 0.35) 62%, transparent 66%), radial-gradient(circle at 32% 28%, #ffffff 0%, #c9cfd6 50%, #6e7781 100%); border-color: #5c6670; box-shadow: 0 5px 0 #454d55, 0 9px 14px rgba(0, 0, 0, 0.35); }
+.sc-interets-et-pourcentages__piece:nth-child(3n) { background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(120, 50, 20, 0.35) 62%, transparent 66%), radial-gradient(circle at 32% 28%, #ffe0c8 0%, #d9824a 50%, #8a4116 100%); border-color: #7a3410; box-shadow: 0 5px 0 #5c2608, 0 9px 14px rgba(0, 0, 0, 0.35); }
+.sc-interets-et-pourcentages__piece:hover:not(:disabled) { transform: translateY(-5px) rotate(-3deg); }
+.sc-interets-et-pourcentages__piece:focus-visible { outline: 4px solid #fff1c4; outline-offset: 3px; }
+.sc-interets-et-pourcentages__piece.est-fausse { cursor: default; opacity: 0.55; filter: grayscale(0.9); animation: none; color: #5c0f10; text-decoration: line-through 3px #c0392b; }
+
+.sc-interets-et-pourcentages__coffre {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 150px;
+  height: 84px;
+  padding: 0 8px 8px;
+  border: 3px solid #3d2404;
+  border-radius: 10px;
+  background: repeating-linear-gradient(90deg, #8a5a2b 0 18px, #74471f 18px 20px);
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.sc-interets-et-pourcentages__couvercle { position: absolute; top: -14px; left: -3px; right: -3px; height: 18px; border: 3px solid #3d2404; border-radius: 12px 12px 4px 4px; background: #9a6a34; transform-origin: bottom left; transition: transform 0.2s ease; }
+.sc-interets-et-pourcentages__fente { position: absolute; top: 18px; left: 50%; width: 46px; height: 8px; margin-left: -23px; border-radius: 4px; background: #1c1004; }
+.sc-interets-et-pourcentages__aide { color: #fff1c4; font-size: 14px; font-weight: 700; line-height: 1.2; text-align: center; }
+.sc-interets-et-pourcentages__coffre.est-survole { transform: scale(1.06); }
+.sc-interets-et-pourcentages__coffre.est-survole .sc-interets-et-pourcentages__couvercle { transform: rotate(-16deg); }
+
+@media (max-width: 640px) {
+  .sc-interets-et-pourcentages { grid-template-columns: minmax(0, 1fr); }
+  .sc-interets-et-pourcentages__atelier { max-height: 120px; }
+  .sc-interets-et-pourcentages__piece { min-width: 96px; font-size: 18px; }
+  .sc-interets-et-pourcentages__coffre { display: none; }
+}
+
+@keyframes sc-interets-et-pourcentages-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-interets-et-pourcentages-frappe { 0%, 60%, 100% { transform: translateY(0); } 75% { transform: translateY(24px); } }
+@keyframes sc-interets-et-pourcentages-eclat { 0%, 70% { transform: scale(1); opacity: 0.6; } 78% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1); opacity: 0.6; } }
+@keyframes sc-interets-et-pourcentages-pile { from { transform: scaleY(0.85); } to { transform: scaleY(1.08); } }
+@keyframes sc-interets-et-pourcentages-pese { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-interets-et-pourcentages-monte { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes sc-interets-et-pourcentages-apparait { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-interets-et-pourcentages-tombe { from { opacity: 0; transform: translateY(-30px) rotate(-20deg); } to { opacity: 1; transform: none; } }
+@keyframes sc-interets-et-pourcentages-brille { from { filter: brightness(1); } to { filter: brightness(1.12); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-interets-et-pourcentages,
+  .sc-interets-et-pourcentages *,
+  .sc-interets-et-pourcentages__comptoir,
+  .sc-interets-et-pourcentages__comptoir * { animation: none !important; transition: none !important; }
+}
+
+/* ------------------------------------------- PROPORTIONS ET GRANDEURS
+   La fabrique de jus d'orange : la cuve qui bouillonne, la fiche de
+   production ; on répond en prenant une bouteille sur le tapis roulant. */
+.sc-proportions-et-grandeurs {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-proportions-et-grandeurs-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-proportions-et-grandeurs__fabrique {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #fff3c4;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(80, 40, 0, 0.35);
+}
+
+.sc-proportions-et-grandeurs__hall { fill: #dff4fb; }
+.sc-proportions-et-grandeurs__tuyaux { stroke: #b9c7d1; stroke-width: 6; }
+.sc-proportions-et-grandeurs__verre { fill: rgba(255, 255, 255, 0.55); stroke: #8fa3b1; stroke-width: 3; }
+.sc-proportions-et-grandeurs__jus { animation: sc-proportions-et-grandeurs-vague 2.4s ease-in-out infinite alternate; }
+.sc-proportions-et-grandeurs__rondelle { transform-box: fill-box; transform-origin: center; animation: sc-proportions-et-grandeurs-flotte 3.2s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.8s); }
+.sc-proportions-et-grandeurs__bulle { fill: #fff7d6; opacity: 0; animation: sc-proportions-et-grandeurs-bulle 2.2s ease-in infinite; animation-delay: calc(var(--n) * 0.7s); }
+.sc-proportions-et-grandeurs__conduite { fill: none; stroke: #b9c7d1; stroke-width: 8; stroke-linejoin: round; }
+.sc-proportions-et-grandeurs__coulee { fill: #ffb347; animation: sc-proportions-et-grandeurs-coule 0.5s linear infinite alternate; }
+.sc-proportions-et-grandeurs__tapis { fill: #44535e; }
+.sc-proportions-et-grandeurs__bouteilles { animation: sc-proportions-et-grandeurs-defile 3s ease-in-out infinite alternate; }
+
+/* La fiche de production, pincée à son porte-bloc. */
+.sc-proportions-et-grandeurs__porte-bloc {
+  position: relative;
+  min-width: 0;
+  padding: 22px 14px 12px;
+  border: 8px solid #1d9bb0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(0, 60, 80, 0.35);
+}
+
+.sc-proportions-et-grandeurs__pince {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 70px;
+  height: 20px;
+  margin-left: -35px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #e9eef2, #9fb0bc);
+  box-shadow: 0 2px 0 #6b7c88;
+}
+
+.sc-proportions-et-grandeurs .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #0e2f3a;
+  font-size: clamp(17px, 2vw, 22px);
+}
+
+.sc-proportions-et-grandeurs__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #ff8a1c;
+  border-radius: 18px;
+  background: rgba(255, 252, 244, 0.97);
+  color: #3a2004;
+  animation: sc-proportions-et-grandeurs-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-proportions-et-grandeurs__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-proportions-et-grandeurs__lignes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.sc-proportions-et-grandeurs__lignes li { padding: 4px 12px; border-radius: 10px; background: #ffe7c4; font-size: 17px; font-weight: 700; text-align: center; animation: sc-proportions-et-grandeurs-verse 0.5s ease-out both; animation-delay: calc(0.3s + var(--n) * 0.5s); }
+
+.sc-proportions-et-grandeurs__tableau { border-collapse: collapse; font-size: 19px; font-weight: 800; animation: sc-proportions-et-grandeurs-verse 0.5s ease-out both; }
+.sc-proportions-et-grandeurs__tableau td { min-width: 70px; padding: 4px 12px; border: 2px solid #ff8a1c; text-align: center; background: #fff; }
+.sc-proportions-et-grandeurs__tableau tr:last-child td:last-child { background: #ffd35c; }
+
+.sc-proportions-et-grandeurs__echelons { display: flex; gap: 6px; }
+.sc-proportions-et-grandeurs__echelons span { padding: 4px 10px; border-radius: 8px; background: #1d9bb0; color: #fff; font-weight: 800; animation: sc-proportions-et-grandeurs-verse 0.4s ease-out both; animation-delay: calc(var(--n) * 0.3s); }
+
+.sc-proportions-et-grandeurs__horloge { width: 104px; height: auto; }
+.sc-proportions-et-grandeurs__cadran { fill: #fff; stroke: #0e2f3a; stroke-width: 3; }
+.sc-proportions-et-grandeurs__secteur { fill: #ffd35c; opacity: 0.85; transform-box: view-box; transform-origin: 50px 50px; animation: sc-proportions-et-grandeurs-pousse 0.8s ease-out both; }
+.sc-proportions-et-grandeurs__heure { fill: #0e2f3a; font: 700 10px 'Outfit', sans-serif; }
+.sc-proportions-et-grandeurs__aiguille { stroke: #e5383b; stroke-width: 3; stroke-linecap: round; }
+
+.sc-proportions-et-grandeurs__triangle { width: 130px; height: auto; }
+.sc-proportions-et-grandeurs__dvt { fill: #ffe7c4; stroke: #ff8a1c; stroke-width: 3; stroke-linejoin: round; }
+.sc-proportions-et-grandeurs__dvt-ligne { stroke: #ff8a1c; stroke-width: 2; }
+.sc-proportions-et-grandeurs__dvt-lettre { fill: #3a2004; font: 900 20px 'Outfit', sans-serif; }
+
+.sc-proportions-et-grandeurs__ph,
+.sc-proportions-et-grandeurs__db { width: min(100%, 300px); height: auto; }
+.sc-proportions-et-grandeurs__repere-ph { fill: #0e2f3a; animation: sc-proportions-et-grandeurs-verse 0.6s ease-out 0.4s both; }
+.sc-proportions-et-grandeurs__marche-db rect { fill: #1d9bb0; transform-box: fill-box; transform-origin: bottom; animation: sc-proportions-et-grandeurs-pousse 0.5s ease-out both; animation-delay: calc(var(--n) * 0.3s); }
+.sc-proportions-et-grandeurs__marche-db text { fill: #0e2f3a; font: 800 10px 'Outfit', sans-serif; }
+
+/* La chaîne d'embouteillage : les réponses. */
+.sc-proportions-et-grandeurs__chaine {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 780px);
+  padding: 10px 14px 0;
+}
+
+.sc-proportions-et-grandeurs__bouteilles-reponse { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 18px; }
+
+.sc-proportions-et-grandeurs__bouteille {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  min-height: 108px;
+  margin-top: 26px;
+  padding: 30px 10px 14px;
+  border: 3px solid #ffffff;
+  border-radius: 26px 26px 14px 14px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.45) 0 14%, transparent 14% 70%, rgba(255, 255, 255, 0.25) 70% 78%, transparent 78%), linear-gradient(180deg, #ffd35c 0%, #ff8a1c 100%);
+  color: #3a2004;
+  font: 800 19px 'Outfit', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.3);
+  transform-origin: bottom center;
+  animation:
+    sc-proportions-et-grandeurs-arrive 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both,
+    sc-proportions-et-grandeurs-oscille 2.6s ease-in-out infinite alternate;
+  animation-delay: calc(0.2s + var(--i) * 0.12s), calc(var(--i) * -0.9s);
+}
+
+.sc-proportions-et-grandeurs__goulot { position: absolute; top: -26px; left: 50%; width: 26px; height: 30px; margin-left: -13px; border: 3px solid #fff; border-bottom: none; border-radius: 8px 8px 0 0; background: #ffb347; }
+.sc-proportions-et-grandeurs__goulot::before { content: ""; position: absolute; top: -8px; left: -5px; right: -5px; height: 9px; border-radius: 4px; background: #1d9bb0; }
+.sc-proportions-et-grandeurs__etiquette { padding: 6px 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.92); line-height: 1.15; }
+.sc-proportions-et-grandeurs__bouteille:hover:not(:disabled) { filter: brightness(1.1) drop-shadow(0 0 10px #fff3c4); }
+.sc-proportions-et-grandeurs__bouteille:focus-visible { outline: 4px solid #1d9bb0; outline-offset: 4px; }
+.sc-proportions-et-grandeurs__bouteille.est-fausse { cursor: default; opacity: 0.55; filter: grayscale(0.9); animation: none; }
+.sc-proportions-et-grandeurs__bouteille.est-fausse .sc-proportions-et-grandeurs__etiquette { color: #c0392b; text-decoration: line-through 3px; }
+
+.sc-proportions-et-grandeurs__tapis-roulant {
+  display: block;
+  width: 100%;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 9px;
+  background: repeating-linear-gradient(90deg, #44535e 0 16px, #5d6e7a 16px 32px);
+  box-shadow: 0 6px 0 #2c363e, 0 10px 14px rgba(0, 0, 0, 0.3);
+  animation: sc-proportions-et-grandeurs-tapis 1.2s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .sc-proportions-et-grandeurs { grid-template-columns: minmax(0, 1fr); }
+  .sc-proportions-et-grandeurs__fabrique { max-height: 120px; }
+  .sc-proportions-et-grandeurs__bouteille { min-width: 92px; min-height: 92px; font-size: 17px; }
+}
+
+@keyframes sc-proportions-et-grandeurs-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-proportions-et-grandeurs-vague { from { transform: translateX(-3px); } to { transform: translateX(3px); } }
+@keyframes sc-proportions-et-grandeurs-flotte { from { transform: translateY(-3px) rotate(-12deg); } to { transform: translateY(3px) rotate(12deg); } }
+@keyframes sc-proportions-et-grandeurs-bulle { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px); } }
+@keyframes sc-proportions-et-grandeurs-coule { from { opacity: 0.8; } to { opacity: 1; } }
+@keyframes sc-proportions-et-grandeurs-defile { from { transform: translateX(-8px); } to { transform: translateX(16px); } }
+@keyframes sc-proportions-et-grandeurs-verse { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes sc-proportions-et-grandeurs-pousse { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes sc-proportions-et-grandeurs-arrive { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+@keyframes sc-proportions-et-grandeurs-oscille { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+@keyframes sc-proportions-et-grandeurs-tapis { to { background-position: 32px 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-proportions-et-grandeurs,
+  .sc-proportions-et-grandeurs *,
+  .sc-proportions-et-grandeurs__chaine,
+  .sc-proportions-et-grandeurs__chaine * { animation: none !important; }
+}
+
+/* ------------------------------------------- LIRE UN GRAPHIQUE
+   Le banc d'essai des rails : le rail ondulé et son wagonnet, le pupitre ;
+   on répond en choisissant une gare ; après la réponse, la lecture sur le dessin. */
+.sc-lire-un-graphique {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 940px);
+  animation: sc-lire-un-graphique-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-lire-un-graphique__banc {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(10, 40, 70, 0.35);
+}
+
+.sc-lire-un-graphique__etabli { fill: #dfe7ee; }
+.sc-lire-un-graphique__pied { fill: #8a98a6; }
+.sc-lire-un-graphique__rail-ombre { fill: none; stroke: rgba(10, 40, 70, 0.25); stroke-width: 12; transform: translateY(4px); }
+.sc-lire-un-graphique__rail { fill: none; stroke: #2f6fc0; stroke-width: 8; stroke-linecap: round; }
+.sc-lire-un-graphique__wagonnet { offset-rotate: auto; animation: sc-lire-un-graphique-parcours 6s ease-in-out infinite alternate; }
+.sc-lire-un-graphique__caisse { fill: #ffb02e; stroke: #8a5a0c; stroke-width: 1.2; }
+.sc-lire-un-graphique__roue { fill: #2b3640; }
+
+/* Le pupitre du banc d'essai. */
+.sc-lire-un-graphique__pupitre {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 3px solid #2f6fc0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #eef5fb 100%);
+  box-shadow: 0 6px 0 #1d4a85, 0 12px 22px rgba(10, 40, 70, 0.35);
+}
+
+.sc-lire-un-graphique .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #0c2238;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+
+.sc-lire-un-graphique__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #2f6fc0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #0c2238;
+  animation: sc-lire-un-graphique-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-lire-un-graphique__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-lire-un-graphique__lecture { width: 100%; height: auto; overflow: visible; }
+.sc-lire-un-graphique__axe { stroke: #6b7f93; stroke-width: 1.5; }
+.sc-lire-un-graphique__courbe { fill: none; stroke: #2f6fc0; stroke-width: 3; }
+.sc-lire-un-graphique__releve { fill: #2f6fc0; }
+.sc-lire-un-graphique__surligne { fill: none; stroke: #ffb02e; stroke-width: 9; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0.9; animation: sc-lire-un-graphique-trace 1s ease-out 0.3s forwards; }
+.sc-lire-un-graphique__pointilles { fill: none; stroke: #e2662a; stroke-width: 2.5; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sc-lire-un-graphique-trace 1.1s ease-out 0.3s forwards; }
+.sc-lire-un-graphique__cible { fill: #ffb02e; stroke: #8a5a0c; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: sc-lire-un-graphique-cible 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 1.2s both; }
+.sc-lire-un-graphique__fanion { animation: sc-lire-un-graphique-plante 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 0.3s both; }
+.sc-lire-un-graphique__fanion line { stroke: #0c2238; stroke-width: 2; }
+.sc-lire-un-graphique__fanion path { fill: #e5383b; }
+.sc-lire-un-graphique__fanion circle { fill: #ffb02e; stroke: #8a5a0c; stroke-width: 2; }
+
+.sc-lire-un-graphique__termes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.sc-lire-un-graphique__terme { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 12px; background: #e5f0fb; font-size: 18px; font-weight: 600; animation: sc-lire-un-graphique-pose 0.45s ease-out both; animation-delay: calc(var(--n) * 0.4s); }
+.sc-lire-un-graphique__terme strong { color: #b5650a; }
+.sc-lire-un-graphique__fleche { color: #2f6fc0; font-weight: 900; }
+
+/* La ligne et ses gares : les réponses. */
+.sc-lire-un-graphique__ligne {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 800px);
+  padding: 4px 12px 0;
+}
+
+.sc-lire-un-graphique__gares { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 26px; }
+
+.sc-lire-un-graphique__gare {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  animation: sc-lire-un-graphique-plante 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(0.2s + var(--i) * 0.1s);
+}
+
+.sc-lire-un-graphique__panneau {
+  min-width: 108px;
+  padding: 10px 16px;
+  border: 3px solid #ffffff;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #3f86d8, #2259a3);
+  color: #ffffff;
+  font: 800 20px 'Outfit', sans-serif;
+  box-shadow: 0 0 0 3px #2259a3, 0 8px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.sc-lire-un-graphique__gare:nth-child(3n + 2) .sc-lire-un-graphique__panneau { background: linear-gradient(180deg, #ffbe4d, #e08a0c); box-shadow: 0 0 0 3px #b56a06, 0 8px 14px rgba(0, 0, 0, 0.3); color: #2d1a00; }
+.sc-lire-un-graphique__gare:nth-child(3n) .sc-lire-un-graphique__panneau { background: linear-gradient(180deg, #4cc28a, #1f8a5a); box-shadow: 0 0 0 3px #17683f, 0 8px 14px rgba(0, 0, 0, 0.3); }
+.sc-lire-un-graphique__poteau { width: 8px; height: 26px; background: linear-gradient(90deg, #8a98a6, #dfe7ee, #8a98a6); }
+.sc-lire-un-graphique__gare:hover:not(:disabled) .sc-lire-un-graphique__panneau { transform: translateY(-5px) rotate(-2deg); }
+.sc-lire-un-graphique__gare:focus-visible .sc-lire-un-graphique__panneau { outline: 4px solid #ffb02e; outline-offset: 3px; }
+.sc-lire-un-graphique__gare.est-fausse { cursor: default; opacity: 0.55; filter: grayscale(0.9); }
+.sc-lire-un-graphique__gare.est-fausse .sc-lire-un-graphique__panneau { text-decoration: line-through 3px #e5383b; }
+
+.sc-lire-un-graphique__voie {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 7px;
+  background:
+    linear-gradient(180deg, transparent 3px, #2f6fc0 3px 7px, transparent 7px),
+    repeating-linear-gradient(90deg, #8a6a4a 0 6px, transparent 6px 22px);
+}
+
+.sc-lire-un-graphique__navette {
+  position: absolute;
+  top: -12px;
+  left: 0;
+  width: 30px;
+  height: 14px;
+  border: 2px solid #8a5a0c;
+  border-radius: 4px;
+  background: #ffb02e;
+  animation: sc-lire-un-graphique-navette 8s ease-in-out infinite alternate;
+}
+
+@media (max-width: 640px) {
+  .sc-lire-un-graphique { grid-template-columns: minmax(0, 1fr); }
+  .sc-lire-un-graphique__banc { max-height: 120px; }
+  .sc-lire-un-graphique__panneau { min-width: 90px; font-size: 18px; }
+}
+
+@keyframes sc-lire-un-graphique-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-lire-un-graphique-parcours { from { offset-distance: 2%; } to { offset-distance: 98%; } }
+@keyframes sc-lire-un-graphique-trace { to { stroke-dashoffset: 0; } }
+@keyframes sc-lire-un-graphique-cible { from { opacity: 0; transform: scale(0.2); } to { opacity: 1; transform: scale(1); } }
+@keyframes sc-lire-un-graphique-plante { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+@keyframes sc-lire-un-graphique-pose { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes sc-lire-un-graphique-navette { from { left: 0; } to { left: calc(100% - 30px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-lire-un-graphique,
+  .sc-lire-un-graphique *,
+  .sc-lire-un-graphique__ligne,
+  .sc-lire-un-graphique__ligne * { animation: none !important; transition: none !important; }
+  .sc-lire-un-graphique__wagonnet { offset-distance: 30%; }
+  .sc-lire-un-graphique__surligne,
+  .sc-lire-un-graphique__pointilles { stroke-dashoffset: 0; }
+}
+
+/* ------------------------------------------- LES PROBABILITÉS (VOIE PRO)
+   L'entrepôt des bacs jaunes : les tapis, l'aiguillage, le bon de contrôle ;
+   après la réponse, le tri refait — tableau, arbre, ensembles, lot. */
+.sc-probabilites-pro {
+  display: grid;
+  grid-template-columns: minmax(190px, 340px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 940px);
+  animation: sc-probabilites-pro-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-probabilites-pro__entrepot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #ffd21f;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(40, 40, 0, 0.35);
+}
+
+.sc-probabilites-pro__hall { fill: #eef2f5; }
+.sc-probabilites-pro__etagere { fill: #ffd21f; }
+.sc-probabilites-pro__bac-deco { fill: #ffd21f; stroke: #a88400; stroke-width: 1.2; }
+.sc-probabilites-pro__bac-deco.est-gris { fill: #6e7781; stroke: #3d444c; }
+.sc-probabilites-pro__tapis { fill: none; stroke: #3d444c; stroke-width: 12; stroke-linecap: round; }
+.sc-probabilites-pro__rouleaux { fill: none; stroke: #9aa5b0; stroke-width: 3; stroke-dasharray: 3 7; animation: sc-probabilites-pro-roule 0.8s linear infinite; }
+.sc-probabilites-pro__aiguillage { fill: #e5383b; transform-box: view-box; transform-origin: 116px 99px; animation: sc-probabilites-pro-bascule 3.2s ease-in-out infinite alternate; }
+.sc-probabilites-pro__colis { offset-path: path('M0 106 H120 L220 76'); offset-rotate: 0deg; animation: sc-probabilites-pro-voyage 3.2s linear infinite; }
+.sc-probabilites-pro__colis.est-second { offset-path: path('M0 106 H120 L220 130'); animation-delay: -1.6s; }
+
+/* Le bon de contrôle, posé dans son bac jaune. */
+.sc-probabilites-pro__bon {
+  position: relative;
+  min-width: 0;
+  padding: 22px 14px 12px;
+  border: 6px solid #ffd21f;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 2px #a88400, 0 10px 22px rgba(40, 40, 0, 0.35);
+}
+
+.sc-probabilites-pro__onglet {
+  position: absolute;
+  top: -6px;
+  left: 18px;
+  padding: 2px 12px;
+  border-radius: 0 0 10px 10px;
+  background: #3d444c;
+  color: #ffd21f;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sc-probabilites-pro .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #1f252b;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+
+.sc-probabilites-pro__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #ffd21f;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #1f252b;
+  animation: sc-probabilites-pro-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-probabilites-pro__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-probabilites-pro__calcul { margin: 0; padding: 4px 12px; border-radius: 10px; background: #fff3b0; font-size: 18px; font-weight: 800; text-align: center; animation: sc-probabilites-pro-pose 0.5s ease-out 0.9s both; }
+
+.sc-probabilites-pro__tableau { border-collapse: collapse; font-size: 16px; }
+.sc-probabilites-pro__tableau th,
+.sc-probabilites-pro__tableau td { padding: 4px 8px; border: 2px solid #c9d0d6; text-align: center; }
+.sc-probabilites-pro__tableau th { background: #eef2f5; font-weight: 700; }
+.sc-probabilites-pro__tableau td { font-weight: 800; transition: background 0.3s ease; }
+.sc-probabilites-pro__tableau td.est-total { box-shadow: inset 0 0 0 3px #3a7bd5; }
+.sc-probabilites-pro__tableau td.est-favorable { background: #ffd21f; animation: sc-probabilites-pro-allume 0.6s ease-out 0.3s both; }
+
+.sc-probabilites-pro__arbre { width: min(100%, 300px); height: auto; }
+.sc-probabilites-pro__racine { fill: #3d444c; }
+.sc-probabilites-pro__branche { stroke: #9aa5b0; stroke-width: 2.5; }
+.sc-probabilites-pro__branche.est-allumee { stroke: #e0a800; stroke-width: 5; stroke-linecap: round; animation: sc-probabilites-pro-pose 0.5s ease-out 0.3s both; }
+.sc-probabilites-pro__poids { fill: #3a7bd5; font: 800 10px 'Outfit', sans-serif; }
+.sc-probabilites-pro__noeud { fill: #1f252b; font: 900 13px 'Outfit', sans-serif; }
+
+.sc-probabilites-pro__venn { width: min(100%, 220px); height: auto; }
+.sc-probabilites-pro__univers { fill: #eef2f5; stroke: #9aa5b0; stroke-width: 2; }
+.sc-probabilites-pro__ensemble { fill: rgba(255, 210, 31, 0.6); stroke: #a88400; stroke-width: 2; animation: sc-probabilites-pro-pose 0.5s ease-out both; }
+.sc-probabilites-pro__venn.est-ni .sc-probabilites-pro__univers { fill: #ffd21f; }
+.sc-probabilites-pro__venn.est-ni .sc-probabilites-pro__ensemble { fill: #ffffff; }
+
+.sc-probabilites-pro__lot { display: grid; grid-template-columns: repeat(12, 14px); gap: 3px; }
+.sc-probabilites-pro__lot span { width: 14px; height: 12px; border-radius: 2px; background: #c9d0d6; animation: sc-probabilites-pro-pose 0.3s ease-out both; animation-delay: calc(var(--n) * 0.015s); }
+.sc-probabilites-pro__lot span.est-marque { background: #e5383b; }
+
+/* Les bacs jaunes : les réponses. */
+.objet--sc-probabilites-pro.objet--sc-probabilites-pro {
+  border: 3px solid #a88400;
+  border-radius: 6px 6px 12px 12px;
+  padding: 18px 26px 12px;
+  color: #1f252b;
+  text-shadow: none;
+  background:
+    linear-gradient(180deg, transparent 0 6px, rgba(0, 0, 0, 0.25) 6px 10px, transparent 10px) center top / 44% 100% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 16px, rgba(168, 132, 0, 0.2) 16px 18px),
+    linear-gradient(180deg, #ffe45c 0%, #ffd21f 60%, #e0a800 100%);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.12);
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-probabilites-pro.objet--sc-probabilites-pro {
+  border-color: #3d444c;
+  color: #ffffff;
+  text-shadow: 0 1px 0 #1f252b;
+  background:
+    linear-gradient(180deg, transparent 0 6px, rgba(0, 0, 0, 0.35) 6px 10px, transparent 10px) center top / 44% 100% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 16px, rgba(0, 0, 0, 0.18) 16px 18px),
+    linear-gradient(180deg, #8a939c 0%, #6e7781 60%, #4b535b 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-probabilites-pro.objet--sc-probabilites-pro.est-fausse { background: linear-gradient(150deg, #d4d8dc, #9aa1a8); color: #fff; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-probabilites-pro { grid-template-columns: minmax(0, 1fr); }
+  .sc-probabilites-pro__entrepot { max-height: 120px; }
+  .sc-probabilites-pro__tableau { font-size: 15px; }
+}
+
+@keyframes sc-probabilites-pro-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-probabilites-pro-roule { to { stroke-dashoffset: -10; } }
+@keyframes sc-probabilites-pro-bascule { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes sc-probabilites-pro-voyage { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes sc-probabilites-pro-pose { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-probabilites-pro-allume { from { background: #ffffff; } to { background: #ffd21f; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-probabilites-pro,
+  .sc-probabilites-pro * { animation: none !important; }
+  .sc-probabilites-pro__colis { offset-distance: 40%; }
+  .sc-probabilites-pro__colis.est-second { offset-distance: 70%; }
+}
+
+/* ------------------------------------------- LA GÉOMÉTRIE DE L'ATELIER
+   L'atelier de charpente : l'établi, la scie qui va et vient, la planche
+   clouée ; après la réponse, la formule gravée au fer et son calcul. */
+.sc-geometrie-atelier {
+  display: grid;
+  grid-template-columns: minmax(190px, 320px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 940px);
+  animation: sc-geometrie-atelier-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-geometrie-atelier__etabli {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #f3d9a8;
+  border-radius: 18px;
+  box-shadow: 0 10px 22px rgba(70, 40, 10, 0.4);
+}
+
+.sc-geometrie-atelier__halle { fill: #cfe6f7; }
+.sc-geometrie-atelier__poutres { fill: none; stroke: #b98a4e; stroke-width: 6; stroke-linecap: round; }
+.sc-geometrie-atelier__veine { fill: none; stroke: rgba(140, 90, 40, 0.35); stroke-width: 1.5; }
+.sc-geometrie-atelier__ferme { fill: none; stroke: #c99a5a; stroke-width: 6; stroke-linejoin: round; }
+.sc-geometrie-atelier__equerre { fill: #2f6fc0; }
+.sc-geometrie-atelier__cylindre { fill: #e8c58a; stroke: #a87a3c; stroke-width: 1.5; }
+.sc-geometrie-atelier__cylindre.est-dessus { fill: #f6dfb4; }
+.sc-geometrie-atelier__planche { fill: #f0cf95; stroke: #a87a3c; stroke-width: 1.2; }
+.sc-geometrie-atelier__lame { fill: #c9d3dc; stroke: #6b7f93; stroke-width: 1; }
+.sc-geometrie-atelier__manche { fill: #e5383b; }
+.sc-geometrie-atelier__scie { animation: sc-geometrie-atelier-scie 0.8s ease-in-out infinite alternate; }
+.sc-geometrie-atelier__copeau { fill: #f6dfb4; opacity: 0; animation: sc-geometrie-atelier-copeau 1.6s ease-out infinite; animation-delay: calc(var(--n) * 0.5s); }
+
+/* La planche clouée, où la question est écrite au crayon de charpentier. */
+.sc-geometrie-atelier__planche-question {
+  position: relative;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 3px solid #a87a3c;
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(178deg, transparent 0 22px, rgba(168, 122, 60, 0.12) 22px 24px),
+    linear-gradient(180deg, #fff5e2 0%, #f6e3c0 100%);
+  box-shadow: 0 8px 0 #8a5f2a, 0 14px 22px rgba(70, 40, 10, 0.4);
+}
+
+.sc-geometrie-atelier__clou { position: absolute; top: 8px; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f2f4f8, #5f6b80); }
+.sc-geometrie-atelier__clou:first-child { left: 8px; }
+.sc-geometrie-atelier__clou:nth-child(2) { right: 8px; }
+
+.sc-geometrie-atelier .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #3a240c;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+
+.sc-geometrie-atelier__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #a87a3c;
+  border-radius: 18px;
+  background: rgba(255, 249, 238, 0.97);
+  color: #3a240c;
+  animation: sc-geometrie-atelier-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-geometrie-atelier__gravure {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #e8c58a, #d4a865);
+  color: #3a1d06;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 2px 4px rgba(58, 29, 6, 0.35);
+  animation: sc-geometrie-atelier-grave 0.8s steps(12) both;
+}
+
+.sc-geometrie-atelier__calcul { margin: 0; padding: 4px 12px; border-radius: 10px; background: #fff; font-size: 18px; font-weight: 700; text-align: center; animation: sc-geometrie-atelier-pose 0.5s ease-out 0.9s both; }
+.sc-geometrie-atelier__dessin { width: min(100%, 220px); height: auto; overflow: visible; }
+.sc-geometrie-atelier__carre { stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: sc-geometrie-atelier-pousse 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.sc-geometrie-atelier__carre.est-a { fill: rgba(47, 111, 192, 0.35); stroke: #2f6fc0; animation-delay: 0.2s; }
+.sc-geometrie-atelier__carre.est-b { fill: rgba(229, 56, 59, 0.3); stroke: #e5383b; animation-delay: 0.6s; }
+.sc-geometrie-atelier__carre.est-c { fill: rgba(240, 183, 47, 0.45); stroke: #c48a0c; animation-delay: 1s; }
+.sc-geometrie-atelier__triangle { fill: #f6dfb4; stroke: #3a240c; stroke-width: 2.5; stroke-linejoin: round; }
+.sc-geometrie-atelier__angle-droit { fill: none; stroke: #3a240c; stroke-width: 1.5; }
+.sc-geometrie-atelier__cote { fill: none; stroke: #b9a07a; stroke-width: 4; stroke-linecap: round; }
+.sc-geometrie-atelier__cote.est-allume { stroke: #e5383b; stroke-width: 6; animation: sc-geometrie-atelier-pose 0.5s ease-out 0.3s both; }
+.sc-geometrie-atelier__arc { fill: none; stroke: #2f6fc0; stroke-width: 2.5; }
+.sc-geometrie-atelier__nom { fill: #3a240c; font: 700 11px 'Outfit', sans-serif; }
+.sc-geometrie-atelier__nom.est-grand { font-size: 26px; font-weight: 900; }
+.sc-geometrie-atelier__tole { fill: #dfe6ec; stroke: #6b7f93; stroke-width: 2; }
+.sc-geometrie-atelier__tole.est-vide { fill: none; }
+.sc-geometrie-atelier__tole.est-deroulee { transform-box: fill-box; transform-origin: left center; animation: sc-geometrie-atelier-deroule 1.2s ease-out 0.3s both; }
+.sc-geometrie-atelier__cone { fill: #f0cf95; stroke: #a87a3c; stroke-width: 2; animation: sc-geometrie-atelier-verse 0.8s ease-in-out both; animation-delay: calc(0.3s + var(--n) * 0.7s); }
+.sc-geometrie-atelier__remplissage { fill: #f0cf95; transform-box: fill-box; transform-origin: bottom; animation: sc-geometrie-atelier-remplit 2.1s steps(3, end) 0.6s both; }
+
+/* Les planchettes de bois : les réponses. */
+.objet--sc-geometrie-atelier.objet--sc-geometrie-atelier {
+  border: 2px solid #a87a3c;
+  border-radius: 6px;
+  color: #3a240c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  background:
+    radial-gradient(ellipse 10px 4px at 22% 40%, rgba(140, 90, 40, 0.35), transparent 70%),
+    repeating-linear-gradient(176deg, transparent 0 7px, rgba(140, 90, 40, 0.18) 7px 9px),
+    linear-gradient(180deg, #f6dfb4 0%, #e8c58a 60%, #d4a865 100%);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.5), 0 5px 0 #8a5f2a;
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-geometrie-atelier.objet--sc-geometrie-atelier {
+  color: #fff8ec;
+  text-shadow: 0 1px 0 #3a1d06;
+  background:
+    radial-gradient(ellipse 10px 4px at 70% 60%, rgba(60, 30, 10, 0.35), transparent 70%),
+    repeating-linear-gradient(176deg, transparent 0 7px, rgba(60, 30, 10, 0.2) 7px 9px),
+    linear-gradient(180deg, #c48a52 0%, #a86a34 60%, #8a5226 100%);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-geometrie-atelier.objet--sc-geometrie-atelier.est-fausse { background: linear-gradient(150deg, #cfc7bd, #948a7f); color: #fff; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-geometrie-atelier { grid-template-columns: minmax(0, 1fr); }
+  .sc-geometrie-atelier__etabli { max-height: 120px; }
+}
+
+@keyframes sc-geometrie-atelier-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-geometrie-atelier-scie { from { transform: translate(-6px, -6px); } to { transform: translate(6px, 6px); } }
+@keyframes sc-geometrie-atelier-copeau { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, 14px); } }
+@keyframes sc-geometrie-atelier-grave { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes sc-geometrie-atelier-pose { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes sc-geometrie-atelier-pousse { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes sc-geometrie-atelier-deroule { from { transform: scaleX(0.05); } to { transform: scaleX(1); } }
+@keyframes sc-geometrie-atelier-verse { 0% { transform: translate(0, 0); } 50% { transform: translate(10px, -12px) rotate(8deg); } 100% { transform: translate(0, 0); } }
+@keyframes sc-geometrie-atelier-remplit { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-geometrie-atelier,
+  .sc-geometrie-atelier * { animation: none !important; }
+}
+
+/* ------------------------------------------- AJUSTER UN NUAGE DE POINTS
+   La terrasse des étoiles : la constellation et sa traînée, la tablette de
+   marbre ; les réponses en sphères de lumière ; après la réponse, G et la droite. */
+.sc-ajuster-un-nuage {
+  display: grid;
+  grid-template-columns: minmax(190px, 330px) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 920px);
+  animation: sc-ajuster-un-nuage-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-ajuster-un-nuage__ciel {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 3px solid #eaf2fb;
+  border-radius: 18px;
+  box-shadow: 0 0 18px rgba(159, 212, 255, 0.5), 0 10px 22px rgba(10, 30, 80, 0.4);
+}
+
+.sc-ajuster-un-nuage__etoile { fill: #ffffff; filter: drop-shadow(0 0 4px #9fd4ff); animation: sc-ajuster-un-nuage-scintille 2.4s ease-in-out infinite; animation-delay: calc(var(--n) * 0.3s); transform-box: fill-box; transform-origin: center; }
+.sc-ajuster-un-nuage__trainee { stroke: #9fd4ff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 10 8; opacity: 0.8; animation: sc-ajuster-un-nuage-file 2s linear infinite; }
+.sc-ajuster-un-nuage__orbe { animation: sc-ajuster-un-nuage-flotte 3s ease-in-out infinite alternate; }
+
+/* La tablette de marbre, bordée de bleu. */
+.sc-ajuster-un-nuage__tablette {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 3px solid #2f6fc0;
+  border-radius: 16px;
+  background:
+    linear-gradient(125deg, transparent 40%, rgba(160, 175, 195, 0.18) 42%, transparent 46%),
+    linear-gradient(160deg, #ffffff 0%, #eef3f9 100%);
+  box-shadow: 0 0 0 4px rgba(214, 170, 60, 0.6), 0 10px 22px rgba(10, 30, 80, 0.4);
+}
+
+.sc-ajuster-un-nuage .college__question {
+  max-width: none;
+  margin: 0;
+  padding: 4px 8px;
+  background: transparent;
+  box-shadow: none;
+  color: #10244a;
+  font-size: clamp(16px, 1.9vw, 21px);
+}
+
+.sc-ajuster-un-nuage__explication {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 3px solid #2f6fc0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #10244a;
+  animation: sc-ajuster-un-nuage-entre 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+.sc-ajuster-un-nuage__regle { margin: 0; font-size: 17px; line-height: 1.35; text-align: center; }
+.sc-ajuster-un-nuage__lecture { width: 100%; height: auto; }
+.sc-ajuster-un-nuage__fond { fill: #12306e; }
+.sc-ajuster-un-nuage__zone { fill: rgba(159, 212, 255, 0.18); }
+.sc-ajuster-un-nuage__brouillard { fill: rgba(255, 255, 255, 0.12); }
+.sc-ajuster-un-nuage__droite { stroke: #9fd4ff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 4px #9fd4ff); animation: sc-ajuster-un-nuage-trace 1.2s ease-out 0.6s forwards; }
+.sc-ajuster-un-nuage__droite.est-incertaine { stroke-dasharray: 6 6; stroke-dashoffset: 0; opacity: 0.5; animation: none; }
+.sc-ajuster-un-nuage__releve { fill: #ffffff; animation: sc-ajuster-un-nuage-allume 0.4s ease-out both; animation-delay: calc(var(--n) * 0.12s); }
+.sc-ajuster-un-nuage__fil { stroke: rgba(255, 210, 74, 0.6); stroke-width: 1.5; opacity: 0; animation: sc-ajuster-un-nuage-allume 0.5s ease-out forwards; animation-delay: calc(0.6s + var(--n) * 0.1s); }
+.sc-ajuster-un-nuage__g { fill: #ffd24a; stroke: #ffffff; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: sc-ajuster-un-nuage-naissance 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 1.2s both; }
+.sc-ajuster-un-nuage__pointilles { fill: none; stroke: #ffd24a; stroke-width: 2.5; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sc-ajuster-un-nuage-trace 1.2s ease-out 1s forwards; }
+.sc-ajuster-un-nuage__repere-x { stroke: #ffd24a; stroke-width: 2.5; stroke-dasharray: 5 4; }
+.sc-ajuster-un-nuage__legende { fill: #eaf2fb; font: 700 10px 'Outfit', sans-serif; }
+
+/* Les sphères de lumière : les réponses. */
+.objet--sc-ajuster-un-nuage.objet--sc-ajuster-un-nuage {
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  color: #10244a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d6ecff 35%, #9fd4ff 70%, #5d9be0 100%);
+  box-shadow: 0 0 16px rgba(159, 212, 255, 0.9), inset 0 -4px 10px rgba(47, 111, 192, 0.35);
+}
+
+.scene__choix > li:nth-child(even) > .objet--sc-ajuster-un-nuage.objet--sc-ajuster-un-nuage {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #fff3cf 35%, #ffd98a 70%, #e0a83a 100%);
+  box-shadow: 0 0 16px rgba(255, 217, 138, 0.9), inset 0 -4px 10px rgba(160, 110, 20, 0.35);
+}
+
+.scene__choix > li:nth-child(n) > .objet--sc-ajuster-un-nuage.objet--sc-ajuster-un-nuage.est-fausse { background: linear-gradient(150deg, #c8cdd4, #8d949e); box-shadow: none; color: #fff; text-shadow: none; text-decoration: line-through; }
+
+@media (max-width: 640px) {
+  .sc-ajuster-un-nuage { grid-template-columns: minmax(0, 1fr); }
+  .sc-ajuster-un-nuage__ciel { max-height: 120px; }
+}
+
+@keyframes sc-ajuster-un-nuage-entre { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+@keyframes sc-ajuster-un-nuage-scintille { 0%, 100% { transform: scale(0.8); opacity: 0.7; } 50% { transform: scale(1.3); opacity: 1; } }
+@keyframes sc-ajuster-un-nuage-file { to { stroke-dashoffset: -36; } }
+@keyframes sc-ajuster-un-nuage-flotte { from { transform: translateY(-3px); } to { transform: translateY(3px); } }
+@keyframes sc-ajuster-un-nuage-trace { to { stroke-dashoffset: 0; } }
+@keyframes sc-ajuster-un-nuage-allume { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sc-ajuster-un-nuage-naissance { from { opacity: 0; transform: scale(0.1); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-ajuster-un-nuage,
+  .sc-ajuster-un-nuage * { animation: none !important; }
+  .sc-ajuster-un-nuage__droite,
+  .sc-ajuster-un-nuage__pointilles { stroke-dashoffset: 0; }
+  .sc-ajuster-un-nuage__fil { opacity: 1; }
+}
+
+/* Lire un graphique : la pente comptée en marches (tangente, nombre dérivé). */
+.sc-lire-un-graphique__tangente { stroke: #e5383b; stroke-width: 2.5; stroke-linecap: round; }
+.sc-lire-un-graphique__delta { fill: #b5650a; font: 900 11px 'Outfit', sans-serif; }
+.sc-lire-un-graphique__pente { animation: sc-lire-un-graphique-pose 0.5s ease-out 0.3s both; }
+
+/* Le logarithme : l'équation lue sur la courbe de ln ou de exp. */
+.sc-logarithme__lecture { width: min(100%, 360px); height: auto; }
+.sc-logarithme__axe { stroke: #5a3a0c; stroke-width: 1.5; }
+.sc-logarithme__courbe { fill: none; stroke: #b3260b; stroke-width: 3; }
+.sc-logarithme__horizontale { stroke: #d08a12; stroke-width: 2.5; stroke-dasharray: 6 4; animation: sc-logarithme-pose 0.6s ease-out 0.2s both; }
+.sc-logarithme__solution { animation: sc-logarithme-pose 0.6s ease-out 0.8s both; }
+.sc-logarithme__solution circle { fill: #fff1b8; stroke: #b3260b; stroke-width: 2.5; }
+.sc-logarithme__aplomb { fill: none; stroke: #b3260b; stroke-width: 2; stroke-dasharray: 3 3; }
+
+/* Les probabilités : la taille des deux échantillons. */
+.sc-probabilites-pro__echantillons { display: flex; flex-direction: column; gap: 6px; width: min(100%, 300px); }
+.sc-probabilites-pro__echantillon { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+.sc-probabilites-pro__jauge { height: 14px; border-radius: 7px; background: linear-gradient(90deg, #ffd21f var(--part), #eef2f5 var(--part)); animation: sc-probabilites-pro-pose 0.5s ease-out both; }

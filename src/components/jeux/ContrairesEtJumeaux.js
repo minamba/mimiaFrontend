@@ -2,10 +2,15 @@ import * as cj from '../../lib/jeux/contrairesEtJumeaux';
 import { repliquesContraires } from '../../lib/jeux/voix/repliques';
 import JeuDeChoix from './JeuDeChoix';
 import VocabulaireCM1 from './VocabulaireCM1';
+import { sceneDe } from './scenes/ce2-francais';
+
+const SCENE = sceneDe('contraires-et-jumeaux');
 
 /**
  * CONTRAIRES ET JUMEAUX, À L'ÉCRAN — le mot, la question, trois choix. Toute
- * la règle vit dans `contrairesEtJumeaux.js`.
+ * la règle vit dans `contrairesEtJumeaux.js`. L'univers de la couverture (le
+ * carrefour des panneaux, le rouge-gorge, les pancartes plantées dans l'herbe)
+ * vit dans `scenes/ce2-francais/Panneaux.js` (09/10/2026).
  */
 const regle = (niveau) => ({
   MANCHES: cj.MANCHES,
@@ -16,11 +21,9 @@ const regle = (niveau) => ({
   verdict: cj.verdict,
   erreur: (m, sens) => repliquesContraires.erreur(m, sens),
   aide: () => null,
+  rendreLesChoix: SCENE.choix,
 });
 const REGLES = { CE1: regle('CE1'), CE2: regle('CE2') };
-
-/** Le signe entre les deux mots : ↔ pour un contraire, = pour un jumeau, ⋯ pour une famille. */
-const LIEN = { contraire: '↔', jumeau: '=', famille: '⋯' };
 
 function ContrairesEtJumeauxAvantCM1({ niveau = 'CE1', ...props }) {
   return (
@@ -28,15 +31,8 @@ function ContrairesEtJumeauxAvantCM1({ niveau = 'CE1', ...props }) {
       {...props}
       regle={REGLES[niveau] ?? REGLES.CE1}
       classe="jeu--contraires"
-      rendreQuestion={(m, termine) => (
-        <p className="contraires__paire">
-          <span className="contraires__mot">{m.mot}</span>
-          <span className="contraires__lien">{LIEN[m.demande]}</span>
-          <span className={`contraires__mot${termine ? ' est-trouve' : ' est-vide'}`}>
-            {termine ? cj.reponse(m) : '?'}
-          </span>
-        </p>
-      )}
+      // Le mot, le lien (↔ contraire, = jumeau, ⋯ famille), la case à trouver : voir la scène.
+      rendreQuestion={SCENE.question}
       rendreApres={(m) => {
         if (m.demande === 'jumeau') return <p className="scene__bulle">{cj.PHRASES.jumeaux}</p>;
         if (m.demande === 'famille') return <p className="scene__bulle">{cj.PHRASES.familles}</p>;

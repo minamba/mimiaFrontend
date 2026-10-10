@@ -19,9 +19,24 @@
  *     + f(a), f(a) et f′(a) échangés ;
  *   - le signe de f′ et les variations. PIÈGES : « f′ négative » lu comme
  *     « f négative », le sens de variation inversé.
+ *
+ * LE DESSIN (09/10/2026) : quatre sortes portent un `visuel` (voir
+ * `lib/jeux/visuels.js`), construit avec les valeurs de la question et sans
+ * aucun tirage — la même graine redonne la même partie :
+ *   - le nombre dérivé : la parabole, le point A et sa tangente (une pente,
+ *     pas une hauteur) ;
+ *   - le nombre dérivé lu : A, B et la tangente qu'il faut lire ; la courbe
+ *     n'étant pas donnée, une parabole qui la touche en A ;
+ *   - la tangente de x² + bx + c : la parabole et le point A, sans la tangente
+ *     (c'est elle qu'on cherche) ; pas de dessin quand seuls f(a) et f′(a)
+ *     sont donnés, il n'y aurait pas de courbe ;
+ *   - les variations : la courbe de f′ sur l'intervalle, ses racines marquées.
+ * Les dérivées à écrire (usuelles, polynôme, produit, quotient) n'ont pas de
+ * dessin : ce sont des calculs.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
+import { valeur as ordonneeEn } from '../visuels.js';
 
 export const FAMILLE = { cle: 'derivation', titre: 'La dérivation', matiereCode: 'MATHS' };
 
@@ -82,6 +97,34 @@ function poly(coefs) {
 const mono = (c, k) => poly([c, ...Array(k).fill(0)]);
 /** « 3x − 2 », « −x + 4 », « 2x », « 5 » */
 const affine = (a, b) => poly([a, b]);
+
+/* ------------------------------------------------------------ les dessins */
+
+// « + 0 » : jamais de −0, qu’un aller-retour JSON ne redonnerait pas.
+const arrondi = (x) => Math.round(x * 100) / 100 + 0;
+
+/** [a, b, c] (du plus haut degré au plus bas, comme `poly`) → la fonction dessinée. */
+const trace = (coefs, etiquette) => ({ forme: 'poly', coefs: [...coefs].reverse().map((c) => c + 0), ...(etiquette ? { etiquette } : {}) });
+
+/** Une parabole qui passe par (x0 ; y0) avec la pente donnée — quand la courbe de f n'est pas donnée. */
+const paraboleTangente = (x0, y0, pente) => trace([0.5, pente - x0, y0 - pente * x0 + (x0 * x0) / 2]);
+
+/** Un dessin de courbes sur [xmin ; xmax] : la fenêtre se cale sur les fonctions, les points et l'axe des x. */
+function dessin(xmin, xmax, fonctions, autres = {}) {
+  const ys = [0, ...(autres.points ?? []).map((p) => p.y)];
+  fonctions.forEach((f) => {
+    for (let i = 0; i <= 48; i += 1) ys.push(ordonneeEn(f, xmin + ((xmax - xmin) * i) / 48));
+  });
+  const air = Math.max((Math.max(...ys) - Math.min(...ys)) * 0.1, 0.5);
+  return {
+    type: 'courbe',
+    fenetre: {
+      xmin: arrondi(xmin), xmax: arrondi(xmax), ymin: arrondi(Math.min(...ys) - air), ymax: arrondi(Math.max(...ys) + air),
+    },
+    fonctions,
+    ...autres,
+  };
+}
 
 /* ---------------------------------------------------------- les manches */
 
@@ -268,13 +311,22 @@ function nombreDerive({ entre, melanger }) {
   const c = entre(-9, 9);
   const x0 = nonNul(entre, -3, 3);
   const bonne = 2 * a * x0 + b;
-  return manche(melanger, {
+  const image = a * x0 * x0 + b * x0 + c;
+  const m = manche(melanger, {
     consigne: 'nombre-derive',
     question: `f(x) = ${poly([a, b, c])} ; f′(${nb(x0)}) = ?`,
     bonne: nb(bonne),
-    pieges: [[nb(a * x0 * x0 + b * x0 + c), 'image-pas-derive'], [nb(a * x0 + b), 'puissance-coefficient']],
+    pieges: [[nb(image), 'image-pas-derive'], [nb(a * x0 + b), 'puissance-coefficient']],
     voisin: (k) => nb(bonne + k),
   });
+  // Le nombre dérivé, c'est la pente de la tangente en A — pas la hauteur de A.
+  return {
+    ...m,
+    visuel: dessin(x0 - 2.5, x0 + 2.5, [trace([a, b, c])], {
+      points: [{ x: x0, y: image, etiquette: 'A' }],
+      tangente: { x: x0, y: image, pente: bonne },
+    }),
+  };
 }
 
 function nombreDeriveLu({ entre, melanger }) {
@@ -283,13 +335,21 @@ function nombreDeriveLu({ entre, melanger }) {
   const dx = entre(1, 3);
   let dy;
   do dy = nonNul(entre, -6, 6); while (Math.abs(dy) === dx);
-  return manche(melanger, {
+  const m = manche(melanger, {
     consigne: 'nombre-derive-lu',
     question: `La tangente à la courbe de f au point A(${nb(x0)} ; ${nb(y0)}) passe par B(${nb(x0 + dx)} ; ${nb(y0 + dy)}). f′(${nb(x0)}) = ?`,
     bonne: fr(dy, dx),
     pieges: [[fr(dx, dy), 'pente-inverse'], [nb(y0), 'image-pas-derive']],
     voisin: (k) => fr(dy + k, dx),
   });
+  // La tangente à lire, par A et B ; la courbe n'est pas donnée : une parabole qui la touche en A.
+  return {
+    ...m,
+    visuel: dessin(x0 - 2, x0 + dx + 1.5, [paraboleTangente(x0, y0, dy / dx)], {
+      points: [{ x: x0, y: y0, etiquette: 'A' }, { x: x0 + dx, y: y0 + dy, etiquette: 'B' }],
+      tangente: { x: x0, y: y0, pente: dy / dx },
+    }),
+  };
 }
 
 /* ---------------------------------------------------------------- tangente */
@@ -299,6 +359,8 @@ function tangente({ au, entre, melanger }) {
   let fa;
   let m;
   let question;
+  // La parabole x² + bx + c quand elle est donnée, pour le dessin.
+  let courbe = null;
   if (au([true, false])) {
     fa = entre(-6, 6);
     m = nonNul(entre, -5, 5);
@@ -309,15 +371,22 @@ function tangente({ au, entre, melanger }) {
     fa = a * a + b * a + c;
     m = 2 * a + b;
     question = `f(x) = ${poly([1, b, c])} ; tangente au point d’abscisse ${nb(a)} ?`;
+    courbe = trace([1, b, c]);
   }
   const y = (pente, p) => `y = ${affine(pente, p)}`;
-  return manche(melanger, {
+  const resultat = manche(melanger, {
     consigne: 'tangente',
     question,
     bonne: y(m, fa - m * a),
     pieges: [[y(m, fa), 'tangente-formule'], [y(fa, m - fa * a), 'tangente-echange']],
     voisin: (k) => y(m, fa - m * a + k),
   });
+  if (!courbe) return resultat;
+  // La parabole et le point de contact A ; la tangente n'est pas tracée : c'est elle qu'on cherche.
+  return {
+    ...resultat,
+    visuel: dessin(a - 3, a + 3, [courbe], { points: [{ x: a, y: fa, etiquette: 'A' }] }),
+  };
 }
 
 /* --------------------------------------------------------------- variations */
@@ -327,10 +396,15 @@ function variations({ au, entre, melanger }) {
   let A;
   let B;
   let positif;
+  // f′ et ses racines, pour le dessin.
+  let fPrime;
+  let racines;
   if (au([true, false])) {
     const k = au([1, 2, 3, -1, -2, -3]);
     const x1 = entre(-5, 2);
     const x2 = x1 + entre(2, 5);
+    fPrime = [k, -k * (x1 + x2), k * x1 * x2];
+    racines = [x1, x2];
     const ou = au(['entre', 'droite', 'gauche']);
     if (ou === 'entre') [A, B] = [x1, x2];
     else if (ou === 'droite') [A, B] = [x2, x2 + entre(2, 4)];
@@ -347,6 +421,8 @@ function variations({ au, entre, melanger }) {
     const a = au([1, 2, 3, -1, -2, -3]);
     const r = entre(-5, 5);
     expr = affine(a, -a * r);
+    fPrime = [a, -a * r];
+    racines = [r];
     if (au([true, false])) {
       [A, B] = [r, r + entre(2, 5)];
       positif = a > 0;
@@ -365,6 +441,10 @@ function variations({ au, entre, melanger }) {
       [positif ? 'décroissante' : 'croissante']: 'derivee-signe-variations',
       [positif ? 'positive' : 'négative']: 'derivee-pas-signe-de-f',
     },
+    // La courbe de f′ (pas de f !) sur l'intervalle seul : son signe s'y lit.
+    visuel: dessin(A, B, [trace(fPrime, 'f′')], {
+      points: racines.filter((x) => x >= A && x <= B).map((x) => ({ x, y: 0 })),
+    }),
   };
 }
 

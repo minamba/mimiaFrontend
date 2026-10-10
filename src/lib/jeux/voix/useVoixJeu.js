@@ -284,6 +284,6 @@ export default function useVoixJeu(matiereCode) {
   useEffect(() => arreter, [arreter]);
 
   return {
-    dire, reecouter, muet, basculerMuet, enCours, parle: professeur !== null,
+    dire, reecouter, arreter, muet, basculerMuet, enCours, parle: professeur !== null,
   };
 }

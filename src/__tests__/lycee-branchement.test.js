@@ -17,6 +17,18 @@ import {
 import { PROFESSEUR_PAR_MATIERE, toutesLesRepliques } from '../lib/jeux/voix/repliques';
 import { ECRANS_COLLEGE } from '../components/jeux/JeuxCollege';
 
+/**
+ * UN ESCAPE GAME SE JOUE DANS SA SALLE (09/10/2026) : on commence l'enquête,
+ * puis on fouille l'objet qui brille, et l'énigme s'ouvre. Un jeu ordinaire
+ * n'a ni l'un ni l'autre : rien à faire.
+ */
+async function ouvrirEnigme() {
+  const commencer = screen.queryByRole('button', { name: 'Commencer l’enquête' });
+  if (commencer) await userEvent.click(commencer);
+  const fouiller = screen.queryByRole('button', { name: /^Fouiller / });
+  if (fouiller) await userEvent.click(fouiller);
+}
+
 const PROGRAMMES = ['SECONDE', 'SECONDE_PRO', 'PREMIERE', 'PREMIERE_TECHNO', 'PREMIERE_PRO', 'TERMINALE', 'TERMINALE_TECHNO', 'TERMINALE_PRO'];
 const cleFichier = (k) => k.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/gi, '-');
 
@@ -151,6 +163,7 @@ describe('les voix et les écrans du lycée', () => {
     const m = module.serie(2024, niveau)[0];
     const Jeu = ECRANS_COLLEGE[cle];
     render(<Jeu onQuitter={jest.fn()} matiereCode={module.FAMILLE.matiereCode} niveau={niveau} />);
+    await ouvrirEnigme();
     const bonne = m.choix.find((c) => String(c.cle) === String(m.bonne));
     const fausse = m.choix.find((c) => String(c.cle) !== String(m.bonne));
     await userEvent.click(screen.getByRole('button', { name: String(fausse.libelle) }));

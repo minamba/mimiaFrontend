@@ -1,5 +1,6 @@
 import { phrasesDe } from '../../lib/jeux/voix/repliques';
 import JeuDeChoix from './JeuDeChoix';
+import { repliquesEscape } from '../../lib/jeux/escapeTextes.js';
 
 /**
  * LES JEUX DU CM1, D'UNE SEULE FAÇON — Camara, le 21/09/2026 : « fais tout ».
@@ -20,7 +21,7 @@ import JeuDeChoix from './JeuDeChoix';
  */
 export default function jeuSimple({
   module: moduleCM1, prefixe: prefixeCM1, classe, rendreQuestion, rendreApres, rendreChoix, niveau: niveauFixe,
-  parNiveau = {}, fond,
+  parNiveau = {}, fond, salle, objets, rendreLesChoix,
 }) {
   const regles = {};
   const regle = (niveau) => {
@@ -38,6 +39,12 @@ export default function jeuSimple({
         verdict: module.verdict,
         erreur: (m, sens) => dire(sens),
         aide: (m) => (m.aide ? dire(m.aide) : null),
+        // Un escape game lit le récit de son cadenas après la consigne (09/10/2026).
+        recit: (m) => (module.ESCAPE && m.recit ? repliquesEscape.recit(prefixe, m.recit) : null),
+        // La forme des réponses, quand le jeu impose la sienne (voir `JeuDeChoix`).
+        objets,
+        // Des réponses jouées autrement (glisser, attraper…) : voir `scenes/`.
+        rendreLesChoix,
       };
     }
     return regles[niveau];
@@ -60,6 +67,8 @@ export default function jeuSimple({
         rendreQuestion={rendreQuestion ?? ((m) => <p className="phrase-a-trou">{m.question}</p>)}
         rendreApres={rendreApres ?? laBonneReponse(niveau)}
         fond={fond}
+        // Une salle à fouiller (escape games) : voir `JeuDeChoix`.
+        salle={salle ? (etat) => salle(etat, niveau) : undefined}
       />
     );
   }

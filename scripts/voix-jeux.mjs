@@ -46,7 +46,11 @@ const { enLettres: centaines } = await import(
   new URL('../src/lib/jeux/nombresEnLettres.js', import.meta.url).href
 );
 
-const DOSSIER = path.join(racine, 'public', 'sons', 'jeux');
+// UN DOSSIER DE TRAVAIL HORS DU PROJET, au besoin (09/10/2026) : le serveur de
+// développement surveille public/ et rechargeait la page à chaque voix écrite,
+// rendant le site inutilisable pendant un lot. MIMIA_SONS_JEUX désigne une copie
+// de public/sons/jeux ; on la recopie dans public/ une fois le lot fini.
+const DOSSIER = process.env.MIMIA_SONS_JEUX || path.join(racine, 'public', 'sons', 'jeux');
 const MANIFESTE = path.join(DOSSIER, 'manifeste.json');
 /**
  * GEMINI, COMME EN COURS — Camara, le 05/10/2026 : « pour les jeux, tu peux
@@ -219,12 +223,34 @@ const notesGeminiCollege = (elle, prenom) => [
 ].join('\n');
 
 const CONSIGNES = {};
-/** `college` : le prénom du professeur quand la réplique est du collège, sinon rien (voir `tonDe`). */
+/**
+ * UN TEXTE EN ANGLAIS (09/10/2026) — les récits des escape games d'anglais.
+ * La consigne d'accent français ferait lire « Welcome to London » avec un
+ * accent français : ici, une professeure qui lit en anglais britannique.
+ */
+const ANGLAIS = 'anglais';
+// LA STRUCTURE DE GEMINI, comme `notesGemini` : sans le titre « TRANSCRIPT »,
+// la voix lisait la consigne à voix haute avant le texte (09/10/2026).
+const consigneAnglais = (elle) => [
+  '# AUDIO PROFILE: a warm English teacher reading a short adventure story aloud to French teenagers who are learning English.',
+  "### DIRECTOR'S NOTES",
+  'Style: a lively, expressive storyteller — clear, warm and engaging. Reading the story aloud for the class.',
+  'Voice quality: a clear, full speaking voice. Never breathy, whispery, husky, intimate, sultry or seductive.',
+  'Pace: natural and lively, like a good audiobook; no dragging, no exaggerated articulation, no long pauses.',
+  'Accent: native British English. Every word is English, with a natural British accent.',
+  ...(elle ? ["Voice: a woman's voice from start to finish."] : []),
+  'Say the transcript exactly once.',
+  '#### TRANSCRIPT',
+].join('\n');
+
+/** `college` : le prénom du professeur quand la réplique est du collège, sinon rien (voir `tonDe`) ; `ANGLAIS` pour un texte en anglais. */
 const consignePour = (voix, college = null) => {
   const cle = college ? `${voix}|${college}` : voix;
   if (!CONSIGNES[cle]) {
     const elle = VOIX_FEMININES.has(voix);
-    if (college) {
+    if (college === ANGLAIS) {
+      CONSIGNES[cle] = consigneAnglais(elle);
+    } else if (college) {
       CONSIGNES[cle] = PAR_OPENAI ? consigneDe(elle, true) : notesGeminiCollege(elle, college);
     } else {
       CONSIGNES[cle] = PAR_OPENAI ? consigneDe(elle) : notesGemini(elle);
@@ -445,7 +471,7 @@ function tempsParle(pcm) {
   return rms.filter((r) => r > pic * 0.04).length * 0.02;
 }
 
-function sembleDoublee(pcm, dit, voix) {
+function sembleDoublee(pcm, dit, voix, anglais = false) {
   const lettres = dit.replace(/[^\p{L}\p{N}]/gu, '').length;
   // UNE FORMULE DICTÉE (« u prime v plus u v prime ») se dit lentement, lettre
   // après lettre : au-delà d'un mot sur six fait d'une seule lettre, le seuil
@@ -456,8 +482,48 @@ function sembleDoublee(pcm, dit, voix) {
   const debit = DEBIT_PAROLE[voix];
   if (!debit || lettres < 20) return false;
   const parle = tempsParle(pcm);
-  const seuil = formule ? 0.4 : (SEUIL_DOUBLON_PAR_VOIX[voix] ?? SEUIL_DOUBLON);
+  // EN ANGLAIS (09/10/2026) : le seuil ordinaire. Mesuré sur l'intro de 6e, une
+  // prise lue DEUX FOIS parle à 0,43 fois le débit français de Marine, une
+  // prise juste vers 0,85. À 0,4, un doublon est passé — et l'écoute ne l'a pas
+  // vu (Camara l'a entendu). Les 12 rejets du premier essai venaient d'une
+  // consigne lue à voix haute, corrigée depuis.
+  const seuil = anglais ? SEUIL_DOUBLON : formule ? 0.4 : (SEUIL_DOUBLON_PAR_VOIX[voix] ?? SEUIL_DOUBLON);
   return parle > 0 && lettres / parle < seuil * debit;
+}
+
+/**
+ * UNE PRISE LUE DEUX FOIS SE COUPE AU LIEU DE SE JETER — Camara, le 09/10/2026
+ * (« au lieu de refaire, tu peux pas juste couper ») : la prise est déjà
+ * payée. Gemini relit le texte ENTIER après un vrai silence, au milieu de la
+ * prise — mesuré sur l'intro de 6e : 14,35 s, silence à 7,18 s, et la première
+ * moitié validée à l'oreille. On coupe au creux le plus calme entre 40 % et
+ * 60 %. Pas de vrai silence (sous le seuil de `tempsParle`) : ce n'est pas une
+ * relecture propre, on renonce. Le morceau gardé passe ensuite l'écoute comme
+ * toute prise — une coupe au mauvais endroit y perd des mots, et y est rejetée.
+ */
+function couperLaRelecture(pcm) {
+  const trame = Math.round(FREQUENCE * 0.02);
+  const rms = [];
+  for (let t = 0; t + trame <= pcm.length; t += trame) {
+    let e = 0;
+    for (let i = 0; i < trame; i += 1) e += pcm[t + i] * pcm[t + i];
+    rms.push(Math.sqrt(e / trame));
+  }
+  const pic = rms.reduce((m, r) => Math.max(m, r), 0);
+  let creux = -1;
+  let plusCalme = Infinity;
+  // Un silence de 120 ms au moins : six trames d'affilée.
+  for (let k = Math.max(2, Math.floor(rms.length * 0.4)); k < rms.length * 0.6 && k + 3 < rms.length; k += 1) {
+    const niveau = (rms[k - 2] + rms[k - 1] + rms[k] + rms[k + 1] + rms[k + 2] + rms[k + 3]) / 6;
+    if (niveau < plusCalme) { plusCalme = niveau; creux = k; }
+  }
+  if (creux < 0 || plusCalme > pic * 0.04) return null;
+  const garde = pcm.slice(0, (creux + 1) * trame);
+  const fondu = Math.round(FREQUENCE * 0.04);
+  for (let i = 0; i < fondu && i < garde.length; i += 1) {
+    garde[garde.length - 1 - i] = Math.round(garde[garde.length - 1 - i] * (i / fondu));
+  }
+  return garde;
 }
 
 function meilleurePrise(prises) {
@@ -950,7 +1016,9 @@ function texteDit(texte, liste) {
 
 export function enFrancais(texte) {
   // « 3 480 » (la transcription sépare les milliers) se lit comme « 3480 ».
-  return texte.replace(/(\d)[   ](\d{3})\b/g, '$1$2').replace(/\b(\d{1,4})\b(\s+(heure|bûchette|cube|biscuit)s?\b)?/g, (m, nombre, suite, mot) => {
+  // JUSQU'AUX CENTAINES DE MILLIERS (10/10/2026) : « 384 000 kilomètres » restait
+  // en chiffres, et l'explication de Salim sur la Lune ne passait jamais l'écoute.
+  return texte.replace(/(\d)[   ](\d{3})\b/g, '$1$2').replace(/\b(\d{1,6})\b(\s+(heure|bûchette|cube|biscuit)s?\b)?/g, (m, nombre, suite, mot) => {
     const n = Number(nombre);
     // AU-DELÀ DE CENT, LES CENTAINES DU CE1 — le 21/09/2026, « 342 » restait en
     // chiffres, et aucune prise du coffre ne pouvait être validée : la
@@ -1078,7 +1146,8 @@ async function ecouter(cleApi, pcm, langueImposee) {
 function nombresAttendus(texte) {
   // La même conversion que le texte dit : au-delà de cent, `nombreEnLettres`
   // ne savait rien, et « 200 grammes » faisait planter la vérification.
-  return (texte.match(/\b\d{1,4}\b/g) ?? []).map((n) => normaliser(enFrancais(n)));
+  // Les milliers d'abord recollés (« 2 500 » est UN nombre, pas « 2 » puis « 500 »).
+  return (texte.replace(/(\d)[   ](\d{3})\b/g, '$1$2').match(/\b\d{1,6}\b/g) ?? []).map((n) => normaliser(enFrancais(n)));
 }
 
 /**
@@ -1137,23 +1206,42 @@ const jumeau = (t) => {
   return groupe ? groupe[0] : t;
 };
 
-function priseValide(ecoute, texte, dit) {
+/**
+ * LES CONTRACTIONS ANGLAISES (09/10/2026) : la voix dit « you are », l'écoute
+ * écrit « you're » — et la prise était rejetée, alors qu'on ne les distingue
+ * pas à l'oreille. Les deux côtés sont ramenés à la forme pleine. Le « 's »
+ * n'est développé qu'après un pronom : ailleurs, c'est un possessif
+ * (« the museum's »).
+ */
+const CONTRACTIONS = [
+  [/\bwon['’]t\b/gi, 'will not'], [/\bcan['’]t\b/gi, 'can not'], [/\bcannot\b/gi, 'can not'],
+  [/\b(\w+)n['’]t\b/gi, '$1 not'], [/['’]re\b/gi, ' are'], [/['’]m\b/gi, ' am'],
+  [/['’]ve\b/gi, ' have'], [/['’]ll\b/gi, ' will'], [/['’]d\b/gi, ' would'],
+  [/\blet['’]s\b/gi, 'let us'],
+  [/\b(it|that|there|here|what|where|who|he|she)['’]s\b/gi, '$1 is'],
+];
+const sansContractions = (t, langue) => (langue === 'english'
+  ? CONTRACTIONS.reduce((s, [motif, plein]) => s.replace(motif, plein), t)
+  : t);
+
+function priseValide(ecoute, texte, dit, langue = 'french') {
   // « une » et « un » comptent pour le même nombre : « vingt et une
   // bûchettes » est juste. Sans ça, toute phrase au féminin était rejetée.
-  const unifier = (t) => normaliser(t).replace(/\bune\b/g, 'un');
+  const unifier = (t) => normaliser(sansContractions(t, langue)).replace(/\bune\b/g, 'un');
   const court = unifier(dit).split(' ').filter(Boolean).length <= MOTS_COURTS;
   if (court) {
-    const valide = jumeau(normaliser(ecoute.texte)) === jumeau(normaliser(dit));
+    const valide = jumeau(normaliser(sansContractions(ecoute.texte, langue))) === jumeau(normaliser(sansContractions(dit, langue)));
     if (!valide && process.env.VOIX_DEBUG) {
       console.log(`\n  rejet (court) : « ${texte} » entendu « ${ecoute.texte} »`);
     }
     return valide;
   }
   const entendu = unifier(ecoute.texte);
-  const bonsNombres = nombresAttendus(texte).every((mots) => ` ${entendu} `.includes(` ${mots} `));
+  // En anglais, les nombres ne se disent pas en français : pas de contrôle des nombres.
+  const bonsNombres = langue !== 'french' || nombresAttendus(texte).every((mots) => ` ${entendu} `.includes(` ${mots} `));
   const { ecart, mots } = ecartEnMots(entendu, unifier(dit));
   const fidele = ecart <= (mots <= 4 ? 0 : 1);
-  const valide = ecoute.langue === 'french' && bonsNombres && fidele;
+  const valide = ecoute.langue === langue && bonsNombres && fidele;
   if (!valide && process.env.VOIX_DEBUG) {
     console.log(`\n  rejet : « ${texte} » entendu « ${ecoute.texte} » (${ecoute.langue})`);
   }
@@ -1180,14 +1268,14 @@ const aLOreille = (t) => t.replace(/\bc est\b/g, 'ces').replace(/\bl heures?\b/g
   .map((m) => jumeau(m).replace(/(ent|s|x|t)$/, ''))
   .join(' ');
 
-function priseTolerable(ecoute, texte, dit) {
-  const unifier = (t) => aLOreille(normaliser(t).replace(/\bune\b/g, 'un'));
+function priseTolerable(ecoute, texte, dit, langue = 'french') {
+  const unifier = (t) => aLOreille(normaliser(sansContractions(t, langue)).replace(/\bune\b/g, 'un'));
   if (unifier(dit).split(' ').filter(Boolean).length <= MOTS_COURTS) return false;
   // « x10 » : l'écoute écrit le signe fois.
   const entendu = unifier(ecoute.texte.replace(/\bx\s?(\d)/gi, 'fois $1'));
-  const bonsNombres = nombresAttendus(texte).every((mots) => ` ${entendu} `.includes(` ${aLOreille(mots)} `));
+  const bonsNombres = langue !== 'french' || nombresAttendus(texte).every((mots) => ` ${entendu} `.includes(` ${aLOreille(mots)} `));
   const { ecart, mots } = ecartEnMots(entendu, unifier(dit));
-  return ecoute.langue === 'french' && bonsNombres && ecart <= Math.max(2, Math.floor(mots / 4));
+  return ecoute.langue === langue && bonsNombres && ecart <= Math.max(2, Math.floor(mots / 4));
 }
 
 /**
@@ -1344,7 +1432,11 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe, col
   // Deux fois plus de prises pour un élément de liste : on cherche une durée
   // précise, pas seulement la plus courte, et le hasard a besoin de place.
   const combien = liste ? PRISES * 2 : PRISES;
-  const dit = texteDit(texte, liste);
+  // Un texte en anglais se dit tel quel : la conversion des nombres et des
+  // abréviations de `texteDit` est française.
+  const anglais = college === ANGLAIS;
+  const langue = anglais ? 'english' : 'french';
+  const dit = anglais ? texte : texteDit(texte, liste);
   const feminine = VOIX_FEMININES.has(voix);
   const prises = [];
   const tolerables = [];
@@ -1354,7 +1446,7 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe, col
   let rejetees = 0;
 
   // UN MOT SEUL PASSE TOUJOURS PAR SA PHRASE PORTEUSE — voir `motDansUnePhrase`.
-  if (unSeulMot(dit)) {
+  if (!anglais && unSeulMot(dit)) {
     const dansUnePhrase = await motDansUnePhrase(cleApi, voix, dit, 2, syllabe, college);
     const claires = dansUnePhrase.filter((p) => !sonneMasculin(p, feminine));
     prises.push(...(claires.length > 0 ? claires : dansUnePhrase));
@@ -1365,20 +1457,27 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe, col
   }
 
   for (let essai = 0; prises.length < combien && essai < combien * 3; essai += 1) {
-    const pcm = await unePrise(cleApi, voix, dit, college);
-    // Une phrase dite deux fois est rejetée AVANT tout le reste — et avant
+    let pcm = await unePrise(cleApi, voix, dit, college);
+    // Une phrase dite deux fois est traitée AVANT tout le reste — et avant
     // l'écoute : la transcription se paie sur le crédit OpenAI, celui du micro
-    // des cours (crédit épuisé le 08/10/2026). Voir `sembleDoublee`.
-    if (sembleDoublee(pcm, dit, voix)) {
+    // des cours (crédit épuisé le 08/10/2026). Voir `sembleDoublee`. On la
+    // coupe plutôt que d'en payer une autre (`couperLaRelecture`) ; seule une
+    // prise qu'on ne sait pas couper proprement est jetée sans être écoutée.
+    if (sembleDoublee(pcm, dit, voix, anglais)) {
       statistiques.doublees += 1;
-      rejetees += 1;
-      continue;
+      const coupee = couperLaRelecture(pcm);
+      if (!coupee || sembleDoublee(coupee, dit, voix, anglais)) {
+        rejetees += 1;
+        continue;
+      }
+      statistiques.coupees += 1;
+      pcm = coupee;
     }
     const court = normaliser(dit).split(' ').filter(Boolean).length <= MOTS_COURTS;
-    const ecoute = await ecouter(cleApi, pcm, court ? 'fr' : null);
+    const ecoute = await ecouter(cleApi, pcm, court ? (anglais ? 'en' : 'fr') : null);
     const bas = sonneMasculin(pcm, feminine);
-    if (priseValide(ecoute, texte, dit)) (bas ? graves : prises).push(pcm);
-    else if (priseTolerable(ecoute, texte, dit)) tolerables.push(pcm);
+    if (priseValide(ecoute, texte, dit, langue)) (bas ? graves : prises).push(pcm);
+    else if (priseTolerable(ecoute, texte, dit, langue)) tolerables.push(pcm);
     else rejetees += 1;
   }
 
@@ -1394,7 +1493,7 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe, col
     statistiques.basses += graves.length;
   }
   if (prises.length === 0) prises.push(...tolerables);
-  if (prises.length === 0) throw new Error(`aucune prise en français sur ${rejetees + tolerables.length}`);
+  if (prises.length === 0) throw new Error(`aucune prise en ${anglais ? 'anglais' : 'français'} sur ${rejetees + tolerables.length}`);
   if (rejetees > 0) statistiques.rejetees += rejetees;
   const choisie = liste ? priseReguliere(prises) : meilleurePrise(prises);
   return versMp3(resserrer(choisie, estReaction(cleReplique)));
@@ -1403,7 +1502,7 @@ async function enregistrer(cleApi, voix, texte, cleReplique, liste, syllabe, col
 // `graves` porte les CLÉS et non un compte : une réplique qui n'a eu que des
 // prises basses est à réécouter, et on ne la retrouve pas sans son nom.
 const statistiques = {
-  rejetees: 0, basses: 0, graves: [], doublees: 0,
+  rejetees: 0, basses: 0, graves: [], doublees: 0, coupees: 0,
 };
 
 // ------------------------------------------------------------------------
@@ -1418,10 +1517,10 @@ for (const [professeur, repliques] of Object.entries(inventaire)) {
   const connues = manifeste.professeurs?.[professeur]?.repliques ?? {};
 
   for (const {
-    cle, texte, liste, syllabe,
+    cle, texte, liste, syllabe, anglais,
   } of repliques) {
     const fichier = path.join(DOSSIER, professeur, `${cle}.mp3`);
-    const college = tonDe(professeur, cle);
+    const college = anglais ? ANGLAIS : tonDe(professeur, cle);
     const e = empreinte(professeur, texte, liste, syllabe, college);
     const aJour = connues[cle]?.empreinte === e && fs.existsSync(fichier);
     const retenue = !seulement || `${professeur}/${cle}`.startsWith(seulement) || cle.startsWith(seulement);
@@ -1505,7 +1604,7 @@ await ecrireManifeste();
 
 console.log(`\n${faites} enregistrée(s).`);
 console.log(`${statistiques.rejetees} prise(s) rejetée(s) à l'écoute : langue ou nombre entendus faux.`);
-console.log(`${statistiques.doublees} prise(s) écartée(s) : phrase dite deux fois.`);
+console.log(`${statistiques.doublees} prise(s) dite(s) deux fois, dont ${statistiques.coupees} coupée(s) au lieu d'être jetée(s).`);
 console.log(`${statistiques.basses} prise(s) écartée(s) pour voix trop grave (seuil ${HAUTEUR_MINIMALE} Hz).`);
 if (statistiques.graves.length > 0) {
   console.log(`${statistiques.graves.length} réplique(s) n'ont eu QUE des prises graves, à réécouter :`);

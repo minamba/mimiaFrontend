@@ -12,6 +12,8 @@ import { Monnaie, Produit } from './Etal';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { classesScene, humeurDe } from './scenes/cp-maths-1/commun';
+import { DecorMarche, FeteMarche, Pomme } from './scenes/cp-maths-1/Marche';
 
 /**
  * LA MARCHANDE, À L'ÉCRAN.
@@ -136,8 +138,17 @@ function MarchandeCP({ onQuitter, matiereCode }) {
     );
   }
 
+  // L'UNIVERS DE LA COUVERTURE (09/10/2026) : le marché vit, Pomme dit la
+  // commande et réagit — voir `scenes/cp-maths-1/Marche.js`.
+  const humeur = humeurDe({ juste, faux: sens === 'trop' });
+
   return (
-    <div className="jeu jeu--marche" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--marche sc-cp-maths-1 ${classesScene('sc-marchande', humeur)}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorMarche />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -152,10 +163,15 @@ function MarchandeCP({ onQuitter, matiereCode }) {
         ))}
       </ol>
 
-      <p className="jeu__consigne">
-        {laConsigne.texte}
-        <BoutonsVoix voix={voix} consigne={laConsigne} />
-      </p>
+      <div className="sc-cp-maths-1__parole">
+        <span className="sc-cp-maths-1__mascotte" key={`${manche}-${sens}`}>
+          <Pomme humeur={humeur} />
+        </span>
+        <p className="jeu__consigne">
+          {laConsigne.texte}
+          <BoutonsVoix voix={voix} consigne={laConsigne} />
+        </p>
+      </div>
 
       {/* LA COMMANDE, POSÉE SUR LE COMPTOIR. Chaque produit porte son prix :
           c'est l'ardoise du stand, et c'est là que l'enfant lit ce qu'il doit
@@ -193,6 +209,8 @@ function MarchandeCP({ onQuitter, matiereCode }) {
       {sens === 'trop' && !juste && (
         <p className="jeu__trop" role="status">{PHRASES.trop}</p>
       )}
+
+      {juste && <FeteMarche key={`fete-${manche}`} />}
 
       {juste ? (
         <div className="jeu__gagne" role="status">

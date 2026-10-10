@@ -81,6 +81,9 @@ import couvertureMarchande from '../../assets/cov_marchande.webp';
 import { CATALOGUE_COLLEGE } from './college/index.js';
 import { CATALOGUE_LYCEE } from './lycee/index.js';
 import { IMAGES_SECONDAIRE } from './imagesSecondaire.js';
+import { CATALOGUE_BONUS } from './bonus/catalogue.js';
+import { IMAGES_BONUS } from './imagesBonus.js';
+import { IMAGES_HISTOIRE_GEO } from './imagesHistoireGeo.js';
 import { programmeDeLaClasse } from './frise.js';
 import couverturePaquets from '../../assets/paquet_10.webp';
 import couvertureTrain from '../../assets/train_des_nombres.webp';
@@ -770,6 +773,15 @@ export const JEUX = [
 
   // LES JEUX DU LYCÉE (07/10/2026), même modèle — voir `lycee/index.js`.
   ...CATALOGUE_LYCEE.map(habiller),
+
+  // LES JEUX BONUS (09/10/2026), du CP à la terminale, dans leur rayon à part
+  // et toujours en dernier — voir `bonus/catalogue.js`. Une seule couverture
+  // pour toutes les classes, le titre peint dedans (`imagesBonus.js`).
+  ...CATALOGUE_BONUS.map((jeu) => {
+    // Les jeux d'histoire-géo (10/10/2026) : leur couverture porte le nom du jeu sans « bonus- ».
+    const couverture = IMAGES_BONUS[jeu.cle]?.couverture ?? IMAGES_HISTOIRE_GEO.covers[jeu.cle.replace(/^bonus-/, '')];
+    return couverture ? { ...jeu, image: couverture, titreDansImage: true } : jeu;
+  }),
 ];
 
 /**

@@ -8,6 +8,8 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/ce2-francais-b/communs';
+import { DecorEnquete, TableauDeLiege, Tasse } from './scenes/ce2-francais-b/Enquete';
 
 const ESSAIS_AVANT_AIDE = 2;
 
@@ -19,6 +21,13 @@ const ESSAIS_AVANT_AIDE = 2;
  * CHAQUE MOT EST UN BOUTON ; un mot faux reste barré, avec sous lui
  * l'étiquette de sa classe — l'erreur apprend quelque chose même quand elle
  * est une erreur. Le bon mot, une fois trouvé, porte la sienne en vert.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) — voir
+ * `scenes/ce2-francais-b/Enquete.js` : le bureau de nuit vit (fenêtre, lampe,
+ * boussole), le tableau de liège montre les cinq fiches des classes, la fiche
+ * recherchée entourée de rouge ; chaque mot touché s'épingle sur la fiche de
+ * sa classe, le bon mot tombe sous le tampon ; la tasse du détective réagit.
+ * Rien de la règle ne change.
  */
 export default function DetectiveClasses({ onQuitter, matiereCode }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -97,7 +106,8 @@ export default function DetectiveClasses({ onQuitter, matiereCode }) {
   const derniere = fautes[fautes.length - 1];
 
   return (
-    <div className="jeu jeu--scene jeu--detective">
+    <div className={`jeu jeu--scene jeu--detective sc-ce2-francais-b sc-detective-du-verbe-ce2${trouve !== null ? ' est-fete' : ''}`}>
+      <DecorEnquete resolu={trouve !== null} />
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -118,6 +128,10 @@ export default function DetectiveClasses({ onQuitter, matiereCode }) {
         <BoutonsVoix voix={voix} consigne={laConsigne} />
       </p>
 
+      {/* LE TABLEAU DE LIÈGE : les cinq classes, la recherchée entourée de rouge. */}
+      <TableauDeLiege key={manche} p={p} cible={cible} fautes={fautes} trouve={trouve} montrer={montrer} />
+
+      {/* LE DOSSIER DE L'ENQUÊTE : chaque mot est une fiche à toucher. */}
       <p className="detective__phrase" aria-label="La phrase">
         {p.mots.map((mot, i) => {
           const faux = fautes.includes(i);
@@ -151,11 +165,19 @@ export default function DetectiveClasses({ onQuitter, matiereCode }) {
         <div className="jeu__gagne" role="status">
           {montrer && <p className="scene__bulle">{PHRASES_CLASSES.definition[cible]}</p>}
           {trouve !== null && <p className="jeu__gagne-calcul">Bien vu, détective&nbsp;!</p>}
+          {trouve !== null && <p className="scene__bulle sc-detective-du-verbe-ce2__definition">{PHRASES_CLASSES.definition[cible]}</p>}
           <button type="button" className="btn btn--principal" onClick={suivante}>
             Continuer
           </button>
         </div>
       )}
+
+      {/* La tasse fête l'indice trouvé, explique l'aide, encourage après une erreur. */}
+      <Tasse
+        humeur={humeurDe({ reussi: trouve !== null, montre: montrer, faute: fautes.length > 0 && !termine })}
+        declic={fautes.length}
+      />
+      {trouve !== null && <Fete forme="papier" teintes={['#2f7fd1', '#d62828', '#2e9e5b', '#f08c00', '#8e44c9', '#ffd23f']} />}
     </div>
   );
 }

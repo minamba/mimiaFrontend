@@ -15,6 +15,11 @@
  *   - LA RÉCIPROQUE (2) : le triangle est-il rectangle, et en quel sommet ?
  *     Pièges : conclure sans l'égalité exacte, l'angle droit placé ailleurs
  *     qu'en face du plus grand côté.
+ *
+ * LE DESSIN (09/10/2026) : l'hypoténuse et le côté de l'angle droit portent un
+ * `visuel`, le triangle rectangle (ou l'échelle contre son mur) avec les
+ * longueurs de la question et « ? » pour la cherchée. Pas la réciproque : un
+ * angle droit dessiné donnerait la réponse.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -95,17 +100,26 @@ function hypotenuse(o, exacte) {
     } while (u === v || Number.isInteger(h) || !finie(h));
   }
   const bonne = `${exacte ? h : dix(h)} cm`;
-  return monter(
-    melanger,
-    'hypotenuse',
-    `${nom} rectangle en ${P} : ${segment(nom, P, Q)} = ${u} cm, ${segment(nom, P, R)} = ${v} cm. ${segment(nom, Q, R)} = ? (${exacte ? 'valeur exacte' : 'arrondi au dixième'})`,
-    bonne,
-    [
-      [`${longueur(Math.sqrt(Math.abs(v * v - u * u)))} cm`, 'hypotenuse-additionner'],
-      [`${u + v} cm`, 'carres-pas-longueurs'],
-    ],
-    (k) => `${exacte ? h + k : dix(h + k)} cm`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'hypotenuse',
+      `${nom} rectangle en ${P} : ${segment(nom, P, Q)} = ${u} cm, ${segment(nom, P, R)} = ${v} cm. ${segment(nom, Q, R)} = ? (${exacte ? 'valeur exacte' : 'arrondi au dixième'})`,
+      bonne,
+      [
+        [`${longueur(Math.sqrt(Math.abs(v * v - u * u)))} cm`, 'hypotenuse-additionner'],
+        [`${u + v} cm`, 'carres-pas-longueurs'],
+      ],
+      (k) => `${exacte ? h + k : dix(h + k)} cm`,
+    ),
+    // Q en haut, l'angle droit P, R en bas à droite : [PQ] debout, [PR] couché.
+    visuel: {
+      type: 'figure',
+      forme: 'triangle-rectangle',
+      cotes: { vertical: `${u} cm`, horizontal: `${v} cm`, hypotenuse: '?' },
+      noms: [Q, P, R],
+    },
+  };
 }
 
 function coteAngleDroit(o, sorte) {
@@ -118,17 +132,24 @@ function coteAngleDroit(o, sorte) {
       d = entre(Math.ceil(L / 4), Math.floor(L / 2));
       h = Math.sqrt(L * L - d * d);
     } while (!finie(h / 10) || dix(Math.sqrt(L * L + d * d) / 10) === dix(h / 10));
-    return monter(
-      melanger,
-      'cote-angle-droit',
-      `Une échelle de ${nb(L / 10)} m est posée contre un mur vertical, son pied à ${nb(d / 10)} m du mur. À quelle hauteur touche-t-elle le mur ? (arrondi au dixième)`,
-      `${dix(h / 10)} m`,
-      [
-        [`${dix(Math.sqrt(L * L + d * d) / 10)} m`, 'soustraire-pour-un-cote'],
-        [`${nb((L - d) / 10)} m`, 'carres-pas-longueurs'],
-      ],
-      (k) => `${dix(h / 10 + k / 10)} m`,
-    );
+    return {
+      ...monter(
+        melanger,
+        'cote-angle-droit',
+        `Une échelle de ${nb(L / 10)} m est posée contre un mur vertical, son pied à ${nb(d / 10)} m du mur. À quelle hauteur touche-t-elle le mur ? (arrondi au dixième)`,
+        `${dix(h / 10)} m`,
+        [
+          [`${dix(Math.sqrt(L * L + d * d) / 10)} m`, 'soustraire-pour-un-cote'],
+          [`${nb((L - d) / 10)} m`, 'carres-pas-longueurs'],
+        ],
+        (k) => `${dix(h / 10 + k / 10)} m`,
+      ),
+      visuel: {
+        type: 'figure',
+        forme: 'echelle',
+        cotes: { vertical: '?', horizontal: `${nb(d / 10)} m`, hypotenuse: `${nb(L / 10)} m` },
+      },
+    };
   }
   const {
     nom, P, Q, R,
@@ -146,17 +167,25 @@ function coteAngleDroit(o, sorte) {
       b = Math.sqrt(c * c - a * a);
     } while (Number.isInteger(b) || !finie(b) || dix(Math.sqrt(c * c + a * a)) === dix(b));
   }
-  return monter(
-    melanger,
-    'cote-angle-droit',
-    `${nom} rectangle en ${P} : ${segment(nom, Q, R)} = ${c} cm, ${segment(nom, P, Q)} = ${a} cm. ${segment(nom, P, R)} = ? (${exacte ? 'valeur exacte' : 'arrondi au dixième'})`,
-    `${exacte ? b : dix(b)} cm`,
-    [
-      [`${longueur(Math.sqrt(c * c + a * a))} cm`, 'soustraire-pour-un-cote'],
-      [`${c - a} cm`, 'carres-pas-longueurs'],
-    ],
-    (k) => `${exacte ? b + k : dix(b + k)} cm`,
-  );
+  return {
+    ...monter(
+      melanger,
+      'cote-angle-droit',
+      `${nom} rectangle en ${P} : ${segment(nom, Q, R)} = ${c} cm, ${segment(nom, P, Q)} = ${a} cm. ${segment(nom, P, R)} = ? (${exacte ? 'valeur exacte' : 'arrondi au dixième'})`,
+      `${exacte ? b : dix(b)} cm`,
+      [
+        [`${longueur(Math.sqrt(c * c + a * a))} cm`, 'soustraire-pour-un-cote'],
+        [`${c - a} cm`, 'carres-pas-longueurs'],
+      ],
+      (k) => `${exacte ? b + k : dix(b + k)} cm`,
+    ),
+    visuel: {
+      type: 'figure',
+      forme: 'triangle-rectangle',
+      cotes: { vertical: `${a} cm`, horizontal: '?', hypotenuse: `${c} cm` },
+      noms: [Q, P, R],
+    },
+  };
 }
 
 function reciproque(o) {

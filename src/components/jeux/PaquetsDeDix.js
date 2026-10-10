@@ -9,6 +9,8 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { classesScene, humeurDe } from './scenes/cp-maths-1/commun';
+import { Buchou, DecorClasse, FeteClasse } from './scenes/cp-maths-1/Classe';
 
 /**
  * LES PAQUETS DE DIX, À L'ÉCRAN.
@@ -178,8 +180,18 @@ export default function PaquetsDeDix({ onQuitter, matiereCode }) {
     );
   }
 
+  // L'UNIVERS DE LA COUVERTURE (09/10/2026) : la classe vit, Bûchou la
+  // bûchette dit la consigne et réagit à l'annonce — voir
+  // `scenes/cp-maths-1/Classe.js`.
+  const humeur = humeurDe({ juste, faux: annonce !== null });
+
   return (
-    <div className="jeu jeu--paquets" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--paquets sc-cp-maths-1 ${classesScene('sc-paquets-de-dix', humeur)}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorClasse />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -194,10 +206,15 @@ export default function PaquetsDeDix({ onQuitter, matiereCode }) {
         ))}
       </ol>
 
-      <p className="jeu__consigne">
-        {laConsigne.texte}
-        <BoutonsVoix voix={voix} consigne={laConsigne} />
-      </p>
+      <div className="sc-cp-maths-1__parole">
+        <span className="sc-cp-maths-1__mascotte" key={`${manche}-${annonce}`}>
+          <Buchou humeur={humeur} />
+        </span>
+        <p className="jeu__consigne">
+          {laConsigne.texte}
+          <BoutonsVoix voix={voix} consigne={laConsigne} />
+        </p>
+      </div>
 
       {/* LE BUREAU EN BOIS EST LA ZONE DE JEU, et le décor a été cadré pour
           ça : le tableau et la fenêtre en haut, le plateau vide en bas. */}
@@ -249,6 +266,8 @@ export default function PaquetsDeDix({ onQuitter, matiereCode }) {
       {annonce === 'pas-assez' && (
         <p className="jeu__trop" role="status">{PHRASES.pasAssez}</p>
       )}
+
+      {juste && <FeteClasse key={`fete-${manche}`} />}
 
       {juste ? (
         <div className="jeu__gagne" role="status">

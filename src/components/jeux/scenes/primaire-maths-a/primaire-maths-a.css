@@ -1,0 +1,2547 @@
+/* ========================================================================
+   LES SCÈNES DU GROUPE « PRIMAIRE-MATHS-A » (09/10/2026)
+   Huit écrans du CM1 et du CM2, chacun son univers, repris de sa couverture.
+   Toutes les classes et tous les keyframes sont préfixés par la clé du jeu :
+   sc-calcul-mental, sc-grands-nombres, sc-fractions-cm1, sc-aires-cm1,
+   sc-durees-cm1, sc-mesures-cm1, sc-suite-qui-continue, sc-recette-pour-8.
+   Tout le mouvement est coupé sous `prefers-reduced-motion` (fin du fichier).
+   ======================================================================== */
+
+/* ------------------------------------------------------------------------
+   LE CALCUL MALIN (CM1) ET LES OPÉRATIONS POSÉES (CM2) — SceneCalcul.js
+   La rivière et ses pierres de gué ; les îles qui flottent dans le ciel.
+   ------------------------------------------------------------------------ */
+.sc-calcul-mental {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 50px 14px 22px;
+  overflow: hidden;
+  border: 3px solid rgba(190, 236, 255, 0.85);
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-calcul-mental--riviere { background: linear-gradient(180deg, #8fd3ff 0%, #c8ecff 38%, #2a9fd6 56%, #0f5f93 100%); }
+.sc-calcul-mental--ciel { background: linear-gradient(180deg, #2f5fd0 0%, #6aa6ff 55%, #d8ecff 100%); }
+.sc-calcul-mental--apres { padding-top: 22px; }
+
+/* La rivière : l'eau qui file, la cascade qui tombe. */
+.sc-calcul-mental__eau { position: absolute; inset: 52% 0 0; z-index: -1; pointer-events: none; }
+
+.sc-calcul-mental__vagues {
+  position: absolute;
+  left: 0;
+  top: 10%;
+  width: 200%;
+  height: 50%;
+  animation: sc-calcul-mental-courant 7s linear infinite;
+}
+
+.sc-calcul-mental__cascade {
+  position: absolute;
+  left: 4%;
+  bottom: 70%;
+  display: flex;
+  width: 46px;
+  height: 120px;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(90deg, rgba(120, 200, 245, 0.85), rgba(225, 245, 255, 0.95) 50%, rgba(120, 200, 245, 0.85));
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+.sc-calcul-mental__cascade span {
+  flex: 1;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0 18px, rgba(255, 255, 255, 0) 18px 26px);
+  opacity: 0.7;
+  animation: sc-calcul-mental-chute 0.9s linear infinite;
+  animation-delay: calc(var(--n) * -0.17s);
+}
+
+/* Le ciel : des nuages qui passent, des étincelles qui scintillent. */
+.sc-calcul-mental__ciel { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+
+.sc-calcul-mental__nuage {
+  position: absolute;
+  top: calc(12% + var(--n) * 24%);
+  left: -30%;
+  width: 130px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 30px -14px 0 4px rgba(255, 255, 255, 0.85), 64px 2px 0 -2px rgba(255, 255, 255, 0.85);
+  animation: sc-calcul-mental-nuage 26s linear infinite;
+  animation-delay: calc(var(--n) * -9s);
+}
+
+.sc-calcul-mental__etincelle {
+  position: absolute;
+  top: calc(8% + var(--n) * 13%);
+  left: calc(6% + var(--n) * 16%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.9);
+  animation: sc-calcul-mental-scintille 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.4s);
+}
+
+/* La grande pierre de la question (ou l'île du ciel). */
+.sc-calcul-mental__rocher {
+  position: relative;
+  padding: 18px 40px 22px;
+  border-radius: 46% 54% 42% 58% / 58% 46% 54% 42%;
+  background:
+    radial-gradient(ellipse at 50% 0%, #79c25a 0 22%, transparent 23%),
+    radial-gradient(circle at 35% 30%, #b8bfca, #7d8592 60%, #545b67);
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.25), 0 12px 0 -4px rgba(10, 60, 100, 0.45);
+  animation: sc-calcul-mental-roule 4s ease-in-out infinite alternate;
+}
+
+.sc-calcul-mental--ciel .sc-calcul-mental__rocher {
+  padding: 22px 46px 40px;
+  border-radius: 26px 26px 50% 50% / 26px 26px 70% 70%;
+  background: linear-gradient(180deg, #6cc04a 0 16px, #9a7b5c 16px, #6b513a);
+  box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.2), 0 18px 24px rgba(20, 40, 90, 0.35);
+}
+
+.sc-calcul-mental__enonce {
+  margin: 0;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(30px, 6vw, 46px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 0 14px rgba(0, 0, 0, 0.35);
+}
+
+.sc-calcul-mental__signe { display: inline-block; padding: 0 0.1em; }
+.sc-calcul-mental__signe--fois { color: #ffe066; text-shadow: 0 0 12px #ffb703, 0 3px 0 rgba(0, 0, 0, 0.5); }
+.sc-calcul-mental__signe--moins { color: #ff8be6; text-shadow: 0 0 12px #e100b4, 0 3px 0 rgba(0, 0, 0, 0.5); }
+.sc-calcul-mental__signe--plus { color: #8fe3ff; text-shadow: 0 0 12px #00a6e1, 0 3px 0 rgba(0, 0, 0, 0.5); }
+.sc-calcul-mental__signe--divise { color: #9bff9e; text-shadow: 0 0 12px #16c430, 0 3px 0 rgba(0, 0, 0, 0.5); }
+.sc-calcul-mental--riviere .sc-calcul-mental__signe { animation: sc-calcul-mental-lueur 1.8s ease-in-out infinite alternate; }
+
+/* La grenouille, assise sur la pierre. */
+.sc-calcul-mental__grenouille {
+  position: absolute;
+  left: 8px;
+  top: -46px;
+  width: 78px;
+  height: auto;
+  overflow: visible;
+}
+
+.sc-calcul-mental__gorge { transform-box: fill-box; transform-origin: center; animation: sc-calcul-mental-gorge 2.2s ease-in-out infinite; }
+.sc-calcul-mental__yeux { transform-box: fill-box; transform-origin: center; animation: sc-calcul-mental-cligne 4.5s ease-in-out infinite; }
+
+/* L'oiseau, qui tourne autour de l'île. */
+.sc-calcul-mental__oiseau {
+  position: absolute;
+  right: -26px;
+  top: -40px;
+  width: 70px;
+  height: auto;
+  overflow: visible;
+  animation: sc-calcul-mental-vol 6s ease-in-out infinite;
+}
+
+.sc-calcul-mental__aile { transform-box: fill-box; transform-origin: bottom center; animation: sc-calcul-mental-aile 0.5s ease-in-out infinite alternate; }
+
+/* La petite cascade qui tombe de l'île. */
+.sc-calcul-mental__chute {
+  position: absolute;
+  left: 62%;
+  bottom: -46px;
+  width: 14px;
+  height: 56px;
+  border-radius: 0 0 8px 8px;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0 8px, rgba(150, 215, 255, 0.7) 8px 18px);
+  background-size: 100% 36px;
+  animation: sc-calcul-mental-filet 0.7s linear infinite;
+}
+
+/* ---- les réponses : des pierres de gué, ou des îlots ---- */
+.sc-calcul-mental__gue {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 28px;
+  width: min(100%, 760px);
+  margin: 4px auto 0;
+  padding: 22px 18px 26px;
+  list-style: none;
+  border-radius: 40px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.sc-calcul-mental__gue--riviere {
+  background:
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.16) 0 6px, transparent 6px 46px),
+    linear-gradient(180deg, #33a8e0, #11679b);
+  background-size: 220px 100%, 100% 100%;
+  animation: sc-calcul-mental-flots 6s linear infinite;
+}
+
+.sc-calcul-mental__gue--ciel { background: linear-gradient(180deg, rgba(120, 175, 255, 0.92), rgba(220, 238, 255, 0.92)); }
+
+.sc-calcul-mental__gue > li {
+  animation: sc-calcul-mental-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  animation-delay: calc(0.2s + var(--i, 0) * 0.1s);
+}
+
+.sc-calcul-mental__pierre {
+  position: relative;
+  min-width: 132px;
+  padding: 18px 28px 20px;
+  border: none;
+  border-radius: 46% 54% 42% 58% / 58% 46% 54% 42%;
+  background: radial-gradient(circle at 35% 30%, #d3d8df, #8b939f 60%, #5d646f);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 -7px 0 rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  animation: sc-calcul-mental-flotte 3.4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1.1s);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-calcul-mental__gue--ciel .sc-calcul-mental__pierre {
+  padding-bottom: 30px;
+  border-radius: 20px 20px 50% 50% / 20px 20px 70% 70%;
+  background: linear-gradient(180deg, #73c95a 0 14px, #a4825f 14px, #6b513a);
+}
+
+.sc-calcul-mental__pierre:hover:not(:disabled) { transform: translateY(-8px) scale(1.07); filter: brightness(1.12); animation-play-state: paused; }
+.sc-calcul-mental__pierre:focus-visible { outline: 4px solid #ffd43b; outline-offset: 4px; }
+.sc-calcul-mental__libelle { position: relative; z-index: 1; }
+
+.sc-calcul-mental__mousse {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 2px;
+  height: 12px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, #8fd36a 0 55%, transparent 60%);
+  pointer-events: none;
+}
+
+.sc-calcul-mental__gue--ciel .sc-calcul-mental__mousse { display: none; }
+
+.sc-calcul-mental__ronds {
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  width: 120%;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: sc-calcul-mental-ronds 2.6s ease-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.8s);
+  pointer-events: none;
+}
+
+.sc-calcul-mental__gue--ciel .sc-calcul-mental__ronds { display: none; }
+
+.sc-calcul-mental__pierre.est-fausse {
+  background: radial-gradient(circle at 35% 30%, #8a8f97, #4f555e);
+  text-decoration: line-through;
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: sc-calcul-mental-coule 0.6s ease-in both;
+}
+
+/* ---- après la réponse, au CM1 : le chemin de la ruse ---- */
+.sc-calcul-mental__chemin {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 54px 34px;
+  margin: 0;
+  padding: 56px 8px 10px;
+  list-style: none;
+}
+
+.sc-calcul-mental__etape {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.22;
+  transition: opacity 0.4s ease;
+}
+
+.sc-calcul-mental__etape.est-la { opacity: 1; animation: sc-calcul-mental-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+.sc-calcul-mental__etape + .sc-calcul-mental__etape::before {
+  content: "";
+  position: absolute;
+  left: -32px;
+  bottom: 26px;
+  width: 28px;
+  height: 16px;
+  border-top: 4px dashed rgba(255, 255, 255, 0.9);
+  border-radius: 50% 50% 0 0;
+}
+
+.sc-calcul-mental__case {
+  padding: 10px 18px;
+  border-radius: 46% 54% 42% 58% / 58% 46% 54% 42%;
+  background: radial-gradient(circle at 35% 30%, #c9ced6, #7d8592 60%, #545b67);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+
+.sc-calcul-mental__case .sc-calcul-mental__enonce { font-size: 26px; }
+
+.sc-calcul-mental__ruse {
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #ffd43b;
+  color: #1b1d3a;
+  font-size: 18px;
+  font-weight: 900;
+  box-shadow: 0 0 12px rgba(255, 212, 59, 0.8);
+}
+
+.sc-calcul-mental__etape .sc-calcul-mental__grenouille {
+  left: calc(50% - 30px);
+  top: -52px;
+  width: 60px;
+  animation: sc-calcul-mental-saut 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+}
+
+.sc-calcul-mental__etape--coffre .sc-calcul-mental__grenouille { left: auto; right: -40px; top: -34px; }
+
+.sc-calcul-mental__coffre { width: 110px; height: auto; overflow: visible; }
+.sc-calcul-mental__couvercle { transform-box: view-box; transform-origin: 10px 34px; transition: transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.sc-calcul-mental__coffre.est-ouvert .sc-calcul-mental__couvercle { transform: rotate(-28deg) translate(-4px, -8px); }
+.sc-calcul-mental__rayons { opacity: 0; transform-box: view-box; transform-origin: 45px 30px; }
+.sc-calcul-mental__coffre.est-ouvert .sc-calcul-mental__rayons { opacity: 1; animation: sc-calcul-mental-rayons 6s linear infinite; }
+
+.sc-calcul-mental__tresor {
+  padding: 4px 16px;
+  border-radius: 12px;
+  background: #fff7d6;
+  color: #7a4b00;
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow: 0 0 18px rgba(255, 212, 59, 0.9);
+  white-space: nowrap;
+  animation: sc-calcul-mental-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+/* ---- après la réponse, au CM2 : l'opération posée sur une ardoise de pierre ---- */
+.sc-calcul-mental__ardoise {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 12px 22px 16px;
+  border: 3px solid rgba(170, 210, 255, 0.9);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #3a4252, #222936);
+  box-shadow: 0 0 24px rgba(120, 180, 255, 0.5), 0 14px 26px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  animation: sc-calcul-mental-roule 4s ease-in-out infinite alternate;
+}
+
+.sc-calcul-mental__entete { display: flex; align-items: center; gap: 10px; }
+.sc-calcul-mental__entete .sc-calcul-mental__oiseau { position: static; width: 54px; animation: none; }
+.sc-calcul-mental__entete .sc-calcul-mental__enonce { font-size: clamp(24px, 4.5vw, 32px); }
+
+.sc-calcul-mental__pose {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes), 1.05em);
+  justify-content: center;
+  row-gap: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(34px, 6vw, 44px);
+  font-weight: 800;
+}
+
+.sc-calcul-mental__chiffre { position: relative; text-align: center; border-radius: 8px; transition: background 0.2s ease; }
+.sc-calcul-mental__chiffre.est-en-cours { background: rgba(255, 212, 59, 0.28); }
+.sc-calcul-mental__chiffre--resultat.est-ecrit { color: #7dff8a; animation: sc-calcul-mental-tombe 0.4s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.sc-calcul-mental__op { color: #ff8be6; text-align: center; }
+.sc-calcul-mental__trait { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: #fff; }
+
+.sc-calcul-mental__retenue {
+  position: absolute;
+  color: #ff7b7b;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  animation: sc-calcul-mental-pop 0.4s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+sup.sc-calcul-mental__retenue { left: -6px; top: 2px; }
+sub.sc-calcul-mental__retenue { right: -14px; bottom: -4px; }
+
+.sc-calcul-mental__multi {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(30px, 5.5vw, 40px);
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: pre;
+}
+
+.sc-calcul-mental__multi strong { color: #7dff8a; }
+.sc-calcul-mental__barre { align-self: stretch; height: 3px; margin: 2px 0; border-radius: 2px; background: #fff; }
+.sc-calcul-mental__zero { color: #ffd43b; font-style: normal; text-shadow: 0 0 10px #ffb703; }
+.sc-calcul-mental .est-cache { visibility: hidden; }
+.sc-calcul-mental__multi .est-ecrit,
+.sc-calcul-mental__potence .est-ecrit,
+.sc-calcul-mental__verif.est-ecrit { animation: sc-calcul-mental-glisse 0.45s cubic-bezier(0.2, 1.2, 0.4, 1); }
+
+.sc-calcul-mental__potence {
+  display: grid;
+  grid-template-columns: auto auto;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(32px, 6vw, 42px);
+  font-weight: 800;
+}
+
+.sc-calcul-mental__dividende,
+.sc-calcul-mental__reste { padding: 0 16px; text-align: right; }
+.sc-calcul-mental__diviseur { padding: 0 16px; border-left: 4px solid #fff; border-bottom: 4px solid #fff; }
+.sc-calcul-mental__quotient { padding: 0 16px; border-left: 4px solid #fff; color: #7dff8a; }
+.sc-calcul-mental__reste { color: #ffb86b; }
+
+.sc-calcul-mental__verif { margin: 0; color: #e6edf7; font-size: 20px; font-weight: 700; text-align: center; white-space: pre-wrap; }
+
+.sc-calcul-mental__legende {
+  max-width: 34em;
+  margin: 0;
+  color: #ffe9a8;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@keyframes sc-calcul-mental-courant { to { transform: translateX(-50%); } }
+@keyframes sc-calcul-mental-chute { from { background-position: 0 0; } to { background-position: 0 26px; } }
+@keyframes sc-calcul-mental-nuage { to { transform: translateX(1100px); } }
+@keyframes sc-calcul-mental-scintille { 0%, 100% { opacity: 0.2; transform: scale(0.6); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes sc-calcul-mental-roule { from { transform: translateY(0) rotate(-0.6deg); } to { transform: translateY(-6px) rotate(0.6deg); } }
+@keyframes sc-calcul-mental-lueur { from { filter: brightness(1); } to { filter: brightness(1.35); } }
+@keyframes sc-calcul-mental-gorge { 0%, 60%, 100% { transform: scale(1); } 75% { transform: scale(1.35, 1.5); } }
+@keyframes sc-calcul-mental-cligne { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes sc-calcul-mental-vol { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-30px, -10px); } 50% { transform: translate(-60px, 4px); } 75% { transform: translate(-24px, 12px); } }
+@keyframes sc-calcul-mental-aile { from { transform: rotate(-14deg); } to { transform: rotate(22deg); } }
+@keyframes sc-calcul-mental-filet { from { background-position: 0 0; } to { background-position: 0 36px; } }
+@keyframes sc-calcul-mental-flots { from { background-position: 0 0, 0 0; } to { background-position: 220px 0, 0 0; } }
+@keyframes sc-calcul-mental-pop { from { opacity: 0; transform: scale(0.6) translateY(14px); } }
+@keyframes sc-calcul-mental-flotte { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-7px) rotate(2deg); } }
+@keyframes sc-calcul-mental-ronds { from { opacity: 0.8; transform: translateX(-50%) scale(0.7); } to { opacity: 0; transform: translateX(-50%) scale(1.25); } }
+@keyframes sc-calcul-mental-coule { 0% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 100% { transform: translateY(10px) rotate(-5deg); } }
+@keyframes sc-calcul-mental-saut { 0% { opacity: 0; transform: translate(-90px, 30px) scale(0.9); } 50% { opacity: 1; transform: translate(-45px, -40px) scale(1.05); } 100% { transform: translate(0, 0) scale(1); } }
+@keyframes sc-calcul-mental-rayons { to { transform: rotate(360deg); } }
+@keyframes sc-calcul-mental-tombe { from { opacity: 0; transform: translateY(-24px); } }
+@keyframes sc-calcul-mental-glisse { from { opacity: 0; transform: translateX(26px); } }
+
+/* ------------------------------------------------------------------------
+   LES GRANDS NOMBRES (CM1, CM2) — SceneNombres.js
+   L'observatoire, la nuit : l'écran lumineux et ses accolades de classes.
+   ------------------------------------------------------------------------ */
+.sc-grands-nombres {
+  --sc-gn-unites: #7dff8a;
+  --sc-gn-mille: #6fd3ff;
+  --sc-gn-millions: #ffd166;
+  --sc-gn-milliards: #ff8be6;
+  position: relative;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 3px solid rgba(120, 190, 255, 0.85);
+  border-radius: 24px;
+  background: #0d1333;
+  box-shadow: 0 0 26px rgba(80, 160, 255, 0.45), 0 14px 30px rgba(0, 0, 0, 0.4);
+}
+
+.sc-grands-nombres__ciel { display: block; width: 100%; height: clamp(62px, 11vw, 96px); }
+.sc-grands-nombres__etoile { animation: sc-grands-nombres-scintille 2.6s ease-in-out infinite; animation-delay: calc(var(--n) * -0.37s); }
+.sc-grands-nombres__filante { opacity: 0; animation: sc-grands-nombres-filante 7s ease-in infinite 1.5s; }
+.sc-grands-nombres__lunette { transform-box: view-box; transform-origin: 58px 52px; animation: sc-grands-nombres-lunette 8s ease-in-out infinite alternate; }
+
+.sc-grands-nombres__scene {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px 18px;
+  background: linear-gradient(180deg, #141b3f, #0d1333);
+}
+
+.sc-grands-nombres__hibou { flex: none; width: 72px; height: auto; overflow: visible; }
+.sc-grands-nombres__tete { transform-box: fill-box; transform-origin: 50% 90%; animation: sc-grands-nombres-tete 5s ease-in-out infinite; }
+.sc-grands-nombres__yeux { transform-box: fill-box; transform-origin: center; animation: sc-grands-nombres-cligne 4s ease-in-out infinite; }
+.sc-grands-nombres__aile { transform-box: fill-box; transform-origin: top center; animation: sc-grands-nombres-aile 3s ease-in-out infinite; }
+
+.sc-grands-nombres__ecran {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 700px;
+  padding: 14px 18px 18px;
+  overflow: hidden;
+  border: 2px solid #6fd3ff;
+  border-radius: 16px;
+  background: rgba(10, 28, 80, 0.94);
+  box-shadow: 0 0 18px rgba(80, 180, 255, 0.6), inset 0 0 24px rgba(80, 180, 255, 0.22);
+  color: #eaf6ff;
+  text-align: center;
+}
+
+.sc-grands-nombres__ecran::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0 45%, rgba(140, 210, 255, 0.12) 50%, transparent 55%);
+  background-size: 100% 220%;
+  animation: sc-grands-nombres-balayage 4s linear infinite;
+  pointer-events: none;
+}
+
+.sc-grands-nombres__nombre {
+  margin: 0 0 30px;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(26px, 7vw, 56px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-shadow: 0 0 14px rgba(111, 211, 255, 0.85);
+}
+
+.sc-grands-nombres__classe { position: relative; display: inline-block; }
+
+.sc-grands-nombres__classe::before,
+.sc-grands-nombres__classe::after {
+  position: absolute;
+  top: 100%;
+  animation: sc-grands-nombres-accolade 0.6s ease-out both;
+}
+
+/* L'accolade, de la largeur de la classe. */
+.sc-grands-nombres__classe::before {
+  content: "";
+  left: 3px;
+  right: 3px;
+  height: 8px;
+  border: 3px solid currentColor;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+}
+
+/* Le nom de la classe, centré dessous. */
+.sc-grands-nombres__classe::after {
+  content: attr(data-classe);
+  left: 50%;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-shadow: none;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.sc-grands-nombres__classe--0::before, .sc-grands-nombres__classe--0::after { color: var(--sc-gn-unites); animation-delay: 0.9s; }
+.sc-grands-nombres__classe--1::before, .sc-grands-nombres__classe--1::after { color: var(--sc-gn-mille); animation-delay: 0.6s; }
+.sc-grands-nombres__classe--2::before, .sc-grands-nombres__classe--2::after { color: var(--sc-gn-millions); animation-delay: 0.3s; }
+.sc-grands-nombres__classe--3::before, .sc-grands-nombres__classe--3::after { color: var(--sc-gn-milliards); }
+
+.sc-grands-nombres__lettres {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(22px, 4.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.sc-grands-nombres__mot--0 { color: var(--sc-gn-unites); }
+.sc-grands-nombres__mot--1 { color: var(--sc-gn-mille); text-shadow: 0 0 12px rgba(111, 211, 255, 0.9); }
+.sc-grands-nombres__mot--2 { color: var(--sc-gn-millions); text-shadow: 0 0 12px rgba(255, 209, 102, 0.9); }
+.sc-grands-nombres__lettres .sc-grands-nombres__mot--1,
+.sc-grands-nombres__lettres .sc-grands-nombres__mot--2 { animation: sc-grands-nombres-brille 1.8s ease-in-out infinite alternate; }
+
+.sc-grands-nombres__titre { margin: 0 0 10px; font-size: clamp(22px, 4vw, 30px); font-weight: 800; }
+
+.sc-grands-nombres__repere { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; }
+
+.sc-grands-nombres__repere span {
+  padding: 3px 14px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+/* ---- après la réponse ---- */
+.sc-grands-nombres__rappel { margin: 0 0 10px; font-size: clamp(20px, 3.8vw, 28px); font-weight: 800; }
+
+.sc-grands-nombres__tableau {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-grands-nombres__case {
+  --sc-gn-c: var(--sc-gn-unites);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 118px;
+  padding: 8px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.45;
+  transition: opacity 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.sc-grands-nombres__case--1 { --sc-gn-c: var(--sc-gn-mille); }
+.sc-grands-nombres__case--2 { --sc-gn-c: var(--sc-gn-millions); }
+.sc-grands-nombres__case.est-allumee { opacity: 1; border-color: var(--sc-gn-c); box-shadow: 0 0 16px var(--sc-gn-c); animation: sc-grands-nombres-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.sc-grands-nombres__nom { color: var(--sc-gn-c); font-size: 16px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.sc-grands-nombres__case strong { font-family: 'Courier New', monospace; font-size: 36px; color: #fff; }
+.sc-grands-nombres__dit { min-height: 1.3em; color: #ffe9a8; font-size: 18px; font-weight: 700; }
+
+.sc-grands-nombres__lecture {
+  margin: 12px 0 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(255, 212, 59, 0.18);
+  color: #fff;
+  font-size: clamp(18px, 3.4vw, 24px);
+  font-weight: 800;
+  animation: sc-grands-nombres-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+.sc-grands-nombres__lignes { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.sc-grands-nombres__ligne {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 14px;
+  padding: 4px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  transition: opacity 0.4s ease, background 0.4s ease;
+}
+
+.sc-grands-nombres__ligne.est-ecarte { opacity: 0.35; text-decoration: line-through; }
+.sc-grands-nombres__ligne.est-gagnant { background: rgba(255, 212, 59, 0.24); box-shadow: 0 0 18px rgba(255, 212, 59, 0.75); }
+.sc-grands-nombres__chiffres { display: inline-flex; font-family: 'Courier New', monospace; font-size: clamp(26px, 5vw, 36px); font-weight: 800; }
+.sc-grands-nombres__chiffre { padding: 0 1px; border-radius: 6px; }
+.sc-grands-nombres__chiffre.est-debut-de-classe { margin-left: 0.4em; }
+.sc-grands-nombres__chiffre.est-compare { background: rgba(255, 209, 102, 0.3); color: #ffd166; animation: sc-grands-nombres-brille 0.8s ease-in-out infinite alternate; }
+.sc-grands-nombres__compte { min-width: 6.5em; color: #9fd3ff; font-size: 17px; font-weight: 700; }
+.sc-grands-nombres__couronne { color: #ffd43b; font-size: 30px; line-height: 1; text-shadow: 0 0 12px #ffb703; animation: sc-grands-nombres-pop 0.6s cubic-bezier(0.2, 1.8, 0.4, 1); }
+.sc-grands-nombres__legende { margin: 10px 0 0; color: #ffe9a8; font-size: 18px; font-weight: 700; }
+
+/* ---- les réponses : des plaques d'étoiles ---- */
+.scene__carte.objet--sc-grands-nombres {
+  max-width: min(100%, 540px);
+  padding: 12px 24px 12px 54px;
+  border: 2px solid var(--c1);
+  border-radius: 999px;
+  clip-path: none;
+  background: linear-gradient(150deg, #22317a, #0e1640);
+  color: #fff;
+  font-size: clamp(18px, 3.2vw, 24px);
+  line-height: 1.25;
+  white-space: normal;
+  box-shadow: 0 0 14px rgba(111, 211, 255, 0.55), inset 0 0 14px rgba(120, 180, 255, 0.25);
+}
+
+.scene__carte.objet--sc-grands-nombres::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  background: linear-gradient(135deg, #fff6c2, #ffc93c);
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: sc-grands-nombres-etoile 6s linear infinite;
+}
+
+.scene__carte.objet--sc-grands-nombres.est-fausse {
+  border-color: #7a8299;
+  background: linear-gradient(150deg, #4a5068, #2b3045);
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.scene__carte.objet--sc-grands-nombres.est-fausse::before { background: #8d93a5; animation: none; }
+
+@keyframes sc-grands-nombres-scintille { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+@keyframes sc-grands-nombres-filante { 0% { opacity: 0; transform: translate(0, 0); } 4% { opacity: 1; } 14% { opacity: 0; transform: translate(220px, 60px); } 100% { opacity: 0; transform: translate(220px, 60px); } }
+@keyframes sc-grands-nombres-lunette { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
+@keyframes sc-grands-nombres-tete { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(8deg); } }
+@keyframes sc-grands-nombres-cligne { 0%, 90%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.1); } }
+@keyframes sc-grands-nombres-aile { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(10deg); } }
+@keyframes sc-grands-nombres-balayage { from { background-position: 0 100%; } to { background-position: 0 -120%; } }
+@keyframes sc-grands-nombres-accolade { from { opacity: 0; } }
+@keyframes sc-grands-nombres-brille { from { filter: brightness(1); } to { filter: brightness(1.4); } }
+@keyframes sc-grands-nombres-pop { from { opacity: 0; transform: scale(0.6); } }
+@keyframes sc-grands-nombres-etoile { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .sc-grands-nombres__scene { gap: 6px; padding: 10px 8px 14px; }
+  .sc-grands-nombres__hibou { width: 46px; }
+  .sc-grands-nombres__ecran { padding: 12px 10px 14px; }
+  .sc-grands-nombres__case { min-width: 0; padding: 6px 8px; }
+}
+
+/* ------------------------------------------------------------------------
+   LES FRACTIONS (CM1) ET LES FRACTIONS DÉCIMALES (CM2) — SceneFractions.js
+   La pizzeria du bord de mer ; le ciel des disques de verre.
+   ------------------------------------------------------------------------ */
+.sc-fractions-cm1 {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 30px 14px 16px;
+  overflow: hidden;
+  border: 3px solid #fff3d6;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-fractions-cm1--terrasse { background: linear-gradient(180deg, #8fd8ff 0 14%, #2f9fd8 14% 22%, #f6e3bd 22% 100%); }
+
+/* Le store rayé de la pizzeria. */
+.sc-fractions-cm1--terrasse::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 20px;
+  background: repeating-linear-gradient(90deg, #e63946 0 28px, #fff 28px 56px);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sc-fractions-cm1--ciel {
+  border-color: rgba(170, 210, 255, 0.9);
+  background: radial-gradient(ellipse at 50% 120%, #ffd59e 0, transparent 45%), linear-gradient(180deg, #1c2a7a, #4a5fd0 60%, #9fb8ff);
+}
+
+.sc-fractions-cm1__mer {
+  position: absolute;
+  inset: 14% 0 auto;
+  z-index: -1;
+  height: 8%;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 14px, transparent 14px 60px);
+  background-size: 120px 100%;
+  opacity: 0.7;
+  animation: sc-fractions-cm1-mer 5s linear infinite;
+}
+
+.sc-fractions-cm1__cosmos { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+
+.sc-fractions-cm1__etoile {
+  position: absolute;
+  top: calc(6% + var(--n) * 7%);
+  left: calc(4% + var(--n) * 12%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.9);
+  animation: sc-fractions-cm1-scintille 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.3s);
+}
+
+.sc-fractions-cm1__ile {
+  position: absolute;
+  left: 4%;
+  bottom: 10%;
+  width: 90px;
+  height: 42px;
+  border-radius: 20px 20px 50% 50% / 20px 20px 80% 80%;
+  background: linear-gradient(180deg, #5fb84a 0 10px, #7a5f45 10px);
+  animation: sc-fractions-cm1-flotte 5s ease-in-out infinite alternate;
+}
+
+.sc-fractions-cm1__ile--loin { left: auto; right: 6%; bottom: 30%; transform: scale(0.6); opacity: 0.7; animation-delay: -2s; }
+
+.sc-fractions-cm1__comptoir {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.sc-fractions-cm1__four { flex: none; width: 120px; height: auto; }
+.sc-fractions-cm1__flamme { transform-box: fill-box; transform-origin: bottom center; animation: sc-fractions-cm1-flamme 0.45s ease-in-out infinite alternate; }
+.sc-fractions-cm1__flamme--coeur { animation-duration: 0.32s; animation-delay: -0.1s; }
+
+.sc-fractions-cm1__souris { flex: none; width: 76px; height: auto; overflow: visible; }
+.sc-fractions-cm1__queue { transform-box: fill-box; transform-origin: left bottom; animation: sc-fractions-cm1-queue 1.4s ease-in-out infinite alternate; }
+.sc-fractions-cm1__yeux { transform-box: fill-box; transform-origin: center; animation: sc-fractions-cm1-cligne 4s ease-in-out infinite; }
+
+.sc-fractions-cm1__ardoise {
+  display: flex;
+  flex: 1 1 250px;
+  max-width: 580px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 16px 14px;
+  border: 8px solid #8a5a2b;
+  border-radius: 16px;
+  background: #24382c;
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.45), 0 10px 18px rgba(0, 0, 0, 0.3);
+}
+
+.sc-fractions-cm1--ciel .sc-fractions-cm1__ardoise {
+  border: 2px solid #9fd3ff;
+  background: rgba(12, 24, 80, 0.92);
+  box-shadow: 0 0 20px rgba(120, 190, 255, 0.6), inset 0 0 20px rgba(120, 190, 255, 0.2);
+}
+
+.sc-fractions-cm1__question {
+  margin: 0;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(28px, 6vw, 44px);
+  font-weight: 800;
+  text-align: center;
+  white-space: pre-wrap;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.6), 0 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.sc-fractions-cm1--apres .sc-fractions-cm1__question { font-size: clamp(22px, 4.5vw, 30px); }
+
+/* ---- les pizzas, les parts, la plaque ---- */
+.sc-fractions-cm1__pizza { width: 104px; height: 104px; overflow: visible; }
+.sc-fractions-cm1__assiette { fill: #fff; stroke: #d9d9d9; stroke-width: 2; }
+.sc-fractions-cm1__part path { fill: rgba(220, 220, 220, 0.35); stroke: #c8c8c8; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.sc-fractions-cm1__part.est-garnie path { fill: #ffd25e; stroke: #c96f22; stroke-width: 3; stroke-dasharray: none; }
+.sc-fractions-cm1__part { transform-box: fill-box; transform-origin: center; transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.sc-fractions-cm1__part.est-levee { transform: translate(5px, -10px) scale(1.08); }
+.sc-fractions-cm1__chorizo { fill: #c0392b; }
+
+.est-en-verre .sc-fractions-cm1__assiette { fill: rgba(160, 210, 255, 0.15); stroke: #9fd3ff; }
+.est-en-verre .sc-fractions-cm1__part path { fill: rgba(255, 255, 255, 0.08); stroke: rgba(200, 235, 255, 0.6); }
+.est-en-verre .sc-fractions-cm1__part.est-garnie path { fill: rgba(120, 200, 255, 0.75); stroke: #e0f4ff; stroke-width: 2; }
+.est-en-verre .sc-fractions-cm1__part.est-levee path { fill: #ffd166; }
+
+.sc-fractions-cm1__vrac { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 100%; }
+
+.sc-fractions-cm1__part-seule {
+  width: 42px;
+  height: 42px;
+  animation: sc-fractions-cm1-sautille 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.23s);
+}
+
+.sc-fractions-cm1__plaque { width: min(220px, 64vw); height: auto; }
+.sc-fractions-cm1__plaque--dixiemes { width: min(300px, 74vw); }
+.sc-fractions-cm1__pate { fill: #f4d9a0; stroke: #c9934c; stroke-width: 2; }
+.sc-fractions-cm1__carre { fill: rgba(255, 255, 255, 0.5); }
+.sc-fractions-cm1__carre.est-garnie { fill: #e2532d; animation: sc-fractions-cm1-garnit 0.35s ease-out both; animation-delay: calc(var(--n) * 25ms); }
+.est-en-verre .sc-fractions-cm1__pate { fill: rgba(20, 40, 110, 0.7); stroke: #9fd3ff; }
+.est-en-verre .sc-fractions-cm1__carre { fill: rgba(255, 255, 255, 0.12); }
+.est-en-verre .sc-fractions-cm1__carre.est-garnie { fill: #6fd3ff; }
+
+/* Le bocal de bonbons. */
+.sc-fractions-cm1__bocal {
+  position: relative;
+  width: 160px;
+  height: 140px;
+  margin-top: 14px;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px 20px 34px 34px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.08) 40%, rgba(255, 255, 255, 0.25));
+}
+
+.sc-fractions-cm1__couvercle {
+  position: absolute;
+  top: -16px;
+  left: 16px;
+  right: 16px;
+  height: 16px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ff6b6b, #c92a2a);
+}
+
+.sc-fractions-cm1__bonbons {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  padding: 8px;
+}
+
+.sc-fractions-cm1__bonbon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ff6fa8 40%, #c2185b);
+  animation: sc-fractions-cm1-bonbon 1.8s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -0.13s);
+}
+
+.sc-fractions-cm1__bonbon:nth-child(4n + 2) { background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ffd43b 40%, #e67700); }
+.sc-fractions-cm1__bonbon:nth-child(4n + 3) { background: radial-gradient(circle at 35% 30%, #fff 0 12%, #69db7c 40%, #2b8a3e); }
+.sc-fractions-cm1__bonbon:nth-child(4n + 4) { background: radial-gradient(circle at 35% 30%, #fff 0 12%, #b197fc 40%, #5f3dc4); }
+
+/* Les bandes de dixièmes et les petits carrés de centièmes (CM2). */
+.sc-fractions-cm1__morceaux { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; }
+.sc-fractions-cm1__bandes { display: flex; gap: 5px; }
+
+.sc-fractions-cm1__bande {
+  width: 14px;
+  height: 120px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(180deg, #6fd3ff 0 10px, #2f6fb0 10px 12px);
+  box-shadow: 0 0 10px rgba(111, 211, 255, 0.7);
+  animation: sc-fractions-cm1-sautille 2.6s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.3s);
+}
+
+.sc-fractions-cm1__plus { color: #fff; font-size: 34px; font-weight: 900; }
+.sc-fractions-cm1__petits { display: flex; flex-wrap: wrap; gap: 4px; max-width: 64px; }
+
+.sc-fractions-cm1__petit {
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  background: #ffd166;
+  box-shadow: 0 0 8px rgba(255, 209, 102, 0.8);
+  animation: sc-fractions-cm1-sautille 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.25s);
+}
+
+/* Deux disques entiers, et la roulette qui attend de couper. */
+.sc-fractions-cm1__duo { display: flex; align-items: center; justify-content: center; gap: 18px; }
+
+.sc-fractions-cm1__roulette {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #8d96a8 0 18%, #eef2f7 20% 62%, #9aa3b2 64%);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  animation: sc-fractions-cm1-roulette 2.4s ease-in-out infinite alternate;
+}
+
+.sc-fractions-cm1__roulette::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 34px;
+  border-radius: 4px;
+  background: #b5532f;
+  transform: translate(-50%, 4px) rotate(30deg);
+  transform-origin: top center;
+}
+
+/* ---- après la réponse ---- */
+.sc-fractions-cm1__explication { display: flex; justify-content: center; max-width: 100%; }
+.sc-fractions-cm1__rangees { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.sc-fractions-cm1__une { display: flex; flex-direction: column; align-items: center; gap: 4px; opacity: 0.4; transition: opacity 0.4s ease, transform 0.4s ease; }
+.sc-fractions-cm1__une.est-faite { opacity: 1; animation: sc-fractions-cm1-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.sc-fractions-cm1__duo .sc-fractions-cm1__une { opacity: 1; }
+.sc-fractions-cm1__une.est-gagnante { transform: scale(1.08); filter: drop-shadow(0 0 14px #ffd43b); }
+.sc-fractions-cm1__une em { min-height: 1.2em; color: #ffe066; font-size: 24px; font-style: normal; font-weight: 900; }
+
+.sc-fractions-cm1__assiettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+.sc-fractions-cm1__assiette-pleine {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 3px;
+  width: 88px;
+  height: 88px;
+  padding: 14px;
+  border: 4px solid #d6dde6;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.sc-fractions-cm1__assiette-pleine .sc-fractions-cm1__bonbon { width: 14px; height: 14px; animation: sc-fractions-cm1-pop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both; animation-delay: calc(var(--n) * 40ms); }
+.sc-fractions-cm1__assiette-pleine.est-prise { border-color: #ffd43b; box-shadow: 0 0 0 4px rgba(255, 212, 59, 0.55), 0 0 18px #ffd43b; transform: translateY(-6px); }
+
+.sc-fractions-cm1__decimal { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; }
+.sc-fractions-cm1__tableau { border-collapse: separate; border-spacing: 5px; }
+.sc-fractions-cm1__tableau th { padding: 0 4px; color: #ffe9a8; font-size: 16px; font-weight: 800; }
+
+.sc-fractions-cm1__tableau td {
+  position: relative;
+  width: 70px;
+  height: 58px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 40px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-fractions-cm1__tableau td.est-rempli { animation: sc-fractions-cm1-tombe 0.45s cubic-bezier(0.3, 1.5, 0.5, 1) both; animation-delay: calc(var(--n) * 0.25s); }
+.sc-fractions-cm1__virgule { position: absolute; right: -12px; bottom: 2px; color: #ffd43b; font-size: 40px; }
+
+.sc-fractions-cm1__legende { margin: 0; color: #ffe9a8; font-size: 18px; font-weight: 700; text-align: center; }
+
+/* ---- les réponses : des pizzas (au CM2, des disques de verre) ---- */
+.scene__carte.objet--sc-fractions-cm1 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 134px;
+  height: 134px;
+  min-width: 0;
+  padding: 0;
+  border: 7px solid #d99a4e;
+  border-radius: 50%;
+  clip-path: none;
+  background: radial-gradient(circle, #fff3cc 0 42%, #ffd25e 43% 72%, #e2532d 73% 100%);
+  color: #5a1a00;
+  font-size: 26px;
+  font-weight: 900;
+  text-shadow: 0 0 6px #fff, 0 0 2px #fff;
+  box-shadow: inset 0 0 0 3px #b5651d;
+}
+
+.scene__carte.objet--sc-fractions-cm1::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 20% 34%, #c0392b 0 7px, transparent 8px),
+    radial-gradient(circle at 80% 30%, #c0392b 0 7px, transparent 8px),
+    radial-gradient(circle at 26% 78%, #c0392b 0 6px, transparent 7px),
+    radial-gradient(circle at 76% 76%, #c0392b 0 7px, transparent 8px),
+    radial-gradient(circle at 50% 12%, #2e8b3a 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 90%, #2e8b3a 0 4px, transparent 5px);
+  pointer-events: none;
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-fractions-cm1 {
+  border: 3px solid #bfe6ff;
+  background:
+    repeating-conic-gradient(from -90deg, rgba(255, 255, 255, 0.5) 0 1.2deg, transparent 1.2deg 36deg),
+    radial-gradient(circle, rgba(225, 242, 255, 0.97) 0 40%, rgba(90, 170, 255, 0.92) 72%, rgba(40, 80, 200, 0.96));
+  color: #0b1a4a;
+  box-shadow: 0 0 18px rgba(120, 200, 255, 0.8);
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-fractions-cm1::before { display: none; }
+
+.scene__carte.objet--sc-fractions-cm1.est-fausse {
+  filter: grayscale(0.9);
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+@keyframes sc-fractions-cm1-mer { to { background-position: 120px 0; } }
+@keyframes sc-fractions-cm1-scintille { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes sc-fractions-cm1-flotte { from { translate: 0 0; } to { translate: 0 -8px; } }
+@keyframes sc-fractions-cm1-flamme { from { transform: scale(1, 0.9) skewX(-3deg); } to { transform: scale(0.94, 1.12) skewX(4deg); } }
+@keyframes sc-fractions-cm1-queue { from { transform: rotate(-6deg); } to { transform: rotate(10deg); } }
+@keyframes sc-fractions-cm1-cligne { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes sc-fractions-cm1-sautille { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(4deg); } }
+@keyframes sc-fractions-cm1-garnit { from { opacity: 0; } }
+@keyframes sc-fractions-cm1-bonbon { from { transform: translateY(0); } to { transform: translateY(-3px) rotate(20deg); } }
+@keyframes sc-fractions-cm1-roulette { from { transform: translateX(-10px) rotate(-120deg); } to { transform: translateX(10px) rotate(120deg); } }
+@keyframes sc-fractions-cm1-pop { from { opacity: 0; transform: scale(0.5); } }
+@keyframes sc-fractions-cm1-tombe { from { opacity: 0; transform: translateY(-30px); } }
+
+@media (max-width: 600px) {
+  .sc-fractions-cm1__four { display: none; }
+  .sc-fractions-cm1__souris { width: 52px; }
+  .sc-fractions-cm1__ardoise { padding: 10px; border-width: 6px; }
+  .sc-fractions-cm1__pizza { width: 84px; height: 84px; }
+}
+
+/* ------------------------------------------------------------------------
+   L'AIRE DU JARDIN (CM1) ET L'AIRE DU RECTANGLE (CM2) — SceneAires.js
+   Le jardin, sa haie, son chien ; la terrasse et son rectangle de lumière.
+   ------------------------------------------------------------------------ */
+.sc-aires-cm1 {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 28px 14px 8px;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-aires-cm1--jardin {
+  border: 3px solid #3f8a2e;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 22px, transparent 22px 44px),
+    linear-gradient(180deg, #bfe8ff 0 10%, #8fd06b 10% 100%);
+}
+
+/* La haie, en haut du jardin. */
+.sc-aires-cm1--jardin::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 30px;
+  background: radial-gradient(circle at 14px 18px, #3f9a32 13px, transparent 14px) repeat-x, linear-gradient(180deg, transparent 18px, #3f9a32 18px);
+  background-size: 28px 30px, 100% 30px;
+}
+
+.sc-aires-cm1--terrasse {
+  border: 3px solid rgba(170, 210, 255, 0.9);
+  background: radial-gradient(ellipse at 50% 0, rgba(106, 166, 255, 0.85), transparent 60%), linear-gradient(180deg, #24347a 0%, #3d4e8f 45%, #2a2f45 100%);
+  padding-bottom: 14px;
+}
+
+.sc-aires-cm1__pelouse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.sc-aires-cm1__dalle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px 12px 12px;
+  border: 1px solid rgba(143, 227, 255, 0.5);
+  border-radius: 18px;
+  background: rgba(12, 22, 60, 0.88);
+  box-shadow: inset 0 0 22px rgba(143, 227, 255, 0.18);
+}
+
+.sc-aires-cm1 .sc-aires-cm1__quadrillage { width: min(100%, 360px); max-height: 250px; padding: 4px; box-shadow: none; }
+.sc-aires-cm1__gazon .aires__case { fill: #57b85a; }
+.sc-aires-cm1__gazon { transform-box: fill-box; transform-origin: center; animation: sc-aires-cm1-pose 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+
+.sc-aires-cm1__numero {
+  fill: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: central;
+  paint-order: stroke;
+  stroke: #1f5a1c;
+  stroke-width: 3px;
+}
+
+.sc-aires-cm1__cloture {
+  stroke: #8b5a2b;
+  stroke-width: 5;
+  stroke-dasharray: 9 5;
+  stroke-linecap: round;
+  animation: sc-aires-cm1-cloture 1.2s linear infinite;
+}
+
+/* La bordure fleurie et le chien. */
+.sc-aires-cm1__bordure { display: flex; align-items: flex-end; justify-content: space-around; width: 100%; height: 54px; }
+.sc-aires-cm1__fleur { width: 22px; height: 38px; transform-origin: bottom center; animation: sc-aires-cm1-balance 2.6s ease-in-out infinite alternate; animation-delay: calc(var(--n) * -0.5s); }
+.sc-aires-cm1__chien { width: 96px; height: auto; overflow: visible; }
+.sc-aires-cm1__queue { transform-box: fill-box; transform-origin: left bottom; animation: sc-aires-cm1-queue 0.35s ease-in-out infinite alternate; }
+.sc-aires-cm1__tete { transform-box: fill-box; transform-origin: center bottom; animation: sc-aires-cm1-tete 4s ease-in-out infinite; }
+.sc-aires-cm1__langue { transform-box: fill-box; transform-origin: top center; animation: sc-aires-cm1-halete 0.5s ease-in-out infinite alternate; }
+.sc-aires-cm1__yeux { transform-box: fill-box; transform-origin: center; animation: sc-aires-cm1-cligne 5s ease-in-out infinite; }
+
+.sc-aires-cm1__papillon {
+  position: absolute;
+  left: 6%;
+  top: 34px;
+  z-index: 2;
+  width: 34px;
+  height: auto;
+  animation: sc-aires-cm1-vol 12s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.sc-aires-cm1__ailes { transform-box: fill-box; transform-origin: center; animation: sc-aires-cm1-ailes 0.22s ease-in-out infinite alternate; }
+
+.sc-aires-cm1__lueur {
+  position: absolute;
+  bottom: -10px;
+  left: calc(8% + var(--n) * 16%);
+  z-index: -1;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bfe6ff;
+  box-shadow: 0 0 12px 3px rgba(143, 227, 255, 0.9);
+  animation: sc-aires-cm1-monte 7s linear infinite;
+  animation-delay: calc(var(--n) * -1.2s);
+}
+
+.sc-aires-cm1__pancarte {
+  position: relative;
+  margin: 0;
+  padding: 10px 22px;
+  border: 3px solid #6e4520;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 10px 50%, #4a2c12 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) 50%, #4a2c12 0 3px, transparent 4px),
+    repeating-linear-gradient(180deg, #c8955a 0 16px, #b5824a 16px 18px);
+  color: #fffaf0;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(20px, 3.6vw, 28px);
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.25);
+  animation: sc-aires-cm1-pancarte 4s ease-in-out infinite alternate;
+}
+
+.sc-aires-cm1--terrasse .sc-aires-cm1__pancarte {
+  border: 2px solid #8fe3ff;
+  background: rgba(12, 24, 80, 0.94);
+  box-shadow: 0 0 18px rgba(143, 227, 255, 0.6);
+}
+
+/* Le plan : la parcelle, ses cotes, ses rangs. */
+.sc-aires-cm1__plan { width: auto; max-width: 100%; height: clamp(180px, 32vh, 250px); overflow: visible; }
+.sc-aires-cm1__terre { fill: #8b5e3c; stroke: #5c3a1e; stroke-width: 3; stroke-dasharray: 10 6; }
+.sc-aires-cm1__graduations line { stroke: #fff; stroke-width: 3; stroke-linecap: round; }
+.sc-aires-cm1__motte { fill: #5cbf4f; stroke: #3f8f3a; stroke-width: 1.5; animation: sc-aires-cm1-pose 0.35s cubic-bezier(0.2, 1.5, 0.4, 1) both; animation-delay: calc(var(--n) * 45ms); transform-box: fill-box; transform-origin: center; }
+.sc-aires-cm1__neon { fill: rgba(80, 170, 255, 0.12); stroke: #8fe3ff; stroke-width: 4; filter: drop-shadow(0 0 6px #8fe3ff); animation: sc-aires-cm1-neon 2s ease-in-out infinite alternate; }
+.sc-aires-cm1__carre-lumineux { fill: rgba(143, 227, 255, 0.55); stroke: #e0f7ff; stroke-width: 1.5; animation: sc-aires-cm1-pose 0.35s cubic-bezier(0.2, 1.5, 0.4, 1) both; animation-delay: calc(var(--n) * 45ms); transform-box: fill-box; transform-origin: center; }
+.sc-aires-cm1__parcelle--1 .sc-aires-cm1__neon { fill: rgba(255, 209, 102, 0.12); stroke: #ffd166; filter: drop-shadow(0 0 6px #ffd166); }
+.sc-aires-cm1__parcelle--1 .sc-aires-cm1__carre-lumineux { fill: rgba(255, 209, 102, 0.6); stroke: #fff3cf; }
+
+.sc-aires-cm1__cote line { stroke: #2d4a26; stroke-width: 2.5; stroke-dasharray: 6 4; }
+.sc-aires-cm1__cote text { fill: #1f3d1a; font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 900; }
+.sc-aires-cm1--terrasse .sc-aires-cm1__cote line { stroke: #bfe6ff; }
+.sc-aires-cm1--terrasse .sc-aires-cm1__cote text { fill: #e8f6ff; }
+
+.sc-aires-cm1__compte {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1d4d1a;
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-aires-cm1--terrasse .sc-aires-cm1__compte { border: 1px solid #8fe3ff; background: rgba(12, 24, 80, 0.94); color: #e8f6ff; }
+.sc-aires-cm1 .sc-aires-cm1__compte.est-fini { background: #fff7d6; color: #7a4b00; box-shadow: 0 0 16px rgba(255, 212, 59, 0.85); animation: sc-aires-cm1-pose 0.5s cubic-bezier(0.2, 1.5, 0.4, 1); }
+
+/* ---- les réponses : des pancartes de jardin (au CM2, des dalles lumineuses) ---- */
+.scene__carte.objet--sc-aires-cm1 {
+  overflow: visible;
+  margin-bottom: 24px;
+  padding: 12px 26px 14px;
+  border: 3px solid #6e4520;
+  border-radius: 10px;
+  clip-path: none;
+  background:
+    radial-gradient(circle at 10px 50%, #4a2c12 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) 50%, #4a2c12 0 3px, transparent 4px),
+    repeating-linear-gradient(180deg, #c8955a 0 16px, #b5824a 16px 18px);
+  color: #fffaf0;
+  font-size: 26px;
+  transform-origin: bottom center;
+}
+
+.scene__carte.objet--sc-aires-cm1::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  z-index: -1;
+  width: 12px;
+  height: 26px;
+  margin-left: -6px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #6e4520, #8b5a2b);
+}
+
+.objet--sc-aires-cm1 .objet__eclat { display: none; }
+
+.jeu--niv-cm2 .scene__carte.objet--sc-aires-cm1 {
+  margin-bottom: 0;
+  border: 2px solid #8fe3ff;
+  background: linear-gradient(150deg, rgba(30, 60, 150, 0.95), rgba(12, 24, 80, 0.95));
+  color: #e8f6ff;
+  box-shadow: 0 0 16px rgba(143, 227, 255, 0.7), inset 0 0 12px rgba(143, 227, 255, 0.3);
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-aires-cm1::after { display: none; }
+
+.scene__carte.objet--sc-aires-cm1.est-fausse {
+  filter: grayscale(0.9);
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+@keyframes sc-aires-cm1-pose { from { opacity: 0; transform: scale(0.3); } }
+@keyframes sc-aires-cm1-cloture { to { stroke-dashoffset: -28; } }
+@keyframes sc-aires-cm1-balance { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-aires-cm1-queue { from { transform: rotate(-18deg); } to { transform: rotate(16deg); } }
+@keyframes sc-aires-cm1-tete { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-6deg); } }
+@keyframes sc-aires-cm1-halete { from { transform: scaleY(0.8); } to { transform: scaleY(1.2); } }
+@keyframes sc-aires-cm1-cligne { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes sc-aires-cm1-vol { 0%, 100% { transform: translate(0, 0) rotate(-8deg); } 25% { transform: translate(28vw, 20px) rotate(10deg); } 50% { transform: translate(50vw, -10px) rotate(-6deg); } 75% { transform: translate(20vw, 30px) rotate(8deg); } }
+@keyframes sc-aires-cm1-ailes { from { transform: scaleX(1); } to { transform: scaleX(0.3); } }
+@keyframes sc-aires-cm1-monte { from { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } to { opacity: 0; transform: translateY(-420px); } }
+@keyframes sc-aires-cm1-pancarte { from { transform: rotate(-1deg); } to { transform: rotate(1deg); } }
+@keyframes sc-aires-cm1-neon { from { stroke-opacity: 0.75; } to { stroke-opacity: 1; } }
+
+/* ------------------------------------------------------------------------
+   HEURES, MINUTES, SECONDES (CM1) ET PROBLÈMES DE DURÉE (CM2) — SceneDurees.js
+   La gare au bord de l'eau ; la tour à horloge au soleil couchant.
+   ------------------------------------------------------------------------ */
+.sc-durees-cm1 {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 28px 14px 22px;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-durees-cm1--gare { border: 3px solid #fff3d6; background: linear-gradient(180deg, #8fd8ff 0 38%, #d6ecf7 38% 74%, #b9a58c 74%); }
+.sc-durees-cm1--tour { border: 3px solid rgba(255, 213, 158, 0.9); background: linear-gradient(180deg, #1b2459 0%, #5a4fa8 42%, #f08c5a 78%, #ffd59e 100%); }
+
+.sc-durees-cm1__auvent {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 20px;
+  background: repeating-linear-gradient(90deg, #5a3b22 0 8px, #7a5233 8px 44px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+.sc-durees-cm1__rails {
+  position: absolute;
+  inset: auto 0 6px;
+  z-index: -1;
+  height: 12px;
+  background: linear-gradient(180deg, #6c757d 0 3px, transparent 3px 9px, #6c757d 9px), repeating-linear-gradient(90deg, #6b4b2b 0 10px, transparent 10px 26px);
+}
+
+.sc-durees-cm1__soleil {
+  position: absolute;
+  left: 50%;
+  bottom: -70px;
+  z-index: -1;
+  width: 180px;
+  height: 180px;
+  margin-left: -90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3bf 0 30%, rgba(255, 200, 120, 0.6) 50%, transparent 70%);
+  animation: sc-durees-cm1-soleil 4s ease-in-out infinite alternate;
+}
+
+.sc-durees-cm1__etoile {
+  position: absolute;
+  top: calc(5% + (var(--n) * 5%));
+  left: calc(5% + var(--n) * 14%);
+  z-index: -1;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.85);
+  animation: sc-durees-cm1-scintille 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.35s);
+}
+
+.sc-durees-cm1__quai { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 14px; width: 100%; }
+
+/* L'horloge du quai (et celle de la tour). */
+.sc-durees-cm1__horloge { flex: none; width: 108px; height: auto; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.3)); }
+.sc-durees-cm1__cadran { fill: #fff; stroke: #2b2b2b; stroke-width: 5; }
+.sc-durees-cm1__horloge--tour .sc-durees-cm1__cadran { fill: #f5e6c8; stroke: #8a6a3a; }
+.sc-durees-cm1__repere { stroke: #333; stroke-width: 2.5; }
+.sc-durees-cm1__petite,
+.sc-durees-cm1__grande,
+.sc-durees-cm1__trotteuse { transform-box: view-box; transform-origin: 50px 50px; stroke-linecap: round; }
+.sc-durees-cm1__petite { stroke: #1b1d3a; stroke-width: 5; transition: transform 1s ease-in-out; }
+.sc-durees-cm1__grande { stroke: #1b1d3a; stroke-width: 3.5; transition: transform 1s ease-in-out; }
+.sc-durees-cm1__trotteuse { stroke: #e03131; stroke-width: 1.6; animation: sc-durees-cm1-tour 60s steps(60) infinite; }
+.sc-durees-cm1__axe { fill: #e03131; }
+
+/* Le tableau des départs. */
+.sc-durees-cm1__tableau {
+  flex: 1 1 260px;
+  max-width: 520px;
+  min-width: 0;
+  padding: 8px 14px 12px;
+  border: 4px solid #3b4252;
+  border-radius: 12px;
+  background: #14181f;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+}
+
+.sc-durees-cm1__entete {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: #1d4e89;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.sc-durees-cm1__panneau {
+  margin: 6px 0 0;
+  color: #ffd43b;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(20px, 3.6vw, 28px);
+  font-weight: 800;
+  line-height: 1.3;
+  text-shadow: 0 0 8px rgba(255, 212, 59, 0.6);
+}
+
+.sc-durees-cm1__panneau--seul { margin: 0; padding: 10px 18px; border-radius: 12px; background: #14181f; text-align: center; }
+
+.sc-durees-cm1--tour .sc-durees-cm1__panneau {
+  flex: 1 1 260px;
+  max-width: 520px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 16px;
+  border: 2px solid #ffd59e;
+  border-radius: 14px;
+  background: rgba(12, 24, 80, 0.93);
+  color: #fff3d6;
+  font-family: 'Outfit', sans-serif;
+  text-shadow: 0 0 10px rgba(255, 213, 158, 0.6);
+  box-shadow: 0 0 18px rgba(255, 213, 158, 0.45);
+}
+
+/* Le train, sa fumée, ses roues. */
+.sc-durees-cm1__train { flex: none; width: 132px; height: auto; overflow: visible; }
+.sc-durees-cm1__train--petit { width: 54px; }
+.sc-durees-cm1__fumee { fill: rgba(255, 255, 255, 0.9); transform-box: fill-box; transform-origin: center; animation: sc-durees-cm1-fumee 2.4s ease-out infinite; animation-delay: calc(var(--n) * 0.8s); }
+.sc-durees-cm1__roue { transform-box: view-box; animation: sc-durees-cm1-tour 1.6s linear infinite; }
+
+/* Le sablier qui se retourne, le chronomètre qui tourne. */
+.sc-durees-cm1__sablier { flex: none; width: 58px; height: auto; animation: sc-durees-cm1-retourne 8s ease-in-out infinite; }
+.sc-durees-cm1__sablier--petit { width: 28px; animation: none; }
+.sc-durees-cm1__sable-haut { transform-box: fill-box; transform-origin: bottom center; animation: sc-durees-cm1-vide 8s linear infinite; }
+.sc-durees-cm1__sable-bas { transform-box: fill-box; transform-origin: bottom center; animation: sc-durees-cm1-remplit 8s linear infinite; }
+.sc-durees-cm1__filet { stroke-dasharray: 3 3; animation: sc-durees-cm1-filet 0.4s linear infinite; }
+.sc-durees-cm1__sablier--petit .sc-durees-cm1__sable-haut,
+.sc-durees-cm1__sablier--petit .sc-durees-cm1__sable-bas,
+.sc-durees-cm1__sablier--petit .sc-durees-cm1__filet { animation: none; }
+.sc-durees-cm1__chrono { flex: none; width: 90px; height: auto; }
+.sc-durees-cm1__aiguille-chrono { transform-box: view-box; transform-origin: 30px 40px; animation: sc-durees-cm1-tour 4s linear infinite; }
+
+/* La tour à horloge. */
+.sc-durees-cm1__tour {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  margin-top: 34px;
+  padding: 18px 8px 44px;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(90deg, #7d6b58, #b6a48d 50%, #7d6b58);
+  box-shadow: inset 0 -30px 0 rgba(0, 0, 0, 0.15);
+}
+
+.sc-durees-cm1__tour .sc-durees-cm1__horloge { width: 82px; }
+
+.sc-durees-cm1__toit {
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: -34px;
+  height: 36px;
+  background: #5a3b6b;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+/* ---- les réponses : des billets à composter ---- */
+.sc-durees-cm1__guichet {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 20px;
+  width: min(100%, 820px);
+  margin: 4px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-durees-cm1__guichet > li { animation: sc-durees-cm1-sort 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both; animation-delay: calc(0.2s + var(--i, 0) * 0.12s); }
+
+.sc-durees-cm1__billet {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 210px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #ffe8a3 0 64px, #fffaf0 64px);
+  color: #1b1d3a;
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  -webkit-mask: radial-gradient(circle at 64px 0, transparent 9px, #000 10px) top / 100% 51% no-repeat, radial-gradient(circle at 64px 100%, transparent 9px, #000 10px) bottom / 100% 51% no-repeat;
+  mask: radial-gradient(circle at 64px 0, transparent 9px, #000 10px) top / 100% 51% no-repeat, radial-gradient(circle at 64px 100%, transparent 9px, #000 10px) bottom / 100% 51% no-repeat;
+  animation: sc-durees-cm1-balance 3.2s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-durees-cm1__billet:hover:not(:disabled) { transform: translateY(-6px) rotate(-1.5deg) scale(1.04); filter: brightness(1.05); animation-play-state: paused; }
+.sc-durees-cm1__billet:focus-visible { outline: 4px solid #1d4e89; outline-offset: 3px; }
+
+.sc-durees-cm1__talon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  border-right: 3px dashed #c9a86a;
+}
+
+.sc-durees-cm1__libelle { flex: 1; padding: 14px 22px; text-align: center; white-space: nowrap; }
+
+.sc-durees-cm1__guichet--or .sc-durees-cm1__billet { background: linear-gradient(90deg, #f4c542 0 64px, #fff6d6 64px); box-shadow: 0 0 14px rgba(255, 213, 158, 0.8), 0 6px 12px rgba(0, 0, 0, 0.3); }
+.sc-durees-cm1__guichet--or .sc-durees-cm1__talon { border-color: #b8860b; }
+
+.sc-durees-cm1__billet.est-fausse { opacity: 0.5; filter: grayscale(0.8); text-decoration: line-through; cursor: not-allowed; animation: sc-durees-cm1-tremble 0.45s ease-in-out; }
+
+.sc-durees-cm1__billet.est-fausse::after {
+  content: "";
+  position: absolute;
+  left: 80px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: #e03131;
+  box-shadow: 0 0 0 3px rgba(224, 49, 49, 0.35);
+}
+
+/* ---- après la réponse : la frise du temps ---- */
+.sc-durees-cm1__entree { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+.sc-durees-cm1__entree .sc-durees-cm1__horloge { width: 96px; }
+.sc-durees-cm1--gare .sc-durees-cm1__entree .sc-durees-cm1__panneau { margin: 0; padding: 10px 16px; border-radius: 12px; background: #14181f; }
+
+.sc-durees-cm1__frise {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 50px 0;
+  margin: 0;
+  padding: 44px 6px 4px;
+  list-style: none;
+}
+
+.sc-durees-cm1__arret { display: flex; align-items: flex-end; opacity: 0.35; transition: opacity 0.4s ease; }
+.sc-durees-cm1__arret.est-atteint { opacity: 1; }
+
+.sc-durees-cm1__saut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0 6px 18px;
+  color: #1b1d3a;
+  font-size: 18px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.sc-durees-cm1--tour .sc-durees-cm1__saut { color: #fff3d6; }
+
+.sc-durees-cm1__saut::after {
+  content: "";
+  width: 86px;
+  height: 6px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0 10px, rgba(255, 255, 255, 0.3) 10px 18px);
+}
+
+.sc-durees-cm1__saut.est-fait::after { background: #ffd43b; box-shadow: 0 0 10px #ffd43b; transform-origin: left center; animation: sc-durees-cm1-trace 0.6s ease-out; }
+
+.sc-durees-cm1__heure {
+  position: relative;
+  padding: 6px 12px;
+  border: 2px solid #3b4252;
+  border-radius: 12px;
+  background: #14181f;
+  color: #ffd43b;
+  font-family: 'Courier New', monospace;
+  font-size: 22px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sc-durees-cm1--tour .sc-durees-cm1__heure { border-color: #ffd59e; background: rgba(12, 24, 80, 0.93); color: #fff3d6; }
+.sc-durees-cm1__arret.est-atteint .sc-durees-cm1__heure { box-shadow: 0 0 12px rgba(255, 212, 59, 0.75); }
+
+.sc-durees-cm1__voyageur {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  margin-left: -27px;
+  animation: sc-durees-cm1-arrive 0.8s cubic-bezier(0.3, 0.8, 0.4, 1) both;
+}
+
+.sc-durees-cm1--tour .sc-durees-cm1__voyageur { margin-left: -14px; }
+
+.sc-durees-cm1__astre { display: inline-block; width: 16px; height: 16px; margin-right: 6px; border-radius: 50%; vertical-align: -2px; }
+.sc-durees-cm1__astre--soleil { background: #ffd43b; box-shadow: 0 0 8px 2px rgba(255, 212, 59, 0.8); }
+.sc-durees-cm1__astre--lune { background: transparent; box-shadow: inset -5px -2px 0 0 #f1f3f5; }
+
+.sc-durees-cm1__conclusion {
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #123;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-durees-cm1__conclusion.est-fini { background: #fff7d6; color: #7a4b00; box-shadow: 0 0 16px rgba(255, 212, 59, 0.85); animation: sc-durees-cm1-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1); }
+
+.sc-durees-cm1__paquets { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
+
+.sc-durees-cm1__paquet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  opacity: 0.2;
+  transition: opacity 0.4s ease;
+}
+
+.sc-durees-cm1__paquet.est-la { opacity: 1; animation: sc-durees-cm1-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.sc-durees-cm1__paquet.est-reste { background: #fff3bf; }
+.sc-durees-cm1__paquet span { color: #1b1d3a; font-size: 18px; font-weight: 800; white-space: nowrap; }
+.sc-durees-cm1__paquet .sc-durees-cm1__chrono { width: 62px; }
+.sc-durees-cm1__paquet .sc-durees-cm1__sablier--petit { width: 40px; }
+
+@keyframes sc-durees-cm1-soleil { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes sc-durees-cm1-scintille { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes sc-durees-cm1-tour { to { transform: rotate(360deg); } }
+@keyframes sc-durees-cm1-fumee { from { opacity: 0.9; transform: translate(0, 0) scale(0.6); } to { opacity: 0; transform: translate(-14px, -26px) scale(1.6); } }
+@keyframes sc-durees-cm1-retourne { 0%, 45% { transform: rotate(0); } 55%, 100% { transform: rotate(180deg); } }
+@keyframes sc-durees-cm1-vide { from { transform: scaleY(1); } to { transform: scaleY(0.15); } }
+@keyframes sc-durees-cm1-remplit { from { transform: scaleY(0.2); } to { transform: scaleY(1); } }
+@keyframes sc-durees-cm1-filet { to { stroke-dashoffset: -6; } }
+@keyframes sc-durees-cm1-sort { from { opacity: 0; transform: translateY(-22px) scale(0.9); } }
+@keyframes sc-durees-cm1-balance { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg) translateY(-3px); } }
+@keyframes sc-durees-cm1-tremble { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@keyframes sc-durees-cm1-trace { from { transform: scaleX(0); } }
+@keyframes sc-durees-cm1-arrive { from { opacity: 0; transform: translateX(-110px); } }
+@keyframes sc-durees-cm1-pop { from { opacity: 0; transform: scale(0.6); } }
+
+@media (max-width: 600px) {
+  .sc-durees-cm1__quai { flex-wrap: wrap; }
+  .sc-durees-cm1__train { width: 96px; }
+  .sc-durees-cm1__horloge { width: 84px; }
+}
+
+/* ------------------------------------------------------------------------
+   MASSES ET CONTENANCES (CM1) ET LES LONGUEURS (CM2) — SceneMesures.js
+   La fontaine, la balance, le pichet ; le mètre ruban et son escargot.
+   ------------------------------------------------------------------------ */
+.sc-mesures-cm1 {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 18px 14px 16px;
+  overflow: hidden;
+  border: 3px solid #fff3d6;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #8fd8ff 0 26%, #eadcc0 26% 100%);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-mesures-cm1--longueurs { border-color: rgba(255, 230, 150, 0.9); background: linear-gradient(180deg, #3a64d8 0%, #8fc3ff 55%, #f6d58e 100%); }
+
+.sc-mesures-cm1__etal { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px 20px; width: 100%; }
+
+/* Le poteau indicateur. */
+.sc-mesures-cm1__poteau { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 6px 0 18px 12px; }
+
+.sc-mesures-cm1__poteau::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -6px;
+  bottom: 0;
+  width: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #6e4520, #8b5a2b);
+}
+
+.sc-mesures-cm1__fleche {
+  padding: 6px 30px 6px 16px;
+  background: repeating-linear-gradient(180deg, #c8955a 0 10px, #b5824a 10px 12px);
+  color: #3b2410;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  clip-path: polygon(0 0, 82% 0, 100% 50%, 82% 100%, 0 100%);
+  transform-origin: left center;
+  animation: sc-mesures-cm1-fleche 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -1.2s);
+}
+
+.sc-mesures-cm1__fleche--de { box-shadow: inset 8px 0 0 #4dabf7; }
+.sc-mesures-cm1__fleche--vers { box-shadow: inset 8px 0 0 #ffa94d; color: #5a2d00; }
+
+.sc-mesures-cm1__centre { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+
+/* L'étiquette de la question (au CM2, un ruban jaune). */
+.sc-mesures-cm1__etiquette {
+  position: relative;
+  margin: 0;
+  padding: 12px 28px 12px 44px;
+  background: #fffaf0;
+  color: #2b2b2b;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 800;
+  clip-path: polygon(24px 0, 100% 0, 100% 100%, 24px 100%, 0 50%);
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.25));
+  transform-origin: 0 50%;
+  animation: sc-mesures-cm1-etiquette 3.6s ease-in-out infinite alternate;
+}
+
+.sc-mesures-cm1__etiquette::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #8a6a2f;
+  box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.5);
+}
+
+.sc-mesures-cm1--longueurs .sc-mesures-cm1__etiquette {
+  padding: 10px 24px 22px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, #5c4400 0 2px, transparent 2px 12px) bottom / 100% 10px no-repeat,
+    repeating-linear-gradient(90deg, #5c4400 0 3px, transparent 3px 60px) bottom / 100% 16px no-repeat,
+    linear-gradient(180deg, #ffe066, #f4b400);
+  color: #2b2000;
+  clip-path: none;
+}
+
+.sc-mesures-cm1--longueurs .sc-mesures-cm1__etiquette::before { display: none; }
+
+/* La balance, le pichet, le ruban. */
+.sc-mesures-cm1__balance { width: 170px; height: auto; overflow: visible; }
+.sc-mesures-cm1__fleau { transform-box: view-box; transform-origin: 80px 33px; animation: sc-mesures-cm1-fleau 3s ease-in-out infinite alternate; }
+
+.sc-mesures-cm1__pichet { width: 180px; height: auto; overflow: visible; }
+.sc-mesures-cm1__filet { stroke-dasharray: 10 6; animation: sc-mesures-cm1-filet 0.6s linear infinite; }
+.sc-mesures-cm1__niveau { transform-box: fill-box; transform-origin: bottom center; animation: sc-mesures-cm1-niveau 4s ease-in-out infinite alternate; }
+.sc-mesures-cm1__goutte { animation: sc-mesures-cm1-goutte 1.2s ease-in infinite; }
+
+.sc-mesures-cm1__ruban { position: relative; width: min(100%, 420px); height: 66px; }
+
+.sc-mesures-cm1__graduations {
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(90deg, #5c4400 0 2px, transparent 2px 10px) top / 100% 10px repeat-x,
+    repeating-linear-gradient(90deg, #5c4400 0 3px, transparent 3px 50px) top / 100% 18px repeat-x,
+    linear-gradient(180deg, #ffe066, #f4b400);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
+}
+
+.sc-mesures-cm1__escargot {
+  position: absolute;
+  left: 0;
+  bottom: 30px;
+  width: 64px;
+  height: auto;
+  animation: sc-mesures-cm1-escargot 16s linear infinite;
+}
+
+/* ---- après la réponse : le tableau de conversion ---- */
+.sc-mesures-cm1--apres .sc-mesures-cm1__etiquette { font-size: clamp(22px, 4vw, 30px); animation: none; }
+.sc-mesures-cm1__defile { max-width: 100%; overflow-x: auto; }
+
+.sc-mesures-cm1__tableau {
+  border-collapse: separate;
+  border-spacing: 3px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.sc-mesures-cm1__tableau th {
+  min-width: clamp(30px, 8vw, 54px);
+  padding: 4px 6px;
+  border-bottom: 3px solid #c9a86a;
+  color: #3b2410;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.sc-mesures-cm1__tableau th.est-de { color: #1c7ed6; }
+.sc-mesures-cm1__tableau th.est-vers { color: #e67700; }
+
+.sc-mesures-cm1__tableau td {
+  position: relative;
+  height: 54px;
+  border-radius: 8px;
+  background: #f8f1e3;
+  color: #1b1d3a;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(26px, 5vw, 36px);
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-mesures-cm1__tableau td.est-de { background: #e7f5ff; }
+.sc-mesures-cm1__tableau td.est-vers { background: #fff3bf; }
+.sc-mesures-cm1__tableau td.est-inutile > span:not(.sc-mesures-cm1__virgule) { opacity: 0.28; }
+.sc-mesures-cm1__chiffre { display: inline-block; animation: sc-mesures-cm1-tombe 0.45s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.sc-mesures-cm1__zero { display: inline-block; color: #e67700; animation: sc-mesures-cm1-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1); }
+
+.sc-mesures-cm1__virgule {
+  position: absolute;
+  right: -8px;
+  bottom: 0;
+  z-index: 1;
+  color: #e03131;
+  font-size: 42px;
+  line-height: 1;
+  animation: sc-mesures-cm1-saute 0.6s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.sc-mesures-cm1__legende {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #123;
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-mesures-cm1__legende.est-fini { background: #fff7d6; color: #7a4b00; box-shadow: 0 0 16px rgba(255, 212, 59, 0.85); }
+
+/* ---- les réponses : des étiquettes à ficelle (au CM2, des bouts de ruban) ---- */
+.scene__carte.objet--sc-mesures-cm1 {
+  padding: 14px 26px 14px 46px;
+  border: none;
+  border-radius: 0;
+  background: linear-gradient(90deg, var(--c1) 0 34px, #fffaf0 34px);
+  color: #2b2b2b;
+  font-size: 26px;
+  text-shadow: none;
+  clip-path: polygon(22px 0, 100% 0, 100% 100%, 22px 100%, 0 50%);
+}
+
+.scene__carte.objet--sc-mesures-cm1::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #6e4520;
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-mesures-cm1 {
+  padding: 10px 26px 24px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(90deg, #5c4400 0 2px, transparent 2px 10px) bottom / 100% 9px no-repeat,
+    repeating-linear-gradient(90deg, #5c4400 0 3px, transparent 3px 50px) bottom / 100% 15px no-repeat,
+    linear-gradient(180deg, #ffe066, #f4b400);
+  color: #2b2000;
+  clip-path: none;
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-mesures-cm1::before { display: none; }
+
+.scene__carte.objet--sc-mesures-cm1.est-fausse { filter: grayscale(0.9); opacity: 0.5; text-decoration: line-through; }
+
+@keyframes sc-mesures-cm1-fleche { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+@keyframes sc-mesures-cm1-etiquette { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
+@keyframes sc-mesures-cm1-fleau { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+@keyframes sc-mesures-cm1-filet { to { stroke-dashoffset: -16; } }
+@keyframes sc-mesures-cm1-niveau { from { transform: scaleY(0.5); } to { transform: scaleY(1); } }
+@keyframes sc-mesures-cm1-goutte { 0% { opacity: 0; transform: translateY(-6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(8px); } }
+@keyframes sc-mesures-cm1-escargot { 0% { opacity: 0; transform: translateX(0); } 8%, 90% { opacity: 1; } 100% { opacity: 0; transform: translateX(min(340px, 70vw)); } }
+@keyframes sc-mesures-cm1-tombe { from { opacity: 0; transform: translateY(-26px); } }
+@keyframes sc-mesures-cm1-pop { from { opacity: 0; transform: scale(0.3); } }
+@keyframes sc-mesures-cm1-saute { 0% { opacity: 0; transform: translate(-60px, -26px); } 60% { opacity: 1; transform: translate(4px, -10px); } 100% { transform: translate(0, 0); } }
+
+@media (max-width: 600px) {
+  .sc-mesures-cm1__balance, .sc-mesures-cm1__pichet { width: 130px; }
+  .sc-mesures-cm1__fleche { font-size: 20px; }
+}
+
+/* ------------------------------------------------------------------------
+   LA SUITE QUI CONTINUE (CM1) — SceneSuite.js
+   L'escalier de pierre qui monte vers le portail ensoleillé.
+   ------------------------------------------------------------------------ */
+.sc-suite-qui-continue {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 16px 14px 14px;
+  overflow: hidden;
+  border: 3px solid #fff3d6;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #7fd0ff 0 40%, #3aa0dc 40% 46%, #bfe6c0 46% 58%, #8fc46b 58%);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-suite-qui-continue__soleil {
+  position: absolute;
+  right: -50px;
+  top: -60px;
+  z-index: -1;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff9db 0 22%, rgba(255, 224, 102, 0.75) 42%, transparent 70%);
+  animation: sc-suite-qui-continue-soleil 4s ease-in-out infinite alternate;
+}
+
+.sc-suite-qui-continue__panneau {
+  margin: 0;
+  padding: 10px 24px;
+  border: 3px solid #6e4520;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 10px 50%, #4a2c12 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) 50%, #4a2c12 0 3px, transparent 4px),
+    repeating-linear-gradient(180deg, #c8955a 0 16px, #b5824a 16px 18px);
+  color: #fffaf0;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(24px, 4.6vw, 36px);
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.25);
+}
+
+/* L'escalier et le portail. */
+.sc-suite-qui-continue__montee { display: flex; align-items: flex-end; gap: 4px; width: min(100%, 760px); padding-top: 40px; }
+
+.sc-suite-qui-continue__escalier {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-suite-qui-continue__marche {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  max-width: 120px;
+  height: calc(48px + var(--i) * 92px / var(--marches));
+  border-right: 2px solid rgba(60, 40, 20, 0.25);
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #e2d6c0 0 10px, #b9a88d 10px, #8d7b68);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* La flèche lumineuse de chaque marche, qui monte de marche en marche. */
+.sc-suite-qui-continue__marche::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  width: 20px;
+  height: 14px;
+  margin-left: -10px;
+  background: #ffd43b;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 0 4px #ffd43b);
+  opacity: 0.3;
+  animation: sc-suite-qui-continue-fleche 2s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.18s);
+}
+
+.sc-suite-qui-continue__terme {
+  margin-top: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(40, 28, 16, 0.6);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(18px, 3.4vw, 30px);
+  font-weight: 900;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.sc-suite-qui-continue__marche.est-derniere { border: 3px dashed #fff; background: rgba(255, 255, 255, 0.3); }
+.sc-suite-qui-continue__marche.est-derniere .sc-suite-qui-continue__terme { background: #1b1d3a; color: #ffd43b; animation: sc-suite-qui-continue-attend 1.2s ease-in-out infinite alternate; }
+.sc-suite-qui-continue__marche.est-posee { border: none; background: linear-gradient(180deg, #fff3bf 0 10px, #ffd43b 10px, #e8a317); box-shadow: 0 0 18px rgba(255, 212, 59, 0.9); }
+.sc-suite-qui-continue__marche.est-posee .sc-suite-qui-continue__terme { color: #fff; background: #e8590c; animation: sc-suite-qui-continue-pose 0.6s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.sc-suite-qui-continue__marche.est-du-groupe-0 { background: linear-gradient(180deg, #d0ebff 0 10px, #74c0fc 10px, #339af0); }
+.sc-suite-qui-continue__marche.est-du-groupe-1 { background: linear-gradient(180deg, #ffe8cc 0 10px, #ffa94d 10px, #f76707); }
+
+.sc-suite-qui-continue__pas {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  z-index: 2;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ffd43b;
+  color: #1b1d3a;
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: sc-suite-qui-continue-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.sc-suite-qui-continue__coccinelle {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 40px;
+  height: auto;
+  margin-left: -20px;
+  overflow: visible;
+}
+
+.sc-suite-qui-continue__coccinelle.est-arrivee { animation: sc-suite-qui-continue-grimpe 0.9s cubic-bezier(0.3, 0.8, 0.4, 1) both; }
+.sc-suite-qui-continue__antennes { transform-box: fill-box; transform-origin: left bottom; animation: sc-suite-qui-continue-antennes 0.9s ease-in-out infinite alternate; }
+.sc-suite-qui-continue__elytre { transform-box: fill-box; transform-origin: right center; }
+.est-arrivee .sc-suite-qui-continue__elytre { animation: sc-suite-qui-continue-ailes 0.5s ease-in-out 0.9s 3 alternate; }
+
+.sc-suite-qui-continue__portail { flex: none; width: 72px; height: auto; overflow: visible; }
+.sc-suite-qui-continue__rayons { transform-box: view-box; transform-origin: 40px 46px; opacity: 0.35; animation: sc-suite-qui-continue-rayons 14s linear infinite; }
+.sc-suite-qui-continue__portail.est-ouvert .sc-suite-qui-continue__rayons { opacity: 1; animation-duration: 5s; }
+.sc-suite-qui-continue__lumiere { animation: sc-suite-qui-continue-lumiere 2s ease-in-out infinite alternate; }
+.sc-suite-qui-continue__portail.est-ouvert .sc-suite-qui-continue__lumiere { fill: #fff; filter: drop-shadow(0 0 10px #ffe066); }
+
+/* ---- les réponses : des pierres taillées à poser ---- */
+.sc-suite-qui-continue__pierres {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 24px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sc-suite-qui-continue__pierres > li { animation: sc-suite-qui-continue-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both; animation-delay: calc(0.2s + var(--i, 0) * 0.1s); }
+
+.sc-suite-qui-continue__bloc {
+  position: relative;
+  min-width: 100px;
+  padding: 18px 24px 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ece2cf 0 14px, #c3b295 14px, #9c8a70);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 34px;
+  font-weight: 900;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.2), 0 8px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  animation: sc-suite-qui-continue-flotte 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i, 0) * -1s);
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.sc-suite-qui-continue__bloc:hover:not(:disabled) { transform: translateY(-8px) scale(1.06); filter: brightness(1.1) drop-shadow(0 0 10px #ffd43b); animation-play-state: paused; }
+.sc-suite-qui-continue__bloc:focus-visible { outline: 4px solid #1d4e89; outline-offset: 4px; }
+
+.sc-suite-qui-continue__fleche {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 14px;
+  height: 11px;
+  background: #ffd43b;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  filter: drop-shadow(0 0 3px #ffd43b);
+  animation: sc-suite-qui-continue-fleche 1.6s ease-in-out infinite;
+}
+
+.sc-suite-qui-continue__bloc.est-fausse {
+  background: linear-gradient(180deg, #9da3ab 0 14px, #7b818a 14px, #5c6168);
+  opacity: 0.5;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  animation: sc-suite-qui-continue-fend 0.5s ease-in both;
+}
+
+.sc-suite-qui-continue__legende {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #123;
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-suite-qui-continue__legende.est-fini { background: #fff7d6; color: #7a4b00; box-shadow: 0 0 16px rgba(255, 212, 59, 0.85); animation: sc-suite-qui-continue-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1); }
+
+@keyframes sc-suite-qui-continue-soleil { from { transform: scale(1); } to { transform: scale(1.1); } }
+@keyframes sc-suite-qui-continue-fleche { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+@keyframes sc-suite-qui-continue-attend { from { transform: scale(1); } to { transform: scale(1.18); } }
+@keyframes sc-suite-qui-continue-pose { from { opacity: 0; transform: translateY(-40px) scale(1.3); } }
+@keyframes sc-suite-qui-continue-pop { from { opacity: 0; transform: scale(0.5); } }
+@keyframes sc-suite-qui-continue-grimpe { 0% { opacity: 0; transform: translate(-70px, 30px); } 50% { opacity: 1; transform: translate(-35px, -24px); } 100% { transform: translate(0, 0); } }
+@keyframes sc-suite-qui-continue-antennes { from { transform: rotate(-8deg); } to { transform: rotate(10deg); } }
+@keyframes sc-suite-qui-continue-ailes { to { transform: rotate(-35deg); } }
+@keyframes sc-suite-qui-continue-rayons { to { transform: rotate(360deg); } }
+@keyframes sc-suite-qui-continue-lumiere { from { opacity: 0.75; } to { opacity: 1; } }
+@keyframes sc-suite-qui-continue-flotte { from { transform: translateY(0) rotate(-1.5deg); } to { transform: translateY(-6px) rotate(1.5deg); } }
+@keyframes sc-suite-qui-continue-fend { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 100% { transform: translateY(6px) rotate(-4deg); } }
+
+/* ------------------------------------------------------------------------
+   LA RECETTE POUR 8 (CM1) ET PRIX, VITESSE, TABLEAU (CM2) — SceneRecette.js
+   La cuisine en plein air ; le circuit et son drapeau à damier.
+   ------------------------------------------------------------------------ */
+.sc-recette-pour-8 {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 18px 14px 16px;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.sc-recette-pour-8--cuisine { border: 3px solid #fff3d6; background: linear-gradient(180deg, #8fd8ff 0 26%, #f3e1bf 26% 72%, #a0703f 72%); }
+.sc-recette-pour-8--circuit { padding-bottom: 60px; border: 3px solid rgba(170, 210, 255, 0.9); background: linear-gradient(180deg, #2f5fd0 0%, #79a8ff 42%, #3a3f55 72%, #2b2f40 100%); }
+
+/* Les citrons qui pendent de la treille. */
+.sc-recette-pour-8__citron {
+  position: absolute;
+  top: 16px;
+  left: calc(4% + var(--n) * 86%);
+  z-index: -1;
+  width: 34px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff59d, #fcc419 60%, #e8a317);
+  transform-origin: 50% -16px;
+  animation: sc-recette-pour-8-citron 3s ease-in-out infinite alternate;
+  animation-delay: calc(var(--n) * -1.4s);
+}
+
+.sc-recette-pour-8__citron::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -16px;
+  width: 2px;
+  height: 17px;
+  background: #5c940d;
+}
+
+.sc-recette-pour-8__citron::after {
+  content: "";
+  position: absolute;
+  left: 52%;
+  top: -12px;
+  width: 16px;
+  height: 9px;
+  border-radius: 0 100% 0 100%;
+  background: #74b816;
+}
+
+.sc-recette-pour-8__ardoise {
+  max-width: min(640px, 78%);
+  margin: 0;
+  padding: 10px 20px;
+  border: 8px solid #8a5a2b;
+  border-radius: 12px;
+  background: #24382c;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(20px, 3.8vw, 28px);
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45), 0 8px 14px rgba(0, 0, 0, 0.3);
+}
+
+.sc-recette-pour-8__plan { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; gap: 12px 22px; }
+.sc-recette-pour-8__recette { display: flex; align-items: flex-end; gap: 8px; }
+.sc-recette-pour-8__ingredient { width: 64px; height: 64px; animation: sc-recette-pour-8-sautille 2.6s ease-in-out infinite; }
+
+.sc-recette-pour-8__tablee {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sc-recette-pour-8__tablee.est-allumee { background: #fff7d6; box-shadow: 0 0 0 3px #ffd43b, 0 0 16px rgba(255, 212, 59, 0.8); animation: sc-recette-pour-8-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.sc-recette-pour-8__assiettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; max-width: 170px; }
+
+.sc-recette-pour-8__assiette {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 44%, #e9ecef 45% 58%, #2f5aa8 59% 67%, #fff 68%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: sc-recette-pour-8-sautille 2.2s ease-in-out infinite;
+  animation-delay: calc(var(--n) * -0.2s);
+}
+
+.sc-recette-pour-8__etiquette { min-height: 1.2em; padding: 1px 12px; border-radius: 999px; background: #ffe8a3; color: #7a3e00; font-size: 20px; font-weight: 900; white-space: nowrap; }
+
+.sc-recette-pour-8__saladier { width: 130px; height: auto; overflow: visible; }
+.sc-recette-pour-8__fouet { transform-box: view-box; transform-origin: 60px 44px; animation: sc-recette-pour-8-fouet 0.6s ease-in-out infinite alternate; }
+.sc-recette-pour-8__nuage { fill: #fff; opacity: 0; transform-box: fill-box; transform-origin: center; animation: sc-recette-pour-8-farine 2.4s ease-out infinite; animation-delay: calc(var(--n) * 0.5s); }
+
+.sc-recette-pour-8__groupes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+.sc-recette-pour-8__verif { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.sc-recette-pour-8__verif p {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #123;
+  font-size: clamp(20px, 3.6vw, 26px);
+  font-weight: 800;
+}
+
+.sc-recette-pour-8 .est-cache { visibility: hidden; }
+.sc-recette-pour-8__verif .est-ecrit { animation: sc-recette-pour-8-glisse 0.45s cubic-bezier(0.2, 1.2, 0.4, 1); }
+.sc-recette-pour-8__verif .est-oui { color: #2b8a3e; box-shadow: 0 0 0 3px #8ce99a; }
+.sc-recette-pour-8__verif .est-non { color: #c92a2a; box-shadow: 0 0 0 3px #ffa8a8; }
+
+.sc-recette-pour-8__legende {
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #123;
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-recette-pour-8__legende.est-fini { background: #fff7d6; color: #7a4b00; box-shadow: 0 0 16px rgba(255, 212, 59, 0.85); animation: sc-recette-pour-8-pop 0.5s cubic-bezier(0.2, 1.5, 0.4, 1); }
+
+/* ---- le circuit (CM2) ---- */
+.sc-recette-pour-8__drapeau {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  z-index: -1;
+  width: 56px;
+  height: 38px;
+  background: conic-gradient(#111 25%, #fff 0 50%, #111 0 75%, #fff 0) 0 0 / 14px 14px;
+  transform-origin: left center;
+  animation: sc-recette-pour-8-drapeau 1.2s ease-in-out infinite alternate;
+}
+
+.sc-recette-pour-8__drapeau::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 0;
+  width: 5px;
+  height: 80px;
+  border-radius: 2px;
+  background: #ced4da;
+}
+
+.sc-recette-pour-8__ecran {
+  max-width: 34em;
+  margin: 0;
+  padding: 10px 20px;
+  border: 2px solid #6fd3ff;
+  border-radius: 14px;
+  background: rgba(10, 24, 70, 0.94);
+  color: #e8f6ff;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(20px, 3.8vw, 28px);
+  font-weight: 800;
+  text-align: center;
+  white-space: pre-wrap;
+  box-shadow: 0 0 18px rgba(111, 211, 255, 0.55);
+}
+
+.sc-recette-pour-8__route {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: -1;
+  height: 46px;
+  border-top: 3px solid #fff;
+  background: repeating-linear-gradient(90deg, #fff 0 26px, transparent 26px 52px) 0 21px / 100% 4px no-repeat, linear-gradient(180deg, #3b3f4c, #2b2e38);
+}
+
+.sc-recette-pour-8__bolide { position: absolute; bottom: 8px; left: -90px; width: 72px; height: auto; animation: sc-recette-pour-8-bolide 5s linear infinite; }
+
+.sc-recette-pour-8__rayon { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 22px; }
+
+.sc-recette-pour-8__lot {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  max-width: 290px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.93);
+  transition: box-shadow 0.3s ease;
+}
+
+.sc-recette-pour-8__lot em { margin-left: 6px; color: #e8590c; font-size: 22px; font-style: normal; font-weight: 900; }
+.sc-recette-pour-8__lot.est-allume { box-shadow: 0 0 0 3px #ffd43b, 0 0 18px rgba(255, 212, 59, 0.9); animation: sc-recette-pour-8-pop 0.45s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.sc-recette-pour-8__objet { width: 34px; height: 32px; animation: sc-recette-pour-8-sautille 2.4s ease-in-out infinite; animation-delay: calc(var(--n) * -0.3s); }
+
+.sc-recette-pour-8__compteur { width: 170px; height: auto; filter: drop-shadow(0 0 10px rgba(111, 211, 255, 0.6)); }
+.sc-recette-pour-8__aiguille { transform-box: view-box; transform-origin: 50px 54px; transform: rotate(var(--angle)); animation: sc-recette-pour-8-aiguille 1.4s ease-in-out infinite alternate; }
+.sc-recette-pour-8__vitesse { fill: #fff; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800; text-anchor: middle; }
+
+.sc-recette-pour-8__tableau { border-collapse: separate; border-spacing: 6px; }
+
+.sc-recette-pour-8__tableau td {
+  min-width: 64px;
+  height: 50px;
+  border: 2px solid #6fd3ff;
+  border-radius: 10px;
+  background: rgba(10, 24, 70, 0.92);
+  color: #e8f6ff;
+  font-family: 'Courier New', monospace;
+  font-size: 30px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-recette-pour-8__tableau td.est-vide { color: #ffd43b; animation: sc-recette-pour-8-attend 1.1s ease-in-out infinite alternate; }
+.sc-recette-pour-8__tableau td.est-rempli { background: #ffd43b; color: #1b1d3a; animation: sc-recette-pour-8-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.sc-recette-pour-8__fleches td { height: auto; border: none; background: none; color: #ffd166; font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 900; }
+
+.sc-recette-pour-8__troncons { display: flex; gap: 4px; width: min(100%, 660px); margin: 0; padding: 0; list-style: none; }
+
+.sc-recette-pour-8__troncons li {
+  flex-basis: 0;
+  min-width: 0;
+  padding: 10px 4px;
+  border: 2px dashed rgba(255, 255, 255, 0.65);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.sc-recette-pour-8__troncons li.est-roule { border-style: solid; border-color: #fff; background: #ffd43b; color: #1b1d3a; transform-origin: left center; animation: sc-recette-pour-8-roule 0.6s ease-out; }
+.sc-recette-pour-8__troncons li.sc-recette-pour-8__demi.est-roule { background: #ffa94d; }
+
+/* ---- les réponses : des bocaux (au CM2, des plaques de course) ---- */
+.scene__carte.objet--sc-recette-pour-8 {
+  padding: 22px 22px 14px;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 14px 14px 24px 24px;
+  clip-path: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.85), rgba(230, 245, 255, 0.65) 40%, rgba(255, 255, 255, 0.9));
+  color: #3b2410;
+  font-size: 22px;
+  text-shadow: none;
+  box-shadow: inset 0 -16px 0 rgba(255, 200, 120, 0.55);
+}
+
+.scene__carte.objet--sc-recette-pour-8::before {
+  content: "";
+  position: absolute;
+  inset: 0 8% auto;
+  height: 12px;
+  border-radius: 0 0 6px 6px;
+  background: repeating-linear-gradient(90deg, #e63946 0 6px, #fff 6px 12px);
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-recette-pour-8 {
+  padding: 22px 24px 12px;
+  border: 4px solid #1b1d3a;
+  border-radius: 10px;
+  background: #fff;
+  color: #1b1d3a;
+  font-size: 26px;
+  box-shadow: none;
+}
+
+.jeu--niv-cm2 .scene__carte.objet--sc-recette-pour-8::before {
+  inset: 0 0 auto;
+  height: 12px;
+  border-radius: 0;
+  background: conic-gradient(#111 25%, #fff 0 50%, #111 0 75%, #fff 0) 0 0 / 12px 12px;
+}
+
+.scene__carte.objet--sc-recette-pour-8.est-fausse { filter: grayscale(0.9); opacity: 0.5; text-decoration: line-through; }
+
+@keyframes sc-recette-pour-8-citron { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes sc-recette-pour-8-sautille { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes sc-recette-pour-8-pop { from { opacity: 0; transform: scale(0.6); } }
+@keyframes sc-recette-pour-8-fouet { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+@keyframes sc-recette-pour-8-farine { 0% { opacity: 0; transform: translateY(10px) scale(0.5); } 30% { opacity: 0.9; } 100% { opacity: 0; transform: translateY(-22px) scale(1.4); } }
+@keyframes sc-recette-pour-8-glisse { from { opacity: 0; transform: translateX(26px); } }
+@keyframes sc-recette-pour-8-drapeau { from { transform: skewY(-4deg) scaleX(1); } to { transform: skewY(5deg) scaleX(0.92); } }
+@keyframes sc-recette-pour-8-bolide { from { left: -90px; } to { left: 100%; } }
+@keyframes sc-recette-pour-8-aiguille { from { transform: rotate(calc(var(--angle) - 7deg)); } to { transform: rotate(calc(var(--angle) + 7deg)); } }
+@keyframes sc-recette-pour-8-attend { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes sc-recette-pour-8-roule { from { transform: scaleX(0.2); } }
+
+/* ------------------------------------------------------------------------
+   MOINS DE MOUVEMENT : tout s'arrête, tout reste lisible. Les explications
+   montrent directement leur dernière étape (voir `useDeroule`).
+   ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .sc-calcul-mental *, .sc-calcul-mental *::before, .sc-calcul-mental *::after,
+  .sc-calcul-mental__gue *, .sc-calcul-mental__gue *::before, .sc-calcul-mental__gue *::after,
+  .sc-grands-nombres *, .sc-grands-nombres *::before, .sc-grands-nombres *::after,
+  .sc-fractions-cm1 *, .sc-fractions-cm1 *::before, .sc-fractions-cm1 *::after,
+  .sc-aires-cm1 *, .sc-aires-cm1 *::before, .sc-aires-cm1 *::after,
+  .sc-durees-cm1 *, .sc-durees-cm1 *::before, .sc-durees-cm1 *::after,
+  .sc-durees-cm1__guichet *, .sc-durees-cm1__guichet *::before, .sc-durees-cm1__guichet *::after,
+  .sc-mesures-cm1 *, .sc-mesures-cm1 *::before, .sc-mesures-cm1 *::after,
+  .sc-suite-qui-continue *, .sc-suite-qui-continue *::before, .sc-suite-qui-continue *::after,
+  .sc-suite-qui-continue__pierres *, .sc-suite-qui-continue__pierres *::before, .sc-suite-qui-continue__pierres *::after,
+  .sc-recette-pour-8 *, .sc-recette-pour-8 *::before, .sc-recette-pour-8 *::after,
+  .sc-calcul-mental, .sc-calcul-mental__gue, .sc-grands-nombres, .sc-fractions-cm1, .sc-aires-cm1,
+  .sc-durees-cm1, .sc-durees-cm1__guichet, .sc-mesures-cm1, .sc-suite-qui-continue,
+  .sc-suite-qui-continue__pierres, .sc-recette-pour-8,
+  .objet--sc-grands-nombres, .objet--sc-grands-nombres::before,
+  .objet--sc-fractions-cm1, .objet--sc-aires-cm1, .objet--sc-mesures-cm1, .objet--sc-recette-pour-8 {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Les aiguilles gardent leur heure ; le reste ne bouge plus. */
+  .sc-recette-pour-8__aiguille { transform: rotate(var(--angle)); }
+  .sc-grands-nombres__filante { opacity: 0; }
+}

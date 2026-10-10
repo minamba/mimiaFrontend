@@ -9,6 +9,8 @@ import BoutonsVoix from './BoutonsVoix';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { DecorChantier, FeteChantier, MascotteChantier } from './scenes/cp-maths-2/SceneChantier';
+import { humeurDe } from './scenes/cp-maths-2/communs';
 
 /**
  * LE CHANTIER DES FORMES, À L'ÉCRAN.
@@ -41,6 +43,11 @@ import { bruitage } from '../../lib/jeux/bruitages';
  * autres jeux. L'affiche et les planches du chantier montrent les quatre
  * formes, mais SANS LEUR NOM : elles ne donnent donc pas la réponse, puisque
  * c'est le mot entendu qu'il faut relier à la forme.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) vit dans
+ * `scenes/cp-maths-2/SceneChantier.js` : la grue et sa caisse, les nuages,
+ * le gyrophare, le petit chef de chantier qui attend, encourage et saute de
+ * joie, et la gerbe de la réussite. Rien de la règle n'a bougé.
  */
 export default function ChantierDesFormes({ onQuitter, matiereCode }) {
   const [graine, setGraine] = useState(() => Date.now());
@@ -148,7 +155,12 @@ export default function ChantierDesFormes({ onQuitter, matiereCode }) {
     : null;
 
   return (
-    <div className="jeu jeu--chantier" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--chantier sc-chantier-des-formes${juste ? ' sc-chantier-des-formes--gagne' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorChantier gagne={juste} />
+
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
@@ -168,7 +180,9 @@ export default function ChantierDesFormes({ onQuitter, matiereCode }) {
         <BoutonsVoix voix={voix} consigne={laConsigne} />
       </p>
 
-      <ul className="chantier__tas" aria-label="Le tas de pièces">
+      {/* LA CLÉ DE MANCHE : le tas se repose à chaque manche, et les pièces
+          descendent de la grue une à une (le CSS du groupe). */}
+      <ul key={`tas-${manche}`} className="chantier__tas" aria-label="Le tas de pièces">
         {courante.pieces.map((piece, i) => {
           const choisie = choisies.includes(piece.id);
           const fautive = resultat?.erreurs.includes(piece.id);
@@ -222,6 +236,8 @@ export default function ChantierDesFormes({ onQuitter, matiereCode }) {
         </button>
       )}
 
+      <MascotteChantier humeur={humeurDe({ gagne: juste, refus: Boolean(resultat) })} />
+      {juste && <FeteChantier key={`fete-${manche}`} />}
     </div>
   );
 }

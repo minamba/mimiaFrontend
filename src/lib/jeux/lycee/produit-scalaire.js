@@ -28,6 +28,13 @@
  *
  * Les vecteurs s'écrivent avec la flèche combinante (u⃗, AB⃗) ; l'angle
  * géométrique en A, « BÂC ».
+ *
+ * LE DESSIN (09/10/2026) : « normes et angle » porte un `visuel`, l'angle
+ * (u⃗, v⃗) ouvert à sa mesure, écrit comme dans la question (« 2π/3 »), les
+ * normes sur ses côtés : aigu ou obtus se voit, donc le signe. Al-Kashi : le
+ * triangle ABC, ses côtés et son angle en A, « ? » pour le cherché. Les autres
+ * n'en ont pas : le dessinateur ne sait tracer ni des vecteurs fléchés dans un
+ * repère, ni un projeté orthogonal.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -119,23 +126,23 @@ function coordonnees(t) {
 
 /* ------------------------------------------- avec les normes et l'angle */
 
-/** [écriture de l'angle, cos = c/2 × √r, sin = s/2 × √q]. */
+/** [écriture de l'angle, cos = c/2 × √r, sin = s/2 × √q, mesure en degrés pour le dessin]. */
 const ANGLES = [
-  ['π/6', [1, 3], [1, 1]],
-  ['π/4', [1, 2], [1, 2]],
-  ['π/3', [1, 1], [1, 3]],
-  ['π/2', [0, 1], [2, 1]],
-  ['2π/3', [-1, 1], [1, 3]],
-  ['3π/4', [-1, 2], [1, 2]],
-  ['5π/6', [-1, 3], [1, 1]],
-  ['π', [-2, 1], [0, 1]],
+  ['π/6', [1, 3], [1, 1], 30],
+  ['π/4', [1, 2], [1, 2], 45],
+  ['π/3', [1, 1], [1, 3], 60],
+  ['π/2', [0, 1], [2, 1], 90],
+  ['2π/3', [-1, 1], [1, 3], 120],
+  ['3π/4', [-1, 2], [1, 2], 135],
+  ['5π/6', [-1, 3], [1, 1], 150],
+  ['π', [-2, 1], [0, 1], 180],
 ];
 
 function normesAngle(t) {
   const n1 = 2 * t.entre(1, 5);
   const n2 = t.entre(2, 9);
   const demi = (n1 * n2) / 2;
-  const [angle, [c, r], [s, q]] = t.au(ANGLES);
+  const [angle, [c, r], [s, q], mesure] = t.au(ANGLES);
   const bonne = racine(demi * c, r);
   // L'angle plat (π) n'est pas obtus : son piège est le cosinus oublié.
   const obtus = c < 0 && angle !== 'π';
@@ -144,13 +151,21 @@ function normesAngle(t) {
     [ecrire(n1 * n2), 'oublier-le-cosinus'],
   ];
   if (obtus) pieges.unshift([racine(-demi * c, r), 'angle-obtus']);
-  return manche(t.melanger, {
-    consigne: 'normes-angle',
-    question: `‖${U}‖ = ${n1}, ‖${V}‖ = ${n2} et (${U}, ${V}) = ${angle}.   ${U} · ${V} = ?`,
-    bonne,
-    pieges,
-    voisin: (k) => racine(demi * c + (c >= 0 ? k : -k), r),
-  });
+  return {
+    ...manche(t.melanger, {
+      consigne: 'normes-angle',
+      question: `‖${U}‖ = ${n1}, ‖${V}‖ = ${n2} et (${U}, ${V}) = ${angle}.   ${U} · ${V} = ?`,
+      bonne,
+      pieges,
+      voisin: (k) => racine(demi * c + (c >= 0 ? k : -k), r),
+    }),
+    visuel: {
+      type: 'figure',
+      forme: 'angle',
+      angle: { mesure, valeur: angle },
+      cotes: { u: `‖${U}‖ = ${n1}`, v: `‖${V}‖ = ${n2}` },
+    },
+  };
 }
 
 /* ------------------------------------------------------- avec le projeté */
@@ -266,13 +281,18 @@ function alKashiLongueur(t) {
     [Math.sqrt(b * b + c * c + 2 * b * c * co), 'al-kashi-signe'],
     t.au([[Math.sqrt(b * b + c * c), 'pas-rectangle'], [Math.sqrt(b * b + c * c - b * c * co), 'al-kashi-deux']]),
   ].filter(([v]) => Math.abs(v - exact) > 0.15);
-  return manche(t.melanger, {
-    consigne: 'al-kashi-longueur',
-    question: `Dans le triangle ABC : AB = ${c}, AC = ${b} et BÂC = ${theta}°. BC ≈ ? (au dixième)`,
-    bonne,
-    pieges: candidats.map(([v, phrase]) => [arrondi(v, 1), phrase]),
-    voisin: (k) => arrondi(exact + (k % 2 ? 0.3 * k : -0.3 * k), 1),
-  });
+  return {
+    ...manche(t.melanger, {
+      consigne: 'al-kashi-longueur',
+      question: `Dans le triangle ABC : AB = ${c}, AC = ${b} et BÂC = ${theta}°. BC ≈ ? (au dixième)`,
+      bonne,
+      pieges: candidats.map(([v, phrase]) => [arrondi(v, 1), phrase]),
+      voisin: (k) => arrondi(exact + (k % 2 ? 0.3 * k : -0.3 * k), 1),
+    }),
+    visuel: {
+      type: 'figure', forme: 'triangle-quelconque', cotes: { AB: String(c), AC: String(b), BC: '?' }, angle: { A: `${theta}°` },
+    },
+  };
 }
 
 /* ------------------------------------------------------ Al-Kashi : angle */
@@ -292,13 +312,18 @@ function alKashiAngle(t) {
     [180 - exact, 'angle-supplementaire'],
     [degres((a * a + b * b - c * c) / (2 * a * b)), 'cote-oppose'],
   ].filter(([v]) => Math.abs(v - exact) > 1.5);
-  return manche(t.melanger, {
-    consigne: 'al-kashi-angle',
-    question: `Dans le triangle ABC : AB = ${c}, AC = ${b} et BC = ${a}. BÂC ≈ ? (au degré)`,
-    bonne: `${bonne}°`,
-    pieges: candidats.map(([v, phrase]) => [`${Math.round(v)}°`, phrase]),
-    voisin: (k) => `${bonne + (k % 2 ? 3 * k : -3 * k)}°`,
-  });
+  return {
+    ...manche(t.melanger, {
+      consigne: 'al-kashi-angle',
+      question: `Dans le triangle ABC : AB = ${c}, AC = ${b} et BC = ${a}. BÂC ≈ ? (au degré)`,
+      bonne: `${bonne}°`,
+      pieges: candidats.map(([v, phrase]) => [`${Math.round(v)}°`, phrase]),
+      voisin: (k) => `${bonne + (k % 2 ? 3 * k : -3 * k)}°`,
+    }),
+    visuel: {
+      type: 'figure', forme: 'triangle-quelconque', cotes: { AB: String(c), AC: String(b), BC: String(a) }, angle: { A: '?' },
+    },
+  };
 }
 
 /* ------------------------------------------------------------ la partie */

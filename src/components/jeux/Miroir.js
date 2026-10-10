@@ -2,6 +2,7 @@ import * as miroir from '../../lib/jeux/miroir';
 import { repliquesMiroir } from '../../lib/jeux/voix/repliques';
 import JeuDeChoix from './JeuDeChoix';
 import GeometrieCM1 from './GeometrieCM1';
+import { ChoixMiroir, QuestionMiroir } from './scenes/ce2-maths/SceneMiroir';
 
 /**
  * LE MIROIR, À L'ÉCRAN — une figure et trois lignes, ou un triangle et ses
@@ -9,8 +10,14 @@ import GeometrieCM1 from './GeometrieCM1';
  *
  * UNE FOIS L'AXE TROUVÉ, IL S'ÉCLAIRE en pointillé vert, comme le pli d'une
  * feuille. Une fois l'angle droit trouvé, le petit carré de l'équerre s'y pose.
+ *
+ * L'UNIVERS DE LA COUVERTURE (09/10/2026) : la figure dans le miroir à cadre
+ * de bois, le papillon qui réagit, des crayons de couleur pour réponses, et
+ * la figure qui se plie le long de l'axe (ou l'équerre qui se cale) une fois
+ * la réponse donnée — voir `scenes/ce2-maths/SceneMiroir.js`, où vivent aussi
+ * les dessins de la figure et du triangle.
  */
-const REGLE = {
+export const REGLE = {
   MANCHES: miroir.MANCHES,
   serie: miroir.serie,
   bilan: miroir.bilan,
@@ -19,6 +26,7 @@ const REGLE = {
   verdict: miroir.verdict,
   erreur: (m, sens) => repliquesMiroir.erreur(sens),
   aide: () => null,
+  rendreLesChoix: (p) => <ChoixMiroir {...p} />,
 };
 
 function MiroirAvantCM1(props) {
@@ -27,47 +35,8 @@ function MiroirAvantCM1(props) {
       {...props}
       regle={REGLE}
       classe="jeu--miroir"
-      rendreQuestion={(m, termine) => (m.mode === 'axe' ? <Axe m={m} termine={termine} /> : <Angle m={m} termine={termine} />)}
+      rendreQuestion={(m, termine, extra) => <QuestionMiroir m={m} termine={termine} extra={extra} />}
     />
-  );
-}
-
-function Axe({ m, termine }) {
-  const points = m.points.map((p) => p.join(',')).join(' ');
-  return (
-    <svg className="miroir__dessin" viewBox="0 0 200 165" role="img" aria-label="Une figure et trois lignes, A, B et C">
-      <polygon points={points} className="miroir__figure" />
-      {m.traces.map((t) => (
-        <g key={t.lettre} className={`miroir__trace${termine && t.sorte === 'axe' ? ' est-axe' : ''}`}>
-          <line x1={t.points[0][0]} y1={t.points[0][1]} x2={t.points[1][0]} y2={t.points[1][1]} />
-          <text x={t.points[0][0] + 6} y={t.points[0][1] + 12} className="miroir__lettre">{t.lettre}</text>
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-function Angle({ m, termine }) {
-  const [droit, ...autres] = m.sommets;
-  const pts = m.sommets.map((s) => s.point.join(',')).join(' ');
-  // Le petit carré de l'équerre, tourné vers l'intérieur du triangle.
-  const [x, y] = droit.point;
-  const sx = Math.sign(autres[0].point[0] - x) || Math.sign(autres[1].point[0] - x);
-  const sy = Math.sign(autres[1].point[1] - y) || Math.sign(autres[0].point[1] - y);
-  const c = 14;
-  return (
-    <svg className="miroir__dessin" viewBox="0 0 200 165" role="img" aria-label="Un triangle et ses trois coins, A, B et C">
-      <polygon points={pts} className="miroir__figure miroir__figure--triangle" />
-      {termine && (
-        <path d={`M${x + sx * c} ${y} L${x + sx * c} ${y + sy * c} L${x} ${y + sy * c}`} className="miroir__equerre" />
-      )}
-      {m.sommets.map((s) => {
-        const [px, py] = s.point;
-        const dx = px < 100 ? -12 : 12;
-        const dy = py < 80 ? -8 : 14;
-        return <text key={s.lettre} x={px + dx} y={py + dy} textAnchor="middle" className="miroir__lettre">{s.lettre}</text>;
-      })}
-    </svg>
   );
 }
 

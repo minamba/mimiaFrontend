@@ -79,6 +79,7 @@ import {
 } from './jeux/VignettesCE2';
 import VignetteTrain from './jeux/VignetteTrain';
 import { ECRANS_COLLEGE, VIGNETTES_COLLEGE } from './jeux/JeuxCollege';
+import { ECRANS_BONUS, VIGNETTES_BONUS } from './jeux/bonus';
 
 /** Le zoom d'un jeu en cours sur ordinateur : voir « LE JEU TIENT DANS L'ÉCRAN ». */
 const ZOOM_JEU_MAX = 1.25;
@@ -130,6 +131,8 @@ const ECRANS = {
   'contraires-et-jumeaux': ContrairesEtJumeaux,
   // Les jeux du collège : un écran par module, tous sur l'écran à choix.
   ...ECRANS_COLLEGE,
+  // Les jeux bonus (09/10/2026).
+  ...ECRANS_BONUS,
 };
 
 /**
@@ -169,6 +172,7 @@ const VIGNETTES = {
   'phrase-qui-dit-non': VignetteNegation,
   'contraires-et-jumeaux': VignetteContraires,
   ...VIGNETTES_COLLEGE,
+  ...VIGNETTES_BONUS,
 };
 
 /**
@@ -450,36 +454,38 @@ export default function JeuxEleve() {
         zoomRef.current = nouveau;
         setZoomJeu(nouveau);
       }
-      if (premier) {
-        premier = false;
-        // Au centre de la place sous la barre, une fois le nouveau zoom posé.
-        window.requestAnimationFrame?.(() => {
-          const r = el.getBoundingClientRect();
-          const marge = Math.max(12, (window.innerHeight - barre - r.height) / 2);
-          window.scrollTo?.({ top: window.scrollY + r.top - barre - marge, behavior: 'auto' });
-        });
-        return;
-      }
-      // LE JEU RESTE DANS L'ÉCRAN QUAND IL GRANDIT — Camara, le 08/10/2026 : « dans
-      // la pêche aux sons, sur une bonne réponse la fenêtre s'agrandit et
-      // déborde ». Un message, un bouton « C'est prêt ! » allongent le jeu : le
-      // zoom baisse, mais le jeu restait calé où il était et son bas sortait de
-      // l'écran. On décale la page juste assez pour le ramener, sans jamais
-      // remonter son haut sous la barre.
+      // TOUJOURS AU CENTRE, PAS SEULEMENT À L'OUVERTURE — Camara, le 10/10/2026 :
+      // « pour les échecs, j'ai dû scroller moi-même pour que ce soit au centre ;
+      // je veux un calcul automatique, quel que soit l'écran ». Le centrage ne
+      // se faisait qu'une fois, à l'ouverture ; ensuite, quand le jeu changeait
+      // de hauteur (le choix de la difficulté laisse place à l'échiquier, bien
+      // plus haut), on ramenait seulement son bas dans l'écran. Désormais, à
+      // CHAQUE changement — fenêtre, contenu, plateau remesuré —, le jeu est
+      // recalé au milieu de la place sous la barre ; trop haut pour tenir, il
+      // se cale sous la barre et l'on défile. En douceur, sauf au premier
+      // rendu et si l'appareil demande moins de mouvement ; un écart de
+      // quelques pixels ne fait pas bouger la page.
+      const doucement = !premier && !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      premier = false;
       window.requestAnimationFrame?.(() => {
         const r = el.getBoundingClientRect();
-        const depasse = r.bottom - (window.innerHeight - 12);
-        if (depasse <= 0) return;
-        const possible = r.top - (barre + 12);
-        const decalage = Math.min(depasse, Math.max(0, possible));
-        if (decalage > 0) window.scrollBy?.({ top: decalage, behavior: 'auto' });
+        const marge = Math.max(12, (window.innerHeight - barre - r.height) / 2);
+        const decalage = r.top - barre - marge;
+        if (Math.abs(decalage) < 6) return;
+        window.scrollTo?.({ top: window.scrollY + decalage, behavior: doucement ? 'smooth' : 'auto' });
       });
     };
 
     ajuster(true);
     const Observateur = window.ResizeObserver;
     const observateur = Observateur ? new Observateur(() => ajuster(false)) : null;
-    if (observateur && el.firstElementChild) observateur.observe(el.firstElementChild);
+    // LE JEU LUI-MÊME, PAS SON ENVELOPPE (10/10/2026) : le décor des jeux bonus
+    // est une enveloppe sans boîte (display: contents) — observée, elle ne
+    // signalait jamais rien, et les échecs ne se recalaient pas. On descend
+    // jusqu'au premier élément qui a une boîte.
+    let cible = el.firstElementChild;
+    while (cible && cible.firstElementChild && window.getComputedStyle(cible).display === 'contents') cible = cible.firstElementChild;
+    if (observateur && cible) observateur.observe(cible);
     const auRedimensionnement = () => ajuster(true);
     window.addEventListener('resize', auRedimensionnement);
     return () => {
@@ -564,6 +570,8 @@ export default function JeuxEleve() {
             // Le compte à rebours d'un escape game, et non le dernier cœur.
             raison={finDefi.raison}
             total={finDefi.total}
+            // Ce qu'un jeu bonus compte (« mot trouvé »), à la place des cadenas.
+            unite={finDefi.unite}
             onRefaire={() => lancer(DEFI)}
             onTranquille={() => lancer(TRANQUILLE)}
             onQuitter={fermer}
@@ -632,6 +640,13 @@ export default function JeuxEleve() {
                       <span className="jeux-matiere__pastille" aria-hidden="true" />
                       {groupe.matiere}
                     </h2>
+                    {/* LES JEUX BONUS LE DISENT — Camara, le 09/10/2026 : « spécifie
+                        qu'ils ne sont pas liés aux notions de cours ». */}
+                    {groupe.matiereCode === 'BONUS' && (
+                      <p className="jeux-matiere__note">
+                        Pour le plaisir de jouer : ces jeux ne sont pas liés aux notions de cours.
+                      </p>
+                    )}
 
                     <ul className="jeux-liste">
                       {groupe.jeux.map((jeu) => (

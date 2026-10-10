@@ -9,6 +9,10 @@ import FractionsCM1 from './FractionsCM1';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { humeurDe } from './scenes/ce1-maths/communs';
+import {
+  DecorPizza, FetePizza, Garniture, Pizzaiola,
+} from './scenes/ce1-maths/ScenePizza';
 
 /**
  * LES PARTS DE PIZZA, À L'ÉCRAN.
@@ -103,10 +107,13 @@ function PartsDePizzaAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
   }
 
   return (
-    <div className="jeu jeu--scene jeu--pizza">
+    // L'UNIVERS DE LA COUVERTURE (09/10/2026, `scenes/ce1-maths/ScenePizza.js`) :
+    // la pizzeria et son four, la pizzaïola en toque, la fête à la réussite.
+    <div className={`jeu jeu--scene jeu--pizza sc-parts-de-pizza${trouve ? ' est-gagne' : ''}`}>
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+      <DecorPizza />
 
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
@@ -196,6 +203,9 @@ function PartsDePizzaAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
           </button>
         </div>
       )}
+
+      {trouve && <FetePizza key={`fete-${manche}`} />}
+      <Pizzaiola humeur={humeurDe({ reussi: trouve, faute: fautes.length > 0 })} cle={`${manche}-${fautes.length}`} />
     </div>
   );
 }
@@ -265,6 +275,11 @@ function Pizza({ n, d, grande }) {
           <circle key={i} cx={50 + 27 * Math.cos(a)} cy={50 + 27 * Math.sin(a)} r="5" className="pizza__rondelle" />
         );
       })}
+      {/* La mozzarella et le basilic de la couverture (09/10/2026), une fois par part garnie. */}
+      {Array.from({ length: Number.isFinite(n) ? n : 0 }, (_, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <Garniture key={`g${i}`} i={i} d={d} />
+      ))}
     </svg>
   );
 }

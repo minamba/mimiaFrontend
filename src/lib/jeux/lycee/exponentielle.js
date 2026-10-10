@@ -18,6 +18,15 @@
  *     l'inégalité ;
  *   - les variations de c e^(kx). PIÈGES : le signe de c fois k, « négative »
  *     pour une fonction toujours positive.
+ *
+ * LE DESSIN (09/10/2026) : le signe porte un `visuel`, la courbe de
+ * l'exponentielle de la question (eˣ, e^(−x), e^(2x), −eˣ), ou, devant
+ * (ax + b)e^(kx), celle du seul facteur e^(kx) : il ne s'annule jamais, c'est
+ * tout le piège — le produit dessiné montrerait sa racine, donc la réponse.
+ * L'équation eᵃˣ⁺ᵇ = 1 montre eˣ et son point (0 ; 1), l'inéquation eˣ
+ * croissante. Rien pour les règles de calcul, la dérivée (la tangente donnerait
+ * le facteur k), l'égalité eᵃ = eᵇ ni les variations de c e^(kx) : la courbe
+ * serait la réponse.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
@@ -113,7 +122,7 @@ const cartes = (liste) => liste.map((c) => ({ cle: c, libelle: c }));
 
 /** Une manche : la bonne réponse, ses pièges nommés (jamais justes), des voisins s'il en manque. */
 function manche(melanger, {
-  consigne, question, bonne, pieges = [], voisin,
+  consigne, question, bonne, pieges = [], voisin, visuel,
 }) {
   const b = String(bonne);
   const valides = pieges.filter(([v]) => v !== null && v !== undefined && String(v) !== b);
@@ -123,9 +132,32 @@ function manche(melanger, {
     const c = String(v);
     if (liste.includes(c) && !(c in table)) table[c] = phrase;
   });
-  return {
+  const m = {
     consigne, question, choix: cartes(melanger(liste)), bonne: b, pieges: table,
   };
+  if (visuel) m.visuel = visuel;
+  return m;
+}
+
+/**
+ * Le dessin : la courbe de c e^(kx) seule, l'axe des abscisses en vue. La
+ * fenêtre s'arrête là où |c e^(kx)| atteint 10, le bord haut (ou bas) : la
+ * courbe ne sort jamais du cadre, et l'asymptote y = 0 a toute la place.
+ */
+function courbe({ c = 1, k = 1, etiquette, points } = {}) {
+  const bord = Math.round((Math.log(10 / Math.abs(c)) / Math.abs(k)) * 100) / 100;
+  const [xmin, xmax] = k > 0 ? [-3, bord] : [-bord, 3];
+  const v = {
+    type: 'courbe',
+    fenetre: {
+      xmin, xmax, ymin: c > 0 ? -1 : -10, ymax: c > 0 ? 10 : 1,
+    },
+    fonctions: [{
+      forme: 'exp', a: c, k, etiquette,
+    }],
+  };
+  if (points) v.points = points;
+  return v;
 }
 
 const nonNul = (entre, a, b) => {
@@ -261,12 +293,17 @@ function signe({ au, entre, melanger }) {
       ['e^(2x)', STRICT_POS, { 'du signe de x': 'exp-toujours-positive', 'positif ou nul': 'exp-jamais-nulle' }],
       ['−eˣ', STRICT_NEG, { [STRICT_POS]: 'exp-signe-coefficient', 'négatif ou nul': 'exp-jamais-nulle' }],
     ]);
+    // Le dessin : la courbe de cette expression même, c e^(kx).
+    const dessin = {
+      'eˣ': { c: 1, k: 1 }, 'e^(−x)': { c: 1, k: -1 }, 'e^(2x)': { c: 1, k: 2 }, '−eˣ': { c: -1, k: 1 },
+    }[expr];
     return {
       consigne: 'signe-toujours',
       question: `Pour tout réel x, ${expr} est…`,
       choix: cartes(melanger([bonne, ...Object.keys(pieges)])),
       bonne,
       pieges,
+      visuel: courbe({ ...dessin, etiquette: `y = ${expr}` }),
     };
   }
   const a = au([1, 2, 3, -1, -2, -3]);
@@ -279,6 +316,7 @@ function signe({ au, entre, melanger }) {
       bonne: ensemble([[-b, a]]),
       pieges: [[ensemble([[-b, a], [0, 1]]), 'exp-jamais-nulle'], [ensemble([[b, a]]), 'transposer-signe']],
       voisin: (j) => ensemble([[-b + j, a]]),
+      visuel: courbe({ k, etiquette: `y = ${ex(k)}` }),
     });
   }
   const op = au(['>', '<', '≥', '≤']);
@@ -292,6 +330,7 @@ function signe({ au, entre, melanger }) {
       [`x ${bon} ${fr(b, a)}`, 'transposer-signe'],
     ],
     voisin: (j) => `x ${bon} ${fr(-b + j, a)}`,
+    visuel: courbe({ k, etiquette: `y = ${ex(k)}` }),
   });
 }
 
@@ -378,6 +417,8 @@ function equation({ au, entre, melanger }) {
       bonne: `x = ${fr(-b, a)}`,
       pieges: [[`x = ${fr(1 - b, a)}`, 'exp-zero'], [`x = ${fr(b, a)}`, 'transposer-signe']],
       voisin: (k) => `x = ${fr(-b + k, a)}`,
+      // eˣ vaut 1 en x = 0 et nulle part ailleurs : l'exposant doit être nul.
+      visuel: courbe({ etiquette: 'y = eˣ', points: [{ x: 0, y: 1, etiquette: 'e⁰ = 1' }] }),
     });
   }
   const a = au([1, 2, 3, -1, -2, -3]);
@@ -395,6 +436,8 @@ function equation({ au, entre, melanger }) {
       [`x ${bon} ${fr(c + b, a)}`, 'transposer-signe'],
     ],
     voisin: (k) => `x ${bon} ${fr(c - b + k, a)}`,
+    // eˣ croissante : comparer deux exponentielles, c'est comparer les exposants.
+    visuel: courbe({ etiquette: 'y = eˣ' }),
   });
 }
 

@@ -19,9 +19,19 @@
  *     sans le moins, S et P échangés, la division par a oubliée ;
  *   - le trinôme qui s'annule en deux nombres donnés. PIÈGES : le signe des
  *     racines dans les facteurs, la règle des signes du produit.
+ *
+ * LE DESSIN (09/10/2026) : cinq sortes portent un `visuel` (voir
+ * `lib/jeux/visuels.js`), la parabole du trinôme de la question, sans aucun
+ * tirage — la même graine redonne la même partie. La fenêtre est centrée sur
+ * le sommet et montre les racines ; on ne marque que ce que la question donne
+ * (les racines du signe et du trinôme à trouver), jamais ce qu'elle demande.
+ * Pas de dessin pour Δ, la somme et le produit (des calculs), ni pour le
+ * nombre de racines : la courbe le donnerait sans calcul, et une parabole qui
+ * frôle l'axe s'y lirait mal.
  */
 
 import { bilan as bilanCommun, outils, troisChoix } from '../outils.js';
+import { valeur as ordonneeEn } from '../visuels.js';
 
 export const FAMILLE = { cle: 'second-degre', titre: 'Le second degré', matiereCode: 'MATHS' };
 
@@ -99,6 +109,34 @@ function canonique(a, alpha, beta) {
   return s;
 }
 const point = (x, y) => `(${x} ; ${y})`;
+
+/* ------------------------------------------------------------ le dessin */
+
+// « + 0 » : jamais de −0, qu’un aller-retour JSON ne redonnerait pas.
+const arrondi = (x) => Math.round(x * 100) / 100 + 0;
+
+/**
+ * La parabole de ax² + bx + c ([a, b, c], comme `poly`) : fenêtre centrée sur
+ * le sommet, assez large pour les abscisses `aVoir` (les racines), l'axe des x
+ * toujours visible ; `points` marqués en plus.
+ */
+function parabole([a, b, c], aVoir = [], points = []) {
+  const alpha = -b / (2 * a);
+  const demi = Math.max(3, ...aVoir.map((x) => Math.abs(x - alpha) + 1.5));
+  const [xmin, xmax] = [arrondi(alpha - demi), arrondi(alpha + demi)];
+  const f = { forme: 'poly', coefs: [c + 0, b + 0, a] };
+  const ys = [0];
+  for (let i = 0; i <= 48; i += 1) ys.push(ordonneeEn(f, xmin + ((xmax - xmin) * i) / 48));
+  const air = Math.max((Math.max(...ys) - Math.min(...ys)) * 0.1, 0.5);
+  return {
+    type: 'courbe',
+    fenetre: {
+      xmin, xmax, ymin: arrondi(Math.min(...ys) - air), ymax: arrondi(Math.max(...ys) + air),
+    },
+    fonctions: [f],
+    ...(points.length ? { points } : {}),
+  };
+}
 
 /* ---------------------------------------------------------- les manches */
 
@@ -197,13 +235,15 @@ function nombreRacines({ au, entre, melanger }) {
 
 function racines(t) {
   const { coefs, racines: [[r, d1], [m, a]] } = aRacines(t);
-  return manche(t.melanger, {
+  const resultat = manche(t.melanger, {
     consigne: 'racines',
     question: `Résous ${poly(coefs)} = 0`,
     bonne: ensemble([[r, d1], [m, a]]),
     pieges: [[ensemble([[-r, d1], [-m, a]]), 'racines-moins-b'], [ensemble([[2 * r, d1], [2 * m, a]]), 'racines-deux-a']],
     voisin: (k) => ensemble([[r + k, d1], [m, a]]),
   });
+  // La parabole coupe l'axe aux racines, qu'on ne marque pas : on les calcule.
+  return { ...resultat, visuel: parabole(coefs, [r, m / a]) };
 }
 
 /* ------------------------------------------------------- forme canonique */
@@ -213,7 +253,7 @@ function formeCanonique({ au, entre, melanger }) {
   const alpha = nonNul(entre, -5, 5);
   const beta = entre(-9, 9);
   const c = a * alpha * alpha + beta;
-  return manche(melanger, {
+  const m = manche(melanger, {
     consigne: 'canonique',
     question: `Forme canonique de ${poly([a, -2 * a * alpha, c])} ?`,
     bonne: canonique(a, alpha, beta),
@@ -225,6 +265,7 @@ function formeCanonique({ au, entre, melanger }) {
     ],
     voisin: (k) => canonique(a, alpha, beta + k),
   });
+  return { ...m, visuel: parabole([a, -2 * a * alpha, c]) };
 }
 
 /* ------------------------------------------------------------------ sommet */
@@ -234,23 +275,27 @@ function sommet({ au, entre, melanger }) {
   const alpha = nonNul(entre, -5, 5);
   const beta = entre(-9, 9);
   const f = (x) => a * (x - alpha) ** 2 + beta;
+  // La parabole, sans marquer le sommet : c'est lui qu'on cherche.
+  const visuel = parabole([a, -2 * a * alpha, f(0)]);
   if (au([true, false])) {
     const c = f(0);
-    return manche(melanger, {
+    const m = manche(melanger, {
       consigne: 'sommet',
       question: `Sommet de la parabole de f(x) = ${poly([a, -2 * a * alpha, c])} ?`,
       bonne: point(nb(alpha), nb(beta)),
       pieges: [[point(nb(-alpha), nb(f(-alpha))), 'sommet-moins-b'], [point(nb(alpha), nb(c)), 'sommet-image']],
       voisin: (k) => point(nb(alpha), nb(beta + k)),
     });
+    return { ...m, visuel };
   }
-  return manche(melanger, {
+  const m = manche(melanger, {
     consigne: 'sommet',
     question: `Sommet de la parabole de f(x) = ${canonique(a, alpha, beta)} ?`,
     bonne: point(nb(alpha), nb(beta)),
     pieges: [[point(nb(-alpha), nb(beta)), 'canonique-alpha-signe'], [point(nb(beta), nb(alpha)), 'sommet-ordre']],
     voisin: (k) => point(nb(alpha), nb(beta + k)),
   });
+  return { ...m, visuel };
 }
 
 /* ------------------------------------------------------------------- signe */
@@ -267,7 +312,7 @@ function signe({ au, entre, melanger }) {
   const [A, B] = [nb(x1), nb(x2)];
   const interieur = (s) => (s ? `]${A} ; ${B}[` : `[${A} ; ${B}]`);
   const exterieur = (s) => (s ? `]−∞ ; ${A}[ ∪ ]${B} ; +∞[` : `]−∞ ; ${A}] ∪ [${B} ; +∞[`);
-  return manche(melanger, {
+  const m = manche(melanger, {
     consigne: 'signe',
     // « 2x(x − 3) » plutôt que « 2(x − 3)x » quand une racine est nulle.
     question: `Résous ${devant(a)}${x2 === 0 ? `x${facteur(x1)}` : `${facteur(x1)}${facteur(x2)}`} ${op} 0`,
@@ -278,6 +323,11 @@ function signe({ au, entre, melanger }) {
     ],
     voisin: (k) => (dedans ? `]${A} ; ${nb(x2 + k)}[` : `]−∞ ; ${nb(x1 - k)}[ ∪ ]${B} ; +∞[`),
   });
+  // La parabole et ses racines, données par la forme factorisée : le signe se lit de part et d'autre.
+  return {
+    ...m,
+    visuel: parabole([a, -a * (x1 + x2), a * x1 * x2], [x1, x2], [{ x: x1, y: 0 }, { x: x2, y: 0 }]),
+  };
 }
 
 /* ------------------------------------------------------- somme et produit */
@@ -310,13 +360,19 @@ function deuxRacines({ entre, melanger }) {
     r1 = nonNul(entre, -6, 6);
     r2 = nonNul(entre, -6, 6);
   } while (r1 === r2 || r1 === -r2);
-  return manche(melanger, {
+  const m = manche(melanger, {
     consigne: 'deux-racines',
     question: `Quel trinôme, avec a = 1, s’annule en ${nb(r1)} et en ${nb(r2)} ?`,
     bonne: poly([1, -(r1 + r2), r1 * r2]),
     pieges: [[poly([1, r1 + r2, r1 * r2]), 'racines-signe-facteur'], [poly([1, -(r1 + r2), -r1 * r2]), 'regle-des-signes']],
     voisin: (k) => poly([1, -(r1 + r2), r1 * r2 + k]),
   });
+  // La parabole qui passe par les deux racines données (marquées) ; son
+  // ordonnée à l'origine, le produit r1 × r2, se vérifie sur l'axe.
+  return {
+    ...m,
+    visuel: parabole([1, -(r1 + r2), r1 * r2], [r1, r2, 0], [{ x: r1, y: 0 }, { x: r2, y: 0 }]),
+  };
 }
 
 /* ------------------------------------------------------------ la partie */

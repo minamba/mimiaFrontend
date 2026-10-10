@@ -11,6 +11,8 @@ import AccordsCM1 from './AccordsCM1';
 import FinDePartie from './FinDePartie';
 import Coeurs from './Coeurs';
 import { bruitage } from '../../lib/jeux/bruitages';
+import { Fete, humeurDe } from './scenes/cp-ce1-francais/communs';
+import { DecorSalleDeJeux, Nounours } from './scenes/cp-ce1-francais/SalleDeJeux';
 
 /**
  * UN OU DES ?, À L'ÉCRAN.
@@ -28,6 +30,12 @@ import { bruitage } from '../../lib/jeux/bruitages';
  *
  * LE DÉCOR EST UNE SALLE DE JEUX : l'ardoise et l'étiquette se posent sur le
  * mur clair du milieu.
+ *
+ * L'UNIVERS DE LA COUVERTURE, AU CP (09/10/2026) — voir
+ * `scenes/cp-ce1-francais/SalleDeJeux.js` : la salle de jeux vit (guirlande,
+ * ballon, voiture, robot), l'image devient une carte de la couverture, le
+ * nounours réagit, et à la bonne étiquette les jouets de la carte sautent
+ * l'un après l'autre. Rien de la règle ne change.
  */
 /** Au CE2, le féminin et le pluriel des groupes — voir `AccordsCE2.js`. */
 function UnOuDesAvantCM1({ niveau, ...props }) {
@@ -177,7 +185,11 @@ function UnOuDesCP({ onQuitter, matiereCode }) {
   const faute = resultat && !termine ? resultat.sens : null;
 
   return (
-    <div className="jeu jeu--unoudes" style={{ backgroundImage: `url(${decor})` }}>
+    <div
+      className={`jeu jeu--unoudes sc-cp-ce1-francais sc-un-ou-des${juste ? ' est-fete' : ''}`}
+      style={{ backgroundImage: `url(${decor})` }}
+    >
+      <DecorSalleDeJeux />
       <Coeurs manche={manche} duPremierCoup={duPremierCoup} />
       <ol className="jeu__manches" aria-label={`Manche ${manche + 1} sur ${MANCHES}`}>
         {manches.map((m, i) => (
@@ -195,6 +207,8 @@ function UnOuDesCP({ onQuitter, matiereCode }) {
 
       {/* L'IMAGE : un objet, ou plusieurs — c'est elle qui décide. */}
       <div
+        // Une carte neuve à chaque manche : elle rejoue son arrivée.
+        key={manche}
         className={`unoudes__image${pluriel ? ' est-pluriel' : ''}`}
         role="img"
         // Le nombre d'objets, sans l'étiquette : la lire donnerait la réponse.
@@ -203,7 +217,7 @@ function UnOuDesCP({ onQuitter, matiereCode }) {
         {Array.from({ length: courante.combien }, (_, i) => (
           // Des copies du même objet : la place est la seule identité.
           // eslint-disable-next-line react/no-array-index-key
-          <span key={i} aria-hidden="true">{leNom.image}</span>
+          <span key={i} aria-hidden="true" style={{ '--n': i }}>{leNom.image}</span>
         ))}
       </div>
 
@@ -283,6 +297,9 @@ function UnOuDesCP({ onQuitter, matiereCode }) {
       <button type="button" className="jeu__quitter" onClick={onQuitter}>
         ← Revenir aux jeux
       </button>
+
+      <Nounours humeur={humeurDe({ reussi: juste, faute: Boolean(resultat) || montrer })} declic={ratees} />
+      {juste && <Fete forme="confetti" />}
     </div>
   );
 }
