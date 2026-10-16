@@ -46,6 +46,14 @@ export const quitterCours = (conversationId) =>
   httpClient.post(`/conversations/${conversationId}/quitter`);
 
 /**
+ * Le cours vient d'être coupé à l'échéance du forfait (essai ou formule,
+ * 16/10/2026) : le serveur décompte ce qui restait et marque la sortie (le
+ * compte rendu est dû).
+ */
+export const terminerForfait = (conversationId) =>
+  httpClient.post(`/conversations/${conversationId}/fin-forfait`);
+
+/**
  * Envoie un message et consomme la réponse en flux.
  *
  * Axios ne sait pas lire un corps de réponse au fil de l'eau : il attend la
@@ -181,7 +189,7 @@ export const accueilStream = (
 export const annonceStream = (conversationId, type, options) =>
   consommerFlux(`/conversations/${conversationId}/annonce?type=${type}`, null, options);
 
-const consommerFlux = async (chemin, corps, { onDelta, onErreur, onQuota, signal } = {}) => {
+const consommerFlux = async (chemin, corps, { onDelta, onErreur, onQuota, onEcheance, signal } = {}) => {
   // `enTeteAuth` ET PAS `getAccessToken` : une session enfant n'a pas de jeton
   // OIDC. L'enfant entre par un code, ce qui lui ouvre une session « Eleve » —
   // un schéma d'autorisation différent, que seule `enTeteAuth` sait produire.
@@ -254,6 +262,8 @@ const consommerFlux = async (chemin, corps, { onDelta, onErreur, onQuota, signal
       // Distinct d'une erreur : « il n'y a plus d'heures » n'appelle ni le même
       // message ni la même action que « c'est cassé ».
       else if (charge.type === 'quota') onQuota?.(charge.motif);
+      // L'échéance du forfait, en tête de chaque tour (16/10/2026).
+      else if (charge.type === 'echeance') onEcheance?.(charge.secondesRestantes, charge.motif);
       else if (charge.type === 'erreur') onErreur?.(charge.message);
     }
   }

@@ -265,6 +265,17 @@ const FICHE_FERMETURE = '[/FICHE]';
 const CONTROLE_PROGRAMME_OUVERTURE = '[CONTROLE_PROGRAMME]';
 const CONTROLE_PROGRAMME_FERMETURE = '[/CONTROLE_PROGRAMME]';
 
+/**
+ * Le projet d'orientation noté par la conseillère (11/10/2026), avec l'accord
+ * de l'élève : rangé pour ses professeurs et sa fiche, jamais lu ni affiché.
+ */
+const PROJET_OUVERTURE = '[PROJET]';
+const PROJET_FERMETURE = '[/PROJET]';
+
+/** Le rapport d'orientation de fin de séance (11/10/2026) : rangé, jamais lu ni affiché. */
+const RAPPORT_ORIENTATION_OUVERTURE = '[RAPPORT_ORIENTATION]';
+const RAPPORT_ORIENTATION_FERMETURE = '[/RAPPORT_ORIENTATION]';
+
 /** Les notions travaillées pour un contrôle : même nature, autre bloc. */
 const CONTROLE_NOTIONS_OUVERTURE = '[CONTROLE_NOTIONS]';
 const CONTROLE_NOTIONS_FERMETURE = '[/CONTROLE_NOTIONS]';
@@ -662,6 +673,11 @@ const DEPARTS = [
   // faute de corroboration, et le minuteur a conclu une seconde fois derrière.
   /\bbonne (soiree|journee|nuit|fin de journee)\b|\bbon week ?end\b/,
 
+  // ET LES JOURS — relevé le 11/10/2026 avec la conseillère : « Merci, bon
+  // dimanche. » n'était pas lu comme un départ, et la séance restait ouverte
+  // après l'au revoir des deux côtés. Les jours, la semaine, les vacances.
+  /\bbon (lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|apres midi)\b|\bbonne (semaine|fin de semaine)\b|\bbonnes vacances\b/,
+
   /\bj ?ai (fini|termine|assez)\b|\bc ?est (fini|bon pour (moi|aujourd ?hui))\b/,
   /\bje (dois )?(y vais|pars|m ?en vais|dois partir|y aller)\b/,
   /\bon (continue|reprend|verra|se voit) (demain|la prochaine fois|plus tard)\b/,
@@ -717,7 +733,7 @@ export function sembleDireAuRevoir(texte) {
  * bonjour. Sans cette exclusion, le « Salut Bilal ! » d'un accueil aurait pu
  * passer pour un départ.
  */
-const ADIEUX = /^(au revoir|a bientot|a plus|a demain|a la prochaine|a tres vite|a tout a l ?heure|bye|ciao|tchao|bonne (soiree|journee|nuit|fin de journee|semaine|vacances)|bon week ?end)\b/;
+const ADIEUX = /^(au revoir|a bientot|a plus|a demain|a la prochaine|a tres vite|a tout a l ?heure|bye|ciao|tchao|bonne (soiree|journee|nuit|fin de journee|semaine|fin de semaine)|bonnes vacances|bon (week ?end|lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|apres midi))\b/;
 
 /**
  * LE PROFESSEUR PREND-IL CONGÉ, EN TOUTES LETTRES ?
@@ -881,6 +897,8 @@ function retirerMarqueurs(texte) {
     [RAPPORT_OUVERTURE, RAPPORT_FERMETURE],
     [FICHE_OUVERTURE, FICHE_FERMETURE],
     [CONTROLE_PROGRAMME_OUVERTURE, CONTROLE_PROGRAMME_FERMETURE],
+    [PROJET_OUVERTURE, PROJET_FERMETURE],
+    [RAPPORT_ORIENTATION_OUVERTURE, RAPPORT_ORIENTATION_FERMETURE],
     [CONTROLE_NOTIONS_OUVERTURE, CONTROLE_NOTIONS_FERMETURE],
     [CONTROLE_PRET_OUVERTURE, CONTROLE_PRET_FERMETURE],
     [EXAMEN_PRET_OUVERTURE, EXAMEN_PRET_FERMETURE],

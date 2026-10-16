@@ -13,8 +13,10 @@ import Loader from './Loader';
  * `admin` masque la route aux non-administrateurs. Ce n'est qu'un confort
  * d'interface : l'API revérifie le rôle sur chaque appel, un utilisateur qui
  * forcerait l'URL n'obtiendrait que des 403.
+ *
+ * `parent` ferme la route à une session d'enfant (l'espace parent, 16/10/2026).
  */
-export default function RouteProtegee({ children, admin = false }) {
+export default function RouteProtegee({ children, admin = false, parent = false }) {
   const { authentifie, estAdmin, loading } = useSelector((state) => state.auth);
 
   // DEUX FAÇONS D'ÊTRE CHEZ SOI.
@@ -28,7 +30,7 @@ export default function RouteProtegee({ children, admin = false }) {
   // connecté », et `VerrouEleve` évite de l'emmener où il n'a rien à voir.
   const eleve = sessionEleve();
 
-  if (eleve) return admin ? <Navigate to="/" replace /> : children;
+  if (eleve) return admin || parent ? <Navigate to="/" replace /> : children;
 
   if (loading) return <Loader texte="Vérification de la session…" />;
   if (!authentifie) return <Navigate to="/" replace />;

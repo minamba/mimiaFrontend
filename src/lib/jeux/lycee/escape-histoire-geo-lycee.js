@@ -675,7 +675,7 @@ const BANQUES = {
       [
         v(
           'HG_TLE_HIST_CRISE_1929',
-          'Premier connecteur : sur l’écran des archives, une dépêche d’octobre 1929, « Panique à la Bourse ! » Le jeudi 24 octobre, les cours s’effondrent, et la crise gagne bientôt le monde entier.',
+          'Premier connecteur : sur la plaque du touret de câbles, une dépêche d’octobre 1929, « Panique à la Bourse ! » Le jeudi 24 octobre, les cours s’effondrent, et la crise gagne bientôt le monde entier.',
           'Dans quelle ville le krach du « jeudi noir » éclate-t-il ?',
           'New York',
           { Londres: 'tle-londres', Berlin: 'tle-berlin' },
@@ -683,7 +683,7 @@ const BANQUES = {
         ),
         v(
           'HG_TLE_HIST_CRISE_1929',
-          'Premier connecteur : sur l’écran des archives, une dépêche de 1933, « Un New Deal pour l’Amérique ». Le nouveau président promet de relancer l’économie par de grands travaux et l’aide aux chômeurs.',
+          'Premier connecteur : sur la plaque du touret de câbles, une dépêche de 1933, « Un New Deal pour l’Amérique ». Le nouveau président promet de relancer l’économie par de grands travaux et l’aide aux chômeurs.',
           'Quel président lance le New Deal ?',
           'Franklin D. Roosevelt',
           { 'Herbert Hoover': 'tle-hoover', 'Harry Truman': 'tle-truman' },

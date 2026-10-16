@@ -6,10 +6,11 @@ import {
   ouvrirConversation,
   envoyerMessage,
   resetChat,
+  forfaitAtteint,
   annoncer,
 } from '../lib/actions/chatActions';
 import {
-  quitterCours, signalerFermeture, deposerPieceJointe, poserChoixCopie, getChoixCopie,
+  quitterCours, terminerForfait, signalerFermeture, deposerPieceJointe, poserChoixCopie, getChoixCopie,
 } from '../lib/api/chatApi';
 import {
   mesurerEcoute, mesurerVoix, mesurerTrouVoix, nouvelleSeanceDeMesure,
@@ -18,6 +19,7 @@ import {
   departDeLaSeance, ecouleDepuisLeDepart, oublierLeDepart,
 } from '../lib/storage/departSeance';
 import { chargerEleves } from '../lib/actions/elevesActions';
+import { retirerMarqueursApplication } from '../lib/storage/texteAffiche';
 import { voixService } from '../lib/storage/voixService';
 import {
   marquerCopieAuCahier,
@@ -45,17 +47,16 @@ import { estIOS } from '../lib/storage/appareil';
 import { estCommandePhoto } from '../lib/storage/commandePhoto';
 import {
   etatCopieControle, lireDemandeCopie, marquerPieceControle, marquerPiecesControle, marquerStyleCorrection,
-  retirerMarqueurCopieControle,
 } from '../lib/storage/copieControle';
 import CopieControle from './CopieControle';
 import PreparationCorrection from './PreparationCorrection';
 import EnonceExercice from './EnonceExercice';
 import {
   choixAvecCopieActif, etatEnonce, marquerAvecCopie, marquerEnonce,
-  marquerRetourChoix, retirerMarqueurAvecCopie, retirerMarqueurEnonce,
+  marquerRetourChoix,
 } from '../lib/storage/enonceExercice';
 import {
-  supportChoisi, marquerSupport, retirerMarqueurSupport, CAHIER,
+  supportChoisi, marquerSupport, CAHIER,
   // RENOMMÉ À L'IMPORT : `copieRendue` existe déjà dans ce fichier, et c'est un
   // BOOLÉEN — « le professeur vient de rendre la note ». Sans cet alias, l'appel
   // plus bas tombait sur lui et levait « copieRendue is not a function ».
@@ -63,7 +64,7 @@ import {
 } from '../lib/storage/supportEvaluation';
 import SupportEvaluation from './SupportEvaluation';
 import {
-  supportEcritChoisi, marquerSupportEcrit, retirerMarqueurSupportEcrit,
+  supportEcritChoisi, marquerSupportEcrit,
   QUESTION_SUPPORT_ECRIT, CAHIER as ECRIT_CAHIER, CLAVIER as ECRIT_CLAVIER,
   rangSupportEcrit, marquerTexteRendu, lireReponseSupportEcrit,
 } from '../lib/storage/supportEcrit';
@@ -126,7 +127,6 @@ import {
 import { demandeChoixVitesse, vitesseDemandee } from '../lib/storage/ardoise';
 import {
   conversationEnCours, marquerVitesseChoisie, rangConversation,
-  retirerMarqueurConversation,
 } from '../lib/storage/conversationLangue';
 import HorlogeReelle from './HorlogeReelle';
 import Schema from './Schema';
@@ -137,6 +137,7 @@ import {
 import CameraVoix from './CameraVoix';
 import Loader from './Loader';
 import Controle from './Controle';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * Affiche un message.
@@ -180,11 +181,8 @@ const heureCourte = (iso) => {
 
 function Contenu({ texte, onRappelerTableau }) {
   const segments = useMemo(
-    () => decouper(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
-      retirerMarqueurSupport(retirerMarqueurCopieControle(
-        retirerMarqueurCahier(retirerMarqueurEnonce(retirerMarqueurAvecCopie(texte))),
-      )),
-    ))),
+    // Une seule liste de marqueurs pour tous les écrans — voir `texteAffiche.js`.
+    () => decouper(retirerMarqueursApplication(texte)),
     [texte],
   );
 
@@ -444,13 +442,23 @@ const assezPourCouper = (texte) => (texte ?? '').trim().length >= 2;
  */
 function MessageQuota({ motif, prof }) {
   const textes = {
-    PotEpuise: {
-      titre: 'Les heures du mois sont utilisées',
+    // LA FIN DE L'ESSAI GRATUIT — Camara, le 16/10/2026 : la séance est coupée
+    // net à la trentième minute, et le professeur dit pourquoi.
+    EssaiEpuise: {
+      titre: 'Ton essai gratuit est terminé',
       detail:
-        "Tu as bien travaillé. Demande à tes parents d'ajouter des heures, ou reviens au renouvellement du forfait.",
+        'Merci d’avoir travaillé avec moi ! Pour continuer, demande à tes parents de choisir un forfait.',
+    },
+    // LE COURS S'ARRÊTE ICI (16/10/2026) : la séance vient d'être coupée net à
+    // la seconde où les heures du forfait sont tombées à zéro — le professeur
+    // dit pourquoi, sans que l'enfant se sente en faute.
+    PotEpuise: {
+      titre: 'Le cours s’arrête ici : les heures du forfait sont utilisées',
+      detail:
+        "Tu as bien travaillé. Demande à tes parents d'ajouter des heures, ou on se retrouve au renouvellement du forfait.",
     },
     PlafondEnfant: {
-      titre: 'Tu as utilisé toutes tes heures du mois',
+      titre: 'Le cours s’arrête ici : tu as utilisé toutes tes heures du mois',
       detail:
         "Il reste des heures pour tes frères et sœurs, mais ta part est terminée. On se retrouve le mois prochain.",
     },
@@ -462,6 +470,13 @@ function MessageQuota({ motif, prof }) {
     EnPause: {
       titre: 'Le forfait est en pause',
       detail: 'Tes parents ont mis les cours en pause. Ils peuvent les reprendre quand ils veulent.',
+    },
+    // LE PAIEMENT DU FORFAIT N'EST PAS PASSÉ (option A, 16/10/2026). Sans ce
+    // texte, l'enfant lisait « Aucun forfait en cours » : faux, et inquiétant.
+    // Rien qui le mette en cause : c'est l'affaire de ses parents.
+    Impaye: {
+      titre: 'Le forfait attend son règlement',
+      detail: 'Le paiement du forfait n’est pas encore passé. Dès que tes parents l’auront réglé, tu pourras reprendre.',
     },
     SansAbonnement: {
       titre: 'Aucun forfait en cours',
@@ -857,10 +872,12 @@ const cleDictee = (id) => `school-ia-dictee-${id}`;
 const VIE_ETAT_DICTEE = 2 * 60 * 60 * 1000;
 export default function Chat() {
   const { eleveId, matiereId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  useAffichageEleve(eleveId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { conversation, messages, reponseEnCours, streaming, loading, error, quota } =
+  const { conversation, messages, reponseEnCours, streaming, loading, error, quota, echeance } =
     useSelector((state) => state.chat);
   const { liste } = useSelector((state) => state.eleves);
   const eleve = liste.find((e) => String(e.id) === String(eleveId));
@@ -2603,6 +2620,50 @@ export default function Chat() {
 
     return () => clearInterval(battement);
   }, [eleveId, matiereId, seance, quota, adieuFait]);
+
+  // LE COURS COUPÉ NET À L'ÉCHÉANCE DU FORFAIT — Camara, le 16/10/2026 : d'abord
+  // pour l'essai (« ça clôt directement sans pitié, même si le professeur est en
+  // pleine phrase, même si l'élève parle »), puis pour toute formule arrivée au
+  // bout de ses heures — « ne coupe pas avant » : l'échéance tombe à la seconde
+  // où le pot (ou la part de l'enfant) atteint zéro. Tout s'arrête dans le même
+  // geste, sans attendre un rendu : la voix, le micro, la saisie, la génération
+  // en cours. Puis le serveur décompte ce qui restait et marque la sortie (le
+  // compte rendu est dû). L'échéance est relue au début de chaque tour.
+  const forfaitCoupeRef = useRef(false);
+  useEffect(() => {
+    if (!echeance || !conversation || forfaitCoupeRef.current) return undefined;
+
+    const couper = () => {
+      if (forfaitCoupeRef.current) return;
+      forfaitCoupeRef.current = true;
+
+      seanceTermineeRef.current = true;
+      arretVolontaireRef.current = true;
+      aStreameRef.current = false;
+      lecteurRef.current?.arreter();
+      ecouteRef.current?.arreter();
+      setEcoute(false);
+      setMainsLibres(false);
+      viderSaisie();
+      dispatch(forfaitAtteint(echeance.motif));
+
+      oublierLeDepart();
+      sortieSignalee.current = true;
+      terminerForfait(conversation.id).catch(() => {
+        // Le serveur refusera le tour suivant de toute façon (forfait épuisé).
+      });
+    };
+
+    const delai = echeance.le - Date.now();
+    if (delai <= 0) {
+      couper();
+      return undefined;
+    }
+
+    const minuteur = setTimeout(couper, delai);
+    return () => clearTimeout(minuteur);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [echeance, conversation]);
 
   // L'au revoir clôt la séance côté serveur, exactement comme le bouton
   // « Quitter le cours » : c'est ce marqueur qui déclenche l'évaluation des

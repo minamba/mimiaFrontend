@@ -14,13 +14,19 @@ import MonAvis from './MonAvis';
 import Onglets from './Onglets';
 import ChampMotDePasse from './ChampMotDePasse';
 import CodeEnfant from './CodeEnfant';
+import ChoixEtablissement from './ChoixEtablissement';
+import ChoixAcademie from './ChoixAcademie';
+import ChoixBesoins from './ChoixBesoins';
+import FenetreEditionEnfant, { Section } from './FenetreEditionEnfant';
+import { useBesoinsParticuliers } from '../lib/storage/modeTest';
 import Loader from './Loader';
 import Quota from './Quota';
+import FichesDuForfait from './FichesDuForfait';
 import QuotaEnfants from './QuotaEnfants';
 import RetraitEnfant from './RetraitEnfant';
 import SuppressionCompte from './SuppressionCompte';
 import { logout } from '../lib/actions/authActions';
-import { getElevesArchives, restaurerEleve } from '../lib/api/elevesApi';
+import { getElevesArchives, restaurerEleve, definirEtablissement } from '../lib/api/elevesApi';
 import { themeEnregistre, definirTheme } from '../lib/storage/theme';
 import {
   grouperClasses,
@@ -30,8 +36,11 @@ import {
   languesAEnvoyer,
   basculerLangue,
   specialitesAEnvoyer,
+  filiereDeLaClasse,
+  filiereAEnvoyer,
 } from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
+import ChoixFilierePro from './ChoixFilierePro';
 // Les mêmes images que le bouton de thème de la barre : déjà en cache, elles
 // donnent à la carte « Apparence » sa couleur — voir `Apparence`.
 import iconeLune from '../assets/lune.png';
@@ -277,10 +286,16 @@ function Securite({ compte, saving, succes, onChanger }) {
 }
 
 // ---------------------------------------------------------------- enfants
-function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, onRetirer, saving }) {
+/** Collège ou lycée : là où la conseillère d'orientation a de quoi dire. */
+const auSecondaire = (eleve) => /coll|lyc/i.test(eleve?.niveauCycle ?? '');
+
+// Exportée pour les tests : choisir l'établissement, puis enregistrer.
+export function LigneEnfant({
+  eleve, niveaux, academies, onEnregistrer, onVoirFiche, onRetirer, onEtablissement, saving,
+}) {
   const [ouvert, setOuvert] = useState(false);
   const [codeOuvert, setCodeOuvert] = useState(false);
-  const [champs, setChamps] = useState({
+  const champsDe = () => ({
     prenom: eleve.prenom ?? '',
     nom: eleve.nom ?? '',
     age: eleve.age ?? '',
@@ -290,7 +305,30 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
     lv2Espagnol: Boolean(eleve.lv2Espagnol),
     specialites: eleve.specialites ?? [],
     langues: eleve.langues ?? [],
+    // La filière professionnelle (15/10/2026).
+    filiere: {
+      familleMetiers: eleve.familleMetiers ?? '',
+      specialitePro: eleve.specialitePro ?? '',
+      specialiteProLibre: eleve.specialiteProLibre ?? '',
+    },
+    // L'établissement, pour la conseillère d'orientation (11/10/2026).
+    etablissement: eleve.etablissementUai
+      ? { uai: eleve.etablissementUai, nom: eleve.etablissementLibelle, commune: eleve.etablissementCommune }
+      : null,
+    // Les besoins particuliers (11/10/2026), cochés par le parent.
+    besoins: { besoins: eleve.besoinsParticuliers ?? [], ecranAdapte: eleve.ecranAdapte !== false },
   });
+  const [champs, setChamps] = useState(champsDe);
+
+  // Une saisie abandonnée (Annuler, Échap) ne revient pas à la prochaine
+  // ouverture : la fenêtre repart de ce qui est enregistré.
+  const ouvrir = () => {
+    setChamps(champsDe());
+    setOuvert(true);
+  };
+  const fermer = useCallback(() => setOuvert(false), []);
+  const [erreurEtablissement, setErreurEtablissement] = useState(null);
+  const besoinsActifs = useBesoinsParticuliers();
 
   // Même règle qu'à l'inscription : la case LV2 n'existe que dans les classes
   // qui ont une LV2, et suit la classe choisie dans le formulaire.
@@ -299,6 +337,7 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
   );
   const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
   const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
+  const filiereClasse = filiereDeLaClasse(niveaux, champs.niveauScolaireId);
 
   const soumettre = (evenement) => {
     evenement.preventDefault();
@@ -313,7 +352,25 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
       lv2Espagnol: lv2Possible && champs.lv2Espagnol,
       specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
       langues: languesAEnvoyer(champs.langues, languesClasse),
+      ...filiereAEnvoyer(champs.filiere, filiereClasse),
+      // Envoyés seulement si le module est allumé : sinon rien n'est changé.
+      ...(besoinsActifs ? {
+        besoinsParticuliers: champs.besoins.besoins,
+        ecranAdapte: champs.besoins.ecranAdapte,
+      } : {}),
     });
+
+    // L'ÉTABLISSEMENT PART AVEC « ENREGISTRER », par sa route à part : le
+    // formulaire du profil ne le porte pas (un autre formulaire le réécrirait
+    // à vide). Seulement s'il a changé.
+    const nouveau = champs.etablissement?.uai ?? null;
+    if (auSecondaire(eleve) && nouveau !== (eleve.etablissementUai ?? null)) {
+      setErreurEtablissement(null);
+      definirEtablissement(eleve.id, nouveau)
+        .then(() => onEtablissement?.())
+        .catch(() => setErreurEtablissement('Le collège ou le lycée n’a pas pu être enregistré. Réessaie.'));
+    }
+
     setOuvert(false);
   };
 
@@ -363,9 +420,9 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
           <button
             type="button"
             className="btn-ghost btn-ghost--mini btn-ghost--modifier"
-            onClick={() => setOuvert(!ouvert)}
+            onClick={ouvrir}
           >
-            {ouvert ? 'Annuler' : 'Modifier'}
+            Modifier
           </button>
 
           {/* Le code d'accès est rangé avec les autres actions de l'enfant :
@@ -397,33 +454,87 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
 
       {codeOuvert && <CodeEnfant eleve={eleve} />}
 
+      {/* LE FORMULAIRE EST UNE FENÊTRE — Camara, le 16/10/2026 : il se
+          dépliait sous la carte, d'une seule couleur, et se perdait dans la
+          liste. Quatre sections colorées, voir `FenetreEditionEnfant`. */}
       {ouvert && (
-        <form onSubmit={soumettre} className="enfant-ligne__form">
-          <div className="duo">
-            <div className="champ">
-              <label htmlFor={`e-prenom-${eleve.id}`}>Prénom</label>
-              <input
-                id={`e-prenom-${eleve.id}`}
-                value={champs.prenom}
-                onChange={(e) => setChamps({ ...champs, prenom: e.target.value })}
-                required
-                minLength={2}
-              />
+        <FenetreEditionEnfant
+          prenom={eleve.prenom}
+          sousTitre={`${eleve.niveauLibelle ?? ''} · ${eleve.age} ans`}
+          initiale={eleve.prenom?.charAt(0)?.toUpperCase()}
+          onFermer={fermer}
+          onSoumettre={soumettre}
+          saving={saving}
+        >
+          <Section couleur="identite" titre="Identité" aide="Ce que le professeur sait de lui pour s'adresser à lui.">
+            <div className="duo">
+              <div className="champ">
+                <label htmlFor={`e-prenom-${eleve.id}`}>Prénom</label>
+                <input
+                  id={`e-prenom-${eleve.id}`}
+                  value={champs.prenom}
+                  onChange={(e) => setChamps({ ...champs, prenom: e.target.value })}
+                  required
+                  minLength={2}
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                />
+              </div>
+
+              <div className="champ">
+                <label htmlFor={`e-nom-${eleve.id}`}>Nom</label>
+                <input
+                  id={`e-nom-${eleve.id}`}
+                  value={champs.nom}
+                  onChange={(e) => setChamps({ ...champs, nom: e.target.value })}
+                  required
+                  minLength={2}
+                />
+              </div>
             </div>
 
-            <div className="champ">
-              <label htmlFor={`e-nom-${eleve.id}`}>Nom</label>
-              <input
-                id={`e-nom-${eleve.id}`}
-                value={champs.nom}
-                onChange={(e) => setChamps({ ...champs, nom: e.target.value })}
-                required
-                minLength={2}
-              />
-            </div>
-          </div>
+            <div className="duo">
+              <div className="champ">
+                <label htmlFor={`e-age-${eleve.id}`}>Âge</label>
+                <input
+                  id={`e-age-${eleve.id}`}
+                  type="number"
+                  min={5}
+                  max={25}
+                  value={champs.age}
+                  onChange={(e) => setChamps({ ...champs, age: e.target.value })}
+                  required
+                />
+              </div>
 
-          <div className="duo">
+              <fieldset className="champ champ--choix">
+                <legend>Fille ou garçon</legend>
+                <div className="choix">
+                  {SEXES.map((option) => (
+                    <label
+                      key={option.valeur}
+                      className={`choix__option ${Number(champs.sexe) === option.valeur ? 'choix__option--actif' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name={`sexe-${eleve.id}`}
+                        value={option.valeur}
+                        checked={Number(champs.sexe) === option.valeur}
+                        onChange={(e) => setChamps({ ...champs, sexe: e.target.value })}
+                        required
+                      />
+                      {option.libelle}
+                    </label>
+                  ))}
+                </div>
+                <span className="champ__aide">
+                  Détermine les accords du professeur quand il lui parle.
+                </span>
+              </fieldset>
+            </div>
+          </Section>
+
+          <Section couleur="scolarite" titre="Scolarité" aide="Sa classe décide de ses matières et de son programme.">
             <div className="champ">
               <label htmlFor={`e-niveau-${eleve.id}`}>Classe</label>
               <select
@@ -452,7 +563,11 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
                   Précise la série : sans elle, ses spécialités n’apparaissent pas.
                 </span>
               )}
+            </div>
 
+            {/* SES LANGUES, SES SPÉCIALITÉS ET SA FILIÈRE, sous la classe qui
+                les décide. Rien ne s'affiche quand la classe n'en a pas. */}
+            <div className="enfant-ligne__options">
               {lv2Possible && (
                 <label className="case">
                   <input
@@ -485,79 +600,50 @@ function LigneEnfant({ eleve, niveaux, academies, onEnregistrer, onVoirFiche, on
                 valeur={champs.specialites}
                 onChange={(specialites) => setChamps({ ...champs, specialites })}
               />
-            </div>
 
-            <div className="champ">
-              <label htmlFor={`e-age-${eleve.id}`}>Âge</label>
-              <input
-                id={`e-age-${eleve.id}`}
-                type="number"
-                min={5}
-                max={25}
-                value={champs.age}
-                onChange={(e) => setChamps({ ...champs, age: e.target.value })}
-                required
+              <ChoixFilierePro
+                id={`e-filiere-${eleve.id}`}
+                filiere={filiereClasse}
+                valeur={champs.filiere}
+                onChange={(filiere) => setChamps({ ...champs, filiere })}
               />
             </div>
-          </div>
+          </Section>
 
-          <div className="champ">
-            <label htmlFor={`e-academie-${eleve.id}`}>Académie (facultatif)</label>
-            <select
+          <Section couleur="lieu" titre="Où il étudie" aide="Son académie fixe ses vacances ; son établissement aide la conseillère d'orientation.">
+            <ChoixAcademie
               id={`e-academie-${eleve.id}`}
-              value={champs.academieId}
-              onChange={(e) => setChamps({ ...champs, academieId: e.target.value })}
-            >
-              <option value="">Je ne sais pas / plus tard</option>
-              <optgroup label="Zones A, B, C">
-                {academies
-                  .filter((a) => ['A', 'B', 'C'].includes(a.zone))
-                  .map((a) => (
-                    <option key={a.id} value={a.id}>{a.libelle}</option>
-                  ))}
-              </optgroup>
-              <optgroup label="Corse et outre-mer">
-                {academies
-                  .filter((a) => !['A', 'B', 'C'].includes(a.zone))
-                  .map((a) => (
-                    <option key={a.id} value={a.id}>{a.libelle}</option>
-                  ))}
-              </optgroup>
-            </select>
-            <span className="champ__aide">
-              Sert à afficher les périodes de vacances scolaires dans « Mon calendrier ».
-            </span>
-          </div>
+              valeur={champs.academieId}
+              onChange={(academieId) => setChamps({ ...champs, academieId })}
+              academies={academies}
+            />
 
-          <fieldset className="champ champ--choix">
-            <legend>Fille ou garçon</legend>
-            <div className="choix">
-              {SEXES.map((option) => (
-                <label
-                  key={option.valeur}
-                  className={`choix__option ${Number(champs.sexe) === option.valeur ? 'choix__option--actif' : ''}`}
-                >
-                  <input
-                    type="radio"
-                    name={`sexe-${eleve.id}`}
-                    value={option.valeur}
-                    checked={Number(champs.sexe) === option.valeur}
-                    onChange={(e) => setChamps({ ...champs, sexe: e.target.value })}
-                    required
-                  />
-                  {option.libelle}
-                </label>
-              ))}
+            {/* L'ÉTABLISSEMENT, POUR LA CONSEILLÈRE D'ORIENTATION (11/10/2026) —
+                choisir ne fait que le retenir, « Enregistrer » l'envoie.
+                Collège et lycée. */}
+            {auSecondaire(eleve) && (
+              <ChoixEtablissement
+                id={`e-etablissement-${eleve.id}`}
+                valeur={champs.etablissement}
+                onChange={(etablissement) => setChamps({ ...champs, etablissement })}
+              />
+            )}
+          </Section>
+
+          {/* Les besoins particuliers ont déjà leur panneau, titré et repliable. */}
+          {besoinsActifs && (
+            <div className="edition-enfant__besoins">
+              <ChoixBesoins
+                valeur={champs.besoins}
+                onChange={(besoins) => setChamps({ ...champs, besoins })}
+              />
             </div>
-            <span className="champ__aide">
-              Détermine les accords du professeur quand il lui parle.
-            </span>
-          </fieldset>
+          )}
+        </FenetreEditionEnfant>
+      )}
 
-          <button type="submit" className="btn btn--compact" disabled={saving}>
-            Enregistrer
-          </button>
-        </form>
+      {erreurEtablissement && (
+        <p className="champ__aide champ__aide--alerte enfant-ligne__erreur" role="alert">{erreurEtablissement}</p>
       )}
     </li>
   );
@@ -672,6 +758,10 @@ export default function MonProfil() {
     // « Donner mon avis », depuis un courriel : la page publique fait
     // connecter le parent, puis l'amène ici, sur le bon onglet.
     if (parametres.get('onglet') === 'avis') return 'avis';
+
+    // « Ajouter des fiches », depuis la jauge des fiches de révision d'un
+    // enfant : l'achat se fait dans le forfait (16/10/2026).
+    if (parametres.get('onglet') === 'forfait') return 'forfait';
 
     return parametres.get('paiement') === 'ok' || parametres.has('formule')
       ? 'forfait'
@@ -836,7 +926,14 @@ export default function MonProfil() {
         </>
       )}
 
-      {onglet === 'forfait' && <Quota />}
+      {onglet === 'forfait' && (
+        <>
+          <Quota />
+          {/* LES FICHES À PART DES HEURES (16/10/2026) : un second encadré,
+              jamais mêlé au premier. */}
+          <FichesDuForfait />
+        </>
+      )}
 
       {onglet === 'avis' && (
         <div className="bloc-profil">
@@ -882,6 +979,7 @@ export default function MonProfil() {
                     onEnregistrer={(donnees) => dispatch(submitEleve(donnees))}
                     onVoirFiche={voirFiche}
                     onRetirer={(cible) => setARetirer({ eleve: cible, dejaRetire: false })}
+                    onEtablissement={() => dispatch(chargerEleves())}
                   />
                 ))}
               </ul>

@@ -320,7 +320,7 @@ const ETAPES = {
         const b = entre(1, 20);
         const c = a * x + b;
         return {
-          question: `${a}x + ${b} = ${c}. x = ?`,
+          question: `Trouve x : ${a}x + ${b} = ${c}`,
           bonne: x,
           pieges: [[(c + b) / a, 'equation-changer-signe'], [c - b - a, 'equation-diviser']],
           positif: true,
@@ -392,7 +392,7 @@ const ETAPES = {
           d = (a - c) * x - b;
         } while (d < 1);
         return {
-          question: `${a}x − ${b} = ${c}x + ${d}. x = ?`,
+          question: `Trouve x : ${a}x − ${b} = ${c}x + ${d}`,
           bonne: x,
           pieges: [[(d + b) / (a + c), 'equation-regrouper'], [(d - b) / (a - c), 'equation-changer-signe'], [d + b, 'equation-diviser']],
         };

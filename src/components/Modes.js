@@ -3,6 +3,9 @@ import {
   getReglages,
   definirReglage,
   definirLangue,
+  definirConseillere,
+  definirBesoinsParticuliers,
+  definirFichesRevision,
   definirStyleSaison,
   definirPlacesAffluence,
   definirOffreLancement,
@@ -14,6 +17,7 @@ import {
 import { oublierReglages } from '../lib/storage/modeTest';
 import { SAISONS } from '../lib/storage/styleSite';
 import Loader from './Loader';
+import ModeConseillere from './ModeConseillere';
 
 /**
  * Les interrupteurs du produit.
@@ -904,6 +908,14 @@ export default function Modes() {
     // Les langues qu'on peut montrer ou cacher — celles qui ont une matière
     // en base. Vide tant que le serveur n'a pas répondu.
     langues: [],
+
+    // La conseillère d'orientation (11/10/2026) : `existe` tant que sa matière
+    // est semée ; éteinte par défaut.
+    conseillere: { existe: false, actif: false },
+
+    // Les besoins particuliers (11/10/2026) : éteints par défaut.
+    besoinsParticuliers: false,
+    fichesRevision: false,
   });
   const [chargement, setChargement] = useState(true);
   const [envoi, setEnvoi] = useState(null);
@@ -987,6 +999,14 @@ export default function Modes() {
             : [],
 
           langues: Array.isArray(data?.langues) ? data.langues : [],
+
+          conseillere: {
+            existe: Boolean(data?.conseillere?.existe),
+            actif: Boolean(data?.conseillere?.actif),
+          },
+
+          besoinsParticuliers: Boolean(data?.besoinsParticuliers),
+          fichesRevision: Boolean(data?.fichesRevision),
         });
 
         setLus(true);
@@ -1075,6 +1095,64 @@ export default function Modes() {
       }));
     } catch {
       setErreur("La langue n'a pas pu être enregistrée.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
+  /**
+   * MONTRER OU CACHER LA CONSEILLÈRE D'ORIENTATION — Camara, le 11/10/2026,
+   * « comme les professeurs de langue ». Même effet : la grille et la page
+   * d'accueil la montrent ou non à leur prochain chargement.
+   */
+  const basculerConseillere = async () => {
+    setEnvoi('MODULE_ORIENTATION');
+    setErreur(null);
+
+    try {
+      await definirConseillere(!reglages.conseillere.actif);
+      setReglages((etat) => ({
+        ...etat,
+        conseillere: { ...etat.conseillere, actif: !etat.conseillere.actif },
+      }));
+    } catch {
+      setErreur("La conseillère n'a pas pu être enregistrée.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
+  /**
+   * LES FICHES DE RÉVISION DE L'ÉLÈVE — Camara, le 14/10/2026. Éteintes, la carte
+   * quitte la grille et plus rien ne se génère ; les fiches déjà faites restent.
+   */
+  const basculerFiches = async () => {
+    setEnvoi('MODULE_FICHES_REVISION');
+    setErreur(null);
+
+    try {
+      await definirFichesRevision(!reglages.fichesRevision);
+      setReglages((etat) => ({ ...etat, fichesRevision: !etat.fichesRevision }));
+    } catch {
+      setErreur("Les fiches de révision n'ont pas pu être enregistrées.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
+  /**
+   * LES BESOINS PARTICULIERS — Camara, le 11/10/2026. Éteints, les cases quittent
+   * les formulaires et rien ne s'applique ; les coches posées sont gardées.
+   */
+  const basculerBesoins = async () => {
+    setEnvoi('MODULE_BESOINS_PARTICULIERS');
+    setErreur(null);
+
+    try {
+      await definirBesoinsParticuliers(!reglages.besoinsParticuliers);
+      setReglages((etat) => ({ ...etat, besoinsParticuliers: !etat.besoinsParticuliers }));
+    } catch {
+      setErreur("Les besoins particuliers n'ont pas pu être enregistrés.");
     } finally {
       setEnvoi(null);
     }
@@ -1338,7 +1416,7 @@ export default function Modes() {
             langue n'a son interrupteur que le jour où sa matière existe en
             base. L'anglais n'y est pas — c'est la langue de tous les élèves. */}
         {reglages.langues.length > 0 && (
-          <section className="mode">
+          <section className="mode mode--pile">
             <div className="mode__entete">
               <div>
                 <h3 className="mode__titre">Les langues</h3>
@@ -1385,6 +1463,50 @@ export default function Modes() {
             </p>
           </section>
         )}
+
+        {/* LA CONSEILLÈRE D'ORIENTATION — Camara, le 11/10/2026. Son
+            interrupteur, et l'état de l'offre des lycées qu'elle lit. */}
+        <Interrupteur
+          titre="Besoins particuliers (dyslexie, dyscalculie, TDAH)"
+          actif={reglages.besoinsParticuliers}
+          connu={lus}
+          occupe={envoi === 'MODULE_BESOINS_PARTICULIERS'}
+          onBasculer={basculerBesoins}
+          description="Le parent peut cocher, dans le profil de son enfant, une dyslexie, une dyscalculie ou un TDAH. Sa coche vaut accord. Le professeur adapte alors sa manière d’expliquer, et l’écran s’adapte."
+          effets={[
+            'Trois cases dans la création et la modification d’un profil, repliées et facultatives.',
+            'Quelques consignes de plus pour le professeur, seulement pour les cases cochées (1,5 à 3 centimes de dollar par heure).',
+            'Dyslexie : lecture plus aérée au tableau, dans les bulles, les fiches et les jeux.',
+            'TDAH : mode tranquille des jeux et séance de 15 minutes conseillés, décor apaisé.',
+            'Le parent peut couper l’écran adapté ; l’enfant ne voit jamais les cases.',
+          ]}
+          note="DONNÉE DE SANTÉ. Éteint, les cases disparaissent et rien ne s’applique ; les coches déjà posées sont gardées, et reviennent si on rallume. La politique de confidentialité décrit leur traitement."
+        />
+
+        <Interrupteur
+          titre="Fiches de révision de l’élève"
+          actif={reglages.fichesRevision}
+          connu={lus}
+          occupe={envoi === 'MODULE_FICHES_REVISION'}
+          onBasculer={basculerFiches}
+          description="L’élève importe son cours (photos, PDF, scan au téléphone), choisit sa matière et un type de fiche parmi six, et ses fiches sont générées. Un espace à part : rien n’est transmis aux professeurs."
+          effets={[
+            'Une carte « Mes fiches de révision » sur la page de l’enfant, une pastille sur celle du parent.',
+            'Une fiche par notion pour les types classique, visuelle, questions et méthode ; une seule pour l’express et la spéciale contrôle.',
+            'Environ 2 centimes la fiche, plus la lecture du cours : mesuré 13 centimes pour un cours de 7 fiches.',
+            '20 COURS par mois et par enfant (un cours compte pour un, quel que soit son nombre de fiches), remis à zéro avec les heures ; ensuite les crédits de la famille (10 à 5,99 €, 20 à 9,99 €, sans date limite).',
+            'Garde-fous : 20 pages et 8 notions par cours ; un cours en route réserve sa place dans le quota.',
+            'Le cours n’est pas gardé : ses pages sont supprimées dès que ses fiches sont prêtes ; les fiches restent.',
+          ]}
+          note="Éteint, la carte disparaît et plus rien ne se génère ; les fiches déjà faites restent, et le travail en attente reprend au rallumage."
+        />
+
+        <ModeConseillere
+          conseillere={reglages.conseillere}
+          lus={lus}
+          envoi={envoi}
+          onBasculer={basculerConseillere}
+        />
 
         {/* LES JEUX, CYCLE PAR CYCLE — Camara, le 20/09/2026.
 

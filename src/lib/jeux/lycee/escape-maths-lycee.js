@@ -134,13 +134,13 @@ const ETAPES = {
         const b = 2 * k * s * a;
         if (au([true, true, false])) {
           return {
-            question: `${carre} = ${polynome([[k * k, 'x²']])} + bx + ${a * a}. b = ?`,
+            question: `Trouve b : ${carre} = ${polynome([[k * k, 'x²']])} + bx + ${a * a}`,
             bonne: b,
             pieges: [[-b, 'identite-signe'], [k * s * a, 'identite-double-produit']],
           };
         }
         return {
-          question: `${carre} = ${polynome([[k * k, 'x²'], [b, 'x']])} + c. c = ?`,
+          question: `Trouve c : ${carre} = ${polynome([[k * k, 'x²'], [b, 'x']])} + c`,
           bonne: a * a,
           pieges: [[-a * a, 'identite-carre-signe'], [2 * a, 'identite-carre-double']],
         };
@@ -184,7 +184,7 @@ const ETAPES = {
         const x = nonNul(entre, -5, 5);
         const y = entre(-9, 9);
         return {
-          question: `La droite y = ${polynome([[m, 'x']])} + p passe par A(${ecrire(x)} ; ${ecrire(y)}). p = ?`,
+          question: `Trouve p : La droite y = ${polynome([[m, 'x']])} + p passe par A(${ecrire(x)} ; ${ecrire(y)})`,
           bonne: y - m * x,
           pieges: [[y + m * x, 'ordonnee-signe']],
         };
@@ -389,7 +389,7 @@ const ETAPES = {
           const b = nonNul(entre, -5, 7);
           const c = nonNul(entre, -5, 7);
           return {
-            question: `e${exposant(a)} × e${exposant(b)} ÷ e${exposant(c)} = eⁿ. n = ?`,
+            question: `Trouve n : e${exposant(a)} × e${exposant(b)} ÷ e${exposant(c)} = eⁿ`,
             bonne: a + b - c,
             pieges: [[a + b + c, 'exp-quotient'], [a * b - c, 'exp-produit']],
           };
@@ -397,7 +397,7 @@ const ETAPES = {
         const a = au([-1, 1]) * entre(2, 6);
         const b = entre(2, 5);
         return {
-          question: `(e${exposant(a)})${exposant(b)} = eⁿ. n = ?`,
+          question: `Trouve n : (e${exposant(a)})${exposant(b)} = eⁿ`,
           bonne: a * b,
           pieges: [[a + b, 'exp-puissance']],
         };
@@ -444,7 +444,7 @@ const ETAPES = {
             c = entre(2, 12);
           } while ((a * b) % c !== 0 || (a * b) / c < 2);
           return {
-            question: `ln(${a}) + ln(${b}) − ln(${c}) = ln(n). n = ?`,
+            question: `Trouve n : ln(${a}) + ln(${b}) − ln(${c}) = ln(n)`,
             bonne: (a * b) / c,
             pieges: [[a + b - c, 'ln-somme'], [a * b * c, 'ln-quotient']],
             positif: true,
@@ -453,7 +453,7 @@ const ETAPES = {
         const k = au([2, 3]);
         const a = k === 2 ? entre(2, 9) : entre(2, 6);
         return {
-          question: `${k} ln(${a}) = ln(n). n = ?`,
+          question: `Trouve n : ${k} ln(${a}) = ln(n)`,
           bonne: a ** k,
           pieges: [[k * a, 'ln-puissance']],
         };
@@ -549,7 +549,7 @@ const ETAPES = {
             e = (-m * f - a * d) / b;
           } while (!Number.isInteger(e) || Math.abs(e) > 6 || e === 0);
           return {
-            question: `Vecteurs u(${ecrire(a)} ; ${ecrire(b)} ; m) et v(${ecrire(d)} ; ${ecrire(e)} ; ${ecrire(f)}) orthogonaux. m = ?`,
+            question: `Trouve m : Vecteurs u(${ecrire(a)} ; ${ecrire(b)} ; m) et v(${ecrire(d)} ; ${ecrire(e)} ; ${ecrire(f)}) orthogonaux`,
             bonne: m,
             pieges: [[-m, 'orthogonal-signe'], [m * f, 'orthogonal-diviser']],
           };
@@ -562,7 +562,7 @@ const ETAPES = {
         const z = nonNul(entre, -6, 6);
         const d = -(a * x + b * y + c * z);
         return {
-          question: `Plan P : ${polynome([[a, 'x'], [b, 'y'], [c, 'z'], [d, '']])} = 0. A(${ecrire(x)} ; ${ecrire(y)} ; z) ∈ P. z = ?`,
+          question: `Trouve z : Plan P : ${polynome([[a, 'x'], [b, 'y'], [c, 'z'], [d, '']])} = 0. A(${ecrire(x)} ; ${ecrire(y)} ; z) ∈ P`,
           bonne: z,
           pieges: [[-z, 'plan-signe'], [c * z, 'plan-diviser']],
         };

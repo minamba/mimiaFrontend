@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import casquePng from '../assets/casque.webp';
 import enceintePng from '../assets/enceinte.webp';
 import { estIOS } from '../lib/storage/appareil';
+import useAccesForfait from '../lib/hooks/useAccesForfait';
 
 /*
  * AVANT D'ENTRER EN SÉANCE : LA DURÉE, PUIS LE CASQUE.
@@ -204,7 +205,19 @@ export function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
 }
 
 /** Choix de la durée, avant d'entrer en cours. */
-export function ChoixDuree({ matiere, onValider, onAnnuler, estAdmin }) {
+/** La durée conseillée quand l'élève a besoin de calme (TDAH, 11/10/2026) : la plus courte. */
+const DUREE_CONSEILLEE_CALME = 15;
+
+/**
+ * L'ESSAI GRATUIT NE DONNE QUE TRENTE MINUTES — Camara, le 16/10/2026 : en
+ * essai, 35 et 45 minutes sont grisées. La séance reste de toute façon coupée
+ * net quand les trente minutes tombent, même au milieu d'une séance de 25.
+ */
+const DUREE_MAX_ESSAI = 25;
+
+export function ChoixDuree({
+  matiere, onValider, onAnnuler, estAdmin, calme = false, essai = false,
+}) {
   return (
     <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-duree">
       <div className="modale__boite modale__boite--duree">
@@ -220,10 +233,16 @@ export function ChoixDuree({ matiere, onValider, onAnnuler, estAdmin }) {
             <button
               key={duree.minutes}
               type="button"
-              className="duree"
+              className={`duree${calme && duree.minutes === DUREE_CONSEILLEE_CALME ? ' duree--conseillee' : ''}${essai && duree.minutes > DUREE_MAX_ESSAI ? ' duree--grisee' : ''}`}
               style={{ '--ton': `var(--duree-${duree.ton})` }}
+              disabled={essai && duree.minutes > DUREE_MAX_ESSAI}
+              title={essai && duree.minutes > DUREE_MAX_ESSAI ? 'Pas pendant l’essai gratuit' : undefined}
               onClick={() => onValider(duree.minutes)}
             >
+              {/* TDAH (11/10/2026) : une séance courte, conseillée, jamais imposée. */}
+              {calme && duree.minutes === DUREE_CONSEILLEE_CALME && (
+                <span className="conseille-pour-toi">Conseillé pour toi</span>
+              )}
               <CadranDuree minutes={duree.minutes} />
               <span className="duree__minutes">
                 {duree.minutes}
@@ -234,6 +253,12 @@ export function ChoixDuree({ matiere, onValider, onAnnuler, estAdmin }) {
             </button>
           ))}
         </div>
+
+        {essai && (
+          <p className="modale__note duree__essai">
+            Pendant l’essai gratuit : {DUREE_MAX_ESSAI} minutes au plus, et 30 minutes en tout.
+          </p>
+        )}
 
         {/* Réservée à l'administration, et elle y reste.
             -------------------------------------------
@@ -277,8 +302,13 @@ export function ChoixDuree({ matiere, onValider, onAnnuler, estAdmin }) {
  *
  * `onOuvrir(duree, casque)` reçoit les deux réponses ; `onAnnuler` ferme tout.
  */
-export default function OuvertureSeance({ matiere, onOuvrir, onAnnuler }) {
+export default function OuvertureSeance({
+  matiere, onOuvrir, onAnnuler, calme = false, eleveId = null,
+}) {
   const [duree, setDuree] = useState(null);
+
+  // En essai, les longues durées sont grisées (16/10/2026).
+  const { motif } = useAccesForfait(eleveId);
 
   // Les durées de test ne s'affichent qu'à l'administration — lu ici, pour
   // que les pages qui ouvrent une séance n'aient pas à le savoir.
@@ -290,7 +320,9 @@ export default function OuvertureSeance({ matiere, onOuvrir, onAnnuler }) {
     return (
       <ChoixDuree
         matiere={matiere}
+        calme={calme}
         estAdmin={estAdmin}
+        essai={motif === 'essai'}
         onValider={setDuree}
         onAnnuler={onAnnuler}
       />

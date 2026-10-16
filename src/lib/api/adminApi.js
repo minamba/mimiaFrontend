@@ -189,6 +189,22 @@ export const getHistoriqueHeures = (id) =>
 export const ajusterHeures = (id, minutes, motif, prevenirLeParent) =>
   httpClient.post(`/admin/parents/${id}/heures`, { minutes, motif, prevenirLeParent });
 
+/**
+ * Les crédits de fiches de révision d'une famille (16/10/2026) : `{ solde,
+ * lignes }`, les mouvements du plus récent au plus ancien — achats, crédits
+ * offerts, ajustements à la main.
+ */
+export const getHistoriqueCreditsFiches = (id) =>
+  httpClient.get(`/admin/parents/${id}/credits-fiches`);
+
+/**
+ * Ajoute (positif) ou retire (négatif) des crédits de fiches, avec un motif.
+ * Le parent est prévenu par courriel dans les deux sens quand la case est
+ * cochée (Camara, le 16/10/2026).
+ */
+export const ajusterCreditsFiches = (id, credits, motif, prevenirLeParent) =>
+  httpClient.post(`/admin/parents/${id}/credits-fiches`, { credits, motif, prevenirLeParent });
+
 export const modifierParent = (id, data) => httpClient.put(`/admin/parents/${id}`, data);
 
 /**
@@ -236,6 +252,10 @@ export const getMesOnglets = () => httpClient.get('/admin/mes-onglets');
  */
 export const definirAjoutEnfant = (id, autorise) =>
   httpClient.put(`/admin/parents/${id}/ajout-enfant`, { autorise });
+
+/** L'espace parent et ses fiches de révision (16/10/2026), pour ce parent. */
+export const definirFichesParent = (id, autorise) =>
+  httpClient.put(`/admin/parents/${id}/fiches-parent`, { autorise });
 
 /**
  * La fiche d'un parent dont l'identité vient d'être créée — voir
@@ -385,6 +405,25 @@ export const definirReglage = (cle, actif) =>
  */
 export const definirLangue = (code, actif) =>
   httpClient.put(`/reglages/langues/${code}`, { actif });
+
+/** Montre ou cache la conseillère d'orientation (11/10/2026). */
+export const definirConseillere = (actif) =>
+  httpClient.put('/reglages/conseillere', { actif });
+
+/** Allume ou éteint les besoins particuliers (dyslexie, dyscalculie, TDAH) — 11/10/2026. */
+export const definirBesoinsParticuliers = (actif) =>
+  httpClient.put('/reglages/besoins-particuliers', { actif });
+
+/** Allume ou éteint les fiches de révision que l'élève tire de son cours — 14/10/2026. */
+export const definirFichesRevision = (actif) =>
+  httpClient.put('/reglages/fiches-revision', { actif });
+
+/** L'état de l'import de l'offre des lycées : en cours, nombre de lycées, derniers passages. */
+export const getImportOrientation = () => httpClient.get('/orientation/import');
+
+/** Lance l'import maintenant ; `forcer` retélécharge même si les sources n'ont pas bougé. */
+export const lancerImportOrientation = (forcer = false) =>
+  httpClient.post('/orientation/import', null, { params: { forcer } });
 
 /**
  * Le nombre de places de la salle d'attente.
@@ -715,3 +754,10 @@ export const getTarifs = () => httpClient.get('/admin/tarifs');
 
 /** Corrige un prix à la main, en secours de la veille : appliqué aussitôt à nos calculs. */
 export const modifierTarif = (id, prix) => httpClient.put(`/admin/tarifs/${id}`, prix);
+
+/**
+ * Crée le profil d'un enfant pour ce parent (16/10/2026) : super-administrateur,
+ * ou administrateur qui a le droit « Création d'enfant ».
+ */
+export const creerEnfantPourParent = (parentId, eleve) =>
+  httpClient.post(`/admin/parents/${parentId}/enfants`, eleve);

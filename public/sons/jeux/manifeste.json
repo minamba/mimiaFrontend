@@ -21892,6 +21892,14 @@
         "bonus-morpion/consigne-choix": {
           "texte": "Choisis ta difficulté : plus elle monte, plus la grille est grande et plus il faut aligner de croix.",
           "empreinte": "162698eac1106ad9"
+        },
+        "escape-francais/recit-1ewsh7g": {
+          "texte": "Au pied du vase, le conservateur a oublié ses notes sur ce qui aurait pu se passer. Il faut compléter ses hypothèses.",
+          "empreinte": "f53a0db8694518a1"
+        },
+        "escape-francais-lycee/recit-571m93": {
+          "texte": "Sur le grand rideau rouge, le poète de la troupe a épinglé des vers. Ils cachent la deuxième lettre.",
+          "empreinte": "8ad0b035abc8acc5"
         }
       }
     },
@@ -28765,6 +28773,14 @@
         "bonus-mythe-ou-histoire/explication-08-muraille-lune": {
           "texte": "La Grande Muraille est très longue, mais étroite : quelques mètres de large. Depuis la Lune, à 384 000 kilomètres, on ne distingue aucune construction humaine.",
           "empreinte": "60f9b9f49cca4004"
+        },
+        "escape-histoire-geo-lycee/recit-1xi9dfd": {
+          "texte": "Sur la plaque du touret de câbles, une dépêche de 1933, « Un New Deal pour l’Amérique ». Le nouveau président promet de relancer l’économie par de grands travaux et l’aide aux chômeurs.",
+          "empreinte": "64e9fd1f0d7861b8"
+        },
+        "escape-histoire-geo-lycee/recit-sftcr8": {
+          "texte": "Sur la plaque du touret de câbles, une dépêche d’octobre 1929, « Panique à la Bourse ! » Le jeudi 24 octobre, les cours s’effondrent, et la crise gagne bientôt le monde entier.",
+          "empreinte": "3c678765f933ce0e"
         }
       }
     },
@@ -30806,6 +30822,18 @@
         "escape-anglais-lycee/recit-7ufmn4": {
           "texte": "On the control screen, you read the system log: “18:02, soil sensor B: dry. 18:03, pump B: no response. 18:05, water tank: 85% full. 18:06, ALARM: irrigation failure in zone B. 18:10, fan 2: on.”",
           "empreinte": "e22a1f5d3bb5efe3"
+        },
+        "escape-anglais-lycee/recit-e59m5s": {
+          "texte": "As you get off the plane, Dr Morgan asks you to translate the notes of Claire, a French glaciologist who worked at the station last winter.",
+          "empreinte": "eeb10a57544bc087"
+        },
+        "escape-anglais/recit-kbdcda": {
+          "texte": "Through a window, you can see the great hall: it is dark and cold. There is a long table, an old fireplace and a big painting of a lady in a green dress.",
+          "empreinte": "bfcca67b815c5134"
+        },
+        "escape-anglais-lycee/recit-dcf23m": {
+          "texte": "In the sensor room, you must first write to the university that runs the station to report the problem. Dr Morgan reminds you: “Formal, please!”",
+          "empreinte": "f52260554e91fa31"
         }
       }
     },

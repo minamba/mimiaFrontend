@@ -283,9 +283,20 @@ function Inventaire({ objets, pieces, total }) {
  *
  * LA MISSION D'ABORD : l'intro de l'histoire et la règle du chrono, sur une
  * carte. Le compte à rebours ne part qu'au clic sur « Commencer l'enquête ».
+ *
+ * TROIS SALLES PAR HISTOIRE — Camara, le 10/10/2026 : « un décor différent à
+ * chaque cadenas ? » ; retenu : trois salles, deux cadenas chacune (122 images
+ * à générer au lieu de 366). `images` = [salle 1, salle 2, salle 3] et
+ * `reperes.salles` = trois { nom, objets[2], passage } : les cadenas 1-2 se
+ * fouillent dans la salle 1, 3-4 dans la 2, 5-6 dans la 3. Quand les deux
+ * cadenas d'une salle sont ouverts, son PASSAGE s'éclaire ; un clic fait
+ * entrer dans la suivante (le fond change, l'inventaire reste). La sortie
+ * finale est le passage de la salle 3. Une histoire sans `salles` se joue
+ * comme avant, dans sa seule salle. L'ambiance est celle de l'histoire, la
+ * même dans les trois salles (décision de Camara).
  */
 function SalleEscape({
-  etat, histoire, duree, ambiance, image, reperes, module, niveau,
+  etat, histoire, duree, ambiance, image: imageUnique, images, reperes, module, niveau,
 }) {
   const {
     courante: m, manche, termine, enquete, ouvrir, enigme, sortie, sortir,
@@ -313,14 +324,32 @@ function SalleEscape({
   }, [mission]);
   const finale = !arrete && reste > 0 && reste <= DERNIERE_MINUTE_MS;
 
-  const objets = reperes?.objets?.length === m.cadenas.total ? reperes.objets : PLACES_PAR_DEFAUT;
-  const porte = reperes?.porte ?? PORTE_PAR_DEFAUT;
+  const salles = reperes?.salles?.length === 3 && images?.length === 3 ? reperes.salles : null;
+  const [salle, setSalle] = useState(0);
+  // La salle où se trouve le cadenas en cours : au-delà de la salle affichée,
+  // il ne reste qu'à franchir le passage.
+  const salleDuCadenas = Math.min(2, Math.floor(manche / 2));
+  const image = salles ? images[salle] : imageUnique;
+  const objets = salles
+    ? salles.flatMap((s) => s.objets)
+    : (reperes?.objets?.length === m.cadenas.total ? reperes.objets : PLACES_PAR_DEFAUT);
+  // Les objets visibles dans la salle affichée, avec leur rang parmi les six.
+  const visibles = salles
+    ? salles[salle].objets.map((o, i) => ({ ...o, rang: salle * 2 + i }))
+    : objets.map((o, i) => ({ ...o, rang: i }));
+  const porte = salles ? salles[2].passage : (reperes?.porte ?? PORTE_PAR_DEFAUT);
+  const passage = salles && salle < 2 ? salles[salle].passage : null;
+  const passageOuvert = Boolean(passage) && salleDuCadenas > salle && !mission;
   const ici = objets[manche] ?? objets[0];
   const pieces = [...m.cadenas.avant, ...(termine ? [m.cadenas.piece] : [])];
 
   const fouiller = () => {
     bruitage('selection');
     ouvrir();
+  };
+  const passer = () => {
+    bruitage('selection');
+    setSalle((s) => Math.min(2, s + 1));
   };
   const franchir = () => {
     bruitage('selection');
@@ -330,19 +359,28 @@ function SalleEscape({
   return (
     <div className={`exploration${enquete ? ' est-en-enquete' : ''}${mission ? ' est-en-mission' : ''}`}>
       <div className="escape__barre">
+        {/* Le nom de la salle dans la barre, pas sur le décor : posé sur l'image,
+            il cachait les objets du coin haut gauche (11/10/2026). */}
+        {salles && (
+          <p key={salle} className="exploration__salle" aria-live="polite">
+            <span className="exploration__salle-numero">{`Salle ${salle + 1}/3`}</span>
+            {salles[salle].nom}
+          </p>
+        )}
         <Chrono m={m} termine={termine} duree={duree} partie={partie} reste={reste} arrete={arrete} />
         <Ambiance url={ambiance} finale={finale} resteMs={reste} />
       </div>
 
       <div className="exploration__corps">
-        <div className="exploration__piece" style={image ? { backgroundImage: `url(${image})` } : undefined}>
+        {/* `key={salle}` : changer de salle rejoue l'entrée du décor. */}
+        <div key={salle} className="exploration__piece" style={image ? { backgroundImage: `url(${image})` } : undefined}>
           <span className="exploration__poussiere" aria-hidden="true" />
-          {objets.map((o, i) => {
+          {visibles.map((o) => {
+            const i = o.rang;
             const etatObjet = i < pieces.length ? 'fouille' : (i === manche && !sortie ? 'a-fouiller' : 'ferme');
             const actif = etatObjet === 'a-fouiller' && !enquete && !mission;
             return (
               <button
-                // eslint-disable-next-line react/no-array-index-key
                 key={i}
                 type="button"
                 className={`exploration__objet est-${etatObjet}`}
@@ -358,16 +396,31 @@ function SalleEscape({
               </button>
             );
           })}
-          <button
-            type="button"
-            className={`exploration__porte${sortie ? ' est-ouverte' : ''}`}
-            style={{ left: `${porte.x}%`, top: `${porte.y}%` }}
-            onClick={sortie ? franchir : undefined}
-            disabled={!sortie}
-            aria-label={sortie ? `Sortir par ${porte.nom}` : `${porte.nom} : fermée par six cadenas`}
-          >
-            <span aria-hidden="true">{sortie ? '🚪' : '🔐'}</span>
-          </button>
+          {passage && (
+            <button
+              type="button"
+              className={`exploration__porte exploration__passage${passageOuvert ? ' est-ouverte' : ''}`}
+              style={{ left: `${passage.x}%`, top: `${passage.y}%` }}
+              onClick={passageOuvert ? passer : undefined}
+              disabled={!passageOuvert}
+              aria-label={passageOuvert ? `Passer par ${passage.nom} vers la salle suivante` : `${passage.nom} : ouvre d'abord les deux cadenas de cette salle`}
+            >
+              <span aria-hidden="true">{passageOuvert ? '🚪' : '🔐'}</span>
+              {passageOuvert && <span className="exploration__etiquette" aria-hidden="true">{`Passer par ${passage.nom}`}</span>}
+            </button>
+          )}
+          {!passage && (
+            <button
+              type="button"
+              className={`exploration__porte${sortie ? ' est-ouverte' : ''}`}
+              style={{ left: `${porte.x}%`, top: `${porte.y}%` }}
+              onClick={sortie ? franchir : undefined}
+              disabled={!sortie}
+              aria-label={sortie ? `Sortir par ${porte.nom}` : `${porte.nom} : fermée par six cadenas`}
+            >
+              <span aria-hidden="true">{sortie ? '🚪' : '🔐'}</span>
+            </button>
+          )}
 
           {sortie && (
             <div className="exploration__sortie" role="status">
@@ -465,6 +518,7 @@ function ecranDuModule(module) {
           duree={dureeEscape(niveau)}
           ambiance={adresseAmbiance(cle, niveau)}
           image={IMAGES_SECONDAIRE[`${cle}|${niveau}`]?.fond}
+          images={IMAGES_SECONDAIRE[`${cle}|${niveau}`]?.salles}
           reperes={REPERES_ESCAPE[`${cle}|${niveau}`]}
         />
       )

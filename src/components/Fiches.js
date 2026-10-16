@@ -8,6 +8,7 @@ import { styleMatiere } from '../lib/couleurMatiere';
 import { etatFiche, nouveaute } from '../lib/fiches';
 import Avatar from './Avatar';
 import Loader from './Loader';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * Les fiches de révision d'un élève dans une matière.
@@ -49,6 +50,8 @@ const aplatir = (texte) =>
 
 export default function Fiches() {
   const { eleveId, matiereId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  useAffichageEleve(eleveId);
   const dispatch = useDispatch();
 
   const { matieres } = useSelector((state) => state.referentiel);

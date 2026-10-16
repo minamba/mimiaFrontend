@@ -53,3 +53,20 @@ describe('la corroboration de l\'élève', () => {
     expect(demandeArret('OK, à la prochaine.')).toBe(true);
   });
 });
+
+describe('les jours aussi disent au revoir (11/10/2026)', () => {
+  test('« Merci, bon dimanche. » : l’élève part', () => {
+    expect(demandeArret('Merci, bon dimanche.')).toBe(true);
+    expect(demandeArret('Bon week-end !')).toBe(true);
+    expect(demandeArret('Bonnes vacances')).toBe(true);
+    expect(demandeArret('Bonne semaine à toi')).toBe(true);
+  });
+
+  test('« bon » sans le jour juste après ne part pas', () => {
+    expect(demandeArret('C’est bon, j’ai compris le dimanche de Pâques')).toBe(false);
+  });
+
+  test('le professeur prend congé avec un jour', () => {
+    expect(prendConge('Avec plaisir. Bon dimanche Bilal !')).toBe(true);
+  });
+});

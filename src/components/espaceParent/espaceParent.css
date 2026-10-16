@@ -1,0 +1,255 @@
+/*
+ * MON ESPACE PARENT (16/10/2026) — le menu à gauche, la page à droite ; en
+ * haut sur téléphone. Préfixe `espace-parent` : App.css est global.
+ */
+.espace-parent {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 16px 0;
+}
+
+.espace-parent__menu {
+  position: sticky;
+  top: calc(var(--hauteur-navbar, 72px) + 16px);
+  align-self: start;
+  padding: 1rem;
+  border: 1px solid var(--trait);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+.espace-parent__titre {
+  margin: 0 0 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.espace-parent__menu ul { margin: 0; padding: 0; list-style: none; }
+
+.espace-parent__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  color: var(--encre);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.espace-parent__item:hover { background: color-mix(in srgb, var(--encre) 7%, transparent); }
+
+.espace-parent__item.est-actif {
+  background: color-mix(in srgb, var(--corail-btn) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--corail-btn);
+}
+
+.espace-parent__icone {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--corail-btn) 18%, transparent);
+  color: var(--corail-btn);
+}
+
+.espace-parent__note { margin: 0.9rem 0 0; font-size: 0.8rem; color: var(--encre-douce); }
+
+.espace-parent__contenu .mf-page { padding-top: 0; }
+
+@media (max-width: 860px) {
+  .espace-parent { grid-template-columns: 1fr; gap: 1rem; padding-top: 1rem; }
+  .espace-parent__menu { position: static; }
+}
+
+/* ---- Le bouton de la barre de navigation
+   AVANT la bulle du compte, texte BLANC, un petit effet (Camara, le
+   16/10/2026) : un dégradé corail → violet discret, un reflet qui le
+   traverse de temps en temps, et au survol il se soulève avec un halo.
+   Sélecteurs à trois classes : `.navbar__right > .btn-ghost` (deux classes,
+   plus haut dans App.css) imposerait sinon sa couleur et son affichage. */
+.navbar .navbar__right > .navbar__espace-parent {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow: hidden;
+  isolation: isolate;
+  white-space: nowrap;
+  padding-left: 15px;
+  padding-right: 16px;
+  border: 1px solid color-mix(in srgb, #f39bd6 45%, transparent);
+  background: linear-gradient(120deg,
+    color-mix(in srgb, var(--corail-btn) 55%, transparent),
+    color-mix(in srgb, #8b5cf6 55%, transparent));
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  box-shadow: 0 6px 18px -10px color-mix(in srgb, #8b5cf6 80%, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+/* Le reflet : une bande claire qui passe toutes les cinq secondes. */
+.navbar .navbar__right > .navbar__espace-parent::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 -60%;
+  z-index: -1;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: ep-reflet 5s ease-in-out infinite;
+}
+
+@keyframes ep-reflet {
+  0%, 70% { left: -60%; }
+  100% { left: 130%; }
+}
+
+.navbar .navbar__right > .navbar__espace-parent:hover,
+.navbar .navbar__right > .navbar__espace-parent:focus-visible {
+  color: #fff;
+  border-color: color-mix(in srgb, #f39bd6 80%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -10px color-mix(in srgb, #8b5cf6 95%, transparent),
+    0 0 0 3px color-mix(in srgb, #8b5cf6 22%, transparent);
+}
+
+.navbar .navbar__right > .navbar__espace-parent svg {
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.navbar .navbar__right > .navbar__espace-parent:hover svg { animation: ep-maison 0.5s ease; }
+
+@keyframes ep-maison {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar .navbar__right > .navbar__espace-parent::after,
+  .navbar .navbar__right > .navbar__espace-parent:hover svg { animation: none; }
+  .navbar .navbar__right > .navbar__espace-parent:hover { transform: none; }
+}
+
+@media (max-width: 640px) {
+  /* Sur téléphone, l'espace est dans le menu du compte : la barre reste légère. */
+  .navbar .navbar__right > .navbar__espace-parent { display: none; }
+}
+
+/* ---- Les catégories du parent (page des fiches) */
+.mf-credits-parent {
+  margin: 0 0 1.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--encre-douce);
+}
+
+.mf-credits-parent strong { color: var(--encre); }
+.mf-credits-parent.est-vide { border-color: color-mix(in srgb, #f59e0b 45%, var(--trait)); }
+
+.mf-categories {
+  margin: 0 0 1.75rem;
+  border: 1px solid var(--trait);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.mf-categories__ouvrir {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 0;
+  background: none;
+  color: var(--encre);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mf-categories__nombre {
+  min-width: 1.6em;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre) 10%, transparent);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.mf-categories__chevron { margin-left: auto; color: var(--encre-douce); }
+
+.mf-categories__corps { padding: 0 1rem 1rem; }
+
+.mf-categories__liste { margin: 0 0 0.75rem; padding: 0; list-style: none; }
+
+.mf-categorie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--trait);
+}
+
+.mf-categorie__pastille {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--pastille);
+}
+
+.mf-categorie__nom { font-weight: 500; }
+.mf-categorie__compte { margin-right: auto; font-size: 0.85rem; color: var(--encre-douce); }
+.mf-categorie--edition { display: block; }
+
+.mf-categorie-nouvelle { margin-top: 0.75rem; }
+
+.mf-categorie-nouvelle__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mf-categorie-nouvelle__ligne input {
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--encre);
+  font: inherit;
+}
+
+.mf-couleurs { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.6rem; }
+
+.mf-couleur {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--pastille);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px transparent;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.mf-couleur input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.mf-couleur:hover { transform: scale(1.08); }
+.mf-couleur.est-choisie { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--pastille); }
+.mf-couleur:focus-within { outline: 2px solid var(--encre); outline-offset: 3px; }

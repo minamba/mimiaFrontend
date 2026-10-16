@@ -60,7 +60,14 @@ export default function CarteJeuProposee({ classe, cle }) {
       )}
 
       <span className="jeu-propose__corps">
-        <span className="jeu-propose__sur">Un jeu pour t’entraîner</span>
+        {/* Le même badge que dans la ludothèque (11/10/2026). */}
+        {jeu.escape && (
+          <span className="jeu-carte__escape">
+            <span aria-hidden="true">🔐</span>
+            Escape game
+          </span>
+        )}
+        <span className="jeu-propose__sur">{jeu.escape ? 'Un escape game pour t’entraîner' : 'Un jeu pour t’entraîner'}</span>
         <strong className="jeu-propose__titre">{jeu.titre}</strong>
         <span className="jeu-propose__detail">
           <span className="jeu-propose__classe">{classe}</span>

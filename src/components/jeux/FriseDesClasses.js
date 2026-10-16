@@ -71,12 +71,16 @@ export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
   }, []);
 
   const choisir = (etape) => {
+    // Une classe fermée ne fait pas le son du choix : elle n'est pas choisie.
+    // Elle a le sien, celui d'une porte qui ne s'ouvre pas (Camara, le
+    // 14/10/2026 : « close.mp3 quand on clique sur une classe auquel on n'a
+    // pas accès »).
     if (etape.verrouillee) {
+      bruitage('ferme');
       setRefus(etape);
       return;
     }
     setRefus(null);
-    // Une classe fermée ne fait pas le son du choix : elle n'est pas choisie.
     bruitage('selection');
     onChoisir(etape.code);
   };

@@ -352,7 +352,8 @@ describe('escape-maths-lycee : chaque réponse recalculée depuis la question', 
     it('la bonne réponse est le vrai résultat, la pièce son chiffre des unités, et aucun autre choix n’est juste', () => {
       const ecarts = [];
       graines.forEach((g) => escapeMaths.serie(g, niveau).forEach((m) => {
-        const juste = RECALCUL[m.consigne](m.question);
+        // Les questions disent « Trouve x : … » (10/10/2026) ; les relectures ci-dessus lisent l’ancienne forme « … . x = ? ».
+        const juste = RECALCUL[m.consigne](m.question.replace(/^Trouve ([a-z]) : (.*)$/, '$2. $1 = ?'));
         if (!Number.isInteger(juste)) ecarts.push(['pas entier', m.question, juste]);
         if (nombre(m.bonne) !== juste) ecarts.push(['bonne', m.question, m.bonne, juste]);
         if (m.cadenas.piece !== String(Math.abs(juste) % 10)) ecarts.push(['pièce', m.question, m.cadenas.piece]);

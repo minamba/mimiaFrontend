@@ -12,6 +12,8 @@ import {
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { styleMatiere } from '../lib/couleurMatiere';
 import Avatar from './Avatar';
+import ProjetOrientationFiche from './ProjetOrientationFiche';
+import RaccourcisFiche from './RaccourcisFiche';
 import Loader from './Loader';
 import ProgressionMatiere from './ProgressionMatiere';
 import Controle from './Controle';
@@ -23,7 +25,7 @@ import DicteeCopie from './DicteeCopie';
 // papier ne rejoue pas.
 import ExpressionCopie from './ExpressionCopie';
 import ComprehensionOraleDetail from './ComprehensionOraleDetail';
-import DeroulerListe from './DeroulerListe';
+import Pagination, { usePage } from './Pagination';
 import TriHistorique from './TriHistorique';
 // La fiche rend ses historiques en tableau sur ordinateur et en cartes sur
 // téléphone : sept colonnes ne se replient pas, elles se réécrivent.
@@ -63,6 +65,8 @@ const SEUIL_CARTES = '(max-width: 860px)';
 function useHistorique(premierePage, charger) {
   const [etat, setEtat] = useState(() => depart(premierePage));
   const [tri, setTri] = useState(TRI_PAR_DEFAUT);
+  // LA PAGE MONTRÉE (12/10/2026) : dix lignes à la fois, comme les tranches.
+  const [page, setPage] = useState(0);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -73,6 +77,7 @@ function useHistorique(premierePage, charger) {
   useEffect(() => {
     setEtat(depart(premierePage));
     setTri(TRI_PAR_DEFAUT);
+    setPage(0);
     setErreur(null);
   }, [premierePage]);
 
@@ -114,6 +119,7 @@ function useHistorique(premierePage, charger) {
     try {
       const { data } = await charger(null, nouveau);
       setEtat(depart(data));
+      setPage(0);
     } catch {
       setErreur("La liste n'a pas pu être réordonnée.");
     } finally {
@@ -121,7 +127,47 @@ function useHistorique(premierePage, charger) {
     }
   };
 
-  return { ...etat, tri, chargement, erreur, plus, ranger };
+  /**
+   * ALLER À UNE PAGE (12/10/2026). Si ses lignes ne sont pas encore là, on
+   * demande les tranches manquantes au serveur, une à une, avec le curseur
+   * qu'il rend — jamais un numéro de page fabriqué ici.
+   */
+  const allerA = async (n) => {
+    if (n < 0 || chargement) return;
+    const besoin = (n + 1) * PAS;
+
+    if (etat.elements.length >= besoin || !etat.suite) {
+      setPage(Math.min(n, Math.max(0, Math.ceil(etat.elements.length / PAS) - 1)));
+      return;
+    }
+
+    setChargement(true);
+    setErreur(null);
+
+    try {
+      let { elements, total, suite } = etat;
+      while (elements.length < besoin && suite) {
+        // eslint-disable-next-line no-await-in-loop
+        const { data } = await charger(suite, tri);
+        elements = [...elements, ...(data.elements ?? [])];
+        total = data.total ?? total;
+        suite = data.suite ?? null;
+      }
+      setEtat({ elements, total, suite });
+      setPage(Math.min(n, Math.max(0, Math.ceil(elements.length / PAS) - 1)));
+    } catch {
+      setErreur("La page n'a pas pu être chargée.");
+    } finally {
+      setChargement(false);
+    }
+  };
+
+  const pages = Math.max(1, Math.ceil(Math.max(etat.total, etat.elements.length) / PAS));
+  const visibles = etat.elements.slice(page * PAS, (page + 1) * PAS);
+
+  return {
+    ...etat, tri, chargement, erreur, plus, ranger, page, pages, visibles, allerA,
+  };
 }
 
 const TRI_PAR_DEFAUT = { matiereId: null, ancien: false };
@@ -701,6 +747,10 @@ export default function FicheEleve({
   const seances = useHistorique(fiche?.rapports, (curseur, tri) =>
     chargerRapports(fiche.id, curseur, PAS, tri));
 
+  // Les listes déjà en mémoire, paginées ici (12/10/2026).
+  const pageMatieres = usePage(fiche?.matieres);
+  const pageProgression = usePage(fiche?.progression);
+
   const voirLaCopie = async (evaluationId) => {
     setCopieChargement(evaluationId);
     setCopieErreur(null);
@@ -884,6 +934,22 @@ export default function FicheEleve({
   // DEDANS — sinon ce lien, posé à côté plutôt que dans cette section,
   // n'hérite ni du centrage ni du rembourrage de la page, et se retrouve
   // collé au bord gauche de l'écran pendant que la fiche, elle, est centrée.
+  // LES SECTIONS DES RACCOURCIS (11/10/2026), dans l'ordre de la page. Une
+  // section absente de la fiche n'a pas de bouton.
+  const avecOrientation = Boolean(fiche?.projetOrientation?.objectif)
+    || (fiche?.rapportsOrientation?.length ?? 0) > 0
+    || (fiche?.observationsOrientation?.length ?? 0) > 0;
+  const sections = [
+    { id: 'fiche-dernier-cours', libelle: 'Dernier cours' },
+    { id: 'fiche-matieres', libelle: 'Par matière' },
+    { id: 'fiche-competences', libelle: 'Points à travailler' },
+    ...((fiche?.progression?.length ?? 0) > 0 ? [{ id: 'fiche-progression', libelle: 'Progression' }] : []),
+    { id: 'fiche-evaluations', libelle: 'Évaluations' },
+    { id: 'fiche-seances', libelle: 'Séances' },
+    { id: 'fiche-historique', libelle: 'Historique des cours' },
+    ...(avecOrientation ? [{ id: 'fiche-orientation', libelle: 'Orientation', orientation: true }] : []),
+  ];
+
   const Cadre = enPage ? Fragment : 'div';
   const attributsCadre = enPage
     ? {}
@@ -921,6 +987,9 @@ export default function FicheEleve({
 
         {fiche && (
           <>
+            {/* Le point où « ↑ En haut » ramène. */}
+            <span id="fiche-haut" className="raccourcis-fiche__ancre" aria-hidden="true" />
+
             {/* ------------------------------------------------- identité
 
                 L'en-tête porte la couleur d'identité de l'enfant — celle de sa
@@ -1044,6 +1113,10 @@ export default function FicheEleve({
             </div>
 
             {/* ------------------------------------------------ dernier cours */}
+            {/* PAS DE BARRE ICI NON PLUS (Camara, le 11/10/2026) : en haut de la
+                fiche, elle ne servait à rien. L'ancre reste, pour le bouton
+                « Dernier cours » des autres barres. */}
+            <span id="fiche-dernier-cours" className="raccourcis-fiche__ancre" aria-hidden="true" />
             <h3>Dernier cours</h3>
             {fiche.dernierCours ? (
               <div className="dernier-cours">
@@ -1068,9 +1141,10 @@ export default function FicheEleve({
             )}
 
             {/* --------------------------------------------------- matières */}
+            <RaccourcisFiche id="fiche-matieres" sections={sections} courante="fiche-matieres" />
             <h3>Par matière</h3>
             <div className="matieres-fiche">
-              {fiche.matieres.map((m) => (
+              {pageMatieres.visibles.map((m) => (
                 <div key={m.matiereId} className="matiere-fiche">
                   <div className="matiere-fiche__entete">
                     <Avatar nom={m.profAvatar} couleur={m.profCouleur} taille={34} />
@@ -1121,8 +1195,15 @@ export default function FicheEleve({
                 </div>
               ))}
             </div>
+            <Pagination
+              page={pageMatieres.page}
+              pages={pageMatieres.pages}
+              onPage={pageMatieres.allerA}
+              etiquette="Pages des matières"
+            />
 
             {/* ------------------------------------------------ compétences */}
+            <span id="fiche-competences" className="raccourcis-fiche__ancre" aria-hidden="true" />
 
             {/* CE QUI RÉPOND À LA QUESTION PASSE AVANT CE QUI LA DOCUMENTE.
                 Les points fragiles étaient sous les deux historiques : un
@@ -1224,15 +1305,23 @@ export default function FicheEleve({
             {/* ------------------------------------------------- progression */}
             {(fiche.progression?.length ?? 0) > 0 && (
               <>
+                <RaccourcisFiche id="fiche-progression" sections={sections} courante="fiche-progression" />
                 <h3>Sa progression</h3>
 
-                {fiche.progression.map((m) => (
+                {pageProgression.visibles.map((m) => (
                   <ProgressionMatiere key={m.matiereId} matiere={m} />
                 ))}
+                <Pagination
+                  page={pageProgression.page}
+                  pages={pageProgression.pages}
+                  onPage={pageProgression.allerA}
+                  etiquette="Pages de la progression"
+                />
               </>
             )}
 
             {/* ------------------------------------------------ évaluations */}
+            <RaccourcisFiche id="fiche-evaluations" sections={sections} courante="fiche-evaluations" />
             <h3>Ses évaluations</h3>
 
             {/* La barre reste même quand la liste est vide : c'est le seul
@@ -1256,7 +1345,7 @@ export default function FicheEleve({
               <div className="tableau">
                 {enCartes ? (
                   <ul className="cartes-histo">
-                    {evaluations.elements.map((e) => (
+                    {evaluations.visibles.map((e) => (
                       <CarteEvaluation
                         key={e.id}
                         e={e}
@@ -1279,7 +1368,7 @@ export default function FicheEleve({
                     </tr>
                   </thead>
                   <tbody>
-                    {evaluations.elements.map((e) => (
+                    {evaluations.visibles.map((e) => (
                       <tr key={e.id}>
                         <td>
                           <Note valeur={e.note} />
@@ -1312,22 +1401,21 @@ export default function FicheEleve({
                 </table>
                 )}
 
-                <DeroulerListe
-                  visibles={evaluations.elements.length}
-                  total={evaluations.total}
-                  nom="évaluations"
-                  pas={PAS}
-                  encore={Boolean(evaluations.suite)}
+                <Pagination
+                  page={evaluations.page}
+                  pages={evaluations.pages}
+                  onPage={evaluations.allerA}
                   chargement={evaluations.chargement}
-                  erreur={evaluations.erreur}
-                  onPlus={evaluations.plus}
+                  etiquette="Pages des évaluations"
                 />
+                {evaluations.erreur && <div className="alert">{evaluations.erreur}</div>}
               </div>
             )}
 
             {copieErreur && <div className="alert">{copieErreur}</div>}
 
             {/* ---------------------------------------------------- rapports */}
+            <RaccourcisFiche id="fiche-seances" sections={sections} courante="fiche-seances" />
             <h3>Ses séances</h3>
 
             <TriHistorique
@@ -1349,7 +1437,7 @@ export default function FicheEleve({
               <div className="tableau">
                 {enCartes ? (
                   <ul className="cartes-histo">
-                    {seances.elements.map((r) => (
+                    {seances.visibles.map((r) => (
                       <CarteSeance
                         key={r.id}
                         r={r}
@@ -1376,7 +1464,7 @@ export default function FicheEleve({
                     </tr>
                   </thead>
                   <tbody>
-                    {seances.elements.map((r) => (
+                    {seances.visibles.map((r) => (
                       <tr key={r.id}>
                         <td>
                           {r.noteComprehension === null || r.noteComprehension === undefined ? (
@@ -1462,20 +1550,19 @@ export default function FicheEleve({
                 </table>
                 )}
 
-                <DeroulerListe
-                  visibles={seances.elements.length}
-                  total={seances.total}
-                  nom="séances"
-                  pas={PAS}
-                  encore={Boolean(seances.suite)}
+                <Pagination
+                  page={seances.page}
+                  pages={seances.pages}
+                  onPage={seances.allerA}
                   chargement={seances.chargement}
-                  erreur={seances.erreur}
-                  onPlus={seances.plus}
+                  etiquette="Pages des séances"
                 />
+                {seances.erreur && <div className="alert">{seances.erreur}</div>}
               </div>
             )}
 
             {/* ---------------------------------------------- derniers cours */}
+            <RaccourcisFiche id="fiche-historique" sections={sections} courante="fiche-historique" />
             <h3>Derniers cours</h3>
             {fiche.dernieresSeances.length === 0 ? (
               <p className="vide vide--compact">Aucun cours enregistré.</p>
@@ -1515,6 +1602,19 @@ export default function FicheEleve({
                 )}
               </div>
             )}
+
+            {/* --------------------------------------------- l'orientation
+                À PART DES COURS — Camara, le 11/10/2026 : « une section
+                spécifique pour la conseillère d'orientation, ça ne se mélange
+                pas avec les cours ». Après tous les blocs de cours, dans son
+                propre cadre ; ses séances ne figurent nulle part au-dessus. */}
+            <ProjetOrientationFiche
+              projet={fiche.projetOrientation}
+              rapports={fiche.rapportsOrientation ?? []}
+              observations={fiche.observationsOrientation ?? []}
+            >
+              <RaccourcisFiche sections={sections} courante="fiche-orientation" />
+            </ProjetOrientationFiche>
 
             <div className="modale__actions">
               {avecApercuBilan && (

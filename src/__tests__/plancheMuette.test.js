@@ -23,8 +23,9 @@ import {
  *    continuer de valoir `legende`, sans aucun changement.
  * 3. Les deux images ont deux ADRESSES distinctes. Servir la légendée à la
  *    place de la muette au milieu d'un exercice, c'est donner la réponse.
- * 4. La muette ne se dépose que SOUS une planche importée : seule, elle n'a
- *    aucune carte de repères, et l'élève cliquerait dans le vide.
+ * 4. La muette ne se dépose qu'APRÈS sa légendée : seule, elle n'a aucune
+ *    carte de repères, et l'élève cliquerait dans le vide. Son emplacement est
+ *    visible dès le départ (13/10/2026), mais son bouton reste grisé.
  *
  * LES BOUTONS DE LA MUETTE SE TROUVENT PAR SON GROUPE, et c'est aussi ce qui
  * rend l'écran utilisable au lecteur d'écran : la ligne porte deux « Remplacer »
@@ -63,8 +64,12 @@ const ouvrirSvt = async (importees) => {
   await screen.findByText(CLE);
 };
 
-/** Le bloc de la version muette, celui qui porte ses propres boutons. */
-const blocMuette = () => screen.getByRole('group', { name: /version muette/i });
+/**
+ * Le bloc de la version muette DE CETTE FIGURE. Depuis le 13/10/2026, chaque
+ * figure a le sien, même avant l'import de sa légendée : on le trouve par le
+ * titre de la figure.
+ */
+const blocMuette = () => screen.getByRole('group', { name: /version muette — appareil respiratoire/i });
 
 describe('La clé et sa variante', () => {
   test('le suffixe ne remonte pas dans la clé du catalogue', () => {
@@ -112,10 +117,11 @@ describe('Deux images, deux adresses', () => {
 });
 
 describe("L'écran d'import", () => {
-  test('aucune version muette proposée tant que la planche manque', async () => {
+  test('l’emplacement de la muette est visible, mais fermé tant que la légendée manque', async () => {
     await ouvrirSvt([]);
 
-    expect(screen.queryByRole('group', { name: /version muette/i })).toBeNull();
+    expect(within(blocMuette()).getByText(/après la légendée/i)).toBeInTheDocument();
+    expect(within(blocMuette()).getByRole('button', { name: /^Ajouter$/ })).toBeDisabled();
   });
 
   test('la planche importée ouvre son emplacement de muette', async () => {
@@ -151,7 +157,7 @@ describe("L'écran d'import", () => {
 
     // Une seule figure importée, pas deux : la muette partage la clé de sa
     // parente et ne prend pas de ligne au catalogue.
-    expect(screen.getByText(/1 \/ \d+ importées/)).toBeInTheDocument();
+    expect(screen.getByText(/1 \/ \d+ légendées/)).toBeInTheDocument();
   });
 
   test('retirer la muette ne touche pas la planche', async () => {
@@ -174,5 +180,27 @@ describe("L'écran d'import", () => {
 
     expect(confirmer).toHaveBeenCalledWith(expect.stringMatching(/muette part avec elle/i));
     expect(api.supprimerPlanche).not.toHaveBeenCalled();
+  });
+});
+
+describe('Ce qui suit la clé est ignoré (13/10/2026)', () => {
+  // Relevé en séance : « SCHEMA:sc-cycle-vie-plante (CP) » affichait le texte
+  // brut au tableau, la classe recopiée passant pour une partie de la clé.
+  test('la classe recopiée après la clé ne cache plus le schéma', () => {
+    expect(cleSchema('SCHEMA:sc-cycle-vie-plante (CP)')).toBe('sc-cycle-vie-plante');
+    expect(varianteSchema('SCHEMA:sc-cycle-vie-plante (CP)')).toBe('legende');
+  });
+
+  test('la variante muette se lit aussi avec une classe derrière', () => {
+    expect(cleSchema(`SCHEMA:${CLE}/muette (5e)`)).toBe(CLE);
+    expect(varianteSchema(`SCHEMA:${CLE}/muette (5e)`)).toBe('muette');
+  });
+
+  test('les accents graves de mise en forme ne gênent pas', () => {
+    expect(cleSchema('`SCHEMA:sc-cycle-vie-plante`')).toBe('sc-cycle-vie-plante');
+  });
+
+  test('une clé inconnue reste inconnue', () => {
+    expect(cleSchema('SCHEMA:cle-qui-n-existe-pas (CP)')).toBeNull();
   });
 });

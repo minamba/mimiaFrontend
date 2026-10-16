@@ -217,7 +217,7 @@ const BANQUES = {
         ],
       },
       {
-        recit: 'Inside, the great hall is dark and cold. There is a long table, an old fireplace and a big painting of a lady in a green dress.',
+        recit: 'Through a window, you can see the great hall: it is dark and cold. There is a long table, an old fireplace and a big painting of a lady in a green dress.',
         variantes: [
           v('The painting is ___ the wall.', 'on', { in: 'on-surface', at: 'on-surface' }),
           v('The key is ___ the carpet: lift the carpet to find it.', 'under', { on: 'lire-position', above: 'lire-position' }),

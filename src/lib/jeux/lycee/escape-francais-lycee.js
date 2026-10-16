@@ -103,7 +103,7 @@ const ETAPES = {
       ],
     },
     {
-      recit: 'Dans la loge du poète de la troupe, des vers sont épinglés au miroir. Ils cachent la deuxième lettre.',
+      recit: 'Sur le grand rideau rouge, le poète de la troupe a épinglé des vers. Ils cachent la deuxième lettre.',
       banque: [
         q('« Demain, dès l’aube, à l’heure où blanchit la campagne » (Hugo) : quel vers ?', 'alexandrin', { décasyllabe: 'vers-compter', octosyllabe: 'vers-compter' }),
         q('« Il pleure dans mon cœur » (Verlaine) : combien de syllabes ?', 'six', { cinq: 'vers-e-muet', sept: 'vers-compter' }),

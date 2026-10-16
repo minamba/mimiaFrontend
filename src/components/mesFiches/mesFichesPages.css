@@ -1,0 +1,3172 @@
+/*
+ * LES PAGES DU MODULE « MES FICHES DE RÉVISION » — espace, création, cours
+ * (14/10/2026). Préfixe `mf-` : App.css est global, et les noms courts y sont
+ * déjà pris. Les couleurs viennent du thème du site (clair et sombre) ; la
+ * feuille de la fiche elle-même reste dans mesFiches.css.
+ */
+
+.mf-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.5rem 16px 4rem;
+}
+
+.mf-titre {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  margin: 0 0 1.2rem;
+}
+
+/* L'EN-TÊTE EST UN BANDEAU (16/10/2026) — Camara : « améliore le style du
+   titre ». Une carte vitrée à deux halos (bleu en haut à gauche, violet en bas
+   à droite), le cahier dans une tuile qui flotte, et « fiches de révision » en
+   dégradé. Les teintes ont leur version claire plus bas. */
+.mf-entete {
+  --mf-halo-1: #6ea8ff;
+  --mf-halo-2: #a78bfa;
+  --mf-accent-1: #ffb38a;
+  --mf-accent-2: #f39bd6;
+  --mf-surtitre: #9cc2ff;
+
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.4rem;
+  margin-bottom: 2rem;
+  padding: 1.4rem 1.6rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--mf-halo-1) 26%, var(--trait));
+  border-radius: 22px;
+  background:
+    radial-gradient(90% 160% at 0% 0%, color-mix(in srgb, var(--mf-halo-1) 22%, transparent), transparent 62%),
+    radial-gradient(80% 160% at 100% 100%, color-mix(in srgb, var(--mf-halo-2) 20%, transparent), transparent 62%),
+    color-mix(in srgb, var(--surface) 86%, transparent);
+  box-shadow: 0 22px 44px -28px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+}
+
+/* Une trame de points, très discrète, qui s'efface vers la droite. */
+.mf-entete::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(color-mix(in srgb, var(--encre) 14%, transparent) 1px, transparent 1.4px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(100deg, transparent 35%, #000 100%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.mf-entete > * { position: relative; }
+
+.mf-entete__vignette {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--mf-halo-1) 34%, transparent);
+  background:
+    radial-gradient(70% 70% at 50% 40%, color-mix(in srgb, var(--mf-halo-1) 30%, transparent), transparent 75%),
+    color-mix(in srgb, var(--mf-halo-1) 10%, var(--surface));
+  box-shadow: 0 12px 28px -14px color-mix(in srgb, var(--mf-halo-1) 70%, transparent);
+}
+
+.mf-entete__icone {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  animation: mf-cahier-flotte 4.5s ease-in-out infinite;
+}
+
+@keyframes mf-cahier-flotte {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-entete__icone { animation: none; }
+}
+
+.mf-entete__texte {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.mf-entete__surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--mf-surtitre);
+}
+
+.mf-entete__surtitre::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mf-surtitre);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mf-surtitre) 22%, transparent);
+}
+
+.mf-entete__texte h1 {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 3.8vw, 2.5rem);
+  line-height: 1.1;
+  margin: 0 0 0.45rem;
+}
+
+.mf-entete__accent {
+  background: linear-gradient(95deg, var(--mf-accent-1), var(--mf-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.mf-entete__texte p {
+  margin: 0;
+  max-width: 36em;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+.mf-entete__bouton {
+  box-shadow: 0 12px 26px -12px var(--corail-btn);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-entete__bouton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -12px var(--corail-btn);
+}
+
+/* En clair : des teintes plus soutenues, lisibles sur fond blanc. */
+:root[data-theme='light'] .mf-entete {
+  --mf-halo-1: #3b82f6;
+  --mf-halo-2: #8b5cf6;
+  --mf-accent-1: #c2410c;
+  --mf-accent-2: #7c3aed;
+  --mf-surtitre: #1d4ed8;
+  box-shadow: 0 18px 40px -30px rgba(15, 23, 42, 0.45);
+}
+
+@media (max-width: 560px) {
+  .mf-entete { padding: 1.1rem; border-radius: 18px; }
+  .mf-entete__vignette { width: 72px; height: 72px; border-radius: 20px; }
+  .mf-entete__icone { width: 54px; height: 54px; }
+  .mf-entete__bouton { width: 100%; }
+}
+
+.mf-vide {
+  padding: 2rem 1.5rem;
+  border: 1.5px dashed var(--trait);
+  border-radius: var(--rayon-l, 18px);
+  text-align: center;
+  color: var(--encre-douce);
+}
+
+.mf-vide p {
+  margin: 0 0 0.8rem;
+}
+
+/* L'espace : une section par matière, à sa couleur. */
+.mf-matiere {
+  margin-bottom: 2rem;
+}
+
+.mf-matiere__titre {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin: 0 0 0.8rem;
+  padding-left: 0.8rem;
+  border-left: 5px solid var(--matiere, var(--sarcelle));
+  font-family: var(--display);
+  font-size: 1.35rem;
+}
+
+.mf-matiere__compte {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--encre-douce);
+}
+
+.mf-cours-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem;
+}
+
+/*
+ * LA CARTE D'UN COURS : le corps est le lien vers le cours, le pied porte
+ * « Supprimer » (16/10/2026). Deux éléments frères dans un même cadre — un
+ * bouton ne peut pas vivre dans un lien.
+ */
+.mf-carte-cours {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 16px;
+  border: 1.5px solid var(--trait);
+  border-top: 4px solid var(--matiere, var(--sarcelle));
+  background: var(--surface);
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-carte-cours:hover,
+.mf-carte-cours:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.mf-cours {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+  flex: 1;
+  padding: 1rem 1.1rem;
+  color: var(--encre);
+  text-decoration: none;
+}
+
+.mf-cours:focus-visible {
+  outline: 2px solid var(--matiere, var(--sarcelle));
+  outline-offset: -4px;
+}
+
+.mf-cours__pied {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.45rem 0.8rem 0.6rem;
+  border-top: 1px dashed var(--trait);
+}
+
+.mf-cours__supprimer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--danger, #ff8a7a);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mf-cours__supprimer::before {
+  content: '🗑';
+  font-size: 0.9rem;
+}
+
+.mf-cours__supprimer:hover,
+.mf-cours__supprimer:focus-visible {
+  border-color: color-mix(in srgb, var(--danger, #ff8a7a) 50%, transparent);
+  background: color-mix(in srgb, var(--danger, #ff8a7a) 14%, transparent);
+}
+
+.mf-cours__titre {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.mf-cours__date {
+  font-size: 0.85rem;
+  color: var(--encre-douce);
+}
+
+.mf-cours__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.mf-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  color: var(--fdr-accent-fonce);
+  background: var(--fdr-accent-pale);
+}
+
+.mf-cours__etat {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  color: var(--encre);
+  background: color-mix(in srgb, var(--controle-avenir, #f28c1e) 25%, transparent);
+}
+
+.mf-cours__etat.est-echec {
+  background: color-mix(in srgb, var(--danger, #ff8a7a) 30%, transparent);
+}
+
+/*
+ * LA CRÉATION, EN TROIS ÉTAPES GUIDÉES — Camara, le 14/10/2026 : « rien ne
+ * me montre visuellement que je dois sélectionner quelque chose ». Une seule
+ * étape allumée à la fois (cadre et numéro qui pulse), les suivantes grisées
+ * avec leur raison, les faites cochées.
+ */
+.mf-etape {
+  --mf-etape: var(--corail-btn, #e8562f);
+  /* La barre de navigation est fixe : une étape amenée à l'écran ne passe pas dessous. */
+  scroll-margin-top: 96px;
+  scroll-margin-bottom: 24px;
+  margin-bottom: 1.4rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+  border-radius: var(--rayon-l, 18px);
+  border: 2px solid transparent;
+  transition: border-color 0.25s ease, background 0.25s ease, opacity 0.25s ease;
+}
+
+.mf-etape.est-active {
+  border-color: var(--mf-etape);
+  background: color-mix(in srgb, var(--mf-etape) 8%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mf-etape) 14%, transparent);
+}
+
+.mf-etape.est-faite {
+  border-color: var(--trait);
+}
+
+.mf-etape.est-verrouillee {
+  opacity: 0.45;
+  border: 2px dashed var(--trait);
+}
+
+.mf-etape.est-verrouillee .mf-etape__corps {
+  pointer-events: none;
+}
+
+.mf-etape__titre {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.25rem;
+  font-family: var(--display);
+  font-size: 1.25rem;
+}
+
+.mf-etape__numero {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--trait);
+  color: var(--encre);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.est-active .mf-etape__numero {
+  background: var(--mf-etape);
+  color: #fff;
+  animation: mf-pulse 1.8s ease-out infinite;
+}
+
+.est-faite .mf-etape__numero {
+  background: #3f9b46;
+  color: #fff;
+}
+
+@keyframes mf-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--mf-etape) 60%, transparent); }
+  70% { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .est-active .mf-etape__numero { animation: none; }
+}
+
+.mf-etape__aide {
+  margin: 0 0 0.9rem 2.6rem;
+  font-size: 0.92rem;
+  color: var(--encre-douce);
+}
+
+.est-active .mf-etape__aide {
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.mf-etape__aide.est-verrou::before {
+  content: '🔒 ';
+}
+
+/* LE ROND À COCHER : ce qui fait lire une pastille comme un choix. */
+.mf-coche {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0.7;
+}
+
+.est-choisi > .mf-coche {
+  opacity: 1;
+  border-color: #fff;
+  background: #fff;
+}
+
+.est-choisi > .mf-coche::after {
+  content: '';
+  width: 0.32rem;
+  height: 0.55rem;
+  margin-top: -0.12rem;
+  border: solid var(--matiere, var(--fdr-accent, #3f9b46));
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+.mf-choix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mf-choix__matiere {
+  font: inherit;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.05rem 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 2px solid var(--matiere, var(--trait));
+  background: transparent;
+  color: var(--encre);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mf-choix__matiere:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--matiere, var(--sarcelle)) 18%, transparent);
+}
+
+.mf-choix__matiere.est-choisi {
+  background: var(--matiere, var(--sarcelle));
+  color: #fff;
+}
+
+.mf-choix__matiere:disabled,
+.mf-type:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Une étape fermée est déjà grisée en entier : ses boutons ne s'effacent pas deux fois. */
+.est-verrouillee .mf-type:disabled,
+.est-verrouillee .mf-choix__matiere:disabled {
+  opacity: 1;
+}
+
+/* Sur une carte de type, le rond se pose en haut à droite et prend la couleur du type. */
+.mf-type > .mf-coche {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  color: var(--fdr-accent);
+}
+
+.mf-type.est-choisi > .mf-coche {
+  border-color: var(--fdr-accent);
+  background: var(--fdr-accent);
+}
+
+.mf-type.est-choisi > .mf-coche::after {
+  border-color: #fff;
+}
+
+.mf-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.6rem;
+}
+
+.mf-type {
+  position: relative;
+  font: inherit;
+  text-align: left;
+  display: grid;
+  gap: 0.2rem;
+  align-content: start;
+  padding: 0.85rem 2.4rem 0.85rem 1rem;
+  border-radius: 14px;
+  border: 2px solid var(--trait);
+  border-left: 6px solid var(--fdr-accent);
+  background: var(--surface);
+  color: var(--encre);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.mf-type:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.mf-type.est-choisi {
+  border-color: var(--fdr-accent);
+  background: color-mix(in srgb, var(--fdr-accent) 16%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fdr-accent) 30%, transparent);
+}
+
+.mf-type__nom {
+  font-weight: 700;
+}
+
+.mf-type__accroche {
+  font-size: 0.85rem;
+  color: var(--encre-douce);
+}
+
+.mf-type__note {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fdr-accent);
+}
+
+.mf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  margin-top: 1.2rem;
+}
+
+.mf-actions__principal {
+  min-width: 13rem;
+}
+
+/* Le cours : son état, ses notions, ses fiches. */
+.mf-cours-entete {
+  margin-bottom: 1.4rem;
+  padding-left: 0.9rem;
+  border-left: 5px solid var(--matiere, var(--sarcelle));
+}
+
+.mf-cours-entete .mf-titre {
+  margin-bottom: 0.2rem;
+}
+
+.mf-cours-entete__matiere {
+  margin: 0 0 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--matiere, var(--sarcelle));
+}
+
+.mf-cours-entete__date {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--encre-douce);
+}
+
+.mf-etat {
+  margin-bottom: 1.5rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: var(--rayon-l, 18px);
+  background: var(--surface);
+  border: 1.5px solid var(--trait);
+}
+
+.mf-etat p {
+  margin: 0 0 0.4rem;
+}
+
+.mf-etat--attente {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.mf-etat__roue {
+  width: 42px;
+  height: 42px;
+  margin-bottom: 0.8rem;
+  border-radius: 50%;
+  border: 4px solid var(--trait);
+  border-top-color: var(--matiere, var(--sarcelle));
+  animation: mf-tourne 0.9s linear infinite;
+}
+
+@keyframes mf-tourne {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-etat__roue { animation-duration: 3s; }
+}
+
+.mf-notions {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.mf-notion {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--trait);
+  cursor: pointer;
+}
+
+.mf-notion.est-choisie {
+  border-color: var(--matiere, var(--sarcelle));
+}
+
+.mf-notion input {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  accent-color: var(--matiere, var(--sarcelle));
+}
+
+.mf-notion__resume {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.88rem;
+  color: var(--encre-douce);
+}
+
+.mf-remarque {
+  margin: 0 0 1.4rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  border-left: 5px solid var(--controle-avenir, #f28c1e);
+  background: color-mix(in srgb, var(--controle-avenir, #f28c1e) 14%, transparent);
+}
+
+.mf-remarque.est-echec {
+  border-left-color: var(--danger, #ff8a7a);
+  background: color-mix(in srgb, var(--danger, #ff8a7a) 14%, transparent);
+}
+
+.mf-lecture {
+  margin-bottom: 2.2rem;
+}
+
+.mf-onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.mf-onglet {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 2px solid var(--fdr-accent);
+  background: transparent;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.mf-onglet.est-choisi {
+  background: var(--fdr-accent);
+  color: #fff;
+}
+
+.mf-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.mf-navigation__position {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--encre);
+}
+
+/*
+ * PRÉCÉDENTE / SUIVANTE, BIEN VISIBLES — Camara, le 16/10/2026 : les boutons
+ * fantômes se perdaient sur le fond. Pleins, dans la couleur de la matière
+ * (le vert des maths, le bleu du français…) plutôt que dans l'orange des
+ * actions, qui reste à « Imprimer ». Au bout de la série, le bouton s'efface
+ * en pointillés : on voit qu'il n'y a plus rien de ce côté.
+ */
+.mf-navigation__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 48px;
+  padding: 0.7rem 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: var(--matiere, #3f9b46);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--matiere, #3f9b46) 45%, transparent);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-navigation__bouton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.mf-navigation__bouton:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.mf-navigation__bouton:disabled {
+  background: transparent;
+  border: 2px dashed var(--trait);
+  color: var(--encre-douce);
+  box-shadow: none;
+  cursor: default;
+  opacity: 0.55;
+}
+
+.mf-fiche-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.mf-autre {
+  margin-bottom: 2rem;
+  padding-top: 1.4rem;
+  border-top: 1.5px dashed var(--trait);
+}
+
+.mf-pied {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+.mf-lien-danger {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--danger, #ff8a7a);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/*
+ * LE TYPE, AVEC SA MINIATURE — Camara, le 15/10/2026 : « que l'enfant voie à
+ * quoi ressemble chaque type ». La case porte le cadre ; la carte à choisir,
+ * la miniature et « Voir un exemple » s'empilent dedans.
+ */
+.mf-type-case {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 2px solid var(--trait);
+  border-left: 6px solid var(--fdr-accent);
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Survoler le haut de la case l'éclaire : c'est là qu'on choisit. */
+.mf-type-case:has(> .mf-type:hover:not(:disabled)) {
+  border-color: color-mix(in srgb, var(--fdr-accent) 70%, var(--trait));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.mf-type-case.est-choisi {
+  border-color: var(--fdr-accent);
+  background: color-mix(in srgb, var(--fdr-accent) 16%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fdr-accent) 30%, transparent);
+}
+
+.mf-type-case > .mf-type,
+.mf-type-case > .mf-type.est-choisi {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/*
+ * L'EXEMPLE, UN BLOC À PART — Camara, le 16/10/2026 : « on ne voit pas que
+ * “Voir un exemple” est un bouton, on ne sait pas où cliquer ». La miniature
+ * et son bouton forment un encart détaché (marge, ombre), sous un filet qui
+ * le sépare du choix ; le bouton est une barre pleine de la couleur du type.
+ */
+.mf-type__miniature {
+  position: relative;
+  flex-shrink: 0;
+  height: 128px;
+  margin: 0 0.8rem;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  background: #fffdf8;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+/*
+ * TOUTES LES CARTES ALIGNÉES — Camara, le 16/10/2026. L'en-tête prend toute
+ * la hauteur libre (flex: 1) : le filet, la miniature et « Voir un exemple »
+ * tombent à la même hauteur d'une carte à l'autre, quelle que soit la
+ * longueur du texte au-dessus. Le bouton « Choisir » ferme l'en-tête.
+ */
+.mf-type-case > .mf-type,
+.mf-type-case > .mf-type.est-choisi {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1rem 0.95rem;
+  border-bottom: 1px dashed var(--trait);
+  margin-bottom: 0.8rem;
+}
+
+.mf-type__texte {
+  flex: 1;
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+}
+
+.mf-type-case .mf-type__nom {
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+
+.mf-type-case .mf-type__note {
+  justify-self: start;
+  margin-top: 0.35rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fdr-accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--fdr-accent) 55%, transparent);
+  color: var(--encre);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mf-type__choix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.32rem 0.85rem 0.32rem 0.5rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--fdr-accent) 65%, transparent);
+  color: var(--encre);
+  font-size: 0.8rem;
+  font-weight: 800;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mf-type__choix .mf-coche {
+  color: var(--fdr-accent);
+  opacity: 1;
+}
+
+.mf-type:hover:not(:disabled) .mf-type__choix,
+.mf-type:focus-visible .mf-type__choix {
+  background: color-mix(in srgb, var(--fdr-accent) 25%, transparent);
+}
+
+.mf-type.est-choisi .mf-type__choix {
+  background: var(--fdr-accent);
+  border-color: var(--fdr-accent);
+  color: #fff;
+}
+
+.mf-type.est-choisi .mf-type__choix .mf-coche {
+  border-color: #fff;
+  background: #fff;
+}
+
+.mf-type.est-choisi .mf-type__choix .mf-coche::after {
+  content: '';
+  width: 0.32rem;
+  height: 0.55rem;
+  margin-top: -0.12rem;
+  border: solid var(--fdr-accent);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+/* La feuille d'exemple, mise en page à sa vraie largeur puis réduite. */
+.mf-type__echelle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 880px;
+  margin-left: -97px;
+  transform: scale(0.22);
+  transform-origin: top left;
+}
+
+.mf-type__echelle .fdr-feuille--miniature {
+  max-width: none;
+  padding: 1.2rem 1.6rem;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Un dégradé en bas : la miniature s'arrête en douceur, pas sur une coupure. */
+.mf-type__miniature::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  background: linear-gradient(transparent, #fffdf8);
+}
+
+.mf-type__voir {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 42px;
+  margin: 0 0.8rem 0.85rem;
+  padding: 0.55rem 0.8rem;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border: 0;
+  border-radius: 0 0 10px 10px;
+  background: var(--fdr-accent);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-type__voir:hover,
+.mf-type__voir:focus-visible {
+  background: var(--fdr-accent-fonce);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32);
+}
+
+.mf-type__voir:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+.mf-type__voir:active {
+  transform: translateY(0);
+}
+
+.mf-type__voir::before {
+  content: '🔍';
+}
+
+.mf-type__voir::after {
+  content: '→';
+  transition: transform 0.15s ease;
+}
+
+/*
+ * UN GROS COURS COMPTE DOUBLE — Camara, le 16/10/2026. Prévenu avant
+ * l'envoi : orange s'il passe, rouge s'il ne reste qu'une place.
+ */
+.mf-poids {
+  margin: 0.6rem 0 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  border: 1.5px solid #f0a33a;
+  background: rgba(240, 163, 58, 0.14);
+  color: var(--encre);
+  font-size: 0.88rem;
+}
+
+.mf-poids.est-bloquant {
+  border-color: var(--danger-fort, #ff705e);
+  background: rgba(255, 112, 94, 0.14);
+}
+
+.mf-type__voir:hover::after,
+.mf-type__voir:focus-visible::after {
+  transform: translateX(3px);
+}
+
+/*
+ * LA JAUGE DU MOIS — Camara, le 15/10/2026. Verte, orange passé 80 %, rouge
+ * quand il ne reste plus rien.
+ */
+.mf-quota {
+  --mf-quota: #3fbf6a;
+  margin: 0 0 1.6rem;
+  padding: 0.9rem 1.1rem 1rem;
+  border-radius: 14px;
+  border: 1.5px solid var(--trait);
+  background: var(--surface);
+}
+
+.mf-quota.est-bas {
+  --mf-quota: #f2a31e;
+}
+
+.mf-quota.est-epuise {
+  --mf-quota: #ef5a4a;
+  border-color: color-mix(in srgb, var(--mf-quota) 60%, var(--trait));
+}
+
+.mf-quota__ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.mf-quota__titre {
+  font-weight: 700;
+}
+
+.mf-quota__compte {
+  font-size: 0.95rem;
+  color: var(--encre-douce);
+}
+
+.mf-quota__compte strong {
+  font-size: 1.15rem;
+  color: var(--mf-quota);
+}
+
+/* Un seul rail : le vert du mois, puis le doré des crédits, collé derrière. */
+.mf-quota__jauge {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre) 12%, transparent);
+  overflow: hidden;
+}
+
+/* Le mois reste VERT, quoi qu'il arrive (Camara, 16/10/2026) : l'alerte se lit
+   dans le compte et le texte ; le jaune est réservé aux crédits. */
+.mf-quota__plein {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  background: #3fbf6a;
+  transition: width 0.4s ease;
+}
+
+.mf-quota__credits {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f2c14e, #f6d47e);
+  transition: width 0.4s ease;
+}
+
+.mf-quota__legende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  color: var(--encre-douce);
+}
+
+.mf-quota__pastille {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+}
+
+.mf-quota__pastille--mois {
+  background: #3fbf6a;
+}
+
+.mf-quota__pastille--credits {
+  margin-left: 0.6rem;
+  background: #f2c14e;
+}
+
+.mf-quota__reste {
+  margin: 0.55rem 0 0;
+  font-size: 0.88rem;
+  color: var(--encre-douce);
+}
+
+.est-epuise .mf-quota__reste {
+  color: var(--encre);
+  font-weight: 600;
+}
+
+/* L'aperçu en grand. */
+.mf-apercu {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(3, 10, 30, 0.72);
+}
+
+.mf-apercu__fenetre {
+  width: min(960px, 100%);
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--rayon-l, 18px);
+  background: var(--papier, #0b1d3d);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.mf-apercu__tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--trait);
+}
+
+.mf-apercu__titre {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mf-apercu__note {
+  margin: 0.2rem 0 0;
+  font-size: 0.88rem;
+  color: var(--encre-douce);
+}
+
+.mf-apercu__fermer {
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--trait);
+  background: transparent;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.mf-apercu__corps {
+  overflow-y: auto;
+  padding: 1.2rem;
+}
+
+.mf-apercu__pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  padding: 0.9rem 1.2rem;
+  border-top: 1px solid var(--trait);
+}
+
+@media (max-width: 600px) {
+  .mf-actions {
+    justify-content: stretch;
+  }
+
+  .mf-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .mf-navigation__bouton {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/*
+ * LA RÉSERVE DE LA FAMILLE — Camara, le 15/10/2026. L'achat se fait dans
+ * « Mon forfait » (16/10/2026), jamais sur les pages de l'enfant.
+ */
+.mf-quota__reserve {
+  font-size: 0.88rem;
+  color: var(--encre-douce);
+}
+
+/* Le chemin du parent vers « Mon forfait », où s'achètent les fiches. */
+.mf-quota__lien {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/*
+ * « SUPPRIMER CETTE FICHE » : ROUGE, MAIS EN CONTOUR (Camara, le 16/10/2026).
+ * Plein, son corail se confondait avec l'orange d'« Imprimer » posé juste à
+ * côté — deux boutons de même poids, dont l'un efface. Le contour garde le
+ * signal du danger et laisse l'impression au premier plan ; il ne se remplit
+ * qu'au survol, au moment où l'on va cliquer.
+ */
+.btn.mf-bouton-supprimer {
+  background: transparent;
+  border: 1.5px solid var(--danger-fort, #ff705e);
+  color: var(--danger-fort, #ff705e);
+}
+
+.btn.mf-bouton-supprimer:hover:not(:disabled),
+.btn.mf-bouton-supprimer:focus-visible {
+  background: var(--danger-fort, #ff705e);
+  color: var(--danger-encre, #2a0d09);
+}
+
+/*
+ * LA JAUGE, MOINS BLEUE — Camara, le 16/10/2026 : « ça fait trop bleu ». Sur
+ * le thème sombre (et en Blue Sky, où la surface est un bleu vif), l'encadré
+ * se fondait dans la page. Il prend un bleu nuit presque noir, son rail
+ * s'éclaircit pour que la barre verte s'y lise, et les crédits passent en
+ * doré : on les distingue du compte du mois d'un coup d'œil. Le thème clair
+ * garde sa surface blanche.
+ */
+.mf-quota {
+  background: rgba(3, 11, 30, 0.78);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.mf-quota__jauge {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.mf-quota__reserve {
+  color: #f2c14e;
+  font-weight: 600;
+}
+
+:root[data-theme='light'] .mf-quota {
+  background: var(--surface);
+  border-color: var(--trait);
+}
+
+:root[data-theme='light'] .mf-quota__jauge {
+  background: color-mix(in srgb, var(--encre) 12%, transparent);
+}
+
+:root[data-theme='light'] .mf-quota__credits,
+:root[data-theme='light'] .mf-quota__pastille--credits {
+  background: #e0a526;
+}
+
+:root[data-theme='light'] .mf-quota__reserve {
+  color: #8a5a00;
+}
+
+/*
+ * L'APERÇU SUR TÉLÉPHONE — Camara, le 16/10/2026 : « la fenêtre déborde, la
+ * croix n'est presque pas visible, ni le bas de la fenêtre ». Deux causes :
+ * 100vh mesure l'écran SANS les barres de Safari (la fenêtre était plus haute
+ * que ce qu'on voit), et le corps, qui défile, ne pouvait pas rétrécir — il
+ * poussait la tête et le pied hors du cadre. On mesure l'écran VISIBLE (dvh),
+ * on laisse le corps rétrécir (min-height: 0), et on respecte l'encoche.
+ */
+.mf-apercu {
+  height: 100vh;
+  height: 100dvh;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+}
+
+.mf-apercu__fenetre {
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.mf-apercu__tete,
+.mf-apercu__pied {
+  flex-shrink: 0;
+}
+
+.mf-apercu__corps {
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * LA FENÊTRE D'EXEMPLE, REVUE — Camara, le 16/10/2026 : « améliore le
+ * design ». Elle prend la couleur du type (liseré du haut, pastille
+ * « Exemple », bouton fermer au survol) ; la fiche est posée sur un fond plus
+ * sombre, comme une feuille sur un bureau ; le pied rappelle que la vraie
+ * fiche reprendra le cours de l'élève.
+ */
+.mf-apercu {
+  background: rgba(3, 10, 30, 0.78);
+  backdrop-filter: blur(4px);
+  animation: mf-apercu-fond 0.18s ease-out;
+}
+
+.mf-apercu__fenetre {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--fdr-accent) 45%, transparent);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 6px color-mix(in srgb, var(--fdr-accent) 12%, transparent);
+  animation: mf-apercu-arrivee 0.22s ease-out;
+}
+
+.mf-apercu__fenetre::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: linear-gradient(90deg, var(--fdr-accent), color-mix(in srgb, var(--fdr-accent) 40%, #fff));
+  z-index: 1;
+}
+
+@keyframes mf-apercu-fond {
+  from { opacity: 0; }
+}
+
+@keyframes mf-apercu-arrivee {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-apercu,
+  .mf-apercu__fenetre {
+    animation: none;
+  }
+}
+
+.mf-apercu__tete {
+  align-items: center;
+  padding: 1.15rem 1.3rem 1rem;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fdr-accent) 16%, transparent), transparent);
+}
+
+.mf-apercu__entete {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.mf-apercu__surtitre {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.2rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--fdr-accent);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mf-apercu__titre {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+.mf-apercu__accroche {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--encre-douce);
+}
+
+.mf-apercu__fermer {
+  width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.mf-apercu__fermer:hover,
+.mf-apercu__fermer:focus-visible {
+  background: var(--fdr-accent);
+  border-color: var(--fdr-accent);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.mf-apercu__corps {
+  padding: 1.4rem;
+  background: rgba(0, 0, 0, 0.22);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--fdr-accent) 70%, transparent) transparent;
+}
+
+.mf-apercu__corps .fdr-feuille {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+}
+
+.mf-apercu__pied {
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  padding: 0.9rem 1.3rem;
+}
+
+.mf-apercu__note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.mf-apercu__note strong {
+  color: var(--encre);
+}
+
+.mf-apercu__boutons {
+  display: flex;
+  gap: 0.7rem;
+  margin-left: auto;
+}
+
+.mf-apercu__choisir {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 600px) {
+  .mf-apercu__tete {
+    padding: 0.7rem 0.8rem 0.7rem 1rem;
+  }
+
+  .mf-apercu__titre {
+    font-size: 1.15rem;
+  }
+
+  .mf-apercu__note {
+    font-size: 0.78rem;
+  }
+
+  .mf-apercu__accroche {
+    font-size: 0.8rem;
+  }
+
+  .mf-apercu__boutons {
+    width: 100%;
+  }
+
+  .mf-apercu__corps {
+    padding: 0.8rem;
+  }
+
+  .mf-apercu__pied {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .mf-apercu__pied .btn {
+    flex: 1 1 0;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+  }
+}
+
+/*
+ * PRÉCÉDENTE / SUIVANTE SUR TÉLÉPHONE — Camara, le 16/10/2026 : « pas
+ * propre ». Les mots passaient à la ligne sous la flèche, et « Fiche 2 sur 4 »
+ * se coupait en deux. Une seule ligne, toujours : boutons plus serrés,
+ * position abrégée en « 2 / 4 » ; sur les très petits écrans, il ne reste que
+ * les flèches (le mot reste lu par les lecteurs d'écran).
+ */
+.mf-navigation__bouton,
+.mf-navigation__position {
+  white-space: nowrap;
+}
+
+.mf-navigation__court {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .mf-navigation {
+    gap: 0.5rem;
+  }
+
+  .mf-navigation__bouton {
+    min-height: 44px;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.92rem;
+  }
+
+  .mf-navigation__position {
+    font-size: 1rem;
+  }
+
+  .mf-navigation__long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .mf-navigation__court {
+    display: inline;
+  }
+}
+
+@media (max-width: 380px) {
+  .mf-navigation__mot {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .mf-navigation__bouton {
+    min-width: 48px;
+    justify-content: center;
+    padding: 0.55rem 0.9rem;
+    font-size: 1.15rem;
+  }
+}
+
+/*
+ * LES CARTES DE COURS, AVEC DU RELIEF — Camara, le 16/10/2026 : « trop plat ».
+ * La matière teinte le haut de la carte, une ombre la détache du fond, une
+ * pile de feuilles dit ce que le cours a donné, et le pied invite à réviser.
+ */
+.mf-cours-liste {
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1rem;
+}
+
+.mf-carte-cours {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 35%, var(--trait));
+  border-top: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--matiere, var(--sarcelle)) 30%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--matiere, var(--sarcelle)) 12%, var(--surface)), var(--surface));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 10px 26px rgba(0, 0, 0, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Le liseré de la matière, en haut, comme un intercalaire de classeur. */
+.mf-carte-cours::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--matiere, var(--sarcelle)), color-mix(in srgb, var(--matiere, var(--sarcelle)) 40%, transparent));
+}
+
+.mf-carte-cours:hover,
+.mf-carte-cours:focus-within {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 18px 36px rgba(0, 0, 0, 0.35),
+    0 0 0 1px color-mix(in srgb, var(--matiere, var(--sarcelle)) 55%, transparent);
+}
+
+.mf-cours {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  padding: 1.25rem 1.2rem 1rem;
+}
+
+.mf-cours__texte {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.mf-cours__titre {
+  font-family: var(--display);
+  font-size: 1.15rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mf-cours__date {
+  font-size: 0.82rem;
+}
+
+.mf-cours__types {
+  margin-top: 0.45rem;
+}
+
+.mf-badge {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* La pile de feuilles : trois feuilles décalées, la première rayée. */
+.mf-pile {
+  position: relative;
+  flex-shrink: 0;
+  width: 56px;
+  height: 68px;
+  margin: 0.2rem 0.3rem 0 0.1rem;
+}
+
+.mf-pile__feuille {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: #fffdf8;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s ease;
+}
+
+.mf-pile__feuille:nth-child(1) {
+  background: #e7e0d0;
+  transform: rotate(-9deg) translate(-5px, 3px);
+}
+
+.mf-pile__feuille:nth-child(2) {
+  background: #f2ecdf;
+  transform: rotate(6deg) translate(4px, 1px);
+}
+
+.mf-pile__feuille:nth-child(3) {
+  border-top: 7px solid var(--fdr-accent);
+  padding: 8px 7px;
+}
+
+.mf-pile__lignes {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--fdr-accent) 40%, transparent) 0 2px,
+    transparent 2px 9px
+  );
+  border-radius: 2px;
+}
+
+.mf-pile__nombre {
+  position: absolute;
+  right: -10px;
+  bottom: -8px;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid var(--surface);
+  background: var(--fdr-accent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Au survol, la pile s'ouvre un peu en éventail. */
+.mf-carte-cours:hover .mf-pile__feuille:nth-child(1) {
+  transform: rotate(-14deg) translate(-9px, 4px);
+}
+
+.mf-carte-cours:hover .mf-pile__feuille:nth-child(2) {
+  transform: rotate(10deg) translate(8px, 2px);
+}
+
+/*
+ * « COMPLÉTER » DANS LE PIED DE LA CARTE — Camara, le 16/10/2026. Une pilule
+ * de la couleur de la matière, à gauche ; « Supprimer » à droite.
+ */
+
+.mf-cours__completer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 70%, transparent);
+  background: color-mix(in srgb, var(--matiere, var(--sarcelle)) 16%, transparent);
+  color: var(--encre);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mf-cours__completer::before {
+  content: '+';
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mf-cours__completer:hover,
+.mf-cours__completer:focus-visible {
+  background: var(--matiere, var(--sarcelle));
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Une notion de complément déjà dans le cours. */
+.mf-notion__deja {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f2c14e;
+}
+
+:root[data-theme='light'] .mf-notion__deja {
+  color: #8a5a00;
+}
+
+/*
+ * LE SOMMAIRE DES NOTIONS — Camara, le 16/10/2026. Une colonne à gauche de la
+ * fiche, qui reste en vue en défilant ; la notion regardée est éclairée de la
+ * couleur de la matière, avec son numéro plein et un trait sur le bord.
+ */
+/* Avec le sommaire, la page s'élargit : la fiche garde la place d'avant. */
+.mf-page:has(.mf-lecteur.a-un-sommaire) {
+  max-width: 1260px;
+}
+
+.mf-lecteur.a-un-sommaire {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+}
+
+.mf-sommaire {
+  position: sticky;
+  /* Sous la barre du site, collée elle aussi : mesurée par CoursFiches. */
+  top: var(--haut-sommaire, 16px);
+  max-height: calc(100vh - var(--haut-sommaire, 16px) - 16px);
+  overflow-y: auto;
+  padding: 0.75rem 0.55rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(3, 11, 30, 0.55);
+  scrollbar-width: thin;
+}
+
+.mf-sommaire__titre {
+  margin: 0 0 0.5rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.mf-sommaire__liste {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mf-sommaire__notion {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 0.86rem;
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.mf-sommaire__notion:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--encre);
+  transform: translateX(2px);
+}
+
+.mf-sommaire__notion:focus-visible {
+  outline: 2px solid var(--matiere, var(--sarcelle));
+  outline-offset: 1px;
+}
+
+.mf-sommaire__numero {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 60%, transparent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mf-sommaire__nom {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding-top: 0.12rem;
+}
+
+.mf-sommaire__notion.est-courante {
+  background: color-mix(in srgb, var(--matiere, var(--sarcelle)) 24%, transparent);
+  color: var(--encre);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--matiere, var(--sarcelle)) 45%, transparent);
+}
+
+.mf-sommaire__notion.est-courante::before {
+  content: '';
+  position: absolute;
+  left: -0.55rem;
+  top: 0.45rem;
+  bottom: 0.45rem;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--matiere, var(--sarcelle));
+}
+
+.mf-sommaire__notion.est-courante .mf-sommaire__numero {
+  border-color: var(--matiere, var(--sarcelle));
+  background: var(--matiere, var(--sarcelle));
+  color: #fff;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--matiere, var(--sarcelle)) 25%, transparent);
+}
+
+:root[data-theme='light'] .mf-sommaire {
+  background: var(--surface);
+  border-color: var(--trait);
+}
+
+@media (max-width: 900px) {
+  .mf-lecteur.a-un-sommaire {
+    display: block;
+  }
+
+  .mf-sommaire {
+    display: none;
+  }
+}
+
+html.fdr-impression .mf-lecteur.a-un-sommaire {
+  display: block;
+}
+
+/*
+ * LE SUIVI DU COMPLÉMENT AU MILIEU DE L'ÉCRAN — Camara, le 16/10/2026. Une
+ * fenêtre centrée sur un fond voilé ; réduite, une pastille en bas à droite.
+ */
+.mf-suivi {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(3, 10, 30, 0.7);
+  backdrop-filter: blur(4px);
+  animation: mf-apercu-fond 0.18s ease-out;
+}
+
+.mf-suivi__fenetre {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  width: min(440px, 100%);
+  padding: 2rem 1.6rem 1.6rem;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 45%, transparent);
+  background: var(--papier, #0b1d3d);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 6px color-mix(in srgb, var(--matiere, var(--sarcelle)) 14%, transparent);
+  text-align: center;
+  animation: mf-apercu-arrivee 0.22s ease-out;
+}
+
+.mf-suivi__titre {
+  margin: 0.2rem 0 0;
+  font-family: var(--display);
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+
+.mf-suivi__texte {
+  margin: 0 0 0.4rem;
+  color: var(--encre-douce);
+  font-size: 0.95rem;
+}
+
+.mf-suivi__roue {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 5px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 25%, transparent);
+  border-top-color: var(--matiere, var(--sarcelle));
+  animation: mf-suivi-tour 0.9s linear infinite;
+}
+
+@keyframes mf-suivi-tour {
+  to { transform: rotate(360deg); }
+}
+
+.mf-suivi__coche {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--matiere, var(--sarcelle));
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--matiere, var(--sarcelle)) 22%, transparent);
+  animation: mf-apercu-arrivee 0.3s ease-out;
+}
+
+.mf-suivi__coche.est-echec {
+  background: var(--danger-fort, #ff705e);
+  box-shadow: 0 0 0 8px rgba(255, 112, 94, 0.22);
+}
+
+.mf-suivi-pastille {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1040;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1.1rem 0.7rem 0.8rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 60%, transparent);
+  background: var(--papier, #0b1d3d);
+  color: var(--encre);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.mf-suivi-pastille .mf-etat__roue {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-suivi,
+  .mf-suivi__fenetre,
+  .mf-suivi__coche {
+    animation: none;
+  }
+}
+
+/*
+ * « ME TESTER » — Camara, le 16/10/2026. Sur la carte, un second pied, sur
+ * toute la largeur ; dans la barre d'une fiche, le bouton le plus coloré.
+ */
+.mf-cours__tester {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 46px;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 30%, var(--trait));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--matiere, var(--sarcelle)) 32%, transparent), color-mix(in srgb, #7c5cd6 32%, transparent));
+  color: var(--encre);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s ease, letter-spacing 0.2s ease;
+}
+
+.mf-cours__tester:hover,
+.mf-cours__tester:focus-visible {
+  filter: brightness(1.25);
+  letter-spacing: 0.01em;
+}
+
+.mf-cours__tester-modes {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--encre-douce);
+}
+
+.btn.mf-bouton-tester {
+  background: linear-gradient(135deg, #7c5cd6, #e2557f);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(124, 92, 214, 0.35);
+}
+
+.btn.mf-bouton-tester:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Le pied : « Réviser → » à gauche, « Supprimer » à droite. */
+.mf-cours__pied {
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.8rem 0.65rem 1.2rem;
+  border-top: 1px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 22%, var(--trait));
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.mf-cours__ouvrir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--encre);
+  text-decoration: none;
+}
+
+.mf-cours__fleche {
+  display: inline-block;
+  color: var(--matiere, var(--sarcelle));
+  transition: transform 0.2s ease;
+}
+
+.mf-carte-cours:hover .mf-cours__fleche {
+  transform: translateX(4px);
+}
+
+:root[data-theme='light'] .mf-cours__pied {
+  background: color-mix(in srgb, var(--matiere, var(--sarcelle)) 6%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-carte-cours,
+  .mf-pile__feuille,
+  .mf-cours__fleche {
+    transition: none;
+  }
+}
+
+/*
+ * LE HAUT D'UNE FICHE — Camara, le 16/10/2026 : « améliore le design de cette
+ * partie ». La matière en pastille, le nombre de fiches à côté de la date, et
+ * une seule barre qui range la navigation (à gauche) et les actions (à
+ * droite), au lieu de deux lignes éparpillées.
+ */
+.mf-cours-entete {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.mf-cours-entete__matiere {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.55rem;
+  padding: 0.28rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--matiere, var(--sarcelle)) 55%, transparent);
+  background: color-mix(in srgb, var(--matiere, var(--sarcelle)) 20%, transparent);
+  color: var(--matiere-claire, var(--matiere, var(--sarcelle)));
+  font-size: 0.74rem;
+}
+
+.mf-cours-entete__matiere::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+:root[data-theme='light'] .mf-cours-entete__matiere {
+  color: var(--matiere, var(--sarcelle));
+}
+
+.mf-cours-entete__nombre {
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.mf-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem 1.2rem;
+  margin-bottom: 1.2rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 18px;
+  border: 1px solid var(--trait);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(6px);
+}
+
+.mf-barre .mf-navigation {
+  flex: 0 1 760px;
+  margin: 0;
+}
+
+/* Les actions de la fiche, juste au-dessus d'elle : « Me tester » à gauche,
+   imprimer et supprimer à droite. */
+.mf-outils {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.mf-outils .mf-bouton-tester {
+  margin-right: auto;
+}
+
+.mf-lecteur__fiche {
+  min-width: 0;
+}
+
+.mf-barre .mf-fiche-actions {
+  flex: 0 1 auto;
+  margin: 0;
+  align-items: center;
+}
+
+.mf-barre .mf-navigation__bouton {
+  min-height: 44px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.95rem;
+}
+
+.mf-navigation__position {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+  color: var(--encre-douce);
+}
+
+.mf-points {
+  display: flex;
+  gap: 6px;
+}
+
+.mf-point {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre) 28%, transparent);
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.mf-point:hover,
+.mf-point:focus-visible {
+  background: color-mix(in srgb, var(--encre) 55%, transparent);
+}
+
+.mf-point.est-courant {
+  width: 26px;
+  background: var(--matiere, var(--sarcelle));
+}
+
+.mf-fiche-actions .btn {
+  min-height: 44px;
+}
+
+.mf-bouton-agrandir span {
+  font-size: 1.1rem;
+  margin-right: 0.15rem;
+}
+
+.mf-action__court {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .mf-barre {
+    padding: 0.65rem;
+  }
+
+  .mf-barre .mf-navigation {
+    flex: 1 1 100%;
+  }
+
+  .mf-outils {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+  }
+
+  .mf-outils .mf-bouton-tester {
+    margin-right: 0;
+  }
+
+  .mf-outils .btn {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .mf-action__long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .mf-action__court {
+    display: inline;
+  }
+
+  .mf-points {
+    display: none;
+  }
+}
+
+/*
+ * LA FICHE À LA TAILLE DE L'ÉCRAN (16/10/2026) : réduite par le haut, centrée.
+ * À l'impression, elle reprend sa vraie taille.
+ */
+.fdr-ajuste {
+  position: relative;
+  /* La feuille posée à sa largeur de bureau dépasse avant d'être réduite :
+     on coupe ce dépassement, en laissant son ombre respirer. */
+  overflow: clip;
+  overflow-clip-margin: 28px;
+}
+
+.fdr-ajuste__contenu {
+  transform-origin: top center;
+}
+
+html.fdr-impression .fdr-ajuste {
+  height: auto !important;
+}
+
+html.fdr-impression .fdr-ajuste__contenu {
+  transform: none !important;
+  width: auto !important;
+}
+
+/*
+ * LA FICHE EN GRAND, OÙ L'ON ZOOME (16/10/2026). Plein écran, fond sombre ;
+ * la fiche garde sa largeur de bureau (960 px) même sur téléphone — c'est le
+ * vrai schéma qu'on agrandit — et se manipule à la souris ou aux doigts.
+ */
+.fdr-visionneuse {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(2, 8, 24, 0.94);
+}
+
+.fdr-visionneuse__barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.fdr-visionneuse__titre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.fdr-visionneuse__outils {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.fdr-visionneuse__bouton {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 0.6rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fdr-visionneuse__bouton:hover,
+.fdr-visionneuse__bouton:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.fdr-visionneuse__bouton--texte {
+  font-size: 0.9rem;
+}
+
+.fdr-visionneuse__fermer {
+  margin-left: 0.3rem;
+  border-radius: 50%;
+  font-size: 1.5rem;
+}
+
+.fdr-visionneuse__zoom {
+  min-width: 3.4rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* D'une fiche à l'autre (16/10/2026) : au milieu de la barre. */
+.fdr-visionneuse__fiches {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.fdr-visionneuse__fiches .fdr-visionneuse__bouton {
+  font-size: 0.9rem;
+}
+
+.fdr-visionneuse__fiches .fdr-visionneuse__bouton > span[aria-hidden='true'] {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.fdr-visionneuse__fiches .fdr-visionneuse__bouton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.fdr-visionneuse__position {
+  min-width: 3.2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fdr-visionneuse__plateau {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.fdr-visionneuse__scene {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+
+/* Les grandes flèches des bords, par-dessus la scène. */
+.fdr-visionneuse__fleche {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  margin-top: -26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(10, 20, 45, 0.72);
+  color: #fff;
+  font: inherit;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.fdr-visionneuse__fleche:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.08);
+}
+
+.fdr-visionneuse__fleche--avant {
+  left: 16px;
+}
+
+.fdr-visionneuse__fleche--apres {
+  right: 16px;
+}
+
+.fdr-visionneuse__scene:active {
+  cursor: grabbing;
+}
+
+.fdr-visionneuse__contenu {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 960px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.fdr-visionneuse__contenu .fdr-feuille {
+  margin: 0;
+  max-width: none;
+}
+
+.fdr-visionneuse__aide {
+  margin: 0;
+  padding: 8px 14px max(10px, env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/*
+ * DES BOUTONS PLUS SYMPATHIQUES — Camara, le 16/10/2026. La fenêtre prend la
+ * couleur du type de fiche (`--fdr-accent`) : « Suivante » pleine, pilules
+ * arrondies, zoom regroupé dans une seule gélule, flèches des bords en verre
+ * dépoli cerclées de couleur, et un léger relief au survol.
+ */
+.fdr-visionneuse__barre {
+  background: linear-gradient(180deg, rgba(8, 16, 40, 0.98), rgba(8, 16, 40, 0.85));
+  backdrop-filter: blur(6px);
+}
+
+.fdr-visionneuse__titre::before {
+  content: '';
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: var(--fdr-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--fdr-accent) 25%, transparent);
+  vertical-align: middle;
+}
+
+.fdr-visionneuse__bouton {
+  border-radius: 999px;
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.fdr-visionneuse__bouton:hover,
+.fdr-visionneuse__bouton:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.fdr-visionneuse__bouton:focus-visible,
+.fdr-visionneuse__pas:focus-visible,
+.fdr-visionneuse__fleche:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--fdr-accent) 70%, #fff);
+  outline-offset: 2px;
+}
+
+/* La navigation : une gélule, « Suivante » pleine de la couleur du type. */
+.fdr-visionneuse__fiches {
+  gap: 0.25rem;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fdr-visionneuse__pas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 38px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fdr-visionneuse__pas > span[aria-hidden='true'] {
+  font-size: 1.35rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.fdr-visionneuse__pas:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.fdr-visionneuse__pas:hover:not(:disabled) > span[aria-hidden='true'] {
+  transform: translateX(-3px);
+}
+
+.fdr-visionneuse__pas--suivante {
+  background: var(--fdr-accent);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--fdr-accent) 45%, transparent);
+}
+
+.fdr-visionneuse__pas--suivante:hover:not(:disabled) {
+  background: var(--fdr-accent-fonce, var(--fdr-accent));
+  transform: translateY(-1px);
+}
+
+.fdr-visionneuse__pas--suivante:hover:not(:disabled) > span[aria-hidden='true'] {
+  transform: translateX(3px);
+}
+
+.fdr-visionneuse__pas:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.fdr-visionneuse__position {
+  min-width: 3.4rem;
+  padding: 0 0.2rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.92rem;
+}
+
+/* Le zoom : − 100 % + dans une seule gélule. */
+.fdr-visionneuse__zoomeur {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fdr-visionneuse__zoomeur .fdr-visionneuse__bouton {
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 1.2rem;
+}
+
+.fdr-visionneuse__zoomeur .fdr-visionneuse__bouton:hover,
+.fdr-visionneuse__zoomeur .fdr-visionneuse__bouton:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.fdr-visionneuse__ajuster {
+  padding: 0 0.95rem;
+  font-weight: 800;
+}
+
+.fdr-visionneuse__fermer {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.fdr-visionneuse__fermer:hover,
+.fdr-visionneuse__fermer:focus-visible {
+  background: var(--fdr-accent);
+  border-color: var(--fdr-accent);
+  transform: rotate(90deg);
+}
+
+/* Les flèches des bords : verre dépoli, cerclées de la couleur du type. */
+.fdr-visionneuse__fleche {
+  width: 56px;
+  height: 56px;
+  margin-top: -28px;
+  border: 2px solid color-mix(in srgb, var(--fdr-accent) 75%, #fff);
+  background: rgba(10, 20, 45, 0.55);
+  backdrop-filter: blur(8px);
+  font-size: 2.1rem;
+  font-weight: 700;
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.45),
+    0 0 0 6px color-mix(in srgb, var(--fdr-accent) 18%, transparent);
+}
+
+.fdr-visionneuse__fleche:hover {
+  background: var(--fdr-accent);
+  transform: scale(1.1);
+}
+
+@media (max-width: 600px) {
+  .fdr-visionneuse__titre {
+    font-size: 0.92rem;
+  }
+
+  .fdr-visionneuse__bouton {
+    min-width: 38px;
+    height: 38px;
+  }
+
+  .fdr-visionneuse__zoom {
+    display: none;
+  }
+
+  .fdr-visionneuse__mot {
+    display: none;
+  }
+
+  .fdr-visionneuse__barre {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .fdr-visionneuse__titre {
+    flex: 1 0 100%;
+  }
+
+  .fdr-visionneuse__pas {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .fdr-visionneuse__zoomeur .fdr-visionneuse__bouton {
+    min-width: 32px;
+    height: 32px;
+  }
+
+  .fdr-visionneuse__fleche {
+    width: 42px;
+    height: 42px;
+    margin-top: -21px;
+    font-size: 1.6rem;
+  }
+
+  .fdr-visionneuse__fleche--avant {
+    left: 8px;
+  }
+
+  .fdr-visionneuse__fleche--apres {
+    right: 8px;
+  }
+}
+
+/*
+ * « AGRANDIR » DANS LE COIN DE LA FICHE — Camara, le 16/10/2026. Hors de la
+ * réduction (il garde sa taille), mais calé sur le bord droit de la feuille,
+ * même réduite : sa place est mesurée sur la feuille affichée.
+ */
+.fdr-ajuste__coin {
+  position: absolute;
+  /* Repli avant la mesure : la position réelle est posée par AjusteALEcran. */
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+}
+
+.mf-agrandir-coin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 38px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  /* Visible d'un coup d'œil (16/10/2026) : la couleur de la matière, pleine. */
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: var(--matiere, #2f6fd6);
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(22, 35, 58, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  animation: mf-agrandir-appel 2.4s ease-out 0.6s 2;
+}
+
+/* Deux ondes à l'arrivée sur la fiche : « on peut cliquer ici ». */
+@keyframes mf-agrandir-appel {
+  0% { box-shadow: 0 6px 16px rgba(22, 35, 58, 0.28), 0 0 0 0 color-mix(in srgb, var(--matiere, #2f6fd6) 55%, transparent); }
+  70% { box-shadow: 0 6px 16px rgba(22, 35, 58, 0.28), 0 0 0 12px transparent; }
+  100% { box-shadow: 0 6px 16px rgba(22, 35, 58, 0.28), 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-agrandir-coin {
+    animation: none;
+  }
+}
+
+.mf-agrandir-coin span[aria-hidden='true'] {
+  font-size: 1.05rem;
+}
+
+.mf-agrandir-coin:hover,
+.mf-agrandir-coin:focus-visible {
+  transform: translateY(-2px) scale(1.05);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 22px rgba(22, 35, 58, 0.32);
+}
+
+.mf-agrandir-coin:focus-visible {
+  outline: 3px solid #16233a;
+  outline-offset: 2px;
+}
+
+.mf-agrandir-coin:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/*
+ * Les pastilles ET le titre laissent la place au bouton. La marge est dans la
+ * feuille, donc réduite avec elle, alors que le bouton garde sa taille : on la
+ * divise par l'échelle pour qu'elle couvre toujours le bouton (une fiche
+ * réduite de moitié le laissait mordre sur le titre).
+ */
+.fdr-ajuste .fdr-entete__ligne,
+.fdr-ajuste .fdr-entete__titre {
+  padding-right: calc(140px / var(--echelle, 1));
+}
+
+@media (max-width: 600px) {
+  .mf-agrandir-coin {
+    width: 40px;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .mf-agrandir-coin__mot {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .fdr-ajuste .fdr-entete__ligne,
+  .fdr-ajuste .fdr-entete__titre {
+    padding-right: 48px;
+  }
+}
+
+html.fdr-impression .fdr-ajuste__coin {
+  display: none;
+}
+
+html.fdr-impression .fdr-ajuste .fdr-entete__ligne,
+html.fdr-impression .fdr-ajuste .fdr-entete__titre {
+  padding-right: 0;
+}
+
+/*
+ * « ME TESTER » PLUS EN VALEUR — Camara, le 16/10/2026 : « plus visible ».
+ * Le pied prend le dégradé violet-rose de « Me tester » (celui du bouton de la
+ * fiche et de la fenêtre), en plein, texte blanc ; un reflet passe dessus de
+ * temps en temps. Pas de halo coloré : « trop de glow fait mal aux yeux ».
+ */
+.mf-cours__tester {
+  position: relative;
+  overflow: hidden;
+  min-height: 52px;
+  border-top: 0;
+  background: linear-gradient(90deg, #7c5cd6, #c04fd0 55%, #e2557f);
+  color: #fff;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.mf-cours__tester-modes {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 700;
+}
+
+.mf-cours__tester::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 30%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: mf-tester-reflet 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes mf-tester-reflet {
+  0%, 60% { left: -40%; }
+  100% { left: 130%; }
+}
+
+.mf-cours__tester:hover,
+.mf-cours__tester:focus-visible {
+  filter: brightness(1.1);
+  letter-spacing: 0.02em;
+}
+
+.mf-cours__tester:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-cours__tester::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/*
+ * LE CERVEAU DE « ME TESTER » — Camara, le 16/10/2026 : brain.png à la place de
+ * l'emoji 🧠 (réencodé en WebP, 1,5 Mo → 8 Ko). Il se balance au survol.
+ */
+.mf-cerveau {
+  display: inline-block;
+  width: auto;
+  height: 1.6em;
+  margin-right: 0.15rem;
+  vertical-align: middle;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+.mf-cours__tester:hover .mf-cerveau,
+.mf-bouton-tester:hover .mf-cerveau {
+  transform: rotate(-10deg) scale(1.15);
+}
+
+.mt__surtitre .mf-cerveau {
+  height: 1.5em;
+  margin-right: 0.25rem;
+}
+
+/*
+ * GLISSER D'UNE FICHE À L'AUTRE — Camara, le 16/10/2026 : « sur mobile, qu'on
+ * puisse swiper ». La fiche entre du côté d'où elle vient (boutons, points,
+ * sommaire ou doigt : le même mouvement). Translation seule : les mesures
+ * d'AjusteALEcran (haut, écart feuille / cadre) n'en sont pas faussées.
+ * `clip` et non `hidden` : rien ne défile, le sommaire reste collé.
+ */
+.mf-lecture {
+  overflow-x: clip;
+}
+
+.mf-arrivee--suivante {
+  animation: mf-arrivee-droite 0.28s ease-out;
+}
+
+.mf-arrivee--precedente {
+  animation: mf-arrivee-gauche 0.28s ease-out;
+}
+
+@keyframes mf-arrivee-droite {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mf-arrivee-gauche {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* L'astuce : sur un écran tactile seulement, là où le geste existe. */
+.mf-astuce-glisser {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .mf-astuce-glisser {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: -0.35rem 0 0.9rem;
+    font-size: 0.85rem;
+    color: var(--encre-douce);
+  }
+
+  .mf-astuce-glisser span {
+    display: inline-block;
+    animation: mf-astuce-doigt 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes mf-astuce-doigt {
+  0%, 55%, 100% { transform: translateX(0); }
+  70% { transform: translateX(-7px); }
+  85% { transform: translateX(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-arrivee--suivante,
+  .mf-arrivee--precedente,
+  .mf-astuce-glisser span {
+    animation: none;
+  }
+}
+
+/*
+ * LES NOTIONS SUR TÉLÉPHONE — Camara, le 16/10/2026 : un bouton « menu » à
+ * gauche d'« Agrandir », là où le sommaire de gauche n'a plus sa colonne
+ * (sous 900 px, voir `.mf-sommaire`). Il ouvre un panneau qui monte du bas.
+ */
+.mf-coin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mf-notions-coin {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--matiere, #2f6fd6);
+  background: #fff;
+  color: var(--matiere, #2f6fd6);
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(22, 35, 58, 0.22);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-notions-coin:hover,
+.mf-notions-coin:focus-visible {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 22px rgba(22, 35, 58, 0.3);
+}
+
+.mf-notions-coin:focus-visible {
+  outline: 3px solid #16233a;
+  outline-offset: 2px;
+}
+
+.mf-notions-coin:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 900px) {
+  .mf-notions-coin {
+    display: inline-grid;
+  }
+
+  /* Le titre laisse la place aux DEUX boutons. */
+  .fdr-ajuste:has(.mf-notions-coin) .fdr-entete__ligne,
+  .fdr-ajuste:has(.mf-notions-coin) .fdr-entete__titre {
+    padding-right: calc(190px / var(--echelle, 1));
+  }
+}
+
+/* Sur téléphone, les pastilles passent à la ligne : le titre arrive sous
+   les boutons, il garde la marge d'un seul. */
+@media (max-width: 600px) {
+  .fdr-ajuste:has(.mf-notions-coin) .fdr-entete__ligne {
+    padding-right: 96px;
+  }
+
+  .fdr-ajuste:has(.mf-notions-coin) .fdr-entete__titre {
+    padding-right: 48px;
+  }
+}
+
+/* Le panneau : posé sur <body>, au-dessus de tout sauf de la visionneuse. */
+.mf-menu-notions {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(3, 8, 20, 0.58);
+  backdrop-filter: blur(3px);
+  animation: mf-menu-voile 0.2s ease-out;
+}
+
+.mf-menu-notions__panneau {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: 78dvh;
+  padding: 0 0.6rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 22px 22px 0 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 0;
+  box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.45), inset 0 3px 0 var(--matiere, var(--sarcelle));
+  background: #0b1630;
+  color: var(--encre);
+  animation: mf-menu-monte 0.26s cubic-bezier(0.2, 0.8, 0.25, 1);
+}
+
+.mf-menu-notions__tete {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.1rem 0.75rem;
+  padding: 0.55rem 0.4rem 0.75rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mf-menu-notions__poignee {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 42px;
+  height: 5px;
+  margin-bottom: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.mf-menu-notions__titre {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--matiere, var(--sarcelle));
+}
+
+.mf-menu-notions__position {
+  grid-row: 3;
+  font-size: 0.85rem;
+  color: var(--encre-douce);
+}
+
+.mf-menu-notions__fermer {
+  grid-row: 2 / span 2;
+  grid-column: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.mf-menu-notions__fermer:hover,
+.mf-menu-notions__fermer:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mf-menu-notions__liste {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.6rem 0.2rem 0.2rem 0.6rem;
+}
+
+.mf-menu-notions .mf-sommaire__notion {
+  min-height: 48px;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.mf-menu-notions .mf-sommaire__nom {
+  padding-top: 0;
+}
+
+:root[data-theme='light'] .mf-menu-notions__panneau {
+  background: var(--surface);
+  border-color: var(--trait);
+}
+
+:root[data-theme='light'] .mf-menu-notions__tete {
+  border-color: var(--trait);
+}
+
+:root[data-theme='light'] .mf-menu-notions__poignee,
+:root[data-theme='light'] .mf-menu-notions__fermer {
+  background: color-mix(in srgb, var(--encre) 10%, transparent);
+}
+
+@keyframes mf-menu-voile {
+  from { opacity: 0; }
+}
+
+@keyframes mf-menu-monte {
+  from { transform: translateY(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-menu-notions,
+  .mf-menu-notions__panneau {
+    animation: none;
+  }
+}
+
+html.fdr-impression .mf-notions-coin {
+  display: none;
+}

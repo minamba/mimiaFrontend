@@ -14,6 +14,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FRISE, frisePourLaClasse, rangDeLaClasse } from '../lib/jeux/frise';
 import FriseDesClasses from '../components/jeux/FriseDesClasses';
+import { bruitage } from '../lib/jeux/bruitages';
+
+jest.mock('../lib/jeux/bruitages', () => ({ bruitage: jest.fn() }));
 
 describe('le rang d’une classe', () => {
   it('va de 1 au CP à 12 en terminale', () => {
@@ -145,6 +148,18 @@ describe('la piste à l’écran', () => {
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('un portail fermé joue close.mp3, une classe ouverte le son du choix', () => {
+    bruitage.mockClear();
+    render(<FriseDesClasses etapes={etapes} choisie="CE2" onChoisir={jest.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Tle/ }));
+    expect(bruitage).toHaveBeenLastCalledWith('ferme');
+
+    fireEvent.click(screen.getByRole('button', { name: /CE1/ }));
+    expect(bruitage).toHaveBeenLastCalledWith('selection');
+    expect(bruitage).toHaveBeenCalledTimes(2);
   });
 
   it('le cadenas reste un bouton : il répond au clic au lieu de se taire', () => {

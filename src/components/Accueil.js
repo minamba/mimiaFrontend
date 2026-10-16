@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { login } from '../lib/actions/authActions';
 import { viserEssai } from '../lib/storage/essaiVise';
 import { signalerVisite } from '../lib/storage/visite';
-import { useEssaisOuverts } from '../lib/storage/modeTest';
+import { useBesoinsParticuliers, useEssaisOuverts } from '../lib/storage/modeTest';
 import { getEquipe, getAnneeScolaire } from '../lib/api/referentielApi';
 import { libelleProgrammes } from '../lib/storage/anneeScolaire';
 import Avatar from './Avatar';
@@ -19,6 +19,7 @@ import ExercicesLangue from './ExercicesLangue';
 import JeuxApercu from './JeuxApercu';
 import BandeauPromo from './BandeauPromo';
 import CompteARebours from './CompteARebours';
+import ToutCompris from './ToutCompris';
 import iconeVoix from '../assets/voix.png';
 import iconeTableau from '../assets/tableau.png';
 import iconeCerveau from '../assets/cerveau.png';
@@ -27,6 +28,8 @@ import iconeNoReponse from '../assets/noreponse.png';
 import iconeDonnees from '../assets/data.png';
 import iconeEnfants from '../assets/many.png';
 import iconeAge from '../assets/age.png';
+import iconeAdapte from '../assets/suggestion.png';
+import portraitMaelle from '../assets/profs/p_orientation.png';
 // LA FRISE DU CP À LA TERMINALE — deux illustrations, deux tailles chacune.
 //
 // DEUX ILLUSTRATIONS : un garçon sur grand écran, une fille sur téléphone
@@ -104,6 +107,30 @@ const PREUVES = [
  * « Il va lui donner les réponses » vient en premier : c'est celle qui fait
  * renoncer. Les icônes sont des images, comme celles de la bande de preuve.
  */
+/**
+ * DEUX CARTES DE PLUS, SOUS CONDITION — Camara, le 11/10/2026 : « ne plus
+ * ajouter de grosses sections à chaque nouvelle fonctionnalité, les faire
+ * entrer dans les sections existantes ». Chacune ne paraît que si son module
+ * est allumé : la page ne promet jamais ce que l'application cache.
+ *   - l'orientation : quand Maëlle est dans l'équipe (le serveur la retire
+ *     quand la conseillère est éteinte) ;
+ *   - l'apprentissage adapté : quand les besoins particuliers sont ouverts.
+ */
+const CONFIANCE_ORIENTATION = {
+  icone: portraitMaelle,
+  portrait: true,
+  titre: 'Orientation scolaire',
+  // Texte de Camara, le 11/10/2026 : le projet, les forces, et les professeurs
+  // qu'elle coordonne (voir ForcesEleve et ProjetPourLesProfesseurs, côté API).
+  texte: 'Maëlle construit son projet avec lui, identifie ses forces et ses points à renforcer, puis coordonne ses professeurs pour l’aider à avancer vers son objectif.',
+};
+
+const CONFIANCE_ADAPTE = {
+  icone: iconeAdapte,
+  titre: 'Apprentissage adapté',
+  texte: 'Dyslexie, dyscalculie, TDAH : vous le signalez, le professeur adapte sa façon d’expliquer et l’écran s’allège.',
+};
+
 const CONFIANCE = [
   {
     icone: iconeNoReponse,
@@ -293,6 +320,7 @@ export default function Accueil() {
   const dispatch = useDispatch();
   const { error } = useSelector((state) => state.auth);
   const essaisOuverts = useEssaisOuverts();
+  const besoinsOuverts = useBesoinsParticuliers();
 
   /**
    * On compte cette venue.
@@ -730,7 +758,13 @@ export default function Accueil() {
               promesse sonnerait faux dès la première connexion. */}
           <ul className="equipe__grille">
             {equipe.map((prof) => (
-              <li key={prof.avatar}>
+              // LE MÊME HALO QUE DANS LA GRILLE DES COURS pour la conseillère
+              // (Camara, le 11/10/2026) : elle n'est pas un professeur comme
+              // les autres, et ça se voit dès la page d'accueil.
+              <li
+                key={prof.avatar}
+                className={prof.avatar === 'maelle' ? 'equipe__case--conseillere' : undefined}
+              >
                 {/* LA CARTE OUVRE SA FICHE — Camara, le 15/09/2026. Un bouton et
                     non un lien : elle ouvre une fenêtre, elle ne mène nulle
                     part. La carte ne dit plus que la matière ; le détail des
@@ -805,9 +839,17 @@ export default function Accueil() {
           </header>
 
           <div className="parents__grille">
-            {CONFIANCE.map((point) => (
+            {[
+              ...CONFIANCE,
+              ...(equipe.some((p) => p.avatar === 'maelle') ? [CONFIANCE_ORIENTATION] : []),
+              ...(besoinsOuverts ? [CONFIANCE_ADAPTE] : []),
+            ].map((point) => (
               <div key={point.titre} className="point">
-                <img className="point__icone" src={point.icone} alt="" />
+                <img
+                  className={`point__icone${point.portrait ? ' point__icone--portrait' : ''}`}
+                  src={point.icone}
+                  alt=""
+                />
                 <h3>{point.titre}</h3>
                 <p>{point.texte}</p>
               </div>
@@ -894,6 +936,11 @@ export default function Accueil() {
                 <span className="prix-phare__unite">l’heure</span>
               </div>
             </div>
+            {/* TOUT COMPRIS, EN UNE LIGNE — Camara, le 11/10/2026 : l'argument
+                le plus fort était éparpillé dans toute la page. Ici, sous le
+                prix, le parent voit d'un coup ce que paient ses 39,90 €.
+                L'orientation n'y figure que si la conseillère est visible. */}
+            <ToutCompris orientation={equipe.some((p) => p.avatar === 'maelle')} />
           </div>
 
           {/* Les autres formules restent à un clic : cacher qu'elles existent

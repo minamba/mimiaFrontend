@@ -523,7 +523,7 @@ const BANQUES = {
       },
       {
         competence: 'AN_TLE_ECR_TRADUIRE',
-        recit: 'On the plane, Dr Morgan asks you to translate the notes of Claire, a French glaciologist who worked at the station last winter.',
+        recit: 'As you get off the plane, Dr Morgan asks you to translate the notes of Claire, a French glaciologist who worked at the station last winter.',
         variantes: [
           v('Translate: « Actuellement, la station n’envoie aucune donnée. »', 'Currently, the station is not sending any data.', {
             'Actually, the station is not sending any data.': 'actually', 'Currently, the station does not send any data.': 'temps-en-cours',
@@ -541,7 +541,7 @@ const BANQUES = {
       },
       {
         competence: 'AN_TLE_LEX_REGISTRE',
-        recit: 'Before landing, you must write to the university that runs the station to report the problem. Dr Morgan reminds you: “Formal, please!”',
+        recit: 'In the sensor room, you must first write to the university that runs the station to report the problem. Dr Morgan reminds you: “Formal, please!”',
         variantes: [
           v('Which sentence is the most formal?', 'I would be grateful if you could send us the latest data.', {
             'Could you get back to me with the data?': 'registre-formel', 'Send us the data asap!': 'registre-formel',

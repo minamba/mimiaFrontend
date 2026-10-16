@@ -42,8 +42,10 @@ import {
   getHistoriqueRapports,
   getCout,
   getHistoriqueHeures,
+  getHistoriqueCreditsFiches,
   definirAdministrateur,
   definirAjoutEnfant,
+  definirFichesParent,
   creerParent,
   getRepartitionParents,
   bannirParent,
@@ -53,6 +55,7 @@ import {
   getMesOnglets,
 } from '../lib/api/adminApi';
 import DroitsAdmin from './DroitsAdmin';
+import CreationEnfantAdmin from './CreationEnfantAdmin';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
 import Graphique from './Graphique';
@@ -607,10 +610,11 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
   const dollars = cout?.totalDollars ?? 0;
   const pale = chargement ? 'cout-total__pale' : '';
 
-  // Ce que les familles consomment vraiment : le dialogue et la voix, et rien
-  // d'autre. Le déduire du total plutôt que d'additionner les deux postes
-  // laisserait les frais de fond dedans le jour où l'API en ajoute un.
-  const famillesDollars = (cout?.dialogueDollars ?? 0) + (cout?.voixDollars ?? 0);
+  // Ce que les familles consomment vraiment : le dialogue, la voix, et depuis le
+  // 15/10/2026 les fiches de révision que leurs enfants génèrent. Additionnés
+  // poste par poste plutôt que déduits du total : sinon les frais de fond
+  // resteraient dedans le jour où l'API en ajoute un.
+  const famillesDollars = (cout?.dialogueDollars ?? 0) + (cout?.voixDollars ?? 0) + (cout?.fichesDollars ?? 0);
 
   const postes = cout?.postes ?? [];
 
@@ -749,6 +753,24 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
                       <strong>{(cout?.voixDollars ?? 0).toFixed(2)} $</strong>
                     </li>
                   )}
+
+                  {/* LA GÉNÉRATION DES FICHES — Camara, le 15/10/2026 : « il
+                      faudrait une nouvelle ligne génération de fiches ». La
+                      lecture des cours et la rédaction des fiches, au tarif
+                      exact des jetons ; ce qu'elles ont produit en dessous. */}
+                  <li>
+                    <span>
+                      Génération de fiches
+                      <small>
+                        {(cout?.fichesCreees ?? 0).toLocaleString('fr-FR')} fiche{(cout?.fichesCreees ?? 0) > 1 ? 's' : ''}
+                        {' · '}
+                        {(cout?.coursLus ?? 0).toLocaleString('fr-FR')} cours lu{(cout?.coursLus ?? 0) > 1 ? 's' : ''}
+                        {' · '}
+                        {(cout?.fichesAppels ?? 0).toLocaleString('fr-FR')} appel{(cout?.fichesAppels ?? 0) > 1 ? 's' : ''}
+                      </small>
+                    </span>
+                    <strong>{(cout?.fichesDollars ?? 0).toFixed(2)} $</strong>
+                  </li>
                 </ul>
               </section>
 
@@ -815,6 +837,74 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
       afficherResultat={voirCout}
     />
     </>
+  );
+}
+
+/**
+ * LES CRÉDITS DE FICHES DE RÉVISION D'UNE FAMILLE — 16/10/2026. Le solde et
+ * ses mouvements, affichés là où on les ajuste, comme pour les heures.
+ */
+function HistoriqueCreditsFiches({ parentId }) {
+  const [donnees, setDonnees] = useState(null);
+  const [erreur, setErreur] = useState(null);
+
+  useEffect(() => {
+    let vivant = true;
+
+    getHistoriqueCreditsFiches(parentId)
+      .then(({ data }) => { if (vivant) setDonnees(data ?? { solde: 0, lignes: [] }); })
+      .catch(() => { if (vivant) setErreur("L'historique n'a pas pu être chargé."); });
+
+    return () => { vivant = false; };
+  }, [parentId]);
+
+  if (erreur) return <p className="modale__note">{erreur}</p>;
+  if (!donnees) return <p className="modale__note">Chargement de l’historique…</p>;
+
+  const credits = (n) => `${n > 0 ? '+' : ''}${n} crédit${Math.abs(n) > 1 ? 's' : ''}`;
+
+  return (
+    <div className="historique-heures">
+      <p className="modale__note">
+        Solde actuel : <strong>{donnees.solde} crédit{donnees.solde > 1 ? 's' : ''}</strong>
+        {' '}(1 crédit = 1 cours importé, une fois les 10 cours du mois de l’enfant utilisés).
+      </p>
+
+      {donnees.lignes.length === 0 ? (
+        <p className="modale__note">Aucun crédit acheté ni ajusté sur ce compte.</p>
+      ) : (
+        <>
+          <h3 className="historique-heures__titre">Historique</h3>
+          <ul className="historique-heures__lignes">
+            {donnees.lignes.map((l, i) => (
+              <li key={`${l.date}-${i}`} className={l.dateRemboursement ? 'est-repris' : ''}>
+                <span className="historique-heures__quand">
+                  {new Date(l.date).toLocaleDateString('fr-FR')}
+                </span>
+
+                <span className={`historique-heures__minutes ${l.credits < 0 ? 'est-retrait' : ''}`}>
+                  {credits(l.credits)}
+                </span>
+
+                <span className="historique-heures__motif" title={l.motif ?? undefined}>
+                  {l.motif
+                    ? l.motif
+                    : l.prixCentimes > 0
+                      ? `Acheté ${(l.prixCentimes / 100).toFixed(2).replace('.', ',')}\u00A0€`
+                      : 'Offert'}
+                </span>
+
+                {l.dateRemboursement && (
+                  <span className="historique-heures__repris">
+                    repris le {new Date(l.dateRemboursement).toLocaleDateString('fr-FR')}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -895,6 +985,28 @@ function HistoriqueHeures({ parentId }) {
   );
 }
 
+/**
+ * LES ÉTATS D'UN COMPTE — Camara, le 16/10/2026. Les clés viennent du serveur
+ * (`EtatsCompte`), qui les calcule ; l'écran ne fait que les nommer.
+ */
+const ETATS_COMPTE = [
+  { cle: 'actif', libelle: 'Actif', aide: 'Tout est en ordre : formule payée, ou compte exempté.' },
+  { cle: 'essai', libelle: 'En essai', aide: 'L’essai gratuit est en cours.' },
+  { cle: 'inactif', libelle: 'Inactif', aide: 'Aucun abonnement en cours : jamais souscrit, résilié, essai terminé ou en pause.' },
+  { cle: 'refuse', libelle: 'Paiement refusé', aide: 'Un prélèvement n’est pas passé ; Stripe réessaie pendant deux semaines. Séances suspendues jusqu’au règlement.' },
+  { cle: 'suspendu', libelle: 'Suspendu', aide: 'Paiement refusé et rien de réglé depuis deux semaines : suspendu jusqu’au règlement de la facture.' },
+  { cle: 'banni', libelle: 'Banni', aide: 'L’adresse de ce parent est bannie.' },
+];
+
+function EtatCompte({ etat }) {
+  const connu = ETATS_COMPTE.find((e) => e.cle === etat) ?? ETATS_COMPTE[1];
+  return (
+    <span className={`etat-compte etat-compte--${connu.cle}`} title={connu.aide}>
+      {connu.libelle}
+    </span>
+  );
+}
+
 export default function Admin() {
   const dispatch = useDispatch();
   const {
@@ -947,6 +1059,28 @@ export default function Admin() {
   /** Le compte dont le super-administrateur règle les droits, ou null. */
   const [droitsDe, setDroitsDe] = useState(null);
 
+  /** Le parent pour qui l'on crée un enfant (16/10/2026), ou null. */
+  const [creationEnfantPour, setCreationEnfantPour] = useState(null);
+
+  // LA CRÉATION SE DIT (16/10/2026) : sans un mot, on ne savait pas si
+  // l'enfant existait — la liste se recharge, mais son compteur seul ne se
+  // remarque pas. Le message s'efface tout seul après huit secondes.
+  const [enfantCree, setEnfantCree] = useState(null);
+
+  // ET CELLE D'UN PARENT, avec son essai (16/10/2026) : ouvert d'office à la
+  // création, sauf essais fermés ou adresse qui a déjà eu le sien.
+  const [parentCree, setParentCree] = useState(null);
+  useEffect(() => {
+    if (!parentCree) return undefined;
+    const minuteur = setTimeout(() => setParentCree(null), 10000);
+    return () => clearTimeout(minuteur);
+  }, [parentCree]);
+  useEffect(() => {
+    if (!enfantCree) return undefined;
+    const minuteur = setTimeout(() => setEnfantCree(null), enfantCree.horsFormule ? 15000 : 8000);
+    return () => clearTimeout(minuteur);
+  }, [enfantCree]);
+
   /**
    * LE TRI DU TABLEAU DES PARENTS — Camara, le 17/09/2026.
    *
@@ -960,6 +1094,9 @@ export default function Admin() {
    * et le tri suivra la pagination côté serveur.
    */
   const [triParents, setTriParents] = useState({ cle: 'inscription', sens: 'desc' });
+
+  // LE FILTRE PAR ÉTAT DU COMPTE (16/10/2026) : '' = tous.
+  const [etatFiltre, setEtatFiltre] = useState('');
   const [versionBannis, setVersionBannis] = useState(0);
 
   // Son propre message d'erreur, et non celui de l'écran : `error` vient du
@@ -998,6 +1135,25 @@ export default function Admin() {
       // n'a pas changé.
     } finally {
       setAjoutEnfantEnCours(null);
+    }
+  };
+
+  /**
+   * L'ESPACE PARENT ET SES FICHES (16/10/2026) — Camara : « dans les droits, il
+   * faut cette option à cocher pour donner l'autorisation ». Pour tout parent ;
+   * un administrateur coché n'a ni limite ni quota. Même verrou par ligne.
+   */
+  const [fichesParentEnCours, setFichesParentEnCours] = useState(null);
+
+  const basculerFichesParent = async (parent) => {
+    setFichesParentEnCours(parent.id);
+    try {
+      await definirFichesParent(parent.id, !parent.peutCreerFiches);
+      dispatch(chargerAdmin());
+    } catch {
+      // Silencieux, comme l'ajout d'enfant : la ligne qui n'a pas changé le dit.
+    } finally {
+      setFichesParentEnCours(null);
     }
   };
 
@@ -1219,10 +1375,25 @@ export default function Admin() {
   };
 
   const parentsTries = useMemo(
-    () => trier(parents, VALEUR_TRI[triParents.cle] ?? VALEUR_TRI.inscription, triParents.sens),
+    () => trier(
+      etatFiltre ? parents.filter((p) => (p.etatCompte ?? 'inactif') === etatFiltre) : parents,
+      VALEUR_TRI[triParents.cle] ?? VALEUR_TRI.inscription,
+      triParents.sens,
+    ),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- VALEUR_TRI est une table de fonctions pures, recréée à chaque rendu mais toujours identique ; la citer relancerait le tri à chaque frappe dans la recherche.
-    [parents, triParents],
+    [parents, triParents, etatFiltre],
   );
+
+  // Combien de parents dans chaque état, sur la liste reçue (la recherche
+  // s'applique donc aussi) : le compteur de chaque entrée du filtre.
+  const nombreParEtat = useMemo(() => {
+    const compte = {};
+    parents.forEach((p) => {
+      const etat = p.etatCompte ?? 'inactif';
+      compte[etat] = (compte[etat] ?? 0) + 1;
+    });
+    return compte;
+  }, [parents]);
 
   const classeEdition = edition?.operation === 'modifierEleve' ? edition.niveauScolaireId : '';
   const lv2PossibleEdition = Boolean(
@@ -1278,6 +1449,7 @@ export default function Admin() {
 
       setCreation({ enCours: false, erreur: null });
       setEdition(null);
+      setParentCree({ nom: [propre.prenom, propre.nom].filter(Boolean).join(' ') || propre.email, essai: parent?.essai });
       dispatch(chargerAdmin());
     } catch (e) {
       setCreation({
@@ -1747,6 +1919,25 @@ export default function Admin() {
               </select>
             </label>
 
+            {/* L'ÉTAT DU COMPTE — Camara, le 16/10/2026 : une liste des états,
+                et le nombre de parents dans celui qu'on choisit. */}
+            <label className="filtres__tri">
+              <span>État</span>
+              <select value={etatFiltre} onChange={(e) => setEtatFiltre(e.target.value)} aria-label="État du compte">
+                <option value="">Tous les états ({parents.length})</option>
+                {ETATS_COMPTE.map((etat) => (
+                  <option key={etat.cle} value={etat.cle}>
+                    {etat.libelle} ({nombreParEtat[etat.cle] ?? 0})
+                  </option>
+                ))}
+              </select>
+            </label>
+            {etatFiltre && (
+              <span className={`filtres__compteur etat-compte etat-compte--${etatFiltre}`} role="status">
+                {parentsTries.length} parent{parentsTries.length > 1 ? 's' : ''}
+              </span>
+            )}
+
             <button
               type="button"
               className="btn-ghost btn-ghost--mini filtres__sens"
@@ -1772,12 +1963,16 @@ export default function Admin() {
                   <th scope="col">Forfait</th>
                   <th scope="col">Email</th>
                   <th scope="col">Nom</th>
+                  {/* JUSTE APRÈS LE NOM (16/10/2026) : qui est-ce, puis où en est son compte. */}
+                  <th scope="col">État</th>
                   <th scope="col">Élèves</th>
                   {/* JUSTE APRÈS LE NOMBRE D'ÉLÈVES : les deux colonnes parlent
                       des enfants, l'une de ceux qui sont là, l'autre du droit
                       d'en ajouter. Séparées, on lirait le droit sans savoir
                       combien il y en a déjà. */}
                   <th scope="col">Peut ajouter</th>
+                  {/* L'ESPACE PARENT (16/10/2026) : ses propres fiches de révision. */}
+                  <th scope="col">Espace parent</th>
                   {/* Entre les élèves et les requêtes : c'est le chiffre qui
                       dit si une formule gagne ou perd de l'argent, il mérite
                       d'être lu avant le volume brut de messages. */}
@@ -1823,6 +2018,7 @@ export default function Admin() {
                     </td>
                     <td>{p.mail}</td>
                     <td>{[p.prenom, p.nom].filter(Boolean).join(' ') || '—'}</td>
+                    <td><EtatCompte etat={p.etatCompte} /></td>
                     <td className="num">{p.nombreEleves}</td>
 
                     {/* UN INTERRUPTEUR QUI DIT SON ÉTAT, pas une case à cocher.
@@ -1851,6 +2047,28 @@ export default function Admin() {
                           ? '…'
                           : p.peutAjouterEnfant === false ? 'Non' : 'Oui'}
                       </button>
+                    </td>
+
+                    {/* Le super-administrateur l'a toujours : la configuration, pas la case. */}
+                    <td>
+                      {p.estSuperAdministrateur ? (
+                        <span className="bascule-droit bascule-droit--oui" title="Le super-administrateur a toujours l'espace parent">Toujours</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`bascule-droit ${p.peutCreerFiches ? 'bascule-droit--oui' : 'bascule-droit--non'}`}
+                          disabled={fichesParentEnCours === p.id}
+                          aria-pressed={Boolean(p.peutCreerFiches)}
+                          onClick={() => basculerFichesParent(p)}
+                          title={p.peutCreerFiches
+                            ? "Retirer l'espace parent et ses fiches de révision"
+                            : p.estAdministrateur
+                              ? "Ouvrir l'espace parent (administrateur : sans limite ni quota)"
+                              : "Ouvrir l'espace parent (crédits de la famille)"}
+                        >
+                          {fichesParentEnCours === p.id ? '…' : p.peutCreerFiches ? 'Oui' : 'Non'}
+                        </button>
+                      )}
                     </td>
                     <td><Consommation parent={p} /></td>
                     <td className="num"><Restant parent={p} /></td>
@@ -1936,6 +2154,21 @@ export default function Admin() {
                           Droits
                         </button>
                       )}
+                      {/* CRÉER UN ENFANT POUR CE PARENT — Camara, le 16/10/2026.
+                          Toujours au super-administrateur ; à un administrateur,
+                          seulement si « Création d'enfant » est cochée dans ses
+                          droits. Sinon le bouton n'existe pas (et le serveur
+                          refuse de toute façon). */}
+                      {(estSuperAdmin || (ongletsAutorises ?? []).includes('creation_enfant')) && (
+                        <button
+                          type="button"
+                          className="btn-ghost btn-ghost--mini btn-ghost--creer"
+                          onClick={() => setCreationEnfantPour(p)}
+                          title="Créer le profil d'un enfant rattaché à ce parent"
+                        >
+                          + Créer un enfant
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="btn-ghost btn-ghost--mini"
@@ -1966,6 +2199,24 @@ export default function Admin() {
                         }
                       >
                         Heures
+                      </button>
+                      {/* LES CRÉDITS DE FICHES, À CÔTÉ DES HEURES (16/10/2026).
+                          Sans forfait exigé : ils tiennent à la famille. */}
+                      <button
+                        type="button"
+                        className="btn-ghost btn-ghost--mini"
+                        onClick={() =>
+                          setEdition({
+                            operation: 'ajusterCreditsFiches',
+                            id: p.id,
+                            mail: p.mail,
+                            credits: 5,
+                            motif: '',
+                            prevenir: true,
+                          })
+                        }
+                      >
+                        Crédit fiche
                       </button>
                       <button
                         type="button"
@@ -2041,6 +2292,11 @@ export default function Admin() {
                     </td>
                   </tr>
                 ))}
+                {etatFiltre && parentsTries.length === 0 && (
+                  <tr>
+                    <td colSpan={99} className="conso__vide">Aucun parent dans cet état.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
 
@@ -2201,6 +2457,59 @@ export default function Admin() {
           Cette dernière est déjà une chaîne de ternaires sur trois
           opérations ; y greffer une quatrième branche aurait rendu les
           quatre illisibles pour économiser un composant. */}
+      {creationEnfantPour && (
+        <CreationEnfantAdmin
+          parent={creationEnfantPour}
+          onFermer={() => setCreationEnfantPour(null)}
+          onCree={(reponse) => {
+            const parentCree = creationEnfantPour;
+            setEnfantCree({
+              prenom: reponse?.eleve?.prenom ?? 'L’enfant',
+              parent: [parentCree.prenom, parentCree.nom].filter(Boolean).join(' ') || parentCree.mail,
+              // Qui a le droit crée sans limite : au-delà de la
+              // formule, on le lui dit — à l'usage, les places restent comptées.
+              horsFormule: Boolean(reponse?.horsFormule),
+              maximum: reponse?.maximum,
+              offre: reponse?.offre,
+            });
+            dispatch(chargerAdmin());
+          }}
+        />
+      )}
+
+      {parentCree && (
+        <div className={`admin-confirmation${parentCree.essai === false ? ' admin-confirmation--attention' : ''}`} role="status">
+          <span className="admin-confirmation__coche" aria-hidden="true">✓</span>
+          <span>
+            Le compte de <strong>{parentCree.nom}</strong> est créé.
+            {parentCree.essai === true && ' Sa séance d’essai est ouverte.'}
+            {parentCree.essai === false && (
+              <span className="admin-confirmation__attention">
+                Pas de séance d’essai : les essais sont fermés (Admin › Modes), ou cette adresse a déjà eu le sien.
+              </span>
+            )}
+          </span>
+          <button type="button" className="admin-confirmation__fermer" aria-label="Fermer" onClick={() => setParentCree(null)}>×</button>
+        </div>
+      )}
+
+      {enfantCree && (
+        <div className={`admin-confirmation${enfantCree.horsFormule ? ' admin-confirmation--attention' : ''}`} role="status">
+          <span className="admin-confirmation__coche" aria-hidden="true">✓</span>
+          <span>
+            <strong>{enfantCree.prenom}</strong> a été créé pour {enfantCree.parent}.
+            {' '}Son profil est dans « Voir les enfants ».
+            {enfantCree.horsFormule && (
+              <span className="admin-confirmation__attention">
+                Au-delà de sa formule{enfantCree.offre ? ` ${enfantCree.offre}` : ''} ({enfantCree.maximum} enfant{enfantCree.maximum > 1 ? 's' : ''}) :
+                {' '}aux séances, seuls {enfantCree.maximum > 1 ? `${enfantCree.maximum} enfants` : 'un enfant'} auront une place, les premiers arrivés.
+              </span>
+            )}
+          </span>
+          <button type="button" className="admin-confirmation__fermer" aria-label="Fermer" onClick={() => setEnfantCree(null)}>×</button>
+        </div>
+      )}
+
       {droitsDe && (
         <DroitsAdmin
           parent={droitsDe}
@@ -2292,6 +2601,8 @@ export default function Admin() {
             <h2>
               {edition.operation === 'ajusterHeures'
                 ? 'Ajuster les heures'
+                : edition.operation === 'ajusterCreditsFiches'
+                  ? 'Ajuster les crédits de fiches'
                 : edition.operation === 'creerParent'
                   ? 'Nouveau parent'
                   : edition.operation === 'modifierParent'
@@ -2374,7 +2685,68 @@ export default function Admin() {
               </>
             )}
 
-            {edition.operation !== 'ajusterHeures' && (
+            {edition.operation === 'ajusterCreditsFiches' && (
+              <>
+                <HistoriqueCreditsFiches parentId={edition.id} />
+
+                <p className="modale__note">
+                  Compte <strong>{edition.mail}</strong>. Ces crédits vont dans la réserve de la
+                  famille : chaque enfant s’en sert une fois ses 10 cours du mois utilisés. Ils
+                  n’expirent pas.
+                </p>
+
+                <div className="champ">
+                  <label htmlFor="ed-credits">Crédits</label>
+                  <input
+                    id="ed-credits"
+                    type="number"
+                    step={1}
+                    value={edition.credits}
+                    onChange={(e) => setEdition({ ...edition, credits: Number(e.target.value) })}
+                  />
+                  <span className="champ__aide">
+                    Positif pour ajouter, négatif pour retirer. 1 crédit = 1 cours importé.
+                  </span>
+                </div>
+
+                <div className="champ">
+                  <label htmlFor="ed-motif-credits">Motif</label>
+                  <input
+                    id="ed-motif-credits"
+                    maxLength={200}
+                    value={edition.motif}
+                    onChange={(e) => setEdition({ ...edition, motif: e.target.value })}
+                    placeholder="Geste commercial après l’incident du 12/10…"
+                  />
+                  <span className="champ__aide">
+                    {edition.prevenir
+                      ? 'Obligatoire, et LU PAR LE PARENT : il devient le texte du courriel. Écrivez-le pour lui.'
+                      : 'Obligatoire. Il reste dans l’historique ci-dessus.'}
+                  </span>
+                </div>
+
+                {/* DANS LES DEUX SENS, COMME LES HEURES — Camara, le 16/10/2026 :
+                    un solde qui baisse sans explication se lit comme une panne.
+                    Cochée par défaut ; on la décoche pour une correction interne. */}
+                <label className={`case-bulle ${edition.prevenir ? 'est-active' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={edition.prevenir}
+                    onChange={(e) => setEdition({ ...edition, prevenir: e.target.checked })}
+                  />
+                  <span className="case-bulle__texte">
+                    <strong>Prévenir le parent par courriel</strong>
+                    <span className="case-bulle__aide">
+                      {edition.prevenir
+                        ? `Le motif ci-dessus lui sera envoyé, avec son nouveau solde de crédits${edition.credits < 0 ? ' — pour un retrait aussi' : ''}.`
+                        : 'Aucun message ne partira. À réserver aux corrections internes.'}
+                    </span>
+                  </span>
+                </label>
+              </>
+            )}
+
+            {edition.operation !== 'ajusterHeures' && edition.operation !== 'ajusterCreditsFiches' && (
               <div className="champ">
                 <label htmlFor="ed-prenom">Prénom</label>
                 <input
@@ -2385,7 +2757,7 @@ export default function Admin() {
               </div>
             )}
 
-            {edition.operation === 'ajusterHeures' ? null : edition.operation === 'modifierParent' || edition.operation === 'creerParent' ? (
+            {edition.operation === 'ajusterHeures' || edition.operation === 'ajusterCreditsFiches' ? null : edition.operation === 'modifierParent' || edition.operation === 'creerParent' ? (
               <>
                 <div className="champ">
                   <label htmlFor="ed-nom">Nom</label>
@@ -2664,6 +3036,8 @@ export default function Admin() {
                   || muting
                   || (edition.operation === 'ajusterHeures'
                       && (!edition.motif.trim() || !edition.minutes))
+                  || (edition.operation === 'ajusterCreditsFiches'
+                      && (!edition.motif.trim() || !edition.credits))
                 }
               >
                 {edition.operation === 'creerParent'

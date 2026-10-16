@@ -182,6 +182,17 @@ function Echeance({ echeance, occupe, onTraiter }) {
         <dt>Dernier relevé</dt>
         <dd>{dateLongue(echeance.dernierePageVerifieeLe)}</dd>
 
+        {/* Le site officiel bloque les robots : la page a été lue sur la
+            copie de l'Internet Archive, et ce constat vaut à SA date. */}
+        {echeance.copieArchiveDu && (
+          <>
+            <dt>Lu sur</dt>
+            <dd title="Le site officiel bloque les robots : la veille lit la dernière copie conservée par l’Internet Archive. Le constat vaut à la date de cette copie.">
+              la copie de l’Internet Archive du {dateLongue(echeance.copieArchiveDu)}
+            </dd>
+          </>
+        )}
+
         {echeance.url && (
           <>
             <dt>Page</dt>

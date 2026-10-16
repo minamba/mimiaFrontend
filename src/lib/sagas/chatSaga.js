@@ -21,6 +21,8 @@ import {
   CHAT_RESET,
   ANNONCE_REQUEST,
   QUOTA_EPUISE,
+  ECHEANCE_FORFAIT,
+  FORFAIT_ATTEINT,
 } from '../actions/chatActions';
 
 /**
@@ -109,6 +111,11 @@ function creerCanalStream(
       signal: controller.signal,
       onDelta: (texte) => emettre({ type: MESSAGE_DELTA, payload: texte }),
       onQuota: (motif) => emettre({ type: QUOTA_EPUISE, payload: motif }),
+      // L'instant est calculé ICI, à la réception : le réducteur reste pur.
+      onEcheance: (secondes, motif) => emettre({
+        type: ECHEANCE_FORFAIT,
+        payload: { le: Date.now() + Math.max(0, secondes) * 1000, motif },
+      }),
       onErreur: (message) => emettre({ type: MESSAGE_SEND_FAILURE, payload: message }),
     };
 
@@ -227,7 +234,7 @@ function* superviseurGeneration() {
 
   for (;;) {
     const action = yield take([
-      MESSAGE_SEND_REQUEST, ACCUEIL_REQUEST, ANNONCE_REQUEST, CHAT_RESET,
+      MESSAGE_SEND_REQUEST, ACCUEIL_REQUEST, ANNONCE_REQUEST, CHAT_RESET, FORFAIT_ATTEINT,
     ]);
     const occupe = Boolean(tache && tache.isRunning());
 
@@ -242,7 +249,10 @@ function* superviseurGeneration() {
     //
     // C'est aussi ce qu'il faut faire en soi : un professeur qui parle à un
     // écran que l'élève a quitté coûte des jetons pour personne.
-    if (action.type === CHAT_RESET) {
+    // LE FORFAIT ATTEINT COUPE AUSSI LA GÉNÉRATION (16/10/2026) : le professeur
+    // s'arrête net, et le serveur cesse de produire une réponse qui ne sera
+    // ni lue ni dite.
+    if (action.type === CHAT_RESET || action.type === FORFAIT_ATTEINT) {
       if (occupe) yield cancel(tache);
       tache = null;
       continue;

@@ -100,7 +100,8 @@ export const DERNIERE_MINUTE_MS = 60000;
  * gagnée). L'ambiance s'efface alors devant la musique de fin ; `resteMs`
  * dit où prendre cette musique pour que son sommet tombe sur le zéro.
  */
-export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MINUTE_MS } = {}) {
+// `volume` (16/10/2026) : une musique (« Me tester ») se joue plus bas qu'un fond de bruits.
+export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MINUTE_MS, volume = VOLUME } = {}) {
   const [coupee, setCoupee] = useState(lireCoupee);
   // Le son est-il là ? Un jeu bonus n'affiche son bouton qu'une fois le fichier chargé.
   const [disponible, setDisponible] = useState(false);
@@ -117,8 +118,8 @@ export default function useAmbiance(url, { finale = false, resteMs = DERNIERE_MI
 
   const cible = useCallback(() => {
     if (coupee || enFinale.current) return 0;
-    return parle.current ? VOLUME_SOUS_LA_VOIX : VOLUME;
-  }, [coupee]);
+    return parle.current ? Math.min(VOLUME_SOUS_LA_VOIX, volume) : volume;
+  }, [coupee, volume]);
 
   const cibleMusique = useCallback(() => {
     if (coupee || !enFinale.current) return 0;

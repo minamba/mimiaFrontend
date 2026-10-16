@@ -50,9 +50,13 @@ const versISODate = (date) => {
  * haut-parleur) qui n'a rien à faire dans un simple formulaire.
  */
 export default function ControleForm({
-  eleveId, matieres, jour, controle = null, sousTitre = null,
+  eleveId, matieres: toutesLesMatieres, jour, controle = null, sousTitre = null,
   onEnregistre, onAnnule,
 }) {
+  // LA CONSEILLÈRE D'ORIENTATION N'EST PAS UNE MATIÈRE DE CONTRÔLE (11/10/2026) :
+  // on ne prépare pas un contrôle d'orientation. Retirée ici, à l'endroit où
+  // toutes les listes de matières d'un contrôle se rejoignent.
+  const matieres = (toutesLesMatieres ?? []).filter((m) => m.code !== 'ORIENTATION');
   const edition = Boolean(controle);
 
   // PAS DE MATIÈRE PAR DÉFAUT À LA CRÉATION. Pré-sélectionner la première de

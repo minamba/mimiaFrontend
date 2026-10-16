@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useBesoinsParticuliers } from '../lib/storage/modeTest';
 
 /**
  * LES QUESTIONS FRÉQUENTES DE LA PAGE D'ACCUEIL — Camara, le 15/09/2026.
@@ -16,6 +17,10 @@ import { Link } from 'react-router-dom';
  * ⚠️ La liste des matières (question 6) est écrite à la main : à relire le jour
  * où une matière ouvre ou ferme. Elle renvoie à l'équipe, qui, elle, vient de
  * la base.
+ *
+ * UNE QUESTION PEUT DÉPENDRE D'UN MODULE (`seulementSi`) : celle des besoins
+ * particuliers n'apparaît — ni à l'écran, ni pour les moteurs de recherche —
+ * que si le module est allumé. La page ne promet pas ce que l'application cache.
  *
  * UNE SEULE QUESTION OUVERTE À LA FOIS : ouvrir la suivante referme la
  * précédente, et la liste reste lisible sur un téléphone.
@@ -47,9 +52,17 @@ export const QUESTIONS = [
       "Chaque séance enrichit le profil de votre enfant : ce qu'il maîtrise, ce qui reste fragile, ce qu'il a déjà travaillé. Le professeur reprend là où ils s'étaient arrêtés, et quand un blocage vient d'une notion plus ancienne, il remonte jusqu'à elle, même si elle date du primaire.",
   },
   {
+    // Camara, le 11/10/2026. Seulement si les besoins particuliers sont ouverts.
+    question: 'Mon enfant est dyslexique, dyscalculique ou a un TDAH : Mimia peut-il s’adapter ?',
+    reponse:
+      "Oui. Dans le profil de votre enfant, vous pouvez cocher une dyslexie (ou dysorthographie), une dyscalculie ou un TDAH. Le professeur adapte alors sa façon d'expliquer : l'oral d'abord et l'orthographe qui ne compte pas hors du français, un calcul montré avant d'être fait, une consigne à la fois avec des pauses. L'affichage peut s'adapter lui aussi, avec un texte plus aéré et un écran plus calme. Ces informations restent privées : votre enfant ne les voit pas, le professeur ne les nomme jamais devant lui, et vous les retirez quand vous voulez.",
+    liens: [{ to: '/confidentialite', libelle: 'Politique de confidentialité' }],
+    seulementSi: 'besoinsParticuliers',
+  },
+  {
     question: 'Quelles matières et quelles classes ?',
     reponse:
-      "Du CP à la Terminale : mathématiques, français, histoire-géographie, anglais, sciences puis physique-chimie et SVT, espagnol en LV2 et philosophie. Au lycée s'ajoutent les spécialités de la voie générale et celles des séries STMG, ST2S et STL. Chaque matière a son professeur : vous les retrouvez tous dans l'équipe pédagogique, plus haut sur cette page.",
+      "Du CP à la Terminale : mathématiques, français, histoire-géographie, anglais, sciences puis physique-chimie et SVT, espagnol en LV2 et philosophie. Au lycée s'ajoutent les spécialités de la voie générale et celles des séries STMG, ST2S et STL. En voie professionnelle : français, histoire-géographie-EMC, mathématiques, anglais, physique-chimie selon la filière, économie et prévention-santé-environnement (pas l'enseignement du métier lui-même). Chaque matière a son professeur : vous les retrouvez tous dans l'équipe pédagogique, plus haut sur cette page.",
   },
   {
     question: 'Mon enfant parle-t-il vraiment avec son professeur ?',
@@ -78,15 +91,20 @@ export const QUESTIONS = [
   },
 ];
 
+/** Les questions à montrer, selon les modules allumés (`{ besoinsParticuliers }`). */
+export const questionsVisibles = (modules = {}) => QUESTIONS.filter(
+  (q) => !q.seulementSi || modules[q.seulementSi],
+);
+
 /**
  * Les mêmes questions, lisibles par les moteurs de recherche : Google peut les
  * afficher directement sous le résultat. Construit depuis `QUESTIONS`, jamais
  * recopié — sinon la page et ce qu'on déclare finiraient par diverger.
  */
-export const schemaFaq = () => ({
+export const schemaFaq = (questions = questionsVisibles()) => ({
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: QUESTIONS.map(({ question, reponse }) => ({
+  mainEntity: questions.map(({ question, reponse }) => ({
     '@type': 'Question',
     name: question,
     acceptedAnswer: { '@type': 'Answer', text: reponse },
@@ -95,6 +113,8 @@ export const schemaFaq = () => ({
 
 export default function Faq() {
   const [ouverte, setOuverte] = useState(null);
+  const besoinsParticuliers = useBesoinsParticuliers();
+  const questions = questionsVisibles({ besoinsParticuliers });
 
   return (
     <section className="faq" id="faq">
@@ -106,7 +126,7 @@ export default function Faq() {
       </header>
 
       <ul className="faq__liste">
-        {QUESTIONS.map(({ question, reponse, liens }, index) => {
+        {questions.map(({ question, reponse, liens }, index) => {
           const estOuverte = ouverte === index;
           const idQuestion = `faq-question-${index}`;
           const idReponse = `faq-reponse-${index}`;
@@ -153,7 +173,7 @@ export default function Faq() {
         type="application/ld+json"
         // Du JSON produit par `JSON.stringify` sur nos propres textes : aucune
         // donnée venue d'un visiteur n'y passe.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaFaq()) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaFaq(questions)) }}
       />
     </section>
   );

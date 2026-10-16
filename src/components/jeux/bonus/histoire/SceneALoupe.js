@@ -13,9 +13,10 @@ const borne = (v) => Math.min(100, Math.max(0, v));
  *
  *   - À LA SOURIS, la loupe suit le pointeur ; un clic accuse.
  *   - AU DOIGT, la loupe naît à l'appui, suit le doigt, et le RELÂCHER
- *     accuse. Elle se pose AU-DESSUS du doigt, qui cacherait sinon ce qu'elle
- *     grossit (en dessous, tout en haut de l'image) ; sa croix marque le point
- *     visé, celui qui est sous le doigt.
+ *     accuse. COMME DANS « OÙ SUR TERRE » — Camara, le 11/10/2026 : « c'est
+ *     comme ça que la loupe doit être » : elle est CENTRÉE sous le doigt, reste
+ *     DANS l'image (le cadre la coupe à ses bords) et DISPARAÎT quand le doigt
+ *     sort de l'image ; relâcher dehors annule le coup.
  *   - AU CLAVIER, la scène se focalise : les flèches promènent la loupe,
  *     Entrée ou Espace accuse.
  *
@@ -31,6 +32,9 @@ export default function SceneALoupe({
 }) {
   const cadre = useRef(null);
   const appui = useRef(null);
+  // Le dernier point VALIDE sous le doigt : c'est là que la loupe reste quand
+  // le doigt sort de l'image, et là qu'on accuse au relâcher.
+  const dernier = useRef(null);
   const [loupe, setLoupe] = useState(null);
   const [taille, setTaille] = useState({ l: 0, h: 0 });
 
@@ -49,29 +53,62 @@ export default function SceneALoupe({
 
   const auDoigt = (e) => e.pointerType && e.pointerType !== 'mouse';
 
+  /**
+   * LE DOIGT HORS DE L'IMAGE — Camara, le 11/10/2026 : « si le doigt sort de
+   * l'écran la loupe remonte tout en haut… sur mobile c'est injouable ». Au
+   * bord de l'écran, un téléphone envoie des positions parasites (souvent 0, 0)
+   * ou un doigt hors de l'image ; la loupe sautait au coin haut. Désormais un
+   * point hors de l'image (au-delà d'une petite marge) ne la déplace plus : elle
+   * reste au dernier point valide.
+   */
+  const dansLImage = (e) => {
+    const r = cadre.current?.getBoundingClientRect?.();
+    if (!r || !r.width || !Number.isFinite(e.clientX) || !Number.isFinite(e.clientY)) return false;
+    if (e.clientX === 0 && e.clientY === 0 && (r.left > 0 || r.top > 0)) return false;
+    return e.clientX >= r.left && e.clientX <= r.right
+      && e.clientY >= r.top && e.clientY <= r.bottom;
+  };
+
   const appuyer = (e) => {
     if (!actif) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     appui.current = e.pointerId ?? 1;
     try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* sans capture, le doigt reste suivi sur la scène */ }
-    setLoupe({ ...point(e), doigt: auDoigt(e) });
+    dernier.current = point(e);
+    setLoupe({ ...dernier.current, doigt: auDoigt(e) });
   };
 
   const bouger = (e) => {
     if (!actif) return;
-    if (!auDoigt(e) || appui.current !== null) setLoupe({ ...point(e), doigt: auDoigt(e) });
+    if (auDoigt(e) && appui.current === null) return;
+    if (auDoigt(e) && !dansLImage(e)) {
+      // Le doigt est sorti : la loupe disparaît, et revient s'il rentre.
+      dernier.current = null;
+      setLoupe(null);
+      return;
+    }
+    dernier.current = point(e);
+    setLoupe({ ...dernier.current, doigt: auDoigt(e) });
   };
 
   const relacher = (e) => {
     if (!actif || appui.current === null) return;
     appui.current = null;
+    if (auDoigt(e)) {
+      setLoupe(null);
+      // Relâché hors de l'image : le coup est annulé, il ne coûte pas une loupe.
+      const p = dansLImage(e) ? point(e) : null;
+      dernier.current = null;
+      if (p) onAccuser(p.x, p.y);
+      return;
+    }
     const p = point(e);
-    if (auDoigt(e)) setLoupe(null);
     onAccuser(p.x, p.y);
   };
 
   const annuler = () => {
     appui.current = null;
+    dernier.current = null;
     setLoupe(null);
   };
 
@@ -106,8 +143,6 @@ export default function SceneALoupe({
   // La loupe : environ un cinquième de la scène, entre 110 et 180 pixels.
   const diametre = Math.round(Math.min(180, Math.max(110, taille.l * 0.2)));
   const visible = actif && loupe && taille.l > 0;
-  // Au doigt, au-dessus ; tout en haut de l'image, en dessous.
-  const decalage = loupe?.doigt ? ((loupe.y / 100) * taille.h > diametre * 1.25 ? -0.8 : 0.8) * diametre : 0;
 
   return (
     <div className={`hg-loupe__scene${actif ? ' est-active' : ''}${visible ? ' a-sa-loupe' : ''}`}>
@@ -152,26 +187,26 @@ export default function SceneALoupe({
         ))}
 
         {children}
-      </div>
 
-      {visible && (
-        <div
-          className="hg-loupe__verre"
-          style={{
-            left: `${loupe.x}%`,
-            top: `${loupe.y}%`,
-            width: diametre,
-            height: diametre,
-            transform: `translate(-50%, calc(-50% + ${decalage}px))`,
-            backgroundImage: `url(${src})`,
-            backgroundSize: `${taille.l * ZOOM}px ${taille.h * ZOOM}px`,
-            backgroundPosition: `${diametre / 2 - (taille.l * ZOOM * loupe.x) / 100}px ${diametre / 2 - (taille.h * ZOOM * loupe.y) / 100}px`,
-          }}
-          aria-hidden="true"
-        >
-          <span className="hg-loupe__croix" />
-        </div>
-      )}
+        {visible && (
+          <div
+            className="hg-loupe__verre"
+            style={{
+              left: `${loupe.x}%`,
+              top: `${loupe.y}%`,
+              width: diametre,
+              height: diametre,
+              transform: 'translate(-50%, -50%)',
+              backgroundImage: `url(${src})`,
+              backgroundSize: `${taille.l * ZOOM}px ${taille.h * ZOOM}px`,
+              backgroundPosition: `${diametre / 2 - (taille.l * ZOOM * loupe.x) / 100}px ${diametre / 2 - (taille.h * ZOOM * loupe.y) / 100}px`,
+            }}
+            aria-hidden="true"
+          >
+            <span className="hg-loupe__croix" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

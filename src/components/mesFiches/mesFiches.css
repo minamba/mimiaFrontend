@@ -1,0 +1,922 @@
+/*
+ * LES FICHES DE RÉVISION DE L'ÉLÈVE — Camara, le 14/10/2026.
+ *
+ * Tout est préfixé `fdr-` : App.css est global, et `.fiche`, `.tableau`,
+ * `.carte` y sont déjà pris (voir la mémoire « collisions de noms »).
+ *
+ * UNE FEUILLE DE PAPIER, MÊME EN THÈME SOMBRE : c'est un document, celui
+ * qu'on imprime et qu'on range dans son classeur. Ce qui est à l'écran est
+ * ce qui sort de l'imprimante.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Les couleurs : celle du type de fiche, puis celles des familles     */
+/* ------------------------------------------------------------------ */
+
+.fdr-feuille {
+  --fdr-papier: #fffdf8;
+  --fdr-encre: #1d2433;
+  --fdr-encre-douce: #4d566b;
+  --fdr-filet: #e7e2d7;
+  --fdr-accent: #2f6fd6;
+  --fdr-accent-pale: #e6eefc;
+  --fdr-accent-fonce: #1f4fa3;
+}
+
+.fdr-feuille--classique { --fdr-accent: #2f6fd6; --fdr-accent-pale: #e6eefc; --fdr-accent-fonce: #1f4fa3; }
+.fdr-feuille--express { --fdr-accent: #0e9488; --fdr-accent-pale: #dcf3f0; --fdr-accent-fonce: #0b6b63; }
+.fdr-feuille--visuelle { --fdr-accent: #df3f7a; --fdr-accent-pale: #fbe3ec; --fdr-accent-fonce: #ab2a5a; }
+.fdr-feuille--questions { --fdr-accent: #7c5cd6; --fdr-accent-pale: #ece6fb; --fdr-accent-fonce: #5a3db3; }
+.fdr-feuille--controle { --fdr-accent: #d64545; --fdr-accent-pale: #fbe2e2; --fdr-accent-fonce: #a83232; }
+.fdr-feuille--methode { --fdr-accent: #3f9b46; --fdr-accent-pale: #e2f3e3; --fdr-accent-fonce: #2d7333; }
+
+.fdr-c-sarcelle { --fdr-c: #0e9488; --fdr-c-pale: #dcf3f0; --fdr-c-fonce: #0b6b63; }
+.fdr-c-violet { --fdr-c: #7c5cd6; --fdr-c-pale: #ece6fb; --fdr-c-fonce: #5a3db3; }
+.fdr-c-vert { --fdr-c: #3f9b46; --fdr-c-pale: #e2f3e3; --fdr-c-fonce: #2d7333; }
+.fdr-c-orange { --fdr-c: #ea7a1a; --fdr-c-pale: #fdeedd; --fdr-c-fonce: #b45a0c; }
+.fdr-c-rose { --fdr-c: #df3f7a; --fdr-c-pale: #fbe3ec; --fdr-c-fonce: #ab2a5a; }
+.fdr-c-ambre { --fdr-c: #c99400; --fdr-c-pale: #fbf1d3; --fdr-c-fonce: #8a6600; }
+.fdr-c-bleu { --fdr-c: #2f74d8; --fdr-c-pale: #e1ecfb; --fdr-c-fonce: #1f56a8; }
+.fdr-c-rouge { --fdr-c: #d64545; --fdr-c-pale: #fbe2e2; --fdr-c-fonce: #a83232; }
+
+/* ------------------------------------------------------------------ */
+/* La feuille                                                          */
+/* ------------------------------------------------------------------ */
+
+.fdr-feuille {
+  background: var(--fdr-papier);
+  color: var(--fdr-encre);
+  border-radius: 20px;
+  padding: 2.2rem 2.5rem 2.6rem;
+  max-width: 920px;
+  margin: 0 auto;
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  text-align: left;
+  box-shadow: 0 24px 60px rgba(4, 12, 34, 0.35), 0 2px 6px rgba(4, 12, 34, 0.2);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  /* Les cases à cocher et les boutons natifs suivent le papier, pas le thème sombre du site. */
+  color-scheme: light;
+}
+
+.fdr-feuille p,
+.fdr-feuille h2,
+.fdr-feuille h3 {
+  margin: 0;
+}
+
+.fdr-entete {
+  margin-bottom: 1.8rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 2px dashed var(--fdr-filet);
+}
+
+.fdr-entete__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+
+.fdr-entete__matiere,
+.fdr-entete__type,
+.fdr-entete__position {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.22rem 0.7rem;
+  border-radius: 999px;
+}
+
+.fdr-entete__matiere {
+  color: var(--fdr-encre);
+  border: 1.5px solid var(--fdr-encre);
+  text-transform: uppercase;
+}
+
+.fdr-entete__type {
+  color: var(--fdr-accent-fonce);
+  background: var(--fdr-accent-pale);
+}
+
+.fdr-entete__position {
+  color: var(--fdr-encre-douce);
+  background: #f1ede4;
+}
+
+/* Le titre, surligné comme au feutre sur la moitié basse. */
+.fdr-entete__titre {
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 3.4vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--fdr-encre);
+}
+
+.fdr-surligne {
+  background-image: linear-gradient(transparent 62%, var(--fdr-accent-pale) 62%);
+  background-repeat: no-repeat;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.fdr-entete__cours {
+  margin-top: 0.5rem !important;
+  color: var(--fdr-encre-douce);
+  font-size: 0.9rem;
+}
+
+.fdr-corps {
+  display: grid;
+  gap: 1.6rem;
+}
+
+.fdr-bloc__titre,
+.fdr-intertitre {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--fdr-accent-fonce);
+  margin-bottom: 0.7rem !important;
+}
+
+.fdr-intertitre {
+  font-size: 1.3rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--fdr-filet);
+}
+
+.fdr-paragraphe {
+  font-size: 1.02rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Les marques du texte                                                */
+/* ------------------------------------------------------------------ */
+
+.fdr-feuille strong {
+  font-weight: 700;
+  color: var(--fdr-accent-fonce);
+}
+
+.fdr-feuille em {
+  color: var(--fdr-encre-douce);
+}
+
+.fdr-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 0.15em;
+  font-size: 0.92em;
+  line-height: 1.15;
+}
+
+/* Une égalité de fractions reste d'un seul tenant (voir grouperFormules). */
+.fdr-formule {
+  white-space: nowrap;
+}
+
+.fdr-fraction__haut {
+  padding: 0 0.2em 0.08em;
+  border-bottom: 1.5px solid currentColor;
+}
+
+.fdr-fraction__bas {
+  padding: 0.08em 0.2em 0;
+}
+
+.fdr-blanc {
+  display: inline-block;
+  padding: 0 0.5em;
+  margin: 0 0.1em;
+  border-radius: 6px;
+  border-bottom: 2px dashed var(--fdr-accent);
+  background: var(--fdr-accent-pale);
+  color: var(--fdr-accent-fonce);
+  font-weight: 600;
+}
+
+.fdr-ajoute {
+  display: inline-block;
+  margin-left: 0.45em;
+  padding: 0.05em 0.5em;
+  border-radius: 999px;
+  border: 1px dashed #b3ab9b;
+  color: #7a7263;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 500;
+  vertical-align: 0.1em;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* Le tableau                                                          */
+/* ------------------------------------------------------------------ */
+
+.fdr-tableau {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1.5px solid var(--fdr-filet);
+  border-radius: 14px;
+  overflow: hidden;
+  font-size: 0.97rem;
+}
+
+.fdr-tableau thead th {
+  background: var(--fdr-accent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+}
+
+.fdr-tableau tbody th,
+.fdr-tableau tbody td {
+  padding: 0.75rem 0.9rem;
+  vertical-align: top;
+  text-align: left;
+  border-top: 1px solid var(--fdr-filet);
+}
+
+.fdr-tableau tbody th {
+  width: 26%;
+  background: var(--fdr-accent-pale);
+  color: var(--fdr-accent-fonce);
+  font-weight: 700;
+}
+
+.fdr-tableau tbody tr:nth-child(even) td {
+  background: #faf7f0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Listes, étapes, encadrés                                            */
+/* ------------------------------------------------------------------ */
+
+.fdr-puces,
+.fdr-coches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.fdr-puces li {
+  position: relative;
+  padding-left: 1.4rem;
+}
+
+.fdr-puces li::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.62em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--fdr-accent);
+}
+
+.fdr-coches label {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: #f7f3ea;
+}
+
+.fdr-coches input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.18rem;
+  flex-shrink: 0;
+  accent-color: var(--fdr-accent);
+}
+
+.fdr-coches input:checked + span {
+  color: var(--fdr-encre-douce);
+  text-decoration: line-through;
+  text-decoration-color: var(--fdr-accent);
+}
+
+.fdr-etapes {
+  list-style: none;
+  counter-reset: fdr-etape;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.fdr-etape {
+  counter-increment: fdr-etape;
+  position: relative;
+  padding: 0.2rem 0 0 3.2rem;
+  min-height: 2.4rem;
+}
+
+.fdr-etape::before {
+  content: counter(fdr-etape);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--fdr-accent);
+  color: #fff;
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.fdr-etape__titre {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.fdr-etape__texte {
+  color: var(--fdr-encre-douce);
+}
+
+.fdr-encadre {
+  --fdr-ton: var(--fdr-accent);
+  --fdr-ton-pale: var(--fdr-accent-pale);
+  --fdr-ton-fonce: var(--fdr-accent-fonce);
+  border-left: 5px solid var(--fdr-ton);
+  background: var(--fdr-ton-pale);
+  border-radius: 4px 14px 14px 4px;
+  padding: 0.9rem 1.15rem 1rem;
+}
+
+.fdr-encadre--definition { --fdr-ton: #2f6fd6; --fdr-ton-pale: #e6eefc; --fdr-ton-fonce: #1f4fa3; }
+.fdr-encadre--cle { --fdr-ton: #0e9488; --fdr-ton-pale: #dcf3f0; --fdr-ton-fonce: #0b6b63; }
+.fdr-encadre--piege { --fdr-ton: #d64545; --fdr-ton-pale: #fbe2e2; --fdr-ton-fonce: #a83232; }
+.fdr-encadre--astuce { --fdr-ton: #3f9b46; --fdr-ton-pale: #e2f3e3; --fdr-ton-fonce: #2d7333; }
+.fdr-encadre--souvent { --fdr-ton: #c99400; --fdr-ton-pale: #fbf1d3; --fdr-ton-fonce: #8a6600; }
+.fdr-encadre--modele { --fdr-ton: #7c5cd6; --fdr-ton-pale: #ece6fb; --fdr-ton-fonce: #5a3db3; }
+.fdr-encadre--exemple { --fdr-ton: #8b8577; --fdr-ton-pale: #f4f1ea; --fdr-ton-fonce: #4d566b; }
+
+.fdr-encadre__titre {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fdr-ton-fonce);
+  margin-bottom: 0.35rem !important;
+}
+
+.fdr-encadre .fdr-puces li::before {
+  background: var(--fdr-ton);
+}
+
+.fdr-encadre .fdr-blanc {
+  border-bottom-color: var(--fdr-ton);
+  background: #fff;
+  color: var(--fdr-ton-fonce);
+}
+
+.fdr-encadre--modele .fdr-encadre__texte {
+  font-size: 1.05rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Les questions à retourner                                           */
+/* ------------------------------------------------------------------ */
+
+.fdr-questions__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.fdr-questions__tete .fdr-bloc__titre {
+  margin-bottom: 0 !important;
+  margin-right: auto !important;
+}
+
+.fdr-questions__compte {
+  font-size: 0.85rem;
+  color: var(--fdr-encre-douce);
+}
+
+.fdr-questions__tout {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fdr-accent-fonce);
+  background: var(--fdr-accent-pale);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+
+.fdr-questions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.fdr-question {
+  border: 1.5px solid var(--fdr-filet);
+  border-radius: 14px;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fdr-question.est-ouverte {
+  border-color: var(--fdr-accent);
+  box-shadow: 0 6px 18px rgba(124, 92, 214, 0.12);
+}
+
+.fdr-question__bouton {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  text-align: left;
+  color: var(--fdr-encre);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.fdr-question__numero {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--fdr-accent-pale);
+  color: var(--fdr-accent-fonce);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.fdr-question__texte {
+  font-weight: 600;
+}
+
+.fdr-question__indice {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--fdr-accent-fonce);
+  white-space: nowrap;
+}
+
+.fdr-question__reponse {
+  margin: 0 1rem 0.95rem 3.75rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  background: #eef8ef;
+  border-left: 4px solid #3f9b46;
+  animation: fdr-apparition 0.25s ease;
+}
+
+.fdr-question__exemple {
+  margin-top: 0.35rem !important;
+  font-style: italic;
+  color: var(--fdr-encre-douce);
+}
+
+@keyframes fdr-apparition {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Les traits des cartes                                               */
+/* ------------------------------------------------------------------ */
+
+.fdr-traits {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.fdr-trait {
+  fill: none;
+  stroke: var(--fdr-c);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.fdr-trait--fleche {
+  stroke-width: 3;
+}
+
+.fdr-pointe {
+  fill: var(--fdr-c);
+}
+
+/* ------------------------------------------------------------------ */
+/* La fiche express : l'arbre                                          */
+/* ------------------------------------------------------------------ */
+
+.fdr-arbre {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(120px, 170px) 1fr;
+  align-items: center;
+  gap: 0 3.5rem;
+  padding: 0.6rem 0;
+}
+
+.fdr-arbre__centre {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fdr-arbre__branches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.6rem;
+}
+
+.fdr-arbre__groupe {
+  display: grid;
+  grid-template-columns: minmax(150px, 230px) 1fr;
+  align-items: center;
+  gap: 0 3.2rem;
+}
+
+.fdr-arbre__branche {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  padding: 0.5rem 1rem;
+  border: 2.5px solid var(--fdr-c);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--fdr-encre);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.fdr-arbre__groupe:nth-child(even) .fdr-arbre__branche {
+  border-radius: 999px;
+}
+
+.fdr-arbre__branche strong {
+  color: var(--fdr-c-fonce);
+}
+
+.fdr-arbre__feuilles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.fdr-arbre__feuille {
+  justify-self: start;
+  min-width: 9rem;
+  padding: 0.12rem 0.9rem 0.18rem 0.35rem;
+  border-bottom: 2.5px solid var(--fdr-c);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ */
+/* La fiche visuelle : la carte                                        */
+/* ------------------------------------------------------------------ */
+
+.fdr-carte {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'tl tc tr'
+    'ml mc mr'
+    'bl bc br';
+  gap: 2.8rem 2.4rem;
+  align-items: center;
+  padding: 0.6rem 0;
+}
+
+.fdr-carte__centre {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  max-width: 15rem;
+  padding: 1.5rem 1.7rem;
+  text-align: center;
+  background: #fff;
+  border: 3px solid var(--fdr-accent);
+  border-radius: 46% 54% 44% 56% / 56% 44% 56% 44%;
+  box-shadow: 0 0 0 7px var(--fdr-papier), 0 0 0 10px var(--fdr-accent-pale);
+}
+
+.fdr-carte__titre {
+  font-family: 'Caveat', cursive;
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1.02;
+  color: var(--fdr-accent-fonce);
+}
+
+.fdr-carte__sous-titre {
+  margin-top: 0.35rem !important;
+  font-size: 0.85rem;
+  color: var(--fdr-encre-douce);
+}
+
+.fdr-bulle {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  max-width: 17rem;
+  text-align: center;
+  padding: 0.25rem 0.35rem;
+  background: var(--fdr-papier);
+  border-radius: 14px;
+}
+
+.fdr-bulle__nom {
+  display: inline-block;
+  margin-bottom: 0.4rem !important;
+  padding: 0.05rem 1.15rem 0.12rem;
+  border: 2.5px solid var(--fdr-c);
+  border-radius: 999px;
+  background: var(--fdr-c-pale);
+  color: var(--fdr-c-fonce);
+  font-family: 'Caveat', cursive;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.fdr-bulle__nom strong {
+  color: inherit;
+}
+
+/* Dans une bulle, le gras prend la couleur de sa famille, pas celle de la fiche. */
+.fdr-bulle strong {
+  color: var(--fdr-c-fonce);
+}
+
+.fdr-bulle__texte {
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+
+.fdr-bulle__exemple {
+  display: block;
+  margin-top: 0.3rem !important;
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--fdr-c-fonce);
+}
+
+.fdr-bulle__enfants {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+/* À un ou deux, la carte n'a besoin que de sa rangée du milieu. */
+.fdr-carte--1 { grid-template-areas: '. mc .' '. bc .'; }
+.fdr-carte--2 { grid-template-areas: 'ml mc mr'; }
+
+/* ------------------------------------------------------------------ */
+/* Téléphone                                                           */
+/* ------------------------------------------------------------------ */
+
+@media screen and (max-width: 720px) {
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-feuille {
+    padding: 1.4rem 1.1rem 1.6rem;
+    border-radius: 16px;
+  }
+
+  /* Le tableau devient une carte par ligne. */
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tbody,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tr,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau th,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau td {
+    display: block;
+    width: auto;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau {
+    border: 0;
+    overflow: visible;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau thead {
+    display: none;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tbody tr {
+    border: 1.5px solid var(--fdr-filet);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tbody th {
+    width: auto;
+    border-top: 0;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tbody td {
+    background: #fff !important;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-tableau tbody td::before {
+    content: attr(data-colonne);
+    display: block;
+    margin-bottom: 0.15rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fdr-encre-douce);
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-question__reponse {
+    margin-left: 1rem;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-question__indice {
+    display: none;
+  }
+
+  /* Les cartes se déplient de haut en bas, sans leurs traits. */
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-traits {
+    display: none;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-arbre,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-arbre__groupe {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-arbre__centre {
+    justify-self: start;
+    text-align: left;
+    padding-bottom: 0.4rem;
+    border-bottom: 3px solid var(--fdr-accent);
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-arbre__groupe {
+    gap: 0.55rem;
+    padding-left: 0.9rem;
+    border-left: 4px solid var(--fdr-c);
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-arbre__feuilles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-arbre__feuille {
+    min-width: 0;
+    padding: 0.2rem 0.7rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--fdr-c-pale);
+    color: var(--fdr-c-fonce);
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-carte,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-carte--1,
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-carte--2 {
+    grid-template-columns: 1fr;
+    grid-template-areas: none;
+    gap: 1rem;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-carte > * {
+    grid-area: auto !important;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-carte__centre {
+    order: -1;
+    margin-bottom: 0.6rem;
+  }
+
+  html:not(.fdr-impression):not(.fdr-grand) .fdr-bulle {
+    justify-self: stretch;
+    max-width: none;
+    text-align: left;
+    padding: 0.2rem 0 0.2rem 0.9rem;
+    border-left: 4px solid var(--fdr-c);
+    border-radius: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Impression                                                          */
+/* ------------------------------------------------------------------ */
+
+/*
+ * PENDANT UNE IMPRESSION (classe `fdr-impression` sur <html>, voir
+ * impression.js) : la fiche prend la largeur d'une page A4, sans son ombre,
+ * et le logo Mimia apparaît. Posé par une classe et non par `@media print`,
+ * pour que les traits des cartes soient mesurés sur la mise en page qui sera
+ * imprimée — la mesure se fait juste avant, à l'écran.
+ */
+.fdr-entete__logo {
+  display: none;
+}
+
+html.fdr-impression,
+html.fdr-impression body {
+  background: #fff !important;
+}
+
+html.fdr-impression .fdr-feuille {
+  /* Blanc comme la page : le crème de l'écran y dessinerait un rectangle. */
+  --fdr-papier: #fff;
+  background: #fff;
+  width: 680px;
+  max-width: 680px;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html.fdr-impression .fdr-entete__logo {
+  display: block;
+  height: 38px;
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+@media print {
+  .fdr-sans-impression {
+    display: none !important;
+  }
+
+  /* Sur papier, on ne retourne pas une carte : toutes les réponses sont là,
+     sans l'animation d'apparition — capturée à son premier instant, elle
+     les imprimait transparentes. */
+  .fdr-question__reponse,
+  .fdr-question__reponse[hidden] {
+    display: block !important;
+    animation: none !important;
+  }
+
+  /* Les marges et fonds des conteneurs de la page ne passent pas sur la feuille. */
+  html.fdr-impression :has(.fdr-feuille) {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: none !important;
+  }
+
+  .fdr-question,
+  .fdr-bulle,
+  .fdr-tableau tr,
+  .fdr-encadre,
+  .fdr-etape {
+    break-inside: avoid;
+  }
+}

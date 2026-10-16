@@ -12,6 +12,7 @@ import JustificationProfesseur from './JustificationProfesseur';
 import Loader from './Loader';
 import PastillePret from './PastillePret';
 import { delaiControle, jourControle } from './MesControles';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * La fiche d'un contrôle : ce qu'il est, où en est sa préparation, et par quoi
@@ -78,6 +79,8 @@ function IconeCorbeille() {
 
 export default function ControleFiche() {
   const { eleveId, controleId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  const { calme } = useAffichageEleve(eleveId);
   const [parametres] = useSearchParams();
 
   // LISTE FERMÉE, jamais l'URL telle quelle : `retour` vient d'une adresse que
@@ -336,6 +339,8 @@ export default function ControleFiche() {
 
       {ouverture && (
         <OuvertureSeance
+          eleveId={eleveId}
+          calme={calme}
           matiere={matieres.find((m) => m.id === controle.matiereId)
             ?? { id: controle.matiereId, profPrenom: 'Ton professeur' }}
           onAnnuler={() => setOuverture(null)}

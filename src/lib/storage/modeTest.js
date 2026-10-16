@@ -43,6 +43,12 @@ const PAR_DEFAUT = {
   // porte qui n'ouvre sur rien déçoit plus qu'elle ne sert.
   jeux: { primaire: false, college: false, lycee: false },
 
+  // LES BESOINS PARTICULIERS (11/10/2026) : éteints tant qu'on n'a rien lu.
+  besoinsParticuliers: false,
+
+  // LES FICHES DE RÉVISION DE L'ÉLÈVE (14/10/2026) : éteintes tant qu'on n'a rien lu.
+  fichesRevision: false,
+
   // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
   // de lecture promet un cadeau que le serveur ne donnera pas — et le
   // parent, lui, aura payé en la voyant.
@@ -108,6 +114,12 @@ function interroger() {
             college: Boolean(data?.jeuxCollege),
             lycee: Boolean(data?.jeuxLycee),
           },
+
+          // Les cases des besoins particuliers dans le profil de l'enfant.
+          besoinsParticuliers: Boolean(data?.besoinsParticuliers),
+
+          // La carte « Mes fiches de révision » de la grille de l'enfant.
+          fichesRevision: Boolean(data?.fichesRevision),
 
           // Le serveur n'envoie le texte que si le bandeau est allumé :
           // ici il n’y a rien à décider, juste à recopier. Une chaîne
@@ -301,6 +313,22 @@ export function useBlueSky() {
  * Un cycle inconnu — profil incomplet, API plus ancienne — rend FAUX : mieux
  * vaut une porte manquante qu'une porte qui n'ouvre sur rien.
  */
+/**
+ * Les besoins particuliers sont-ils allumés ? (11/10/2026) — les cases du profil
+ * de l'enfant et l'affichage adapté en dépendent. Voir `lib/besoins.js`.
+ */
+export function useBesoinsParticuliers() {
+  return Boolean(useDrapeaux().besoinsParticuliers);
+}
+
+/**
+ * Les fiches de révision de l'élève sont-elles ouvertes ? (14/10/2026) — la
+ * carte de la grille et les pages du module en dépendent.
+ */
+export function useFichesRevision() {
+  return Boolean(useDrapeaux().fichesRevision);
+}
+
 export function useJeuxOuverts(cycle) {
   // Défensif : un jeu de valeurs venu d'une version antérieure du module
   // n'aurait pas cette clé, et une porte fermée vaut mieux qu'un écran blanc.

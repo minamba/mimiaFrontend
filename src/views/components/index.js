@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import {
   Navbar,
   BoutonSignalement,
@@ -46,6 +46,11 @@ import {
   ScanMobile,
   BandeauInfo,
 } from '../../components';
+import RapportsOrientation from '../../components/RapportsOrientation';
+import MesFiches from '../../components/mesFiches/MesFiches';
+import NouveauCours from '../../components/mesFiches/NouveauCours';
+import CoursFiches from '../../components/mesFiches/CoursFiches';
+import EspaceParent from '../../components/espaceParent/EspaceParent';
 import { initAuth } from '../../lib/actions/authActions';
 import { authService } from '../../lib/storage/authService';
 import { sessionEleve } from '../../lib/storage/sessionEleve';
@@ -191,6 +196,19 @@ export const BaseApp = () => {
               </RouteProtegee>
             }
           />
+          {/* MES FICHES DE RÉVISION (14/10/2026) : l'espace, la création, un cours. */}
+          <Route
+            path="/eleves/:eleveId/mes-fiches"
+            element={<RouteProtegee><MesFiches /></RouteProtegee>}
+          />
+          <Route
+            path="/eleves/:eleveId/mes-fiches/nouvelle"
+            element={<RouteProtegee><NouveauCours /></RouteProtegee>}
+          />
+          <Route
+            path="/eleves/:eleveId/mes-fiches/cours/:coursId"
+            element={<RouteProtegee><CoursFiches /></RouteProtegee>}
+          />
           <Route
             path="/eleves/:eleveId/jeux"
             element={
@@ -256,6 +274,16 @@ export const BaseApp = () => {
           {/* Les fiches sont rangées par matière — c'est la matière qu'on a en
               tête quand on va réviser — mais une fiche donnée a son adresse à
               elle, sous l'élève : elle se partage et se met en favori. */}
+          {/* Les rapports de la conseillère d'orientation (11/10/2026) : à la
+              place des fiches de révision, pour elle seule. */}
+          <Route
+            path="/eleves/:eleveId/rapports-orientation"
+            element={
+              <RouteProtegee>
+                <RapportsOrientation />
+              </RouteProtegee>
+            }
+          />
           <Route
             path="/eleves/:eleveId/matieres/:matiereId/fiches"
             element={
@@ -331,6 +359,22 @@ export const BaseApp = () => {
                 <ExpressionsEcrites />
               </RouteProtegee>
             }
+          />
+
+          {/* MON ESPACE PARENT (16/10/2026) : ses propres fiches, sans lien avec
+              ses enfants. Les pages de fiches des élèves, propriétaire changé. */}
+          <Route path="/espace-parent" element={<Navigate to="/espace-parent/fiches" replace />} />
+          <Route
+            path="/espace-parent/fiches"
+            element={<RouteProtegee parent><EspaceParent><MesFiches /></EspaceParent></RouteProtegee>}
+          />
+          <Route
+            path="/espace-parent/fiches/nouvelle"
+            element={<RouteProtegee parent><EspaceParent><NouveauCours /></EspaceParent></RouteProtegee>}
+          />
+          <Route
+            path="/espace-parent/fiches/cours/:coursId"
+            element={<RouteProtegee parent><EspaceParent><CoursFiches /></EspaceParent></RouteProtegee>}
           />
 
           <Route

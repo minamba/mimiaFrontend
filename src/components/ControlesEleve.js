@@ -8,6 +8,7 @@ import Loader from './Loader';
 import Onglets from './Onglets';
 import OuvertureSeance from './OuvertureSeance';
 import { ControleCarte } from './MesControles';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * REGROUPÉS PAR MATIÈRE, ET C'EST LE PROFESSEUR QUI SIGNE LE GROUPE.
@@ -59,6 +60,8 @@ const ONGLETS = [
 
 export default function ControlesEleve() {
   const { eleveId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  const { calme } = useAffichageEleve(eleveId);
   const navigate = useNavigate();
 
   // L'ONGLET PEUT ÊTRE DEMANDÉ PAR L'ADRESSE — depuis le 20/09/2026, pour que
@@ -119,6 +122,8 @@ export default function ControlesEleve() {
 
       {ouverture && (
         <OuvertureSeance
+          eleveId={eleveId}
+          calme={calme}
           matiere={matieres.find((m) => m.id === ouverture.controle.matiereId)
             ?? { id: ouverture.controle.matiereId, profPrenom: 'Ton professeur' }}
           onAnnuler={() => setOuverture(null)}

@@ -13,6 +13,8 @@ import ChoixDuMode from './jeux/ChoixDuMode';
 import FinDuDefi from './jeux/FinDuDefi';
 import FriseDesClasses from './jeux/FriseDesClasses';
 import { sessionEleve } from '../lib/storage/sessionEleve';
+import useAccesForfait from '../lib/hooks/useAccesForfait';
+import { noterActivite } from '../lib/api/elevesApi';
 import { styleMatiere } from '../lib/couleurMatiere';
 import { bruitage, prechargerBruitages } from '../lib/jeux/bruitages';
 import Balance from './jeux/Balance';
@@ -80,6 +82,7 @@ import {
 import VignetteTrain from './jeux/VignetteTrain';
 import { ECRANS_COLLEGE, VIGNETTES_COLLEGE } from './jeux/JeuxCollege';
 import { ECRANS_BONUS, VIGNETTES_BONUS } from './jeux/bonus';
+import { useAffichageEleve } from '../lib/besoins';
 
 /** Le zoom d'un jeu en cours sur ordinateur : voir « LE JEU TIENT DANS L'ÉCRAN ». */
 const ZOOM_JEU_MAX = 1.25;
@@ -195,9 +198,19 @@ const VIGNETTES = {
  */
 export default function JeuxEleve() {
   const { eleveId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  const { calme } = useAffichageEleve(eleveId);
   const { liste } = useSelector((etat) => etat.eleves);
 
   const [ouvert, setOuvert] = useState(null);
+
+  // LES JEUX DEMANDENT UN VRAI FORFAIT — Camara, le 16/10/2026 : en essai, en
+  // pause ou sans abonnement, la page s'ouvre mais tous les jeux sont grisés,
+  // et un clic dit pourquoi au lieu de lancer la partie. `null` = on ne sait
+  // pas encore : rien n'est grisé le temps du chargement.
+  const { ouvert: forfaitOuvert } = useAccesForfait(eleveId);
+  const jeuxFermes = forfaitOuvert === false;
+  const [verrouVu, setVerrouVu] = useState(false);
 
   // Les bruitages (survol des cartes, bonne et mauvaise réponse) sont décodés
   // dès l'arrivée sur la page : le premier doit tomber pile, pas après un temps.
@@ -353,6 +366,16 @@ export default function JeuxEleve() {
   // uniquement quand on est en jeu qu'il faut faire le zoom »).
   const enPartie = Boolean(Ecran && mode && !finDefi);
 
+  // UNE PARTIE LANCÉE EST UNE ACTIVITÉ — Camara, le 11/10/2026 : un enfant qui
+  // ne faisait que jouer gardait une « dernière activité » figée. Seulement
+  // quand c'est L'ENFANT qui joue, connecté avec son code : un parent qui
+  // essaie un jeu ne doit pas faire croire que son enfant a travaillé. Le
+  // serveur n'écrit qu'une fois par heure ; une panne réseau ne gêne pas le jeu.
+  useEffect(() => {
+    if (!enPartie || !sien) return;
+    Promise.resolve(noterActivite(eleveId)).catch(() => {});
+  }, [enPartie, sien, eleveId, ouvert, partie]);
+
   // LA MATIÈRE DU JEU DÉCIDE DE LA VOIX : les mathématiques parlent avec
   // celle de Nora. Le jeu ne la connaît pas lui-même, c'est le catalogue qui
   // la porte — voir `voix/repliques.js`.
@@ -378,11 +401,15 @@ export default function JeuxEleve() {
   // focus retourne sur la carte de ce jeu.
   const retour = useRef(null);
   const ouvrir = useCallback((cle) => {
+    if (jeuxFermes) {
+      setVerrouVu(true);
+      return;
+    }
     retour.current = { y: window.scrollY, cle };
     setOuvert(cle);
     setMode(null);
     setFinDefi(null);
-  }, []);
+  }, [jeuxFermes]);
 
   useEffect(() => {
     // Au chargement, on ne bouge rien : la page s'ouvre où elle doit.
@@ -507,6 +534,14 @@ export default function JeuxEleve() {
   useEffect(() => {
     if (!classeDemandee || !jeuDemande) return;
 
+    // La carte du professeur n'ouvre pas non plus un jeu fermé : on attend de
+    // savoir, puis on explique au lieu de lancer.
+    if (forfaitOuvert === null) return;
+    if (forfaitOuvert === false) {
+      setVerrouVu(true);
+      return;
+    }
+
     const rangSien = rangDeLaClasse(niveauCode);
     const rangVu = rangDeLaClasse(classeDemandee);
     if (rangSien !== null && (rangVu === null || rangVu > rangSien)) return;
@@ -516,13 +551,44 @@ export default function JeuxEleve() {
     setOuvert(jeuDemande);
     setMode(null);
     setFinDefi(null);
-  }, [classeDemandee, jeuDemande, niveauCode, setRegardee]);
+  }, [classeDemandee, jeuDemande, niveauCode, setRegardee, forfaitOuvert]);
+
+  // Un jeu ouvert avant que l'on sache (lien gardé, réponse lente) se referme.
+  useEffect(() => {
+    if (jeuxFermes && ouvert) setOuvert(null);
+  }, [jeuxFermes, ouvert]);
 
   return (
     // UN JEU OUVERT PREND LA PLACE — Camara, le 08/10/2026 : « sur PC, pour les
     // jeux, augmenter le zoom de 25 %, c'est trop petit ». Voir `.page--jeu-ouvert`.
     <section ref={page} className={`page page--large${enPartie ? ' page--jeu-ouvert' : ''}`}>
       <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour">← Mes cours</Link>
+
+      {jeuxFermes && (
+        <p className="jeux-verrou" role="note">
+          <span aria-hidden="true">🔒 </span>
+          Les jeux sont réservés aux familles abonnées.
+        </p>
+      )}
+
+      {verrouVu && (
+        <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-verrou-jeux">
+          <div className="modale__boite">
+            <h2 id="titre-verrou-jeux">Il faut être abonné pour jouer</h2>
+            <p className="modale__texte">
+              {enfant
+                ? 'Les jeux sont réservés aux familles abonnées. Demande à tes parents de choisir un forfait.'
+                : 'Les jeux sont réservés aux familles abonnées. Choisissez une formule pour y accéder.'}
+            </p>
+            <div className="modale__actions">
+              {!enfant && <Link to="/tarifs" className="btn-ghost">Voir les formules</Link>}
+              <button type="button" className="btn btn--compact" onClick={() => setVerrouVu(false)}>
+                D’accord
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="jeux-entete">
         <span className="jeux-entete__icone" aria-hidden="true">
@@ -561,6 +627,7 @@ export default function JeuxEleve() {
             niveau={programmeDeLaClasse(classe)}
             onChoisir={lancer}
             onQuitter={fermer}
+            calme={calme}
           />
         ) : Ecran && finDefi ? (
           <FinDuDefi
@@ -651,7 +718,7 @@ export default function JeuxEleve() {
                     <ul className="jeux-liste">
                       {groupe.jeux.map((jeu) => (
                         <li key={jeu.cle}>
-                          <CarteJeu jeu={jeu} onOuvrir={ouvrir} />
+                          <CarteJeu jeu={jeu} onOuvrir={ouvrir} verrouille={jeuxFermes} />
                         </li>
                       ))}
                     </ul>
@@ -703,11 +770,12 @@ export default function JeuxEleve() {
 }
 
 /** Une carte de la ludothèque : sa couverture, ou son aperçu dessiné. */
-function CarteJeu({ jeu, onOuvrir }) {
+function CarteJeu({ jeu, onOuvrir, verrouille = false }) {
   return (
     <button
       type="button"
-      className={`jeu-carte${jeu.image ? ' jeu-carte--illustree' : ''}`}
+      className={`jeu-carte${jeu.image ? ' jeu-carte--illustree' : ''}${verrouille ? ' est-verrouille' : ''}`}
+      aria-label={verrouille ? `${jeu.titre} — réservé aux familles abonnées` : undefined}
       data-jeu={jeu.cle}
       style={{
         ...styleMatiere({ matiereLibelle: jeu.matiere }),
@@ -741,9 +809,28 @@ function CarteJeu({ jeu, onOuvrir }) {
         <span className="jeu-carte__accroche">{jeu.accroche}</span>
       </span>
 
+      {/* LE BADGE DES ESCAPE GAMES — Camara, le 11/10/2026 : « un badge
+          indiquant que le jeu est un escape game », sur tous. Juste au-dessus
+          de « Jouer », pour ne pas couvrir le titre peint dans la couverture. */}
+      {jeu.escape && (
+        <span className="jeu-carte__escape">
+          <span aria-hidden="true">🔐</span>
+          Escape game
+        </span>
+      )}
+
       <span className="jeu-carte__jouer">
-        <span className="jeu-carte__triangle" aria-hidden="true" />
-        Jouer
+        {verrouille ? (
+          <>
+            <span aria-hidden="true">🔒</span>
+            Abonnés
+          </>
+        ) : (
+          <>
+            <span className="jeu-carte__triangle" aria-hidden="true" />
+            Jouer
+          </>
+        )}
       </span>
     </button>
   );

@@ -170,6 +170,27 @@ export default function RevenuTotal({
                   </li>
                 </ul>
               </section>
+
+              <section className="cout-bulle">
+                <header className="cout-bulle__entete">
+                  <div className="cout-bulle__nom">
+                    Packs de fiches
+                    <small>fiches de révision, achetées sur la période, remboursées exclues</small>
+                  </div>
+                  <strong className="cout-bulle__somme revenu-bulle__somme">
+                    {enEuros(revenu.packsFichesEuros ?? 0)}
+                  </strong>
+                </header>
+
+                <ul className="cout-bulle__lignes">
+                  <li>
+                    <span>
+                      {revenu.packsFiches ?? 0} pack{(revenu.packsFiches ?? 0) > 1 ? 's' : ''} vendu{(revenu.packsFiches ?? 0) > 1 ? 's' : ''}
+                    </span>
+                    <strong>{enEuros(revenu.packsFichesEuros ?? 0)}</strong>
+                  </li>
+                </ul>
+              </section>
             </div>
           </div>
 

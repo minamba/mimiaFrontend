@@ -11,6 +11,8 @@ import {
   ANNONCE_REQUEST,
   QUOTA_EPUISE,
   CHAT_RESET,
+  ECHEANCE_FORFAIT,
+  FORFAIT_ATTEINT,
 } from '../actions/chatActions';
 
 const initialState = {
@@ -27,6 +29,12 @@ const initialState = {
    * n'est pas une panne, et l'écran qu'il appelle n'est pas le même.
    */
   quota: null,
+  /**
+   * L'échéance du forfait pendant la séance, `{ le, motif }` — l'instant (ms)
+   * où les heures tombent à zéro et le motif de la coupure —, ou null quand
+   * rien ne doit couper (16/10/2026).
+   */
+  echeance: null,
 };
 
 export default function chatReducer(state = initialState, action) {
@@ -117,6 +125,21 @@ export default function chatReducer(state = initialState, action) {
         messages: state.messages.filter(
           (m, index) => !(m.role === 'user' && index === state.messages.length - 1 && m.id < 0),
         ),
+      };
+
+    case ECHEANCE_FORFAIT:
+      return { ...state, echeance: action.payload };
+
+    // LE FORFAIT EST ATTEINT EN PLEINE SÉANCE : coupé net. Le motif rejoint
+    // `quota`, qui ferme déjà tout (saisie, micro, minuteur) ; la bulle de
+    // l'élève reste — son message est bien parti, c'est le temps qui manque.
+    case FORFAIT_ATTEINT:
+      return {
+        ...state,
+        streaming: false,
+        reponseEnCours: '',
+        quota: action.payload || 'PotEpuise',
+        echeance: null,
       };
 
     case CHAT_RESET:

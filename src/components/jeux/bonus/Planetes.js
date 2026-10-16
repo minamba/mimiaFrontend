@@ -15,7 +15,8 @@ function Astre({ cle, echelle = 1 }) {
   const p = planetes.planete(cle);
   const d = Math.round(26 + 70 * p.taille * echelle);
   return (
-    <span className="planetes__astre" style={{ width: d, height: d }} aria-hidden="true">
+    // `--d` : la taille calculée, que le téléphone réduit sans perdre les proportions.
+    <span className="planetes__astre" style={{ width: d, height: d, '--d': `${d}px` }} aria-hidden="true">
       <Dessin cle={cle} diametre={d} />
     </span>
   );
@@ -121,7 +122,7 @@ export default function Planetes({ onQuitter, niveau = 'CP' }) {
                   onDrop={(e) => { e.preventDefault(); poser(i, e.dataTransfer.getData('text/plain')); }}
                   aria-label={cle ? `Place ${i + 1} : ${planetes.planete(cle).nom}` : `Place ${i + 1}, libre`}
                 >
-                  {cle && <Astre cle={cle} />}
+                  {cle ? <Astre cle={cle} /> : <span className="planetes__rang" aria-hidden="true">{i + 1}</span>}
                 </button>
                 {cle && <span className="planetes__nom">{planetes.planete(cle).nom}</span>}
               </li>

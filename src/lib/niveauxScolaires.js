@@ -58,6 +58,29 @@ export function basculerSpecialite(liste, code, maximum) {
 }
 
 /** Ce qu'on envoie au serveur : seulement des spécialités proposées, jamais plus que la classe n'en a. */
+/**
+ * LA FILIÈRE PROFESSIONNELLE de la classe choisie (15/10/2026) : familles de
+ * métiers et spécialités, données par le serveur dans les seules classes pro.
+ * Null ailleurs — et alors rien ne s'affiche.
+ */
+export function filiereDeLaClasse(niveaux, id) {
+  const niveau = (niveaux ?? []).find((n) => String(n.id) === String(id));
+  return niveau?.filierePro ?? null;
+}
+
+/**
+ * Ce qui part au serveur. Hors voie pro, des champs vides : le serveur efface
+ * la filière d'un élève qui quitte la voie pro. Il filtre de toute façon.
+ */
+export function filiereAEnvoyer(valeur, filiere) {
+  if (!filiere) return { familleMetiers: '', specialitePro: '', specialiteProLibre: '' };
+  return {
+    familleMetiers: valeur?.familleMetiers ?? '',
+    specialitePro: valeur?.specialitePro ?? '',
+    specialiteProLibre: (valeur?.specialiteProLibre ?? '').trim(),
+  };
+}
+
 export function specialitesAEnvoyer(liste, { nombre, possibles }) {
   const codes = new Set(possibles.map((s) => s.code));
   return (liste ?? []).filter((c) => codes.has(c)).slice(0, nombre);

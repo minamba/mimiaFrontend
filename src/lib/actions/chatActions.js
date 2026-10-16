@@ -28,6 +28,17 @@ export const QUOTA_EPUISE = 'QUOTA_EPUISE';
 export const CHAT_RESET = 'CHAT_RESET';
 
 /**
+ * LE FORFAIT À LA SECONDE PRÈS — Camara, le 16/10/2026 : essai ou formule
+ * payante, le cours est coupé net quand les heures tombent à zéro, ni avant ni
+ * après. `ECHEANCE_FORFAIT` porte `{ le, motif }` — l'instant (ms) et le motif
+ * de la coupure (EssaiEpuise, PotEpuise, PlafondEnfant) —, relu au début de
+ * chaque tour du professeur. `FORFAIT_ATTEINT` coupe la séance net : la
+ * génération en cours est annulée, la séance se ferme.
+ */
+export const ECHEANCE_FORFAIT = 'ECHEANCE_FORFAIT';
+export const FORFAIT_ATTEINT = 'FORFAIT_ATTEINT';
+
+/**
  * Ouvre (ou crée) la conversation d'un élève pour une matière.
  *
  * @param seanceFinie la séance était DÉJÀ terminée au chargement de la page.
@@ -74,3 +85,5 @@ export const envoyerMessage = (
 });
 
 export const resetChat = () => ({ type: CHAT_RESET });
+
+export const forfaitAtteint = (motif) => ({ type: FORFAIT_ATTEINT, payload: motif });

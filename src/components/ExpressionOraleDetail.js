@@ -1,3 +1,4 @@
+import { texteLisible } from '../lib/storage/texteAffiche';
 /**
  * UNE CONVERSATION D'EXPRESSION ORALE, RELUE COMME UNE MESSAGERIE — voulu par
  * Camara le 18/09/2026 : « on aura juste la discussion entre l'élève et le
@@ -21,7 +22,11 @@
 export default function ExpressionOraleDetail({ conversation, prenomEleve }) {
   if (!conversation) return null;
 
-  const tours = conversation.echange ?? [];
+  // CE QUE L'APPLICATION A GLISSÉ DANS LES MESSAGES NE SE RELIT PAS (12/10/2026)
+  // — voir `texteLisible`. Un tour qui n'était qu'une consigne disparaît.
+  const tours = (conversation.echange ?? [])
+    .map((tour) => ({ ...tour, texte: texteLisible(tour.texte) }))
+    .filter((tour) => tour.texte);
 
   const nomProf = conversation.profPrenom || 'Le professeur';
   const nomEleve = prenomEleve || 'Moi';

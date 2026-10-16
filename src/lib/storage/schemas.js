@@ -83,16 +83,32 @@ export function titreFigure(cle) {
  * Reconnaît AUSSI les emplacements sans dessin : c'est ce qui permet à une
  * planche importée de s'afficher pour une matière qui n'a aucun tracé à elle.
  */
-export function cleSchema(contenu) {
-  if (typeof contenu !== 'string') return null;
+/**
+ * LA CLÉ SEULE, QUOI QU'IL Y AIT AUTOUR — relevé le 13/10/2026 : le professeur
+ * a écrit « SCHEMA:sc-cycle-vie-plante (CP) » ; tout ce qui suivait le préfixe
+ * passait pour la clé, aucune figure ne s'appelait ainsi, et l'élève voyait le
+ * texte brut au tableau au lieu du schéma. On ne garde que la clé et sa
+ * variante : ce qui suit (une classe, une ponctuation, des accents graves de
+ * mise en forme) est ignoré.
+ */
+// Le préfixe est `PREFIXE` (« SCHEMA: ») ; écrit en dur ici pour garder un motif lisible.
+const MOTIF_SCHEMA = /^SCHEMA:\s*([a-z0-9-]+(?:\/[a-z]+)?)/i;
 
-  const propre = contenu.trim();
-  if (!propre.startsWith(PREFIXE)) return null;
+function partieSchema(contenu) {
+  if (typeof contenu !== 'string') return null;
+  const propre = contenu.trim().replace(/^`+|`+$/g, '').trim();
+  const trouve = propre.match(MOTIF_SCHEMA);
+  return trouve ? trouve[1].toLowerCase() : null;
+}
+
+export function cleSchema(contenu) {
+  const partie = partieSchema(contenu);
+  if (partie === null) return null;
 
   // LE SUFFIXE DE VARIANTE EST RETIRÉ ICI, et c'est volontaire : la clé
   // reste celle du catalogue. Une figure et sa version muette sont le même
   // document — même titre, même niveau, même ligne d'administration.
-  const { cle } = separerVariante(propre.slice(PREFIXE.length).trim().toLowerCase());
+  const { cle } = separerVariante(partie);
   return CLES.has(cle) ? cle : null;
 }
 
@@ -109,9 +125,7 @@ export function cleSchema(contenu) {
 export function varianteSchema(contenu) {
   if (cleSchema(contenu) === null) return 'legende';
 
-  const { variante } = separerVariante(
-    contenu.trim().slice(PREFIXE.length).trim().toLowerCase(),
-  );
+  const { variante } = separerVariante(partieSchema(contenu));
 
   return variante;
 }

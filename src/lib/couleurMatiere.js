@@ -59,6 +59,10 @@ const MATIERES = {
   CHINOIS: { clair: '#A16207', sombre: '#FACC15' },
   ARABE: { clair: '#0F766E', sombre: '#5EEAD4' },
 
+  // LA CONSEILLÈRE D'ORIENTATION (11/10/2026) : Maëlle, un violet vif, loin du
+  // violet éteint de Camille. Choisi par moi, non montré à Camara.
+  ORIENTATION: { clair: '#6D28D9', sombre: '#C4B5FD' },
+
   // LES SPÉCIALITÉS DES SÉRIES TECHNOLOGIQUES (STMG, ST2S, STL). Une
   // couleur suit le professeur : les trois matières de Karim partagent son
   // vert, les spécialités scientifiques gardent l'ambre de Yann et l'olive
@@ -70,6 +74,12 @@ const MATIERES = {
   BIOTECHNOLOGIES: { clair: '#5C7F14', sombre: '#8FCE5C' },
   BIOLOGIE_HUMAINE: { clair: '#5C7F14', sombre: '#8FCE5C' },
   SANITAIRE_SOCIAL: { clair: '#B91C1C', sombre: '#F59E9E' },
+
+  // LA VOIE PROFESSIONNELLE (16/10/2026) : l'économie va à Karim, avec sa
+  // couleur ; la PSE à Hugo, en orange brûlé, comme son t-shirt.
+  ECONOMIE_DROIT: { clair: '#166534', sombre: '#6FCF8B' },
+  ECONOMIE_GESTION: { clair: '#166534', sombre: '#6FCF8B' },
+  PSE: { clair: '#9A3412', sombre: '#FDBA74' },
 
   // LES SPÉCIALITÉS DE LA VOIE GÉNÉRALE : même règle, la couleur suit le
   // professeur — Salim en HGGSP, Camille en HLP, Karim en SES.
@@ -157,6 +167,7 @@ const PAR_LIBELLE = {
   italien: 'ITALIEN',
   chinois: 'CHINOIS',
   arabe: 'ARABE',
+  orientation: 'ORIENTATION',
   sciences: 'SCIENCES',
   'sciences et technologie': 'SCIENCES',
   'physique chimie': 'PHYSIQUE_CHIMIE',
@@ -171,6 +182,10 @@ const PAR_LIBELLE = {
   'sciences physiques et chimiques en laboratoire': 'SPCL',
   'biologie et physiopathologie humaines': 'BIOLOGIE_HUMAINE',
   'sciences et techniques sanitaires et sociales': 'SANITAIRE_SOCIAL',
+  'economie droit': 'ECONOMIE_DROIT',
+  'economie gestion': 'ECONOMIE_GESTION',
+  'prevention sante environnement': 'PSE',
+  pse: 'PSE',
   'histoire geographie, geopolitique et sciences politiques': 'HGGSP',
   hggsp: 'HGGSP',
   'humanites, litterature et philosophie': 'HLP',
@@ -336,11 +351,15 @@ const MURS = {
   MANAGEMENT: 'droit_economie',
   DROIT_ECONOMIE: 'droit_economie',
   SCIENCES_GESTION: 'droit_economie',
+  ECONOMIE_DROIT: 'droit_economie',
+  ECONOMIE_GESTION: 'droit_economie',
 
   // Le soin et le lien. La biologie humaine y va plutôt qu'au laboratoire :
   // ce qu'elle étudie, c'est le corps de quelqu'un.
   SANITAIRE_SOCIAL: 'sante',
   BIOLOGIE_HUMAINE: 'sante',
+  // La PSE aussi : la santé, la prévention, les premiers secours.
+  PSE: 'sante',
 
   // L'atelier, le chevalet, les pinceaux : les sept matières artistiques.
   ARTS_PLASTIQUES: 'arts',

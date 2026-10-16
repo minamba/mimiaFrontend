@@ -6,13 +6,14 @@ import { chargerEleves } from '../lib/actions/elevesActions';
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { sessionEleve } from '../lib/storage/sessionEleve';
 import { cycleDuNiveau } from '../lib/niveauCycle';
-import { useJeuxOuverts } from '../lib/storage/modeTest';
+import { useFichesRevision, useJeuxOuverts } from '../lib/storage/modeTest';
 import {
   getNombreFiches, getEvaluations, getMatieresEleve, getNombreDictees,
   getNombreComprehensionsOrales,
   getNombreExpressionsOrales, getNombreExpressionsEcrites, getControles, getExamen,
 } from '../lib/api/elevesApi';
 import { estMatiereLangue } from '../lib/matieresLangues';
+import { compterRapportsOrientation } from '../lib/api/orientationApi';
 import Avatar from './Avatar';
 import MotifMatiere from './MotifMatiere';
 import Loader from './Loader';
@@ -21,10 +22,13 @@ import MesControles from './MesControles';
 import iconeCarte from '../assets/carte.png';
 import iconeCalendrier from '../assets/calendrier.png';
 import iconeJeux from '../assets/games.webp';
+import iconeCahier from '../assets/cahier.webp';
 import PreparationExamen from './PreparationExamen';
 import ControleForm from './ControleForm';
 import { ChoixCasque, ChoixDuree } from './OuvertureSeance';
 import useAncreSection from '../lib/hooks/useAncreSection';
+import useAccesForfait, { messageForfait } from '../lib/hooks/useAccesForfait';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * Ce qu'on promet à l'élève pour chaque matière, en une phrase.
@@ -39,9 +43,12 @@ import useAncreSection from '../lib/hooks/useAncreSection';
  * s'affiche qu'à partir d'une fiche — annoncer « Fiches · 0 » avant le premier
  * cours ne dit rien à personne.
  */
+/** La conseillère d'orientation : pas un professeur comme les autres (11/10/2026). */
+const estConseillere = (matiere) => matiere?.code === 'ORIENTATION';
+
 function CarteMatiere({
   matiere, onOuvrir, fiches, evaluations, dictees, comprehensionsOrales,
-  expressionsOrales, expressionsEcrites, eleveId,
+  expressionsOrales, expressionsEcrites, eleveId, rapportsOrientation,
 }) {
   const total = fiches?.total ?? 0;
   const nouveautes = fiches?.nouveautes ?? 0;
@@ -104,7 +111,10 @@ function CarteMatiere({
   }
 
   return (
-    <div className="matiere-case" style={{ '--teinte': matiere.profCouleur }}>
+    <div
+      className={`matiere-case${estConseillere(matiere) ? ' matiere-case--conseillere' : ''}`}
+      style={{ '--teinte': matiere.profCouleur }}
+    >
       <button type="button" className="matiere-carte" onClick={onOuvrir}>
         {contenu}
       </button>
@@ -217,6 +227,24 @@ function CarteMatiere({
         </Link>
       )}
 
+      {/* LES RAPPORTS D'ORIENTATION — la conseillère seule (11/10/2026) : ses
+          « fiches » à elle, un rapport par séance. */}
+      {estConseillere(matiere) && (rapportsOrientation?.total ?? 0) > 0 && (
+        <Link
+          to={`/eleves/${eleveId}/rapports-orientation`}
+          className={`matiere-fiches matiere-fiches--orientation ${rapportsOrientation.nouveaux > 0 ? 'matiere-fiches--nouveautes' : ''}`}
+        >
+          <span className="matiere-fiches__emoji" aria-hidden="true">🧭</span>
+          {rapportsOrientation.nouveaux > 0
+            ? `${rapportsOrientation.nouveaux} rapport${rapportsOrientation.nouveaux > 1 ? 's' : ''} à lire`
+            : 'Rapports d’orientation'}
+          <span className="matiere-fiches__compte">
+            {rapportsOrientation.nouveaux > 0 ? rapportsOrientation.nouveaux : rapportsOrientation.total}
+          </span>
+          <span className="matiere-fiches__fleche" aria-hidden="true">→</span>
+        </Link>
+      )}
+
       {/* Ses copies, à lui. Elles n'étaient visibles que du parent — or c'est
           lui qui les a passées, et revoir ce qu'on a écrit à côté de ce qu'il
           fallait écrire est le moment où la correction rentre vraiment. */}
@@ -237,6 +265,8 @@ function CarteMatiere({
 
 export default function GrilleMatieres() {
   const { eleveId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  const { calme } = useAffichageEleve(eleveId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -285,6 +315,8 @@ export default function GrilleMatieres() {
   // restriction que les deux du dessus.
   const [expressionsOrales, setExpressionsOrales] = useState({});
   const [expressionsEcrites, setExpressionsEcrites] = useState({});
+  // Les rapports d'orientation, pour la seule carte de la conseillère.
+  const [rapportsOrientation, setRapportsOrientation] = useState(null);
 
   // Les contrôles à venir, avec leur préparation. `null` tant que rien n'est
   // revenu : la section ne s'affiche pas plutôt que d'annoncer « aucun
@@ -359,6 +391,14 @@ export default function GrilleMatieres() {
   const jeuxOuverts = useJeuxOuverts(
     identite?.cycle || cycleDuNiveau(identite?.niveauLibelle),
   );
+
+  // Les fiches de révision de l'élève (14/10/2026) : un interrupteur, pas de cycle.
+  const fichesOuvertes = useFichesRevision();
+
+  // EN ESSAI, EN PAUSE OU SANS FORFAIT, LA CARTE DES FICHES EST DÉSACTIVÉE
+  // (Camara, le 16/10/2026) et dit pourquoi. `false` seulement quand on sait.
+  const { ouvert: forfaitOuvert, motif: motifForfait } = useAccesForfait(identite?.id);
+  const fichesFermees = forfaitOuvert === false;
 
   useEffect(() => {
     if (matieres.length === 0) dispatch(chargerReferentiel());
@@ -477,12 +517,31 @@ export default function GrilleMatieres() {
   }, [eleveId]);
 
   const { ouvertes, aVenir } = useMemo(() => ({
-    ouvertes: (siennes ?? []).filter((m) => m.active),
+    // LA CONSEILLÈRE D'ORIENTATION EN PREMIER — Camara, le 11/10/2026 : « à la
+    // place de Nora ». Les autres gardent l'ordre du serveur, décalées d'un rang.
+    ouvertes: (siennes ?? [])
+      .filter((m) => m.active)
+      .sort((a, b) => Number(estConseillere(b)) - Number(estConseillere(a))),
 
     // « Bientôt » et « pas pour toi » ne sont pas la même chose : le serveur
     // renvoie les matières à venir de SA classe, avec leur drapeau à faux.
     aVenir: (siennes ?? []).filter((m) => !m.active),
   }), [siennes]);
+
+  // LES RAPPORTS D'ORIENTATION, SEULEMENT SI LA CONSEILLÈRE EST LÀ
+  // (11/10/2026) : sans sa carte, rien à compter ni à demander au serveur.
+  const aLaConseillere = ouvertes.some(estConseillere);
+
+  useEffect(() => {
+    if (!aLaConseillere) return undefined;
+    let vivant = true;
+
+    compterRapportsOrientation(eleveId)
+      .then(({ data }) => { if (vivant) setRapportsOrientation(data ?? null); })
+      .catch(() => { /* le pied ne s'affiche pas, rien de plus */ });
+
+    return () => { vivant = false; };
+  }, [eleveId, aLaConseillere]);
 
 
   if (siennes === null) {
@@ -497,6 +556,8 @@ export default function GrilleMatieres() {
       {enAttente && dureeChoisie === null && (
         <ChoixDuree
           matiere={enAttente}
+          calme={calme}
+          essai={motifForfait === 'essai'}
           onAnnuler={() => setEnAttente(null)}
           estAdmin={estAdmin}
           onValider={setDureeChoisie}
@@ -595,6 +656,23 @@ export default function GrilleMatieres() {
           </Link>
           </>
           )}
+
+          {fichesOuvertes && !fichesFermees && (
+            <Link to={`/eleves/${identite.id}/mes-fiches`} className="lien-carte lien-carte--badge">
+              <img className="lien-carte__badge" src={iconeCahier} alt="" />
+              Mes fiches de révision
+            </Link>
+          )}
+          {fichesOuvertes && fichesFermees && (
+            <span
+              className="lien-carte lien-carte--badge est-verrouille"
+              aria-disabled="true"
+              title={messageForfait(false, 'cette fonctionnalité')}
+            >
+              <img className="lien-carte__badge" src={iconeCahier} alt="" />
+              Mes fiches de révision · avec un forfait
+            </span>
+          )}
         </div>
       )}
 
@@ -686,6 +764,45 @@ export default function GrilleMatieres() {
             <span className="carte-mienne__fleche" aria-hidden="true">→</span>
           </Link>
 
+          {/* MES FICHES DE RÉVISION — Camara, le 14/10/2026 : l'enfant importe
+              son cours et en tire ses fiches. Une porte à part, comme les jeux :
+              ce n'est ni une matière ni un cours avec un professeur. AVANT les
+              jeux (16/10/2026) : le travail d'abord, le jeu ensuite. */}
+          {/* DÉSACTIVÉE SANS VRAI FORFAIT (16/10/2026) : la carte reste à sa
+              place — l'enfant sait que la porte existe —, grisée, et dit ce
+              qu'il manque au lieu de mener à une page fermée. */}
+          {fichesOuvertes && fichesFermees && (
+            <div className="carte-mienne carte-mienne--fiches est-verrouillee" aria-disabled="true">
+              <MotifMatiere code="FICHES" />
+              <span className="carte-mienne__icone-zone">
+                <span className="carte-mienne__icone" aria-hidden="true">
+                  <img src={iconeCahier} alt="" />
+                </span>
+              </span>
+              <span className="carte-mienne__texte">
+                <strong>Mes fiches de révision</strong>
+                <span>{messageForfait(Boolean(enfant), 'cette fonctionnalité')}</span>
+              </span>
+              <span className="carte-mienne__fleche" aria-hidden="true">🔒</span>
+            </div>
+          )}
+          {fichesOuvertes && !fichesFermees && (
+            <Link to={`/eleves/${identite.id}/mes-fiches`} className="carte-mienne carte-mienne--fiches">
+              <MotifMatiere code="FICHES" />
+              <span className="carte-mienne__icone-zone">
+                <span className="carte-mienne__halo" aria-hidden="true" />
+                <span className="carte-mienne__icone" aria-hidden="true">
+                  <img src={iconeCahier} alt="" />
+                </span>
+              </span>
+              <span className="carte-mienne__texte">
+                <strong>Mes fiches de révision</strong>
+                <span>Importe ton cours, ta fiche est prête en un instant</span>
+              </span>
+              <span className="carte-mienne__fleche" aria-hidden="true">→</span>
+            </Link>
+          )}
+
           {jeuxOuverts && (
           <>
           {/* MES JEUX — Camara, le 20/09/2026. Sous les deux autres et sur
@@ -744,6 +861,7 @@ export default function GrilleMatieres() {
               comprehensionsOrales={comprehensionsOrales[matiere.id]}
               expressionsOrales={expressionsOrales[matiere.id]}
               expressionsEcrites={expressionsEcrites[matiere.id]}
+              rapportsOrientation={rapportsOrientation}
               eleveId={eleveId}
             />
           </li>

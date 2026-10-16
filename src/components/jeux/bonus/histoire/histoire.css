@@ -214,7 +214,15 @@
   -webkit-touch-callout: none;
 }
 
-.hg-loupe__scene.est-active .hg-loupe__cadre { touch-action: none; cursor: zoom-in; }
+.hg-loupe__scene.est-active .hg-loupe__cadre {
+  touch-action: none;
+  cursor: zoom-in;
+  /* Le doigt qui glisse ne fait ni défiler ni « rebondir » la page (11/10/2026). */
+  overscroll-behavior: contain;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 .hg-loupe__scene.a-sa-loupe .hg-loupe__cadre { cursor: none; }
 .hg-loupe__cadre:focus-visible { outline: 4px solid #ffd36b; outline-offset: 2px; }
 

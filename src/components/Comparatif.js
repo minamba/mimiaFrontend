@@ -9,16 +9,17 @@
  * parent décide. Les colonnes « professeur particulier » et « ChatGPT »
  * décrivent ce qu'ils font vraiment, pas une caricature : le professeur
  * particulier garde ses avantages, et ChatGPT les siens.
+ *
+ * TROIS LIGNES, PAS HUIT — Camara, le 11/10/2026 : la page est devenue
+ * longue, et le reste de la page démontre déjà la différence. On garde les
+ * trois que ChatGPT ne fait pas du tout ; les cinq autres (disponibilité,
+ * même professeur, mémoire, oral, toutes les matières) sont dans l'historique
+ * git, et montrées ailleurs sur la page.
  */
 const LIGNES = [
-  { quoi: 'Disponible à 22 h, la veille du contrôle', prof: false, chat: true, mimia: true },
-  { quoi: 'Le même professeur à chaque séance', prof: true, chat: false, mimia: true },
-  { quoi: 'Se souvient des séances précédentes', prof: true, chat: 'partiel', mimia: true },
   { quoi: 'Refuse de donner la réponse toute faite', prof: true, chat: false, mimia: true },
   { quoi: 'Remonte aux lacunes des années passées', prof: true, chat: false, mimia: true },
-  { quoi: 'Dictées corrigées et compréhension orale', prof: true, chat: 'partiel', mimia: true },
   { quoi: 'Bilan écrit aux parents chaque semaine', prof: 'partiel', chat: false, mimia: true },
-  { quoi: 'Toutes les matières, du CP à la Terminale', prof: false, chat: true, mimia: true },
 ];
 
 /** Une case : oui, non, ou « en partie ». Le texte porte le sens, pas la couleur. */

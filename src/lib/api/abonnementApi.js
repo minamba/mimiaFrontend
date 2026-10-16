@@ -104,3 +104,18 @@ export const annulerChangement = () => httpClient.post('/abonnements/annuler-cha
  * Répond `{ urlPortail }`, ou 404 si le compte n'a jamais rien payé.
  */
 export const ouvrirPortail = () => httpClient.post('/abonnements/portail');
+
+/**
+ * LES FICHES DE RÉVISION DANS « MON FORFAIT » (16/10/2026) : la réserve de la
+ * famille, les fiches du mois de chaque enfant, les packs en vente. Séparé des
+ * heures.
+ */
+export const getFichesFamille = () => httpClient.get('/abonnements/fiches');
+
+/**
+ * Un pack de fiches pour la famille. Rend `{ urlPaiement }`, ou `{ credits }`
+ * pour un compte exempté, crédité sans paiement. Stripe ramène le parent sur
+ * `/profil?paiement=ok&achat=fiches`.
+ */
+export const acheterFiches = (codePack) =>
+  httpClient.post(`/abonnements/fiches?pack=${encodeURIComponent(codePack)}`);

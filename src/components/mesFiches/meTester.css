@@ -1,0 +1,1137 @@
+/*
+ * « ME TESTER » — FLASH CARDS ET QUIZ (Camara, le 16/10/2026 : « les flash
+ * cards doivent être très belles, bien animées »). Préfixe `mt-`, libre dans
+ * App.css (vérifié). La couleur de la matière (`--matiere`) vient de la page.
+ */
+.mt {
+  --mt-couleur: var(--matiere, #7c5cd6);
+  --mt-juste: #3fbf6a;
+  --mt-faux: #ff705e;
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(3, 10, 30, 0.82);
+  backdrop-filter: blur(6px);
+  animation: mt-fondu 0.2s ease-out;
+}
+
+.mt__fenetre {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 1.1rem 1.4rem 1.6rem;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--mt-couleur) 45%, transparent);
+  background:
+    radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--mt-couleur) 22%, transparent), transparent 70%),
+    var(--papier, #0b1d3d);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 0 0 6px color-mix(in srgb, var(--mt-couleur) 14%, transparent);
+  animation: mt-arrivee 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.mt__tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mt__surtitre {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--mt-couleur) 60%, #fff);
+}
+
+.mt__titre {
+  margin: 0.15rem 0 0;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mt__fermer {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--trait);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.mt__fermer:hover,
+.mt__fermer:focus-visible {
+  background: var(--mt-couleur);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+/* ------------------------------------------------------------------ choix */
+
+.mt-choix__question {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mt-choix__grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.mt-choix__carte {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1rem 1.3rem;
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, var(--mt-a), var(--mt-b));
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.3), box-shadow 0.2s ease;
+  animation: mt-monte 0.35s ease-out both;
+}
+
+.mt-choix__carte:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.mt-choix__carte:hover,
+.mt-choix__carte:focus-visible {
+  transform: translateY(-4px) rotate(-1deg) scale(1.02);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
+}
+
+.mt-choix__carte:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+.mt-choix__carte--cartes { --mt-a: #7c5cd6; --mt-b: #4a2fa8; }
+.mt-choix__carte--quiz { --mt-a: #e2557f; --mt-b: #a32a59; }
+.mt-choix__carte--tranquille { --mt-a: #2fa66a; --mt-b: #17714a; }
+.mt-choix__carte--challenge { --mt-a: #f08a24; --mt-b: #c0441d; }
+
+.mt-choix__icone {
+  font-size: 2.6rem;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.mt-choix__nom {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.mt-choix__desc {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.mt-retour {
+  display: block;
+  margin: 1rem auto 0;
+  border: 0;
+  background: none;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.mt-retour:hover {
+  color: var(--encre);
+}
+
+/* ------------------------------------------------------------------ chargement */
+
+.mt-chargement {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 2rem 0 1rem;
+  text-align: center;
+}
+
+.mt-chargement p {
+  margin: 0;
+}
+
+.mt-chargement__aide {
+  color: var(--encre-douce);
+  font-size: 0.88rem;
+}
+
+.mt-chargement__cartes {
+  position: relative;
+  width: 90px;
+  height: 110px;
+  margin-bottom: 1rem;
+}
+
+.mt-chargement__cartes span {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(160deg, var(--mt-couleur), color-mix(in srgb, var(--mt-couleur) 55%, #000));
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  animation: mt-battre 1.4s ease-in-out infinite;
+}
+
+.mt-chargement__cartes span:nth-child(2) { animation-delay: 0.15s; opacity: 0.85; }
+.mt-chargement__cartes span:nth-child(3) { animation-delay: 0.3s; opacity: 0.7; }
+
+/* ------------------------------------------------------------------ partie */
+
+.mt-jeu__haut {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.mt-jeu__compte {
+  color: var(--encre-douce);
+}
+
+.mt-jeu__points {
+  position: relative;
+  margin-left: auto;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(242, 193, 78, 0.18);
+  color: #f2c14e;
+  font-variant-numeric: tabular-nums;
+}
+
+.mt-jeu__gain {
+  position: absolute;
+  right: 0;
+  top: -1.2rem;
+  color: #f2c14e;
+  font-size: 0.85rem;
+  animation: mt-gain 0.9s ease-out forwards;
+}
+
+.mt-jeu__serie {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 112, 60, 0.2);
+  color: #ffb27a;
+  animation: mt-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+.mt-jeu__clavier {
+  margin: 0.8rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--encre-douce);
+}
+
+.mt-progression {
+  height: 6px;
+  margin-bottom: 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.mt-progression span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mt-couleur), color-mix(in srgb, var(--mt-couleur) 50%, #fff));
+  transition: width 0.4s ease;
+}
+
+.mt-chrono {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 22px;
+  margin-bottom: 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.mt-chrono__barre {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #3fbf6a, #f2c14e);
+  transition: transform 0.1s linear;
+}
+
+.mt-chrono.est-presse .mt-chrono__barre {
+  background: linear-gradient(90deg, #ff705e, #ff9a5e);
+  animation: mt-clignote 0.5s ease-in-out infinite alternate;
+}
+
+.mt-chrono__secondes {
+  position: relative;
+  margin-left: auto;
+  padding: 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ la pile et la carte */
+
+.mt-pile {
+  position: relative;
+  height: 330px;
+  margin: 0.4rem auto 0;
+  max-width: 520px;
+  perspective: 1400px;
+}
+
+.mt-pile__fantome {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--mt-couleur) 70%, #fff 0%), color-mix(in srgb, var(--mt-couleur) 45%, #000));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.mt-pile__fantome--1 {
+  transform: translateY(10px) scale(0.96) rotate(2deg);
+  opacity: 0.6;
+}
+
+.mt-pile__fantome--2 {
+  transform: translateY(20px) scale(0.92) rotate(-2.5deg);
+  opacity: 0.35;
+}
+
+.mt-carte {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  perspective: 1400px;
+  animation: mt-entree 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.mt-carte:focus-visible {
+  outline: none;
+}
+
+.mt-carte:focus-visible .mt-carte__face {
+  box-shadow: 0 0 0 4px #fff, 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.mt-carte__interieur {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.3, 1.25, 0.4, 1);
+}
+
+.mt-carte:hover:not(.est-retournee) .mt-carte__interieur {
+  transform: rotateY(-8deg) rotateX(4deg) translateY(-4px);
+}
+
+.mt-carte.est-retournee .mt-carte__interieur {
+  transform: rotateY(180deg);
+}
+
+.mt-carte__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 1.6rem 1.6rem 1.4rem;
+  border-radius: 24px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+/* Le recto : la couleur de la matière, en dégradé, avec des reflets. */
+.mt-carte__face--avant {
+  background:
+    radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.28) 0 18%, transparent 19%),
+    radial-gradient(circle at 10% 95%, rgba(255, 255, 255, 0.14) 0 22%, transparent 23%),
+    linear-gradient(155deg, color-mix(in srgb, var(--mt-couleur) 92%, #fff), color-mix(in srgb, var(--mt-couleur) 60%, #000));
+  color: #fff;
+}
+
+/* Le verso : une feuille claire, bordée de la couleur. */
+.mt-carte__face--arriere {
+  transform: rotateY(180deg);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mt-couleur) 14%, #fffdf8), #fffdf8 45%);
+  color: #1d2433;
+  border: 3px solid var(--mt-couleur);
+}
+
+.mt-carte__etiquette {
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mt-carte__face--arriere .mt-carte__etiquette {
+  background: color-mix(in srgb, var(--mt-couleur) 18%, transparent);
+  color: color-mix(in srgb, var(--mt-couleur) 75%, #000);
+}
+
+.mt-question .mt-carte__etiquette {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  background: color-mix(in srgb, var(--mt-couleur) 22%, transparent);
+  color: color-mix(in srgb, var(--mt-couleur) 55%, #fff);
+}
+
+.mt-carte__texte {
+  font-family: var(--display);
+  font-size: clamp(1.15rem, 3.2vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.mt-carte__texte--reponse {
+  color: color-mix(in srgb, var(--mt-couleur) 70%, #000);
+}
+
+.mt-carte__explication {
+  max-width: 34rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #4d566b;
+}
+
+.mt-carte__aide {
+  position: absolute;
+  bottom: 1rem;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  animation: mt-respire 2s ease-in-out infinite;
+}
+
+/* L'envol : la carte part sur le côté en tournant. */
+.mt-carte.s-envole-droite {
+  animation: mt-envol-droite 0.38s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+
+.mt-carte.s-envole-gauche {
+  animation: mt-envol-gauche 0.38s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+
+.mt-jugement {
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 1.6rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.mt-jugement.est-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.mt-jugement__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 48px;
+  padding: 0 1.4rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mt-jugement__bouton span {
+  font-size: 1.25rem;
+}
+
+.mt-jugement__bouton--revoir {
+  border-color: var(--mt-faux);
+  background: rgba(255, 112, 94, 0.12);
+  color: #ffb3a8;
+}
+
+.mt-jugement__bouton--savais {
+  background: var(--mt-juste);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(63, 191, 106, 0.35);
+}
+
+.mt-jugement__bouton:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.04);
+}
+
+.mt-jugement__bouton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------ quiz */
+
+.mt-question {
+  margin: 0.3rem 0 1rem;
+  padding: 1.3rem 1.4rem;
+  border-radius: 20px;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--mt-couleur) 30%, transparent), rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--mt-couleur) 40%, transparent);
+  text-align: center;
+  animation: mt-monte 0.35s ease-out;
+}
+
+.mt-question__texte {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.1rem, 3vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.mt-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mt-options li {
+  animation: mt-monte 0.35s ease-out both;
+}
+
+.mt-options li:nth-child(2) { animation-delay: 0.05s; }
+.mt-options li:nth-child(3) { animation-delay: 0.1s; }
+.mt-options li:nth-child(4) { animation-delay: 0.15s; }
+
+.mt-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 58px;
+  padding: 0.6rem 0.9rem;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--encre);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.mt-option:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--mt-couleur);
+  background: color-mix(in srgb, var(--mt-couleur) 16%, transparent);
+}
+
+.mt-option__lettre {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--mt-couleur) 30%, transparent);
+  font-weight: 800;
+}
+
+.mt-option.est-juste {
+  border-color: var(--mt-juste);
+  background: rgba(63, 191, 106, 0.22);
+  animation: mt-pop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+.mt-option.est-juste .mt-option__lettre {
+  background: var(--mt-juste);
+  color: #fff;
+}
+
+.mt-option.est-faux {
+  border-color: var(--mt-faux);
+  background: rgba(255, 112, 94, 0.2);
+  animation: mt-tremble 0.4s ease;
+}
+
+.mt-option.est-faux .mt-option__lettre {
+  background: var(--mt-faux);
+  color: #fff;
+}
+
+.mt-option.est-eteint {
+  opacity: 0.45;
+}
+
+.mt-option:disabled {
+  cursor: default;
+}
+
+.mt-verdict {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 16px;
+  border-left: 5px solid var(--mt-juste);
+  background: rgba(63, 191, 106, 0.12);
+  animation: mt-monte 0.3s ease-out;
+}
+
+.mt-verdict.est-faux {
+  border-left-color: var(--mt-faux);
+  background: rgba(255, 112, 94, 0.12);
+}
+
+.mt-verdict span {
+  color: var(--encre-douce);
+  font-size: 0.92rem;
+}
+
+.mt-verdict__suite {
+  justify-self: end;
+}
+
+/* ------------------------------------------------------------------ fin */
+
+.mt-fin {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 1rem 0 0.4rem;
+  text-align: center;
+}
+
+.mt-fin__anneau {
+  display: grid;
+  place-items: center;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--papier, #0b1d3d) 78%, transparent 79%),
+    conic-gradient(var(--mt-juste) calc(var(--part) * 1%), rgba(255, 255, 255, 0.1) 0);
+  animation: mt-pop 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+.mt-fin__anneau span {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.mt-fin__titre {
+  margin: 0.6rem 0 0;
+  font-family: var(--display);
+  font-size: 1.35rem;
+}
+
+.mt-fin__detail {
+  margin: 0;
+  color: var(--encre-douce);
+}
+
+.mt-fin__points {
+  margin: 0.2rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #f2c14e;
+  font-variant-numeric: tabular-nums;
+}
+
+.mt-fin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.mt-confettis {
+  position: absolute;
+  inset: -1rem 0 auto;
+  height: 0;
+  pointer-events: none;
+}
+
+.mt-confettis span {
+  position: absolute;
+  top: 0;
+  left: calc(var(--i) * 4.2%);
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: hsl(calc(var(--i) * 47deg) 85% 62%);
+  animation: mt-confetti 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) calc(var(--i) * 0.04s) forwards;
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------ mouvements */
+
+@keyframes mt-fondu { from { opacity: 0; } }
+@keyframes mt-arrivee { from { opacity: 0; transform: translateY(20px) scale(0.96); } }
+@keyframes mt-monte { from { opacity: 0; transform: translateY(12px); } }
+@keyframes mt-entree { from { opacity: 0; transform: translateY(24px) scale(0.92) rotate(-2deg); } }
+@keyframes mt-pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@keyframes mt-tremble {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+@keyframes mt-envol-droite { to { transform: translateX(130%) rotate(18deg); opacity: 0; } }
+@keyframes mt-envol-gauche { to { transform: translateX(-130%) rotate(-18deg); opacity: 0; } }
+@keyframes mt-respire { 50% { opacity: 0.5; } }
+@keyframes mt-clignote { to { opacity: 0.65; } }
+@keyframes mt-gain { to { transform: translateY(-14px); opacity: 0; } }
+@keyframes mt-battre {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  30% { transform: rotate(-12deg) translateX(-18px); }
+  60% { transform: rotate(10deg) translateX(18px); }
+}
+@keyframes mt-confetti {
+  0% { opacity: 1; transform: translateY(0) rotate(0); }
+  100% { opacity: 0; transform: translateY(260px) rotate(540deg); }
+}
+
+@media (max-width: 600px) {
+  .mt__fenetre {
+    padding: 0.9rem 0.9rem 1.2rem;
+  }
+
+  .mt-choix__grille,
+  .mt-options {
+    grid-template-columns: 1fr;
+  }
+
+  .mt-pile {
+    height: 300px;
+  }
+
+  .mt-jugement__bouton {
+    flex: 1;
+    justify-content: center;
+    padding: 0 0.8rem;
+  }
+
+  .mt-jeu__clavier {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt,
+  .mt__fenetre,
+  .mt-carte,
+  .mt-choix__carte,
+  .mt-options li,
+  .mt-question,
+  .mt-verdict,
+  .mt-option,
+  .mt-fin__anneau,
+  .mt-chargement__cartes span,
+  .mt-carte__aide,
+  .mt-confettis span {
+    animation: none;
+  }
+
+  .mt-carte__interieur {
+    transition: none;
+  }
+}
+
+/*
+ * LE STYLE DES IMAGES DE CAMARA — 16/10/2026 : « que le design ressemble à
+ * ça, en écriture et en couleur ». Nuit violette, lueurs, étincelles ; titres
+ * en Lilita One (déjà chargée par le site), blancs, soulignés violet-rose.
+ */
+.mt__fenetre {
+  border: 2px solid rgba(167, 139, 250, 0.7);
+  background:
+    radial-gradient(60% 40% at 12% 0%, rgba(168, 85, 247, 0.32), transparent 70%),
+    radial-gradient(50% 40% at 100% 10%, rgba(59, 130, 246, 0.25), transparent 70%),
+    linear-gradient(160deg, #1b1446 0%, #121a4a 55%, #0d1438 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 0 40px rgba(139, 92, 246, 0.45),
+    0 30px 90px rgba(0, 0, 0, 0.6);
+}
+
+/* Quelques étincelles dans le fond de la fenêtre. */
+.mt__fenetre::before,
+.mt__fenetre::after {
+  content: '✦';
+  position: absolute;
+  pointer-events: none;
+  color: rgba(196, 181, 253, 0.55);
+  text-shadow: 0 0 12px rgba(196, 181, 253, 0.9);
+  animation: mt-scintille 2.6s ease-in-out infinite;
+}
+
+.mt__fenetre::before {
+  top: 1.1rem;
+  right: 5.2rem;
+  font-size: 1.3rem;
+}
+
+.mt__fenetre::after {
+  top: 4.8rem;
+  left: 52%;
+  font-size: 0.9rem;
+  animation-delay: 1.2s;
+}
+
+@keyframes mt-scintille {
+  50% { opacity: 0.25; transform: scale(0.7) rotate(20deg); }
+}
+
+.mt__surtitre {
+  color: #f472b6;
+  font-family: 'Lilita One', var(--display);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.mt__titre {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.35rem;
+  font-family: 'Lilita One', var(--display);
+  font-size: 1.7rem;
+  font-weight: 400;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(91, 33, 182, 0.6), 0 0 18px rgba(167, 139, 250, 0.45);
+}
+
+.mt__titre::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 18%;
+  bottom: 0;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #a855f7, #ec4899 70%, transparent);
+}
+
+.mt__fermer {
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 2px solid rgba(147, 197, 253, 0.7);
+  background: radial-gradient(circle at 35% 30%, #3b82f6, #1d3fa8);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.65);
+}
+
+.mt__fermer:hover,
+.mt__fermer:focus-visible {
+  background: radial-gradient(circle at 35% 30%, #60a5fa, #2563eb);
+}
+
+.mt-choix__question {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  font-family: 'Lilita One', var(--display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: #fff;
+}
+
+/* Les petits traits de part et d'autre de la question. */
+.mt-choix__question::before,
+.mt-choix__question::after {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background:
+    linear-gradient(#a78bfa, #a78bfa) 0 30% / 100% 3px no-repeat,
+    linear-gradient(#ec4899, #ec4899) 0 75% / 70% 3px no-repeat;
+  border-radius: 2px;
+}
+
+.mt-choix__question::after {
+  transform: scaleX(-1);
+}
+
+/* Les deux jeux : l'image, sa lueur, sa flèche. */
+.mt-choix__image {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 7% / 10%;
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.3), box-shadow 0.22s ease, filter 0.22s ease;
+  animation: mt-monte 0.35s ease-out both;
+}
+
+.mt-choix__image:nth-child(2) {
+  animation-delay: 0.07s;
+}
+
+.mt-choix__image img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mt-choix__image--cartes {
+  box-shadow: 0 0 22px rgba(139, 92, 246, 0.55), 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+.mt-choix__image--quiz {
+  box-shadow: 0 0 22px rgba(236, 72, 153, 0.55), 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+.mt-choix__image:hover,
+.mt-choix__image:focus-visible {
+  transform: translateY(-5px) scale(1.025);
+  filter: brightness(1.08) saturate(1.1);
+}
+
+.mt-choix__image--cartes:hover,
+.mt-choix__image--cartes:focus-visible {
+  box-shadow: 0 0 34px rgba(139, 92, 246, 0.85), 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.mt-choix__image--quiz:hover,
+.mt-choix__image--quiz:focus-visible {
+  box-shadow: 0 0 34px rgba(236, 72, 153, 0.85), 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.mt-choix__image:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+/* La flèche ronde, en bas à droite, comme sur la maquette. */
+.mt-choix__fleche {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.mt-choix__image:hover .mt-choix__fleche,
+.mt-choix__carte:hover .mt-choix__fleche {
+  transform: translateX(3px);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Les modes, dans le même esprit : dégradés vifs, Lilita, étincelle. */
+.mt-choix__carte {
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+
+.mt-choix__carte::before {
+  content: '✦';
+  position: absolute;
+  top: 0.7rem;
+  left: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 0 10px #fff;
+  animation: mt-scintille 2.4s ease-in-out infinite;
+}
+
+.mt-choix__carte--tranquille {
+  --mt-a: #34d399;
+  --mt-b: #0f8f63;
+  box-shadow: 0 0 22px rgba(52, 211, 153, 0.45), 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+.mt-choix__carte--challenge {
+  --mt-a: #fb923c;
+  --mt-b: #db2777;
+  box-shadow: 0 0 22px rgba(251, 146, 60, 0.5), 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+.mt-choix__nom {
+  font-family: 'Lilita One', var(--display);
+  font-size: 1.7rem;
+  font-weight: 400;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.18), 0 0 14px rgba(255, 255, 255, 0.35);
+}
+
+.mt-choix__desc {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt__fenetre::before,
+  .mt__fenetre::after,
+  .mt-choix__carte::before,
+  .mt-choix__image {
+    animation: none;
+  }
+}
+
+/* Un peu plus large : les deux images respirent côte à côte. */
+.mt__fenetre {
+  width: min(820px, 100%);
+}
+
+/*
+ * MOINS DE LUEUR — Camara, le 16/10/2026 : « trop de glow, même quand je
+ * sélectionne, ça fait mal aux yeux ». Les images ont déjà leur propre bord
+ * lumineux : on n'en rajoute pas. Une ombre sombre pour le relief, et au
+ * survol un léger soulèvement, sans halo coloré ni éclaircissement.
+ */
+.mt__fenetre {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 18px rgba(139, 92, 246, 0.18),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+.mt__fermer {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.mt-choix__image--cartes,
+.mt-choix__image--quiz {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+.mt-choix__image:hover,
+.mt-choix__image:focus-visible {
+  transform: translateY(-3px);
+  filter: none;
+}
+
+.mt-choix__image--cartes:hover,
+.mt-choix__image--cartes:focus-visible,
+.mt-choix__image--quiz:hover,
+.mt-choix__image--quiz:focus-visible {
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mt-choix__carte--tranquille,
+.mt-choix__carte--challenge {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+.mt-choix__carte:hover,
+.mt-choix__carte:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5);
+}
+
+.mt__titre {
+  text-shadow: 0 2px 0 rgba(91, 33, 182, 0.5);
+}
+
+.mt__fenetre::before,
+.mt__fenetre::after,
+.mt-choix__carte::before {
+  text-shadow: none;
+}
+
+/* Les images des modes : plus larges que hautes, coins à leur mesure. */
+.mt-choix__image--mode {
+  border-radius: 5.5% / 10.5%;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+}
+
+.mt-choix__image--mode:hover,
+.mt-choix__image--mode:focus-visible {
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Le bouton de l'ambiance, à côté de la croix. */
+.mt__boutons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.mt__son {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(167, 139, 250, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mt__son:hover,
+.mt__son:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.05);
+}
+
+.mt__son.est-coupee {
+  opacity: 0.6;
+}

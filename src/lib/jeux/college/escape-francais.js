@@ -298,7 +298,7 @@ const ETAPES = {
       ],
     },
     {
-      recit: 'Dans le bureau du conservateur, tu trouves ses notes sur ce qui aurait pu se passer. Il faut compléter ses hypothèses.',
+      recit: 'Au pied du vase, le conservateur a oublié ses notes sur ce qui aurait pu se passer. Il faut compléter ses hypothèses.',
       banque: [
         q('Si le suspect ___ la vérité, il serait libre. (dire)', 'disait', { dirait: 'hypothese-si-conditionnel', dira: 'hypothese-systemes' }),
         q('Si tu observes bien, tu ___ l’indice. (trouver)', 'trouveras', { trouverais: 'hypothese-systemes', trouvais: 'hypothese-systemes' }),

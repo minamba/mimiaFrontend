@@ -38,6 +38,12 @@ const MATIERES = {
   hg: { code: 'HISTOIRE_GEO', libelle: 'Histoire-Géographie' },
   an: { code: 'ANGLAIS', libelle: 'Anglais' },
   es: { code: 'ESPAGNOL', libelle: 'Espagnol' },
+  // Les quatre langues qui n'avaient aucun emplacement (13/10/2026). Le serveur
+  // les connaît déjà comme langues enseignées (`LanguesEnseignees`).
+  de: { code: 'ALLEMAND', libelle: 'Allemand' },
+  it: { code: 'ITALIEN', libelle: 'Italien' },
+  zh: { code: 'CHINOIS', libelle: 'Chinois' },
+  ar: { code: 'ARABE', libelle: 'Arabe' },
   sc: { code: 'SCIENCES', libelle: 'Sciences et technologie' },
   // Spécialités des séries technologiques : seulement leurs manques, le reste
   // est emprunté à la SVT et à la physique-chimie côté serveur.
@@ -492,6 +498,8 @@ export default function Planches() {
         <ul className="planches__cartes">
           {groupes.map(({ matiere, figures }) => {
             const importeesIci = figures.filter((f) => f.planche).length;
+            // Chaque figure a DEUX versions à importer (13/10/2026).
+            const muettesIci = figures.filter((f) => f.muette).length;
 
             // Ce qui reste à faire, dans l'ordre d'urgence : une figure sans
             // dessin ET sans planche n'existe pas du tout ; une figure de SVT
@@ -515,7 +523,7 @@ export default function Planches() {
                   ) : (
                     <>
                       <span className="planche-carte__compte">
-                        {importeesIci} / {figures.length} importées
+                        {importeesIci} / {figures.length} légendées · {muettesIci} / {figures.length} muettes
                       </span>
                       <span className="planche-carte__jauge" aria-hidden="true">
                         <span style={{ width: `${(importeesIci / figures.length) * 100}%` }} />
@@ -553,7 +561,9 @@ export default function Planches() {
           <h3 style={styleMatiere(groupeOuvert.matiere.libelle)} className="matiere-nom">
             {groupeOuvert.matiere.libelle}
             <span className="planches__compte">
-              {groupeOuvert.figures.filter((f) => f.planche).length} / {groupeOuvert.figures.length} importées
+              {groupeOuvert.figures.filter((f) => f.planche).length} / {groupeOuvert.figures.length} légendées
+              {' · '}
+              {groupeOuvert.figures.filter((f) => f.muette).length} / {groupeOuvert.figures.length} muettes
             </span>
           </h3>
 
@@ -695,16 +705,19 @@ export default function Planches() {
                   aurait doublé le catalogue et laissé croire qu'il y a deux
                   documents à choisir.
 
-                  ELLE N'APPARAÎT QUE SOUS UNE PLANCHE IMPORTÉE, parce qu'elle
-                  n'a de sens qu'avec elle : sa correction lit les repères de sa
-                  parente. Le serveur refuse d'ailleurs l'import dans l'autre
-                  ordre.
+                  TOUJOURS VISIBLE (Camara, le 13/10/2026 : « deux emplacements
+                  pour chaque schéma, avec la version muette »). Mais elle ne
+                  s'IMPORTE qu'après sa légendée : sa correction lit les repères
+                  de sa parente, et le serveur refuse l'import dans l'autre
+                  ordre. Avant, le bouton est grisé et le dit.
                 */}
-                {figure.planche && (
+                {(
+
                   <div
                     className="planches__muette"
                     role="group"
-                    aria-label="Version muette"
+                    // Un bloc par figure désormais : le titre le distingue.
+                    aria-label={`Version muette — ${figure.titre}`}
                   >
                     {figure.muette && (
                       <button
@@ -745,13 +758,23 @@ export default function Planches() {
                             Retirer
                           </button>
                         </>
-                      ) : (
+                      ) : figure.planche ? (
                         <>
                           <span className="planches__badge planches__badge--vide">
                             à importer
                           </span>
                           <button type="button" className="btn btn--fantome btn--compact"
                             onClick={() => setOuverte({ cle: figure.cle, variante: 'muette' })}>
+                            Ajouter
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="planches__badge planches__badge--vide">
+                            après la légendée
+                          </span>
+                          <button type="button" className="btn btn--fantome btn--compact" disabled
+                            title="Importe d’abord la version légendée : la muette reprend ses repères.">
                             Ajouter
                           </button>
                         </>

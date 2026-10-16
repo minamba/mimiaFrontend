@@ -6,6 +6,7 @@ import { getFiche, marquerFicheVue } from '../lib/api/elevesApi';
 import { imprimerSous, nomDocument } from '../lib/impression';
 import { etatFiche } from '../lib/fiches';
 import Loader from './Loader';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * Une fiche de révision, en pleine page.
@@ -140,6 +141,8 @@ export function FeuilleFiche({ fiche }) {
 
 export default function Fiche() {
   const { eleveId, ficheId } = useParams();
+  // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
+  useAffichageEleve(eleveId);
 
   const [fiche, setFiche] = useState(null);
   const [chargement, setChargement] = useState(true);

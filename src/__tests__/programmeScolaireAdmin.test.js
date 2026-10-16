@@ -259,3 +259,16 @@ describe('Le filtre par matière', () => {
     expect(await screen.findByRole('heading', { name: 'Mathématiques' })).toBeInTheDocument();
   });
 });
+
+test('une page lue sur la copie de l’Internet Archive le dit, avec la date de la copie', async () => {
+  getProgrammeScolaire.mockResolvedValue({
+    data: {
+      ...PROGRAMME,
+      sentinelles: [{ ...PROGRAMME.sentinelles[0], copieArchiveDu: '2026-10-01T10:11:21Z' }],
+    },
+  });
+  render(<ProgrammeScolaireAdmin />);
+
+  expect(await screen.findByText(/la copie de l’Internet Archive du 1 octobre 2026/)).toBeInTheDocument();
+  expect(screen.getAllByText('Lu sur')).toHaveLength(1);
+});

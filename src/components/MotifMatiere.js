@@ -215,6 +215,17 @@ const MOTIFS = {
     </>
   ),
 
+  // Un panneau « danger » et une croix de secours : repérer le risque, puis
+  // savoir agir (PSE, voie professionnelle, 16/10/2026).
+  PSE: (
+    <>
+      <path d="M34 18 L60 64 H8 Z" />
+      <path d="M34 34 v14" /><circle cx="34" cy="55" r="1.8" fill="currentColor" />
+      <path d="M86 46 h10 v-12 h10 v12 h10 v10 h-10 v12 h-10 v-12 h-10 Z" />
+      <path d="M20 88 h88" />
+    </>
+  ),
+
   // Un chemin qui serpente vers une étoile : ce n'est pas une matière, c'est
   // la carte de progression elle-même. Les trois points sont les notions
   // déjà passées ; l'étoile, au bout, dit qu'on continue d'avancer.
@@ -258,6 +269,16 @@ const MOTIFS = {
       <path d="M40 60 L40 42 M34 26 h12 M40 26 v8" />
       <circle cx="96" cy="70" r="16" />
       <path d="M80 70 h32 M96 54 q8 16 0 32 M96 54 q-8 16 0 32" />
+    </>
+  ),
+
+  // Une boussole et un chemin qui bifurque : l'orientation (11/10/2026).
+  ORIENTATION: (
+    <>
+      <circle cx="40" cy="56" r="26" />
+      <path d="M40 34 L46 56 L40 78 L34 56 Z" />
+      <circle cx="40" cy="56" r="3" />
+      <path d="M86 96 v-26 M86 70 q0 -14 -14 -24 M86 70 q0 -14 14 -24 M68 42 l4 4 l-6 2 M104 42 l-4 4 l6 2" />
     </>
   ),
 
@@ -323,6 +344,18 @@ const MOTIFS = {
       <path d="M63 99 l9 -5" />
     </>
   ),
+
+  // Une fiche de révision : une feuille au coin corné, ses lignes, et une
+  // étoile — « Mes fiches de révision » (14/10/2026). Comme JEUX, ce n'est
+  // pas une matière. Tient dans la bande commune, entre y=26 et y=104.
+  FICHES: (
+    <>
+      <path d="M38 28 h40 l16 16 v58 h-56 z" />
+      <path d="M78 28 v16 h16" />
+      <path d="M48 56 h34 M48 68 h34 M48 80 h22" />
+      <path d="M86 84 l2.6 5.4 5.9 .8 -4.3 4.1 1 5.9 -5.2 -2.8 -5.2 2.8 1 -5.9 -4.3 -4.1 5.9 -.8 z" fill="currentColor" />
+    </>
+  ),
 };
 
 // L'HGGSP et l'HLP prolongent la matière de leur professeur : le globe de
@@ -335,6 +368,9 @@ MOTIFS.LLCER_ESPAGNOL = MOTIFS.ESPAGNOL;
 MOTIFS.SI = MOTIFS.PHYSIQUE_CHIMIE;
 MOTIFS.LLCA_LATIN = MOTIFS.FRANCAIS;
 MOTIFS.LLCA_GREC = MOTIFS.FRANCAIS;
+// L'économie de la voie pro prolonge celle de Karim.
+MOTIFS.ECONOMIE_DROIT = MOTIFS.DROIT_ECONOMIE;
+MOTIFS.ECONOMIE_GESTION = MOTIFS.SCIENCES_GESTION;
 ['ARTS_PLASTIQUES', 'HISTOIRE_ARTS', 'CINEMA_AUDIOVISUEL', 'MUSIQUE', 'THEATRE', 'DANSE', 'ARTS_CIRQUE']
   .forEach((code) => { MOTIFS[code] = MOTIFS.ARTS; });
 

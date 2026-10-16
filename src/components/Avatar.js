@@ -25,6 +25,8 @@ import photoJonas from '../assets/profs/p_allemand.png';
 import photoGiulia from '../assets/profs/p_italien.png';
 import photoLin from '../assets/profs/p_chinois.png';
 import photoYoussef from '../assets/profs/p_arabe.png';
+import photoMaelle from '../assets/profs/p_orientation.png';
+import photoHugo from '../assets/profs/p_pse.png';
 
 import animNora from '../assets/profs/anim/nora.mp4';
 import animAdrien from '../assets/profs/anim/adrien.mp4';
@@ -43,6 +45,8 @@ import animJonas from '../assets/profs/anim/jonas.mp4';
 import animGiulia from '../assets/profs/anim/giulia.mp4';
 import animLin from '../assets/profs/anim/lin.mp4';
 import animYoussef from '../assets/profs/anim/youssef.mp4';
+import animMaelle from '../assets/profs/anim/maelle.mp4';
+import animHugo from '../assets/profs/anim/hugo.mp4';
 
 /**
  * LES VISAGES ILLUSTRÉS — voulus par Camara le 14/09/2026, d'abord pour Nora
@@ -77,6 +81,12 @@ const PHOTOS = {
   giulia: photoGiulia,
   lin: photoLin,
   youssef: photoYoussef,
+  // La conseillère d'orientation — portrait fourni par Camara le 11/10/2026.
+  maelle: photoMaelle,
+  // Le professeur de PSE de la voie professionnelle (16/10/2026) — portrait
+  // généré (Higgsfield, GPT Image, deux portraits de l'équipe en référence de
+  // style), cercle redécoupé net.
+  hugo: photoHugo,
 };
 
 /**
@@ -113,6 +123,9 @@ const BOUCLES = {
   giulia: animGiulia,
   lin: animLin,
   youssef: animYoussef,
+  // Higgsfield Kling 3.0, 4,5 crédits, le 11/10/2026 — même recette que les autres.
+  maelle: animMaelle,
+  hugo: animHugo,
 };
 
 const PROFS = {
@@ -234,6 +247,15 @@ const PROFS = {
     vetement: '#0F766E',
     lunettes: false,
   },
+  // LA CONSEILLÈRE D'ORIENTATION (11/10/2026) — le dessin n'est plus que le
+  // repli : Camara a fourni son portrait le jour même (voir PHOTOS).
+  maelle: {
+    peau: '#EBC2A0',
+    cheveux: '#6B3E26',
+    coupe: 'boucles',
+    vetement: '#6D28D9',
+    lunettes: true,
+  },
   // Sciences et techniques sanitaires et sociales.
   elodie: {
     peau: '#F1CFB0',
@@ -278,6 +300,17 @@ const PROFS = {
     coupe: 'boucles',
     vetement: '#AA5F04',
     lunettes: true,
+  },
+
+  // Prévention santé environnement, voie professionnelle (16/10/2026). Son
+  // image (`p_pse.png`) prime. Cheveux châtain clair, sans lunettes : deux
+  // écarts avec Théo (blond), Karim (lunettes, brun) et Salim.
+  hugo: {
+    peau: '#E9B98F',
+    cheveux: '#7A5230',
+    coupe: 'courte',
+    vetement: '#9A3412',
+    lunettes: false,
   },
 };
 

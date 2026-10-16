@@ -54,3 +54,32 @@ test('le clavier arrive dans la fiche, sur le bouton de fermeture', () => {
 
   expect(screen.getByRole('button', { name: 'Fermer la fiche' })).toHaveFocus();
 });
+
+describe('la conseillère d’orientation (11/10/2026)', () => {
+  const MAELLE = {
+    prenom: 'Maëlle',
+    avatar: 'maelle',
+    couleur: '#6D28D9',
+    code: 'ORIENTATION',
+    titre: 'Conseillère d’orientation',
+    presentation: 'On construit ton projet.',
+    disciplines: [{ libelle: 'Orientation', promesse: 'Choisir sa voie', niveaux: 'De la 3e à la Terminale' }],
+  };
+
+  test('elle dit ce qu’elle fait, et ce qu’elle fait avec les professeurs', () => {
+    render(<FicheProfesseur prof={MAELLE} onFermer={() => {}} />);
+
+    expect(screen.getByRole('heading', { name: 'Ce que je fais' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Ce que j’enseigne' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Avec tes professeurs' })).toBeInTheDocument();
+    expect(screen.getByText(/je te demande si je peux en parler à tes professeurs/)).toBeInTheDocument();
+    expect(screen.getByText(/C’est avec moi que tu en parles/)).toBeInTheDocument();
+  });
+
+  test('un professeur, lui, n’a pas cet encadré', () => {
+    render(<FicheProfesseur prof={KARIM} onFermer={() => {}} />);
+
+    expect(screen.getByRole('heading', { name: 'Ce que j’enseigne' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Avec tes professeurs' })).not.toBeInTheDocument();
+  });
+});

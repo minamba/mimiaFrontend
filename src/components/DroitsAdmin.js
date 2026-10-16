@@ -37,6 +37,7 @@ const LIBELLES = {
   fournisseurs: 'Anthropic / OpenAI / Gemini',
   cout: 'Ce que le produit me coûte',
   revenu: 'Ce que le produit me rapporte',
+  creation_enfant: 'Création d’enfant',
 };
 
 /**
@@ -45,7 +46,9 @@ const LIBELLES = {
  * part ici, sous leur propre titre : mêlés aux onglets, on aurait cru qu'ils
  * ajoutaient une section à la barre.
  */
-const BLOCS = ['cout', 'revenu'];
+// ET UN GESTE (16/10/2026) : « Création d'enfant », le bouton qui crée un
+// enfant pour un parent depuis sa ligne. Décoché, le bouton n'existe pas.
+const BLOCS = ['cout', 'revenu', 'creation_enfant'];
 
 export default function DroitsAdmin({ parent, onFermer, onEnregistre }) {
   const [toutes, setToutes] = useState([]);
@@ -141,7 +144,7 @@ export default function DroitsAdmin({ parent, onFermer, onEnregistre }) {
 
             {toutes.some((cle) => BLOCS.includes(cle)) && (
               <>
-                <h4 className="droits__sous-titre">Blocs de l’onglet Parents</h4>
+                <h4 className="droits__sous-titre">Dans l’onglet Parents</h4>
                 <div className="droits__liste">
                   {toutes.filter((cle) => BLOCS.includes(cle)).map((cle) => (
                     <label key={cle} className="droits__case">

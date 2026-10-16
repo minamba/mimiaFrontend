@@ -22,14 +22,14 @@ import Loader from './Loader';
  * calcul, et « 1,2 million de tokens » ne lui dit rien du tout.
  */
 
-const euros = (centimes) =>
+export const euros = (centimes) =>
   (centimes / 100).toLocaleString('fr-FR', {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: centimes % 100 === 0 ? 0 : 2,
   });
 
-const dateCourte = (valeur) =>
+export const dateCourte = (valeur) =>
   valeur
     ? new Date(valeur).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
     : '';
@@ -59,7 +59,7 @@ export function heures(minutes) {
 }
 
 /** Jauge de consommation. Le seuil colore, il n'alarme pas trop tôt. */
-function Jauge({ part }) {
+export function Jauge({ part }) {
   const niveau = part >= 1 ? 'plein' : part >= 0.8 ? 'haut' : 'normal';
 
   return (
@@ -80,7 +80,7 @@ function Jauge({ part }) {
  * conséquences, et laisser une porte de sortie. Deux fenêtres séparées auraient
  * fini par diverger.
  */
-function Confirmation({ titre, resume, consequences, libelle, enCours, onConfirmer, onAnnuler }) {
+export function Confirmation({ titre, resume, consequences, libelle, enCours, onConfirmer, onAnnuler }) {
   return (
     <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-confirmation">
       <div className="modale__boite">
@@ -423,11 +423,22 @@ export default function Quota({ compact = false }) {
           pas seulement la mauvaise nouvelle. */}
       {!compact && etat.impaye && (
         <div className="quota-impaye">
-          <p>
-            <strong>Un prélèvement n'est pas passé.</strong> Vos heures restent
-            disponibles jusqu'au {dateCourte(etat.periodeFin)}, mais votre forfait ne
-            sera pas renouvelé tant que la carte n'est pas à jour.
-          </p>
+          {/* OPTION A (16/10/2026) : à l'échéance, un prélèvement refusé suspend
+              les séances jusqu'au règlement ; en milieu de période (changement
+              de formule), la période payée continue jusqu'à sa fin. */}
+          {new Date(etat.periodeFin) <= new Date() ? (
+            <p>
+              <strong>Un prélèvement n'est pas passé : les séances sont suspendues.</strong>{' '}
+              Elles reprennent dès que le paiement passe — à la prochaine tentative
+              automatique, ou tout de suite si vous mettez votre carte à jour.
+            </p>
+          ) : (
+            <p>
+              <strong>Un prélèvement n'est pas passé.</strong> Vos heures restent
+              disponibles jusqu'au {dateCourte(etat.periodeFin)}, mais votre forfait ne
+              sera pas renouvelé tant que la carte n'est pas à jour.
+            </p>
+          )}
           <button
             type="button"
             className="btn btn--compact"

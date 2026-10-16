@@ -32,6 +32,24 @@ export const getFicheEleve = (id, niveau = null) =>
 export const getProgression = (eleveId) =>
   httpClient.get(`/eleves/${eleveId}/progression`);
 
+/**
+ * L'enfant lance une partie : le serveur avance sa « dernière activité »
+ * (au plus une fois par heure). Rien d'autre n'est envoyé (11/10/2026).
+ */
+export const noterActivite = (eleveId) =>
+  httpClient.post(`/eleves/${eleveId}/activite`);
+
+/**
+ * L'ÉTABLISSEMENT DE L'ENFANT, pour la conseillère d'orientation (11/10/2026).
+ * La recherche passe par le serveur, qui interroge l'Annuaire de l'éducation.
+ */
+export const chercherEtablissements = (q) =>
+  httpClient.get('/orientation/etablissements', { params: { q } });
+
+/** Enregistre l'établissement (code UAI), ou l'efface avec `null`. */
+export const definirEtablissement = (eleveId, uai) =>
+  httpClient.put(`/eleves/${eleveId}/etablissement`, { uai });
+
 /** Les évaluations d'un enfant, la plus récente d'abord. */
 export const getEvaluations = (eleveId) =>
   httpClient.get(`/eleves/${eleveId}/evaluations`);
@@ -346,3 +364,10 @@ export const changerAccesEleve = (id, suspendu) =>
  * concernent bien sa classe, c'est leur ouverture qui n'est pas faite.
  */
 export const getMatieresEleve = (eleveId) => httpClient.get(`/eleves/${eleveId}/matieres`);
+
+/**
+ * Ce que la famille peut ouvrir selon son forfait (16/10/2026) : `{ ouvert,
+ * motif }`, motif = essai, sans-forfait ou pause. Les fiches de révision et
+ * les jeux demandent un vrai forfait. Lisible par l'enfant.
+ */
+export const getAccesForfait = (eleveId) => httpClient.get(`/eleves/${eleveId}/acces`);

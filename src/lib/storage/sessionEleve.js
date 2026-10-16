@@ -58,6 +58,10 @@ export function ouvrirSessionEleve({ jeton, eleve }) {
 
       // ET SON ÂGE, pour le ton de la voix — voir `eleveDeLaSession`.
       age: Number.isFinite(eleve?.age) ? eleve.age : null,
+
+      // L'AFFICHAGE ADAPTÉ (11/10/2026) : lecture aérée, calme. Jamais les
+      // besoins eux-mêmes — voir `lib/besoins.js`.
+      affichage: eleve?.affichage ?? null,
     }));
   } catch {
     // Navigation privée : la session ne survivra pas à la fermeture de

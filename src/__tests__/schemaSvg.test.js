@@ -195,6 +195,8 @@ describe('cohérence du catalogue', () => {
     'svt', 'pc', 'math', 'fr', 'hg', 'an', 'es', 'sc', 'bph', 'biotech', 'spcl', 'hggsp', 'ses', 'nsi', 'si', 'eppcs',
     'sgn', 'mgt', 'droiteco', 'stss', 'philo', 'hlp', 'llceran', 'amc', 'llceres', 'latin', 'grec',
     'artspla', 'hda', 'cav', 'musique', 'theatre', 'danse', 'cirque',
+    // Les quatre langues ajoutées le 13/10/2026.
+    'de', 'it', 'zh', 'ar',
   ];
 
   it('n’a aucune clé en double', () => {

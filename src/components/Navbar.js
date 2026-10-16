@@ -8,6 +8,8 @@ import { useModeTest } from '../lib/storage/modeTest';
 import { fermerSessionEleve, sessionEleve } from '../lib/storage/sessionEleve';
 import { fermerSession } from '../lib/api/sessionEleveApi';
 import BoutonTheme from './BoutonTheme';
+import useEspaceParent from '../lib/hooks/useEspaceParent';
+import './espaceParent/espaceParent.css';
 
 export default function Navbar() {
   const dispatch = useDispatch();
@@ -16,6 +18,10 @@ export default function Navbar() {
   const { authentifie, estAdmin, utilisateur } = useSelector((state) => state.auth);
 
   const modeTest = useModeTest();
+
+  // MON ESPACE PARENT (16/10/2026) : le bouton n'existe que pour un parent
+  // qui a le droit aux fiches (coché dans Admin › Parents).
+  const espace = useEspaceParent();
 
   // Relu à chaque navigation : ouvrir ou fermer une session change
   // l'adresse, donc la barre se remet à jour au bon moment sans état partagé.
@@ -171,6 +177,19 @@ export default function Navbar() {
             Mes enfants
           </Link>
 
+          {/* AVANT LA BULLE DU COMPTE — Camara, le 16/10/2026 (d'abord à sa droite). */}
+          {espace?.fiches && (
+            <Link to="/espace-parent" className="btn-ghost navbar__espace-parent">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 11l9-7 9 7" />
+                <path d="M5 10v10h14V10" />
+                <path d="M10 20v-5h4v5" />
+              </svg>
+              Mon espace parent
+            </Link>
+          )}
+
           <div className="menu-compte" ref={menuRef}>
             {/* UNE SEULE BULLE, ICÔNE ET CHEVRON ENSEMBLE — sur toutes les
                 tailles d'écran, y compris l'ordinateur.
@@ -210,6 +229,13 @@ export default function Navbar() {
                   Mes enfants
                 </Link>
 
+                {/* Sur téléphone, le bouton de la barre s'efface : l'espace est ici. */}
+                {espace?.fiches && (
+                  <Link to="/espace-parent" className="menu-compte__item" role="menuitem">
+                    Mon espace parent
+                  </Link>
+                )}
+
                 {/* CONTACT ICI, EN PLUS DU PIED DE PAGE.
                     Un parent qui a un problème le rencontre pendant qu'il
                     utilise le service — devant le forfait de son enfant, pas
@@ -240,6 +266,7 @@ export default function Navbar() {
               </div>
             )}
           </div>
+
 
           <BoutonTheme className="navbar__theme" />
         </div>

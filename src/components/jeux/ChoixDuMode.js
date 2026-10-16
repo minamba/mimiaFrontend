@@ -47,7 +47,7 @@ import { bruitage } from '../../lib/jeux/bruitages';
  * davantage — c'est sa nature — mais il n'est ni plus grand, ni premier.
  */
 export default function ChoixDuMode({
-  classe, jeuCle, niveau, onChoisir, onQuitter,
+  classe, jeuCle, niveau, onChoisir, onQuitter, calme = false,
 }) {
   const coeurs = coeursDeLaClasse(classe);
   const { eleveId } = sessionEleve() ?? {};
@@ -135,6 +135,8 @@ export default function ChoixDuMode({
             {/* DÉCORATIVE, ET ANNONCÉE COMME TELLE : le nom du mode est juste
                 en dessous, en texte. Un lecteur d'écran qui décrirait le
                 dessin dirait deux fois la même chose, moins bien. */}
+            {/* TDAH (11/10/2026) : le mode tranquille, conseillé, jamais imposé. */}
+            {calme && <span className="conseille-pour-toi conseille-pour-toi--porte">Conseillé pour toi</span>}
             <img
               className="choix-mode__image"
               src={imageTranquille}

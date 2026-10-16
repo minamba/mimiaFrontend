@@ -33,6 +33,11 @@ export default function FicheProfesseur({ prof, onFermer }) {
 
   const disciplines = prof.disciplines ?? [];
 
+  // LA CONSEILLÈRE N'ENSEIGNE PAS (11/10/2026) : sa rubrique dit ce qu'elle
+  // fait, et un encadré dit ce qu'elle fait avec les professeurs — Camara :
+  // « que sa fiche dise ce qu'elle fait avec les professeurs pour le projet ».
+  const conseillere = prof.code === 'ORIENTATION' || prof.avatar === 'maelle';
+
   return (
     <div
       className="modale"
@@ -75,7 +80,9 @@ export default function FicheProfesseur({ prof, onFermer }) {
 
           {disciplines.length > 0 && (
             <>
-              <h3 className="fiche-prof__rubrique">Ce que j’enseigne</h3>
+              <h3 className="fiche-prof__rubrique">
+                {conseillere ? 'Ce que je fais' : 'Ce que j’enseigne'}
+              </h3>
               <ul className="fiche-prof__disciplines">
                 {disciplines.map((d) => (
                   <li key={d.libelle} className="fiche-prof__discipline">
@@ -95,6 +102,23 @@ export default function FicheProfesseur({ prof, onFermer }) {
                   </li>
                 ))}
               </ul>
+            </>
+          )}
+
+          {conseillere && (
+            <>
+              <h3 className="fiche-prof__rubrique">Avec tes professeurs</h3>
+              <div className="fiche-prof__coordination">
+                <p>
+                  Quand ton projet se dessine, je te demande si je peux en parler à
+                  tes professeurs. Si tu es d’accord, chacun reçoit ce qui compte
+                  dans sa matière pour t’aider à atteindre ton objectif.
+                </p>
+                <p>
+                  Ton projet change&nbsp;? C’est avec moi que tu en parles, et je
+                  préviens tes professeurs.
+                </p>
+              </div>
             </>
           )}
         </div>

@@ -7,7 +7,7 @@
  * comme d'habitude, sans erreur.
  */
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import JeuxEleve from '../components/JeuxEleve';
 
 const ETAT = { eleves: { liste: [] } };
@@ -31,10 +31,49 @@ jest.mock('../lib/storage/sessionEleve', () => ({
   sessionEleve: () => ({ jeton: 'x', eleveId: 24, prenom: 'Lina', niveau: 'CE2', niveauCode: 'CE2', cycle: 'Primaire' }),
 }));
 
+// LE FORFAIT DE LA FAMILLE (16/10/2026) : ouvert par défaut ; un test le ferme.
+let mockAcces = { ouvert: true, motif: null };
+jest.mock('../lib/hooks/useAccesForfait', () => ({
+  __esModule: true,
+  ...jest.requireActual('../lib/hooks/useAccesForfait'),
+  default: () => mockAcces,
+}));
+
 // Les jeux parlent : on fait taire la voix, ce n'est pas elle qu'on teste.
 jest.mock('../lib/jeux/voix/useVoixJeu', () => () => ({
   dire: () => {}, couper: () => {}, muet: false, basculerMuet: () => {}, relire: () => {},
 }));
+
+beforeEach(() => { mockAcces = { ouvert: true, motif: null }; });
+
+describe('sans vrai forfait (16/10/2026)', () => {
+  it('la carte du professeur n’ouvre pas le jeu : elle dit qu’il faut être abonné', () => {
+    mockAcces = { ouvert: false, motif: 'essai' };
+    mockRecherche = 'classe=CE1&jeu=course-des-tables';
+    render(<JeuxEleve />);
+
+    expect(screen.queryByRole('button', { name: /Revenir aux jeux/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent('Il faut être abonné pour jouer');
+    expect(screen.getByRole('dialog')).toHaveTextContent('Demande à tes parents');
+  });
+
+  it('les jeux sont grisés ; un clic explique au lieu de lancer', () => {
+    mockAcces = { ouvert: false, motif: 'sans-forfait' };
+    mockRecherche = '';
+    render(<JeuxEleve />);
+
+    expect(screen.getByText('Les jeux sont réservés aux familles abonnées.')).toBeInTheDocument();
+    const cartes = screen.getAllByRole('button', { name: /réservé aux familles abonnées/ });
+    expect(cartes.length).toBeGreaterThan(0);
+
+    fireEvent.click(cartes[0]);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Il faut être abonné pour jouer');
+    expect(screen.queryByRole('button', { name: /Revenir aux jeux/ })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'D’accord' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
 
 describe('le lien vers un jeu précis', () => {
   it('ouvre le jeu demandé, à la classe demandée, quand elle est ouverte', () => {

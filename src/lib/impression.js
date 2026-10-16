@@ -67,7 +67,7 @@ export function nomDocument({ prenom, nom, matiere, date, suffixe }) {
  *
  * @returns la fonction qui rétablit l'affichage.
  */
-function isolerPourImpression(feuille) {
+export function isolerPourImpression(feuille) {
   if (!feuille) return () => {};
 
   const masques = [];

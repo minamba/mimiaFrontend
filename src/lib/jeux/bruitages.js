@@ -4,6 +4,9 @@ import sonSurvol from '../../assets/sons/passage_sur_carte.mp3';
 import sonSelection from '../../assets/sons/select.mp3';
 import sonRetour from '../../assets/sons/return.mp3';
 import sonFinDuDefi from '../../assets/sons/game_over.mp3';
+import sonFerme from '../../assets/sons/close.mp3';
+import sonRetourneCarte from '../../assets/sons/return_card.mp3';
+import sonGlisseCarte from '../../assets/sons/card_swipe.mp3';
 import { moteur } from './ambiance.js';
 
 /**
@@ -31,6 +34,14 @@ const SONS = {
   retour: { url: sonRetour, volume: 0.3 },
   // Le défi perdu, cœurs ou temps épuisés (09/10/2026) : au niveau de good/bad.
   finDuDefi: { url: sonFinDuDefi, volume: 0.5 },
+  // Le portail d'une classe encore fermée (14/10/2026) : un clic, comme le
+  // choix d'une classe, au même réglage que select.mp3.
+  ferme: { url: sonFerme, volume: 0.3 },
+  // Les flash cards de « Me tester » (16/10/2026) : la carte qui se retourne, et
+  // celle qui s'en va quand on passe à la suivante. Fichiers bien plus faibles que
+  // good.mp3 (-43 et -41 dB de moyenne contre -19) : volumes de départ plus hauts.
+  retourneCarte: { url: sonRetourneCarte, volume: 0.5 },
+  glisseCarte: { url: sonGlisseCarte, volume: 0.9 },
 };
 
 const tampons = new Map();
@@ -69,8 +80,10 @@ export function prechargerBruitages() {
 // les sons ne s'empilent pas.
 let survolEnCours = null;
 
-/** Joue un bruitage : 'bonne', 'mauvaise', 'survol', 'selection', 'retour' ou 'finDuDefi'. */
-export function bruitage(nom) {
+/** Joue un bruitage : 'bonne', 'mauvaise', 'survol', 'selection', 'retour', 'finDuDefi', 'ferme', 'retourneCarte' ou 'glisseCarte'. */
+// `volume` (16/10/2026) : remplace le volume du son pour cet appel — « Me tester »
+// joue ses réponses plus bas que les jeux.
+export function bruitage(nom, volume = null) {
   const son = SONS[nom];
   const ctx = son ? moteur() : null;
   if (!ctx) return;
@@ -79,7 +92,7 @@ export function bruitage(nom) {
     if (!tampon || ctx.state !== 'running') return;
     const source = ctx.createBufferSource();
     const gain = ctx.createGain();
-    gain.gain.value = son.volume;
+    gain.gain.value = volume ?? son.volume;
     source.buffer = tampon;
     source.connect(gain);
     gain.connect(ctx.destination);

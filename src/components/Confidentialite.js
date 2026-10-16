@@ -19,7 +19,7 @@ export default function Confidentialite() {
       <header className="legal__entete">
         <p className="legal__surtitre">RGPD</p>
         <h1 className="legal__titre">Confidentialité</h1>
-        <p className="legal__maj">Dernière mise à jour&nbsp;: 25 septembre 2026</p>
+        <p className="legal__maj">Dernière mise à jour&nbsp;: 16 octobre 2026</p>
       </header>
 
       <section className="legal__section">
@@ -66,12 +66,35 @@ export default function Confidentialite() {
           <li>Ses fiches de révision, ses évaluations, les comptes rendus de séance</li>
           <li>Sa progression&nbsp;: les compétences travaillées et leur niveau de maîtrise</li>
           <li>Le temps de cours consommé</li>
+          <li>
+            <em>Si vous le renseignez</em>, son établissement scolaire (nom,
+            commune, code officiel), pour que la conseillère d'orientation
+            parle des formations proches de chez lui
+          </li>
+          <li>
+            <em>S'il en parle avec la conseillère d'orientation et qu'il est
+            d'accord</em>, son projet&nbsp;: le métier ou la voie qu'il vise, et
+            ce qu'il aurait à consolider pour y arriver. Ses professeurs en
+            reçoivent chacun la ligne de leur matière, et vous le voyez sur sa
+            fiche. Seule la conseillère le met à jour.
+          </li>
+          <li>
+            Les <em>rapports d'orientation</em> que la conseillère écrit après
+            chaque séance avec lui&nbsp;: ce qu'ils se sont dit, les pistes et
+            les prochaines étapes. Votre enfant et vous les lisez&nbsp;; aucun
+            professeur.
+          </li>
+          <li>
+            <em>Si vous les cochez</em>, ses besoins particuliers&nbsp;: dyslexie,
+            dyscalculie, TDAH — voir plus bas
+          </li>
         </ul>
 
         <p>
           Nous ne demandons ni adresse postale, ni date de naissance exacte, ni
-          numéro de téléphone, ni établissement scolaire. Nous n'utilisons aucun
-          traceur publicitaire et ne pratiquons aucun profilage commercial.
+          numéro de téléphone. L'établissement scolaire est facultatif. Nous
+          n'utilisons aucun traceur publicitaire et ne pratiquons aucun profilage
+          commercial.
         </p>
       </section>
 
@@ -136,10 +159,20 @@ export default function Confidentialite() {
           <strong>Le cours importé avec un contrôle</strong> suit une règle
           encore plus courte pour l'image. Il est transmis à Anthropic pour
           être relevé en texte, et <strong>l'image est effacée dès que ce
-          relevé est fait</strong> — en général dans la minute. Le texte reste
-          attaché au contrôle, pour que le professeur prépare et corrige avec
-          la leçon de votre enfant, et il disparaît avec le contrôle quand vous
-          le supprimez.
+          relevé est fait</strong> — en général dans la minute, et au plus
+          tard après trois lectures en échec. Le texte reste attaché au
+          contrôle, pour que le professeur prépare et corrige avec la leçon de
+          votre enfant, puis il est <strong>effacé un mois après la date du
+          contrôle</strong> (deux si le bilan n'a pas encore été fait), ou plus
+          tôt si vous supprimez le contrôle.
+        </p>
+        <p>
+          <strong>Les contrôles passés</strong> sont allégés au même moment&nbsp;:
+          il ne reste que leur date, leur matière, leur sujet, la note et le
+          ressenti de votre enfant, pour son calendrier. Ils sont
+          supprimés entièrement à la fin de l'année scolaire, le 1er août.
+          Ce que votre enfant a montré maîtriser, notion par notion, reste dans
+          son suivi.
         </p>
         <p>
           Les documents ne sont lisibles que depuis votre compte. Ils ne portent
@@ -149,6 +182,97 @@ export default function Confidentialite() {
         <p>
           Cette fonctionnalité est facultative. Un enfant peut travailler
           entièrement sans jamais envoyer de document.
+        </p>
+      </section>
+
+      {/* LES FICHES DE RÉVISION DE L'ÉLÈVE — 14/10/2026. Relevé dans le code :
+          `CoursImporte` et ses pages (octets en base), `RedacteurFichesService`
+          (transmission à Anthropic, pages en tête de chaque appel), la purge
+          de `FichesDeCoursRepository` (brouillons 24 h ; pages supprimées dès que
+          le cours est fini, au plus tard 24 h après sa lecture — 15/10/2026),
+          `MesFichesController` (accès par le compte, rien vers les professeurs). */}
+      <section className="legal__section">
+        <h2>Les fiches de révision que votre enfant crée</h2>
+        <p>
+          Votre enfant peut importer son cours — des photos de son cahier, une
+          image ou un PDF — pour en tirer des fiches de révision. Le cours est{' '}
+          <strong>enregistré sur nos serveurs le temps de créer les fiches</strong> et{' '}
+          <strong>transmis à Anthropic</strong>, qui le lit pour en trouver les
+          notions, puis pour rédiger chaque fiche.
+        </p>
+        <p>
+          Nous n'acceptons que les images et les PDF, cinq mégaoctets par
+          fichier et vingt pages par cours. Un cours déposé mais jamais envoyé
+          est effacé dans les vingt-quatre heures.
+        </p>
+        <p>
+          <strong>Le cours n'est pas gardé</strong>&nbsp;: ses pages sont
+          supprimées dès que ses fiches sont prêtes, ou dès que sa lecture
+          échoue. Si votre enfant doit choisir les notions à réviser et ne le
+          fait pas, elles sont supprimées vingt-quatre heures après la lecture.
+          Seuls le titre du cours et la liste de ses notions restent, pour
+          ranger les fiches.{' '}
+          <strong>Les fiches, elles, restent</strong> tant que votre enfant ne
+          les supprime pas ; il peut supprimer une fiche ou un cours entier à
+          tout moment, et tout disparaît avec son profil.
+        </p>
+        <p>
+          Ces fiches restent dans son espace&nbsp;: elles ne sont{' '}
+          <strong>pas transmises à ses professeurs</strong> et n'entrent pas
+          dans le suivi de ses progrès. Elles ne sont lisibles que depuis votre
+          compte et celui de votre enfant.
+        </p>
+      </section>
+
+      {/* LES BESOINS PARTICULIERS — 11/10/2026. Une dyslexie, une dyscalculie,
+          un TDAH sont des DONNÉES DE SANTÉ (article 9 du RGPD) : leur traitement
+          est interdit sauf exception, ici le consentement explicite du parent,
+          donné en cochant. Tout ce qui est écrit ci-dessous a été relevé dans le
+          code : `BesoinsParticuliers.cs`, `PromptsBesoins.cs`, la session de
+          l'enfant (qui ne reçoit que l'affichage, jamais les cases),
+          `EleveRepository` (date d'accord, effacement). */}
+      <section className="legal__section">
+        <h2>Les besoins particuliers de votre enfant</h2>
+        <p>
+          Dans le profil de votre enfant, une rubrique facultative vous permet
+          d'indiquer une <strong>dyslexie</strong> (ou dysorthographie), une{' '}
+          <strong>dyscalculie</strong> ou un <strong>TDAH</strong>. Ce sont des
+          données de santé&nbsp;: la loi les protège plus que les autres, et nous
+          aussi.
+        </p>
+        <p>
+          <strong>Ce qu'elles changent.</strong> Le professeur adapte sa manière
+          d'expliquer&nbsp;: consignes plus courtes, une étape à la fois, pas de
+          reproche sur l'orthographe hors du français, et ainsi de suite. Si
+          vous le laissez allumé, l'affichage s'adapte aussi&nbsp;: texte plus
+          aéré, décor plus calme, séance courte conseillée. Le professeur ne
+          nomme jamais le trouble devant votre enfant et ne pose aucun
+          diagnostic.
+        </p>
+        <p>
+          <strong>Votre accord.</strong> Rien n'est enregistré tant que vous ne
+          cochez pas. Cocher vaut accord explicite, au sens de
+          l'article&nbsp;9 du RGPD&nbsp;; nous en gardons la date. Décocher retire
+          cet accord&nbsp;: les cases et leur date sont effacées sur-le-champ, et
+          le professeur reprend sa manière habituelle dès la séance suivante.
+        </p>
+        <p>
+          <strong>Le strict nécessaire.</strong> Trois cases, rien d'autre&nbsp;:
+          ni certificat, ni compte rendu de bilan, ni nom de médecin, ni texte
+          libre.
+        </p>
+        <p>
+          <strong>Qui les voit.</strong> Vous, dans le profil de votre enfant.
+          Le professeur, pendant la séance&nbsp;: elles sont transmises à
+          Anthropic avec le reste du dialogue, comme le prénom et la classe.
+          Personne d'autre&nbsp;: votre enfant ne voit pas les cases, seulement
+          l'affichage qui en découle, et elles ne figurent ni dans les bilans,
+          ni dans les e-mails, ni dans les outils d'administration de Mimia.
+        </p>
+        <p>
+          <strong>Combien de temps.</strong> Tant que les cases restent cochées.
+          Elles disparaissent quand vous les décochez, quand vous effacez les
+          données de l'enfant ou quand vous supprimez votre compte.
         </p>
       </section>
 
@@ -166,6 +290,15 @@ export default function Confidentialite() {
           <li>
             <strong>Facturer et prévenir de la fin du quota</strong> — exécution
             du contrat et obligations comptables.
+          </li>
+          <li>
+            <strong>Adapter les séances aux besoins particuliers</strong> —
+            consentement explicite du parent (article&nbsp;9, paragraphe&nbsp;2,
+            point&nbsp;a du RGPD), retirable à tout moment en décochant.
+          </li>
+          <li>
+            <strong>Orienter à partir de l'établissement</strong> — exécution du
+            contrat, et seulement si vous l'avez renseigné.
           </li>
           <li>
             <strong>Assurer la sécurité et prévenir les abus</strong> — intérêt
@@ -199,7 +332,11 @@ export default function Confidentialite() {
             <tbody>
               <tr>
                 <td>Anthropic (Claude)</td>
-                <td>Prénom de l'enfant, sa classe, le contenu du dialogue</td>
+                <td>
+                  Prénom de l'enfant, sa classe, le contenu du dialogue&nbsp;; et,
+                  s'ils existent, son établissement, ses besoins particuliers et
+                  son projet d'orientation
+                </td>
                 <td>Hors&nbsp;UE</td>
               </tr>
               <tr>
@@ -287,6 +424,30 @@ export default function Confidentialite() {
                 <td>Jusqu'à suppression par le parent</td>
               </tr>
               <tr>
+                <td>Besoins particuliers et date de votre accord</td>
+                <td>Tant qu'ils sont cochés&nbsp;; effacés dès que vous décochez</td>
+              </tr>
+              <tr>
+                <td>Rapports d'orientation</td>
+                <td>Durée de vie du compte, comme les fiches et les comptes rendus</td>
+              </tr>
+              <tr>
+                <td>Contrôles passés et texte du cours importé avec eux</td>
+                <td>Texte du cours et détail effacés <strong>un mois après le contrôle</strong> (deux sans bilan)&nbsp;; date, sujet et note gardés jusqu'au 1er août, puis suppression</td>
+              </tr>
+              <tr>
+                <td>Pages d'un cours importé pour des fiches de révision</td>
+                <td><strong>Le temps de créer les fiches</strong>, puis suppression automatique (24 heures au plus pour un cours jamais envoyé, ou dont les notions n'ont pas été choisies)</td>
+              </tr>
+              <tr>
+                <td>Fiches de révision créées par votre enfant</td>
+                <td>Jusqu'à ce qu'il les supprime, ou avec son profil</td>
+              </tr>
+              <tr>
+                <td>Projet d'orientation</td>
+                <td>Jusqu'à ce que la conseillère le remplace ou le retire, à la demande de l'enfant</td>
+              </tr>
+              <tr>
                 <td>Enfant retiré du compte</td>
                 <td>Archivé, puis anonymisé à la demande</td>
               </tr>
@@ -321,8 +482,9 @@ export default function Confidentialite() {
             d'avis.
           </li>
           <li>
-            <strong>Effacer ses données</strong> — ses échanges, ses fiches et
-            ses évaluations sont supprimés définitivement. Seule subsiste la
+            <strong>Effacer ses données</strong> — ses échanges, ses fiches,
+            ses évaluations, son établissement, ses besoins particuliers, son
+            projet et ses rapports d'orientation sont supprimés définitivement. Seule subsiste la
             trace anonyme du temps de cours consommé, nécessaire à la
             comptabilité.
           </li>
@@ -349,7 +511,11 @@ export default function Confidentialite() {
         </p>
         <p>Sont effacés de nos serveurs&nbsp;:</p>
         <ul>
-          <li>Les profils de vos enfants, leur âge, leur classe.</li>
+          <li>
+            Les profils de vos enfants, leur âge, leur classe, leur établissement,
+            leurs besoins particuliers, leur projet et leurs rapports
+            d'orientation.
+          </li>
           <li>
             Tous leurs cours et l'intégralité de ce qu'ils y ont écrit ou dit.
           </li>

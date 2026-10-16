@@ -9,6 +9,7 @@ import {
   getEleves,
   getFicheEleve,
   ajusterHeures,
+  ajusterCreditsFiches,
   modifierParent,
   modifierEleve,
   supprimerParent,
@@ -38,8 +39,13 @@ import {
 const ajusterHeuresOperation = (id, donnees) =>
   ajusterHeures(id, donnees.minutes, donnees.motif, donnees.prevenir);
 
+// Même adaptateur pour les crédits de fiches (16/10/2026).
+const ajusterCreditsFichesOperation = (id, donnees) =>
+  ajusterCreditsFiches(id, donnees.credits, donnees.motif, donnees.prevenir);
+
 const OPERATIONS = {
   ajusterHeures: ajusterHeuresOperation,
+  ajusterCreditsFiches: ajusterCreditsFichesOperation,
   modifierParent,
   modifierEleve,
   supprimerParent,
