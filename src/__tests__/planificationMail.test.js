@@ -67,9 +67,31 @@ test('les bilans ne proposent pas de fréquence : ils sont hebdomadaires', () =>
   expect(screen.getByLabelText('Jour')).toBeInTheDocument();
 });
 
-test('Relance et Rappels ne se programment pas : leurs règles restent à définir', () => {
-  render(<PlanificationModele modele={{ ...FIN_ESSAI, code: 'RELANCE', reglesADefinir: true }} />);
+/*
+ * À QUI IL PART — Camara, le 17/10/2026 : Relance, Rappels et les courriels créés
+ * depuis l'écran se programment en choisissant leurs destinataires.
+ */
+const CIBLES = [
+  { code: 'tous', libelle: 'Tous les parents' },
+  { code: 'essai', libelle: 'Les parents en période d’essai' },
+];
 
-  expect(screen.getByText(/ne sont pas encore définies/)).toBeInTheDocument();
-  expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+test('un courriel par cible : on choisit ses destinataires avant de le programmer', async () => {
+  const relance = { ...FIN_ESSAI, id: 9, code: null, reglesADefinir: true, parCible: true, cibles: CIBLES, cible: null };
+  api.planifierModeleMail.mockResolvedValue({ data: { ...relance, cible: 'essai', reglesADefinir: false } });
+  render(<PlanificationModele modele={relance} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer la programmation' }));
+  expect(await screen.findByText('Choisissez d’abord à qui ce courriel part.')).toBeInTheDocument();
+  expect(api.planifierModeleMail).not.toHaveBeenCalled();
+
+  fireEvent.change(screen.getByLabelText('Destinataires'), { target: { value: 'essai' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer la programmation' }));
+
+  await waitFor(() => expect(api.planifierModeleMail).toHaveBeenCalledWith(9, expect.objectContaining({ cible: 'essai', heure: '10:00' })));
+});
+
+test('un courriel relié à une règle codée n’a pas de liste de destinataires', () => {
+  render(<PlanificationModele modele={FIN_ESSAI} />);
+  expect(screen.queryByLabelText('Destinataires')).not.toBeInTheDocument();
 });

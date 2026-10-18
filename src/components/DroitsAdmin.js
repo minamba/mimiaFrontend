@@ -21,7 +21,7 @@ import { getOngletsAdmin, definirOngletsAdmin } from '../lib/api/adminApi';
  * ouvertes pendant qu'on hésite sur la quatrième. On coche, on relit, on
  * valide.
  */
-const LIBELLES = {
+export const LIBELLES = {
   stats: 'Statistiques',
   frequentation: 'Fréquentation',
   parents: 'Parents',
@@ -48,7 +48,7 @@ const LIBELLES = {
  */
 // ET UN GESTE (16/10/2026) : « Création d'enfant », le bouton qui crée un
 // enfant pour un parent depuis sa ligne. Décoché, le bouton n'existe pas.
-const BLOCS = ['cout', 'revenu', 'creation_enfant'];
+export const BLOCS = ['cout', 'revenu', 'creation_enfant'];
 
 export default function DroitsAdmin({ parent, onFermer, onEnregistre }) {
   const [toutes, setToutes] = useState([]);

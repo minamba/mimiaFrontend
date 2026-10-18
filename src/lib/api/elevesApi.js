@@ -371,3 +371,10 @@ export const getMatieresEleve = (eleveId) => httpClient.get(`/eleves/${eleveId}/
  * les jeux demandent un vrai forfait. Lisible par l'enfant.
  */
 export const getAccesForfait = (eleveId) => httpClient.get(`/eleves/${eleveId}/acces`);
+
+/**
+ * Le bilan hebdomadaire de l'enfant (17/10/2026), en HTML — celui de la
+ * semaine close lundi dernier, mot pour mot le courriel. Au parent seul.
+ */
+export const getBilanEleve = (eleveId) =>
+  httpClient.get(`/eleves/${eleveId}/bilan`, { responseType: 'text' });

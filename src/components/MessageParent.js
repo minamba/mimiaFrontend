@@ -1,14 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   apercuDiffusion,
   apercuModeleMail,
   envoyerMailParent,
   envoyerModeleParent,
+  enregistrerBrouillon,
+  getBrouillonLibre,
+  getPieceBrouillon,
+  remplacerPiecesBrouillon,
+  supprimerMessages,
 } from '../lib/api/adminApi';
 import { useModeleMail } from '../lib/hooks/useModeleMail';
 import BandeauModele from './BandeauModele';
 import BarreOutilsTexte from './BarreOutilsTexte';
 import BlocPieces from './BlocPieces';
+import CarteExpediteur from './CarteExpediteur';
 import ColonneModeles from './ColonneModeles';
 import SectionMail from './SectionMail';
 
@@ -43,7 +49,22 @@ const nomAffiche = (parent) => [parent.prenom, parent.nom].filter(Boolean).join(
  * d'actions qui reste à portée : les trois questions qu'on se pose dans cet
  * ordre, séparées plutôt qu'enfilées dans une seule colonne de champs.
  */
-export default function MessageParent({ parents }) {
+/**
+ * LE BROUILLON — Camara, le 17/10/2026 : « tant qu'on ne l'a pas envoyé, qu'il
+ * soit sauvegardé en tant que brouillon ». Sans template, le message (adresse,
+ * objet, titre, texte) est enregistré au fil de la frappe dans « Ma boîte ›
+ * Brouillons », d'où un clic le rouvre ici. Les images et documents ne sont pas
+ * gardés : ce sont des fichiers. Avec un template, rien de tout cela : le
+ * template s'enregistre déjà lui-même.
+ */
+/**
+ * `boite` (17/10/2026) : « moi » — sa boîte, sa signature — ou « support » — la
+ * boîte commune, support@mimia.fr, signé « L'équipe Mimia ». Les brouillons
+ * sont rangés dans la boîte d'où le message partira.
+ */
+export default function MessageParent({
+  parents, brouillonAReprendre = null, onBrouillonRepris = null, onConnecterBoite = null, boite = 'moi',
+}) {
   const [recherche, setRecherche] = useState('');
   const [listeOuverte, setListeOuverte] = useState(false);
   const [destinataire, setDestinataire] = useState('');
@@ -54,7 +75,7 @@ export default function MessageParent({ parents }) {
     sujet, setSujet,
     titre, setTitre,
     texte, setTexte,
-    images, documents,
+    images, documents, charger: chargerComposition,
     zoneTexte,
     insererMarqueur, insererEmoji, insererGras,
     modele, etat: etatModele, enregistreA, revision, erreurPiece,
@@ -66,6 +87,168 @@ export default function MessageParent({ parents }) {
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [envoye, setEnvoye] = useState(null);
+  // La confirmation s'efface seule : elle a dit ce qu'elle avait à dire.
+  useEffect(() => {
+    if (!envoye) return undefined;
+    const minuteur = setTimeout(() => setEnvoye(null), 10000);
+    return () => clearTimeout(minuteur);
+  }, [envoye]);
+
+  // ------------------------------------------------------------ brouillon
+  const VIDE = JSON.stringify({ destinataire: '', sujet: '', titre: '', texte: '', avecPieces: false });
+  const brouillonId = useRef(null);
+  const dernierBrouillon = useRef(VIDE);
+  const enAttente = useRef(null);
+  const [etatBrouillon, setEtatBrouillon] = useState(null);
+
+  const sauverBrouillon = useCallback(async (contenu) => {
+    enAttente.current = null;
+    const cle = JSON.stringify(contenu);
+    if (cle === dernierBrouillon.current) return;
+    dernierBrouillon.current = cle;
+
+    setEtatBrouillon({ etat: 'enregistrement' });
+    try {
+      const { status, data } = await enregistrerBrouillon(
+        { messageOrigine: null, id: brouillonId.current, ...contenu }, boite);
+      brouillonId.current = status === 204 ? null : data?.id ?? brouillonId.current;
+      setEtatBrouillon(status === 204 ? null : { etat: 'enregistre', heure: new Date() });
+    } catch (e) {
+      dernierBrouillon.current = null;
+      setEtatBrouillon({ etat: 'erreur', boite: e?.response?.status === 409 });
+    }
+  }, [boite]);
+
+  /** Ce qui attendait la pause de la frappe part tout de suite. */
+  const sauverMaintenant = useCallback(
+    () => (enAttente.current ? sauverBrouillon(enAttente.current) : Promise.resolve()),
+    [sauverBrouillon],
+  );
+
+  // LES IMAGES ET DOCUMENTS DU BROUILLON — Camara, le 18/10/2026 : « en
+  // rouvrant le brouillon je n'ai que le marqueur ». Ils sont envoyés au
+  // serveur (rangés sur le disque, pas en base) à chaque ajout ou retrait, et
+  // effacés quand le message part ou que le brouillon est supprimé.
+  const clePieces = (imgs, docs) =>
+    JSON.stringify([...imgs.map((f) => ['I', f.name, f.size]), ...docs.map((f) => ['D', f.name, f.size])]);
+  const dernieresPieces = useRef(clePieces([], []));
+  const actuel = useRef({});
+  actuel.current = {
+    contenu: { destinataire, sujet, titre, texte, avecPieces: images.length + documents.length > 0 },
+    images,
+    documents,
+  };
+
+  const sauverPieces = useCallback(async (imgs, docs) => {
+    const cle = clePieces(imgs, docs);
+    if (cle === dernieresPieces.current) return;
+
+    // Il faut un brouillon pour y ranger des pièces : le texte d'abord.
+    if (!brouillonId.current) await sauverBrouillon(actuel.current.contenu);
+    if (!brouillonId.current) return;
+
+    dernieresPieces.current = cle;
+    setEtatBrouillon({ etat: 'enregistrement' });
+    try {
+      await remplacerPiecesBrouillon(brouillonId.current, imgs, docs, boite);
+      setEtatBrouillon({ etat: 'enregistre', heure: new Date() });
+    } catch (e) {
+      dernieresPieces.current = null;
+      setEtatBrouillon({ etat: 'erreur', message: e?.response?.data?.message });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boite, sauverBrouillon]);
+
+  useEffect(() => {
+    if (modele) return undefined;
+    if (clePieces(images, documents) === dernieresPieces.current) return undefined;
+
+    const minuteur = setTimeout(() => sauverPieces(images, documents), 600);
+    return () => clearTimeout(minuteur);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modele, images, documents, sauverPieces]);
+
+  /** Le message suivant repart d'un brouillon neuf ; le précédent reste dans « Brouillons ». */
+  const nouveauBrouillon = useCallback(async () => {
+    await sauverMaintenant();
+    if (!modele) await sauverPieces(actuel.current.images, actuel.current.documents);
+    brouillonId.current = null;
+    dernierBrouillon.current = VIDE;
+    dernieresPieces.current = clePieces([], []);
+    setEtatBrouillon(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sauverMaintenant, sauverPieces, modele]);
+
+  useEffect(() => {
+    if (modele) return undefined;
+
+    const contenu = { destinataire, sujet, titre, texte, avecPieces: images.length + documents.length > 0 };
+    if (JSON.stringify(contenu) === dernierBrouillon.current) return undefined;
+
+    const vide = !destinataire.trim() && !sujet.trim() && !titre.trim() && !texte.trim() && !contenu.avecPieces;
+    if (vide && !brouillonId.current) return undefined;
+
+    enAttente.current = contenu;
+    const minuteur = setTimeout(() => sauverBrouillon(contenu), 1500);
+    return () => clearTimeout(minuteur);
+  }, [modele, destinataire, sujet, titre, texte, images, documents, sauverBrouillon]);
+
+  // En quittant l'onglet, ce qui restait à enregistrer part quand même.
+  const sauverRef = useRef(null);
+  sauverRef.current = async () => {
+    await sauverMaintenant();
+    if (!modele) await sauverPieces(actuel.current.images, actuel.current.documents);
+  };
+  useEffect(() => () => { sauverRef.current(); }, []);
+
+  // UN BROUILLON CHOISI DANS « MA BOÎTE › BROUILLONS » se rouvre ici.
+  useEffect(() => {
+    if (!brouillonAReprendre?.identifiant) return;
+    let annule = false;
+
+    (async () => {
+      try {
+        const { data } = await getBrouillonLibre(brouillonAReprendre.identifiant, boite);
+        if (annule) return;
+        await nouveauBrouillon();
+        await deselectionner();
+
+        // Les pièces reviennent en vrais fichiers : l'envoi les reprend tels quels.
+        const fichiers = await Promise.all((data.pieces ?? []).map(async (p) => {
+          const { data: octets } = await getPieceBrouillon(data.id, p.id, boite);
+          return { genre: p.genre, fichier: new File([octets], p.nomFichier, { type: p.typeMime }) };
+        }));
+        if (annule) return;
+        const imgs = fichiers.filter((f) => f.genre === 'Image').map((f) => f.fichier);
+        const docs = fichiers.filter((f) => f.genre === 'Document').map((f) => f.fichier);
+
+        const contenu = {
+          destinataire: data.destinataire ?? '',
+          sujet: data.sujet ?? '',
+          titre: data.titre ?? '',
+          texte: data.texte ?? '',
+          avecPieces: imgs.length + docs.length > 0,
+        };
+        brouillonId.current = data.id;
+        dernierBrouillon.current = JSON.stringify(contenu);
+        dernieresPieces.current = clePieces(imgs, docs);
+        setDestinataire(contenu.destinataire);
+        setRecherche(contenu.destinataire);
+        setSujet(contenu.sujet);
+        setTitre(contenu.titre);
+        chargerComposition({ texte: contenu.texte, images: imgs, documents: docs });
+        setConfirme(false);
+        setEtatBrouillon({ etat: 'enregistre', heure: new Date(data.dateModification) });
+      } catch {
+        if (!annule) setErreur("Ce brouillon n'a pas pu être rouvert. Il a peut-être été supprimé.");
+      } finally {
+        if (!annule) onBrouillonRepris?.();
+      }
+    })();
+
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brouillonAReprendre]);
 
   const resultats = useMemo(() => {
     const terme = recherche.trim();
@@ -92,9 +275,9 @@ export default function MessageParent({ parents }) {
 
       if (modele) {
         await enregistrer();
-        ({ data: html } = await apercuModeleMail(modele.id));
+        ({ data: html } = await apercuModeleMail(modele.id, { signature: true, boite }));
       } else {
-        ({ data: html } = await apercuDiffusion(composition));
+        ({ data: html } = await apercuDiffusion(composition, { signature: true, boite }));
       }
 
       // MÊME GESTE QUE LA DIFFUSION : un onglet plutôt qu'une modale, pour
@@ -124,22 +307,38 @@ export default function MessageParent({ parents }) {
   const envoyer = async () => {
     setEnvoi(true);
     setErreur(null);
+    setEnvoye(null);
+
+    // Le brouillon en attente ne doit pas renaître après l'envoi.
+    enAttente.current = null;
+    const brouillonEnvoye = modele ? null : brouillonId.current;
 
     try {
       const adresse = destinataire.trim();
 
+      let reponse;
       if (modele) {
         await enregistrer();
-        await envoyerModeleParent(modele.id, adresse);
+        reponse = await envoyerModeleParent(modele.id, adresse, boite);
       } else {
-        await envoyerMailParent({ ...composition, destinataire: adresse });
+        reponse = await envoyerMailParent({ ...composition, destinataire: adresse }, boite);
 
         // Sans template, le formulaire se vide comme avant. Avec, il reste
         // ouvert : on écrit souvent le même message à plusieurs parents.
         await deselectionner();
       }
 
-      setEnvoye(adresse);
+      // Le message est parti : son brouillon n'a plus lieu d'être.
+      if (brouillonEnvoye) {
+        brouillonId.current = null;
+        dernierBrouillon.current = VIDE;
+        dernieresPieces.current = clePieces([], []);
+        setEtatBrouillon(null);
+        supprimerMessages([brouillonEnvoye], boite, 'brouillons').catch(() => {});
+      }
+
+      // En développement, le serveur dit vers quelle adresse il a détourné l'envoi.
+      setEnvoye({ adresse, redirection: reponse?.data?.redirection ?? null });
       setConfirme(false);
       setDestinataire('');
       setRecherche('');
@@ -150,9 +349,10 @@ export default function MessageParent({ parents }) {
     }
   };
 
-  const choisir = (id) => {
+  const choisir = async (id) => {
     setErreur(null);
     setConfirme(false);
+    await nouveauBrouillon();
     selectionner(id).catch(() => setErreur("Le template n'a pas pu être ouvert."));
   };
 
@@ -160,7 +360,8 @@ export default function MessageParent({ parents }) {
     <div className="atelier-mails">
       <div className="diffusion message-parent">
         {erreur && <div className="alert">{erreur}</div>}
-        {envoye && <div className="alert alert--succes">Message envoyé à {envoye}.</div>}
+
+        <CarteExpediteur mode={boite === 'support' ? 'support' : 'boite'} onConnecter={onConnecterBoite} />
 
         <BandeauModele modele={modele} etat={etatModele} enregistreA={enregistreA} />
 
@@ -325,6 +526,24 @@ export default function MessageParent({ parents }) {
         </SectionMail>
 
         <div className="diffusion__actions diffusion__actions--barre">
+          {!modele && etatBrouillon && (
+            <span
+              className={`message-parent__brouillon${etatBrouillon.etat === 'erreur' ? ' est-en-erreur' : ''}`}
+              role="status"
+            >
+              {etatBrouillon.etat === 'enregistrement' && 'Enregistrement du brouillon…'}
+              {etatBrouillon.etat === 'enregistre' && (
+                <>
+                  Brouillon enregistré à {etatBrouillon.heure.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  {' '}· Messagerie › {boite === 'support' ? 'Support' : 'Ma boîte'} › Brouillons
+                </>
+              )}
+              {etatBrouillon.etat === 'erreur' && (etatBrouillon.boite
+                ? 'Brouillon non enregistré : connectez d’abord votre boîte (Messagerie › Ma boîte).'
+                : etatBrouillon.message ?? 'Le brouillon n’a pas pu être enregistré.')}
+            </span>
+          )}
+
           <button
             type="button"
             className="btn btn--compact btn--fantome"
@@ -390,12 +609,37 @@ export default function MessageParent({ parents }) {
         </div>
       </div>
 
+      {/* LE RÉSULTAT DE L'ENVOI, LÀ OÙ L'ON CLIQUE — Camara, le 17/10/2026 : « je
+          n'ai pas eu de message ». La confirmation et l'erreur s'affichaient en
+          haut du formulaire, hors de vue quand on envoie depuis la barre du bas. */}
+      {envoye && (
+        <div className="admin-confirmation" role="status">
+          <span className="admin-confirmation__coche" aria-hidden="true">✓</span>
+          <span>
+            Message envoyé à <strong>{envoye.adresse}</strong>.
+            {envoye.redirection && (
+              <span className="admin-confirmation__attention">
+                En développement : parti en réalité vers {envoye.redirection}.
+              </span>
+            )}
+          </span>
+          <button type="button" className="admin-confirmation__fermer" aria-label="Fermer" onClick={() => setEnvoye(null)}>×</button>
+        </div>
+      )}
+      {erreur && !envoye && (
+        <div className="admin-confirmation admin-confirmation--erreur" role="alert">
+          <span className="admin-confirmation__coche" aria-hidden="true">!</span>
+          <span>{erreur}</span>
+          <button type="button" className="admin-confirmation__fermer" aria-label="Fermer" onClick={() => setErreur(null)}>×</button>
+        </div>
+      )}
+
       <ColonneModeles
         nature="Diffusion"
         natureFixe
         selectionId={modele?.id}
         onSelectionner={choisir}
-        onNouveau={() => { setConfirme(false); deselectionner(); }}
+        onNouveau={async () => { setConfirme(false); await nouveauBrouillon(); deselectionner(); }}
         onSupprime={(id) => { if (modele?.id === id) deselectionner({ sansEnregistrer: true }); }}
         revision={revision}
       />

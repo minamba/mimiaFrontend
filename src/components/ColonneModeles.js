@@ -16,7 +16,11 @@ const jour = (valeur) =>
 function Badge({ modele }) {
   if (modele.nature === 'Automatique') {
     if (modele.reglesADefinir) {
-      return <span className="modeles__badge modeles__badge--attente">Règles à définir</span>;
+      return (
+        <span className="modeles__badge modeles__badge--attente">
+          {modele.parCible ? 'Destinataires à choisir' : 'Règles à définir'}
+        </span>
+      );
     }
 
     // « POUR CEUX QUI SONT DÉJÀ PROGRAMMÉS, JE VEUX VOIR QUAND » — Camara.

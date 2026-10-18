@@ -974,9 +974,10 @@ export default function Accueil() {
           </h2>
           <p>Création du compte en une minute. Premier échange dans la foulée.</p>
           {/* Celui-ci dit « créer un compte » : il mène donc au formulaire
-              d'INSCRIPTION, pas à celui de connexion. Il ne pose pas non plus
-              d'intention d'essai — c'est le bouton du héros qui porte la
-              promesse de gratuité, et un seul chemin doit l'ouvrir. */}
+              d'INSCRIPTION, pas à celui de connexion. L'essai s'ouvre aussi par
+              lui (Camara, le 16/10/2026) : le serveur l'ouvre à la création de
+              TOUT compte parent (`ParentService.GetOrCreateAsync`), quel que
+              soit le bouton, l'onglet ou l'appareil de la confirmation. */}
           <button
             type="button"
             className="btn btn--principal btn--large"

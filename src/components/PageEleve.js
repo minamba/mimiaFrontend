@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
+  getBilanEleve,
   getFicheEleve,
   getHistoriqueEvaluations,
   getHistoriqueRapports,
@@ -82,6 +83,7 @@ export default function PageEleve() {
         onNiveau={setNiveau}
         chargerEvaluations={getHistoriqueEvaluations}
         chargerRapports={getHistoriqueRapports}
+        chargerBilan={getBilanEleve}
       />
     </section>
   );

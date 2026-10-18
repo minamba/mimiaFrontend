@@ -49,6 +49,9 @@ const PAR_DEFAUT = {
   // LES FICHES DE RÉVISION DE L'ÉLÈVE (14/10/2026) : éteintes tant qu'on n'a rien lu.
   fichesRevision: false,
 
+  // LA CONSEILLÈRE D'ORIENTATION (18/10/2026) : éteinte tant qu'on n'a rien lu.
+  conseillereOrientation: false,
+
   // ÉTEINTE TANT QU'ON NE SAIT PAS. Une promotion affichée sur une panne
   // de lecture promet un cadeau que le serveur ne donnera pas — et le
   // parent, lui, aura payé en la voyant.
@@ -120,6 +123,9 @@ function interroger() {
 
           // La carte « Mes fiches de révision » de la grille de l'enfant.
           fichesRevision: Boolean(data?.fichesRevision),
+
+          // La ligne « conseillère d'orientation » de la page des tarifs.
+          conseillereOrientation: Boolean(data?.conseillereOrientation),
 
           // Le serveur n'envoie le texte que si le bandeau est allumé :
           // ici il n’y a rien à décider, juste à recopier. Une chaîne
@@ -327,6 +333,17 @@ export function useBesoinsParticuliers() {
  */
 export function useFichesRevision() {
   return Boolean(useDrapeaux().fichesRevision);
+}
+
+/** La conseillère d'orientation est-elle allumée ? (18/10/2026) — la page des tarifs l'annonce alors. */
+export function useConseillereOrientation() {
+  return Boolean(useDrapeaux().conseillereOrientation);
+}
+
+/** Un cycle au moins a-t-il ses jeux ouverts ? (18/10/2026) — la page des tarifs les annonce alors. */
+export function useDesJeuxOuverts() {
+  const jeux = useDrapeaux().jeux ?? {};
+  return Boolean(jeux.primaire || jeux.college || jeux.lycee);
 }
 
 export function useJeuxOuverts(cycle) {

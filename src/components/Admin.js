@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { nomVoix } from '../lib/nomVoix';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -43,7 +43,8 @@ import {
   getCout,
   getHistoriqueHeures,
   getHistoriqueCreditsFiches,
-  definirAdministrateur,
+  getRoles,
+  definirRoleParent,
   definirAjoutEnfant,
   definirFichesParent,
   creerParent,
@@ -54,7 +55,7 @@ import {
   getDicteeEleve,
   getMesOnglets,
 } from '../lib/api/adminApi';
-import DroitsAdmin from './DroitsAdmin';
+import RolesAdmin from './RolesAdmin';
 import CreationEnfantAdmin from './CreationEnfantAdmin';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
@@ -64,9 +65,9 @@ import RelectureAvis from './RelectureAvis';
 import Loader from './Loader';
 import Modes from './Modes';
 import Diffusion from './Diffusion';
-import MessageParent from './MessageParent';
 import CalendrierEleveModale from './CalendrierEleveModale';
 import Messagerie from './Messagerie';
+import SignaturesMail from './SignaturesMail';
 import MessageInformation from './MessageInformation';
 import PromosAdmin from './PromosAdmin';
 import PeriodesVacancesAdmin from './PeriodesVacancesAdmin';
@@ -1043,6 +1044,8 @@ export default function Admin() {
   // La messagerie d'abord : c'est celle qu'on ouvre tous les jours, alors
   // qu'une diffusion se prépare trois fois par an.
   const [sousOnglet, setSousOnglet] = useState('messagerie');
+  // Dans la messagerie : « Ma boîte » ou la boîte commune du support (17/10/2026).
+  const [boiteMessagerie, setBoiteMessagerie] = useState('moi');
   const [edition, setEdition] = useState(null);
 
   // L'élève dont on regarde le calendrier — l'objet entier, pas seulement
@@ -1057,7 +1060,24 @@ export default function Admin() {
   const [aBannir, setABannir] = useState(null);
 
   /** Le compte dont le super-administrateur règle les droits, ou null. */
-  const [droitsDe, setDroitsDe] = useState(null);
+  /**
+   * LES RÔLES (17/10/2026), pour les listes déroulantes de la table et du
+   * formulaire « Nouveau parent ». Le super-administrateur seul les lit et les
+   * attribue ; les autres voient le nom du rôle, sans pouvoir le changer.
+   */
+  const [roles, setRoles] = useState([]);
+  const chargerRoles = useCallback(async () => {
+    try {
+      const { data } = await getRoles();
+      setRoles(data.roles ?? []);
+    } catch {
+      setRoles([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (estSuperAdmin) chargerRoles();
+  }, [estSuperAdmin, chargerRoles]);
 
   /** Le parent pour qui l'on crée un enfant (16/10/2026), ou null. */
   const [creationEnfantPour, setCreationEnfantPour] = useState(null);
@@ -1157,11 +1177,12 @@ export default function Admin() {
     }
   };
 
-  const basculerAdministrateur = async (parent) => {
+  const changerRole = async (parent, roleId) => {
     setRoleEnCours(parent.id);
 
     try {
-      await definirAdministrateur(parent.id, !parent.estAdministrateur);
+      await definirRoleParent(parent.id, roleId ? Number(roleId) : null);
+      chargerRoles();
 
       // On recharge plutôt que de retoucher la ligne à la main : le tableau
       // porte une douzaine de chiffres dérivés, et en corriger un seul ferait
@@ -1240,6 +1261,8 @@ export default function Admin() {
       { cle: 'eleves', libelle: `Élèves (${eleves.length})` },
       { cle: 'avis', libelle: 'Avis' },
       ...(estSuperAdmin ? [{ cle: 'modes', libelle: 'Modes' }] : []),
+      // LES RÔLES (17/10/2026) : super-administrateur seul, comme les Modes.
+      ...(estSuperAdmin ? [{ cle: 'roles', libelle: 'Rôles' }] : []),
       { cle: 'schemas', libelle: 'Schémas' },
 
       // JUSTE AVANT LES PÉRIODES SCOLAIRES — voulu par Camara le 13/09/2026,
@@ -1414,7 +1437,7 @@ export default function Admin() {
   const [creation, setCreation] = useState({ enCours: false, erreur: null });
 
   const creerCompteParent = async ({
-    prenom, nom, mail, administrateur, motDePasse, confirmation,
+    prenom, nom, mail, roleId, motDePasse, confirmation,
   }) => {
     // LES DEUX SAISIES SE COMPARENT AVANT TOUT APPEL. Un compte créé avec un
     // mot de passe mal tapé n'est rattrapable que par « mot de passe oublié »,
@@ -1439,13 +1462,15 @@ export default function Admin() {
       };
 
       const { data: identite } = await creerIdentite(propre);
+      // LE RÔLE PART AVEC LA FICHE (17/10/2026) : le serveur ne le retient que
+      // pour le super-administrateur.
       const { data: parent } = await creerParent({
-        identityUserId: identite.id, mail: propre.email, prenom: propre.prenom, nom: propre.nom,
+        identityUserId: identite.id,
+        mail: propre.email,
+        prenom: propre.prenom,
+        nom: propre.nom,
+        roleId: estSuperAdmin && roleId ? Number(roleId) : null,
       });
-
-      if (administrateur && estSuperAdmin) {
-        await definirAdministrateur(parent.id, true);
-      }
 
       setCreation({ enCours: false, erreur: null });
       setEdition(null);
@@ -1821,10 +1846,9 @@ export default function Admin() {
             items={[
               { cle: 'messagerie', libelle: 'Messagerie' },
 
-              // ENTRE LIRE ET DIFFUSER : écrire à un parent précis est un
-              // geste ciblé, comme la messagerie, mais c'est une prise de
-              // parole nouvelle — pas une réponse dans un fil existant.
-              { cle: 'parent', libelle: 'Écrire à un parent' },
+              // « ÉCRIRE À UN PARENT » N'EST PLUS UN ONGLET (Camara, le
+              // 17/10/2026) : il s'ouvre en fenêtre depuis la messagerie,
+              // avec « Écrire un nouveau message ».
 
               { cle: 'diffusion', libelle: 'Message de diffusion' },
 
@@ -1832,6 +1856,9 @@ export default function Admin() {
               // endroit que les deux autres : c'est une prise de parole,
               // pas un réglage. On la cherche là où on écrit aux gens.
               { cle: 'information', libelle: 'Message d’information' },
+
+              // LES SIGNATURES (17/10/2026) : super-administrateur seul.
+              ...(estSuperAdmin ? [{ cle: 'signatures', libelle: 'Signatures' }] : []),
 
               // LE BANDEAU PROMO EST PARTI D'ICI, et c'était le bon geste.
               // Ces trois-là sont du COURRIER — des mots qu'on adresse à
@@ -1842,10 +1869,31 @@ export default function Admin() {
             ]}
           />
 
-          {sousOnglet === 'messagerie' && <Messagerie />}
-          {sousOnglet === 'parent' && <MessageParent parents={parents} />}
+          {/* « MA BOÎTE » ET « SUPPORT » (17/10/2026) — la boîte de la personne
+              connectée, ou la boîte commune du support. `key` : changer de
+              boîte repart d'un écran propre (message ouvert, réponse en cours). */}
+          {sousOnglet === 'messagerie' && (
+            <>
+              <div className="boites-onglets" role="tablist" aria-label="Boîte">
+                {[{ cle: 'moi', libelle: 'Ma boîte' }, { cle: 'support', libelle: 'Support' }].map((o) => (
+                  <button
+                    key={o.cle}
+                    type="button"
+                    role="tab"
+                    aria-selected={boiteMessagerie === o.cle}
+                    className={`boites-onglets__onglet${boiteMessagerie === o.cle ? ' est-actif' : ''}`}
+                    onClick={() => setBoiteMessagerie(o.cle)}
+                  >
+                    {o.libelle}
+                  </button>
+                ))}
+              </div>
+              <Messagerie key={boiteMessagerie} boite={boiteMessagerie} parents={parents} />
+            </>
+          )}
           {sousOnglet === 'diffusion' && <Diffusion nombreParents={parents.length} />}
           {sousOnglet === 'information' && <MessageInformation />}
+          {sousOnglet === 'signatures' && estSuperAdmin && <SignaturesMail />}
         </>
       )}
 
@@ -1880,7 +1928,7 @@ export default function Admin() {
                   mail: '',
                   motDePasse: '',
                   confirmation: '',
-                  administrateur: false,
+                  roleId: '',
                 })
               }
             >
@@ -2113,46 +2161,31 @@ export default function Admin() {
                           Super-admin
                         </span>
                       )}
+                      {/* LE RÔLE DU COMPTE — Camara, le 17/10/2026 : une liste des
+                          rôles créés dans l'onglet « Rôles », à la place du
+                          bouton Utilisateur / Administrateur et de « Droits » :
+                          les droits sont désormais ceux du rôle. Super-admin
+                          n'y figure pas — il ne s'attribue pas. */}
                       {estSuperAdmin && !p.estSuperAdministrateur && (
-                        <button
-                          type="button"
-                          className={`btn-ghost btn-ghost--mini ${
-                            p.estAdministrateur ? 'btn-ghost--accent' : ''
-                          }`}
+                        <select
+                          className={`role-parent${p.estAdministrateur ? ' role-parent--acces' : ''}`}
+                          value={p.roleId ?? ''}
                           disabled={roleEnCours === p.id}
-                          onClick={() => basculerAdministrateur(p)}
-                          title={
-                            p.estAdministrateur
-                              ? "Retirer l'accès à l'administration"
-                              : "Donner l'accès à l'administration"
-                          }
+                          onChange={(e) => changerRole(p, e.target.value)}
+                          aria-label={`Rôle de ${p.mail}`}
+                          title={p.estAdministrateur ? 'Ce rôle ouvre l’administration' : 'Ce rôle n’ouvre pas l’administration'}
                         >
-                          {roleEnCours === p.id
-                            ? '…'
-                            : p.estAdministrateur
-                              ? 'Administrateur'
-                              : 'Utilisateur'}
-                        </button>
+                          {roles.filter((r) => r.code !== 'super_admin').map((r) => (
+                            <option key={r.id} value={r.code === 'utilisateur' ? '' : r.id}>{r.nom}</option>
+                          ))}
+                          {/* Un rôle pas encore relu (liste en chargement) reste affiché. */}
+                          {p.roleId && !roles.some((r) => r.id === p.roleId) && (
+                            <option value={p.roleId}>{p.roleNom ?? '…'}</option>
+                          )}
+                        </select>
                       )}
-
-                      {/* LES DROITS NE S'AFFICHENT QUE SUR UN ADMINISTRATEUR.
-
-                          Sur un compte ordinaire, cocher des sections ne
-                          produirait rien : il n'a pas accès au tableau de bord.
-                          Le bouton apparaît donc AVEC le rôle et disparaît avec
-                          lui — et le serveur efface les droits quand on retire
-                          le rôle, pour qu’une repromotion reparte de zéro.
-
-                          Camara, le 17/09/2026. */}
-                      {estSuperAdmin && !p.estSuperAdministrateur && p.estAdministrateur && (
-                        <button
-                          type="button"
-                          className="btn-ghost btn-ghost--mini"
-                          onClick={() => setDroitsDe(p)}
-                          title="Choisir les sections visibles dans son tableau de bord"
-                        >
-                          Droits
-                        </button>
+                      {!estSuperAdmin && (
+                        <span className="badge badge--discret">{p.roleNom ?? 'Utilisateur'}</span>
                       )}
                       {/* CRÉER UN ENFANT POUR CE PARENT — Camara, le 16/10/2026.
                           Toujours au super-administrateur ; à un administrateur,
@@ -2510,14 +2543,6 @@ export default function Admin() {
         </div>
       )}
 
-      {droitsDe && (
-        <DroitsAdmin
-          parent={droitsDe}
-          onFermer={() => setDroitsDe(null)}
-          onEnregistre={() => dispatch(chargerAdmin())}
-        />
-      )}
-
       {aBannir && (
         <div className="modale" role="dialog" aria-modal="true">
           <form
@@ -2837,17 +2862,26 @@ export default function Admin() {
                   </>
                 )}
 
-                {/* Le rôle ne se distribue que par le super-administrateur —
-                    l'API le revérifie. Les autres ne voient pas la case. */}
+                {/* LE RÔLE DU NOUVEAU COMPTE (17/10/2026) : « Utilisateur » par
+                    défaut, ou un rôle de l'onglet « Rôles ». Le super-
+                    administrateur seul le choisit — l'API le revérifie ; les
+                    autres créent un « Utilisateur ». */}
                 {edition.operation === 'creerParent' && estSuperAdmin && (
-                  <label className="case">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(edition.administrateur)}
-                      onChange={(e) => setEdition({ ...edition, administrateur: e.target.checked })}
-                    />
-                    Administrateur — peut ouvrir l’administration
-                  </label>
+                  <div className="champ">
+                    <label htmlFor="ed-role">Rôle</label>
+                    <select
+                      id="ed-role"
+                      value={edition.roleId ?? ''}
+                      onChange={(e) => setEdition({ ...edition, roleId: e.target.value })}
+                    >
+                      {roles.filter((r) => r.code !== 'super_admin').map((r) => (
+                        <option key={r.id} value={r.code === 'utilisateur' ? '' : r.id}>
+                          {r.nom}{r.ouvreAdministration ? ' — accès à l’administration' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="champ__aide">Ses droits sont ceux du rôle (onglet « Rôles »).</span>
+                  </div>
                 )}
 
                 {/* RÉINITIALISER LE MOT DE PASSE D'UN PARENT — Camara, le
@@ -3058,6 +3092,9 @@ export default function Admin() {
       {onglet === 'promos' && <PromosAdmin />}
 
       {onglet === 'modes' && <Modes />}
+      {onglet === 'roles' && estSuperAdmin && (
+        <RolesAdmin onChange={() => { chargerRoles(); dispatch(chargerAdmin()); }} />
+      )}
 
       {/* Les schémas : quelles figures sont importées, lesquelles restent au
           crayon du professeur. */}

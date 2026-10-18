@@ -144,8 +144,22 @@ function CourbeNotes({ notes, couleur }) {
   );
 }
 
-/** Niveau de maîtrise, notion par notion. */
+/**
+ * Niveau de maîtrise, notion par notion.
+ *
+ * UN NOM COUPÉ SE LIT EN ENTIER AU TOUCHER — Camara, le 17/10/2026 : sur
+ * téléphone, les « … » empêchaient de lire les notions longues, et la bulle
+ * `title` n'existe pas au doigt. Toucher le nom le déplie, le toucher encore
+ * le replie.
+ */
 function BarresNotions({ notions }) {
+  const [ouvertes, setOuvertes] = useState(() => new Set());
+  const basculer = (id) => setOuvertes((avant) => {
+    const apres = new Set(avant);
+    if (apres.has(id)) apres.delete(id); else apres.add(id);
+    return apres;
+  });
+
   return (
     <ul className="notions">
       {notions.map((notion) => {
@@ -159,10 +173,16 @@ function BarresNotions({ notions }) {
           notion.score >= 0.80 ? 'acquis' : notion.score >= 0.50 ? 'fragile' : 'lacune';
 
         return (
-          <li key={notion.competenceId} className="notion">
-            <span className="notion__libelle" title={notion.libelle}>
+          <li key={notion.competenceId} className={`notion${ouvertes.has(notion.competenceId) ? ' est-ouverte' : ''}`}>
+            <button
+              type="button"
+              className="notion__libelle"
+              title={notion.libelle}
+              aria-expanded={ouvertes.has(notion.competenceId)}
+              onClick={() => basculer(notion.competenceId)}
+            >
               {notion.libelle}
-            </span>
+            </button>
 
             <span className="notion__barre">
               <span

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { getApercuBilan, envoyerBilan } from '../lib/api/adminApi';
 import {
   getCopieEvaluation,
@@ -12,6 +12,7 @@ import {
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { styleMatiere } from '../lib/couleurMatiere';
 import Avatar from './Avatar';
+import FenetreBilan from './FenetreBilan';
 import ProjetOrientationFiche from './ProjetOrientationFiche';
 import RaccourcisFiche from './RaccourcisFiche';
 import Loader from './Loader';
@@ -659,6 +660,11 @@ export default function FicheEleve({
   // recevrait un 403. Le bouton n'apparaît donc que pour l'administrateur.
   avecApercuBilan = false,
 
+  // LE BILAN HEBDOMADAIRE POUR LE PARENT (17/10/2026) : la fonction qui le
+  // charge (`getBilanEleve`). Présente, elle fait paraître le bouton lumineux
+  // au-dessus de « Dernier cours ».
+  chargerBilan = null,
+
   // L.année regardée, et le moyen d.en changer. Absents côté administration
   // tant qu.elle ne recharge pas la fiche : un onglet qui ne fait rien vaut
   // moins que pas d.onglet.
@@ -713,6 +719,11 @@ export default function FicheEleve({
 
   /** null | 'encours' | 'envoye' | 'rien' | 'echec' */
   const [envoiBilan, setEnvoiBilan] = useState(null);
+  const [bilanOuvert, setBilanOuvert] = useState(false);
+  const chargerCeBilan = useCallback(
+    () => chargerBilan(fiche?.id),
+    [chargerBilan, fiche?.id],
+  );
 
   // Matière sur laquelle les deux colonnes sont restreintes. Null = toutes,
   // et c'est le défaut : voir d'un coup d'œil où l'enfant a le plus besoin
@@ -1116,6 +1127,19 @@ export default function FicheEleve({
             {/* PAS DE BARRE ICI NON PLUS (Camara, le 11/10/2026) : en haut de la
                 fiche, elle ne servait à rien. L'ancre reste, pour le bouton
                 « Dernier cours » des autres barres. */}
+            {/* « VOIR LE BILAN HEBDOMADAIRE » — Camara, le 17/10/2026 : au-dessus
+                de « Dernier cours », avec un effet lumineux pour qu'on le voie. */}
+            {chargerBilan && (
+              <div className="bilan-hebdo__appel">
+                <button type="button" className="bilan-hebdo__bouton" onClick={() => setBilanOuvert(true)}>
+                  <span aria-hidden="true">✦</span> Voir le bilan hebdomadaire
+                </button>
+              </div>
+            )}
+            {bilanOuvert && (
+              <FenetreBilan prenom={fiche.prenom} charger={chargerCeBilan} onFermer={() => setBilanOuvert(false)} />
+            )}
+
             <span id="fiche-dernier-cours" className="raccourcis-fiche__ancre" aria-hidden="true" />
             <h3>Dernier cours</h3>
             {fiche.dernierCours ? (
@@ -1616,7 +1640,7 @@ export default function FicheEleve({
               <RaccourcisFiche sections={sections} courante="fiche-orientation" />
             </ProjetOrientationFiche>
 
-            <div className="modale__actions">
+            <div className={`modale__actions${chargerBilan ? ' a-un-bilan' : ''}`}>
               {avecApercuBilan && (
                 <button
                   type="button"
@@ -1648,6 +1672,13 @@ export default function FicheEleve({
                       : envoiBilan === 'rien' ? 'Rien à envoyer'
                         : envoiBilan === 'echec' ? "L'envoi a échoué"
                           : 'Envoyer le bilan au parent'}
+                </button>
+              )}
+              {/* LE MÊME BOUTON EN BAS, À CÔTÉ DE « RETOUR » (Camara, le
+                  17/10/2026) : qui a lu la fiche jusqu'au bout l'a sous la main. */}
+              {chargerBilan && (
+                <button type="button" className="bilan-hebdo__bouton bilan-hebdo__bouton--compact" onClick={() => setBilanOuvert(true)}>
+                  <span aria-hidden="true">✦</span> Voir le bilan hebdomadaire
                 </button>
               )}
               <button type="button" className="btn btn--compact" onClick={onFermer}>

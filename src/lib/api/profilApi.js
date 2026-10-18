@@ -138,3 +138,8 @@ export const changerEmailDe = (sub, nouvelEmail) =>
     `/api/admin/comptes/par-id/${encodeURIComponent(sub)}/email`,
     { email: nouvelEmail },
   );
+
+/** Mes courriels (17/10/2026) : les catégories dont on peut se (dés)abonner, et leur état. */
+export const getCourriels = () => httpClient.get('/profil/courriels');
+export const choisirCourriel = (categorie, abonne) =>
+  httpClient.put(`/profil/courriels/${categorie}`, { abonne });

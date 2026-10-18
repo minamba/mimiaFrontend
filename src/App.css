@@ -40087,3 +40087,1497 @@ body:has(.cookies) .bouton-signalement { display: none; }
 .etat-compte--banni { --etat: #a855f7; }
 
 .filtres__compteur { align-self: center; }
+
+/* « VOIR LE BILAN HEBDOMADAIRE » (17/10/2026) — Camara : « un effet lumineux pour
+   qu'il soit visible ». Corail plein (la couleur des actions), un halo qui
+   respire, un reflet qui le traverse de temps en temps. Préfixe `bilan-hebdo` :
+   App.css est global. */
+.bilan-hebdo__appel {
+  display: flex;
+  justify-content: center;
+  margin: 28px 0 8px;
+}
+
+.bilan-hebdo__bouton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 14px 30px;
+  border: 1px solid color-mix(in srgb, #ffd2c4 70%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ff7a5c, #e8452b 55%, #ff8a4c);
+  color: #fff;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 10px 28px -10px rgba(255, 106, 74, 0.9), 0 0 0 0 rgba(255, 122, 92, 0.55);
+  animation: bilan-hebdo-halo 2.8s ease-in-out infinite;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.bilan-hebdo__bouton > span { font-size: 1.1rem; }
+
+/* Le reflet : une bande claire, toutes les quatre secondes. */
+.bilan-hebdo__bouton::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 -60%;
+  z-index: -1;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: skewX(-20deg);
+  animation: bilan-hebdo-reflet 4s ease-in-out infinite;
+}
+
+.bilan-hebdo__bouton:hover,
+.bilan-hebdo__bouton:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.06);
+}
+
+.bilan-hebdo__bouton:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+@keyframes bilan-hebdo-halo {
+  0%, 100% { box-shadow: 0 10px 28px -10px rgba(255, 106, 74, 0.9), 0 0 0 0 rgba(255, 122, 92, 0.55); }
+  50% { box-shadow: 0 12px 34px -8px rgba(255, 106, 74, 1), 0 0 0 10px rgba(255, 122, 92, 0); }
+}
+
+@keyframes bilan-hebdo-reflet {
+  0%, 65% { left: -60%; }
+  100% { left: 130%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bilan-hebdo__bouton,
+  .bilan-hebdo__bouton::after { animation: none; }
+}
+
+/* La fenêtre : le bilan tel que le courriel, dans un cadre isolé. */
+.bilan-hebdo__boite {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 32px));
+  max-width: none;
+  height: min(88dvh, 1100px);
+  padding: 0;
+  overflow: hidden;
+}
+
+.bilan-hebdo__tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.bilan-hebdo__tete h2 { margin: 0; font-size: 1.15rem; }
+
+.bilan-hebdo__fermer {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--encre) 8%, transparent);
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.bilan-hebdo__corps {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: #f3efe8;
+}
+
+.bilan-hebdo__cadre { flex: 1; width: 100%; border: 0; background: #f3efe8; }
+
+.bilan-hebdo__message {
+  margin: auto;
+  padding: 24px;
+  max-width: 420px;
+  text-align: center;
+  color: #45597a;
+}
+
+@media (max-width: 560px) {
+  .bilan-hebdo { padding: 0; }
+  .bilan-hebdo__boite { width: 100vw; height: 100dvh; border-radius: 0; }
+}
+
+/* En bas, à côté de « Retour » : même effet, à la hauteur des boutons compacts. */
+.bilan-hebdo__bouton--compact {
+  padding: 9px 20px;
+  font-size: 0.92rem;
+}
+
+/* Le bouton du bilan CENTRÉ sur la ligne, « Retour » à droite (17/10/2026). */
+.modale__actions.a-un-bilan {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.modale__actions.a-un-bilan > .bilan-hebdo__bouton { grid-column: 2; }
+.modale__actions.a-un-bilan > .btn { grid-column: 3; justify-self: end; }
+
+/* Sur téléphone : l'un sous l'autre, centrés. */
+@media (max-width: 560px) {
+  .modale__actions.a-un-bilan { grid-template-columns: 1fr; justify-items: center; }
+  .modale__actions.a-un-bilan > .bilan-hebdo__bouton,
+  .modale__actions.a-un-bilan > .btn { grid-column: 1; justify-self: center; }
+}
+
+/* « AJOUTER UN ENFANT » DANS UN ENCADRÉ (17/10/2026) — Camara : le formulaire
+   flottait sur la grille du fond, et « Créer le profil » collait au bloc des
+   besoins particuliers. */
+.formulaire-enfant {
+  margin-top: 22px;
+  padding: 30px 30px 26px;
+  border: 1px solid var(--trait);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: 0 24px 50px -28px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+/* `.champ label` impose `display: block` : la pastille collait au mot. */
+.formulaire-enfant .choix__option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.formulaire-enfant__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--trait);
+}
+
+@media (max-width: 560px) {
+  .formulaire-enfant { padding: 20px 16px 18px; border-radius: 18px; }
+  .formulaire-enfant__actions .btn { width: 100%; }
+}
+
+/* LE TITRE DE « AJOUTER UN ENFANT » EN BANDEAU (17/10/2026) : une vignette
+   corail, un surtitre, « un enfant » en dégradé corail → or. */
+.ajout-enfant-entete {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 0 4px;
+}
+
+.ajout-enfant-entete__vignette {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff7a5c, #e8452b);
+  color: #fff;
+  box-shadow: 0 12px 26px -10px rgba(255, 106, 74, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.ajout-enfant-entete__surtitre {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ff9a7f;
+}
+
+.ajout-enfant-entete h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  line-height: 1.1;
+}
+
+.ajout-enfant-entete__accent {
+  background: linear-gradient(95deg, #ff7a5c, #ffc76b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ajout-enfant-entete p {
+  margin: 6px 0 0;
+  color: var(--encre-douce);
+}
+
+:root[data-theme='light'] .ajout-enfant-entete__surtitre { color: #c2410c; }
+:root[data-theme='light'] .ajout-enfant-entete__accent {
+  background-image: linear-gradient(95deg, #e8452b, #c2410c);
+}
+
+@media (max-width: 560px) {
+  .ajout-enfant-entete { gap: 14px; }
+  .ajout-enfant-entete__vignette { width: 50px; height: 50px; border-radius: 15px; }
+}
+
+/* La page s'élargit à la fenêtre « Modifier » (660 px) : ses champs vont par
+   deux, et « Une fille / Un garçon » passaient à la ligne à 500 px. Le cadre
+   extérieur s'efface un peu : ce sont les sections qui portent la couleur. */
+.page--etroite.page--ajout-enfant { max-width: 700px; }
+.page--ajout-enfant .formulaire-enfant { padding: 22px; }
+.page--ajout-enfant .formulaire-enfant .edition-section { margin-bottom: 16px; }
+
+@media (max-width: 560px) {
+  .page--ajout-enfant .formulaire-enfant { padding: 14px; }
+}
+
+/* Le grand encadré plus FONCÉ que ses sections (Camara, le 17/10/2026) : elles
+   s'en détachent, au lieu de se fondre dans le même bleu. En sombre seulement ;
+   le thème clair garde son fond crème. */
+:root:not([data-theme='light']) .page--ajout-enfant .formulaire-enfant {
+  border-color: color-mix(in srgb, #ffffff 10%, transparent);
+  background: color-mix(in srgb, #020b1f 72%, var(--surface));
+  box-shadow: 0 28px 60px -30px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* « Télécharger en PDF », dans l'en-tête de la fenêtre du bilan (17/10/2026). */
+.bilan-hebdo__pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, #ff7a5c 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #ff7a5c 16%, transparent);
+  color: var(--encre);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bilan-hebdo__pdf:hover { background: color-mix(in srgb, #ff7a5c 26%, transparent); }
+.bilan-hebdo__pdf:disabled { opacity: 0.7; cursor: progress; }
+.bilan-hebdo__pdf + .bilan-hebdo__fermer { margin-left: 0; }
+
+/* iPhone agrandit un cadre à la largeur de son contenu : celui-ci reste à l'écran. */
+.bilan-hebdo__cadre { width: 1px; min-width: 100%; }
+
+/* Sur téléphone : le titre sur sa ligne, le bouton PDF dessous, la croix en coin. */
+@media (max-width: 560px) {
+  .bilan-hebdo__tete { position: relative; flex-wrap: wrap; gap: 8px; padding: 12px 60px 12px 14px; }
+  .bilan-hebdo__tete h2 { flex: 1 1 100%; font-size: 1.02rem; }
+  .bilan-hebdo__pdf { margin-left: 0; }
+  .bilan-hebdo__tete .bilan-hebdo__fermer { position: absolute; top: 10px; right: 12px; }
+}
+
+/* LE NOM D'UNE NOTION SE DÉPLIE AU TOUCHER (17/10/2026) : un bouton qui garde
+   l'allure du texte ; ouvert, le nom passe sur plusieurs lignes. */
+button.notion__libelle {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.notion__libelle:focus-visible { outline: 2px solid var(--corail); outline-offset: 2px; border-radius: 4px; }
+
+.notion.est-ouverte { align-items: start; }
+
+.notion.est-ouverte .notion__libelle {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.notion.est-ouverte .notion__barre { margin-top: 5px; }
+
+/* LE BLOC ORIENTATION SUR TÉLÉPHONE (17/10/2026) — Camara : « tout le texte est
+   calé sur la droite ». L'avatar de Maëlle gardait sa colonne sur toute la
+   hauteur, et chaque carte imbriquée reprenait de la marge : le texte finissait
+   sur un tiers de l'écran. Ici l'avatar ne flanque que le titre du projet, et
+   tout le reste prend la largeur entière. */
+@media (max-width: 600px) {
+  .projet-orientation {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 6px;
+    padding: 14px 12px;
+  }
+
+  .projet-orientation__corps { display: contents; }
+  .projet-orientation__corps > * { grid-column: 1 / -1; min-width: 0; }
+  .projet-orientation__corps > :first-child { grid-column: 2; grid-row: 1; align-self: center; }
+
+  .projet-orientation__lignes { padding-left: 16px; }
+  .projet-orientation__seances { margin-top: 10px; }
+  .observation-orientation { padding: 12px; }
+  .observation-orientation__remarque { padding: 8px 10px; }
+}
+
+/*
+ * UNE FENÊTRE OUVERTE FIGE LA PAGE — Camara, le 17/10/2026 : « dès qu'une popup
+ * s'ouvre sur l'application, mobile ou ordinateur, on empêche le scroll ».
+ * Faire défiler la page sous l'intro d'un escape game pouvait casser la salle.
+ *
+ * UNE SEULE RÈGLE, ICI, pour toutes les fenêtres : tant que l'une d'elles est
+ * dans la page, ni <html> ni <body> ne défilent ; la fenêtre, elle, garde son
+ * propre défilement. Rien à appeler à l'ouverture ni à la fermeture : la règle
+ * suit la présence de l'élément, et ne peut donc pas rester bloquée.
+ *
+ * UNE NOUVELLE FENÊTRE PLEIN ÉCRAN se déclare dans cette liste (ou porte
+ * `aria-modal="true"`, déjà couvert).
+ */
+html:has(
+  .modale,
+  [aria-modal="true"],
+  .exploration__voile,
+  .scan-mobile,
+  .preparation-correction,
+  .visionneuse,
+  .planche-apercu,
+  .tableau-plein,
+  .sortie-eleve,
+  .hg-loupe-dossier,
+  .mf-apercu,
+  .mf-suivi,
+  .mt,
+  .fdr-visionneuse,
+  .mf-menu-notions
+),
+html:has(
+  .modale,
+  [aria-modal="true"],
+  .exploration__voile,
+  .scan-mobile,
+  .preparation-correction,
+  .visionneuse,
+  .planche-apercu,
+  .tableau-plein,
+  .sortie-eleve,
+  .hg-loupe-dossier,
+  .mf-apercu,
+  .mf-suivi,
+  .mt,
+  .fdr-visionneuse,
+  .mf-menu-notions
+) body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Le voile de l'intro d'un escape game défile seul (petits écrans) sans entraîner la page. */
+.exploration__voile { overscroll-behavior: contain; }
+
+/* LA LISTE DES MESSAGES, PLUS LISIBLE (17/10/2026) — Camara : « cette partie
+   n'est pas très visible ». Un fond à elle, l'initiale de l'expéditeur, un
+   survol, et le message ouvert nettement marqué. */
+.messagerie__liste {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border-color: color-mix(in srgb, var(--encre) 16%, var(--trait));
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.7);
+}
+
+.messagerie__ligne {
+  align-items: center;
+  padding: 2px 10px 2px 0;
+  transition: background 0.15s ease;
+}
+
+.messagerie__ligne:hover { background: color-mix(in srgb, var(--encre) 6%, transparent); }
+
+.messagerie__ligne.est-ouvert {
+  background: color-mix(in srgb, var(--corail) 14%, var(--surface-2));
+  box-shadow: inset 4px 0 0 var(--corail);
+}
+
+.messagerie__ouvrir {
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 2px;
+  padding: 12px 12px 12px 14px;
+}
+
+.messagerie__ouvrir > :not(.messagerie__initiale) { grid-column: 2; }
+
+.messagerie__initiale {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b7bab, #3b5a8a);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.messagerie__ligne.est-non-lu .messagerie__initiale { background: linear-gradient(135deg, #ff7a5c, #e8452b); }
+.messagerie__ligne.est-ouvert .messagerie__initiale { box-shadow: 0 0 0 3px color-mix(in srgb, var(--corail) 40%, transparent); }
+
+.messagerie__de { font-size: 14.5px; font-weight: 600; color: var(--encre); }
+.messagerie__sujet { font-size: 14px; font-weight: 600; }
+.messagerie__extrait { font-size: 13px; }
+
+.messagerie__ligne > .btn-ghost--mini {
+  flex-shrink: 0;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.messagerie__ligne > .btn-ghost--mini:hover { opacity: 1; }
+
+/* « Agrandir » dans le coin de l'aperçu du message. */
+.messagerie__apercu { position: relative; }
+
+.messagerie__agrandir {
+  position: absolute;
+  top: 10px;
+  right: 22px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: #2f6fd6;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(22, 35, 58, 0.3);
+}
+
+.messagerie__agrandir:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+/* La fenêtre : le message à toute la hauteur de l'écran. */
+.messagerie-grand__boite {
+  display: flex;
+  flex-direction: column;
+  width: min(980px, calc(100vw - 32px));
+  max-width: none;
+  height: min(92dvh, 1400px);
+  padding: 0;
+  overflow: hidden;
+}
+
+.messagerie-grand__tete {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.messagerie-grand__tete h3 { margin: 0 0 4px; font-family: var(--display); font-size: 18px; }
+.messagerie-grand__tete p { margin: 0; font-size: 13px; color: var(--encre-douce); overflow-wrap: anywhere; }
+
+.messagerie-grand__fermer {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  margin-left: auto;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--encre) 8%, transparent);
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.messagerie-grand__corps { flex: 1; width: 100%; border: 0; background: #ffffff; }
+.messagerie-grand__texte { flex: 1; margin: 0; border: 0; border-radius: 0; overflow: auto; }
+
+@media (max-width: 560px) {
+  .messagerie-grand { padding: 0; }
+  .messagerie-grand__boite { width: 100vw; height: 100dvh; border-radius: 0; }
+}
+
+/* LA MESSAGERIE SUR FOND PLEIN (17/10/2026) — Camara : « le fait d'avoir un fond
+   transparent, visuellement c'est dur à bien voir ». La grille du décor
+   transparaissait sous la liste et sous la lecture : les deux panneaux ont
+   désormais un fond opaque, un cran plus clair que la page, et un en-tête
+   séparé. En sombre seulement ; le thème clair garde ses surfaces. */
+:root:not([data-theme='light']) .messagerie__liste,
+:root:not([data-theme='light']) .messagerie__lecture {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #0f2448, #0b1c3a);
+  box-shadow: 0 22px 50px -30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:root:not([data-theme='light']) .messagerie__ligne { border-bottom-color: rgba(255, 255, 255, 0.08); }
+:root:not([data-theme='light']) .messagerie__ligne.est-ouvert { background: linear-gradient(90deg, rgba(255, 122, 92, 0.22), rgba(255, 122, 92, 0.08)); }
+
+.messagerie__lecture { padding: 22px 24px; }
+
+.messagerie__entete {
+  margin: -22px -24px 18px;
+  padding: 18px 24px 16px;
+  border-bottom: 1px solid var(--trait);
+  border-radius: 12px 12px 0 0;
+}
+
+:root:not([data-theme='light']) .messagerie__entete {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:root:not([data-theme='light']) .messagerie__images-bloquees {
+  background: rgba(245, 176, 65, 0.1);
+  border: 1px solid rgba(245, 176, 65, 0.3);
+  color: #f3dcae;
+}
+
+/* L'aperçu blanc tient dans un cadre net. */
+.messagerie__corps { border-color: rgba(255, 255, 255, 0.18); box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.6); }
+
+/* La zone de réponse, sur le même fond plein : un champ franc. */
+:root:not([data-theme='light']) .messagerie__reponse textarea {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: #081630;
+}
+
+@media (max-width: 560px) {
+  .messagerie__lecture { padding: 16px; }
+  .messagerie__entete { margin: -16px -16px 14px; padding: 14px 16px; }
+}
+
+/* LES RÔLES (17/10/2026) — l'onglet « Rôles » et le sélecteur de la table. */
+.roles { display: grid; gap: 18px; }
+
+.roles__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.roles__entete h2 { margin: 0 0 4px; font-family: var(--display); }
+.roles__entete p { margin: 0; max-width: 640px; color: var(--encre-douce); font-size: 14px; }
+.roles__attente { color: var(--encre-douce); }
+
+.roles__edition,
+.roles__carte {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #0f2448, #0b1c3a);
+}
+
+:root[data-theme='light'] .roles__edition,
+:root[data-theme='light'] .roles__carte { border-color: var(--trait); background: var(--surface); }
+
+.roles__edition { padding: 20px 22px; }
+.roles__edition h3 { margin: 0 0 12px; }
+.roles__droits { margin: 8px 0 0; padding: 0; border: 0; }
+.roles__droits legend { margin-bottom: 8px; font-weight: 600; }
+
+.roles__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roles__carte { display: grid; gap: 10px; padding: 16px 18px; }
+.roles__carte.est-systeme { box-shadow: inset 4px 0 0 #6ea8ff; }
+
+.roles__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.roles__nom { font-size: 16px; color: var(--encre); }
+
+.roles__badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #6ea8ff 18%, transparent);
+  color: #9cc2ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.roles__badge--acces { background: color-mix(in srgb, var(--sarcelle) 20%, transparent); color: var(--sarcelle); }
+.roles__compte { margin-left: auto; font-size: 12.5px; color: var(--encre-douce); }
+.roles__onglets { margin: 0; font-size: 13px; line-height: 1.5; color: var(--encre-douce); }
+.roles__actions { display: flex; gap: 8px; }
+
+/* Le sélecteur du rôle dans la table des parents. */
+.role-parent {
+  min-width: 130px;
+  padding: 7px 10px;
+  border: 1px solid var(--trait-bouton, var(--trait));
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--encre);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.role-parent--acces {
+  border-color: color-mix(in srgb, var(--corail) 55%, var(--trait));
+  color: var(--corail);
+  font-weight: 600;
+}
+
+/* CONNECTER SA BOÎTE MAIL (17/10/2026) — la première ouverture de la messagerie. */
+.connexion-boite {
+  display: grid;
+  gap: 4px;
+  max-width: 520px;
+  margin: 10px auto;
+  padding: 26px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #0f2448, #0b1c3a);
+  box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.85);
+}
+
+:root[data-theme='light'] .connexion-boite { border-color: var(--trait); background: var(--surface); }
+
+.connexion-boite__pastille {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff7a5c, #e8452b);
+  color: #fff;
+  box-shadow: 0 12px 26px -12px rgba(255, 106, 74, 0.85);
+}
+
+.connexion-boite h3 { margin: 0; font-family: var(--display); font-size: 20px; }
+.connexion-boite > p { margin: 4px 0 12px; color: var(--encre-douce); font-size: 14px; line-height: 1.5; }
+.connexion-boite .btn { justify-self: start; margin-top: 6px; }
+
+/* L'adresse de la boîte dans la barre de la messagerie. */
+.messagerie__boite strong { color: var(--encre); }
+
+.messagerie__deconnecter {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.messagerie__deconnecter:hover { color: var(--corail); }
+
+/* LES SIGNATURES (17/10/2026) — reprend les cartes de l'onglet Rôles. */
+.signatures { display: grid; gap: 18px; }
+
+.signatures__grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 760px) { .signatures__grille { grid-template-columns: 1fr; } }
+
+.signatures__options { margin: 4px 0 14px; padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.signatures__options legend { width: 100%; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+
+.signatures__couleurs { display: flex; gap: 10px; }
+
+.signatures__couleur {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--pastille);
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px transparent;
+}
+
+.signatures__couleur input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.signatures__couleur.est-choisie { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--pastille); }
+.signatures__couleur:focus-within { outline: 2px solid var(--encre); outline-offset: 3px; }
+
+.signatures__apercu-zone { display: grid; gap: 6px; }
+.signatures__apercu-titre { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--encre-douce); }
+
+.signatures__apercu {
+  width: 100%;
+  height: 210px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.signatures__liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signatures__attribution h3 { margin: 6px 0 4px; }
+
+.signatures__table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 14px; }
+.signatures__table th { padding: 8px 10px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--encre-douce); }
+.signatures__table td { padding: 10px; border-top: 1px solid var(--trait); vertical-align: middle; }
+.signatures__mail { display: block; font-size: 12.5px; color: var(--encre-douce); }
+.signatures__non { color: var(--encre-douce); font-style: italic; }
+
+/* « MA BOÎTE » / « SUPPORT » (17/10/2026) : deux boutons-pilules au-dessus de la messagerie. */
+.boites-onglets {
+  display: inline-flex;
+  gap: 4px;
+  margin: 4px 0 16px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(4, 14, 34, 0.55);
+}
+
+:root[data-theme='light'] .boites-onglets { border-color: var(--trait); background: var(--surface-2); }
+
+.boites-onglets__onglet {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.boites-onglets__onglet:hover { color: var(--encre); }
+
+.boites-onglets__onglet.est-actif {
+  background: linear-gradient(120deg, #ff7a5c, #e8452b);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(255, 106, 74, 0.9);
+}
+
+/* « MES COURRIELS » (17/10/2026), sous « Apparence » : la même carte, une ligne
+   par catégorie avec son interrupteur. */
+.bloc-profil--courriels { margin-top: 18px; }
+.bloc-profil--courriels .courriels__mode + .courriels__mode { margin-top: 10px; }
+
+/* L'aperçu de la signature d'un compte, en fenêtre (17/10/2026). */
+.signatures__fenetre { width: min(640px, calc(100vw - 32px)); max-width: none; padding: 20px 22px; }
+.signatures__fenetre .signatures__apercu { height: 230px; }
+
+.signatures__fenetre-tete { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.signatures__fenetre-tete h3 { margin: 0 0 2px; }
+.signatures__fenetre-tete p { margin: 0; font-size: 13px; color: var(--encre-douce); }
+
+/* Une erreur d'envoi, à la même place que la confirmation (17/10/2026). */
+.admin-confirmation--erreur {
+  border-color: color-mix(in srgb, #ef4444 60%, transparent);
+  background: color-mix(in srgb, #ef4444 16%, var(--surface));
+}
+
+.admin-confirmation--erreur .admin-confirmation__coche { background: #dc2626; }
+
+/* LES TROIS DOSSIERS DE LA MESSAGERIE (17/10/2026) — Camara : « Boîte de
+   réception », « Messages envoyés », « Brouillons » sous l'adresse ; supprimer
+   un message ou toute la page ; dix messages par page. */
+.messagerie__dossiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -4px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.messagerie__dossier {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.messagerie__dossier:hover { color: var(--encre); background: color-mix(in srgb, var(--encre) 7%, transparent); }
+
+.messagerie__dossier.est-actif {
+  border-color: color-mix(in srgb, var(--corail) 55%, transparent);
+  background: color-mix(in srgb, var(--corail) 16%, transparent);
+  color: var(--encre);
+}
+
+.messagerie__dossier-compte {
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--corail);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.messagerie__colonne { min-width: 0; }
+
+.messagerie__selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 36px;
+  margin-bottom: 8px;
+  padding: 0 4px 0 14px;
+}
+
+.messagerie__tout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--encre-douce);
+  cursor: pointer;
+}
+
+.messagerie__tout input,
+.messagerie__case {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--corail);
+  cursor: pointer;
+}
+
+.messagerie__case { flex-shrink: 0; margin-left: 14px; }
+
+.messagerie__supprimer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, #e5484d 60%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, #e5484d 16%, transparent);
+  color: #ff8a8d;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messagerie__supprimer:hover:not(:disabled) { background: color-mix(in srgb, #e5484d 26%, transparent); }
+.messagerie__supprimer:disabled { opacity: 0.6; cursor: default; }
+
+:root[data-theme='light'] .messagerie__supprimer { color: #c62a2f; }
+
+/* La case à gauche : l'initiale garde sa place, un peu moins de marge. */
+.messagerie__ligne .messagerie__ouvrir { padding-left: 10px; }
+.messagerie__ligne.est-coche { background: color-mix(in srgb, var(--corail) 8%, transparent); }
+
+.messagerie__liste.est-en-chargement { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
+
+.messagerie__a { font-weight: 500; color: var(--encre-douce); }
+
+.messagerie__badge-brouillon {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #f5b041 22%, transparent);
+  color: #f5c46b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+:root[data-theme='light'] .messagerie__badge-brouillon { color: #9a6300; }
+
+.messagerie__etat-brouillon { font-size: 12.5px; color: var(--encre-douce); }
+.messagerie__etat-brouillon.est-en-erreur { color: #ff8a8d; }
+
+/* La pagination tient dans la colonne étroite de la liste. */
+.messagerie__colonne .pagination { gap: 4px; margin-top: 12px; }
+.messagerie__colonne .pagination button { min-width: 32px; height: 32px; padding: 0 8px; font-size: 12.5px; }
+
+/* LA LIGNE DE LA LISTE, AVEC SA CASE À COCHER (17/10/2026) — Camara : « regarde
+   le bouton non lu ». La case a pris de la place : « non lu » se coupait sur
+   deux lignes et le nom aussi. Colonne un peu plus large, étiquettes d'un
+   seul tenant, nom tronqué, et les étiquettes passent à la ligne entières. */
+.messagerie__grille { grid-template-columns: minmax(300px, 400px) 1fr; }
+
+.messagerie__ligne .messagerie__de {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messagerie__ligne .messagerie__meta { flex-wrap: wrap; row-gap: 4px; }
+
+.messagerie__badge-nonlu,
+.messagerie__repondu,
+.messagerie__badge-brouillon {
+  flex-shrink: 0;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .messagerie__grille { grid-template-columns: 1fr; }
+}
+
+/* L'ÉTAT DU BROUILLON dans la barre d'« Écrire à un parent » (17/10/2026). */
+.message-parent__brouillon {
+  margin-right: auto;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+}
+
+.message-parent__brouillon.est-en-erreur { color: #ff8a8d; }
+
+/* LA MESSAGERIE SUR MOBILE (17/10/2026) — Camara : la lecture et la réponse
+   tombaient en bas de la page, sous la liste. Sous 900 px, le message ouvert
+   passe en plein écran, avec « Retour à la liste » ; sans message ouvert, le
+   panneau de lecture (qui ne disait que « Choisissez un message ») disparaît. */
+.messagerie__retour { display: none; }
+
+@media (max-width: 900px) {
+  .messagerie__lecture:not(.est-en-lecture) { display: none; }
+
+  .messagerie__lecture.est-en-lecture {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0;
+    padding: 0 16px 28px;
+    border: 0;
+    border-radius: 0;
+    background: var(--surface);
+  }
+
+  :root:not([data-theme='light']) .messagerie__lecture.est-en-lecture {
+    background: linear-gradient(180deg, #0f2448, #0b1c3a);
+  }
+
+  .messagerie__retour {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: calc(100% + 32px);
+    margin: 0 -16px 0;
+    padding: 14px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--trait);
+    background: inherit;
+    background-color: var(--surface);
+    color: var(--encre);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  :root:not([data-theme='light']) .messagerie__retour {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    background-color: #0f2448;
+  }
+
+  .messagerie__lecture.est-en-lecture .messagerie__entete {
+    margin: 0 -16px 14px;
+    padding: 14px 16px;
+    border-radius: 0;
+  }
+
+  .messagerie__entete h3 { font-size: 17px; overflow-wrap: anywhere; }
+  .messagerie__entete p { overflow-wrap: anywhere; }
+
+  /* Le courriel prend la hauteur qu'il faut pour se lire sans cadre minuscule. */
+  .messagerie__lecture.est-en-lecture .messagerie__corps { height: 60vh; min-height: 0; }
+  .messagerie__agrandir { right: 10px; padding: 6px 12px; }
+
+  .messagerie__images-bloquees { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .messagerie__reponse-actions { flex-direction: column; align-items: stretch; }
+  .messagerie__reponse-actions .btn { width: 100%; }
+}
+
+@media (max-width: 900px) {
+  html:has(.messagerie__lecture.est-en-lecture),
+  html:has(.messagerie__lecture.est-en-lecture) body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}
+
+/* La liste sur téléphone : l'action « Marquer lu » sous le texte plutôt qu'à
+   côté, le texte garde la largeur. */
+@media (max-width: 560px) {
+  .messagerie__ligne { flex-wrap: wrap; padding-bottom: 8px; }
+  .messagerie__ligne .messagerie__ouvrir { flex: 1 1 calc(100% - 40px); }
+  .messagerie__ligne > .btn-ghost--mini { margin-left: 96px; }
+  .messagerie__dossiers { flex-wrap: nowrap; overflow-x: auto; }
+  .messagerie__dossier { flex-shrink: 0; }
+  .messagerie__barre { flex-wrap: wrap; }
+}
+
+/* « FERMER LE MESSAGE » DANS LA FENÊTRE AGRANDIE, SUR MOBILE (17/10/2026) :
+   une barre au pied de la fenêtre, hors du cadre qui défile — elle reste donc
+   visible quelle que soit la longueur du courriel. Sur ordinateur, la croix
+   de l'en-tête suffit. */
+.messagerie-grand__pied { display: none; }
+
+@media (max-width: 900px) {
+  .messagerie-grand__tete { position: sticky; top: 0; z-index: 1; background: var(--surface); }
+
+  .messagerie-grand__pied {
+    display: block;
+    flex-shrink: 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--trait);
+    background: var(--surface);
+    box-shadow: 0 -10px 24px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  :root:not([data-theme='light']) .messagerie-grand__pied,
+  :root:not([data-theme='light']) .messagerie-grand__tete { background: #0f2448; }
+
+  .messagerie-grand__fermer-bas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--corail-btn, #e8452b);
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
+/* « Fermer le message » collé au bas de l'écran de lecture, sur mobile (17/10/2026). */
+.messagerie__fermer-mobile { display: none; }
+
+@media (max-width: 900px) {
+  .messagerie__lecture.est-en-lecture { padding-bottom: 0; }
+
+  .messagerie__fermer-mobile {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: block;
+    margin: 18px -16px 0;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--trait);
+    background: var(--surface);
+    box-shadow: 0 -10px 24px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  :root:not([data-theme='light']) .messagerie__fermer-mobile {
+    border-top-color: rgba(255, 255, 255, 0.1);
+    background: #0f2448;
+  }
+
+  .messagerie__fermer-mobile button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--corail-btn, #e8452b);
+    color: #fff;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
+/* LA BOÎTE OUVERTE, EN VALEUR (17/10/2026) — Camara : « plus visible ». */
+.messagerie__barre {
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, #2f6fd6 45%, var(--trait));
+  border-radius: 16px;
+  background: linear-gradient(120deg, color-mix(in srgb, #2f6fd6 16%, var(--surface)), var(--surface));
+  box-shadow: 0 16px 36px -26px rgba(0, 0, 0, 0.7);
+}
+
+:root:not([data-theme='light']) .messagerie__barre {
+  background: linear-gradient(120deg, #17386e, #0f2448 70%);
+  border-color: rgba(120, 170, 255, 0.28);
+}
+
+.messagerie__compte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  min-width: 0;
+}
+
+.messagerie__compte-icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3b82f6, #2f6fd6);
+  color: #fff;
+  box-shadow: 0 8px 18px -8px rgba(47, 111, 214, 0.8);
+}
+
+.messagerie__compte-texte { display: grid; gap: 1px; min-width: 0; }
+
+.messagerie__compte-libelle {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.messagerie__compte-adresse {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--encre);
+  overflow-wrap: anywhere;
+}
+
+.messagerie__compte-chiffres { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.messagerie__pastille {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre) 10%, transparent);
+  color: var(--encre);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.messagerie__pastille--non-lus { background: var(--corail); color: #fff; }
+
+.messagerie__barre-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+.messagerie__barre-actions .messagerie__deconnecter {
+  margin: 0;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, var(--encre) 25%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--encre-douce);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.messagerie__barre-actions .messagerie__deconnecter:hover { border-color: var(--corail); color: var(--corail); }
+
+@media (max-width: 560px) {
+  .messagerie__barre-actions { width: 100%; justify-content: flex-end; }
+  .messagerie__compte-adresse { font-size: 15.5px; }
+}
+
+/* Les onglets de dossiers défilent au doigt sur mobile, sans barre de défilement visible. */
+.messagerie__dossiers { scrollbar-width: none; }
+.messagerie__dossiers::-webkit-scrollbar { display: none; }
+
+/* TOUTES LES ÉMOTICÔNES, PAR FAMILLE (17/10/2026) — voir BarreOutilsTexte. */
+.barre-outils-texte__palette {
+  display: block;
+  width: min(340px, calc(100vw - 40px));
+  padding: 8px;
+}
+
+:root:not([data-theme='light']) .barre-outils-texte__palette {
+  background: #10254a;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.barre-outils-texte__familles {
+  display: flex;
+  gap: 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--trait);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.barre-outils-texte__familles::-webkit-scrollbar { display: none; }
+
+.barre-outils-texte__palette .barre-outils-texte__familles button {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 4px 4px;
+  opacity: 0.7;
+}
+
+.barre-outils-texte__palette .barre-outils-texte__familles button.est-active {
+  opacity: 1;
+  border-bottom-color: var(--corail);
+  background: color-mix(in srgb, var(--corail) 14%, transparent);
+}
+
+.barre-outils-texte__famille-nom {
+  margin: 6px 4px 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.barre-outils-texte__grille {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  max-height: 232px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.barre-outils-texte__grille button { width: 100%; height: 36px; font-size: 21px; }
+.barre-outils-texte__grille {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--encre) 30%, transparent) transparent;
+}
+
+.barre-outils-texte__palette .barre-outils-texte__grille button { min-width: 0; padding: 0; }
+
+/* À QUI PART UN COURRIEL AUTOMATIQUE (17/10/2026) — voir PlanificationModele. */
+.planification__cible { margin: 14px 0 4px; }
+.planification__cible select { width: 100%; }
+.planification__attente { margin: 0; font-size: 14px; color: var(--encre-douce); }
+
+/* L'ADRESSE D'ENVOI AU-DESSUS D'« ÉCRIRE À UN PARENT » ET DE LA DIFFUSION
+   (17/10/2026) : la carte de la messagerie, et en orange quand la boîte manque. */
+.carte-expediteur { margin-bottom: 18px; }
+
+.carte-expediteur.est-a-connecter {
+  border-color: color-mix(in srgb, var(--corail) 60%, transparent);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--corail) 16%, var(--surface)), var(--surface));
+}
+
+:root:not([data-theme='light']) .carte-expediteur.est-a-connecter {
+  background: linear-gradient(120deg, #4a2230, #0f2448 70%);
+}
+
+.carte-expediteur.est-a-connecter .messagerie__compte-icone { background: linear-gradient(135deg, #ff7a5c, #e8452b); }
+.carte-expediteur__aide { font-size: 13px; color: var(--encre-douce); }
+
+/* « ÉCRIRE UN NOUVEAU MESSAGE » (17/10/2026) : le bouton devant les dossiers,
+   et la fenêtre qui porte le formulaire d'« Écrire à un parent ». */
+.messagerie__ecrire {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7a5c, #e8452b);
+  color: #fff;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -10px rgba(232, 69, 43, 0.9);
+}
+
+.messagerie__ecrire:hover { filter: brightness(1.07); transform: translateY(-1px); }
+
+.messagerie-ecrire__boite {
+  display: flex;
+  flex-direction: column;
+  width: min(1240px, calc(100vw - 32px));
+  max-width: none;
+  height: min(94dvh, 1600px);
+  padding: 0;
+  overflow: hidden;
+}
+
+.messagerie-ecrire__tete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.messagerie-ecrire__tete h3 { margin: 0; font-family: var(--display); font-size: 19px; }
+
+.messagerie-ecrire__corps {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 20px 0;
+}
+
+:root:not([data-theme='light']) .messagerie-ecrire__boite { background: #0b1c3a; }
+:root:not([data-theme='light']) .messagerie-ecrire__tete { border-bottom-color: rgba(255, 255, 255, 0.1); background: #0f2448; }
+
+@media (max-width: 560px) {
+  .messagerie-ecrire { padding: 0; }
+  .messagerie-ecrire__boite { width: 100vw; height: 100dvh; border-radius: 0; }
+  .messagerie-ecrire__corps { padding: 14px 12px 0; }
+}
+
+/* « ÉCRIRE UN NOUVEAU MESSAGE » DOIT SORTIR DU LOT (Camara, le 17/10/2026) :
+   plus grand que les onglets, un halo qui respire, et un trait qui le
+   sépare des dossiers. */
+.messagerie__ecrire {
+  position: relative;
+  margin-right: 16px;
+  padding: 11px 22px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14), 0 10px 26px -8px rgba(232, 69, 43, 0.95);
+  animation: messagerie-ecrire-halo 2.6s ease-in-out infinite;
+}
+
+.messagerie__ecrire::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  width: 1px;
+  height: 26px;
+  transform: translateY(-50%);
+  background: var(--trait);
+}
+
+.messagerie__ecrire svg { width: 19px; height: 19px; }
+
+@keyframes messagerie-ecrire-halo {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14), 0 10px 26px -8px rgba(232, 69, 43, 0.95); }
+  50% { box-shadow: 0 0 0 4px rgba(255, 122, 92, 0.28), 0 12px 32px -6px rgba(232, 69, 43, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .messagerie__ecrire { animation: none; }
+}
+
+.messagerie__dossiers { align-items: center; }
+
+@media (max-width: 560px) {
+  .messagerie__dossiers { flex-wrap: wrap; overflow: visible; }
+  .messagerie__ecrire { width: 100%; justify-content: center; margin: 0 0 8px; }
+  .messagerie__ecrire::after { display: none; }
+}
+
+/* EN VERT, PAS EN ORANGE (Camara, le 17/10/2026) : l'orange est déjà celui des
+   onglets actifs et des pastilles « non lu » ; le vert le détache de tout le reste. */
+.messagerie__ecrire {
+  background: linear-gradient(135deg, #34d399, #16a34a);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14), 0 10px 26px -8px rgba(22, 163, 74, 0.95);
+  animation-name: messagerie-ecrire-halo-vert;
+}
+
+@keyframes messagerie-ecrire-halo-vert {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14), 0 10px 26px -8px rgba(22, 163, 74, 0.95); }
+  50% { box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.3), 0 12px 32px -6px rgba(22, 163, 74, 1); }
+}
+
+@media (max-width: 560px) {
+  .messagerie__dossier { padding: 7px 10px; font-size: 12.5px; gap: 6px; }
+}
+
+/* Sur téléphone : le bouton vert sur toute la largeur, puis les trois dossiers
+   côte à côte en trois colonnes égales. */
+@media (max-width: 560px) {
+  .messagerie__dossiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .messagerie__ecrire { grid-column: 1 / -1; }
+  .messagerie__dossier { justify-content: center; padding: 8px 4px; text-align: center; line-height: 1.25; }
+}
+
+/* LES PASTILLES DES ONGLETS (17/10/2026) : orange = non lus ; sinon un total
+   discret ; ambre pour les brouillons, comme leur étiquette dans la liste. */
+.messagerie__dossier-compte--reception,
+.messagerie__dossier-compte--envoyes {
+  background: color-mix(in srgb, var(--encre) 16%, transparent);
+  color: var(--encre);
+}
+
+.messagerie__dossier-compte--brouillons { background: #f5b041; color: #3a2600; }
+
+/* « Inutile d'écrire Bonjour » sous le champ de réponse (18/10/2026). */
+.messagerie__info-salutation {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 2px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, #2f6fd6 14%, transparent);
+  border: 1px solid color-mix(in srgb, #2f6fd6 35%, transparent);
+  font-size: 13px;
+  color: var(--encre);
+}
+
+.messagerie__info-salutation::before { content: 'ℹ️'; }
+
+/* EN HAUT DE « VOTRE RÉPONSE », EN ORANGE (Camara, le 18/10/2026) : pour qu'on
+   le lise avant d'écrire. */
+.messagerie__info-salutation {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, #ff7a2f 60%, transparent);
+  background: color-mix(in srgb, #ff7a2f 16%, transparent);
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.messagerie__info-salutation::before { content: '⚠️'; }
+
+:root:not([data-theme='light']) .messagerie__info-salutation {
+  background: linear-gradient(120deg, rgba(255, 122, 47, 0.24), rgba(255, 122, 47, 0.1));
+  color: #ffe2cf;
+}

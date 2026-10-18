@@ -27,6 +27,7 @@ import RetraitEnfant from './RetraitEnfant';
 import SuppressionCompte from './SuppressionCompte';
 import { logout } from '../lib/actions/authActions';
 import { getElevesArchives, restaurerEleve, definirEtablissement } from '../lib/api/elevesApi';
+import { getCourriels, choisirCourriel } from '../lib/api/profilApi';
 import { themeEnregistre, definirTheme } from '../lib/storage/theme';
 import {
   grouperClasses,
@@ -662,6 +663,91 @@ export function LigneEnfant({
  * navigateur du salon ne doit rien changer sur la tablette de la chambre —
  * chacune retombe sur le sombre tant qu'on ne l'a pas réglée à son tour.
  */
+/**
+ * MES COURRIELS — Camara, le 17/10/2026 : « les personnes qui se désabonnent
+ * peuvent-elles se réabonner ? ». Seulement par le lien d'un ancien courriel :
+ * qui l'avait effacé ne pouvait plus rien. Ici, chaque catégorie se coche et se
+ * décoche quand on veut. Les bilans des enfants et les messages sur le compte
+ * n'y sont pas : ils font partie du service.
+ */
+const COURRIELS = {
+  diffusion: { titre: 'Les annonces de Mimia', description: 'Les nouveautés et les informations importantes du service.' },
+  avis: { titre: 'Les demandes d’avis', description: 'De temps en temps, on vous demande ce que vous pensez de Mimia.' },
+  relance: { titre: 'Les relances', description: 'Un petit mot quand votre enfant n’a pas travaillé depuis un moment.' },
+  rappels: { titre: 'Les rappels', description: 'Les rappels utiles : séances, contrôles, échéances.' },
+};
+
+export function MesCourriels() {
+  const [etat, setEtat] = useState(null);
+  const [enCours, setEnCours] = useState(null);
+  const [erreur, setErreur] = useState(null);
+
+  useEffect(() => {
+    let vivant = true;
+    getCourriels()
+      .then(({ data }) => { if (vivant) setEtat(data ?? []); })
+      .catch(() => { if (vivant) setErreur('Vos préférences n’ont pas pu être chargées.'); });
+    return () => { vivant = false; };
+  }, []);
+
+  const basculer = async (ligne) => {
+    setEnCours(ligne.categorie);
+    setErreur(null);
+    try {
+      await choisirCourriel(ligne.categorie, !ligne.abonne);
+      setEtat((avant) => avant.map((l) => (l.categorie === ligne.categorie ? { ...l, abonne: !l.abonne } : l)));
+    } catch {
+      setErreur('Ce choix n’a pas pu être enregistré. Réessayez.');
+    } finally {
+      setEnCours(null);
+    }
+  };
+
+  return (
+    <div className="bloc-profil bloc-profil--courriels">
+      <h2>Mes courriels</h2>
+      <p className="bloc-profil__intro">
+        Choisissez ce que vous recevez. Les bilans de vos enfants et les messages sur votre compte
+        arrivent toujours : ils font partie du service.
+      </p>
+
+      {erreur && <div className="alert" role="alert">{erreur}</div>}
+      {!etat && !erreur && <p className="bloc-profil__intro">Un instant…</p>}
+
+      {etat?.map((ligne) => {
+        const texte = COURRIELS[ligne.categorie] ?? { titre: ligne.categorie, description: '' };
+        return (
+          <div key={ligne.categorie} className="mode courriels__mode">
+            <div className="mode__texte">
+              <strong className="mode__titre">
+                {texte.titre}
+                <span className={`mode__etat ${ligne.abonne ? 'mode__etat--actif' : ''}`}>
+                  {ligne.abonne ? 'Reçus' : 'Non reçus'}
+                </span>
+              </strong>
+              <p className="mode__description">{texte.description}</p>
+            </div>
+
+            <button
+              type="button"
+              className={`bascule ${ligne.abonne ? 'bascule--active' : ''}`}
+              onClick={() => basculer(ligne)}
+              disabled={enCours === ligne.categorie}
+              role="switch"
+              aria-checked={ligne.abonne}
+              aria-label={texte.titre}
+            >
+              <span className="bascule__piste">
+                <span className="bascule__bouton" />
+              </span>
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Parametres() {
   const [theme, setTheme] = useState(() => themeEnregistre());
   const clair = theme === 'light';
@@ -673,6 +759,7 @@ function Parametres() {
   };
 
   return (
+    <>
     <div className="bloc-profil bloc-profil--apparence">
       <h2>Apparence</h2>
       <p className="bloc-profil__intro">
@@ -728,6 +815,9 @@ function Parametres() {
         </button>
       </div>
     </div>
+
+    <MesCourriels />
+    </>
   );
 }
 

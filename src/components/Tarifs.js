@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getMonQuota, getOffres, souscrire } from '../lib/api/abonnementApi';
 import { login } from '../lib/actions/authActions';
-import { useEssaisOuverts, useOffreLancement } from '../lib/storage/modeTest';
+import {
+  useConseillereOrientation,
+  useDesJeuxOuverts,
+  useEssaisOuverts,
+  useFichesRevision,
+  useOffreLancement,
+} from '../lib/storage/modeTest';
 import Loader from './Loader';
 
 /**
@@ -71,7 +77,11 @@ const heures = (h) => {
  * aurait menti au premier changement d'offre — et personne n'aurait su
  * qu'elle existait.
  */
-function Details({ offre, lancement }) {
+/**
+ * `modules` (18/10/2026) : fiches, jeux et conseillère s'allument et s'éteignent
+ * dans Admin › Modes ; une formule n'annonce que ce qui est réellement ouvert.
+ */
+function Details({ offre, lancement, modules = {} }) {
   const lignes = [
     offre.nombreEnfantsMax > 1
       ? `Jusqu'à ${offre.nombreEnfantsMax} enfants`
@@ -95,6 +105,17 @@ function Details({ offre, lancement }) {
       ? `${heures(offre.heuresPlafondEnfant)} maximum pour un seul enfant`
       : null,
     'Toutes les matières disponibles',
+
+    // Camara, le 18/10/2026 : ce que la séance apporte en plus des cours.
+    'Préparation aux contrôles et aux examens (brevet, bac)',
+    'Suivi détaillé des activités de l’enfant',
+    modules.orientation ? 'Une conseillère d’orientation dès la 3e' : null,
+
+    // FICHES ET JEUX (Camara, le 18/10/2026) : réservés aux formules payantes,
+    // jamais à l'essai. Sans chiffre : le nombre de cours de fiches par mois
+    // se règle côté serveur, une constante ici mentirait au premier changement.
+    offre.estEssai || !modules.fiches ? null : 'Fiches de révision générées à partir de ses cours',
+    offre.estEssai || !modules.jeux ? null : 'Accès aux jeux éducatifs',
     'Bilan hebdomadaire par mail',
     offre.estEssai ? null : 'Un mois de pause offert par an',
   ].filter(Boolean);
@@ -130,6 +151,13 @@ export default function Tarifs() {
   // ne rejuge pas ici avec l'horloge du visiteur, qu'il suffirait de reculer
   // pour rouvrir une promotion fermée.
   const lancement = useOffreLancement();
+
+  // Ce que les formules annoncent : seulement les modules allumés.
+  const modules = {
+    fiches: useFichesRevision(),
+    jeux: useDesJeuxOuverts(),
+    orientation: useConseillereOrientation(),
+  };
 
   const [formules, setFormules] = useState([]);
   const [recharges, setRecharges] = useState([]);
@@ -544,7 +572,7 @@ export default function Tarifs() {
               )
             )}
 
-            <Details offre={offre} lancement={enPromotion(offre) ? lancement.heures : 0} />
+            <Details offre={offre} lancement={enPromotion(offre) ? lancement.heures : 0} modules={modules} />
 
             {/* La contrepartie de l'autre rythme, pour que le choix reste
                 réversible sans remonter en haut de page. */}

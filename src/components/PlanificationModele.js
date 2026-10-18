@@ -23,6 +23,7 @@ const regleDe = (modele) => ({
   heure: modele.heure ?? '09:00',
   jourSemaine: modele.jourSemaine ?? 1,
   jourMois: modele.jourMois ?? 1,
+  cible: modele.cible ?? '',
 });
 
 /**
@@ -36,8 +37,16 @@ const regleDe = (modele) => ({
  * règle en plusieurs retouches, et un envoi ne doit pas se reprogrammer à
  * chaque chiffre tapé.
  */
+/**
+ * À QUI IL PART — Camara, le 17/10/2026 : Relance, Rappels et les courriels
+ * créés depuis l'écran se programment en choisissant leurs destinataires
+ * (`modele.parCible`) ; ils partent à chaque envoi à toute la cible.
+ */
 export default function PlanificationModele({ modele, onPlanifie }) {
   const bilans = modele.code === 'BILANS';
+  const parCible = Boolean(modele.parCible);
+  const cibles = modele.cibles ?? [];
+  const libelleCible = (code) => cibles.find((c) => c.code === code)?.libelle;
 
   const [regle, setRegle] = useState(() => regleDe(modele));
   const [occupe, setOccupe] = useState(false);
@@ -52,7 +61,7 @@ export default function PlanificationModele({ modele, onPlanifie }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modele.id]);
 
-  if (modele.reglesADefinir) {
+  if (modele.reglesADefinir && !parCible) {
     return (
       <div className="planification planification--bloquee">
         <strong className="planification__titre">Programmation</strong>
@@ -70,6 +79,11 @@ export default function PlanificationModele({ modele, onPlanifie }) {
   };
 
   const enregistrer = async (aEnregistrer) => {
+    if (parCible && !aEnregistrer.cible) {
+      setErreur('Choisissez d’abord à qui ce courriel part.');
+      return;
+    }
+
     setOccupe(true);
     setErreur(null);
 
@@ -80,6 +94,7 @@ export default function PlanificationModele({ modele, onPlanifie }) {
         heure: aEnregistrer.heure,
         jourSemaine: Number(aEnregistrer.jourSemaine),
         jourMois: Number(aEnregistrer.jourMois),
+        ...(parCible ? { cible: aEnregistrer.cible } : {}),
       });
 
       setRegle(regleDe(data));
@@ -101,12 +116,28 @@ export default function PlanificationModele({ modele, onPlanifie }) {
         occupe={occupe}
         onBasculer={() => enregistrer({ ...regle, actif: !modele.actif })}
         description={modele.actif
-          ? `${resumerPlanification(modele)} (heure de Paris).`
+          ? `${resumerPlanification(modele)} (heure de Paris)${parCible && libelleCible(modele.cible) ? ` — ${libelleCible(modele.cible).toLowerCase()}` : ''}.`
           : 'Ce courriel ne part pas tant qu’il n’est pas programmé.'}
         note={bilans
           ? 'Les bilans sont écrits pour une semaine : ils se programment chaque semaine, le jour et l’heure de votre choix.'
-          : undefined}
+          : parCible
+            ? 'Il part à chaque envoi à tous les parents choisis ci-dessous. Les adresses bannies et les parents désabonnés n’en reçoivent jamais.'
+            : undefined}
       />
+
+      {parCible && (
+        <div className="champ planification__cible">
+          <label htmlFor="plan-cible">Destinataires</label>
+          <select
+            id="plan-cible"
+            value={regle.cible}
+            onChange={(e) => modifier('cible', e.target.value)}
+          >
+            <option value="" disabled>Choisir à qui il part…</option>
+            {cibles.map((c) => <option key={c.code} value={c.code}>{c.libelle}</option>)}
+          </select>
+        </div>
+      )}
 
       <div className="planification__champs">
         {!bilans && (

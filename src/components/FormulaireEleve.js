@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { submitEleve, resetEleve } from '../lib/actions/elevesActions';
 import { chargerReferentiel } from '../lib/actions/referentielActions';
 import Loader from './Loader';
@@ -12,6 +12,7 @@ import ChoixSpecialites from './ChoixSpecialites';
 import ChoixFilierePro from './ChoixFilierePro';
 import ChoixBesoins from './ChoixBesoins';
 import ChoixAcademie from './ChoixAcademie';
+import { Section } from './FenetreEditionEnfant';
 import { useBesoinsParticuliers } from '../lib/storage/modeTest';
 import QuotaEnfants from './QuotaEnfants';
 import { getCapaciteEnfants } from '../lib/api/abonnementApi';
@@ -132,6 +133,7 @@ export default function FormulaireEleve() {
   if (!capacite.peutAjouter) {
     return (
       <section className="page page--etroite">
+        <Link to="/eleves" className="lien-retour"><span aria-hidden="true">←</span> Mes enfants</Link>
         <h1>Ajouter un enfant</h1>
         <QuotaEnfants capacite={capacite} enPage />
       </section>
@@ -142,142 +144,161 @@ export default function FormulaireEleve() {
   const groupes = grouperClasses(niveaux);
 
   return (
-    <section className="page page--etroite">
-      <h1>Ajouter un enfant</h1>
-      <p className="page__sous-titre">Deux minutes, et son professeur est prêt.</p>
+    <section className="page page--etroite page--ajout-enfant">
+      <Link to="/eleves" className="lien-retour"><span aria-hidden="true">←</span> Mes enfants</Link>
+
+      {/* LE TITRE EN BANDEAU — Camara, le 17/10/2026 : « tu peux améliorer le
+          titre ? ». Une vignette, un surtitre, le mot qui compte en couleur. */}
+      <header className="ajout-enfant-entete">
+        <span className="ajout-enfant-entete__vignette" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor"
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="10" cy="8" r="4" />
+            <path d="M3 21c0-4 3.1-6.5 7-6.5 1.6 0 3 .4 4.2 1.1" />
+            <path d="M19 14v6M16 17h6" />
+          </svg>
+        </span>
+        <div>
+          <span className="ajout-enfant-entete__surtitre">Nouveau profil</span>
+          <h1>Ajouter <span className="ajout-enfant-entete__accent">un enfant</span></h1>
+          <p>Deux minutes, et son professeur est prêt.</p>
+        </div>
+      </header>
 
       {error && <div className="alert">{error}</div>}
 
-      <form onSubmit={soumettre}>
-        <div className="champ">
-          <label htmlFor="prenom">Prénom</label>
-          <input
-            id="prenom"
-            type="text"
-            value={champs.prenom}
-            onChange={set('prenom')}
-            required
-            minLength={2}
-            maxLength={100}
-            autoFocus
-          />
-        </div>
+      {/* DANS UN ENCADRÉ — Camara, le 17/10/2026 : les champs flottaient sur la
+          grille du fond, et « Créer le profil » collait au bloc des besoins. */}
+      <form onSubmit={soumettre} className="formulaire-enfant">
+        {/* EN TROIS SECTIONS, COMME LA FENÊTRE « MODIFIER » — Camara, le
+            17/10/2026 : on retrouve le même formulaire à la création et à la
+            modification. Voir `FenetreEditionEnfant`. */}
+        <Section couleur="identite" titre="Identité" aide="Ce que le professeur saura de lui pour s'adresser à lui.">
+          <div className="duo">
+            <div className="champ">
+              <label htmlFor="prenom">Prénom</label>
+              <input
+                id="prenom"
+                type="text"
+                value={champs.prenom}
+                onChange={set('prenom')}
+                required
+                minLength={2}
+                maxLength={100}
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+              />
+            </div>
 
-        <div className="champ">
-          <label htmlFor="nom">Nom de famille</label>
-          <input
-            id="nom"
-            type="text"
-            value={champs.nom}
-            onChange={set('nom')}
-            required
-            minLength={2}
-            maxLength={100}
-          />
+            <div className="champ">
+              <label htmlFor="nom">Nom de famille</label>
+              <input
+                id="nom"
+                type="text"
+                value={champs.nom}
+                onChange={set('nom')}
+                required
+                minLength={2}
+                maxLength={100}
+              />
+            </div>
+          </div>
           <span className="champ__aide">
-            Sert uniquement à retrouver le profil. Le professeur, lui, l'appellera
+            Le nom sert uniquement à retrouver le profil : le professeur l'appellera
             toujours par son prénom.
           </span>
-        </div>
 
-        <div className="champ">
-          <label htmlFor="niveau">Classe</label>
-          <select
-            id="niveau"
-            value={champs.niveauScolaireId}
-            onChange={set('niveauScolaireId')}
-            required
-          >
-            <option value="">Choisir une classe…</option>
-            {groupes.map(([cycle, niveauxDuCycle]) => (
-              <optgroup key={cycle} label={cycle}>
-                {niveauxDuCycle.map((niveau) => (
-                  <option key={niveau.id} value={niveau.id}>
-                    {niveau.libelle}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-          <span className="champ__aide">
-            Au lycée technologique, choisis la série : c'est ce qui donne à ton
-            enfant les bonnes spécialités.
-          </span>
-        </div>
-
-        <div className="champ">
-          <label htmlFor="age">Âge</label>
-          <input
-            id="age"
-            type="number"
-            value={champs.age}
-            onChange={set('age')}
-            required
-            min={5}
-            max={25}
-          />
-          <span className="champ__aide">
-            Sert à adapter le vocabulaire — il peut ne pas correspondre à la classe.
-          </span>
-        </div>
-
-        {/* Le professeur parle : en français, tout s'accorde. Sans cette
-            information, une élève s'entend dire « tu es prêt ? » à chaque
-            séance, ce qui rappelle en continu qu'on ne la connaît pas. */}
-        <fieldset className="champ champ--choix">
-          <legend>C'est une fille ou un garçon ?</legend>
-
-          <div className="choix">
-            {[
-              { valeur: '1', libelle: 'Une fille' },
-              { valeur: '2', libelle: 'Un garçon' },
-            ].map((option) => (
-              <label
-                key={option.valeur}
-                className={`choix__option ${champs.sexe === option.valeur ? 'choix__option--actif' : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="sexe"
-                  value={option.valeur}
-                  checked={champs.sexe === option.valeur}
-                  onChange={set('sexe')}
-                  required
-                />
-                {option.libelle}
-              </label>
-            ))}
-          </div>
-
-          <span className="champ__aide">
-            Uniquement pour que le professeur accorde correctement quand il lui parle.
-          </span>
-        </fieldset>
-
-        {lv2Possible && (
-          <div className="champ">
-            <label className="case">
+          <div className="duo">
+            <div className="champ">
+              <label htmlFor="age">Âge</label>
               <input
-                type="checkbox"
-                checked={champs.lv2Espagnol}
-                onChange={(e) => setChamps((p) => ({ ...p, lv2Espagnol: e.target.checked }))}
+                id="age"
+                type="number"
+                value={champs.age}
+                onChange={set('age')}
+                required
+                min={5}
+                max={25}
               />
-              Il a l’espagnol en LVB
-            </label>
+              <span className="champ__aide">
+                Pour adapter le vocabulaire — il peut ne pas correspondre à la classe.
+              </span>
+            </div>
+
+            {/* Le professeur parle : en français, tout s'accorde. Sans cette
+                information, une élève s'entend dire « tu es prêt ? » à chaque
+                séance, ce qui rappelle en continu qu'on ne la connaît pas. */}
+            <fieldset className="champ champ--choix">
+              <legend>Fille ou garçon</legend>
+              <div className="choix">
+                {[
+                  { valeur: '1', libelle: 'Une fille' },
+                  { valeur: '2', libelle: 'Un garçon' },
+                ].map((option) => (
+                  <label
+                    key={option.valeur}
+                    className={`choix__option ${champs.sexe === option.valeur ? 'choix__option--actif' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="sexe"
+                      value={option.valeur}
+                      checked={champs.sexe === option.valeur}
+                      onChange={set('sexe')}
+                      required
+                    />
+                    {option.libelle}
+                  </label>
+                ))}
+              </div>
+              <span className="champ__aide">
+                Pour que le professeur accorde correctement quand il lui parle.
+              </span>
+            </fieldset>
+          </div>
+        </Section>
+
+        <Section couleur="scolarite" titre="Scolarité" aide="Sa classe décide de ses matières et de son programme.">
+          <div className="champ">
+            <label htmlFor="niveau">Classe</label>
+            <select
+              id="niveau"
+              value={champs.niveauScolaireId}
+              onChange={set('niveauScolaireId')}
+              required
+            >
+              <option value="">Choisir une classe…</option>
+              {groupes.map(([cycle, niveauxDuCycle]) => (
+                <optgroup key={cycle} label={cycle}>
+                  {niveauxDuCycle.map((niveau) => (
+                    <option key={niveau.id} value={niveau.id}>
+                      {niveau.libelle}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
             <span className="champ__aide">
-              Coche la case si l’espagnol est sa deuxième langue vivante, la LVB
-              (souvent encore appelée LV2) : un professeur d’espagnol apparaîtra dans
-              ses matières. La spécialité LLCER espagnol, elle, se coche avec les
-              spécialités.
+              Au lycée technologique, choisissez la série : c'est elle qui donne les
+              bonnes spécialités.
             </span>
           </div>
-        )}
 
-        {/* LES AUTRES LANGUES VIVANTES B — une case par langue allumée. Rien
-            ne s'affiche tant qu'aucune ne l'est. */}
-        {languesClasse.length > 0 && (
-          <div className="champ">
-            <span className="champ__libelle">Une autre langue en LVB ?</span>
+          {/* SES LANGUES, SES SPÉCIALITÉS ET SA FILIÈRE, sous la classe qui les
+              décide. Rien ne s'affiche quand la classe n'en a pas. */}
+          <div className="enfant-ligne__options">
+            {lv2Possible && (
+              <label className="case">
+                <input
+                  type="checkbox"
+                  checked={champs.lv2Espagnol}
+                  onChange={(e) => setChamps((p) => ({ ...p, lv2Espagnol: e.target.checked }))}
+                />
+                Espagnol en LVB
+              </label>
+            )}
+
+            {/* LES AUTRES LANGUES VIVANTES B — une case par langue allumée. */}
             {languesClasse.map((langue) => (
               <label className="case" key={langue.code}>
                 <input
@@ -287,55 +308,60 @@ export default function FormulaireEleve() {
                     ...p, langues: basculerLangue(p.langues, langue.code),
                   }))}
                 />
-                {langue.libelle}
+                {langue.libelle} en LVB
               </label>
             ))}
+
+            <ChoixSpecialites
+              id="specialites"
+              nombre={specialitesClasse.nombre}
+              possibles={specialitesClasse.possibles}
+              valeur={champs.specialites}
+              onChange={(specialites) => setChamps((p) => ({ ...p, specialites }))}
+            />
+
+            <ChoixFilierePro
+              id="filiere"
+              filiere={filiereClasse}
+              valeur={champs.filiere}
+              onChange={(filiere) => setChamps((p) => ({ ...p, filiere }))}
+            />
+          </div>
+          {(lv2Possible || languesClasse.length > 0) && (
             <span className="champ__aide">
-              Coche la langue que ton enfant étudie en deuxième langue vivante :
-              son professeur apparaîtra dans ses matières.
+              Cochez sa deuxième langue vivante (LVB, souvent encore appelée LV2) : son
+              professeur apparaîtra dans ses matières. La spécialité LLCER, elle, se
+              coche avec les spécialités.
             </span>
+          )}
+        </Section>
+
+        {/* FACULTATIVE, VOLONTAIREMENT : sans académie, « Mon calendrier »
+            affiche ses séances sans les vacances, jusqu'à ce qu'elle soit
+            renseignée. */}
+        <Section couleur="lieu" titre="Où il étudie" aide="Son académie fixe ses vacances dans « Mon calendrier ». Facultatif.">
+          <ChoixAcademie
+            id="academie"
+            valeur={champs.academieId}
+            onChange={(academieId) => setChamps((p) => ({ ...p, academieId }))}
+            academies={academies}
+          />
+        </Section>
+
+        {besoinsActifs && (
+          <div className="edition-enfant__besoins">
+            <ChoixBesoins
+              valeur={champs.besoins}
+              onChange={(besoins) => setChamps((p) => ({ ...p, besoins }))}
+            />
           </div>
         )}
 
-        <ChoixSpecialites
-          id="specialites"
-          nombre={specialitesClasse.nombre}
-          possibles={specialitesClasse.possibles}
-          valeur={champs.specialites}
-          onChange={(specialites) => setChamps((p) => ({ ...p, specialites }))}
-        />
-
-        <ChoixFilierePro
-          id="filiere"
-          filiere={filiereClasse}
-          valeur={champs.filiere}
-          onChange={(filiere) => setChamps((p) => ({ ...p, filiere }))}
-        />
-
-
-
-        {/* FACULTATIF, VOLONTAIREMENT.
-            Un parent qui ne connaît pas l'académie de son enfant, ou qui ne
-            s'en soucie pas, ne doit pas être bloqué pour autant : sans elle,
-            « Mon calendrier » affiche simplement ses séances sans les
-            périodes de vacances, jusqu'à ce qu'elle soit renseignée. */}
-        <ChoixAcademie
-          id="academie"
-          valeur={champs.academieId}
-          onChange={(academieId) => setChamps((p) => ({ ...p, academieId }))}
-          academies={academies}
-        />
-
-        {besoinsActifs && (
-          <ChoixBesoins
-            valeur={champs.besoins}
-            onChange={(besoins) => setChamps((p) => ({ ...p, besoins }))}
-          />
-        )}
-
-        <button type="submit" className="btn" disabled={submitting}>
-          {submitting ? 'Création…' : 'Créer le profil'}
-        </button>
+        <div className="formulaire-enfant__actions">
+          <button type="submit" className="btn" disabled={submitting}>
+            {submitting ? 'Création…' : 'Créer le profil'}
+          </button>
+        </div>
       </form>
     </section>
   );

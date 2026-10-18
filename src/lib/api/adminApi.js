@@ -595,9 +595,11 @@ function corpsDiffusion({ sujet, titre, texte, images, documents }) {
 const estFichier = (f) => typeof File !== 'undefined' && f instanceof File;
 
 /** Le message rendu en HTML, sans destinataire. */
-export const apercuDiffusion = (composition) =>
+/** `signature` (17/10/2026) : l'aperçu d'« Écrire à un parent » porte la signature de l'expéditeur. */
+export const apercuDiffusion = (composition, { signature = false, boite = undefined } = {}) =>
   httpClient.post('/admin/diffusion/apercu', corpsDiffusion(composition), {
     responseType: 'text',
+    params: signature ? { signature: true, ...parBoite(boite) } : undefined,
   });
 
 /** Lance l'envoi à TOUS les parents. Rend tout de suite : l'envoi se poursuit. */
@@ -612,10 +614,11 @@ export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
  * la diffusion. Contrairement à `lancerDiffusion`, l'envoi tient dans le
  * temps d'une requête : pas de suivi d'avancement à interroger après coup.
  */
-export const envoyerMailParent = (composition) => {
+/** `boite` (17/10/2026) : 'support' pour envoyer sous support@mimia.fr, signé « L'équipe Mimia ». */
+export const envoyerMailParent = (composition, boite = undefined) => {
   const corps = corpsDiffusion(composition);
   corps.append('destinataire', composition.destinataire ?? '');
-  return httpClient.post('/admin/mails/parent', corps);
+  return httpClient.post('/admin/mails/parent', corps, { params: parBoite(boite) });
 };
 
 // ------------------------------------------------- templates de courriel
@@ -662,15 +665,18 @@ export const retirerPieceModele = (id, pieceId) =>
 export const supprimerModeleMail = (id) => httpClient.delete(`/admin/modeles-mail/${id}`);
 
 /** Le template rendu en HTML, tel qu'il est enregistré. */
-export const apercuModeleMail = (id) =>
-  httpClient.post(`/admin/modeles-mail/${id}/apercu`, null, { responseType: 'text' });
+export const apercuModeleMail = (id, { signature = false, boite = undefined } = {}) =>
+  httpClient.post(`/admin/modeles-mail/${id}/apercu`, null, {
+    responseType: 'text',
+    params: signature ? { signature: true, ...parBoite(boite) } : undefined,
+  });
 
 /** Lance la diffusion d'un template à TOUS les parents. */
 export const diffuserModeleMail = (id) => httpClient.post(`/admin/modeles-mail/${id}/diffusion`);
 
 /** Envoie un template à UN parent. */
-export const envoyerModeleParent = (id, destinataire) =>
-  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire });
+export const envoyerModeleParent = (id, destinataire, boite = undefined) =>
+  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire }, { params: parBoite(boite) });
 
 /**
  * Programme un courriel automatique :
@@ -682,8 +688,60 @@ export const planifierModeleMail = (id, regle) =>
 
 // ------------------------------------------------ messagerie du support
 
-/** Les derniers messages reçus sur la boîte de support. */
-export const getMessages = () => httpClient.get('/admin/messagerie');
+/**
+ * Les derniers messages reçus. `boite` (17/10/2026) : 'support' pour la boîte
+ * commune, absent pour « Ma boîte », celle de la personne connectée.
+ */
+const parBoite = (boite) => (boite === 'support' ? { boite: 'support' } : {});
+
+/**
+ * Une page d'un dossier (17/10/2026) : 'reception', 'envoyes' ou 'brouillons',
+ * dix messages par page, la page 1 portant les plus récents.
+ */
+export const getMessages = (boite, dossier = 'reception', page = 1) =>
+  httpClient.get('/admin/messagerie', { params: { ...parBoite(boite), dossier, page } });
+
+/** Les pastilles des onglets (17/10/2026) : reçus, non lus, envoyés, brouillons. */
+export const getCompteursMessagerie = (boite) =>
+  httpClient.get('/admin/messagerie/compteurs', { params: parBoite(boite) });
+
+/** Supprime des messages du dossier (corbeille de la boîte) ou des brouillons. */
+export const supprimerMessages = (identifiants, boite, dossier) =>
+  httpClient.post('/admin/messagerie/supprimer', { identifiants }, { params: { ...parBoite(boite), dossier } });
+
+/** Son brouillon de réponse à ce message : 404 s'il n'en a pas. */
+export const getBrouillonPour = (messageOrigine, boite) =>
+  httpClient.get(`/admin/messagerie/brouillons/${messageOrigine}`, { params: parBoite(boite) });
+
+/**
+ * LES PIÈCES D'UN BROUILLON (18/10/2026) : toutes remplacées d'un coup, dans
+ * l'ordre — c'est l'ordre qui fait les marqueurs [image:N].
+ */
+export const remplacerPiecesBrouillon = (id, images, documents, boite) => {
+  const corps = new FormData();
+  (images ?? []).filter(estFichier).forEach((f) => corps.append('images', f, f.name));
+  (documents ?? []).filter(estFichier).forEach((f) => corps.append('documents', f, f.name));
+  return httpClient.put(`/admin/messagerie/brouillons/libre/${id}/pieces`, corps, { params: parBoite(boite) });
+};
+
+/** Une pièce d'un brouillon, pour la remettre dans le formulaire. */
+export const getPieceBrouillon = (id, pieceId, boite) =>
+  httpClient.get(`/admin/messagerie/brouillons/libre/${id}/pieces/${pieceId}`, {
+    params: parBoite(boite),
+    responseType: 'blob',
+  });
+
+/** Un brouillon par son identifiant : « Écrire à un parent » le rouvre (17/10/2026). */
+export const getBrouillonLibre = (id, boite) =>
+  httpClient.get(`/admin/messagerie/brouillons/libre/${id}`, { params: parBoite(boite) });
+
+/**
+ * Enregistre un brouillon ; un brouillon vide s'efface (204). Une réponse porte
+ * `messageOrigine` ; un message libre (« Écrire à un parent ») porte son `id`
+ * une fois créé, et son `titre`.
+ */
+export const enregistrerBrouillon = (brouillon, boite) =>
+  httpClient.put('/admin/messagerie/brouillons', brouillon, { params: parBoite(boite) });
 
 /**
  * Un message avec son corps.
@@ -692,15 +750,15 @@ export const getMessages = () => httpClient.get('/admin/messagerie');
  * surtout des traceurs, qui disent à l'expéditeur quand le message a été
  * ouvert et depuis quelle adresse. On ne les charge que si on le demande.
  */
-export const getMessage = (id, images = false) =>
-  httpClient.get(`/admin/messagerie/${id}`, { params: { images } });
+export const getMessage = (id, images = false, boite = undefined, dossier = 'reception') =>
+  httpClient.get(`/admin/messagerie/${id}`, { params: { images, ...parBoite(boite), dossier } });
 
-export const marquerMessageLu = (id, lu) =>
-  httpClient.post(`/admin/messagerie/${id}/lu`, null, { params: { lu } });
+export const marquerMessageLu = (id, lu, boite = undefined, dossier = 'reception') =>
+  httpClient.post(`/admin/messagerie/${id}/lu`, null, { params: { lu, ...parBoite(boite), dossier } });
 
 /** Répond dans le fil, avec la mise en page du site. */
-export const repondreMessage = (id, texte) =>
-  httpClient.post(`/admin/messagerie/${id}/repondre`, { texte });
+export const repondreMessage = (id, texte, boite = undefined) =>
+  httpClient.post(`/admin/messagerie/${id}/repondre`, { texte }, { params: parBoite(boite) });
 
 /** L'adresse d'une pièce jointe reçue — passée au navigateur pour téléchargement. */
 export const urlPieceJointeMessage = (id, nom) =>
@@ -761,3 +819,32 @@ export const modifierTarif = (id, prix) => httpClient.put(`/admin/tarifs/${id}`,
  */
 export const creerEnfantPourParent = (parentId, eleve) =>
   httpClient.post(`/admin/parents/${parentId}/enfants`, eleve);
+
+/* LES RÔLES DES COMPTES PARENTS (17/10/2026) — super-administrateur seul. */
+export const getRoles = () => httpClient.get('/admin/roles');
+export const creerRole = (nom, onglets) => httpClient.post('/admin/roles', { nom, onglets });
+export const modifierRole = (id, nom, onglets) => httpClient.put(`/admin/roles/${id}`, { nom, onglets });
+export const supprimerRole = (id) => httpClient.delete(`/admin/roles/${id}`);
+/** `roleId` null : « Utilisateur ». */
+export const definirRoleParent = (parentId, roleId) =>
+  httpClient.put(`/admin/parents/${parentId}/role`, { roleId });
+
+/* LA BOÎTE MAIL DE LA PERSONNE CONNECTÉE (17/10/2026). */
+export const getEtatBoite = () => httpClient.get('/admin/messagerie/boite');
+export const connecterBoite = (adresse, motDePasse) =>
+  httpClient.put('/admin/messagerie/boite', { adresse, motDePasse });
+export const deconnecterBoite = () => httpClient.delete('/admin/messagerie/boite');
+
+/* LES SIGNATURES DE COURRIEL (17/10/2026) — super-administrateur seul. */
+export const getSignatures = () => httpClient.get('/admin/signatures');
+export const creerSignature = (saisie) => httpClient.post('/admin/signatures', saisie);
+export const modifierSignature = (id, saisie) => httpClient.put(`/admin/signatures/${id}`, saisie);
+export const supprimerSignature = (id) => httpClient.delete(`/admin/signatures/${id}`);
+export const apercuSignature = (saisie) =>
+  httpClient.post('/admin/signatures/apercu', saisie, { responseType: 'text' });
+/** `signatureId` null : le modèle par défaut. */
+export const attribuerSignature = (parentId, signatureId) =>
+  httpClient.put(`/admin/parents/${parentId}/signature`, { signatureId });
+/** La signature d'un compte, telle que ses destinataires la verront (17/10/2026). */
+export const apercuSignatureCompte = (parentId) =>
+  httpClient.get(`/admin/parents/${parentId}/signature/apercu`, { responseType: 'text' });

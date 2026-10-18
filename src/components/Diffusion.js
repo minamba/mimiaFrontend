@@ -12,6 +12,7 @@ import BlocPieces from './BlocPieces';
 import ColonneModeles from './ColonneModeles';
 import LegendeVariables from './LegendeVariables';
 import PlanificationModele from './PlanificationModele';
+import CarteExpediteur from './CarteExpediteur';
 import SectionMail from './SectionMail';
 
 /** Ouvre un courriel rendu dans un nouvel onglet. */
@@ -238,12 +239,14 @@ export default function Diffusion({ nombreParents }) {
             </div>
           )}
 
+          <CarteExpediteur mode="diffusion" />
+
           <BandeauModele modele={modele} etat={etatModele} enregistreA={enregistreA} />
 
           {creationAuto && (
             <p className="diffusion__note-creation">
-              <strong>Nouveau courriel automatique.</strong> Il sera créé sans règle d’envoi :
-              modifiable, mais pas encore programmable.
+              <strong>Nouveau courriel automatique.</strong> Une fois créé, choisissez à qui il
+              part et quand, dans « La programmation ».
             </p>
           )}
 
@@ -377,7 +380,23 @@ export default function Diffusion({ nombreParents }) {
             )}
           </SectionMail>
 
-          {/* ③ LA PROGRAMMATION — pour un courriel automatique seulement. */}
+          {/* ③ LA PROGRAMMATION — pour un courriel automatique seulement. Pendant
+              la création, la section est annoncée : elle se règle une fois le
+              courriel créé (Camara, le 17/10/2026 : « je n'ai pas le bloc »). */}
+          {creationAuto && !estAutomatique && (
+            <SectionMail
+              numero="3"
+              titre="La programmation"
+              aide="À qui il part et quand, à l’heure de Paris."
+              teinte="bleu"
+            >
+              <p className="planification__attente">
+                Créez d’abord le courriel avec le bouton du bas : vous choisirez ensuite ici ses
+                destinataires, sa fréquence, son jour et son heure.
+              </p>
+            </SectionMail>
+          )}
+
           {estAutomatique && (
             <SectionMail
               numero="3"
