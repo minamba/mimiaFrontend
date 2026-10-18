@@ -41581,3 +41581,173 @@ html:has(
   background: linear-gradient(120deg, rgba(255, 122, 47, 0.24), rgba(255, 122, 47, 0.1));
   color: #ffe2cf;
 }
+
+/* LES PIÈCES JOINTES D'UN MESSAGE, À OUVRIR (18/10/2026). */
+.messagerie__pieces ul { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+
+.messagerie__piece {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--encre) 5%, transparent);
+  color: var(--encre);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.messagerie__piece:hover:not(:disabled) { border-color: #2f6fd6; }
+.messagerie__piece-nom { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.messagerie__piece-taille { font-size: 12.5px; color: var(--encre-douce); white-space: nowrap; }
+.messagerie__piece-action { font-size: 13px; font-weight: 700; color: #6ea8ff; white-space: nowrap; }
+
+/* LES SIGNATURES SUR TÉLÉPHONE (Camara, le 18/10/2026) : « ce n'est pas
+   responsive, impossible de voir l'aperçu des comptes ». */
+.signatures__apercu--grand { height: 300px; }
+.signatures__fenetre-pied { display: none; }
+.signatures__cellule-apercu { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  /* L'aperçu d'un modèle : un peu plus haut, la carte se replie sur deux lignes. */
+  .signatures__apercu { height: 240px; }
+
+  /* Le tableau devient une pile de cartes : chaque cellule porte son libellé. */
+  .signatures__table thead { display: none; }
+  .signatures__table, .signatures__table tbody, .signatures__table tr, .signatures__table td { display: block; width: 100%; }
+  .signatures__table tr {
+    margin-top: 12px;
+    padding: 6px 14px 12px;
+    border: 1px solid var(--trait);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+  }
+  .signatures__table td { padding: 9px 0; border-top: 1px solid color-mix(in srgb, var(--trait) 60%, transparent); }
+  .signatures__table td:first-child { border-top: 0; }
+  .signatures__table td::before {
+    content: attr(data-libelle);
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--encre-douce);
+  }
+  .signatures__table td .role-parent { width: 100%; }
+  .signatures__cellule-apercu { white-space: normal; }
+  .signatures__cellule-apercu .btn-ghost { width: 100%; justify-content: center; padding: 10px; }
+  .signatures__mail { overflow-wrap: anywhere; }
+
+  /* La fenêtre d'aperçu : plein écran, l'aperçu prend la hauteur, Fermer en bas. */
+  .signatures__fenetre {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100dvh;
+    padding: 16px 14px;
+    border-radius: 0;
+  }
+  .signatures__fenetre .signatures__apercu--grand { flex: 1; min-height: 0; height: auto; }
+  .signatures__fenetre-pied { display: block; margin-top: 12px; }
+  .signatures__fenetre-pied .btn { width: 100%; }
+}
+
+/* L'APERÇU D'UN COMPTE SUR TÉLÉPHONE, PROPRE (Camara, le 18/10/2026) : la
+   fenêtre « plein écran » dépassait à droite (100vw dans un voile qui garde
+   20 px de marge) et l'aperçu, étiré sur toute la hauteur, laissait un grand
+   vide blanc. Désormais : une carte compacte, centrée, entièrement visible,
+   l'aperçu à la hauteur de la signature. */
+@media (max-width: 760px) {
+  .signatures-modale { padding: 12px; }
+
+  .signatures__fenetre {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 24px);
+    padding: 16px 14px 14px;
+    border-radius: 18px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+
+  .signatures__fenetre .signatures__apercu--grand {
+    flex: none;
+    width: 100%;
+    height: 280px;
+    min-height: 0;
+  }
+
+  .signatures__fenetre-tete h3 { font-size: 18px; line-height: 1.25; }
+  .signatures__fenetre-pied { margin-top: 12px; }
+}
+
+/* L'APERÇU D'UNE SIGNATURE SANS BARRE DE DÉFILEMENT (Camara, le 18/10/2026) :
+   210 px ne suffisaient pas avec la formule de politesse. Sur téléphone, un peu
+   plus encore : la phrase en italique y passe sur deux lignes. */
+.signatures__apercu { height: 260px; }
+
+@media (max-width: 760px) {
+  .signatures__apercu { height: 280px; }
+}
+
+/* LE ZOOM DE LA FENÊTRE AGRANDIE (18/10/2026) : − 80 % +, à côté de la croix. */
+.messagerie-grand__zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px;
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+}
+
+.messagerie-grand__zoom + .messagerie-grand__fermer { margin-left: 8px; }
+
+.messagerie-grand__zoom button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--encre) 8%, transparent);
+  color: var(--encre);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.messagerie-grand__zoom button:disabled { opacity: 0.35; cursor: default; }
+.messagerie-grand__zoom span { min-width: 46px; text-align: center; font-size: 13px; font-weight: 700; }
+
+/* LES FENÊTRES SANS FLOU EN TEMPS RÉEL (Camara, le 18/10/2026 : « quand j'ouvre
+   une popup, n'importe laquelle, ça ralentit mon PC »). Le voile floutait TOUTE
+   la page derrière la fenêtre (backdrop-filter), recalculé à chaque image tant
+   qu'une animation tournait dessous (halo du bouton vert, décor animé) ; et la
+   fenêtre Blue Sky ajoutait un second flou de 18 px — invisible, elle est
+   opaque. Un voile sombre simple rend presque la même chose, pour un coût nul. */
+.modale {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(6, 12, 24, 0.72);
+}
+
+.modale__boite,
+:root[data-da='blue-sky'] .modale__boite {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Et les animations en boucle de la page s'arrêtent tant qu'une fenêtre est
+   ouverte : personne ne les voit sous le voile. Celles de la fenêtre continuent. */
+html:has(.modale, [aria-modal="true"]) #root *:not(.modale, .modale *, [aria-modal="true"], [aria-modal="true"] *) {
+  animation-play-state: paused !important;
+}

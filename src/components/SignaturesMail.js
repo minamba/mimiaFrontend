@@ -38,10 +38,29 @@ const VIDE = {
   parDefaut: false,
 };
 
-/** L'aperçu, isolé dans un cadre : le HTML vient du serveur, déjà échappé. */
-function Apercu({ html }) {
-  const page = `<!doctype html><html><body style="margin:0;padding:14px 18px;background:#fff;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">${html ?? ''}</body></html>`;
-  return <iframe className="signatures__apercu" title="Aperçu de la signature" sandbox="" srcDoc={page} />;
+/**
+ * L'aperçu, isolé dans un cadre : le HTML vient du serveur, déjà échappé.
+ * SUR TÉLÉPHONE (Camara, le 18/10/2026 : « le modèle par défaut, je le vois
+ * mal ») : la même règle que dans le courriel — logo plus petit, marges
+ * resserrées, adresse insécable — pour que la carte tienne dans la largeur.
+ */
+const STYLE_APERCU = '<meta name="viewport" content="width=device-width,initial-scale=1">'
+  + '<style>@media only screen and (max-width:520px){'
+  + '.sig-logo{padding-right:10px!important}.sig-logo img{width:64px!important}'
+  + '.sig-texte{padding-left:10px!important;word-break:normal!important}'
+  + '.sig-texte div:first-child{font-size:18px!important}'
+  + '}</style>';
+
+function Apercu({ html, grand = false }) {
+  const page = `<!doctype html><html><head><meta charset="utf-8">${STYLE_APERCU}</head><body style="margin:0;padding:14px 16px;background:#fff;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;">${html ?? ''}</body></html>`;
+  return (
+    <iframe
+      className={`signatures__apercu${grand ? ' signatures__apercu--grand' : ''}`}
+      title="Aperçu de la signature"
+      sandbox=""
+      srcDoc={page}
+    />
+  );
 }
 
 export default function SignaturesMail() {
@@ -261,6 +280,9 @@ export default function SignaturesMail() {
       <section className="signatures__attribution">
         <h3>Qui signe avec quoi</h3>
         <p className="champ__aide">Les comptes qui ouvrent l’administration. « Par défaut » suit le modèle par défaut s’il change.</p>
+        {/* SUR TÉLÉPHONE (18/10/2026) : chaque ligne devient une carte, les
+            en-têtes de colonnes passent en libellés (`data-libelle`), et le
+            bouton Aperçu reste visible. Sur ordinateur, le tableau ne change pas. */}
         <table className="signatures__table">
           <thead>
             <tr><th scope="col">Compte</th><th scope="col">Rôle</th><th scope="col">Boîte</th><th scope="col">Signature</th><th scope="col">Aperçu</th></tr>
@@ -268,20 +290,20 @@ export default function SignaturesMail() {
           <tbody>
             {donnees.signataires.map((s) => (
               <tr key={s.parentId}>
-                <td>
+                <td data-libelle="Compte">
                   <strong>{[s.prenom, s.nom].filter(Boolean).join(' ') || s.mail}</strong>
                   <span className="signatures__mail">{s.mail}</span>
                 </td>
-                <td>{s.role ?? '—'}</td>
-                <td>{s.adresseBoite ?? <span className="signatures__non">non connectée</span>}</td>
-                <td>
+                <td data-libelle="Rôle">{s.role ?? '—'}</td>
+                <td data-libelle="Boîte">{s.adresseBoite ?? <span className="signatures__non">non connectée</span>}</td>
+                <td data-libelle="Signature">
                   <select value={s.signatureId ?? ''} onChange={(e) => attribuer(s.parentId, e.target.value)}
                     aria-label={`Signature de ${s.mail}`} className="role-parent">
                     <option value="">Par défaut{parDefaut ? ` (${parDefaut.nom})` : ''}</option>
                     {donnees.modeles.map((m) => <option key={m.id} value={m.id}>{m.nom}</option>)}
                   </select>
                 </td>
-                <td>
+                <td data-libelle="Aperçu" className="signatures__cellule-apercu">
                   <button type="button" className="btn-ghost btn-ghost--mini" onClick={() => voirSignature(s)}>
                     Aperçu
                   </button>
@@ -294,7 +316,7 @@ export default function SignaturesMail() {
 
       {/* LA SIGNATURE D'UN COMPTE, TELLE QUE SES DESTINATAIRES LA VERRONT. */}
       {apercuCompte && (
-        <div className="modale" onMouseDown={(e) => { if (e.target === e.currentTarget) setApercuCompte(null); }}>
+        <div className="modale signatures-modale" onMouseDown={(e) => { if (e.target === e.currentTarget) setApercuCompte(null); }}>
           <div
             className="modale__boite signatures__fenetre"
             role="dialog"
@@ -315,7 +337,10 @@ export default function SignaturesMail() {
             </header>
             {apercuCompte.html === null
               ? <p className="roles__attente">Un instant…</p>
-              : <Apercu html={apercuCompte.html} />}
+              : <Apercu html={apercuCompte.html} grand />}
+            <div className="signatures__fenetre-pied">
+              <button type="button" className="btn btn--compact" onClick={() => setApercuCompte(null)}>Fermer</button>
+            </div>
           </div>
         </div>
       )}

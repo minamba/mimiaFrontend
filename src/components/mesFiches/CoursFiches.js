@@ -125,6 +125,23 @@ export default function CoursFiches() {
   const [menuNotions, setMenuNotions] = useState(false);
   // Flash cards et quiz sur la fiche regardée (16/10/2026).
   const [aTester, setATester] = useState(false);
+
+  // TOUTES LES FICHES EN UN SEUL PDF — Camara, le 18/10/2026 : « un seul PDF
+  // avec toutes les fiches qu'on retrouve dans le menu à gauche ». Le lot est
+  // monté hors de l'écran, ses images chargées, puis imprimé : une fiche par
+  // page, dans l'ordre du menu. Il disparaît après l'impression.
+  const [lotAImprimer, setLotAImprimer] = useState(false);
+
+  // APRÈS LA FENÊTRE D'IMPRESSION (Camara, le 18/10/2026 : « aucun indicateur
+  // qui me dit que le PDF a bien été téléchargé »). Le navigateur ne dit pas si
+  // l'on a enregistré ou annulé : le message rappelle le nom du fichier et où le
+  // trouver. Il s'efface seul.
+  const [pdfEnregistre, setPdfEnregistre] = useState(null);
+  useEffect(() => {
+    if (!pdfEnregistre) return undefined;
+    const minuteur = setTimeout(() => setPdfEnregistre(null), 12000);
+    return () => clearTimeout(minuteur);
+  }, [pdfEnregistre]);
   // Où la feuille est affichée : la barre d'actions s'aligne sur ses bords.
   const [placeFeuille, setPlaceFeuille] = useState(null);
   const placer = useCallback((p) => {
@@ -217,6 +234,43 @@ export default function CoursFiches() {
     position: ficheVue.notionRang ? { rang: ficheVue.notionRang, total: ficheVue.notionTotal } : null,
     blocs: ficheVue.blocs,
   };
+
+  useEffect(() => {
+    if (!lotAImprimer) return undefined;
+    let annule = false;
+
+    // Le lot reste monté tant que la fenêtre d'impression est ouverte : Chrome
+    // signale la fin dès que son aperçu est prêt, et retirer le lot à ce moment
+    // vidait l'aperçu. Il part avec le message, une fois la fenêtre fermée.
+    (async () => {
+      // Les images du lot (logo, illustrations) doivent être là avant l'impression.
+      await new Promise((ok) => { window.requestAnimationFrame(() => ok()); });
+      const images = [...document.querySelectorAll('.fdr-lot img')];
+      await Promise.race([
+        Promise.all(images.map((img) => (img.complete ? null : new Promise((ok) => {
+          img.addEventListener('load', ok, { once: true });
+          img.addEventListener('error', ok, { once: true });
+        })))),
+        new Promise((ok) => { setTimeout(ok, 4000); }),
+      ]);
+      if (annule) return;
+      imprimerFiche({
+        titre: `${cours?.titre ?? 'Fiches'} — toutes les fiches`,
+        matiere: cours?.matiereLibelle,
+        dateCreation: cours?.dateCreation,
+      }, {
+        surFin: (nom) => {
+          setLotAImprimer(false);
+          setPdfEnregistre({ nom, nombre: fichesDuType.length });
+        },
+      });
+    })();
+
+    return () => {
+      annule = true;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lotAImprimer]);
 
   // Toute navigation passe ici : la fiche arrive du côté d'où elle vient.
   const allerA = (i) => {
@@ -511,11 +565,30 @@ export default function CoursFiches() {
                   <button
                     type="button"
                     className="btn btn--compact"
-                    onClick={() => imprimerFiche({ titre: ficheVue.titre, matiere: cours.matiereLibelle, dateCreation: ficheVue.dateCreation })}
+                    onClick={() => imprimerFiche(
+                      { titre: ficheVue.titre, matiere: cours.matiereLibelle, dateCreation: ficheVue.dateCreation },
+                      { surFin: (nom) => setPdfEnregistre({ nom, nombre: 1 }) },
+                    )}
                   >
                     <span className="mf-action__long">Imprimer ou enregistrer en PDF</span>
                     <span className="mf-action__court" aria-hidden="true">Imprimer / PDF</span>
                   </button>
+                  {fichesDuType.length > 1 && (
+                    <button
+                      type="button"
+                      className="btn btn--compact mf-bouton-tout"
+                      onClick={() => setLotAImprimer(true)}
+                      disabled={lotAImprimer}
+                      title="Un seul PDF avec toutes les fiches du menu, une par page"
+                    >
+                      <span className="mf-action__long">
+                        {lotAImprimer ? 'Préparation du PDF…' : `Toutes les fiches en PDF (${fichesDuType.length})`}
+                      </span>
+                      <span className="mf-action__court" aria-hidden="true">
+                        {lotAImprimer ? 'Préparation…' : `Tout en PDF (${fichesDuType.length})`}
+                      </span>
+                    </button>
+                  )}
                   <button type="button" className="btn btn--compact mf-bouton-supprimer" onClick={() => effacerFiche(ficheVue)}>
                     <span className="mf-action__long">Supprimer cette fiche</span>
                     <span className="mf-action__court" aria-hidden="true">Supprimer</span>
@@ -640,6 +713,43 @@ export default function CoursFiches() {
       {!versComplete && (
         <div className="mf-pied">
           <button type="button" className="mf-lien-danger" onClick={effacerCours}>Supprimer ce cours et ses fiches</button>
+        </div>
+      )}
+
+      {pdfEnregistre && (
+        <div className="mf-pdf-fin fdr-sans-impression" role="status">
+          <span className="mf-pdf-fin__icone" aria-hidden="true">📄</span>
+          <span className="mf-pdf-fin__texte">
+            <strong>
+              {pdfEnregistre.nombre > 1
+                ? `Vos ${pdfEnregistre.nombre} fiches sont prêtes en PDF`
+                : 'Votre fiche est prête en PDF'}
+            </strong>
+            Si vous avez cliqué sur « Enregistrer », le fichier
+            <code>{pdfEnregistre.nom}.pdf</code> est dans votre dossier <em>Téléchargements</em>.
+          </span>
+          <button type="button" className="mf-pdf-fin__fermer" aria-label="Fermer" onClick={() => setPdfEnregistre(null)}>×</button>
+        </div>
+      )}
+
+      {/* LE LOT À IMPRIMER : toutes les fiches du menu, hors de l'écran, le temps
+          d'une impression (voir lotAImprimer et impression.js). */}
+      {lotAImprimer && (
+        <div className="fdr-lot" aria-hidden="true">
+          {fichesDuType.map((f) => (
+            <RenduFiche
+              key={f.id}
+              fiche={{
+                id: `lot-${f.id}`,
+                type: f.type,
+                matiere: cours?.matiereLibelle,
+                titre: f.titre,
+                cours: cours?.titre,
+                position: f.notionRang ? { rang: f.notionRang, total: f.notionTotal } : null,
+                blocs: f.blocs,
+              }}
+            />
+          ))}
         </div>
       )}
     </div>

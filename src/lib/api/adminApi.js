@@ -760,6 +760,13 @@ export const marquerMessageLu = (id, lu, boite = undefined, dossier = 'reception
 export const repondreMessage = (id, texte, boite = undefined) =>
   httpClient.post(`/admin/messagerie/${id}/repondre`, { texte }, { params: parBoite(boite) });
 
+/** Télécharge une pièce jointe d'un message, dans son dossier (18/10/2026). */
+export const telechargerPieceJointe = (id, nom, boite, dossier = 'reception') =>
+  httpClient.get(`/admin/messagerie/${id}/piece`, {
+    params: { nom, ...parBoite(boite), dossier },
+    responseType: 'blob',
+  });
+
 /** L'adresse d'une pièce jointe reçue — passée au navigateur pour téléchargement. */
 export const urlPieceJointeMessage = (id, nom) =>
   `/admin/messagerie/${id}/piece?nom=${encodeURIComponent(nom)}`;

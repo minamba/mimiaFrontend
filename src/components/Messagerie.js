@@ -7,6 +7,7 @@ import {
   deconnecterBoite,
   supprimerMessages,
   getCompteursMessagerie,
+  telechargerPieceJointe,
   getBrouillonPour,
   enregistrerBrouillon,
 } from '../lib/api/adminApi';
@@ -56,13 +57,23 @@ const PAR_PAGE = 10;
  * l'appareil et on borne ses tableaux et ses images ; le contenu, lui, ne change
  * pas (toujours affiché dans le cadre isolé, sans script).
  */
+// SA VRAIE LARGEUR SUR ORDINATEUR (Camara, le 18/10/2026 : « en moins gros,
+// pour scroller le moins possible ») : un courriel mis en page pour 600 px
+// était étiré à toute la fenêtre agrandie, bannière et images comprises. Il
+// n'est désormais ramené à la largeur de l'écran que sur un téléphone.
 const LECTURE_ADAPTEE = '<meta name="viewport" content="width=device-width, initial-scale=1">'
   + '<style>html,body{margin:0;padding:8px;overflow-wrap:anywhere;-webkit-text-size-adjust:100%}'
-  + 'table{max-width:100%!important}table[width]{width:100%!important;table-layout:fixed}td[width]{width:auto!important}'
-  + 'img{max-width:100%!important;height:auto!important}'
-  + 'td,th{word-break:break-word}pre{white-space:pre-wrap}</style>';
+  + 'table{max-width:100%!important}img{max-width:100%!important;height:auto!important}'
+  + 'td,th{word-break:break-word}pre{white-space:pre-wrap}'
+  + '@media (max-width:640px){table[width]{width:100%!important;table-layout:fixed}td[width]{width:auto!important}}'
+  + '</style>';
 
-const pourLecture = (html) => LECTURE_ADAPTEE + (html ?? '');
+/** `zoom` (en %) : la fenêtre agrandie peut réduire le courriel pour le voir d'un coup. */
+const pourLecture = (html, zoom = 100) => LECTURE_ADAPTEE
+  + (zoom !== 100 ? `<style>html{zoom:${zoom / 100}}</style>` : '')
+  + (html ?? '');
+
+const ZOOMS = [50, 60, 70, 80, 90, 100];
 
 /**
  * La pastille d'un onglet : les non lus en orange pour la réception (sinon le
@@ -117,8 +128,22 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
   const [dossierOuvert, setDossierOuvert] = useState('reception');
   const [chargementCorps, setChargementCorps] = useState(false);
   const [images, setImages] = useState(false);
-  // Le courriel en grand, dans une fenêtre (17/10/2026).
+  // Le courriel en grand, dans une fenêtre (17/10/2026), et son zoom (18/10/2026) :
+  // gardé d'un message à l'autre, comme dans un lecteur de documents.
   const [enGrand, setEnGrand] = useState(false);
+  const [zoom, setZoom] = useState(() => {
+    try {
+      const garde = Number(localStorage.getItem('mimia.messagerie.zoom'));
+      return ZOOMS.includes(garde) ? garde : 80;
+    } catch {
+      return 80;
+    }
+  });
+  const changerZoom = (sens) => setZoom((z) => {
+    const suivant = ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, ZOOMS.indexOf(z) + sens))];
+    try { localStorage.setItem('mimia.messagerie.zoom', String(suivant)); } catch { /* navigation privée */ }
+    return suivant;
+  });
 
   useEffect(() => {
     if (!enGrand) return undefined;
@@ -341,6 +366,32 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
         : "Ce message n'a pas pu être ouvert. Il a peut-être été supprimé.");
     } finally {
       setChargementCorps(false);
+    }
+  };
+
+  /**
+   * TÉLÉCHARGER UNE PIÈCE JOINTE (18/10/2026) : un PDF s'ouvre dans un nouvel
+   * onglet, le reste s'enregistre sous son nom.
+   */
+  const [pieceEnCours, setPieceEnCours] = useState(null);
+  const telecharger = async (piece) => {
+    setPieceEnCours(piece.nomFichier);
+    try {
+      const { data } = await telechargerPieceJointe(ouvert.identifiant, piece.nomFichier, boite, dossierOuvert);
+      const url = URL.createObjectURL(new Blob([data], { type: piece.typeMime || data.type }));
+      if ((piece.typeMime || '').startsWith('application/pdf') || (piece.typeMime || '').startsWith('image/')) {
+        window.open(url, '_blank', 'noopener');
+      } else {
+        const lien = document.createElement('a');
+        lien.href = url;
+        lien.download = piece.nomFichier;
+        lien.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      setErreur(`« ${piece.nomFichier} » n'a pas pu être téléchargé.`);
+    } finally {
+      setPieceEnCours(null);
     }
   };
 
@@ -827,6 +878,13 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                           {new Date(ouvert.date).toLocaleString('fr-FR')}
                         </p>
                       </div>
+                      {ouvert.html && (
+                        <div className="messagerie-grand__zoom" role="group" aria-label="Taille de l’aperçu">
+                          <button type="button" onClick={() => changerZoom(-1)} disabled={zoom === ZOOMS[0]} aria-label="Réduire">−</button>
+                          <span>{zoom} %</span>
+                          <button type="button" onClick={() => changerZoom(1)} disabled={zoom === ZOOMS[ZOOMS.length - 1]} aria-label="Agrandir">+</button>
+                        </div>
+                      )}
                       <button type="button" className="messagerie-grand__fermer" aria-label="Fermer" onClick={() => setEnGrand(false)}>
                         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none"
                           stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -840,7 +898,7 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                         title="Le message en grand"
                         className="messagerie-grand__corps"
                         sandbox=""
-                        srcDoc={pourLecture(ouvert.html)}
+                        srcDoc={pourLecture(ouvert.html, zoom)}
                       />
                     ) : (
                       <pre className="messagerie__corps-texte messagerie-grand__texte">{ouvert.texte || '(message vide)'}</pre>
@@ -866,13 +924,29 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                   <strong>Pièces jointes</strong>
                   <ul>
                     {ouvert.piecesJointes.map((p) => (
-                      <li key={p.nomFichier}>📎 {p.nomFichier}</li>
+                      <li key={p.nomFichier}>
+                        <button
+                          type="button"
+                          className="messagerie__piece"
+                          onClick={() => telecharger(p)}
+                          disabled={pieceEnCours === p.nomFichier}
+                        >
+                          <span aria-hidden="true">📎</span>
+                          <span className="messagerie__piece-nom">{p.nomFichier}</span>
+                          {p.taille > 0 && (
+                            <span className="messagerie__piece-taille">
+                              {p.taille < 1024 * 1024
+                                ? `${Math.max(1, Math.round(p.taille / 1024))} Ko`
+                                : `${(p.taille / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`}
+                            </span>
+                          )}
+                          <span className="messagerie__piece-action">
+                            {pieceEnCours === p.nomFichier ? 'Ouverture…' : 'Ouvrir'}
+                          </span>
+                        </button>
+                      </li>
                     ))}
                   </ul>
-                  <span className="champ__aide">
-                    Les pièces jointes se téléchargent depuis votre webmail —
-                    elles ne sont pas rapatriées ici.
-                  </span>
                 </div>
               )}
 

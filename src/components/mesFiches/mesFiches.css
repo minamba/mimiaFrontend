@@ -920,3 +920,30 @@ html.fdr-impression .fdr-entete__logo {
     break-inside: avoid;
   }
 }
+
+/* TOUTES LES FICHES EN UN SEUL PDF (18/10/2026) : le lot attend hors de l'écran,
+   à la largeur de la feuille imprimée (les traits des cartes s'y mesurent), puis
+   s'imprime une fiche par page. */
+.fdr-lot {
+  position: absolute;
+  left: -100000px;
+  top: 0;
+  width: 680px;
+  pointer-events: none;
+}
+
+html.fdr-impression .fdr-lot {
+  position: static;
+  left: auto;
+  width: auto;
+}
+
+html.fdr-impression .fdr-lot .fdr-feuille {
+  break-after: page;
+  page-break-after: always;
+}
+
+html.fdr-impression .fdr-lot .fdr-feuille:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}

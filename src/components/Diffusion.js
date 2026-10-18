@@ -338,8 +338,9 @@ export default function Diffusion({ nombreParents }) {
                   : 'Bonjour,\n\nUne ligne vide sépare deux paragraphes.\n\nÀ bientôt,\nL’équipe Mimia'}
               />
               <span className="champ__aide">
-                Une ligne vide crée un paragraphe. <strong>**Ainsi**</strong> devient du
-                gras ; le reste du texte part tel quel.
+                Une ligne vide crée un paragraphe. <strong>**Ainsi**</strong> devient du gras.
+                Une adresse comme <strong>https://mimia.fr</strong> devient un lien ; pour un lien avec
+                un texte, écrivez <strong>[voir les formules](https://mimia.fr/tarifs)</strong>.
               </span>
             </div>
 

@@ -659,6 +659,83 @@ describe('un cours', () => {
     expect(within(sommaire).getByRole('button', { name: /La configuration/ })).not.toHaveAttribute('aria-current');
   });
 
+  it('après l’impression d’une fiche, la page revient entière', async () => {
+    const carte = (centre) => [{ type: 'carte', centre, branches: [{ titre: 'Idée', texte: 'Une phrase.' }] }];
+    api.getCours.mockResolvedValue({
+      data: {
+        ...coursLu,
+        etat: 'pret',
+        fiches: [
+          { id: 1, type: 'visuelle', titre: 'La configuration', notionRang: 1, notionTotal: 2, dateCreation: '2026-10-14T10:01:00Z', blocs: carte('Configuration') },
+          { id: 2, type: 'visuelle', titre: 'Le théorème', notionRang: 2, notionTotal: 2, dateCreation: '2026-10-14T10:01:00Z', blocs: carte('Théorème') },
+        ],
+      },
+    });
+    // Chrome tel qu'il se comporte : « avant », « après » dès l'aperçu prêt, puis
+    // un nouvel aperçu (« avant ») qui remet la page en mode impression sans « après ».
+    const imprimer = jest.spyOn(window, 'print').mockImplementation(() => {
+      window.dispatchEvent(new Event('beforeprint'));
+      window.dispatchEvent(new Event('afterprint'));
+      window.dispatchEvent(new Event('beforeprint'));
+    });
+    ouvrirCours();
+    await screen.findByRole('heading', { level: 2, name: 'La configuration' });
+
+    fireEvent.click(screen.getByRole('button', { name: /Imprimer ou enregistrer en PDF/ }));
+
+    // Chrome signale la fin fenêtre encore ouverte : rien ne bouge tant qu'on
+    // n'a pas touché la page (la fenêtre est alors fermée).
+    expect(screen.queryByText('Votre fiche est prête en PDF')).not.toBeInTheDocument();
+    await act(async () => { await new Promise((ok) => { setTimeout(ok, 350); }); });
+    fireEvent.keyDown(window, { key: 'Shift' });
+
+    expect(await screen.findByText('Votre fiche est prête en PDF')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Suivante' })).toBeVisible();
+    expect(screen.getByText('Fiche 1 sur 2')).toBeVisible();
+    expect(document.documentElement).not.toHaveClass('fdr-impression');
+    imprimer.mockRestore();
+  });
+
+  it('toutes les fiches du menu partent dans un seul PDF, une par page', async () => {
+    const carte = (centre) => [{ type: 'carte', centre, branches: [{ titre: 'Idée', texte: 'Une phrase.' }] }];
+    api.getCours.mockResolvedValue({
+      data: {
+        ...coursLu,
+        etat: 'pret',
+        fiches: [
+          { id: 1, type: 'visuelle', titre: 'La configuration', notionRang: 1, notionTotal: 2, dateCreation: '2026-10-14T10:01:00Z', blocs: carte('Configuration') },
+          { id: 2, type: 'visuelle', titre: 'Le théorème', notionRang: 2, notionTotal: 2, dateCreation: '2026-10-14T10:01:00Z', blocs: carte('Théorème') },
+        ],
+      },
+    });
+    const imprimer = jest.spyOn(window, 'print').mockImplementation(() => {});
+    ouvrirCours();
+    await screen.findByRole('heading', { level: 2, name: 'La configuration' });
+
+    // Le bouton d'une fiche reste là ; le nouveau compte les fiches du menu.
+    expect(screen.getByRole('button', { name: /Imprimer ou enregistrer en PDF/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Toutes les fiches en PDF (2)' }));
+
+    // Le lot attend ses images (au plus 4 s) : en test, elles ne se chargent jamais.
+    await waitFor(() => expect(imprimer).toHaveBeenCalled(), { timeout: 6000 });
+    // eslint-disable-next-line testing-library/no-node-access
+    const lot = document.querySelectorAll('.fdr-lot .fdr-feuille');
+    expect(lot).toHaveLength(2);
+
+    // Après l'impression, le lot disparaît.
+    act(() => { window.dispatchEvent(new Event('afterprint')); });
+    // Le lot reste tant que la fenêtre est ouverte ; au premier geste, il part
+    // et un message dit où trouver le fichier.
+    // eslint-disable-next-line testing-library/no-node-access
+    expect(document.querySelector('.fdr-lot')).not.toBeNull();
+    await act(async () => { await new Promise((ok) => { setTimeout(ok, 350); }); });
+    fireEvent.keyDown(window, { key: 'Shift' });
+    expect(await screen.findByText('Vos 2 fiches sont prêtes en PDF')).toBeInTheDocument();
+    // eslint-disable-next-line testing-library/no-node-access
+    await waitFor(() => expect(document.querySelector('.fdr-lot')).toBeNull());
+    imprimer.mockRestore();
+  }, 10000);
+
   it('sur téléphone, on glisse la fiche du doigt pour passer à la voisine', async () => {
     window.localStorage.removeItem('mimia.fiches.glissement-compris');
     const carte = (centre) => [{ type: 'carte', centre, branches: [{ titre: 'Idée', texte: 'Une phrase.' }] }];

@@ -28,8 +28,11 @@ let rendre = null;
 export function entrerEnImpression() {
   if (rendre) return;
 
-  // Les miniatures de la page de création ne s'impriment pas : la vraie fiche seulement.
-  const feuille = document.querySelector('.fdr-feuille:not(.fdr-feuille--miniature)');
+  // TOUTES LES FICHES D'UN COUP (18/10/2026) : quand le lot est monté, c'est lui
+  // qu'on imprime, une fiche par page. Sinon la fiche affichée — jamais les
+  // miniatures de la page de création.
+  const feuille = document.querySelector('.fdr-lot')
+    ?? document.querySelector('.fdr-feuille:not(.fdr-feuille--miniature)');
   if (!feuille) return;
 
   document.documentElement.classList.add(CLASSE);
@@ -60,20 +63,45 @@ export function installerImpression() {
  * Le bouton « Imprimer ou enregistrer en PDF » : la même impression, avec un
  * nom de fichier lisible — `Mimia--Francais_2026-10-14_Les-figures-d-opposition`.
  */
-export function imprimerFiche(fiche) {
+/**
+ * `surFin(nomFichier)` (18/10/2026) : appelé quand la fenêtre d'impression se
+ * ferme. Le navigateur ne dit pas si l'on a enregistré ou annulé — l'écran ne
+ * peut donc que rappeler le nom du fichier et où le trouver.
+ */
+export function imprimerFiche(fiche, { surFin = null } = {}) {
   const titreOrigine = document.title;
-
-  const restaurer = () => {
-    document.title = titreOrigine;
-    window.removeEventListener('afterprint', restaurer);
-  };
-
-  window.addEventListener('afterprint', restaurer);
-  document.title = nomDocument({
+  const nomFichier = nomDocument({
     matiere: fiche.matiere,
     date: fiche.dateCreation,
     suffixe: texteNu(fiche.titre),
   });
+
+  // LE MESSAGE N'ARRIVE QU'UNE FOIS LA FENÊTRE VRAIMENT FERMÉE (18/10/2026).
+  // Chrome émet « afterprint » dès que son aperçu est prêt, fenêtre encore
+  // ouverte : afficher le message à ce moment changeait la page sous l'aperçu,
+  // Chrome la remettait en mode impression et ne la rendait plus — la fiche
+  // restait seule, en petit. On attend donc le premier geste sur la page (la
+  // fenêtre est alors fermée), on rétablit la page de force, puis on prévient.
+  let fini = false;
+  const gestes = ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'focus'];
+  const apresFermeture = () => {
+    gestes.forEach((g) => window.removeEventListener(g, apresFermeture, true));
+    sortirDeLImpression();
+    surFin?.(nomFichier);
+  };
+
+  const restaurer = () => {
+    document.title = titreOrigine;
+    window.removeEventListener('afterprint', restaurer);
+    if (fini) return;
+    fini = true;
+    if (!surFin) return;
+    // Un court délai : le geste qui ferme la fenêtre ne compte pas encore.
+    setTimeout(() => gestes.forEach((g) => window.addEventListener(g, apresFermeture, true)), 300);
+  };
+
+  window.addEventListener('afterprint', restaurer);
+  document.title = nomFichier;
 
   window.print();
 

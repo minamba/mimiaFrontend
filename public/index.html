@@ -100,13 +100,19 @@
       property="og:description"
       content="Un professeur par IA avec un prénom, un visage, une voix — et une mémoire qui suit votre enfant d'année en année. Il ne donne jamais la réponse : il cherche où ça bloque."
     />
-    <meta property="og:image" content="https://mimia.fr/apercu.png" />
-    <meta property="og:image:type" content="image/png" />
+    <!-- L'IMAGE DES PARTAGES (WhatsApp, Telegram, Messenger…) — Camara, le
+         18/10/2026 : apercu-v2.jpg, tirée de src/assets/apercçu_v2.png, réduite à
+         1200 × 600 et sous 300 Ko (au-delà, WhatsApp n'affiche pas d'aperçu).
+         UN NOUVEAU NOM À CHAQUE CHANGEMENT : les messageries gardent l'image en
+         mémoire tant que son adresse ne change pas. -->
+    <meta property="og:image" content="https://mimia.fr/apercu-v2.jpg" />
+    <meta property="og:image:secure_url" content="https://mimia.fr/apercu-v2.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:height" content="600" />
     <meta
       property="og:image:alt"
-      content="Nora, professeure de mathématiques, explique une fraction à Emma et l'écrit au tableau."
+      content="Votre enfant bloque ? Son professeur cherche pourquoi. Nora, professeure de mathématiques, propose un exercice de fractions au tableau."
     />
 
     <meta name="twitter:card" content="summary_large_image" />
@@ -115,7 +121,7 @@
       name="twitter:description"
       content="Un professeur par IA avec un prénom, un visage, une voix — et une mémoire qui suit votre enfant d'année en année. Il ne donne jamais la réponse : il cherche où ça bloque."
     />
-    <meta name="twitter:image" content="https://mimia.fr/apercu.png" />
+    <meta name="twitter:image" content="https://mimia.fr/apercu-v2.jpg" />
 
     <!-- Ce qui donne à Google le logo de la marque, distinct de l'icône des
          résultats : il alimente le panneau de connaissance. -->
