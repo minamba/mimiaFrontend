@@ -12,6 +12,7 @@ import ChoixSpecialites from './ChoixSpecialites';
 import ChoixFilierePro from './ChoixFilierePro';
 import ChoixBesoins from './ChoixBesoins';
 import ChoixAcademie from './ChoixAcademie';
+import ChoixEtablissement, { classeAvecConseillere } from './ChoixEtablissement';
 import { Section } from './FenetreEditionEnfant';
 import { useBesoinsParticuliers } from '../lib/storage/modeTest';
 import QuotaEnfants from './QuotaEnfants';
@@ -38,6 +39,8 @@ export default function FormulaireEleve() {
     niveauScolaireId: '',
     sexe: '',
     academieId: '',
+    // L'établissement, pour la conseillère d'orientation (18/10/2026).
+    etablissement: null,
     lv2Espagnol: false,
     specialites: [],
     langues: [],
@@ -56,6 +59,7 @@ export default function FormulaireEleve() {
   const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
   const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
   const filiereClasse = filiereDeLaClasse(niveaux, champs.niveauScolaireId);
+  const avecEtablissement = classeAvecConseillere(niveaux, champs.niveauScolaireId);
 
   const set = (nom) => (evenement) =>
     setChamps((precedent) => ({ ...precedent, [nom]: evenement.target.value }));
@@ -109,6 +113,9 @@ export default function FormulaireEleve() {
         sexe: Number(champs.sexe),
         niveauScolaireId: Number(champs.niveauScolaireId),
         academieId: champs.academieId ? Number(champs.academieId) : null,
+        // EN DEUX TEMPS (18/10/2026) : la route de l'établissement demande
+        // l'identifiant de l'enfant. La saga crée le profil, puis l'enregistre.
+        etablissementUai: avecEtablissement ? champs.etablissement?.uai ?? null : null,
         lv2Espagnol: lv2Possible && champs.lv2Espagnol,
         specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
         langues: languesAEnvoyer(champs.langues, languesClasse),
@@ -339,13 +346,29 @@ export default function FormulaireEleve() {
         {/* FACULTATIVE, VOLONTAIREMENT : sans académie, « Mon calendrier »
             affiche ses séances sans les vacances, jusqu'à ce qu'elle soit
             renseignée. */}
-        <Section couleur="lieu" titre="Où il étudie" aide="Son académie fixe ses vacances dans « Mon calendrier ». Facultatif.">
+        <Section
+          couleur="lieu"
+          titre="Où il étudie"
+          aide={avecEtablissement
+            ? 'Son académie fixe ses vacances ; son établissement aide la conseillère d’orientation. Facultatif.'
+            : 'Son académie fixe ses vacances dans « Mon calendrier ». Facultatif.'}
+        >
           <ChoixAcademie
             id="academie"
             valeur={champs.academieId}
             onChange={(academieId) => setChamps((p) => ({ ...p, academieId }))}
             academies={academies}
           />
+
+          {/* L'ÉTABLISSEMENT, POUR LA CONSEILLÈRE D'ORIENTATION — à partir de la
+              3e seulement (18/10/2026). Enregistré juste après le profil. */}
+          {avecEtablissement && (
+            <ChoixEtablissement
+              id="etablissement"
+              valeur={champs.etablissement}
+              onChange={(etablissement) => setChamps((p) => ({ ...p, etablissement }))}
+            />
+          )}
         </Section>
 
         {besoinsActifs && (

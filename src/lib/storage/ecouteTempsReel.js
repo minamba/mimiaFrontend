@@ -611,6 +611,7 @@ export const ecouteTempsReel = {
    */
   ecouter({
     conversationId, chemin, ecriture = null, onPartiel, onFinal, onErreur, onVoix, onSilence, onReprise,
+    onSonSansTexte,
     onFermeture, onOuverture, onOreilleMorte, onMuet,
   }) {
     // LE MÊME MICRO HORS D'UNE SÉANCE — `chemin` remplace l'identifiant de
@@ -779,6 +780,15 @@ export const ecouteTempsReel = {
     // Le silence de fin de tour n'est signalé qu'UNE fois : sans ce drapeau,
     // chaque bloc audio suivant le redéclencherait cinquante fois par seconde.
     let silenceSignale = true;
+
+    // LE TOUR EN COURS A ÉTÉ OUBLIÉ AU CLAVIER — voir `oublierLeTourEnCours`.
+    // Vrai jusqu'à la prochaine prise de parole : entre-temps, les textes qui
+    // reviennent du relais décrivent une phrase que l'élève a remplacée.
+    let tourOublie = false;
+
+    // La dernière fois que le micro a entendu une VOIX, et non un simple son : c'est
+    // ce qui distingue un enfant qui parle d'une télévision allumée.
+    let dernierVoise = 0;
 
     // Depuis quand le son est fort ET continu. Remis à zéro dès qu'il retombe :
     // seule une parole soutenue coupe le professeur.
@@ -1328,6 +1338,10 @@ export const ecouteTempsReel = {
               console.warn('[ecoute] effacement demandé par le serveur (écho repéré).');
             }
 
+            // LE TOUR A ÉTÉ OUBLIÉ (voir `oublierLeTourEnCours`) : ce provisoire
+            // appartient à une parole que l'élève a déjà remplacée au clavier.
+            if (tourOublie) return;
+
             onPartiel?.(charge.texte);
           }
           else if (charge.type === 'erreur') {
@@ -1352,6 +1366,9 @@ export const ecouteTempsReel = {
             return;
           }
           else if (charge.type === 'final') {
+            // Lu avant la remise à zéro : c'est le son de CE tour, voir `onSonSansTexte`.
+            const secondesDuTour = sonDepuisDernierTexte / FREQUENCE;
+
             // UN TEXTE EST REVENU : le son parti avant lui n'est plus en route,
             // et la plus ancienne phrase close n'a plus à être renvoyée.
             sonDepuisDernierTexte = 0;
@@ -1382,7 +1399,10 @@ export const ecouteTempsReel = {
             // Une hésitation seule n'est pas une réponse : on ne l'ajoute pas,
             // et on continue d'écouter, comme le ferait un professeur qui voit
             // que l'élève cherche encore.
-            if (estUneHesitation(charge.texte)) {
+            //
+            // SAUF QUAND LE TEXTE VIENT DE LA VOIX (`son`) : au CP, « ba » est la syllabe
+            // que le professeur a demandée, pas un « bah » qui cherche ses mots.
+            if (!charge.son && estUneHesitation(charge.texte)) {
               // CE CHEMIN EFFAÇAIT SANS RIEN DIRE, et c'est ce qui rendait le
               // défaut introuvable : l'élève voit son texte disparaître, et le
               // journal ne porte aucune trace de qui l'a effacé. Trois chemins
@@ -1400,6 +1420,10 @@ export const ecouteTempsReel = {
             // on continue d'écouter, plutôt que d'envoyer au professeur un
             // message qu'il ne pourra que déclarer incompréhensible.
             if (!alphabetPlausible(charge.texte, ecriture)) {
+              // DU SON EST PARTI, ET RIEN NE REVIENT : un « ffff », que le modèle ne
+              // sait pas écrire. Seul l'écran sait si c'était attendu.
+              if (!charge.texte?.trim() && !tourOublie) onSonSansTexte?.(secondesDuTour);
+
               // DEUX CAS SOUS LE MÊME REFUS, ET UN SEUL MÉRITE QU'ON REGARDE.
               //
               // Un tour vide, c'est du silence : un souffle, une porte, le
@@ -1417,6 +1441,26 @@ export const ecouteTempsReel = {
               }
 
               effacerSiRienDit(secondes);
+              return;
+            }
+
+            // LE TOUR A ÉTÉ OUBLIÉ : son verdict arrive après coup, il ne part
+            // pas en second message (voir `oublierLeTourEnCours`).
+            if (tourOublie) {
+              if (process.env.NODE_ENV !== 'production') {
+                console.info('[ecoute] verdict ignoré, tour oublié au clavier :', charge.texte);
+              }
+              return;
+            }
+
+            // LE VERDICT DE LA VOIX voyage avec le texte (04/11/2026) : `son` dit
+            // que le serveur a jugé la voix, `juste` ce qu'il en a conclu. L'écran
+            // en fait « Bonne prononciation » ou « On réessaie », sans rien écrire d'autre.
+            if (charge.son) {
+              onFinal?.(charge.texte, {
+                son: true,
+                juste: typeof charge.juste === 'boolean' ? charge.juste : null,
+              });
               return;
             }
 
@@ -1583,6 +1627,11 @@ export const ecouteTempsReel = {
               onReprise?.();
             }
 
+            if (estVoise(bloc)) dernierVoise = maintenant;
+
+            // Une nouvelle prise de parole : ce qui en reviendra compte à nouveau.
+            tourOublie = false;
+
             dernierSon = maintenant;
             silenceSignale = false;
           } else if (!silenceSignale && maintenant - dernierSon > SILENCE_FIN_MS) {
@@ -1717,7 +1766,30 @@ export const ecouteTempsReel = {
     const transcriptionEnCours = () => !arrete
       && (sonDepuisDernierTexte >= seuilEnRoute || fileEchantillons > 0);
 
-    return { arreter, suspendre, parleEnCeMoment, transcriptionEnCours };
+    /**
+     * L'ÉLÈVE A REPRIS LA MAIN AU CLAVIER — remonté par un parent le 26/10/2026 :
+     * sa fille effaçait la transcription, réécrivait, envoyait… et le message
+     * partait avec l'ancien texte ET le nouveau, ou en deux messages. Ce que
+     * le micro avait encore en route — son pas encore parti, son parti pas
+     * encore transcrit — décrivait une parole qu'elle venait de remplacer.
+     *
+     * On jette donc la file et la copie en vol, et on ignore les textes qui
+     * reviendraient encore de ce tour, jusqu'à ce que le micro entende une
+     * NOUVELLE prise de parole. Rien n'est fermé : la liaison reste prête.
+     */
+    const oublierLeTourEnCours = () => {
+      fileEnAttente.length = 0;
+      fileEchantillons = 0;
+      retirerEnVolJusqua(enVol.length - 1);
+      sonDepuisDernierTexte = 0;
+      tourOublie = true;
+    };
+
+    const voixRecenteMs = () => (dernierVoise ? performance.now() - dernierVoise : Infinity);
+
+    return {
+      arreter, suspendre, parleEnCeMoment, transcriptionEnCours, oublierLeTourEnCours, voixRecenteMs,
+    };
   },
 };
 

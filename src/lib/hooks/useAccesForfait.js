@@ -6,14 +6,18 @@ import { getAccesForfait } from '../api/elevesApi';
  * en essai, en pause ou sans abonnement, la carte des fiches est désactivée
  * et les jeux sont grisés.
  *
- * Rend `{ ouvert, motif }`. `ouvert` vaut NULL TANT QU'ON NE SAIT PAS : rien
+ * EN ESSAI (Camara, le 18/10/2026) : deux jeux de mathématiques ouverts, et UN
+ * cours de fiches par famille. `essaiFiches` dit où en est ce cours : libre,
+ * en-route (parti, pas encore fini), utilise. Null hors essai.
+ *
+ * Rend `{ ouvert, motif, essaiFiches }`. `ouvert` vaut NULL TANT QU'ON NE SAIT PAS : rien
  * n'est grisé le temps d'un chargement — mieux vaut un instant d'ouverture
  * qu'un enfant abonné qui voit sa page verrouillée en arrivant. Une erreur de
  * lecture laisse ouvert pour la même raison ; le serveur, lui, garde la porte
  * des fiches.
  */
 export default function useAccesForfait(eleveId) {
-  const [acces, setAcces] = useState({ ouvert: null, motif: null });
+  const [acces, setAcces] = useState({ ouvert: null, motif: null, essaiFiches: null });
 
   useEffect(() => {
     if (!eleveId) return undefined;
@@ -22,12 +26,25 @@ export default function useAccesForfait(eleveId) {
     // échoue avant même de partir tombent dans le même filet (ouvert).
     Promise.resolve()
       .then(() => getAccesForfait(eleveId))
-      .then(({ data }) => { if (vivant) setAcces({ ouvert: data?.ouvert !== false, motif: data?.motif ?? null }); })
-      .catch(() => { if (vivant) setAcces({ ouvert: true, motif: null }); });
+      .then(({ data }) => {
+        if (vivant) setAcces({ ouvert: data?.ouvert !== false, motif: data?.motif ?? null, essaiFiches: data?.essaiFiches ?? null });
+      })
+      .catch(() => { if (vivant) setAcces({ ouvert: true, motif: null, essaiFiches: null }); });
     return () => { vivant = false; };
   }, [eleveId]);
 
   return acces;
+}
+
+/** LA PHRASE DE L'ESSAI DES FICHES UTILISÉ — les mots de Camara, le 18/10/2026. */
+export const MESSAGE_ESSAI_FICHES = 'Il faut être abonné pour continuer à générer des fiches de révision.';
+
+/**
+ * Les fiches sont-elles consultables ? Sans forfait, seulement en essai : la
+ * famille y retrouve la fiche de son essai.
+ */
+export function fichesConsultables({ ouvert, motif }) {
+  return ouvert !== false || motif === 'essai';
 }
 
 /** La phrase à montrer quand une fonctionnalité est fermée, selon qui la lit. */

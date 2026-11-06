@@ -7,3 +7,10 @@ import httpClient from './httpClient';
  */
 export const creerSignalement = (categorie, description) =>
   httpClient.post('/signalements', { categorie, description });
+
+/** Joint une capture d'écran ou un document à son propre signalement, juste créé. */
+export const joindrePieceSignalement = (id, fichier) => {
+  const corps = new FormData();
+  corps.append('fichier', fichier);
+  return httpClient.post(`/signalements/${id}/pieces`, corps);
+};

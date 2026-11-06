@@ -199,10 +199,61 @@ export function extraireEcoutes(texte) {
   return passages.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * QUAND C'EST À L'ÉLÈVE DE LE DIRE, LA BALISE SE TAIT — remonté par un parent
+ * le 26/10/2026 : « Comment dit-on la lettre [EN]A[/EN] en anglais ? » — et la
+ * voix prononçait « A » à l'anglaise, soufflant la réponse. La consigne le dit
+ * au professeur ; ce filet le garantit quand il l'oublie.
+ *
+ * Pour chaque passage balisé, on regarde LA PHRASE qui le contient : si elle se
+ * termine par un point d'interrogation et demande « comment » quelque chose se
+ * dit, se prononce, s'épelle ou s'écrit, les balises tombent et le contenu
+ * reste — affiché, et lu en français. Une relecture (« répète après moi »), une
+ * écoute ou une question de sens (« que veut dire … ? ») ne sont pas touchées.
+ */
+const DEMANDE_DE_DIRE = /\bcomment\b[\s\S]{0,80}?\b(dit|dis|dis-tu|dirais|dire|prononce|prononces|prononcer|épelle|épelles|épeler|epelle|s[’']écrit|écrit)\b|\b(dit|dis|dis-tu|prononce|prononces|épelle|épelles)\b[\s\S]{0,40}?\bcomment\b/i;
+const FIN_DE_PHRASE = /[.!?…\n]/;
+
+export function neutraliserBalisesDeQuestion(texte) {
+  if (!texte) return texte;
+  let sortie = texte;
+
+  for (const [ouverture, fermeture] of LANGUES_ECOUTE) {
+    let depuis = 0;
+
+    for (;;) {
+      const debut = sortie.indexOf(ouverture, depuis);
+      if (debut === -1) break;
+      const fin = sortie.indexOf(fermeture, debut + ouverture.length);
+      if (fin === -1) break;
+
+      // La phrase : du dernier point avant la balise au premier après elle.
+      let avant = debut;
+      while (avant > 0 && !FIN_DE_PHRASE.test(sortie[avant - 1])) avant -= 1;
+      let apres = fin + fermeture.length;
+      while (apres < sortie.length && !FIN_DE_PHRASE.test(sortie[apres])) apres += 1;
+
+      const phrase = sortie.slice(avant, debut) + sortie.slice(fin + fermeture.length, apres);
+      const question = sortie[apres] === '?' && DEMANDE_DE_DIRE.test(phrase);
+
+      if (question) {
+        sortie = sortie.slice(0, debut)
+          + sortie.slice(debut + ouverture.length, fin)
+          + sortie.slice(fin + fermeture.length);
+        depuis = fin - ouverture.length;
+      } else {
+        depuis = fin + fermeture.length;
+      }
+    }
+  }
+
+  return sortie;
+}
+
 function retirerEcouteLangue(texte) {
   return LANGUES_ECOUTE.reduce(
     (texteCourant, [ouverture, fermeture]) => retirerBloc(texteCourant, ouverture, fermeture),
-    texte,
+    neutraliserBalisesDeQuestion(texte),
   );
 }
 
@@ -379,6 +430,10 @@ const SUPPORT_EVALUATION = '[SUPPORT_EVALUATION]';
 
 /** Le support d'un texte à rédiger : cahier ou clavier. */
 const SUPPORT_ECRIT = '[SUPPORT_ECRIT]';
+const SUPPORT_SON = '[SUPPORT_SON]';
+
+/** La question « des mots ou des phrases ? » avant une dictée — voir typeDictee.js. */
+const TYPE_DICTEE = '[TYPE_DICTEE]';
 
 /** Marqueur posé par le professeur au moment où le contrôle commence. */
 export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
@@ -880,6 +935,8 @@ function retirerMarqueurs(texte) {
     .split(CONVERSATION).join('')
     .split(SUPPORT_EVALUATION).join('')
     .split(SUPPORT_ECRIT).join('')
+    .split(SUPPORT_SON).join('')
+    .split(TYPE_DICTEE).join('')
     .split(CORRECTION_TERMINEE).join('')
     .replace(ERREUR_CORRECTION, '')
     // La forme à cible porte un paramètre : elle se retire par motif, sinon
@@ -1061,7 +1118,9 @@ export function texteParle(texte, { bornes = false } = {}) {
     .split(DICTEE_FERMETURE).join(bornes ? FIN_DICTEE : '');
 
   // Une paire de bornes par langue, mais une seule fermeture pour toutes :
-  // voir le commentaire sur `LANGUES_ECOUTE`.
+  // voir le commentaire sur `LANGUES_ECOUTE`. Une balise qui soufflerait la
+  // réponse d'une question tombe d'abord (26/10/2026).
+  reste = neutraliserBalisesDeQuestion(reste);
   for (const [ouverture, fermeture, debut] of LANGUES_ECOUTE) {
     reste = reste
       .split(ouverture).join(bornes ? debut : '')

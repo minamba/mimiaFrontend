@@ -224,10 +224,13 @@ describe('Le choix du support, quel que soit le chemin', () => {
     // La fenêtre est le filet : si on ne sait pas lire la réponse, on ne la
     // devine pas.
     const hesite = [prof('Cahier ou clavier ? [SUPPORT_ECRIT]'), eleve('C’est quoi la différence ?')];
-    const lesDeux = [prof('[SUPPORT_ECRIT]'), eleve('pas le cahier, plutôt le clavier')];
 
     expect(supportEcritChoisi(hesite)).toBeNull();
-    expect(supportEcritChoisi(lesDeux)).toBeNull();
+
+    // LES DEUX NOMMÉS TRANCHENT DEPUIS LE 01/11/2026 — l'enfant qui se reprend
+    // dit en dernier ce qu'il veut (voir reponseSupportReprise.test.js).
+    const lesDeux = [prof('[SUPPORT_ECRIT]'), eleve('pas le cahier, plutôt le clavier')];
+    expect(supportEcritChoisi(lesDeux)).toBe('clavier');
   });
 
   test('seule la PREMIÈRE réponse après la question compte', () => {

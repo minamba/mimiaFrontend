@@ -18,7 +18,8 @@ import userEvent from '@testing-library/user-event';
 import ControleForm from '../components/ControleForm';
 import CoursDuControle from '../components/CoursDuControle';
 import {
-  ajouterCoursControle, creerControle, getCoursControle, supprimerCoursControle,
+  ajouterCoursControle, creerControle, getCoursControle, getFichierCoursControle,
+  getTexteCoursControle, supprimerCoursControle,
 } from '../lib/api/elevesApi';
 
 jest.mock('../lib/api/elevesApi', () => ({
@@ -29,6 +30,8 @@ jest.mock('../lib/api/elevesApi', () => ({
   supprimerCoursControle: jest.fn(),
   creerScanCoursControle: jest.fn(),
   etatScanCoursControle: jest.fn(),
+  getFichierCoursControle: jest.fn(),
+  getTexteCoursControle: jest.fn(),
 }));
 
 jest.mock('../lib/storage/ecouteService', () => ({
@@ -136,4 +139,71 @@ test('sur un contrôle existant, un fichier part tout de suite', async () => {
 
   await waitFor(() => expect(ajouterCoursControle).toHaveBeenCalledWith('9', 42, expect.any(File)));
   expect(await screen.findByText('En lecture…')).toBeInTheDocument();
+});
+
+/*
+ * L'APERÇU DU DOCUMENT PAR L'ÉLÈVE — Camara, le 04/11/2026 : « je veux aussi que
+ * l'enfant puisse consulter le document ». Le fichier est sur le serveur une
+ * semaine après le contrôle, puis effacé : l'aperçu disparaît avec lui.
+ */
+describe('l’aperçu du cours par l’élève (04/11/2026)', () => {
+  beforeEach(() => {
+    global.URL.createObjectURL = jest.fn(() => 'blob:apercu');
+    global.URL.revokeObjectURL = jest.fn();
+  });
+
+  test('une image consultable a un bouton Aperçu qui l’affiche ; un fichier effacé n’en a plus', async () => {
+    getCoursControle.mockResolvedValue({
+      data: [
+        { id: 1, nomFichier: 'page1.jpg', lu: true, consultable: true, purge: false, genre: 'image' },
+        { id: 2, nomFichier: 'ancienne.jpg', lu: true, consultable: false, purge: true, genre: 'image' },
+      ],
+    });
+    getFichierCoursControle.mockResolvedValue({ data: new Blob(['img'], { type: 'image/jpeg' }) });
+
+    render(<CoursDuControle eleveId="9" controleId={42} />);
+
+    expect(await screen.findByText('page1.jpg')).toBeInTheDocument();
+    expect(screen.getByText('Effacé une semaine après le contrôle')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aperçu de ancienne.jpg' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Aperçu de page1.jpg' }));
+
+    expect(getFichierCoursControle).toHaveBeenCalledWith('9', 42, 1);
+    expect(await screen.findByRole('img', { name: 'page1.jpg' })).toHaveAttribute('src', 'blob:apercu');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  test('un document Word montre le texte que le professeur lit, et se télécharge', async () => {
+    getCoursControle.mockResolvedValue({
+      data: [{ id: 3, nomFichier: 'lecon.docx', lu: true, consultable: true, purge: false, genre: 'word' }],
+    });
+    getTexteCoursControle.mockResolvedValue({ data: { texte: 'Le théorème de Thalès', lu: true, illisible: false } });
+
+    render(<CoursDuControle eleveId="9" controleId={42} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Aperçu de lecon.docx' }));
+
+    expect(getTexteCoursControle).toHaveBeenCalledWith('9', 42, 3);
+    expect(await screen.findByText('Le théorème de Thalès')).toBeInTheDocument();
+    expect(getFichierCoursControle).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Télécharger' })).toBeInTheDocument();
+  });
+
+  test('un fichier purgé entre-temps le dit au lieu d’un cadre vide', async () => {
+    getCoursControle.mockResolvedValue({
+      data: [{ id: 4, nomFichier: 'cours.pdf', lu: true, consultable: true, purge: false, genre: 'pdf' }],
+    });
+    getFichierCoursControle.mockRejectedValue({ response: { status: 410 } });
+
+    render(<CoursDuControle eleveId="9" controleId={42} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Aperçu de cours.pdf' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('effacé une semaine après le contrôle');
+    expect(screen.queryByRole('button', { name: 'Télécharger' })).not.toBeInTheDocument();
+  });
 });

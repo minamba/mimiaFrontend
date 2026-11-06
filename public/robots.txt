@@ -1,28 +1,30 @@
 # Mimia — https://mimia.fr
 #
-# CE QUI EST FERMÉ, ET POURQUOI. Trois familles d'adresses n'ont rien à faire
-# dans un index :
-#   — l'espace connecté : les pages d'un enfant, même protégées par un mot de
-#     passe, ne doivent pas apparaître dans une recherche ;
-#   — les pages de passage : elles ne veulent rien dire hors de leur flux, et
-#     /scan/ porte un jeton dans son adresse ;
-#   — les pages d'un lien de courriel : elles n'ont de sens que pour qui a
-#     reçu le courriel.
+# CE FICHIER NE SERT PAS À RETIRER UNE PAGE DE GOOGLE — 26/10/2026.
+# Il interdit de LIRE une page, pas de l'indexer. Une adresse fermée ici mais
+# liée ailleurs (le bouton « Espace enfant » mène à /code) est indexée quand
+# même, sans contenu : Google ne peut pas lire le « noindex » d'une page qu'on
+# lui interdit d'ouvrir. C'est l'alerte « Indexée malgré le blocage par le
+# fichier robots.txt » reçue de la Search Console.
 #
-# CE FICHIER NE PROTÈGE RIEN. Il demande, il n'interdit pas : un robot peut
-# l'ignorer, et une adresse citée ici est une adresse publiée. La protection
-# des données, c'est l'authentification côté API, pas ce fichier.
+# Les pages privées (/eleves, /profil, /admin, /code) sont donc LISIBLES : le
+# serveur leur répond avec l'en-tête « X-Robots-Tag: noindex », et la page pose
+# la balise robots du même nom. Le robot lit, et ne garde rien. Il n'y voit
+# rien non plus : sans connexion, ces pages n'affichent qu'un formulaire.
 #
-# LA LISTE DOIT SUIVRE CELLE DE src/lib/seo/pages.js (NON_INDEXEES) : les deux
-# disent la même chose, l'une aux robots qui lisent ce fichier, l'autre à ceux
-# qui exécutent le JavaScript et lisent la balise « robots ».
+# Restent fermées les seules pages qui AGISSENT à l'ouverture ou portent un
+# jeton dans leur adresse — un robot qui exécute le JavaScript pourrait
+# consommer un lien de scan, un retour de connexion ou un désabonnement.
+# Aucune n'est liée depuis une page publique.
+#
+# CE FICHIER NE PROTÈGE RIEN. La protection des données, c'est
+# l'authentification côté API.
+#
+# LA LISTE DOIT SUIVRE FERMEES_AUX_ROBOTS dans src/lib/seo/pages.js
+# (vérifié par sitemap.test.js).
 
 User-agent: *
 
-Disallow: /eleves/
-Disallow: /profil
-Disallow: /admin
-Disallow: /code
 Disallow: /scan/
 Disallow: /callback
 Disallow: /silent-renew

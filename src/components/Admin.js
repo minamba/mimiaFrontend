@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { nomVoix } from '../lib/nomVoix';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -74,6 +75,7 @@ import PeriodesVacancesAdmin from './PeriodesVacancesAdmin';
 import ProgrammeScolaireAdmin from './ProgrammeScolaireAdmin';
 import SignalementsAdmin from './SignalementsAdmin';
 import IdeesAdmin from './IdeesAdmin';
+import JeuxTestsAdmin from './JeuxTestsAdmin';
 import FournisseursIA from './FournisseursIA';
 import Onglets from './Onglets';
 import Bannis from './Bannis';
@@ -1046,6 +1048,93 @@ export default function Admin() {
   const [sousOnglet, setSousOnglet] = useState('messagerie');
   // Dans la messagerie : « Ma boîte » ou la boîte commune du support (17/10/2026).
   const [boiteMessagerie, setBoiteMessagerie] = useState('moi');
+
+  // VENU D'UNE NOTIFICATION DE COURRIEL (19/10/2026) : `?onglet=mails&boite=moi`
+  // ouvre la messagerie, sur la bonne boîte — même si la page était déjà là.
+  //
+  // RELU À CHAQUE CLIC, MÊME VERS LA MÊME ADRESSE (20/10/2026) : après un premier
+  // passage, l'adresse garde ?onglet=mails ; changer d'onglet à la main ne la
+  // touche pas, et l'icône des mails renvoyait vers une adresse identique, sans
+  // effet. La clé de navigation, elle, change à chaque clic.
+  const { search, key: cleNavigation } = useLocation();
+
+  // LE MENU DES SECTIONS SE COLLE SOUS LA BARRE DU SITE, SUR TÉLÉPHONE
+  // (Camara, le 20/10/2026). La hauteur de cette barre change (connexion,
+  // thème, bandeau d'information) : on la mesure plutôt que de la deviner.
+  useEffect(() => {
+    const barre = document.querySelector('.navbar');
+    if (!barre) return undefined;
+    const poser = () => document.documentElement.style.setProperty(
+      '--hauteur-navbar', `${Math.round(barre.getBoundingClientRect().height)}px`,
+    );
+    poser();
+    const Observateur = window.ResizeObserver;
+    const observateur = Observateur ? new Observateur(poser) : null;
+    observateur?.observe(barre);
+    window.addEventListener('resize', poser);
+    return () => {
+      observateur?.disconnect();
+      window.removeEventListener('resize', poser);
+    };
+  }, []);
+  // LE JEU DE TEST À OUVRIR, venu d'un signalement admin (06/11/2026) : par un clic dans l'onglet, ou par
+  // l'adresse `?onglet=jeux_tests&jeu=…&ligne=…` (Ctrl+clic, nouvel onglet). L'onglet « Jeux de tests »
+  // l'ouvre une fois puis le rend : revenir plus tard sur l'onglet montre la liste, comme d'habitude.
+  const [cibleJeu, setCibleJeu] = useState(null);
+  const ouvrirJeuDeTest = useCallback((jeuId, ligneId) => {
+    setCibleJeu({ jeuId, ligneId, cle: Date.now() });
+    setOnglet('jeux_tests');
+  }, []);
+
+  useEffect(() => {
+    const parametres = new URLSearchParams(search);
+    if (parametres.get('onglet') !== 'jeux_tests') return;
+    const jeuId = Number(parametres.get('jeu'));
+    const ligneId = Number(parametres.get('ligne'));
+    setOnglet('jeux_tests');
+    if (jeuId > 0) setCibleJeu({ jeuId, ligneId: ligneId > 0 ? ligneId : null, cle: cleNavigation });
+  }, [search, cleNavigation]);
+
+  useEffect(() => {
+    const parametres = new URLSearchParams(search);
+    if (parametres.get('onglet') !== 'mails') return;
+    setOnglet('mails');
+    setSousOnglet('messagerie');
+    setBoiteMessagerie(parametres.get('boite') === 'support' ? 'support' : 'moi');
+
+    // EN HAUT DE L'ÉCRAN : LE CHOIX « MA BOÎTE / SUPPORT » (Camara, le 20/10/2026),
+    // sur téléphone comme sur ordinateur. On attend que l'onglet soit peint, puis
+    // on cale ce choix juste sous la barre du site — collante, elle le cacherait.
+    let fini = false;
+    let essais = 0;
+    const viser = () => {
+      if (fini) return;
+      const cible = document.querySelector('.boites-onglets');
+      if (!cible) {
+        essais += 1;
+        if (essais < 60) window.requestAnimationFrame(viser);
+        return;
+      }
+      const barre = document.querySelector('.navbar')?.getBoundingClientRect().height ?? 0;
+
+      // SUR TÉLÉPHONE, LE MENU DES SECTIONS EST COLLÉ SOUS LA BARRE (20/10/2026) :
+      // il recouvrait « Ma boîte / Support ». Quand il est collant, sa hauteur
+      // et son décalage s'ajoutent à ce qu'il faut laisser libre en haut.
+      const menu = document.querySelector('.onglets--admin');
+      const menuColle = menu && window.getComputedStyle(menu).position === 'sticky'
+        ? menu.getBoundingClientRect().height + 8
+        : 0;
+
+      const doux = !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      window.scrollTo({
+        top: Math.max(0, cible.getBoundingClientRect().top + window.scrollY - barre - menuColle - 12),
+        behavior: doux ? 'smooth' : 'auto',
+      });
+      cible.querySelector('[aria-selected="true"]')?.focus?.({ preventScroll: true });
+    };
+    window.requestAnimationFrame(viser);
+    return () => { fini = true; };
+  }, [search, cleNavigation]);
   const [edition, setEdition] = useState(null);
 
   // L'élève dont on regarde le calendrier — l'objet entier, pas seulement
@@ -1271,12 +1360,15 @@ export default function Admin() {
       { cle: 'programme', libelle: 'Programme scolaire' },
       { cle: 'periodes', libelle: 'Périodes scolaires' },
       { cle: 'signalements', libelle: 'Signalements' },
+      // CEUX DES ADMINISTRATEURS, RELIÉS AUX JEUX DE TEST (05/11/2026).
+      { cle: 'signalements_admin', libelle: 'Signalements Admin' },
 
       // APRÈS LES SIGNALEMENTS, AVANT LA SURVEILLANCE DES FOURNISSEURS : les
       // deux premiers disent ce qui ne va pas aujourd'hui, le carnet dit ce
       // qu'on voudrait demain. Le dernier onglet, lui, ne se lit qu'en cas de
       // panne.
       { cle: 'idees', libelle: 'Idées' },
+      { cle: 'jeux_tests', libelle: 'Jeux de tests' },
       { cle: 'fournisseurs', libelle: 'Anthropic / OpenAI / Gemini' },
     ];
 
@@ -1680,6 +1772,7 @@ export default function Admin() {
         actif={onglet}
         onChoisir={setOnglet}
         items={sections}
+        variante="admin"
       />
 
       {/* UN TABLEAU DE BORD SANS AUCUNE SECTION SE DIT — Camara, le
@@ -3105,6 +3198,10 @@ export default function Admin() {
       {onglet === 'periodes' && <PeriodesVacancesAdmin />}
 
       {onglet === 'signalements' && <SignalementsAdmin />}
+
+      {onglet === 'signalements_admin' && <SignalementsAdmin admin onOuvrirJeu={ouvrirJeuDeTest} />}
+
+      {onglet === 'jeux_tests' && <JeuxTestsAdmin cible={cibleJeu} onCibleVue={() => setCibleJeu(null)} />}
 
       {onglet === 'fournisseurs' && <FournisseursIA />}
     </section>

@@ -187,10 +187,39 @@ export function lireReponseSupportEcrit(texte) {
   const cahier = ORAL_CAHIER.test(dit);
   const clavier = ORAL_CLAVIER.test(dit);
 
-  if (cahier === clavier) return undefined;
+  if (!cahier && !clavier) return undefined;
+  if (cahier !== clavier) return cahier ? CAHIER : CLAVIER;
 
-  return cahier ? CAHIER : CLAVIER;
+  // LES DEUX SONT DITS : L'ENFANT SE REPREND — Camara, le 01/11/2026 :
+  // « Sur mon clavier, sur, pardon, pardon, sur mon cahier. » La phrase
+  // partait au professeur comme un message ordinaire, la carte n'était pas
+  // close, et la dictée démarrait sans support enregistré. Un enfant qui se
+  // corrige dit en dernier ce qu'il veut : c'est le DERNIER nommé qui compte —
+  // sauf s'il est nié (« le clavier, pas le cahier »), et alors l'autre.
+  const dernier = (motif) => {
+    const global = new RegExp(motif.source, 'giu');
+    let position = -1;
+    let trouve = global.exec(dit);
+    while (trouve) {
+      position = trouve.index;
+      trouve = global.exec(dit);
+    }
+    return position;
+  };
+
+  const posCahier = dernier(ORAL_CAHIER);
+  const posClavier = dernier(ORAL_CLAVIER);
+  const retenu = posCahier > posClavier ? CAHIER : CLAVIER;
+  const position = Math.max(posCahier, posClavier);
+
+  const nie = NEGATION_AVANT.test(dit.slice(Math.max(0, position - 16), position));
+  if (nie) return retenu === CAHIER ? CLAVIER : CAHIER;
+
+  return retenu;
 }
+
+/** « pas le », « pas sur mon », « pas au »… juste avant le mot. */
+const NEGATION_AVANT = /(?<!\p{L})pas(?:\s+(?:le|la|sur|au|à|a|mon|ma|en))*\s*$/iu;
 
 /** Joint le fait du support au message de l'élève. */
 export function marquerSupportEcrit(texte, support) {

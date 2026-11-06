@@ -98,7 +98,11 @@ export default function NouveauCours() {
   const complementDe = Number(recherche.get('complement')) || null;
   const [complete, setComplete] = useState(null);
   // Le parent n'a pas de porte de forfait : son droit et ses crédits suffisent.
-  const { ouvert: forfaitOuvert } = useAccesForfait(estParent ? null : eleveId);
+  const { ouvert: forfaitOuvert, motif: motifForfait, essaiFiches } = useAccesForfait(estParent ? null : eleveId);
+  // EN ESSAI, UN COURS PAR FAMILLE (18/10/2026) : un brouillon déjà commencé
+  // garde sa page ; sinon, l'essai doit être libre.
+  const enEssai = forfaitOuvert === false && motifForfait === 'essai';
+  const essaiUtilise = enEssai && essaiFiches !== 'libre';
   const { rang } = useEleveFiches(eleveId);
 
   const [matieres, setMatieres] = useState(null);
@@ -299,13 +303,14 @@ export default function NouveauCours() {
   // ARRIVÉ ICI SANS PLUS RIEN À CRÉER (lien gardé, page rechargée) : pas une
   // seule étape à l'écran, seulement la jauge et son message (16/10/2026). Un
   // brouillon déjà commencé garde sa page, ses boutons restent grisés.
-  // SANS VRAI FORFAIT (16/10/2026) : aucune étape, la raison seulement.
-  if (forfaitOuvert === false) {
+  // SANS VRAI FORFAIT (16/10/2026) : aucune étape, la raison seulement. En
+  // essai, la même chose une fois la fiche de l'essai créée (18/10/2026).
+  if ((forfaitOuvert === false && !enEssai) || (essaiUtilise && !coursId)) {
     return (
       <div className="mf-page">
         <Link to={retour} className="lien-retour">{libelleRetour}</Link>
         <h1 className="mf-titre">{titrePage}</h1>
-        <ForfaitRequis />
+        <ForfaitRequis essaiUtilise={enEssai} />
       </div>
     );
   }

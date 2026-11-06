@@ -1,0 +1,657 @@
+/* L'ONGLET « JEUX DE TESTS » — Camara, le 04/11/2026.
+ *
+ * LES COULEURS DES STATUTS PASSENT PAR UNE VARIABLE, `--statut` : celles de `--duree-*` et
+ * `--danger` ont une valeur par thème. Vert = OK, orange = en cours, gris = rien de démarré,
+ * rouge = KO.
+ */
+.jeux-tests__badge--ok,
+.jeux-tests__statut--ok,
+.jeux-tests__puce--ok { --statut: var(--duree-2); }
+
+.jeux-tests__badge--en_cours,
+.jeux-tests__statut--en_cours,
+.jeux-tests__puce--en_cours { --statut: var(--duree-3); }
+
+.jeux-tests__badge--non_demarre,
+.jeux-tests__statut--a_tester,
+.jeux-tests__puce--a_tester { --statut: var(--encre-douce); }
+
+.jeux-tests__statut--ko,
+.jeux-tests__puce--ko { --statut: var(--danger); }
+
+.jeux-tests__badge,
+.jeux-tests__puce {
+  display: inline-block;
+  padding: 4px 11px;
+  border: 1px solid color-mix(in srgb, var(--statut) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--statut) 16%, transparent);
+  color: var(--statut);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* LE CHOIX DU STATUT : tous les champs du site reçoivent leur fond et leur texte d'une
+   règle commune d'App.css qui pèse plus lourd. D'où ce sélecteur renforcé, comme pour les
+   signalements. */
+.jeux-tests__statut {
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+  padding: 5px 10px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+:root:root:root select.jeux-tests__statut {
+  border-color: color-mix(in srgb, var(--statut) 65%, transparent);
+  background-color: color-mix(in srgb, var(--statut) 16%, var(--surface));
+  color: var(--statut);
+  font-weight: 700;
+}
+
+:root:root:root select.jeux-tests__statut:hover:not(:disabled, :focus),
+:root:root:root select.jeux-tests__statut:focus {
+  border-color: var(--statut);
+  background-color: color-mix(in srgb, var(--statut) 24%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--statut) 22%, transparent);
+}
+
+.jeux-tests__statut:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.jeux-tests__statut option {
+  background: var(--surface);
+  color: var(--encre);
+}
+
+/* ------------------------------------------------------------- la mise en page */
+.jeux-tests__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* LA BANNIÈRE DE LA PAGE — Camara, le 04/11/2026. Elle porte le titre et son fond est
+   transparent : ni cadre, ni recadrage, et le bouton sur la même ligne pour ne pas
+   « prendre de la place ». */
+.jeux-tests__banniere-page {
+  flex: 0 1 680px;
+  min-width: 0;
+}
+
+/* Ses marges transparentes sont retirées à la conversion en WebP : la hauteur suit l'image. */
+.jeux-tests__banniere-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.jeux-tests__entete-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.jeux-tests__entete-actions .signalements__sous-titre { margin: 0; }
+
+.jeux-tests__entete-droite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* LES BOUTONS D'EXPORT ET D'AJOUT DE LIGNE — Camara, le 04/11/2026 : ils se perdaient, gris
+   sur le fond bleu. Vert pour l'export, comme son icône dans la liste ; corail pour l'ajout,
+   comme « Ajouter un test ». Le texte tire vers l'encre du thème : pur, le vert se lit mal. */
+.jeux-tests__bouton--export { --teinte-bouton: var(--action-ajouter); }
+.jeux-tests__bouton--ajout { --teinte-bouton: var(--corail); }
+
+/* REPLIER / DÉPLIER UN BLOC (05/11/2026) : bleu clair, distinct de l'ajout. Le chevron se
+   retourne quand le bloc est replié. */
+.jeux-tests__bouton--replier { --teinte-bouton: #7aa7ff; }
+.jeux-tests__chevron { transition: transform 0.2s ease; }
+.jeux-tests__bouton--replie .jeux-tests__chevron { transform: rotate(180deg); }
+
+.jeux-tests__bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border: 1px solid color-mix(in srgb, var(--teinte-bouton) 75%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--teinte-bouton) 20%, transparent);
+  color: color-mix(in srgb, var(--teinte-bouton) 55%, var(--encre));
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.jeux-tests__bouton svg { flex: 0 0 auto; }
+
+/* LE RETOUR ET « ANNULER » EN COULEUR — Camara, le 04/11/2026 : ambre pour revenir, rose pour
+   renoncer, les teintes de « Pause » et « Quitter » dans le cours. Ils gardent la taille du
+   bouton principal à côté d'eux. */
+.jeux-tests__bouton--retour { --teinte-bouton: var(--duree-3); }
+.jeux-tests__bouton--annuler { --teinte-bouton: var(--action-retirer); }
+
+.jeux-tests__bouton--annuler,
+.jeux-tests__bouton--retour {
+  padding: 9px 16px;
+  border-color: var(--teinte-bouton);
+  background: color-mix(in srgb, var(--teinte-bouton) 26%, transparent);
+  color: color-mix(in srgb, var(--teinte-bouton) 45%, var(--encre));
+  font-size: 14.5px;
+}
+
+.jeux-tests__bouton:hover:not(:disabled) {
+  border-color: var(--teinte-bouton);
+  background: color-mix(in srgb, var(--teinte-bouton) 32%, transparent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--teinte-bouton) 30%, transparent);
+  transform: translateY(-1px);
+}
+
+.jeux-tests__bouton:focus-visible {
+  outline: 2px solid var(--teinte-bouton);
+  outline-offset: 2px;
+}
+
+.jeux-tests__bouton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jeux-tests__bouton { transition: none; }
+  .jeux-tests__bouton:hover:not(:disabled) { transform: none; }
+}
+
+/* Dans la liste : une icône de plus, à la couleur des gestes qui ajoutent. */
+.jeux-tests__action-export { --teinte-action: var(--action-ajouter); }
+
+.jeux-tests__action-export:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.jeux-tests__action-export[aria-busy='true'] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.jeux-tests__retour { margin-bottom: 16px; }
+
+.jeux-tests__ajouter { margin-bottom: 20px; }
+
+/* LES BOUTONS RESTENT SUR UNE LIGNE — Camara, le 04/11/2026 : une compétence longue
+   écrasait la colonne, et la corbeille passait seule en dessous. La colonne prend la
+   largeur de ses boutons, c'est le texte qui revient à la ligne. */
+.jeux-tests__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.jeux-tests__liste .jeux-tests__cellule-actions,
+.jeux-tests__lignes .jeux-tests__cellule-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.jeux-tests__actions > * { flex: 0 0 auto; }
+
+.jeux-tests__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.jeux-tests__a-remplir { color: var(--encre-douce); }
+
+.jeux-tests__liste td,
+.jeux-tests__lignes td { vertical-align: middle; }
+
+/* LA LIGNE D'UN SIGNALEMENT, ouverte depuis l'onglet « Signalements Admin » (06/11/2026) : un halo corail
+   qui s'efface en quelques secondes. */
+.jeux-tests__lignes tr.jeux-tests__ligne--ciblee td {
+  animation: jeux-tests-ligne-ciblee 6s ease-out both;
+}
+
+@keyframes jeux-tests-ligne-ciblee {
+  0%, 60% { background: color-mix(in srgb, #ff7a59 24%, transparent); }
+  100% { background: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jeux-tests__lignes tr.jeux-tests__ligne--ciblee td {
+    animation: none;
+    background: color-mix(in srgb, #ff7a59 24%, transparent);
+  }
+}
+
+.jeux-tests__cellule-competence,
+.jeux-tests__cellule-commentaire,
+.jeux-tests__cellule-titres { overflow-wrap: anywhere; }
+
+.jeux-tests__cellule-commentaire {
+  max-width: 260px;
+  color: var(--encre-douce);
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.jeux-tests__cellule-date { white-space: nowrap; }
+
+/* LE TITRE EN VALEUR DANS LA LISTE — Camara, le 04/11/2026 : c'est lui qu'on y cherche,
+   dans la même police que le titre d'un test ouvert. « Aucun test » reste discret. */
+.jeux-tests__liste .jeux-tests__cellule-titres {
+  color: var(--encre);
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.jeux-tests__liste .jeux-tests__cellule-titres .jeux-tests__a-remplir {
+  color: var(--encre-douce);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ---------------------------------------------------------------- un test */
+/* UN TEST EST UNE CARTE AUX COULEURS DE SA MATIÈRE — Camara, le 04/11/2026 : « le nom des
+   matières n'est pas au niveau, les titres non plus ». La teinte est celle du professeur
+   (`styleMatiere`) et le décor celui du bandeau de ses cours (`murMatiere`). */
+.jeux-tests__test,
+.jeux-tests__test-details { --teinte-matiere: var(--matiere, var(--corail)); }
+
+:root:not([data-theme='light']) .jeux-tests__test,
+:root:not([data-theme='light']) .jeux-tests__test-details {
+  --teinte-matiere: var(--matiere-claire, var(--corail));
+}
+
+.jeux-tests__test {
+  margin-bottom: 26px;
+  border: 1px solid color-mix(in srgb, var(--teinte-matiere) 45%, var(--trait));
+  border-radius: var(--rayon-l);
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.jeux-tests__banniere {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px 22px;
+  border-bottom: 3px solid var(--teinte-matiere);
+  background: linear-gradient(100deg,
+    color-mix(in srgb, var(--teinte-matiere) 34%, var(--surface)) 0%,
+    color-mix(in srgb, var(--teinte-matiere) 10%, var(--surface)) 100%);
+}
+
+/* LE DÉCOR S'EFFACE VERS LE TITRE : il habille le bandeau sans passer sous le texte. */
+.jeux-tests__banniere::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--mur);
+  background-position: center;
+  background-size: cover;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(90deg, transparent 22%, #000 78%);
+  mask-image: linear-gradient(90deg, transparent 22%, #000 78%);
+  pointer-events: none;
+}
+
+.jeux-tests__banniere[data-mur='math'] { --mur: url('../assets/walls/w_math.webp'); }
+.jeux-tests__banniere[data-mur='informatique'] { --mur: url('../assets/walls/w_informatique.webp'); }
+.jeux-tests__banniere[data-mur='francais'] { --mur: url('../assets/walls/w_francais.webp'); }
+.jeux-tests__banniere[data-mur='philosophie'] { --mur: url('../assets/walls/w_philosophie.webp'); }
+.jeux-tests__banniere[data-mur='anglais'] { --mur: url('../assets/walls/w_anglais.webp'); }
+.jeux-tests__banniere[data-mur='espagnol'] { --mur: url('../assets/walls/w_espagnol.webp'); }
+.jeux-tests__banniere[data-mur='histoire_geo'] { --mur: url('../assets/walls/w_histoire_geo.webp'); }
+.jeux-tests__banniere[data-mur='physique_chimie'] { --mur: url('../assets/walls/w_phisique_chimie.webp'); }
+.jeux-tests__banniere[data-mur='svt'] { --mur: url('../assets/walls/w_svt.webp'); }
+.jeux-tests__banniere[data-mur='droit_economie'] { --mur: url('../assets/walls/w_droit_economie.webp'); }
+.jeux-tests__banniere[data-mur='sante'] { --mur: url('../assets/walls/w_sante.webp'); }
+.jeux-tests__banniere[data-mur='arts'] { --mur: url('../assets/walls/w_artd.webp'); }
+.jeux-tests__banniere[data-mur='sport'] { --mur: url('../assets/walls/w_sport.webp'); }
+
+/* Sur le décor, les boutons gardent un fond à eux. */
+.jeux-tests__banniere .idee-action { background: color-mix(in srgb, var(--surface) 82%, transparent); }
+
+/* CONFIRMER / ANNULER UNE SUPPRESSION — Camara, le 06/11/2026 : « ils sont toujours pas visibles ». Des boutons
+   pleins, lisibles sur la bannière illustrée comme dans les lignes. */
+.jeux-tests__confirmer {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: #1c2b4a;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.jeux-tests__confirmer:hover:not(:disabled) { background: #26385e; }
+.jeux-tests__confirmer--oui { border-color: #e4572e; background: #d9481f; }
+.jeux-tests__confirmer--oui:hover:not(:disabled) { background: #c03d17; }
+.jeux-tests__confirmer:disabled { opacity: 0.6; cursor: wait; }
+.jeux-tests__confirmer:focus-visible { outline: 3px solid #ffb199; outline-offset: 2px; }
+
+.jeux-tests__banniere .jeux-tests__bouton {
+  background: color-mix(in srgb, var(--teinte-bouton) 24%, var(--surface));
+}
+
+.jeux-tests__banniere .jeux-tests__bouton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--teinte-bouton) 38%, var(--surface));
+}
+
+/* Le tableau et le formulaire appartiennent à la carte : plus de cadre à eux. */
+.jeux-tests__test .tableau {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.jeux-tests__test .jeux-tests__formulaire {
+  margin: 0;
+  border: 0;
+  border-bottom: 3px solid var(--teinte-matiere);
+  border-radius: 0;
+}
+
+.jeux-tests__test-nom { min-width: 0; }
+
+.jeux-tests__test-titre {
+  margin: 0;
+  color: var(--encre);
+  font-family: var(--display);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.jeux-tests__test-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+}
+
+/* PLEINE, ET NON CERCLÉE : le nom de la matière se lit de loin. `--papier` y tient le
+   contraste dans les deux thèmes, c'est le fond sur lequel ces teintes ont été mesurées. */
+.jeux-tests__test-matiere {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: var(--teinte-matiere);
+  color: var(--papier);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.jeux-tests__test-compte {
+  color: var(--encre);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------ le formulaire d'un test */
+.jeux-tests__formulaire {
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+.jeux-tests__formulaire-titre {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.jeux-tests__champs {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 0 14px;
+}
+
+.jeux-tests__champs .champ { margin-bottom: 14px; }
+
+.jeux-tests__competences {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  margin: 0 0 10px;
+  padding: 2px 4px 2px 26px;
+  overflow-y: auto;
+  color: var(--encre-douce);
+}
+
+.jeux-tests__competences .champ { margin: 0; }
+
+.jeux-tests__competences input { width: 100%; }
+
+/* --------------------------------------------------------------- les fenêtres */
+.modale__boite.jeux-tests__fenetre { max-width: 560px; }
+
+.modale__boite.jeux-tests__fenetre--apercu { max-width: 680px; }
+
+/* LA MODIFICATION PLUS LARGE — Camara, le 04/11/2026 : un long commentaire s'y lit mieux. */
+.modale__boite.jeux-tests__fenetre--large { max-width: 780px; }
+
+.jeux-tests__fenetre-tete {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.jeux-tests__fenetre-ligne {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.jeux-tests__fenetre-titre {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--display);
+  font-size: 22px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.jeux-tests__fenetre-ligne .jeux-tests__puce { flex: 0 0 auto; }
+
+/* La barre grise du système jurait sur le dégradé bleu : une barre fine, qu'on oublie. */
+.jeux-tests__fenetre-corps {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-right: 6px;
+  overflow-y: auto;
+  scrollbar-color: color-mix(in srgb, var(--encre) 30%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.jeux-tests__apercu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jeux-tests__dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* UNE COULEUR PAR BLOC — Camara, le 04/11/2026. Ces jetons ont une valeur par thème. Pas de
+   sarcelle : sur le bleu de marque, elle ne se distingue pas du fond. */
+.jeux-tests__bloc--competence { --bloc: var(--corail-texte, var(--corail)); }
+.jeux-tests__bloc--creation { --bloc: var(--action-code); }
+.jeux-tests__bloc--effectue { --bloc: var(--action-ajouter); }
+.jeux-tests__bloc--commentaire { --bloc: var(--duree-3); }
+
+.jeux-tests__bloc {
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--bloc) 55%, transparent);
+  border-left: 4px solid var(--bloc);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bloc) 13%, transparent);
+}
+
+.jeux-tests__bloc-titre {
+  margin: 0 0 5px;
+  color: var(--bloc);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.jeux-tests__bloc .jeux-tests__texte {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.jeux-tests__fenetre-corps .champ { margin-bottom: 14px; }
+
+/* EN HAUTEUR SEULEMENT : tiré en largeur, un champ sortait de la fenêtre, coupait son texte
+   et faisait paraître une barre de défilement horizontale. */
+.jeux-tests__fenetre-corps { overflow-x: hidden; }
+
+.jeux-tests__fenetre-corps textarea {
+  width: 100%;
+  max-width: 100%;
+  resize: vertical;
+}
+
+.jeux-tests__mention {
+  margin: 0 0 14px;
+  color: var(--encre-douce);
+  font-size: 13px;
+}
+
+.jeux-tests__texte {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* ------------------------------------------------- sur téléphone : des cartes */
+/* MÊME REMÈDE QUE LES SIGNALEMENTS : six colonnes dans 360 pixels réduisent le texte à
+   trois mots par ligne et laissent les actions hors de l'écran. */
+@media (max-width: 640px) {
+  .jeux-tests__champs { grid-template-columns: minmax(0, 1fr); }
+
+  .jeux-tests__liste,
+  .jeux-tests__liste tbody,
+  .jeux-tests__lignes,
+  .jeux-tests__lignes tbody { display: block; width: 100%; }
+
+  .jeux-tests__liste thead,
+  .jeux-tests__lignes thead { display: none; }
+
+  .jeux-tests__liste tr,
+  .jeux-tests__lignes tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--trait);
+  }
+
+  .jeux-tests__liste tr:last-child,
+  .jeux-tests__lignes tr:last-child { border-bottom: 0; }
+
+  .jeux-tests__liste td,
+  .jeux-tests__lignes td {
+    display: block;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .jeux-tests__cellule-titres,
+  .jeux-tests__cellule-competence,
+  .jeux-tests__cellule-statut,
+  .jeux-tests__cellule-commentaire,
+  .jeux-tests__cellule-actions { grid-column: 1 / -1; }
+
+  .jeux-tests__cellule-titres,
+  .jeux-tests__cellule-competence { order: -1; font-size: 15px; }
+
+  .jeux-tests__cellule-commentaire { max-width: none; }
+
+  .jeux-tests__cellule-commentaire:empty { display: none; }
+
+  .jeux-tests__cellule-date {
+    color: var(--encre-douce);
+    font-size: 12.5px;
+  }
+
+  .jeux-tests__cellule-date::before { content: attr(data-libelle) " : "; }
+
+  .jeux-tests__cellule-auteur {
+    color: var(--encre-douce);
+    font-size: 12.5px;
+    overflow-wrap: anywhere;
+  }
+
+  .jeux-tests__cellule-classe,
+  .jeux-tests__cellule-badge { justify-self: end; }
+
+  .jeux-tests__liste .jeux-tests__cellule-actions,
+  .jeux-tests__lignes .jeux-tests__cellule-actions { width: auto; }
+
+  .jeux-tests__banniere-page { flex-basis: 100%; }
+
+  .jeux-tests__entete-actions { align-items: flex-start; }
+
+  .jeux-tests__test-titre { font-size: 22px; }
+
+  .jeux-tests__banniere { padding: 16px; }
+
+  /* Sur téléphone, la confirmation de suppression doit pouvoir passer à la ligne. */
+  .jeux-tests__actions { flex-wrap: wrap; }
+
+  /* La date d'exécution sous celle de création, à gauche comme elle. */
+  .jeux-tests__liste .jeux-tests__cellule-date,
+  .jeux-tests__lignes .jeux-tests__cellule-date { grid-column: 1 / -1; }
+}

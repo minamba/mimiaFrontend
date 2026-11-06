@@ -72,6 +72,9 @@ export default function chatReducer(state = initialState, action) {
             piecesJointes: action.payload.piecesJointes ?? null,
             // Le singulier garde la première, pour ce qui ne connaît que lui.
             pieceJointe: action.payload.piecesJointes?.[0] ?? null,
+            // Le verdict de la voix : la bulle écrit « Bonne prononciation » ou « On
+            // réessaie » tout de suite, pas au rechargement (04/11/2026).
+            sonJuste: typeof action.payload.sonJuste === 'boolean' ? action.payload.sonJuste : null,
           },
         ],
       };

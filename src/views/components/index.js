@@ -47,6 +47,8 @@ import {
   BandeauInfo,
 } from '../../components';
 import RapportsOrientation from '../../components/RapportsOrientation';
+import NotificationsMail from '../../components/NotificationsMail';
+import BoutonMails from '../../components/BoutonMails';
 import MesFiches from '../../components/mesFiches/MesFiches';
 import NouveauCours from '../../components/mesFiches/NouveauCours';
 import CoursFiches from '../../components/mesFiches/CoursFiches';
@@ -69,7 +71,7 @@ function SilentRenew() {
 
 export const BaseApp = () => {
   const dispatch = useDispatch();
-  const { authentifie } = useSelector((state) => state.auth);
+  const { authentifie, estAdmin } = useSelector((state) => state.auth);
 
   // `state.auth.authentifie` ne couvre que la session OpenID Connect du
   // parent. Un enfant connecté avec son code a sa propre session, tenue à
@@ -116,6 +118,11 @@ export const BaseApp = () => {
       <MetaDeLaPage />
       <BandeauInfo />
       <Navbar />
+      {/* LES COURRIELS QUI ARRIVENT, en bas à droite (19/10/2026) : pour un
+          administrateur, sur toutes les pages. */}
+      {authentifie && estAdmin && <NotificationsMail />}
+      {/* LA BOÎTE AUX LETTRES EN BAS À GAUCHE (20/10/2026) : badge des non lus. */}
+      {authentifie && estAdmin && <BoutonMails />}
       {/* Le verrou enveloppe TOUTES les routes, y compris les publiques : un
           enfant qui atterrit sur la page des tarifs doit revenir à ses cours,
           pas y rester. */}

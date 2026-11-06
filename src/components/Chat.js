@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -10,17 +10,18 @@ import {
   annoncer,
 } from '../lib/actions/chatActions';
 import {
-  quitterCours, terminerForfait, signalerFermeture, deposerPieceJointe, poserChoixCopie, getChoixCopie,
+  quitterCours, terminerForfait, signalerFermeture, mettreCoursEnPause, reprendreCours, deposerPieceJointe, poserChoixCopie, getChoixCopie,
 } from '../lib/api/chatApi';
 import {
   mesurerEcoute, mesurerVoix, mesurerTrouVoix, nouvelleSeanceDeMesure,
 } from '../lib/api/mesuresApi';
 import {
   departDeLaSeance, ecouleDepuisLeDepart, oublierLeDepart,
+  pauseEnregistree, poserPause, leverPause,
 } from '../lib/storage/departSeance';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { retirerMarqueursApplication } from '../lib/storage/texteAffiche';
-import { voixService } from '../lib/storage/voixService';
+import { voixService, nombreDeMots } from '../lib/storage/voixService';
 import {
   marquerCopieAuCahier,
   marquerCopieAuClavier,
@@ -30,6 +31,7 @@ import {
   texteDicteDepuis,
 } from '../lib/storage/comparaisonDictee';
 import {
+  annonceAvantDictee,
   carteDeChoixVisible,
   debutDeDictee,
   finDeDictee,
@@ -68,6 +70,14 @@ import {
   QUESTION_SUPPORT_ECRIT, CAHIER as ECRIT_CAHIER, CLAVIER as ECRIT_CLAVIER,
   rangSupportEcrit, marquerTexteRendu, lireReponseSupportEcrit,
 } from '../lib/storage/supportEcrit';
+import {
+  supportSonChoisi, copieSonAttendue, marquerSupportSon, marquerSonAuCahier, marquerSonAuClavier, marquerPhotoDesSons,
+  QUESTION_SUPPORT_SON, SON_CAHIER, SON_CLAVIER,
+} from '../lib/storage/supportSon';
+import {
+  typeDicteeChoisi, typeDeLaDictee, marquerTypeDictee, lireReponseTypeDictee, demandeRedite,
+  QUESTION_TYPE_DICTEE, MOTS as DICTEE_MOTS, PHRASES as DICTEE_PHRASES,
+} from '../lib/storage/typeDictee';
 import { figerTableauDeCorrection } from '../lib/storage/tableauFige';
 import ScanMobileModale from './ScanMobileModale';
 import { styleMatiere, murMatiere } from '../lib/couleurMatiere';
@@ -76,7 +86,7 @@ import micFermePng from '../assets/mic_b.png';
 import micOuvertPng from '../assets/mic_o.png';
 import hautParleurPng from '../assets/haut_parleur.webp';
 import { camera } from '../lib/storage/camera';
-import { delaiAssemblage, doitAttendreAvantEnvoi, amorceSeule } from '../lib/storage/tourEleve';
+import { delaiAssemblage, doitAttendreAvantEnvoi, amorceSeule, gardienDoitEnvoyer, demandeSonTenu, SON_TENU_MIN_S } from '../lib/storage/tourEleve';
 import { estUnSchema } from '../lib/storage/schemaSvg';
 import {
   decouper,
@@ -119,6 +129,9 @@ import iconeClavier from '../assets/clavier.webp';
 import iconeAgrandir from '../assets/agrandir.webp';
 import LignesCopie from './LignesCopie';
 import { ContenuTableau, tableauDeDictee } from './ComparaisonDictee';
+import VerdictSon, { estVerdictDEcoute } from './VerdictSon';
+import { motTrouve } from '../lib/imagesMots';
+import { jouerSonDuVerdict } from '../lib/storage/sonDuVerdict';
 import { copieDeReference } from '../lib/storage/diffDictee';
 import { estMatiereLangue } from '../lib/matieresLangues';
 import {
@@ -137,6 +150,7 @@ import {
 import CameraVoix from './CameraVoix';
 import Loader from './Loader';
 import Controle from './Controle';
+import PauseCours from './PauseCours';
 import { useAffichageEleve } from '../lib/besoins';
 
 /**
@@ -515,7 +529,17 @@ function MessageQuota({ motif, prof }) {
  * tableaux de données de l'administration, et le panneau en héritait leur
  * bordure et leur fond — d'où son allure de simple carte.
  */
-function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrecedents = [] }) {
+function Ardoise({
+  contenu, prof, onMontrer, copieReference = null, tableauxPrecedents = [], imageMot = null,
+}) {
+  /**
+   * L'IMAGE DU MOT TROUVÉ, AU TABLEAU — Camara, le 06/11/2026 : « les images ne doivent pas apparaître dans la
+   * discussion mais au tableau ». Elle passe devant ce qui y était écrit (elle est plus récente : voir
+   * `imageAuTableau`), mais SEULEMENT UNE FOIS CHARGÉE : une syllabe encore sans dessin laisse le tableau tel quel.
+   */
+  const [imageChargee, setImageChargee] = useState(null);
+  const montrerImage = Boolean(imageMot && imageChargee === imageMot.image);
+
   // Le tableau en grand. Une planche d'anatomie porte une douzaine de
   // légendes dans un panneau large comme un téléphone : lisible pour situer,
   // pas pour lire. L'agrandissement n'est donc pas un confort, c'est ce qui
@@ -555,6 +579,14 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
     contenuVu.current = contenu;
     setOuvert(true);
   }, [contenu]);
+
+  // Une image de mot qui arrive ouvre le tableau, comme un tableau écrit — une fois par image.
+  const imageVue = useRef(null);
+  useEffect(() => {
+    if (!montrerImage || imageVue.current === imageMot.cle) return;
+    imageVue.current = imageMot.cle;
+    setOuvert(true);
+  }, [montrerImage, imageMot]);
 
   /**
    * L'endroit montré, tenu ICI et non dans la figure.
@@ -753,7 +785,7 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
           Sur sa propre ligne, il ne peut plus recouvrir quoi que ce soit,
           quelle que soit l'image. Il ne coûte cette ligne que lorsqu'il
           existe, c'est-à-dire quand le professeur a dessiné. */}
-      {contenu && estUnSchema(contenu) && (
+      {contenu && estUnSchema(contenu) && !montrerImage && (
         <div className="ardoise__outils">
           {/* UNE ICÔNE ILLUSTRÉE, ET SEULEMENT ELLE — Camara, le 23/09/2026 :
               « mets l'icône agrandir.png dans le coin droit du tableau ».
@@ -795,7 +827,21 @@ function Ardoise({ contenu, prof, onMontrer, copieReference = null, tableauxPrec
             calcul reste du texte à la craie, un schéma devient un dessin. Le
             cadre, l'en-tête et le fond ne bougent pas — pour l'élève c'est le
             même tableau, le professeur y écrit ou y dessine. */}
-        {contenu && estUnSchema(contenu) ? (
+        {/* L'image se charge en coulisse ; elle ne remplace le tableau qu'une fois prête. */}
+        {imageMot && !montrerImage && (
+          <img src={imageMot.image} alt="" hidden onLoad={() => setImageChargee(imageMot.image)} />
+        )}
+        {montrerImage ? (
+          <figure
+            className={`image-mot image-mot--tableau image-mot--${imageMot.type}`}
+            aria-label={`Image ${imageMot.type === 'syllabe' ? 'de la syllabe' : 'du mot'} ${imageMot.mot}`}
+            key={imageMot.cle}
+          >
+            <img className="image-mot__image" src={imageMot.image} alt={imageMot.mot} width="240" height="240" />
+            {/* L'image d'une syllabe porte déjà son mot, la syllabe en couleur (« BElette ») : rien à écrire dessous. */}
+            {imageMot.type !== 'syllabe' && <figcaption className="image-mot__mot">{imageMot.mot}</figcaption>}
+          </figure>
+        ) : contenu && estUnSchema(contenu) ? (
           <Schema
             contenu={contenu}
             key={contenu}
@@ -870,6 +916,9 @@ const cleDictee = (id) => `school-ia-dictee-${id}`;
  * reposer la question vaut mieux que deviner à sa place.
  */
 const VIE_ETAT_DICTEE = 2 * 60 * 60 * 1000;
+/** Le même texte que `PromptsPedagogiques.SonFait` : le professeur en connaît le sens. */
+const SON_FAIT = '🔊 Bien reçu';
+
 export default function Chat() {
   const { eleveId, matiereId } = useParams();
   // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
@@ -881,6 +930,10 @@ export default function Chat() {
     useSelector((state) => state.chat);
   const { liste } = useSelector((state) => state.eleves);
   const eleve = liste.find((e) => String(e.id) === String(eleveId));
+
+  // La classe règle le temps laissé avant d'envoyer une réponse dite : voir `delaiAssemblage`.
+  const classeRef = useRef(null);
+  classeRef.current = eleve?.niveauLibelle;
 
   const [tableauRappele, setTableauRappele] = useState(null);
   const [saisie, setSaisie] = useState('');
@@ -910,6 +963,10 @@ export default function Chat() {
   const [saisieTapee, setSaisieTapee] = useState(false);
   const saisieTapeeRef = useRef(false);
 
+  // « armerEnvoi » est défini plus bas que les endroits qui rendent le micro sourd
+  // (26/10/2026) : une référence le leur tend.
+  const armerEnvoiRef = useRef(null);
+
   /**
    * Le champ vient du clavier.
    *
@@ -924,6 +981,20 @@ export default function Chat() {
     saisieTapeeRef.current = tapee;
     setSaisieTapee(tapee);
     setSaisie(valeur);
+
+    // IL CORRIGE SA TRANSCRIPTION : LE CHAMP DEVIENT LA SEULE VÉRITÉ — remonté
+    // par un parent le 26/10/2026 : sa fille effaçait ce que le micro avait
+    // écrit, réécrivait, envoyait, et le professeur recevait l'ancien texte ET
+    // le nouveau. Trois causes, toutes ici : l'envoi programmé sur l'ancien
+    // texte partait quand même ; la mémoire de la parole, intacte, revenait
+    // dans le champ dès qu'il était vidé ; et le micro continuait de
+    // transcrire la phrase d'avant. Dès la première touche, tout cela cesse.
+    const encours = assemblageRef.current;
+    if (encours.minuteur) clearTimeout(encours.minuteur);
+    assemblageRef.current = { texte: '', minuteur: null };
+    partielRef.current = '';
+    partielConsommeRef.current = false;
+    ecouteRef.current?.oublierLeTourEnCours?.();
 
     // Le moteur du navigateur, en repli, n'a pas de pause : d'où l'appel
     // facultatif. Les trois verrous, eux, valent pour les deux.
@@ -988,6 +1059,22 @@ export default function Chat() {
   // chronomètre quand l'élève en relance une : changer cette valeur suffit à
   // redémarrer l'effet, sans remonter tout le composant ni recharger la page.
   const [seance, setSeance] = useState(1);
+
+  // LE COURS EN PAUSE — Camara, le 03/11/2026 : « le timer s'arrête, la détection
+  // de voix est coupée, l'enfant ne peut plus du tout écrire ». Lu dès le premier
+  // rendu : une page rechargée pendant la pause y reste, sans ouvrir le micro.
+  const [enPause, setEnPause] = useState(
+    () => pauseEnregistree({ eleveId, matiereId, seance: 1 }),
+  );
+  const enPauseRef = useRef(enPause);
+  enPauseRef.current = enPause;
+
+  // Le micro ouvert à la main, hors détection automatique : il se rouvre à la reprise.
+  const micManuelAvantPauseRef = useRef(false);
+
+  // Ce que les pauses ont repoussé de la coupure du forfait.
+  const decalageEcheanceRef = useRef(0);
+  const echeanceVueRef = useRef(null);
 
   // Le document en attente d'envoi. Trois choses à retenir en même temps : le
   // fichier local (pour le nom, la taille et l'aperçu immédiat), son identifiant
@@ -1221,6 +1308,24 @@ export default function Chat() {
   const supportEcrit = useMemo(() => supportEcritChoisi(messages), [messages]);
 
   supportEcritEnAttenteRef.current = supportEcrit === null;
+
+  // L'ENFANT ÉCRIT LE SON QU'IL ENTEND — Camara, le 05/11/2026, voir supportSon.js. Des refs lues
+  // dans `envoyerTexte`, pour la raison de `cahierRef` : son identité ne doit pas changer.
+  const supportSon = useMemo(() => supportSonChoisi(messages), [messages]);
+  const copieSonEnAttente = useMemo(() => copieSonAttendue(messages), [messages]);
+  const supportSonEnAttenteRef = useRef(false);
+  const copieSonEnAttenteRef = useRef(false);
+  supportSonEnAttenteRef.current = supportSon === null;
+  const sonAuClavierRef = useRef(false);
+  sonAuClavierRef.current = supportSon === SON_CLAVIER;
+  copieSonEnAttenteRef.current = copieSonEnAttente;
+
+  // DES MOTS OU DES PHRASES (01/11/2026) — voir typeDictee.js. Au lycée, le
+  // serveur dit `dicteeAuChoix: false` : la carte ne s'affiche jamais.
+  const typeDictee = useMemo(() => typeDicteeChoisi(messages), [messages]);
+  const typeDicteeEnAttente = typeDictee === null && conversation?.dicteeAuChoix !== false;
+  const typeDicteeEnAttenteRef = useRef(false);
+  typeDicteeEnAttenteRef.current = typeDicteeEnAttente;
 
   /**
    * LA CARTE ATTEND : LES AUTRES CHEMINS D'ENVOI SONT FERMÉS.
@@ -1508,6 +1613,21 @@ export default function Chat() {
   // reconnaître sa propre voix si elle revient par le micro.
   const paroleProfRef = useRef({ texte: '', finLe: 0 });
 
+  // LE CURSEUR REVIENT DANS LE CHAMP — Camara, le 05/11/2026 : « au clavier,
+  // quand je fais Entrée, je perds le focus, le professeur parle et je dois
+  // recliquer dans le champ ». Le champ est désactivé tant que la réponse
+  // arrive, et un champ désactivé perd le curseur. Il le retrouve dès que la
+  // réponse est arrivée — seulement si l'élève avait envoyé depuis le clavier :
+  // une réponse dictée au micro n'ouvre pas le clavier d'une tablette.
+  const champSaisieRef = useRef(null);
+  const rendreLeCurseurRef = useRef(false);
+
+  useEffect(() => {
+    if (streaming || !rendreLeCurseurRef.current) return;
+    rendreLeCurseurRef.current = false;
+    champSaisieRef.current?.focus();
+  }, [streaming]);
+
   /**
    * Le professeur est-il en train de parler, à cet instant ?
    *
@@ -1758,6 +1878,33 @@ export default function Chat() {
   const cahierRef = useRef(false);
   useEffect(() => { cahierRef.current = cahierOuvert; }, [cahierOuvert]);
 
+  // LA COPIE DÉJÀ ENVOYÉE REFERME LE CAHIER, MÊME APRÈS UN RETOUR — Camara, le
+  // 01/11/2026 : parti en pleine correction, revenu, « la fenêtre pour envoyer
+  // la copie reste toujours présente ». L'état gardé par le navigateur dit
+  // « cahier », et le rouvrait sans savoir que la photo était partie. Le fil,
+  // lui, le sait : une photo de l'élève après la dernière dictée, ou le
+  // tableau « La dictée / Ta copie » du professeur, et la copie est rendue.
+  useEffect(() => {
+    if (!cahierOuvert) return;
+
+    let debut = -1;
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i]?.role === 'assistant' && contientDictee(messages[i].contenu)) {
+        debut = i;
+        break;
+      }
+    }
+    if (debut < 0) return;
+
+    const suite = messages.slice(debut + 1);
+    const photoEnvoyee = suite.some((m) => m?.role === 'user'
+      && ((m.piecesJointes?.length ?? 0) > 0 || Boolean(m.pieceJointe)));
+    const correctionOuverte = suite.some((m) => m?.role === 'assistant'
+      && /\[ARDOISE\][\s\S]*?^\s*La dictée\s*$[\s\S]*?^\s*Ta copie\s*$[\s\S]*?\[\/ARDOISE\]/im.test(m.contenu ?? ''));
+
+    if (photoEnvoyee || correctionOuverte) setCahierOuvert(false);
+  }, [messages, cahierOuvert]);
+
   /**
    * Comment l'élève écrit ses dictées : `null` tant qu'il n'a pas choisi,
    * puis `'cahier'` ou `'clavier'`.
@@ -1793,6 +1940,10 @@ export default function Chat() {
    * l'instant » — pas « la dictée est finie ». Seule la correction la clôt.
    */
   const [dicteeOuverte, setDicteeOuverte] = useState(false);
+
+  // « ATTENDS ! » AU CAHIER (01/11/2026) — l'élève en retard fige la dictée
+  // jusqu'à « C'est bon, continue ». Voir `suspendreDictee` dans voixService.
+  const [attendsDictee, setAttendsDictee] = useState(false);
 
   /**
    * Le prochain envoi EST une copie de dictée tapée au clavier.
@@ -2011,6 +2162,68 @@ export default function Chat() {
     if (lecteurRef.current) lecteurRef.current.supportDictee = modeDictee;
   }, [modeDictee]);
 
+  const basculerAttenteDictee = () => {
+    const suite = !attendsDictee;
+    setAttendsDictee(suite);
+    lecteurRef.current?.suspendreDictee?.(suite);
+  };
+
+  // Le bouton ne vit que pendant la dictée au cahier, avant la relecture : la
+  // dictée finie, abandonnée, ou passée au clavier, il se relâche de lui-même.
+  // Seulement s'il était appuyé — le relâcher écourte la pause en cours.
+  // LA VOIX EST EN TRAIN DE DICTER — et c'est un fait de CETTE page, jamais
+  // relu du navigateur. Camara, le 01/11/2026 : sorti puis revenu, « Redis le
+  // mot » était encore là, la dictée finie depuis longtemps. L'état restauré
+  // disait « dictée ouverte, relecture pas faite » (la relecture n'est pas
+  // gardée) : les boutons y croyaient. Ils ne s'allument plus qu'à la
+  // première pause d'écriture réellement entendue ici, et s'éteignent à la
+  // relecture ou à la fin de la dictée.
+  //
+  // C'EST LA VOIX QUI LE DIT, PAS L'ÉCRAN QUI LE DÉDUIT — second relevé le
+  // même jour : les boutons manquaient encore, dictée en cours au cahier. Je
+  // les déduisais de « pause en cours » et « dictée ouverte », deux états que
+  // la mémoire du navigateur et les rechargements dérèglent. La voix, elle,
+  // SAIT qu'elle dicte : elle le signale au premier morceau dicté
+  // (`surDicteeEnCours`), et le retire à la relecture ou à l'arrêt.
+  const [dicteeEnVoix, setDicteeEnVoix] = useState(false);
+
+  // Lu dans `envoyerTexte`, hors du cycle de rendu : « répète le mot » dit à
+  // voix haute pendant la dictée vaut le clic sur « Redis le mot ».
+  const dicteeEnVoixRef = useRef(false);
+  dicteeEnVoixRef.current = dicteeEnVoix;
+
+  const boutonAttendsVisible = dicteeEnVoix && modeDictee === 'cahier';
+
+  // « Redis le mot » : au cahier comme au clavier, pendant toute la dictée,
+  // jusqu'à la relecture (01/11/2026).
+  const boutonRediteVisible = dicteeEnVoix && Boolean(modeDictee);
+  useEffect(() => {
+    if (boutonAttendsVisible || !attendsDictee) return;
+    setAttendsDictee(false);
+    lecteurRef.current?.suspendreDictee?.(false);
+  }, [boutonAttendsVisible, attendsDictee]);
+
+  // « PREMIER MOT » OU « PREMIÈRE PHRASE » (01/11/2026) : la voix doit savoir
+  // quelle dictée elle annonce. Posé avant que le texte ne lui soit confié —
+  // cet effet est déclaré avant ceux qui l'alimentent.
+  const dicteeDeMots = useMemo(
+    () => typeDeLaDictee(messages, reponseEnCours) === DICTEE_MOTS,
+    [messages, reponseEnCours],
+  );
+
+  useEffect(() => {
+    if (lecteurRef.current) lecteurRef.current.dicteeDeMots = dicteeDeMots;
+  }, [dicteeDeMots]);
+
+  // OÙ EN EST LA COPIE AU CLAVIER (01/11/2026) — voir `noterCopie` : le
+  // morceau suivant attend que l'élève ait rattrapé la voix, et Entrée
+  // n'écourte la pause que s'il l'a rattrapée.
+  useEffect(() => {
+    const lignes = copieDictee ?? [];
+    const mots = lignes.reduce((total, ligne) => total + nombreDeMots(ligne), 0);
+    lecteurRef.current?.noterCopie?.(lignes.length, mots);
+  }, [copieDictee]);
+
   /**
    * Le passage d'écoute du moment — celui qui arrive en flux, ou celui que le
    * professeur vient de finir d'écrire. Les deux comptent, comme pour la
@@ -2084,7 +2297,9 @@ export default function Chat() {
 
   const vitesseEnAttente = enConversation
     ? vitesseConversationRef.current !== ouvertureConversation
-    : exerciceVitesseRef.current !== exerciceEnCours && carteVitesseVisible({
+    // PAS DE VITESSE PENDANT QUE L'ENFANT ÉCRIT LE SON — Camara, le 05/11/2026 : la fenêtre surgissait au
+    // milieu de l'exercice, les mots dictés étant pris pour un passage d'écoute.
+    : supportSon === undefined && exerciceVitesseRef.current !== exerciceEnCours && carteVitesseVisible({
       passageEcoute,
       passageChoisi: passageEcouteChoisiRef.current,
       tourDuChoix: tourVitesseRef.current,
@@ -2251,6 +2466,58 @@ export default function Chat() {
       setRelectureDictee(null);
     }
   }, [dicteeOuverte, messages, indexDernierProf, reponseEnCours]);
+
+  /**
+   * UNE NOUVELLE DICTÉE SE PRÉPARE, OU L'ANCIENNE EST ANNULÉE : SA COPIE SE
+   * REFERME — Camara, le 01/11/2026 : « j'ai annulé une dictée, j'ai demandé
+   * une nouvelle, pourquoi la copie apparaît déjà alors que je n'ai pas encore
+   * dit ce que je veux ? »
+   *
+   * L'élève était sorti puis revenu : l'état de la dictée, gardé dans le
+   * navigateur pour survivre à un rechargement, a rouvert la copie de
+   * l'ancienne. L'effet du dessus ne la refermait pas — il ne surveille qu'une
+   * dictée encore « ouverte ». Ici, trois signes qui ne trompent pas :
+   * la question « mots ou phrases ? » posée pour la suivante, la dictée
+   * supprimée à sa demande, ou abandonnée par le serveur.
+   */
+  useEffect(() => {
+    // L'ABANDON SE CHERCHE APRÈS LA DERNIÈRE DICTÉE, PAS SEULEMENT AU DERNIER
+    // MOT — Camara, le 01/11/2026. Sorti puis revenu : le serveur avait posé
+    // [DICTEE_ABANDONNEE], mais l'accueil du retour venait juste après, et
+    // l'écran gardait la dictée « au cahier, copie attendue ». Le premier
+    // message de l'enfant (« je veux qu'on en refasse une ») partait avec ce
+    // fait périmé, puis la question « cahier ou clavier ? » ne se reposait
+    // plus pour la dictée suivante.
+    let derniereDictee = -1;
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i]?.role === 'assistant' && contientDictee(messages[i].contenu)) {
+        derniereDictee = i;
+        break;
+      }
+    }
+
+    const abandonnee = derniereDictee >= 0 && messages
+      .slice(derniereDictee + 1)
+      .some((m) => m?.role === 'assistant'
+        && (dicteeAbandonnee(m.contenu) || dicteeSupprimee(m.contenu)));
+
+    const ferme = typeDicteeEnAttente || abandonnee;
+
+    if (!ferme) return;
+
+    setDicteeOuverte(false);
+    setCopieDictee(null);
+    setCahierOuvert(false);
+    setRelectureDictee(null);
+
+    // ET LA DICTÉE SUIVANTE REPART DE ZÉRO : sans mode ni tour retenus, la
+    // question « cahier ou clavier ? » se repose pour elle. Un mode resté d'une
+    // dictée finie la faisait partir sans demander — et sans les boutons
+    // « Attends ! » et « Redis le mot », qui supposent un choix fait.
+    setModeDictee(null);
+    tourModeRef.current = null;
+  }, [typeDicteeEnAttente, messages]);
+
   const [erreurMicro, setErreurMicro] = useState(null);
 
   /**
@@ -2382,12 +2649,28 @@ export default function Chat() {
     lecteurRef.current.configurer({
       avatar: conversation?.profAvatar,
       age: eleve?.age,
+      // La classe règle le temps laissé pour écrire une dictée (01/11/2026).
+      niveau: eleve?.niveauLibelle,
     });
   }, [eleve, conversation]);
 
   useEffect(() => {
     filRef.current?.scrollTo({ top: filRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, reponseEnCours]);
+
+  // LES GESTES DE LA DICTÉE SE MONTRENT — Camara, le 01/11/2026 : « il faut
+  // scroller pour les voir, si on ne scrolle pas on peut croire qu'ils
+  // n'existent pas ». Ils apparaissent au premier mot dicté, sous le panneau
+  // de la copie : le fil descend jusqu'à eux. Au prochain rendu, pour que
+  // leur hauteur soit déjà comptée.
+  useEffect(() => {
+    if (!boutonRediteVisible) return undefined;
+
+    const trame = requestAnimationFrame(() => {
+      filRef.current?.scrollTo({ top: filRef.current.scrollHeight, behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(trame);
+  }, [boutonRediteVisible]);
 
   /**
    * Recoller au bas du fil quand il RÉTRÉCIT.
@@ -2499,6 +2782,36 @@ export default function Chat() {
   useEffect(() => setTableauRappele(null), [tableauAuto]);
 
   /**
+   * L'IMAGE DU MOT (OU DE LA SYLLABE) TROUVÉ, AU TABLEAU — Camara, le 06/11/2026 : « les images ne doivent pas
+   * apparaître dans la discussion mais au tableau ». Voir `lib/imagesMots.js` pour la règle.
+   *
+   * ELLE RESTE TANT QUE RIEN DE PLUS RÉCENT NE LA REMPLACE. On remonte la séance depuis la fin : le professeur qui
+   * écrit ou efface le tableau l'emporte ; la dernière réponse JUGÉE de l'élève décide — juste et illustrée, son
+   * image ; fausse ou sans image, plus d'image (celle du mot d'avant tromperait l'enfant).
+   */
+  const imageAuTableau = useMemo(() => {
+    const geste = (texte) => Boolean(
+      texte && (dicteeAuTableau(texte) || extraireArdoises(texte).length > 0 || effaceLeTableau(texte)),
+    );
+    if (geste(reponseEnCours)) return null;
+
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i];
+      if (m.role === 'assistant') {
+        if (geste(m.contenu)) return null;
+      } else if (m.role === 'user' && typeof m.sonJuste === 'boolean') {
+        let question = null;
+        for (let j = i - 1; j >= 0 && !question; j -= 1) {
+          if (messages[j].role === 'assistant' && aQuelqueChoseAMontrer(messages[j].contenu)) question = messages[j];
+        }
+        const trouve = motTrouve(m, question, eleve);
+        return trouve ? { ...trouve, cle: m.id } : null;
+      }
+    }
+    return null;
+  }, [messages, reponseEnCours, eleve]);
+
+  /**
    * LE TABLEAU RESTE VIDE TANT QUE LA COPIE N'EST PAS RENDUE.
    *
    * Relevé le 11/09/2026 : le texte dicté écrit AU TABLEAU, en entier, face
@@ -2515,14 +2828,13 @@ export default function Chat() {
    * c'est là que le professeur y pose le texte dicté et, dessous, la copie
    * de l'élève, pour corriger devant les deux. Voir `tableauVerrouille`.
    */
-  const tableauAffiche = tableauVerrouille({
+  const verrouTableau = tableauVerrouille({
     carteDeChoix: dicteeEnAttente,
     dicteeOuverte,
     copieClavierOuverte: copieDictee !== null,
     cahierEnAttente: cahierOuvert,
-  })
-    ? null
-    : (tableauRappele ?? tableauAuto);
+  });
+  const tableauAffiche = verrouTableau ? null : (tableauRappele ?? tableauAuto);
 
   /**
    * UNE DICTÉE ARCHIVÉE AU TABLEAU : on va chercher l'archive, telle que
@@ -2595,7 +2907,10 @@ export default function Chat() {
     //
     // Après l'au revoir, même raison : ils se sont dit au revoir, plus rien
     // ne se passe, le compteur n'a plus de sens.
-    if (quota || adieuFait) return undefined;
+    //
+    // En pause, le compteur est arrêté : `leverPause` avance le départ d'autant,
+    // et cet effet repart de là à la reprise.
+    if (quota || adieuFait || enPause) return undefined;
 
     // LE DÉPART SURVIT AU RECHARGEMENT.
     //
@@ -2619,7 +2934,27 @@ export default function Chat() {
     );
 
     return () => clearInterval(battement);
-  }, [eleveId, matiereId, seance, quota, adieuFait]);
+  }, [eleveId, matiereId, seance, quota, adieuFait, enPause]);
+
+  // LA PAUSE, CÔTÉ VOIX ET CÔTÉ SERVEUR. Le serveur la connaît pour ne pas la
+  // décompter du forfait. Le nettoyage la lui lève aussi bien à la reprise qu'au
+  // départ de la page par le bouton retour : une page revenue la reposera ici.
+  useEffect(() => {
+    if (enPause) lecteurRef.current?.mettreEnPause();
+  }, [enPause]);
+
+  const idConversation = conversation?.id;
+  useEffect(() => {
+    if (!enPause || !idConversation) return undefined;
+
+    mettreCoursEnPause(idConversation).catch(() => {
+      // Sans importance pour l'enfant : le temps serait décompté, le cours reste en pause.
+    });
+
+    return () => {
+      reprendreCours(idConversation).catch(() => {});
+    };
+  }, [enPause, idConversation]);
 
   // LE COURS COUPÉ NET À L'ÉCHÉANCE DU FORFAIT — Camara, le 16/10/2026 : d'abord
   // pour l'essai (« ça clôt directement sans pitié, même si le professeur est en
@@ -2632,6 +2967,15 @@ export default function Chat() {
   const forfaitCoupeRef = useRef(false);
   useEffect(() => {
     if (!echeance || !conversation || forfaitCoupeRef.current) return undefined;
+
+    // UNE NOUVELLE ÉCHÉANCE VIENT DU SERVEUR, qui a déjà retiré les pauses passées.
+    if (echeanceVueRef.current !== echeance) {
+      echeanceVueRef.current = echeance;
+      decalageEcheanceRef.current = 0;
+    }
+
+    // Le temps est arrêté : le forfait ne s'épuise pas pendant la pause.
+    if (enPause) return undefined;
 
     const couper = () => {
       if (forfaitCoupeRef.current) return;
@@ -2654,7 +2998,7 @@ export default function Chat() {
       });
     };
 
-    const delai = echeance.le - Date.now();
+    const delai = echeance.le + decalageEcheanceRef.current - Date.now();
     if (delai <= 0) {
       couper();
       return undefined;
@@ -2663,7 +3007,7 @@ export default function Chat() {
     const minuteur = setTimeout(couper, delai);
     return () => clearTimeout(minuteur);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [echeance, conversation]);
+  }, [echeance, conversation, enPause]);
 
   // L'au revoir clôt la séance côté serveur, exactement comme le bouton
   // « Quitter le cours » : c'est ce marqueur qui déclenche l'évaluation des
@@ -2835,6 +3179,10 @@ export default function Chat() {
         // haut-parleur rouvrirait la boucle d'écho.
         if (ecouteRef.current?.suspendre) {
           ecouteRef.current.suspendre(true, false);
+          // Sourd, le micro ne signalera plus de silence : la phrase déjà
+          // transcrite partirait seulement au clic. On l'arme ici (26/10/2026) ;
+          // l'envoi attend de toute façon que le professeur ait fini (tenter).
+          armerEnvoiRef.current?.();
         } else {
           arretVolontaireRef.current = true;
           ecouteRef.current?.arreter();
@@ -2909,12 +3257,20 @@ export default function Chat() {
       if (sansCasque) return;
 
       setMicEnPause(oui);
-      if (oui) ecouteRef.current?.suspendre?.(true, false);
-      else ecouteRef.current?.suspendre?.(saisieTapeeRef.current);
+      if (oui) {
+        ecouteRef.current?.suspendre?.(true, false);
+        armerEnvoiRef.current?.();
+      } else {
+        ecouteRef.current?.suspendre?.(saisieTapeeRef.current);
+      }
     };
 
     // Le silence de dictée : l'écran doit dire qu'il est voulu.
     lecteur.surPauseDictee = setPauseDictee;
+
+    // La dictée se dit : ses boutons (« Attends ! », « Redis le mot »)
+    // s'affichent — voir `dicteeEnVoix`.
+    lecteur.surDicteeEnCours = setDicteeEnVoix;
 
     // La relecture complète : l'écran dit qu'elle se fait, puis met en avant
     // le geste qui rend la copie.
@@ -2930,6 +3286,7 @@ export default function Chat() {
       lecteur.surTrou = null;
       lecteur.surEcoute = null;
       lecteur.surPauseDictee = null;
+      lecteur.surDicteeEnCours = null;
       lecteur.surRelectureDictee = null;
     };
 
@@ -2998,7 +3355,22 @@ export default function Chat() {
       c.envoiLe = 0;
     }
 
-    if (dicteeEnAttente) return;
+    if (dicteeEnAttente) {
+      // L'ANNONCE PART, LA DICTÉE ATTEND — voir `annonceAvantDictee`
+      // (01/11/2026). Le repère `ditJusquaRef` avance sur l'annonce : au clic,
+      // seule la suite — la dictée — reste à dire.
+      const annonce = sansBorneEntamee(annonceAvantDictee(
+        texteParle(reponseEnCours, { bornes: true }),
+      ));
+      const { aDire, dit } = suiteADire(ditJusquaRef.current, annonce);
+      ditJusquaRef.current = dit;
+
+      if (aDire) {
+        lecteurRef.current.marquerDebutTour();
+        lecteurRef.current.alimenter(aDire);
+      }
+      return;
+    }
 
     // MÊME RETENUE POUR L'ÉCOUTE : le passage ne se prononce pas avant que
     // l'élève ait choisi sa vitesse. Sans elle, il l'entendrait une première
@@ -3097,7 +3469,22 @@ export default function Chat() {
     //
     // On sort AVANT de poser `indexDitRef` : sans ça, le tour serait marqué
     // comme déjà dit et l'effet ne repasserait jamais après le choix.
-    if (dicteeEnAttente) return;
+    //
+    // L'ANNONCE, ELLE, PART TOUT DE SUITE (01/11/2026) — même règle que sur le
+    // chemin du flux, pour le message arrivé d'un bloc sans passer par lui.
+    // Jamais sur un historique qu'on vient de charger : la question serait
+    // reposée à chaque rechargement.
+    if (dicteeEnAttente) {
+      if (aStreameRef.current) {
+        const annonce = annonceAvantDictee(
+          texteParle(messages[index].contenu, { bornes: true }),
+        );
+        const { aDire, dit } = suiteADire(ditJusquaRef.current, annonce);
+        ditJusquaRef.current = dit;
+        if (aDire) lecteurRef.current.alimenter(aDire);
+      }
+      return;
+    }
 
     // Et la même chose pour la vitesse d'écoute : ce second chemin prononce
     // le message une fois versé au fil, et il partirait sans attendre le clic.
@@ -3243,6 +3630,12 @@ export default function Chat() {
   const partielRef = useRef('');
   const partielConsommeRef = useRef(false);
 
+  // La demande de son tenu à laquelle on a déjà répondu : voir `onSonSansTexte`.
+  const sonFaitPourRef = useRef(null);
+
+  // La dernière nouvelle du micro : voir le gardien de l'envoi.
+  const derniereParoleRef = useRef(0);
+
   // La dernière question du professeur, pour régler la patience : c'est lui
   // qui sait s'il attend un nombre ou une explication. Dans une ref plutôt
   // qu'un état — elle est lue dans des rappels, jamais rendue.
@@ -3299,7 +3692,10 @@ export default function Chat() {
   }, []);
 
   const envoyerTexte = useCallback(
-    (contenu) => {
+    (contenu, { sonJuste = null } = {}) => {
+      // En pause, rien ne part : le texte reste, et repartira à la reprise.
+      if (enPauseRef.current) return;
+
       // Un envoi, d'où qu'il vienne, clôt le tour en cours. Sans cette purge,
       // l'élève qui tape sur « Envoyer » pendant qu'un fragment attend verrait
       // partir son message, puis le fragment derrière, comme deux questions.
@@ -3326,6 +3722,21 @@ export default function Chat() {
       // orale n'envoie rien non plus. Pour l'expression écrite, le clic part
       // avec son marqueur : la réponse orale part avec le même.
       const supportDit = documentPret ? undefined : lireReponseSupportEcrit(propre);
+
+      // « TU PEUX RÉPÉTER LE MOT ? » PENDANT LA DICTÉE VAUT « REDIS LE MOT » —
+      // Camara, le 01/11/2026. Envoyée au professeur, la phrase lui faisait
+      // redicter TOUTE la dictée depuis le début (message 9237 en local). Le
+      // dernier mot est redit par la voix, rien ne part, la dictée continue.
+      if (!documentPret && dicteeEnVoixRef.current && demandeRedite(propre)
+        && lecteurRef.current?.redireLeMot?.()) {
+        viderSaisie();
+        return;
+      }
+
+      // « Des mots ! » dit devant la carte de la dictée vaut le clic (01/11/2026).
+      const typeDit = documentPret || !typeDicteeEnAttenteRef.current
+        ? undefined
+        : lireReponseTypeDictee(propre);
 
       if (supportDit && dicteeEnAttenteRef.current) {
         choisirModeDicteeRef.current?.(supportDit === ECRIT_CAHIER ? 'cahier' : 'clavier');
@@ -3372,7 +3783,15 @@ export default function Chat() {
             ? marquerTexteRendu(propre)
             : supportDit && supportEcritEnAttenteRef.current
               ? marquerSupportEcrit(propre, supportDit)
-              : propre;
+              : supportDit && supportSonEnAttenteRef.current
+                ? marquerSupportSon(propre, supportDit)
+                : copieSonEnAttenteRef.current
+                  ? (documentPret ? marquerPhotoDesSons(propre) : marquerSonAuCahier(propre))
+                  : sonAuClavierRef.current
+                    ? marquerSonAuClavier(propre, { auMicro: !saisieTapeeRef.current })
+                    : typeDit
+                      ? marquerTypeDictee(propre, typeDit)
+                      : propre;
 
       // Une transcription peut arriver après l'échéance : le micro était encore
       // ouvert quand le temps est tombé. Elle ne part pas.
@@ -3430,7 +3849,7 @@ export default function Chat() {
 
       dispatch(envoyerMessage(
         conversation.id, aEnvoyer, restantRef.current, documentsPrets, piecesJointesApercu,
-        vitesseEcouteRef.current,
+        vitesseEcouteRef.current, sonJuste,
       ));
       viderSaisie();
 
@@ -3545,6 +3964,10 @@ export default function Chat() {
    * sur la précédente (voir `envoyerTexte`). L'élève parlait une minute et
    * voyait arriver une réponse à ses trois derniers mots.
    */
+  // LES FILETS DE L'ENVOI AUTOMATIQUE (26/10/2026) — voir `tenter` et `accumuler`.
+  const FILET_AMORCE_MS = 4000;
+  const FILET_PAROLE_MS = 5000;
+
   const programmerEnvoi = useCallback(
     (delai) => {
       const encours = assemblageRef.current;
@@ -3562,6 +3985,12 @@ export default function Chat() {
       // plus rien n'est en route ; sinon on repasse un quart de seconde plus
       // tard. Voir `doitAttendreAvantEnvoi`.
       const tenter = () => {
+        // Un morceau revenu de la transcription après la pause attend la reprise.
+        if (enPauseRef.current) {
+          assemblageRef.current = { ...assemblageRef.current, minuteur: null };
+          return;
+        }
+
         const ecoute = ecouteRef.current;
 
         if (doitAttendreAvantEnvoi({
@@ -3580,8 +4009,12 @@ export default function Chat() {
         // complet du professeur pour un mot attrapé avant une hésitation. Le
         // texte reste dans le champ, le morceau suivant s'y recollera, et le
         // prochain silence relancera l'envoi. Voir `amorceSeule` dans tourEleve.
-        if (amorceSeule(complet)) {
-          assemblageRef.current = { texte: complet, minuteur: null };
+        if (amorceSeule(complet) && !assemblageRef.current.amorceRetenue) {
+          // UNE SEULE FOIS (26/10/2026) : retenue sans limite, « je pense »
+          // restait dans le champ jusqu'à ce que l'enfant clique Envoyer. Elle
+          // est reprise dans quatre secondes et part alors telle quelle.
+          const minuteur = setTimeout(tenter, FILET_AMORCE_MS);
+          assemblageRef.current = { texte: complet, minuteur, amorceRetenue: true };
           return;
         }
 
@@ -3608,12 +4041,13 @@ export default function Chat() {
     if (!texte.trim()) return;
 
     const attente = delaiAssemblage({
-      demandeProf: demandeProfRef.current, fragment: '', accumule: texte,
+      demandeProf: demandeProfRef.current, fragment: '', accumule: texte, classe: classeRef.current,
     });
 
     chronoRef.current.assemblageMs = attente;
     programmerEnvoi(attente);
   }, [programmerEnvoi]);
+  armerEnvoiRef.current = armerEnvoi;
 
   /**
    * EN MATHS, CE QUI EST DIT S'ÉCRIT EN SYMBOLES — Camara, le 26/09/2026, sur
@@ -3641,6 +4075,8 @@ export default function Chat() {
       // vidant au passage le champ qu'il était en train de remplir.
       if (saisieTapeeRef.current) return;
 
+      derniereParoleRef.current = Date.now();
+
       const encours = assemblageRef.current;
 
       // LA MÊME PHRASE, RENDUE UNE SECONDE FOIS PAR LE MICRO : elle n'entre
@@ -3650,7 +4086,12 @@ export default function Chat() {
         assemble: encours.texte,
         dernierEnvoi: dernierEnvoiRef.current,
         demandeProf: demandeProfRef.current,
-      })) return;
+      })) {
+        // Le provisoire déjà affiché s'efface : sinon il restait dans le champ,
+        // sans minuteur, et l'enfant le croyait en attente d'envoi (26/10/2026).
+        setSaisie(encours.texte);
+        return;
+      }
 
       if (encours.minuteur) clearTimeout(encours.minuteur);
 
@@ -3664,10 +4105,18 @@ export default function Chat() {
       // tour : il dit seulement que le fournisseur a fini de transcrire ce
       // qu'il a déjà dit. C'est le silence du micro qui clôt un tour, et lui
       // seul — voir `armerEnvoi`, appelé depuis `onSilence`.
-      if (ecouteRef.current?.parleEnCeMoment?.()) return;
+      if (ecouteRef.current?.parleEnCeMoment?.()) {
+        // AVEC UN FILET (26/10/2026). Le silence devait relancer l'envoi — mais
+        // il ne vient pas toujours : un bruit de fond au-dessus du seuil, ou le
+        // micro rendu sourd entre-temps, et la phrase restait dans le champ.
+        // Dans quelques secondes sans nouvelle parole, elle part quand même ;
+        // une reprise de parole annule ce filet comme les autres (onReprise).
+        programmerEnvoi(FILET_PAROLE_MS);
+        return;
+      }
 
       const attente = delaiAssemblage({
-        demandeProf: demandeProfRef.current, fragment, accumule: texte,
+        demandeProf: demandeProfRef.current, fragment, accumule: texte, classe: classeRef.current,
       });
 
       chronoRef.current.assemblageMs = attente;
@@ -3918,6 +4367,16 @@ export default function Chat() {
    */
   const choisirSupportEcrit = useCallback(
     (choix) => envoyerTexte(marquerSupportEcrit('', choix)),
+    [envoyerTexte],
+  );
+
+  const choisirSupportSon = useCallback(
+    (choix) => envoyerTexte(marquerSupportSon('', choix)),
+    [envoyerTexte],
+  );
+
+  const choisirTypeDictee = useCallback(
+    (type) => envoyerTexte(marquerTypeDictee('', type)),
     [envoyerTexte],
   );
 
@@ -4230,6 +4689,12 @@ export default function Chat() {
   const soumettre = (evenement) => {
     evenement.preventDefault();
 
+    // Envoyé depuis le champ (Entrée) ou le bouton juste à côté : il écrivait.
+    const actif = document.activeElement;
+    if (actif && (actif === champSaisieRef.current || actif.type === 'submit')) {
+      rendreLeCurseurRef.current = true;
+    }
+
     // LE BOUTON « ENVOYER » FAIT LA MÊME CHOSE QU'ENTRÉE quand la feuille est
     // ouverte : il ajoute la ligne, il n'envoie rien.
     //
@@ -4246,6 +4711,9 @@ export default function Chat() {
       return;
     }
 
+    // Ce que le micro a encore en route décrit une parole déjà envoyée : il
+    // ne doit pas la renvoyer en second message (26/10/2026).
+    ecouteRef.current?.oublierLeTourEnCours?.();
     envoyerTexte(saisie);
   };
 
@@ -4266,14 +4734,11 @@ export default function Chat() {
       setCopieDictee((lignes) => [...(lignes ?? []), ligne]);
       viderSaisie();
 
-      // IL A FINI D'ÉCRIRE : LA PAUSE N'A PLUS D'OBJET.
-      //
-      // Le silence entre deux phrases est CALCULÉ, donc majoré — il doit
-      // couvrir l'élève le plus lent de sa classe d'âge. Sa validation est le
-      // signal exact que l'estimation cherchait à approcher : continuer
-      // d'attendre ferait patienter quelqu'un qui a terminé, et rallongerait
-      // une dictée de dix lignes de plusieurs minutes pour rien.
-      lecteurRef.current.sauterLaPause();
+      // LA VOIX EST PRÉVENUE PAR L'EFFET DE LA COPIE (01/11/2026) — voir
+      // `noterCopie` : la ligne validée n'écourte la pause que si l'élève a
+      // rattrapé la voix. L'appeler ici sans condition faisait partir le mot
+      // suivant quand il validait celui d'AVANT, et les mots de retard
+      // s'accumulaient sans qu'il puisse les rattraper.
 
       return;
     }
@@ -4291,6 +4756,11 @@ export default function Chat() {
       return;
     }
 
+    // Ce que le micro a encore en route décrit une parole déjà envoyée : il
+    // ne doit pas la renvoyer en second message (26/10/2026).
+    ecouteRef.current?.oublierLeTourEnCours?.();
+    // Entrée au clavier : le curseur reviendra dans le champ (voir `champSaisieRef`).
+    rendreLeCurseurRef.current = true;
     envoyerTexte(saisie);
   };
 
@@ -4446,6 +4916,7 @@ export default function Chat() {
           // parole : le verrou anti-doublon est levé.
           partielRef.current = texte;
           partielConsommeRef.current = false;
+          derniereParoleRef.current = Date.now();
 
           const debut = assemblageRef.current.texte;
           setSaisie(enMaths(debut ? `${debut} ${texte}` : texte));
@@ -4521,7 +4992,26 @@ export default function Chat() {
         // enfant d'expliquer pendant une minute, en respirant entre ses
         // phrases, sans que son explication parte en six messages dont cinq
         // annulés.
+        // LE SON QUE LE MICRO NE SAIT PAS ÉCRIRE — Camara, le 03/11/2026, voir
+        // `demandeSonTenu`. Le professeur l'a demandé, l'enfant l'a fait, le modèle
+        // rend du vide : sans ce message, chacun attendrait l'autre. Une seule fois par
+        // demande. Son sens est expliqué au professeur (`MarqueurSonsIsoles`).
+        onSonSansTexte: (secondes) => {
+          const demande = demandeProfRef.current;
+
+          if (secondes < SON_TENU_MIN_S || saisieTapeeRef.current) return;
+          if (!demandeSonTenu(demande) || sonFaitPourRef.current === demande) return;
+
+          // Il a aussi dit quelque chose : ces mots-là partent comme d'habitude.
+          if (assemblageRef.current.texte.trim()) return;
+
+          sonFaitPourRef.current = demande;
+          envoyerTexte(SON_FAIT);
+        },
+
         onReprise: () => {
+          derniereParoleRef.current = Date.now();
+
           const { minuteur } = assemblageRef.current;
           if (!minuteur) return;
 
@@ -4536,7 +5026,7 @@ export default function Chat() {
         // pris pour un retour de haut-parleur, et sa réponse jetée.
         // On n'envoie PAS tout de suite : le transcripteur dit qu'une phrase
         // est finie, pas que l'élève a fini de parler. Voir tourEleve.js.
-        onFinal: (texte) => {
+        onFinal: (texte, verdict = null) => {
           // Du départ de l'ordre au texte reçu. Nul si le transcripteur a
           // tranché de lui-même avant qu'on ne clôture : il n'y a alors aucun
           // départ à mesurer, et zéro serait un mensonge.
@@ -4553,6 +5043,38 @@ export default function Chat() {
           // reprendre la poserait deux fois.
           if (partielConsommeRef.current) {
             partielConsommeRef.current = false;
+            return;
+          }
+
+          // UN SON JUGÉ PART SUR-LE-CHAMP — Camara, le 04/11/2026 : « quand il
+          // répond, il y a écrit Bonne prononciation », et « On réessaie » depuis le même soir. Le serveur a
+          // déjà entendu tout le son du tour et tranché : attendre le délai du CP
+          // (une correction possible) n'apporterait rien, le verdict est posé. Rien
+          // n'entre dans le champ, rien ne s'y assemble : la bulle montre le verdict.
+          if (verdict?.son && texte?.trim() && !saisieTapeeRef.current) {
+            if (assemblageRef.current.minuteur) clearTimeout(assemblageRef.current.minuteur);
+            assemblageRef.current = { texte: '', minuteur: null };
+            derniereParoleRef.current = Date.now();
+
+            mesurerEcoute({
+              cause: 'verdict-son',
+              message: typeof verdict.juste === 'boolean' ? (verdict.juste ? 'juste' : 'faux') : 'non-juge',
+            });
+
+            // « Bien reçu » n'est ni bon ni mauvais : il n'a pas de son.
+            if (typeof verdict.juste === 'boolean') {
+              jouerSonDuVerdict({
+                juste: verdict.juste,
+                // Lu ici : ce rappel vit plus longtemps que l'état `muet` qu'il a vu naître.
+                muet: localStorage.getItem('school-ia-muet') === '1',
+                sansCasque,
+                ecoute: ecouteRef.current,
+                professeurParle: () => profParleRef.current,
+                eleveTape: () => saisieTapeeRef.current,
+              });
+            }
+
+            envoyerTexte(texte, { sonJuste: verdict.juste });
             return;
           }
 
@@ -4739,6 +5261,10 @@ export default function Chat() {
 
           // Envoi automatique après un court silence : l'élève porte un casque,
           // lui demander de cliquer « Envoyer » casserait la conversation.
+          // IL A REPRIS LA MAIN AU CLAVIER (26/10/2026) : son texte prime, le
+          // moteur ne l'envoie pas à sa place — ni ne l'écrase.
+          if (saisieTapeeRef.current) return;
+
           envoyerTexte(enMaths(texte));
           return;
         }
@@ -4858,6 +5384,140 @@ export default function Chat() {
       prendrePhoto, signalerOreilleMorte, enMaths,
       ]);
 
+  /**
+   * LE GARDIEN DE L'ENVOI AUTOMATIQUE — voir `gardienDoitEnvoyer`, qui dit pourquoi
+   * une règle unique plutôt qu'un filet de plus.
+   *
+   * IL ENVOIE LUI-MÊME, SANS PASSER PAR `programmerEnvoi` : dans le bruit, `tenter`
+   * attendrait encore le silence qui ne vient pas, et une reprise l'annulerait.
+   *
+   * CHAQUE ENVOI LAISSE UNE TRACE (`cause=gardien-envoi` dans docker logs mimia) : il
+   * n'agit que là où le chemin normal a échoué, donc la trace dit lequel, et combien
+   * de fois.
+   */
+  const envoyerParLeGardien = () => {
+    const assemble = assemblageRef.current.texte;
+    const partiel = partielRef.current.trim();
+    const parle = Boolean(ecouteRef.current?.parleEnCeMoment?.());
+    let complet = assemble;
+
+    if (partiel) {
+      partielRef.current = '';
+
+      // Son verdict, s'il arrive encore, porterait sur une phrase déjà partie.
+      partielConsommeRef.current = true;
+
+      const aPrendre = estUnTourDeParole(partiel, ecritureDuCours(conversation?.matiereCode))
+        && !estUneRedite(partiel, {
+          assemble,
+          dernierEnvoi: dernierEnvoiRef.current,
+          demandeProf: demandeProfRef.current,
+        });
+
+      if (aPrendre) complet = enMaths(assemble ? `${assemble} ${partiel}` : partiel);
+    }
+
+    assemblageRef.current = { texte: '', minuteur: null };
+
+    // Ce qui s'affichait n'était pas une réponse : le champ ne doit pas le garder.
+    if (!complet.trim()) {
+      setSaisie('');
+      return;
+    }
+
+    mesurerEcoute({
+      cause: 'gardien-envoi',
+      message: `${partiel ? 'provisoire' : 'assemble'} ; parle=${parle} ; `
+        + `depuis ${Date.now() - derniereParoleRef.current} ms ; ${complet.length} car.`,
+    });
+
+    if (cameraRef.current?.actif && estCommandePhoto(complet)) {
+      setSaisie('');
+      prendrePhoto();
+      return;
+    }
+
+    envoyerTexte(complet);
+  };
+
+  const envoyerParLeGardienRef = useRef(envoyerParLeGardien);
+  envoyerParLeGardienRef.current = envoyerParLeGardien;
+
+  const ecoutePourGardienRef = useRef(false);
+  ecoutePourGardienRef.current = ecoute;
+
+  useEffect(() => {
+    const garde = setInterval(() => {
+      // Le micro fermé à la main : ce qui reste dans le champ attend son clic.
+      if (!mainsLibresRef.current && !ecoutePourGardienRef.current) return;
+
+      const micro = ecouteRef.current;
+      const { texte, minuteur } = assemblageRef.current;
+
+      if (gardienDoitEnvoyer({
+        aDuTexte: Boolean(texte.trim() || partielRef.current.trim()),
+        minuteurArme: Boolean(minuteur),
+        tapee: saisieTapeeRef.current,
+        enPause: enPauseRef.current,
+        finie: seanceTermineeRef.current,
+        depuisTexteMs: Date.now() - derniereParoleRef.current,
+        parle: micro?.parleEnCeMoment?.(),
+        voixRecenteMs: micro?.voixRecenteMs?.(),
+        transcriptionEnCours: micro?.transcriptionEnCours?.(),
+      })) {
+        envoyerParLeGardienRef.current();
+      }
+    }, 500);
+
+    return () => clearInterval(garde);
+  }, []);
+
+  /**
+   * METTRE LE COURS EN PAUSE — Camara, le 03/11/2026.
+   *
+   * PAS PENDANT UN CONTRÔLE NOTÉ : le temps arrêté, l'enfant pourrait ouvrir ses
+   * cahiers. Le bouton n'y est pas proposé.
+   *
+   * RIEN N'EST PERDU : ni la phrase du professeur (figée, pas coupée), ni ce que
+   * l'enfant avait commencé à dire (le texte reste, son envoi repart à la reprise).
+   */
+  const mettreEnPause = () => {
+    if (enPauseRef.current || seanceTerminee || evaluationEnCours) return;
+
+    poserPause({ eleveId, matiereId, seance });
+    enPauseRef.current = true;
+    setEnPause(true);
+
+    lecteurRef.current.mettreEnPause();
+
+    micManuelAvantPauseRef.current = ecoute && !mainsLibres;
+    arretVolontaireRef.current = true;
+    ecouteRef.current?.arreter();
+    setEcoute(false);
+
+    clearTimeout(assemblageRef.current.minuteur);
+    assemblageRef.current = { ...assemblageRef.current, minuteur: null };
+  };
+
+  const reprendreLeCours = () => {
+    decalageEcheanceRef.current += leverPause({ eleveId, matiereId, seance });
+
+    enPauseRef.current = false;
+    setEnPause(false);
+
+    lecteurRef.current.reprendreApresPause();
+
+    // En détection automatique, c'est l'effet de réouverture qui rouvre le micro.
+    arretVolontaireRef.current = false;
+    if (micManuelAvantPauseRef.current) {
+      micManuelAvantPauseRef.current = false;
+      demarrerEcoute();
+    }
+
+    derniereParoleRef.current = Date.now();
+    armerEnvoiRef.current?.();
+  };
+
   const basculerMicro = () => {
     if (seanceTerminee) return;
 
@@ -4907,7 +5567,8 @@ export default function Chat() {
   // c'est l'horloge du navigateur qui commande, le serveur ne connaît ni la
   // durée choisie ni l'heure d'entrée.
   useEffect(() => {
-    if (!conversation || streaming) return;
+    // En pause, le professeur ne prend pas la parole de lui-même.
+    if (!conversation || streaming || enPauseRef.current) return;
 
     // Les adieux sont dits : plus une seule annonce. L'élève peut prendre
     // congé à trente secondes de la fin — le professeur lui répond, la séance
@@ -5045,7 +5706,7 @@ export default function Chat() {
    * reconnaît le retour, coupe le mode mains libres et explique le problème.
    */
   useEffect(() => {
-    if (!mainsLibres || seanceTerminee || streaming || ecoute || !vocalDispo) {
+    if (!mainsLibres || seanceTerminee || streaming || ecoute || !vocalDispo || enPause) {
       return undefined;
     }
 
@@ -5071,7 +5732,7 @@ export default function Chat() {
     const minuteur = setTimeout(demarrerEcoute, delai);
     return () => clearTimeout(minuteur);
   }, [mainsLibres, seanceTerminee, streaming, ecoute, tourDeParole, vocalDispo,
-      sansCasque, demarrerEcoute]);
+      sansCasque, demarrerEcoute, enPause]);
 
   if (loading) return <Loader texte="Le professeur arrive…" />;
 
@@ -5143,6 +5804,8 @@ export default function Chat() {
     <div className="chat-espace">
     {copie && <Controle copie={copie} onFermer={() => setCopie(null)} />}
 
+    {enPause && !quota && <PauseCours onReprendre={reprendreLeCours} onQuitter={quitter} />}
+
     {/* LA FLÈCHE DE DÉFILEMENT, EN MARGE DROITE DE L'ÉCRAN — Camara, le
         23/09/2026 : « elle sera à droite en dehors de la discussion sur
         mobile ». Posée en fixe dans la marge plutôt que dans le panneau :
@@ -5157,7 +5820,8 @@ export default function Chat() {
       </svg>
     </span>
 
-    <section className="chat">
+    {/* `inert` : plus un clic, plus une frappe, sur rien de ce que porte le cours. */}
+    <section className="chat" inert={enPause}>
       {/* LA CONFIRMATION DE LA PHOTO PRISE À LA VOIX.
           Se referme toute seule après quelques secondes : l'élève vient de
           parler sans toucher l'écran, il n'a rien à fermer non plus. */}
@@ -5247,7 +5911,7 @@ export default function Chat() {
               // phrase ; `profParle` vient du lecteur, au début et à la fin
               // réels de la parole. Et `niveau` donne aux ondes le son du
               // moment.
-              parle={profParle && !muet}
+              parle={profParle && !muet && !enPause}
               niveau={niveauVoix}
             />
 
@@ -5271,15 +5935,33 @@ export default function Chat() {
               LE NOM ACCESSIBLE GARDE LA PHRASE : un lecteur d'écran annonce
               « Quitter le cours », et la commande vocale accepte les deux — le
               nom contient le texte visible, c'est ce qu'exige la règle. */}
-          <button
-            type="button"
-            className="btn-quitter"
-            onClick={quitter}
-            title="Quitter le cours"
-            aria-label="Quitter le cours"
-          >
-            Quitter
-          </button>
+          {/* « PAUSE » JUSTE SOUS « QUITTER » — Camara, le 03/11/2026. L'un sur
+              l'autre, ils n'élargissent pas la rangée : sur téléphone, la bulle du
+              professeur reste centrée. */}
+          <span className="chat__depart">
+            <button
+              type="button"
+              className="btn-quitter"
+              onClick={quitter}
+              title="Quitter le cours"
+              aria-label="Quitter le cours"
+            >
+              Quitter
+            </button>
+
+            {!seanceTerminee && !evaluationEnCours && (
+              <button
+                type="button"
+                className="btn-pause-cours"
+                onClick={mettreEnPause}
+                title="Mettre le cours en pause"
+                aria-label="Mettre le cours en pause"
+              >
+                <span className="btn-pause-cours__barres" aria-hidden="true" />
+                Pause
+              </button>
+            )}
+          </span>
 
           {/* Une séance finie laisse deux issues, et une seule est mise en avant :
               repartir. « Quitter » reste en retrait plutôt que de rivaliser —
@@ -5428,7 +6110,8 @@ export default function Chat() {
             const duProf = message.role !== 'user';
 
             return (
-              /* LE TOUR DE PAROLE : la bulle et son heure.
+              <Fragment key={message.id}>
+              {/* LE TOUR DE PAROLE : la bulle et son heure.
                  -----------------------------------------------------------
                  SANS AVATAR — Camara, le 18/09/2026 : « c'est redondant avec
                  le prof qui est déjà dans le header ». Je l'avais ajouté en
@@ -5437,10 +6120,10 @@ export default function Chat() {
                  il n'y a jamais deux professeurs dans une séance.
 
                  L'HEURE EST SOUS LA BULLE, PAS DEDANS : dedans, elle se lisait
-                 comme la fin du message. */
-              <div key={message.id} className={`tour tour--${duProf ? 'prof' : 'eleve'}`}>
+                 comme la fin du message. */}
+              <div className={`tour tour--${duProf ? 'prof' : 'eleve'}`}>
                 <div className="tour__corps">
-                  <div className={`bulle bulle--${duProf ? 'agent' : 'eleve'}`}>
+                  <div className={`bulle bulle--${duProf ? 'agent' : 'eleve'}${typeof message.sonJuste === 'boolean' ? ` bulle--verdict-${message.sonJuste ? 'juste' : 'faux'}` : (message.contenu === SON_FAIT ? ' bulle--verdict-recu' : '')}`}>
                     {(message.piecesJointes ?? (message.pieceJointe ? [message.pieceJointe] : []))
                       .map((piece) => (
                         <PieceJointeBulle
@@ -5450,7 +6133,11 @@ export default function Chat() {
                           onAgrandir={(url, nom) => setAgrandie({ url, nom })}
                         />
                       ))}
-                    <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} />
+                    {/* UN SON JUGÉ N'ÉCRIT PAS CE QUE L'ENFANT A DIT (04/11/2026) : le
+                        professeur lit le son dans le contenu, l'élève voit le verdict. */}
+                    {typeof message.sonJuste === 'boolean'
+                      ? <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} />
+                      : <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} />}
                   </div>
 
                   {/* Pas d'heure sur le message en cours d'écriture : il n'en a
@@ -5461,6 +6148,7 @@ export default function Chat() {
                   )}
                 </div>
               </div>
+              </Fragment>
             );
           })}
 
@@ -5506,6 +6194,66 @@ export default function Chat() {
                 <img className="choix-dictee__image" src={iconeClavier} alt="" />
                 Au clavier
                 <small>Tu écris ici, puis tu envoies</small>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* L'ENFANT ÉCRIT LE SON QU'IL ENTEND — Camara, le 05/11/2026. La même carte, au mot près :
+            un enfant qui en a déjà vu une sait y répondre. */}
+        {supportSon === null && !streaming && !seanceTerminee && (
+          <div className="choix-dictee">
+            <p className="choix-dictee__question">{QUESTION_SUPPORT_SON}</p>
+
+            <div className="choix-dictee__boutons">
+              <button
+                type="button"
+                className="btn btn--fantome"
+                onClick={() => choisirSupportSon(SON_CAHIER)}
+              >
+                <img className="choix-dictee__image" src={iconeCahier} alt="" />
+                Sur mon cahier
+                <small>Tu m’enverras une photo à la fin</small>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn--fantome"
+                onClick={() => choisirSupportSon(SON_CLAVIER)}
+              >
+                <img className="choix-dictee__image" src={iconeClavier} alt="" />
+                Au clavier
+                <small>Tu écris ici, puis tu envoies</small>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* DES MOTS OU DES PHRASES — Camara, le 01/11/2026 : un enfant de CP qui
+            révisait « un, deux, trois » a reçu ces mots pris dans des phrases,
+            qu'il ne sait pas encore écrire. La même carte que les autres
+            choix : un enfant qui en a déjà vu une sait y répondre. */}
+        {typeDicteeEnAttente && !streaming && !seanceTerminee && (
+          <div className="choix-dictee">
+            <p className="choix-dictee__question">{QUESTION_TYPE_DICTEE}</p>
+
+            <div className="choix-dictee__boutons">
+              <button
+                type="button"
+                className="btn btn--fantome"
+                onClick={() => choisirTypeDictee(DICTEE_MOTS)}
+              >
+                Une dictée de mots
+                <small>Des mots seuls, un par ligne</small>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn--fantome"
+                onClick={() => choisirTypeDictee(DICTEE_PHRASES)}
+              >
+                Une dictée de phrases
+                <small>De vraies phrases à écrire</small>
               </button>
             </div>
           </div>
@@ -5822,7 +6570,7 @@ export default function Chat() {
             le trombone, et comprendre tout seul qu'une dictée au cahier se
             rend en image. Le professeur, lui, n'a aucun moyen de la réclamer
             de façon fiable — il ne l'a pas fait. */}
-        {cahierOuvert && (
+        {(cahierOuvert || copieSonEnAttente) && (
           <div className={`copie-dictee${relectureTerminee ? ' copie-dictee--pret' : ''}`}>
             <div className="copie-dictee__entete">
               <span className="copie-dictee__titre">Ta copie</span>
@@ -5876,7 +6624,51 @@ export default function Chat() {
         {pauseDictee && (
           <div className="dictee-pause">
             <span className="dictee-pause__plume" aria-hidden="true">✍️</span>
-            Écris… je reprends dans un instant.
+            {attendsDictee
+              ? 'Je t’attends. Appuie sur « C’est bon » quand tu as fini.'
+              : 'Écris… je reprends dans un instant.'}
+          </div>
+        )}
+
+        {/* « ATTENDS ! » — Camara, le 01/11/2026. Au cahier, l'écran ne sait
+            pas où en est l'enfant : la pause calculée par classe règle le
+            rythme, et ce bouton sert quand il est en retard. Au clavier, il
+            n'existe pas — c'est Entrée qui dit où il en est. */}
+        {/* « REDIS LE MOT » — Camara, le 01/11/2026 : au cahier comme au
+            clavier. Un enfant qui n'a pas entendu le mot ne pouvait pas le
+            redemander — le micro est coupé pendant la dictée. */}
+        {boutonRediteVisible && (
+          <div className="dictee-gestes">
+            {boutonAttendsVisible && (
+              <button
+                type="button"
+                className={`dictee-attends${attendsDictee ? ' dictee-attends--actif' : ''}`}
+                aria-pressed={attendsDictee}
+                onClick={basculerAttenteDictee}
+              >
+                <span className="dictee-attends__icone" aria-hidden="true">{attendsDictee ? '▶️' : '✋'}</span>
+                <span>
+                  {attendsDictee ? 'C’est bon, continue' : 'Attends !'}
+                  <small>
+                    {attendsDictee
+                      ? (dicteeDeMots ? 'Je dis le mot suivant.' : 'Je dis la phrase suivante.')
+                      : 'Je n’ai pas fini d’écrire.'}
+                  </small>
+                </span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="dictee-attends dictee-attends--redite"
+              onClick={() => lecteurRef.current?.redireLeMot?.()}
+            >
+              <span className="dictee-attends__icone" aria-hidden="true">🔁</span>
+              <span>
+                {dicteeDeMots ? 'Redis le mot' : 'Redis la phrase'}
+                <small>Je ne l’ai pas bien entendu.</small>
+              </span>
+            </button>
           </div>
         )}
 
@@ -6169,6 +6961,7 @@ export default function Chat() {
         )}
 
         <textarea
+          ref={champSaisieRef}
           value={saisie}
           onChange={(evenement) => taper(evenement.target.value)}
           onKeyDown={auClavier}
@@ -6259,6 +7052,8 @@ export default function Chat() {
         tableauxPrecedents={tableauxPrecedents}
         prof={conversation?.profPrenom}
         onMontrer={montrerSurLeTableau}
+        // Pas d'image quand le tableau est verrouillé (dictée en cours) ou que l'élève y a rappelé un ancien tableau.
+        imageMot={!verrouTableau && tableauRappele === null && !idDicteeAuTableau ? imageAuTableau : null}
       />
     </div>
   );

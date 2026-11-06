@@ -15,6 +15,8 @@ import BandeauModele from './BandeauModele';
 import BarreOutilsTexte from './BarreOutilsTexte';
 import BlocPieces from './BlocPieces';
 import CarteExpediteur from './CarteExpediteur';
+import ChampAdresses, { adressesValides, lireAdresses } from './ChampAdresses';
+import useContactsEquipe from '../lib/hooks/useContactsEquipe';
 import ColonneModeles from './ColonneModeles';
 import SectionMail from './SectionMail';
 
@@ -68,6 +70,13 @@ export default function MessageParent({
   const [recherche, setRecherche] = useState('');
   const [listeOuverte, setListeOuverte] = useState(false);
   const [destinataire, setDestinataire] = useState('');
+  // LES COPIES ET COPIES CACHÉES (19/10/2026) — « comme sur Gmail » : un clic
+  // sur « Cc » ou « Cci » ouvre leur champ.
+  const [copies, setCopies] = useState([]);
+  const [cachees, setCachees] = useState([]);
+  const [ccVisible, setCcVisible] = useState(false);
+  const [cciVisible, setCciVisible] = useState(false);
+  const equipe = useContactsEquipe();
 
   const {
     nom, setNom,
@@ -95,7 +104,7 @@ export default function MessageParent({
   }, [envoye]);
 
   // ------------------------------------------------------------ brouillon
-  const VIDE = JSON.stringify({ destinataire: '', sujet: '', titre: '', texte: '', avecPieces: false });
+  const VIDE = JSON.stringify({ destinataire: '', cc: [], cci: [], sujet: '', titre: '', texte: '', avecPieces: false });
   const brouillonId = useRef(null);
   const dernierBrouillon = useRef(VIDE);
   const enAttente = useRef(null);
@@ -134,7 +143,7 @@ export default function MessageParent({
   const dernieresPieces = useRef(clePieces([], []));
   const actuel = useRef({});
   actuel.current = {
-    contenu: { destinataire, sujet, titre, texte, avecPieces: images.length + documents.length > 0 },
+    contenu: { destinataire, cc: copies, cci: cachees, sujet, titre, texte, avecPieces: images.length + documents.length > 0 },
     images,
     documents,
   };
@@ -182,16 +191,17 @@ export default function MessageParent({
   useEffect(() => {
     if (modele) return undefined;
 
-    const contenu = { destinataire, sujet, titre, texte, avecPieces: images.length + documents.length > 0 };
+    const contenu = { destinataire, cc: copies, cci: cachees, sujet, titre, texte, avecPieces: images.length + documents.length > 0 };
     if (JSON.stringify(contenu) === dernierBrouillon.current) return undefined;
 
-    const vide = !destinataire.trim() && !sujet.trim() && !titre.trim() && !texte.trim() && !contenu.avecPieces;
+    const vide = !destinataire.trim() && copies.length === 0 && cachees.length === 0
+      && !sujet.trim() && !titre.trim() && !texte.trim() && !contenu.avecPieces;
     if (vide && !brouillonId.current) return undefined;
 
     enAttente.current = contenu;
     const minuteur = setTimeout(() => sauverBrouillon(contenu), 1500);
     return () => clearTimeout(minuteur);
-  }, [modele, destinataire, sujet, titre, texte, images, documents, sauverBrouillon]);
+  }, [modele, destinataire, copies, cachees, sujet, titre, texte, images, documents, sauverBrouillon]);
 
   // En quittant l'onglet, ce qui restait à enregistrer part quand même.
   const sauverRef = useRef(null);
@@ -224,6 +234,8 @@ export default function MessageParent({
 
         const contenu = {
           destinataire: data.destinataire ?? '',
+          cc: lireAdresses(data.copies),
+          cci: lireAdresses(data.copiesCachees),
           sujet: data.sujet ?? '',
           titre: data.titre ?? '',
           texte: data.texte ?? '',
@@ -234,6 +246,10 @@ export default function MessageParent({
         dernieresPieces.current = clePieces(imgs, docs);
         setDestinataire(contenu.destinataire);
         setRecherche(contenu.destinataire);
+        setCopies(contenu.cc);
+        setCachees(contenu.cci);
+        setCcVisible(contenu.cc.length > 0);
+        setCciVisible(contenu.cci.length > 0);
         setSujet(contenu.sujet);
         setTitre(contenu.titre);
         chargerComposition({ texte: contenu.texte, images: imgs, documents: docs });
@@ -265,7 +281,12 @@ export default function MessageParent({
   const composition = { sujet, titre: titre || sujet, texte, images, documents };
   const adresseValide = REGEX_MAIL.test(destinataire.trim());
   const contenuPret = sujet.trim().length > 0 && texte.trim().length > 0;
-  const pret = adresseValide && contenuPret;
+  const pret = adresseValide && contenuPret && adressesValides(copies) && adressesValides(cachees);
+  const nombreCopies = copies.length + cachees.length;
+  const suggestions = useMemo(
+    () => [...equipe, ...(parents ?? []).map((p) => ({ nom: nomAffiche(p), mail: p.mail }))],
+    [equipe, parents],
+  );
 
   const voirApercu = async () => {
     setErreur(null);
@@ -319,9 +340,9 @@ export default function MessageParent({
       let reponse;
       if (modele) {
         await enregistrer();
-        reponse = await envoyerModeleParent(modele.id, adresse, boite);
+        reponse = await envoyerModeleParent(modele.id, adresse, boite, { cc: copies, cci: cachees });
       } else {
-        reponse = await envoyerMailParent({ ...composition, destinataire: adresse }, boite);
+        reponse = await envoyerMailParent({ ...composition, destinataire: adresse, cc: copies, cci: cachees }, boite);
 
         // Sans template, le formulaire se vide comme avant. Avec, il reste
         // ouvert : on écrit souvent le même message à plusieurs parents.
@@ -342,6 +363,10 @@ export default function MessageParent({
       setConfirme(false);
       setDestinataire('');
       setRecherche('');
+      setCopies([]);
+      setCachees([]);
+      setCcVisible(false);
+      setCciVisible(false);
     } catch (e) {
       setErreur(e?.response?.data?.message ?? "Le message n'a pas pu être envoyé.");
     } finally {
@@ -437,18 +462,50 @@ export default function MessageParent({
 
           <div className="champ">
             <label htmlFor="mp-mail">Adresse e-mail du destinataire</label>
-            <input
-              id="mp-mail"
-              type="email"
-              value={destinataire}
-              onChange={(e) => setDestinataire(e.target.value)}
-              placeholder="parent@exemple.fr"
-            />
+            {/* CC ET CCI DANS LE CHAMP, comme dans la réponse (Camara, le 19/10/2026). */}
+            <div className={`champ-avec-copies${ccVisible && cciVisible ? '' : ' avec-liens'}`}>
+              <input
+                id="mp-mail"
+                type="email"
+                value={destinataire}
+                onChange={(e) => setDestinataire(e.target.value)}
+                placeholder="parent@exemple.fr"
+              />
+              {(!ccVisible || !cciVisible) && (
+                <span className="champ-avec-copies__liens">
+                  {!ccVisible && <button type="button" onClick={() => setCcVisible(true)}>Cc</button>}
+                  {!cciVisible && <button type="button" onClick={() => setCciVisible(true)}>Cci</button>}
+                </span>
+              )}
+            </div>
             <span className="champ__aide">
               Remplie automatiquement en choisissant une ligne ci-dessus, ou à taper
               directement.
             </span>
           </div>
+
+          {/* CC ET CCI, COMME SUR GMAIL (19/10/2026) : ouverts depuis le champ du destinataire. */}
+          {ccVisible && (
+            <ChampAdresses
+              id="mp-cc"
+              libelle="Cc — en copie"
+              valeur={copies}
+              onChange={setCopies}
+              suggestions={suggestions}
+              autoFocus={copies.length === 0}
+            />
+          )}
+          {cciVisible && (
+            <ChampAdresses
+              id="mp-cci"
+              libelle="Cci — en copie cachée"
+              valeur={cachees}
+              onChange={setCachees}
+              suggestions={suggestions}
+              autoFocus={cachees.length === 0}
+              placeholder="Les autres destinataires ne la verront pas"
+            />
+          )}
         </SectionMail>
 
         {/* ③ LE COURRIEL — ce que le parent reçoit. */}
@@ -586,7 +643,7 @@ export default function MessageParent({
                 disabled={envoi}
                 onClick={envoyer}
               >
-                {envoi ? 'Envoi…' : `Confirmer l’envoi à ${destinataire.trim()}`}
+                {envoi ? 'Envoi…' : `Confirmer l’envoi à ${destinataire.trim()}${nombreCopies > 0 ? ` (+ ${nombreCopies} en copie)` : ''}`}
               </button>
 
               <button

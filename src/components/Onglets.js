@@ -38,7 +38,12 @@ import { useEffect, useRef, useState } from 'react';
  * `display: none` retire aussi les boutons cachés du parcours de tabulation :
  * la version repliée n'est pas seulement invisible, elle est absente.
  */
-export default function Onglets({ items, actif, onChoisir, mini = false, etiquette }) {
+/**
+ * `variante` (20/10/2026) : « admin » pour la barre des sections de
+ * l'administration — plus marquée sur ordinateur, collée en haut de l'écran
+ * sur téléphone. Les autres barres ne changent pas.
+ */
+export default function Onglets({ items, actif, onChoisir, mini = false, etiquette, variante = null }) {
   const [ouvert, setOuvert] = useState(false);
   const boite = useRef(null);
 
@@ -81,6 +86,7 @@ export default function Onglets({ items, actif, onChoisir, mini = false, etiquet
       className={[
         'onglets',
         mini ? 'onglets--secondaires' : '',
+        variante ? `onglets--${variante}` : '',
         ouvert ? 'onglets--ouvert' : '',
       ].filter(Boolean).join(' ')}
     >

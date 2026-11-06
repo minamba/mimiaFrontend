@@ -877,6 +877,7 @@ export default function Modes() {
     voixGemini: false,
     voixGeminiDisponible: false,
     voixGeminiModele: '',
+    verificationSyllabes: false,
     blueSky: false,
     styleSaison: null,
     modeDeveloppeur: false,
@@ -956,6 +957,9 @@ export default function Modes() {
           voixGemini: Boolean(data?.voixGemini),
           voixGeminiDisponible: Boolean(data?.voixGeminiDisponible),
           voixGeminiModele: data?.voixGeminiModele ?? '',
+
+          // Éteint par défaut : aucune voix de plus ne part tant qu'on ne l'allume pas.
+          verificationSyllabes: Boolean(data?.verificationSyllabes),
 
           // Éteint par défaut : le style d'origine reste la référence.
           blueSky: Boolean(data?.blueSky),
@@ -1244,6 +1248,27 @@ export default function Modes() {
             // jusqu’au rechargement.
             oublierReglages();
           }}
+        />
+
+        {/* LES SYLLABES DU PRIMAIRE — Camara, le 04/11/2026 : « on doit envoyer les voix au
+            lieu du texte », puis « les syllabes on en fait jusqu'en CM2 ». Éteint : le micro
+            fait exactement ce qu'il faisait. */}
+        <Interrupteur
+          titre="Vérification des syllabes et des mots au primaire — OpenAI"
+          actif={reglages.verificationSyllabes}
+          connu={lus}
+          occupe={envoi === 'VERIFICATION_SYLLABES_PRIMAIRE'}
+          onBasculer={() => basculer('VERIFICATION_SYLLABES_PRIMAIRE', 'verificationSyllabes')}
+          description="Du CP au CM2, en français et en anglais, seulement pendant un exercice de sons ou de syllabes, quand le professeur demande de dire une syllabe ou de lire un mot, la voix de l’enfant est jugée par gpt-audio-1.5 au lieu du texte écrit par le micro : pour une syllabe il choisit à l’aveugle parmi des sons proches ; pour un mot, court ou long (« ordinateur »), il transcrit les sons entendus en alphabet phonétique, sans droit de corriger vers un mot connu, et on les compare à la prononciation de référence du mot. Le professeur sait alors ce qui a été entendu, et « ffff » n’est plus perdu. Il enchaîne chaque syllabe avec un mot qui la contient : c’est là que l’écoute est la plus sûre."
+          effets={[
+            'Rien ne change au collège et au lycée, dans les autres matières et les autres tours : le micro et la voix des professeurs restent ceux d’aujourd’hui.',
+            'Le changement vaut au prochain tour de parole, y compris dans les cours déjà commencés.',
+            'Si OpenAI ne répond pas sous 4 secondes, le texte du micro part comme d’habitude.',
+            'L’élève voit « Bonne prononciation » en vert, ou « On réessaie » en couleur neutre : jamais de rouge, l’outil refuse aussi de bonnes réponses.',
+            'Un mot ou une syllabe n’est jugé que s’il a été testé et reconnu au moins 3 fois sur 4 par 4 voix de synthèse. Sinon l’élève lit « Bien reçu » et le cours continue ; le professeur ne choisit que dans la liste vérifiée, liste fermée en anglais ; en français, un mot jamais vu se teste tout seul en arrière-plan, une fois, environ 0,5 à 1 centime (voix de synthèse OpenAI, jamais celle d’un enfant, 300 mots par jour au plus).',
+            'Environ 0,001 $ par syllabe vérifiée (gpt-audio-1.5, plus gpt-4.1-mini pour lire la demande du professeur) ; pour un mot, s’ajoutent gpt-4.1-mini et gpt-4.1 qui donnent sa prononciation de référence, gardée un jour. La voix part chez OpenAI, sans ZDR tant qu’il n’est pas accordé.',
+          ]}
+          note="MESURÉ LE 04/11/2026, SUR DES VOIX DE SYNTHÈSE À PRONONCIATION IMPOSÉE (phonème par phonème, 4 voix françaises dont une voix d’enfant). Syllabes, 88 prises : bonnes acceptées 37 sur 44, mauvaises acceptées à tort 2 sur 44 (mi/ni, ja/cha). Mots courts par paires proches (lapin/sapin…), 160 prises : bons acceptés 56 sur 80, mauvais acceptés à tort 1 sur 80. Mots longs du CE2 au CM2 mal lus d’un son (« ordinatur », « champinon »), 128 prises : bons acceptés 49 sur 64, mauvais acceptés à tort 5 sur 64 ; en écrivant le mot en français au lieu de la phonétique, le modèle les corrigeait tous : 60 sur 64. La voix d’enfant concentre les deux tiers des refus à tort. Verdict en 0,6 s. Jamais mesuré sur de vraies voix d’enfants : le professeur fait donc redire plutôt que de dire que c’est faux. ESSAI RÉEL DU 04/11/2026, UNE VOIX D’ADULTE, 10 PRISES : 4 acceptées en séance, 9 une fois la comparaison faite sur le son et non sur l’écriture (« li » vaut « lit »). Au banc, « fu » reste reconnu 9 fois sur 24. À NE PAS ALLUMER EN PRODUCTION AVANT LA MESURE SUR 30 VRAIES PRISES, DONT UN ENFANT."
         />
 
         {/* LE CHOIX DE LA VOIX — Camara, le 28/09/2026 : « je veux garder

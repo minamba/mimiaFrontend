@@ -1,0 +1,162 @@
+/* « PAUSE » SOUS « QUITTER », de la même largeur (Camara, le 03/11/2026). */
+.chat__depart {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+/*
+ * MÊME FORME QUE « QUITTER », L'OR À LA PLACE DU CORAIL — Camara, le 03/11/2026 : le
+ * bleu d'abord essayé ne se voyait pas sur le bandeau bleu du cours. L'or est celui
+ * de la pastille de classe : il ressort sur le bleu sans dire « attention ».
+ *
+ * PAS `.btn-pause`, DÉJÀ PRIS : c'est la pause du forfait, dans Quota.js, avec
+ * ses propres barres en ::before. L'emprunter affichait deux icônes ici, et mes
+ * réglages déformaient le sien (Camara, le 03/11/2026).
+ */
+.btn-pause-cours,
+.pause-cours__icone {
+  --or-pause: #f5c14d;
+}
+
+.btn-pause-cours {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--or-pause);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--or-pause) 20%, var(--papier));
+  color: color-mix(in srgb, var(--or-pause) 35%, white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.3);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-pause-cours:hover {
+  background: color-mix(in srgb, var(--or-pause) 34%, var(--papier));
+}
+
+/* DEUX BARRES DESSINÉES, ET NON LE CARACTÈRE ⏸ : chaque système le rend à sa façon,
+   parfois en pictogramme coloré dans un carré. */
+.btn-pause-cours__barres {
+  flex-shrink: 0;
+  width: 10px;
+  height: 11px;
+  background:
+    linear-gradient(currentColor, currentColor) left / 3.5px 100% no-repeat,
+    linear-gradient(currentColor, currentColor) right / 3.5px 100% no-repeat;
+  border-radius: 1px;
+}
+
+/* L'ÉCRAN DE PAUSE, par-dessus tout, menu compris. */
+.pause-cours {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(3 10 24 / 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.pause-cours__carte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(420px, 100%);
+  padding: 28px 24px 22px;
+  border: 1px solid var(--trait-bouton);
+  border-radius: var(--rayon-l);
+  background: var(--papier);
+  color: var(--encre);
+  text-align: center;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.5);
+}
+
+.pause-cours__icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border: 1.5px solid var(--or-pause);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--or-pause) 20%, var(--papier));
+  color: color-mix(in srgb, var(--or-pause) 35%, white);
+}
+
+.pause-cours__icone .btn-pause-cours__barres {
+  width: 20px;
+  height: 22px;
+  background-size: 7px 100%;
+}
+
+.pause-cours__carte h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 24px;
+}
+
+.pause-cours__carte p {
+  margin: 0 0 6px;
+  color: var(--encre-douce);
+  line-height: 1.45;
+}
+
+.pause-cours__reprendre {
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--corail-btn);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.pause-cours__reprendre:hover {
+  background: var(--corail-btn-survol);
+}
+
+.pause-cours__quitter {
+  padding: 6px 12px;
+  border: 0;
+  background: none;
+  color: var(--encre-douce);
+  font-family: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pause-cours__quitter:hover {
+  color: var(--encre);
+}
+
+/* Sur fond clair, le texte presque blanc disparaîtrait. */
+:root[data-theme='light'] .btn-pause-cours,
+:root[data-theme='light'] .pause-cours__icone {
+  color: #6b4b00;
+}
+
+/* Les mêmes tailles que « Quitter », aux mêmes largeurs (voir App.css). */
+@media (max-width: 1040px) {
+  .btn-pause-cours { padding: 7px 12px; font-size: 12.5px; }
+}
+
+@media (max-width: 400px) {
+  .btn-pause-cours { padding: 6px 10px; font-size: 12px; }
+}

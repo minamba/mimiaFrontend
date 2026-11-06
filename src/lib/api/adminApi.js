@@ -313,6 +313,17 @@ export const traiterEcheanceReferentiel = (id) =>
  */
 export const getSignalements = () => httpClient.get('/admin/signalements');
 
+/**
+ * LES SIGNALEMENTS DES ADMINISTRATEURS (05/11/2026) : le bouton à côté du bouclier les crée, reliés ou non à un
+ * bloc d'un jeu de test ; l'onglet « Signalements Admin » les liste.
+ */
+export const getSignalementsAdmin = () => httpClient.get('/admin/signalements-admin');
+
+export const creerSignalementAdmin = ({ categorie, description, competence, jeuId, testId }) =>
+  httpClient.post('/admin/signalements-admin', {
+    categorie, description, competence: competence || null, jeuId: jeuId || null, testId: testId || null,
+  });
+
 export const creerSignalement = (data) => httpClient.post('/admin/signalements', data);
 
 export const modifierSignalement = (id, data) =>
@@ -320,6 +331,35 @@ export const modifierSignalement = (id, data) =>
 
 export const supprimerSignalement = (id) =>
   httpClient.delete(`/admin/signalements/${id}`);
+
+/** Les captures d'écran et documents d'un signalement. Les fichiers viennent en blob : la route exige le jeton. */
+export const getPiecesSignalement = (id) =>
+  httpClient.get(`/admin/signalements/${id}/pieces`);
+
+export const getFichierPieceSignalement = (id, pieceId) =>
+  httpClient.get(`/admin/signalements/${id}/pieces/${pieceId}/fichier`, { responseType: 'blob' });
+
+export const ajouterPieceSignalement = (id, fichier) => {
+  const corps = new FormData();
+  corps.append('fichier', fichier);
+  return httpClient.post(`/admin/signalements/${id}/pieces`, corps);
+};
+
+export const supprimerPieceSignalement = (id, pieceId) =>
+  httpClient.delete(`/admin/signalements/${id}/pieces/${pieceId}`);
+
+/** Les notes de l'administration sous un signalement : le parent ne les voit pas. */
+export const getCommentairesSignalement = (id) =>
+  httpClient.get(`/admin/signalements/${id}/commentaires`);
+
+export const ajouterCommentaireSignalement = (id, texte) =>
+  httpClient.post(`/admin/signalements/${id}/commentaires`, { texte });
+
+export const modifierCommentaireSignalement = (id, commentaireId, texte) =>
+  httpClient.put(`/admin/signalements/${id}/commentaires/${commentaireId}`, { texte });
+
+export const supprimerCommentaireSignalement = (id, commentaireId) =>
+  httpClient.delete(`/admin/signalements/${id}/commentaires/${commentaireId}`);
 
 /**
  * Supprimer un parent, DES DEUX CÔTÉS.
@@ -493,7 +533,7 @@ export const getPlanches = () => httpClient.get('/planches');
  * « svt-respiratoire.svg », et on retrouve toujours une planche à son nom.
  */
 export const importerPlanche = ({
-  cle, matiereCode, niveau, fichier, auteur, source, licence, maison, variante,
+  cle, matiereCode, niveau, fichier, auteur, source, licence, maison, variante, differer = false,
 }) => {
   const corps = new FormData();
   corps.append('cle', cle);
@@ -519,6 +559,10 @@ export const importerPlanche = ({
   // remplacée par une figure de Commons resterait marquée maison, et le
   // remplissage automatique des crédits continuerait de l'ignorer.
   corps.append('maison', maison ? 'true' : 'false');
+
+  // L'IMPORT D'UN DOSSIER (20/10/2026) : la description se fait en tâche de
+  // fond, l'envoi ne l'attend pas.
+  if (differer) corps.append('differer', 'true');
 
   return httpClient.post('/planches', corps);
 };
@@ -592,6 +636,13 @@ function corpsDiffusion({ sujet, titre, texte, images, documents }) {
   return corps;
 }
 
+/** Les copies et copies cachées d'un courriel personnel (19/10/2026). */
+function ajouterCopies(corps, { cc, cci } = {}) {
+  (cc ?? []).forEach((a) => corps.append('cc', a));
+  (cci ?? []).forEach((a) => corps.append('cci', a));
+  return corps;
+}
+
 const estFichier = (f) => typeof File !== 'undefined' && f instanceof File;
 
 /** Le message rendu en HTML, sans destinataire. */
@@ -616,7 +667,7 @@ export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
  */
 /** `boite` (17/10/2026) : 'support' pour envoyer sous support@mimia.fr, signé « L'équipe Mimia ». */
 export const envoyerMailParent = (composition, boite = undefined) => {
-  const corps = corpsDiffusion(composition);
+  const corps = ajouterCopies(corpsDiffusion(composition), composition);
   corps.append('destinataire', composition.destinataire ?? '');
   return httpClient.post('/admin/mails/parent', corps, { params: parBoite(boite) });
 };
@@ -675,8 +726,8 @@ export const apercuModeleMail = (id, { signature = false, boite = undefined } = 
 export const diffuserModeleMail = (id) => httpClient.post(`/admin/modeles-mail/${id}/diffusion`);
 
 /** Envoie un template à UN parent. */
-export const envoyerModeleParent = (id, destinataire, boite = undefined) =>
-  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire }, { params: parBoite(boite) });
+export const envoyerModeleParent = (id, destinataire, boite = undefined, { cc = [], cci = [] } = {}) =>
+  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire, cc, cci }, { params: parBoite(boite) });
 
 /**
  * Programme un courriel automatique :
@@ -757,8 +808,12 @@ export const marquerMessageLu = (id, lu, boite = undefined, dossier = 'reception
   httpClient.post(`/admin/messagerie/${id}/lu`, null, { params: { lu, ...parBoite(boite), dossier } });
 
 /** Répond dans le fil, avec la mise en page du site. */
-export const repondreMessage = (id, texte, boite = undefined) =>
-  httpClient.post(`/admin/messagerie/${id}/repondre`, { texte }, { params: parBoite(boite) });
+/** Les adresses de l'équipe, proposées en copie (19/10/2026). */
+export const getContactsEquipe = () => httpClient.get('/admin/messagerie/contacts');
+
+/** `cc` et `cci` (19/10/2026) : « Répondre à tous », ou des copies ajoutées. */
+export const repondreMessage = (id, texte, boite = undefined, { cc = [], cci = [] } = {}) =>
+  httpClient.post(`/admin/messagerie/${id}/repondre`, { texte, cc, cci }, { params: parBoite(boite) });
 
 /** Télécharge une pièce jointe d'un message, dans son dossier (18/10/2026). */
 export const telechargerPieceJointe = (id, nom, boite, dossier = 'reception') =>
@@ -781,6 +836,9 @@ export const urlPieceJointeMessage = (id, nom) =>
  * texte par planche, aucune lecture d'image repayée.
  */
 export const requalifierPlanches = () => httpClient.post('/planches/requalifier');
+
+/** Réveille la tâche de fond des descriptions, sans fichier (20/10/2026). */
+export const relancerDescriptionsPlanches = () => httpClient.post('/planches/relancer');
 
 /**
  * Le détail d'un compte rendu, et la copie d'une évaluation, VUS PAR
@@ -827,10 +885,22 @@ export const modifierTarif = (id, prix) => httpClient.put(`/admin/tarifs/${id}`,
 export const creerEnfantPourParent = (parentId, eleve) =>
   httpClient.post(`/admin/parents/${parentId}/enfants`, eleve);
 
+/**
+ * L'établissement d'un enfant, posé par l'administration (20/10/2026) : le
+ * second temps de la création, quand l'identifiant existe. La route du parent
+ * n'ouvre que ses propres enfants.
+ */
+export const definirEtablissementEnfantAdmin = (eleveId, uai) =>
+  httpClient.put(`/admin/eleves/${eleveId}/etablissement`, { uai });
+
 /* LES RÔLES DES COMPTES PARENTS (17/10/2026) — super-administrateur seul. */
 export const getRoles = () => httpClient.get('/admin/roles');
-export const creerRole = (nom, onglets) => httpClient.post('/admin/roles', { nom, onglets });
-export const modifierRole = (id, nom, onglets) => httpClient.put(`/admin/roles/${id}`, { nom, onglets });
+/** `courriels` : les codes des courriels que reçoivent les comptes du rôle (06/11/2026). */
+export const creerRole = (nom, onglets, courriels = []) => httpClient.post('/admin/roles', { nom, onglets, courriels });
+export const modifierRole = (id, nom, onglets, courriels = []) =>
+  httpClient.put(`/admin/roles/${id}`, { nom, onglets, courriels });
+/** minamba.camara@mimia.fr reçoit-il les courriels de signalement ? */
+export const definirCopieMinamba = (actif) => httpClient.put('/admin/roles/copie-minamba', { actif });
 export const supprimerRole = (id) => httpClient.delete(`/admin/roles/${id}`);
 /** `roleId` null : « Utilisateur ». */
 export const definirRoleParent = (parentId, roleId) =>

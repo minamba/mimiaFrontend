@@ -21,6 +21,20 @@ import { chercherEtablissements } from '../lib/api/elevesApi';
  */
 const ATTENTE_MS = 350;
 
+/**
+ * LE CHAMP NE S'AFFICHE QU'À PARTIR DE LA 3e — Camara, le 18/10/2026 : « la
+ * conseillère d'orientation n'est présente qu'à partir de la 3e ». Le même
+ * seuil que sa matière en base (`ORIENTATION`, rangs 9 à 12) : le rang de la
+ * classe CHOISIE dans le formulaire, du CP (1) à la terminale (12), toutes
+ * voies confondues.
+ */
+export const RANG_CONSEILLERE = 9;
+
+export function classeAvecConseillere(niveaux, niveauScolaireId) {
+  const niveau = (niveaux ?? []).find((n) => String(n.id) === String(niveauScolaireId));
+  return Boolean(niveau) && (niveau.ordre ?? 0) >= RANG_CONSEILLERE;
+}
+
 export default function ChoixEtablissement({ id, valeur, onChange }) {
   const [texte, setTexte] = useState('');
   const [resultats, setResultats] = useState([]);

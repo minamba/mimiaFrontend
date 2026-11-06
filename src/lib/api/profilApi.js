@@ -7,6 +7,9 @@ export const getProfil = () => httpClient.get('/profil');
 
 export const modifierProfil = (data) => httpClient.put('/profil', data);
 
+// Le tutoriel ne se relancera plus tout seul pour ce parent (02/11/2026).
+export const marquerTutorielVu = () => httpClient.post('/profil/tutoriel-vu');
+
 
 // ------------------------------------------------------- serveur d'identité
 /**

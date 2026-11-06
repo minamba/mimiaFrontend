@@ -50,6 +50,13 @@ const lire = () => {
 };
 
 /**
+ * Le départ enregistré vaut-il encore ? Une séance en pause se périme à partir de
+ * sa pause, et non de son départ : le temps de pause ne compte pas comme du cours.
+ */
+const pasPerimee = (enregistre, maintenant) =>
+  maintenant - (enregistre.pauseDepuis ?? enregistre.depart) < PEREMPTION_MS;
+
+/**
  * L'instant où la séance a commencé.
  *
  * Reprend celui qui est enregistré s'il concerne la même séance, le même
@@ -68,7 +75,7 @@ export function departDeLaSeance({ eleveId, matiereId, seance }) {
     && enregistre.matiereId === matiereId
     && enregistre.seance === seance
     && typeof enregistre.depart === 'number'
-    && maintenant - enregistre.depart < PEREMPTION_MS;
+    && pasPerimee(enregistre, maintenant);
 
   if (memeSeance) return enregistre.depart;
 
@@ -106,9 +113,70 @@ export function ecouleDepuisLeDepart({ eleveId, matiereId, seance }) {
     && enregistre.matiereId === matiereId
     && enregistre.seance === seance
     && typeof enregistre.depart === 'number'
-    && maintenant - enregistre.depart < PEREMPTION_MS;
+    && pasPerimee(enregistre, maintenant);
 
-  return memeSeance ? Math.floor((maintenant - enregistre.depart) / 1000) : 0;
+  // En pause, le compteur s'est arrêté à la pause, même après un rechargement.
+  return memeSeance
+    ? Math.floor(((enregistre.pauseDepuis ?? maintenant) - enregistre.depart) / 1000)
+    : 0;
+}
+
+/**
+ * LA PAUSE SURVIT AU RECHARGEMENT, COMME LE DÉPART — Camara, le 03/11/2026. Un F5
+ * pendant une pause la laisse en place : sans quoi le compteur repartirait tout
+ * seul, et tout le temps de pause serait perdu d'un coup.
+ */
+const seanceEnPause = ({ eleveId, matiereId, seance }) => {
+  const enregistre = lire();
+
+  return enregistre
+    && enregistre.eleveId === eleveId
+    && enregistre.matiereId === matiereId
+    && enregistre.seance === seance
+    && typeof enregistre.depart === 'number'
+    ? enregistre
+    : null;
+};
+
+const ecrire = (enregistre) => {
+  try {
+    window.localStorage.setItem(CLE, JSON.stringify(enregistre));
+  } catch {
+    // Voir plus haut : on continue sans mémoire plutôt que sans séance.
+  }
+};
+
+/** La séance est-elle en pause, au chargement de la page ? */
+export function pauseEnregistree(seance) {
+  const enregistre = seanceEnPause(seance);
+  return Boolean(
+    enregistre
+    && typeof enregistre.pauseDepuis === 'number'
+    && pasPerimee(enregistre, Date.now()),
+  );
+}
+
+/** Note le début de la pause. Une pause déjà en cours garde son début. */
+export function poserPause(seance) {
+  const enregistre = seanceEnPause(seance);
+  if (!enregistre || typeof enregistre.pauseDepuis === 'number') return;
+
+  ecrire({ ...enregistre, pauseDepuis: Date.now() });
+}
+
+/**
+ * Lève la pause : le départ avance d'autant, et le compteur repart exactement où
+ * il s'était arrêté. Rend la durée de la pause, en millisecondes.
+ */
+export function leverPause(seance) {
+  const enregistre = seanceEnPause(seance);
+  if (!enregistre || typeof enregistre.pauseDepuis !== 'number') return 0;
+
+  const duree = Math.max(0, Date.now() - enregistre.pauseDepuis);
+  const { pauseDepuis, ...reste } = enregistre;
+  ecrire({ ...reste, depart: enregistre.depart + duree });
+
+  return duree;
 }
 
 /**

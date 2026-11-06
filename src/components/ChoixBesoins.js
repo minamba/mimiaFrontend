@@ -31,8 +31,17 @@ export default function ChoixBesoins({ valeur, onChange }) {
   };
 
   return (
-    <fieldset className={`panneau-choix panneau-choix--besoins${ouvert ? ' est-ouvert' : ''}`}>
-      <legend className="besoins__legende">
+    // UN GROUPE, PAS UN FIELDSET (20/10/2026). La légende d'un fieldset est posée
+    // SUR sa bordure par Safari iOS, même flottante : sur téléphone, l'icône et
+    // le chevron chevauchaient le cadre, le titre partait au-dessus. Un groupe
+    // nommé par son titre garde le même sens pour un lecteur d'écran, et se
+    // dessine comme n'importe quel bloc.
+    <div
+      role="group"
+      aria-labelledby={`${id}-titre`}
+      className={`panneau-choix panneau-choix--besoins${ouvert ? ' est-ouvert' : ''}`}
+    >
+      <div className="besoins__legende">
         <button
           type="button"
           className="panneau-choix__tete besoins__ouvrir"
@@ -47,7 +56,9 @@ export default function ChoixBesoins({ valeur, onChange }) {
           </span>
           <span className="panneau-choix__titres">
             <span className="panneau-choix__titre">
-              Besoins particuliers
+              {/* Le nom du groupe : le titre seul, pas le sous-titre — un test ou un
+                  lecteur d'écran qui cherche « TDAH » doit tomber sur la case. */}
+              <span id={`${id}-titre`}>Besoins particuliers</span>
               <span className="panneau-choix__etiquette">facultatif</span>
               {besoins.length > 0 && (
                 <span className="panneau-choix__compte">{besoins.length}</span>
@@ -63,7 +74,7 @@ export default function ChoixBesoins({ valeur, onChange }) {
             </svg>
           </span>
         </button>
-      </legend>
+      </div>
 
       {ouvert && (
         <div id={`${id}-corps`} className="besoins__corps">
@@ -141,6 +152,6 @@ export default function ChoixBesoins({ valeur, onChange }) {
           </div>
         </div>
       )}
-    </fieldset>
+    </div>
   );
 }

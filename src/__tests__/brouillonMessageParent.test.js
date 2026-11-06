@@ -28,7 +28,7 @@ it('le message en cours s’enregistre en brouillon, puis met à jour le même',
   await act(async () => { jest.advanceTimersByTime(1600); });
 
   expect(api.enregistrerBrouillon).toHaveBeenCalledWith({
-    messageOrigine: null, id: null, destinataire: 'hilda@exemple.fr', sujet: 'Votre inscription', titre: '', texte: '', avecPieces: false,
+    messageOrigine: null, id: null, destinataire: 'hilda@exemple.fr', cc: [], cci: [], sujet: 'Votre inscription', titre: '', texte: '', avecPieces: false,
   }, 'moi');
 
   fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'Bonjour Hilda' } });

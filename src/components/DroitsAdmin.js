@@ -34,6 +34,8 @@ export const LIBELLES = {
   periodes: 'Périodes scolaires',
   signalements: 'Signalements',
   idees: 'Idées',
+  jeux_tests: 'Jeux de tests',
+  signalements_admin: 'Signalements Admin',
   fournisseurs: 'Anthropic / OpenAI / Gemini',
   cout: 'Ce que le produit me coûte',
   revenu: 'Ce que le produit me rapporte',

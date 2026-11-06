@@ -3222,3 +3222,21 @@ html.fdr-impression .mf-notions-coin {
   font-size: 18px;
   cursor: pointer;
 }
+
+/* L'ESSAI DES FICHES (18/10/2026) : à la place de la jauge du mois, ce qu'il
+   reste de l'essai — une fiche offerte. */
+.mf-essai {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.1);
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.mf-essai.est-utilise {
+  border-color: rgba(251, 146, 60, 0.5);
+  background: rgba(251, 146, 60, 0.1);
+}

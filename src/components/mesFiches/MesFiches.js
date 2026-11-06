@@ -9,6 +9,8 @@ import iconeCahier from '../../assets/cahier.webp';
 import Loader from '../Loader';
 import JaugeQuota, { quotaEpuise } from './JaugeQuota';
 import ForfaitRequis from './ForfaitRequis';
+import { sessionEleve } from '../../lib/storage/sessionEleve';
+import { MESSAGE_ESSAI_FICHES } from '../../lib/hooks/useAccesForfait';
 import MeTester from './MeTester';
 import imageCerveau from '../../assets/me-tester/cerveau.webp';
 import './mesFiches.css';
@@ -105,6 +107,35 @@ function CreditsParent({ quota }) {
   );
 }
 
+/**
+ * L'ESSAI DES FICHES — Camara, le 18/10/2026 : une fiche offerte par famille
+ * pendant l'essai. À la place de la jauge du mois (dix cours qu'un essai n'a
+ * pas), ce qu'il reste de l'essai.
+ */
+function NoteEssai({ etat }) {
+  const enfant = Boolean(sessionEleve());
+  if (etat === 'utilise') {
+    return (
+      <p className="mf-essai est-utilise" role="status">
+        <strong>{MESSAGE_ESSAI_FICHES}</strong>
+        {' '}
+        {enfant
+          ? 'Demande à tes parents de choisir un forfait.'
+          : <Link to="/tarifs">Voir les formules</Link>}
+      </p>
+    );
+  }
+  return (
+    <p className="mf-essai" role="status">
+      <strong>Essai : une fiche de révision offerte.</strong>
+      {' '}
+      {etat === 'en-route'
+        ? (enfant ? 'Ta fiche est en préparation. Pour en créer d’autres, il faudra un forfait.' : 'Votre fiche est en préparation. Pour en créer d’autres, il faudra un forfait.')
+        : (enfant ? 'Après, il faudra un forfait pour en créer d’autres.' : 'Après, il faudra un forfait pour en créer d’autres.')}
+    </p>
+  );
+}
+
 export default function MesFiches() {
   const { eleveId, estParent, chemin, retour } = useProprietaireFiches();
   const [donnees, setDonnees] = useState(null);
@@ -126,7 +157,11 @@ export default function MesFiches() {
   const supprimer = async (cours) => {
     const nombre = cours.fiches?.length ?? 0;
     const quoi = nombre > 1 ? ` et ses ${nombre} fiches` : nombre === 1 ? ' et sa fiche' : '';
-    const compte = cours.etat === 'pret' && !estParent ? '\n\nIl restera compté dans tes cours du mois.' : '';
+    const compte = cours.etat === 'pret' && !estParent
+      ? (donnees?.essai
+        ? '\n\nC’est la fiche de ton essai : la supprimer ne permet pas d’en créer une autre.'
+        : '\n\nIl restera compté dans tes cours du mois.')
+      : '';
     // eslint-disable-next-line no-alert
     if (!window.confirm(`Supprimer « ${cours.titre ?? 'Ton cours'} »${quoi} ? C’est définitif.${compte}`)) return;
 
@@ -145,7 +180,12 @@ export default function MesFiches() {
   // SANS VRAI FORFAIT (essai, pause, plus d'abonnement — 16/10/2026), la page
   // dit pourquoi et ne montre rien d'autre.
   const fermee = donnees?.forfait === false;
-  const peutCreer = Boolean(donnees?.actif) && !fermee && !quotaEpuise(donnees?.quota);
+  // EN ESSAI (18/10/2026) : une fiche par famille. Une fois partie, « Créer »
+  // reste à sa place et dit qu'il faut un abonnement au lieu d'ouvrir la page.
+  const essai = donnees?.essai ?? null;
+  const essaiUtilise = essai === 'en-route' || essai === 'utilise';
+  const [essaiVu, setEssaiVu] = useState(false);
+  const peutCreer = Boolean(donnees?.actif) && !fermee && !essaiUtilise && !quotaEpuise(donnees?.quota);
 
   // « ME TESTER » (16/10/2026) : hors quota, mais un vrai forfait, un cours prêt
   // et au moins une fiche.
@@ -180,11 +220,36 @@ export default function MesFiches() {
             + Créer une fiche
           </Link>
         )}
+        {donnees?.actif && !fermee && essaiUtilise && groupes.length > 0 && (
+          <button type="button" className="btn mf-entete__bouton" onClick={() => setEssaiVu(true)}>
+            + Créer une fiche
+          </button>
+        )}
       </header>
 
       {donnees?.actif && fermee && <ForfaitRequis />}
 
-      {donnees?.actif && !fermee && !estParent && <JaugeQuota quota={donnees.quota} />}
+      {donnees?.actif && !fermee && !estParent && !essai && <JaugeQuota quota={donnees.quota} />}
+      {donnees?.actif && !fermee && !estParent && essai && <NoteEssai etat={essai} />}
+
+      {essaiVu && (
+        <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-essai-fiches">
+          <div className="modale__boite">
+            <h2 id="titre-essai-fiches">{MESSAGE_ESSAI_FICHES}</h2>
+            <p className="modale__texte">
+              {sessionEleve()
+                ? 'Pendant l’essai, tu as droit à une fiche de révision. Demande à tes parents de choisir un forfait pour en créer d’autres.'
+                : 'Pendant l’essai, une fiche de révision est offerte. Choisissez une formule pour en créer d’autres.'}
+            </p>
+            <div className="modale__actions">
+              {!sessionEleve() && <Link to="/tarifs" className="btn-ghost">Voir les formules</Link>}
+              <button type="button" className="btn btn--compact" onClick={() => setEssaiVu(false)}>
+                D’accord
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {donnees?.actif && estParent && <CreditsParent quota={donnees.quota} />}
 
       {/* SES CATÉGORIES, à lui : il les crée, les renomme, les supprime. */}

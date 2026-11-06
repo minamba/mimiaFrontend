@@ -1,5 +1,5 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { getEleves, addEleve, updateEleve } from '../api/elevesApi';
+import { getEleves, addEleve, updateEleve, definirEtablissement } from '../api/elevesApi';
 import { eleveDeLaSession } from '../storage/sessionEleve';
 import {
   ELEVES_LOAD_REQUEST,
@@ -33,10 +33,26 @@ function* chargerElevesSaga() {
 
 function* submitEleveSaga(action) {
   try {
-    const estModification = Boolean(action.payload.id);
-    const reponse = yield call(estModification ? updateEleve : addEleve, action.payload);
+    const { etablissementUai, ...profil } = action.payload;
+    const estModification = Boolean(profil.id);
+    const reponse = yield call(estModification ? updateEleve : addEleve, profil);
+    let eleve = reponse.data;
 
-    yield put({ type: ELEVE_SUBMIT_SUCCESS, payload: reponse.data });
+    // L'ÉTABLISSEMENT, EN SECOND TEMPS — Camara, le 18/10/2026. Sa route
+    // demande l'identifiant de l'enfant, qui n'existe qu'une fois le profil
+    // créé. Un échec ici (annuaire injoignable) ne défait pas la création :
+    // l'enfant existe, le parent choisira son collège dans « Modifier ».
+    if (!estModification && etablissementUai && eleve?.id) {
+      try {
+        const { data } = yield call(definirEtablissement, eleve.id, etablissementUai);
+        const e = data?.etablissement;
+        if (e) eleve = { ...eleve, etablissementUai: e.uai, etablissementLibelle: e.nom, etablissementCommune: e.commune };
+      } catch {
+        /* le profil est créé ; l'établissement reste à choisir */
+      }
+    }
+
+    yield put({ type: ELEVE_SUBMIT_SUCCESS, payload: eleve });
   } catch (error) {
     const statut = error.response?.status;
 

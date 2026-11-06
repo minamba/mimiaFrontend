@@ -26,8 +26,11 @@ import iconeCahier from '../assets/cahier.webp';
 import PreparationExamen from './PreparationExamen';
 import ControleForm from './ControleForm';
 import { ChoixCasque, ChoixDuree } from './OuvertureSeance';
+import Tutoriel from './tutoriel/Tutoriel';
+import CoursDemonstration from './tutoriel/CoursDemonstration';
+import { getProfil, marquerTutorielVu } from '../lib/api/profilApi';
 import useAncreSection from '../lib/hooks/useAncreSection';
-import useAccesForfait, { messageForfait } from '../lib/hooks/useAccesForfait';
+import useAccesForfait, { fichesConsultables, messageForfait } from '../lib/hooks/useAccesForfait';
 import { useAffichageEleve } from '../lib/besoins';
 
 /**
@@ -48,7 +51,7 @@ const estConseillere = (matiere) => matiere?.code === 'ORIENTATION';
 
 function CarteMatiere({
   matiere, onOuvrir, fiches, evaluations, dictees, comprehensionsOrales,
-  expressionsOrales, expressionsEcrites, eleveId, rapportsOrientation,
+  expressionsOrales, expressionsEcrites, eleveId, rapportsOrientation, repereTuto,
 }) {
   const total = fiches?.total ?? 0;
   const nouveautes = fiches?.nouveautes ?? 0;
@@ -115,7 +118,7 @@ function CarteMatiere({
       className={`matiere-case${estConseillere(matiere) ? ' matiere-case--conseillere' : ''}`}
       style={{ '--teinte': matiere.profCouleur }}
     >
-      <button type="button" className="matiere-carte" onClick={onOuvrir}>
+      <button type="button" className="matiere-carte" data-tuto={repereTuto} onClick={onOuvrir}>
         {contenu}
       </button>
 
@@ -279,6 +282,14 @@ export default function GrilleMatieres() {
   // la première.
   const [dureeChoisie, setDureeChoisie] = useState(null);
 
+  // LE TUTORIEL (02/11/2026) : en cours ou non, et s'il montre le cours de
+  // démonstration. La matière de la démonstration survit à la fermeture des
+  // deux fenêtres, puisqu'elles se referment pour y entrer.
+  const [tutoriel, setTutoriel] = useState(false);
+  const [demoAffichee, setDemoAffichee] = useState(false);
+  const [demoMatiere, setDemoMatiere] = useState(null);
+  const [demoDuree, setDemoDuree] = useState(null);
+
   // Le référentiel n est plus lu ici : les matières de l élève viennent de sa
   // propre route, et le niveau ne sert plus à filtrer puisque le serveur s en
   // charge. On garde le chargement, que d autres écrans attendent — la liste
@@ -397,8 +408,9 @@ export default function GrilleMatieres() {
 
   // EN ESSAI, EN PAUSE OU SANS FORFAIT, LA CARTE DES FICHES EST DÉSACTIVÉE
   // (Camara, le 16/10/2026) et dit pourquoi. `false` seulement quand on sait.
+  // SAUF EN ESSAI (18/10/2026) : une fiche offerte, la carte mène à la page.
   const { ouvert: forfaitOuvert, motif: motifForfait } = useAccesForfait(identite?.id);
-  const fichesFermees = forfaitOuvert === false;
+  const fichesFermees = !fichesConsultables({ ouvert: forfaitOuvert, motif: motifForfait });
 
   useEffect(() => {
     if (matieres.length === 0) dispatch(chargerReferentiel());
@@ -532,6 +544,48 @@ export default function GrilleMatieres() {
   // (11/10/2026) : sans sa carte, rien à compter ni à demander au serveur.
   const aLaConseillere = ouvertes.some(estConseillere);
 
+  // LE PROFESSEUR DU TUTORIEL : les maths d'abord, comme l'a demandé Camara ;
+  // à défaut, un vrai professeur plutôt que la conseillère d'orientation.
+  const matiereTuto = ouvertes.find((m) => m.code === 'MATHS')
+    ?? ouvertes.find((m) => !estConseillere(m))
+    ?? ouvertes[0]
+    ?? null;
+
+  // UNE FOIS PAR COMPTE PARENT — Camara, le 02/11/2026. Jamais pour un enfant
+  // connecté avec son code : la décision appartient au compte du parent. Noté
+  // « vu » dès le départ : qui ferme l'onglet au milieu ne le subit pas une
+  // seconde fois, et garde le bouton. Tout échec laisse simplement la page.
+  const pageChargee = siennes !== null;
+
+  useEffect(() => {
+    if (!pageChargee || enfant) return undefined;
+    let vivant = true;
+
+    Promise.resolve()
+      .then(() => getProfil())
+      .then(({ data }) => {
+        if (!vivant || data?.tutorielVu !== false) return;
+        setTutoriel(true);
+        marquerTutorielVu().catch(() => {});
+      })
+      .catch(() => {});
+
+    return () => { vivant = false; };
+    // `enfant` est relu à chaque rendu mais ne change pas sans changer de page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageChargee]);
+
+  const finirTutoriel = () => {
+    setTutoriel(false);
+    setDemoAffichee(false);
+    setDemoMatiere(null);
+    setDemoDuree(null);
+
+    // « Passer » peut tomber sur l'une des deux fenêtres ouvertes.
+    setEnAttente(null);
+    setDureeChoisie(null);
+  };
+
   useEffect(() => {
     if (!aLaConseillere) return undefined;
     let vivant = true;
@@ -553,6 +607,16 @@ export default function GrilleMatieres() {
       {/* DEUX ÉTAPES, ET LA DURÉE D’ABORD. La question du casque tient à
           l’équipement, pas au cours : la poser en premier ferait commencer
           par de l’intendance quelqu’un qui vient travailler. */}
+      {tutoriel && <Tutoriel onScene={setDemoAffichee} onFin={finirTutoriel} />}
+
+      {tutoriel && demoAffichee && (
+        <CoursDemonstration
+          matiere={demoMatiere ?? matiereTuto}
+          duree={demoDuree}
+          onQuitter={() => setDemoAffichee(false)}
+        />
+      )}
+
       {enAttente && dureeChoisie === null && (
         <ChoixDuree
           matiere={enAttente}
@@ -573,7 +637,18 @@ export default function GrilleMatieres() {
             setControleEnAttente(null);
             setEpreuveEnAttente(null);
           }}
-          onRepondre={(casque) =>
+          onRepondre={(casque) => {
+            // PENDANT LE TUTORIEL, ON N'ENTRE JAMAIS DANS UN VRAI COURS : il
+            // appellerait le professeur et décompterait le forfait. Les
+            // fenêtres se referment, et le tutoriel montre la démonstration.
+            if (tutoriel) {
+              setDemoMatiere(enAttente);
+              setDemoDuree(dureeChoisie);
+              setEnAttente(null);
+              setDureeChoisie(null);
+              return;
+            }
+
             navigate(
               `/eleves/${eleveId}/matieres/${enAttente.id}/chat`
               + `?duree=${dureeChoisie}&casque=${casque ? 1 : 0}`
@@ -584,8 +659,8 @@ export default function GrilleMatieres() {
               // d'aucun examen.
               + (controleEnAttente ? `&mode=controle&controleId=${controleEnAttente}` : '')
               + (epreuveEnAttente ? `&mode=examen&epreuve=${encodeURIComponent(epreuveEnAttente)}` : ''),
-            )
-          }
+            );
+          }}
         />
       )}
 
@@ -635,11 +710,11 @@ export default function GrilleMatieres() {
           {/* LES ILLUSTRATIONS EN BADGE — Camara, le 15/09/2026 : `carte.png` et
               `calendrier.png`, les mêmes que sur la page de l'enfant, à la
               place des emojis. Posées à cheval sur le bord de la pastille. */}
-          <Link to={`/eleves/${identite.id}/progression`} className="lien-carte lien-carte--badge">
+          <Link to={`/eleves/${identite.id}/progression`} className="lien-carte lien-carte--badge" data-tuto="carte">
             <img className="lien-carte__badge" src={iconeCarte} alt="" />
             Ma carte
           </Link>
-          <Link to={`/eleves/${identite.id}/calendrier`} className="lien-carte lien-carte--badge">
+          <Link to={`/eleves/${identite.id}/calendrier`} className="lien-carte lien-carte--badge" data-tuto="calendrier">
             <img className="lien-carte__badge" src={iconeCalendrier} alt="" />
             Mon calendrier
           </Link>
@@ -650,7 +725,7 @@ export default function GrilleMatieres() {
               chose que son enfant, en pastilles : trois portes, trois
               pastilles. En laisser une de côté aurait fait croire que les jeux
               lui sont cachés. */}
-          <Link to={`/eleves/${identite.id}/jeux`} className="lien-carte lien-carte--badge">
+          <Link to={`/eleves/${identite.id}/jeux`} className="lien-carte lien-carte--badge" data-tuto="jeux">
             <img className="lien-carte__badge" src={iconeJeux} alt="" />
             Mes jeux
           </Link>
@@ -658,7 +733,7 @@ export default function GrilleMatieres() {
           )}
 
           {fichesOuvertes && !fichesFermees && (
-            <Link to={`/eleves/${identite.id}/mes-fiches`} className="lien-carte lien-carte--badge">
+            <Link to={`/eleves/${identite.id}/mes-fiches`} className="lien-carte lien-carte--badge" data-tuto="fiches">
               <img className="lien-carte__badge" src={iconeCahier} alt="" />
               Mes fiches de révision
             </Link>
@@ -666,6 +741,7 @@ export default function GrilleMatieres() {
           {fichesOuvertes && fichesFermees && (
             <span
               className="lien-carte lien-carte--badge est-verrouille"
+              data-tuto="fiches"
               aria-disabled="true"
               title={messageForfait(false, 'cette fonctionnalité')}
             >
@@ -719,6 +795,17 @@ export default function GrilleMatieres() {
               l'enfant comme le parent passent vraiment, contrairement aux
               deux autres. */}
           <BoutonAvis />
+
+          {/* « VOIR LE TUTO », QUAND ON VEUT — Camara, le 02/11/2026. Il rejoue
+              tout, sans toucher à la date qui empêche le lancement automatique. */}
+          <button
+            type="button"
+            className="bouton-tuto"
+            data-tuto="revoir"
+            onClick={() => setTutoriel(true)}
+          >
+            <span aria-hidden="true">🎓</span> Voir le tuto
+          </button>
         </div>
       </div>
 
@@ -731,7 +818,7 @@ export default function GrilleMatieres() {
           matières. */}
       {identite && enfant && (
         <div className="cartes-mienne">
-          <Link to={`/eleves/${identite.id}/progression`} className="carte-mienne">
+          <Link to={`/eleves/${identite.id}/progression`} className="carte-mienne" data-tuto="carte">
             <MotifMatiere code="CARTE" />
             <span className="carte-mienne__icone-zone">
               <span className="carte-mienne__halo" aria-hidden="true" />
@@ -749,7 +836,7 @@ export default function GrilleMatieres() {
             <span className="carte-mienne__fleche" aria-hidden="true">→</span>
           </Link>
 
-          <Link to={`/eleves/${identite.id}/calendrier`} className="carte-mienne">
+          <Link to={`/eleves/${identite.id}/calendrier`} className="carte-mienne" data-tuto="calendrier">
             <MotifMatiere code="CALENDRIER" />
             <span className="carte-mienne__icone-zone">
               <span className="carte-mienne__halo" aria-hidden="true" />
@@ -772,7 +859,7 @@ export default function GrilleMatieres() {
               place — l'enfant sait que la porte existe —, grisée, et dit ce
               qu'il manque au lieu de mener à une page fermée. */}
           {fichesOuvertes && fichesFermees && (
-            <div className="carte-mienne carte-mienne--fiches est-verrouillee" aria-disabled="true">
+            <div className="carte-mienne carte-mienne--fiches est-verrouillee" aria-disabled="true" data-tuto="fiches">
               <MotifMatiere code="FICHES" />
               <span className="carte-mienne__icone-zone">
                 <span className="carte-mienne__icone" aria-hidden="true">
@@ -787,7 +874,7 @@ export default function GrilleMatieres() {
             </div>
           )}
           {fichesOuvertes && !fichesFermees && (
-            <Link to={`/eleves/${identite.id}/mes-fiches`} className="carte-mienne carte-mienne--fiches">
+            <Link to={`/eleves/${identite.id}/mes-fiches`} className="carte-mienne carte-mienne--fiches" data-tuto="fiches">
               <MotifMatiere code="FICHES" />
               <span className="carte-mienne__icone-zone">
                 <span className="carte-mienne__halo" aria-hidden="true" />
@@ -816,6 +903,7 @@ export default function GrilleMatieres() {
           <Link
             to={`/eleves/${identite.id}/jeux`}
             className="carte-mienne carte-mienne--jeux"
+            data-tuto="jeux"
           >
             {/* UN MOTIF DE CHAQUE CÔTÉ : le contenu étant centré, un seul
                 aurait tiré toute la carte vers la droite. Deux dessins
@@ -863,6 +951,11 @@ export default function GrilleMatieres() {
               expressionsEcrites={expressionsEcrites[matiere.id]}
               rapportsOrientation={rapportsOrientation}
               eleveId={eleveId}
+              repereTuto={
+                estConseillere(matiere)
+                  ? 'conseillere'
+                  : (matiere.id === matiereTuto?.id ? 'professeur' : undefined)
+              }
             />
           </li>
         ))}

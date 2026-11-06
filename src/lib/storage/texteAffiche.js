@@ -4,7 +4,9 @@ import { retirerMarqueurCopieControle } from './copieControle';
 import { retirerMarqueurConversation } from './conversationLangue';
 import { retirerMarqueurAvecCopie, retirerMarqueurEnonce } from './enonceExercice';
 import { retirerMarqueurSupportEcrit } from './supportEcrit';
+import { retirerMarqueurSupportSon } from './supportSon';
 import { retirerMarqueurSupport } from './supportEvaluation';
+import { retirerMarqueurTypeDictee } from './typeDictee';
 
 /**
  * CE QUE L'APPLICATION GLISSE DANS UN MESSAGE NE SE MONTRE JAMAIS — Camara, le
@@ -19,11 +21,11 @@ import { retirerMarqueurSupport } from './supportEvaluation';
  * aucun écran ne peut l'oublier.
  */
 export function retirerMarqueursApplication(texte) {
-  return retirerMarqueurSupportEcrit(retirerMarqueurConversation(
+  return retirerMarqueurSupportSon(retirerMarqueurTypeDictee(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
     retirerMarqueurSupport(retirerMarqueurCopieControle(
       retirerMarqueurCahier(retirerMarqueurEnonce(retirerMarqueurAvecCopie(texte ?? ''))),
     )),
-  ));
+  ))));
 }
 
 /**

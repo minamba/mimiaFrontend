@@ -343,11 +343,15 @@ export default function Quota({ compact = false }) {
                 encadré, sur la même date : impossible de savoir laquelle
                 croire. Le renouvellement n'est annoncé que lorsqu'il aura
                 vraiment lieu. */}
+            {/* L'ESSAI N'A PLUS DE DATE (18/10/2026) : ses trente minutes
+                restent valables jusqu'à ce qu'elles soient utilisées. */}
             {etat.enPause
               ? `En pause jusqu'au ${dateCourte(etat.pauseJusquau)}`
-              : enEssai || etat.resiliationDemandee
-                ? `Se termine le ${dateCourte(etat.periodeFin)}`
-                : `Renouvellement le ${dateCourte(etat.periodeFin)}`}
+              : enEssai
+                ? 'Sans date limite : à utiliser quand vous voulez'
+                : etat.resiliationDemandee
+                  ? `Se termine le ${dateCourte(etat.periodeFin)}`
+                  : `Renouvellement le ${dateCourte(etat.periodeFin)}`}
           </span>
         </div>
 
@@ -487,7 +491,7 @@ export default function Quota({ compact = false }) {
           une dépense. On ne fait pas payer quelqu'un par surprise.
 
           RIEN À VENDRE PENDANT L'ESSAI. Ces heures sont valables « jusqu'à la
-          fin de la période en cours » — pour un essai, c'est sept jours, et il
+          fin de la période en cours » — un essai n'en a qu'une, qui ne se renouvelle pas, et il
           n'y a pas d'abonnement derrière pour en profiter ensuite. On
           proposait donc quinze euros d'heures qui expirent avec l'essai, à
           quelqu'un qui n'a pas encore décidé de rester. Ce qu'il faut lui

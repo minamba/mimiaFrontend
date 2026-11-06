@@ -74,13 +74,18 @@ export const ouvrirConversation = (
  *   — sans lui, elle restait vide jusqu'au rechargement de la page, seul
  *   moment où le serveur redonne le vrai message avec sa pièce jointe.
  */
+/*
+ * @param sonJuste le verdict de la voix (04/11/2026) : vrai ou faux quand ce tour
+ *   est un son demandé par le professeur et jugé par le serveur, null sinon. La
+ *   bulle écrit alors « Bonne prononciation » ou « On réessaie » à la place du texte.
+ */
 export const envoyerMessage = (
   conversationId, contenu, secondesRestantes = null, pieceJointeIds = null, piecesJointes = null,
-  vitesseEcoute = null,
+  vitesseEcoute = null, sonJuste = null,
 ) => ({
   type: MESSAGE_SEND_REQUEST,
   payload: {
-    conversationId, contenu, secondesRestantes, pieceJointeIds, piecesJointes, vitesseEcoute,
+    conversationId, contenu, secondesRestantes, pieceJointeIds, piecesJointes, vitesseEcoute, sonJuste,
   },
 });
 

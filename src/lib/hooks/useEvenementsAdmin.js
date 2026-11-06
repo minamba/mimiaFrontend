@@ -101,7 +101,8 @@ export function useEvenementsAdmin(onEvenement) {
 
               try {
                 const charge = JSON.parse(ligne.slice(6));
-                if (charge.type) callbackRef.current(charge.type);
+                // La charge suit le type (19/10/2026) : un courriel porte ses messages.
+                if (charge.type) callbackRef.current(charge.type, charge);
               } catch {
                 // fragment illisible : on l'ignore plutôt que de casser le flux
               }

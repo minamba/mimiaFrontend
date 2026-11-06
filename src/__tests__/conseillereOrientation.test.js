@@ -112,7 +112,7 @@ describe('dans la carte de l’enfant : le champ est au-dessus d’Enregistrer, 
     id: 24, prenom: 'Lina', nom: 'Doe', age: 15, niveauScolaireId: 10, sexe: 1,
     niveauCycle: 'Lycee', niveauLibelle: '2de', specialites: [], langues: [],
   };
-  const NIVEAUX = [{ id: 10, libelle: '2de', cycle: 'Lycée', groupe: 'Lycée', selectionnable: true }];
+  const NIVEAUX = [{ id: 10, libelle: '2de', cycle: 'Lycée', groupe: 'Lycée', selectionnable: true, ordre: 10 }];
 
   beforeEach(() => {
     chercherEtablissements.mockResolvedValue({

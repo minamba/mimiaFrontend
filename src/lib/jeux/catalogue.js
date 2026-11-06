@@ -832,9 +832,13 @@ export function jeuxDeLaClasse(niveauCode) {
  * chaque jeu porte déjà. Un jeu de français ouvre la section Français à son
  * arrivée, un jeu de maths rejoint celle des maths.
  *
- * L'ORDRE EST CELUI DU CATALOGUE, sections comme jeux : la première matière
- * qui y apparaît vient en premier. On range donc les matières en rangeant
- * leurs jeux ici, sans tri caché ailleurs.
+ * LES JEUX, DANS L'ORDRE DU CATALOGUE à l'intérieur de leur matière.
+ *
+ * LES MATIÈRES, DANS UN ORDRE FIXE, LE MÊME POUR TOUTES LES CLASSES — Camara,
+ * le 18/10/2026 : « il faut absolument que toutes les classes aient le même
+ * ordre ; la classe de référence, c'est la terminale ». L'ordre suivait celui
+ * du catalogue, et au CM1 et au CM2 un jeu de français écrit avant les jeux
+ * de maths faisait passer le français en tête. Voir `ORDRE_DES_MATIERES`.
  */
 export function parMatiere(jeux) {
   const groupes = [];
@@ -846,5 +850,40 @@ export function parMatiere(jeux) {
     }
     groupe.jeux.push(jeu);
   });
-  return groupes;
+  // Tri stable : deux matières hors de la liste gardent l'ordre du catalogue.
+  return groupes
+    .map((groupe, i) => ({ groupe, i }))
+    .sort((a, b) => rangDeLaMatiere(a.groupe.matiereCode) - rangDeLaMatiere(b.groupe.matiereCode) || a.i - b.i)
+    .map(({ groupe }) => groupe);
+}
+
+/**
+ * L'ORDRE DES MATIÈRES DE LA LUDOTHÈQUE, pour toutes les classes (18/10/2026) :
+ * celui du lycée, la terminale en référence — les mathématiques, le français
+ * (absent en terminale, il garde sa place juste après), puis les autres. Les
+ * sciences de 6e prennent la place des sciences du lycée. Une matière qui
+ * n'est pas ici passe après les autres, et les jeux bonus toujours en dernier.
+ */
+export const ORDRE_DES_MATIERES = [
+  'MATHS', 'FRANCAIS', 'HISTOIRE_GEO', 'ANGLAIS', 'SCIENCES', 'PHYSIQUE_CHIMIE', 'SVT',
+];
+
+function rangDeLaMatiere(code) {
+  if (code === 'BONUS') return ORDRE_DES_MATIERES.length + 1;
+  const rang = ORDRE_DES_MATIERES.indexOf(code);
+  return rang === -1 ? ORDRE_DES_MATIERES.length : rang;
+}
+
+/**
+ * LES JEUX OUVERTS EN ESSAI — Camara, le 18/10/2026 : « pour les personnes en
+ * essai, tu ouvres les 2 premiers jeux de mathématiques en dehors des escape
+ * games ; le reste reste en grisé ». Les deux premiers jeux de la section
+ * Mathématiques de la classe affichée, dans l'ordre de la page, escape games
+ * sautés. Rend leurs clés.
+ */
+export const JEUX_OUVERTS_EN_ESSAI = 2;
+
+export function jeuxOuvertsEnEssai(jeux) {
+  const maths = parMatiere(jeux).find((g) => g.matiereCode === 'MATHS');
+  return new Set((maths?.jeux ?? []).filter((jeu) => !jeu.escape).slice(0, JEUX_OUVERTS_EN_ESSAI).map((jeu) => jeu.cle));
 }

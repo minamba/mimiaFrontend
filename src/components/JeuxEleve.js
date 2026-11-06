@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import iconeJeux from '../assets/games.webp';
-import { jeuxDeLaClasse, parMatiere } from '../lib/jeux/catalogue';
+import { jeuxDeLaClasse, jeuxOuvertsEnEssai, parMatiere } from '../lib/jeux/catalogue';
 import {
   FRISE, classeDansSaVoie, frisePourLaClasse, programmeDeLaClasse, rangDeLaClasse,
 } from '../lib/jeux/frise';
@@ -208,8 +208,13 @@ export default function JeuxEleve() {
   // pause ou sans abonnement, la page s'ouvre mais tous les jeux sont grisés,
   // et un clic dit pourquoi au lieu de lancer la partie. `null` = on ne sait
   // pas encore : rien n'est grisé le temps du chargement.
-  const { ouvert: forfaitOuvert } = useAccesForfait(eleveId);
+  //
+  // SAUF DEUX JEUX EN ESSAI (Camara, le 18/10/2026) : les deux premiers jeux de
+  // mathématiques de la classe affichée, escape games sautés — voir
+  // `jeuxOuvertsEnEssai`. Les autres restent grisés.
+  const { ouvert: forfaitOuvert, motif: motifForfait } = useAccesForfait(eleveId);
   const jeuxFermes = forfaitOuvert === false;
+  const enEssai = jeuxFermes && motifForfait === 'essai';
   const [verrouVu, setVerrouVu] = useState(false);
 
   // Les bruitages (survol des cartes, bonne et mauvaise réponse) sont décodés
@@ -343,6 +348,10 @@ export default function JeuxEleve() {
     [classe],
   );
 
+  // Fermé pour CE jeu : tout est fermé sans forfait, sauf les jeux de l'essai.
+  const ouvertsEnEssai = useMemo(() => (enEssai ? jeuxOuvertsEnEssai(jeux) : new Set()), [enEssai, jeux]);
+  const estFerme = useCallback((cle) => jeuxFermes && !ouvertsEnEssai.has(cle), [jeuxFermes, ouvertsEnEssai]);
+
   // Une classe de la frise « a des jeux » quand elle en a d'ÉCRITS : le
   // catalogue en annonce que les écrans ne servent pas encore.
   const etapes = useMemo(
@@ -401,7 +410,7 @@ export default function JeuxEleve() {
   // focus retourne sur la carte de ce jeu.
   const retour = useRef(null);
   const ouvrir = useCallback((cle) => {
-    if (jeuxFermes) {
+    if (estFerme(cle)) {
       setVerrouVu(true);
       return;
     }
@@ -409,7 +418,7 @@ export default function JeuxEleve() {
     setOuvert(cle);
     setMode(null);
     setFinDefi(null);
-  }, [jeuxFermes]);
+  }, [estFerme]);
 
   useEffect(() => {
     // Au chargement, on ne bouge rien : la page s'ouvre où elle doit.
@@ -537,26 +546,30 @@ export default function JeuxEleve() {
     // La carte du professeur n'ouvre pas non plus un jeu fermé : on attend de
     // savoir, puis on explique au lieu de lancer.
     if (forfaitOuvert === null) return;
-    if (forfaitOuvert === false) {
-      setVerrouVu(true);
-      return;
-    }
 
     const rangSien = rangDeLaClasse(niveauCode);
     const rangVu = rangDeLaClasse(classeDemandee);
     if (rangSien !== null && (rangVu === null || rangVu > rangSien)) return;
-    if (!jeuxDeLaClasse(classeDemandee).some((j) => j.cle === jeuDemande && ECRANS[j.cle])) return;
+    const jeuxDemandes = jeuxDeLaClasse(classeDemandee).filter((j) => ECRANS[j.cle]);
+    if (!jeuxDemandes.some((j) => j.cle === jeuDemande)) return;
+
+    // En essai, la carte n'ouvre que les deux jeux de l'essai de cette classe.
+    if (forfaitOuvert === false
+      && !(motifForfait === 'essai' && jeuxOuvertsEnEssai(jeuxDemandes).has(jeuDemande))) {
+      setVerrouVu(true);
+      return;
+    }
 
     setRegardee(classeDemandee);
     setOuvert(jeuDemande);
     setMode(null);
     setFinDefi(null);
-  }, [classeDemandee, jeuDemande, niveauCode, setRegardee, forfaitOuvert]);
+  }, [classeDemandee, jeuDemande, niveauCode, setRegardee, forfaitOuvert, motifForfait]);
 
   // Un jeu ouvert avant que l'on sache (lien gardé, réponse lente) se referme.
   useEffect(() => {
-    if (jeuxFermes && ouvert) setOuvert(null);
-  }, [jeuxFermes, ouvert]);
+    if (ouvert && estFerme(ouvert)) setOuvert(null);
+  }, [estFerme, ouvert]);
 
   return (
     // UN JEU OUVERT PREND LA PLACE — Camara, le 08/10/2026 : « sur PC, pour les
@@ -567,7 +580,9 @@ export default function JeuxEleve() {
       {jeuxFermes && (
         <p className="jeux-verrou" role="note">
           <span aria-hidden="true">🔒 </span>
-          Les jeux sont réservés aux familles abonnées.
+          {enEssai && ouvertsEnEssai.size > 0
+            ? `Pendant l’essai, ${ouvertsEnEssai.size > 1 ? 'deux jeux de mathématiques sont ouverts' : 'un jeu de mathématiques est ouvert'}. Les autres sont réservés aux familles abonnées.`
+            : 'Les jeux sont réservés aux familles abonnées.'}
         </p>
       )}
 
@@ -718,7 +733,7 @@ export default function JeuxEleve() {
                     <ul className="jeux-liste">
                       {groupe.jeux.map((jeu) => (
                         <li key={jeu.cle}>
-                          <CarteJeu jeu={jeu} onOuvrir={ouvrir} verrouille={jeuxFermes} />
+                          <CarteJeu jeu={jeu} onOuvrir={ouvrir} verrouille={estFerme(jeu.cle)} />
                         </li>
                       ))}
                     </ul>

@@ -303,6 +303,11 @@ describe('la relecture complète', () => {
     lecteur.supportDictee = 'clavier';
     const etats = suivre(lecteur);
 
+    // L'ÉLÈVE SUIT, LIGNE APRÈS LIGNE — depuis le 01/11/2026, au clavier, la
+    // voix attend que la copie ait rattrapé chaque morceau (`attendreLaCopie`).
+    // Sans copie, elle l'attendrait, et c'est voulu.
+    lecteur.noterCopie(99, 999);
+
     dicter(lecteur);
     await attendre(() => etats.includes('finie'));
     lecteur.arreter();

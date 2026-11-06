@@ -8,6 +8,7 @@ import Loader from './Loader';
 import QuotaEnfants from './QuotaEnfants';
 import CodeEnfant from './CodeEnfant';
 import BoutonAvis from './BoutonAvis';
+import ResteForfait from './ResteForfait';
 
 /**
  * Ancienneté en clair. « 2026-07-26T20:18 » ne dit rien à un parent ;
@@ -148,6 +149,9 @@ export default function ListeEleves() {
       </div>
 
       {error && <div className="alert">{error}</div>}
+
+      {/* LE TEMPS QUI RESTE, VISIBLE DÈS L'ARRIVÉE — voir ResteForfait.js. */}
+      <ResteForfait />
 
       {complet && <QuotaEnfants capacite={capacite} enPage />}
 

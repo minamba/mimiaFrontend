@@ -15,6 +15,33 @@ import Loader from './Loader';
 import ConnexionBoite from './ConnexionBoite';
 import Pagination from './Pagination';
 import MessageParent from './MessageParent';
+import ChampAdresses, { adressesValides, lireAdresses } from './ChampAdresses';
+import useContactsEquipe from '../lib/hooks/useContactsEquipe';
+
+/**
+ * « RÉPONDRE À TOUS » — Camara, le 19/10/2026 : « comme sur Gmail ». Les
+ * autres personnes du fil : tous les destinataires et toutes les copies du
+ * message, sauf la boîte elle-même et la personne à qui l'on répond.
+ */
+function autresDuFil(message, maBoite) {
+  if (!message) return [];
+  const principal = (message.repondreA || message.deAdresse || '').toLowerCase();
+  const moi = (maBoite || '').toLowerCase();
+  const vues = new Set();
+  return [...(message.destinataires ?? []), ...(message.copies ?? [])]
+    .map((a) => a?.adresse)
+    .filter(Boolean)
+    .filter((a) => {
+      const cle = a.toLowerCase();
+      if (cle === principal || cle === moi || vues.has(cle)) return false;
+      vues.add(cle);
+      return true;
+    });
+}
+
+/** « Nom <adresse> », ou l'adresse seule. */
+// Un nom identique à l'adresse ne se répète pas : « a@x.fr <a@x.fr> » devient « a@x.fr ».
+const enClair = (a) => (a?.nom && a.nom.toLowerCase() !== a.adresse?.toLowerCase() ? `${a.nom} <${a.adresse}>` : a?.adresse);
 
 /**
  * La boîte de support, lue et répondue depuis l'administration.
@@ -187,6 +214,12 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
   const [redaction, setRedaction] = useState(null);
 
   const [reponse, setReponse] = useState('');
+  // LES COPIES DE LA RÉPONSE (19/10/2026) : Cc et Cci, chacune ouverte d'un clic.
+  const [copies, setCopies] = useState([]);
+  const [cachees, setCachees] = useState([]);
+  const [ccVisible, setCcVisible] = useState(false);
+  const [cciVisible, setCciVisible] = useState(false);
+  const equipe = useContactsEquipe();
   const [envoi, setEnvoi] = useState(false);
   // Le compte rendu de l'envoi, tel que le serveur l'a dit : destinataire
   // réel, accusé SMTP, dépôt de la copie. « Réponse envoyée » ne suffit pas
@@ -272,6 +305,37 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
 
   useEffect(() => { charger(); }, [charger]);
 
+  // UN COURRIEL VIENT D'ARRIVER (19/10/2026, voir NotificationsMail) : sur la
+  // première page de la réception, la liste se relit ; ailleurs, seules les
+  // pastilles des dossiers.
+  useEffect(() => {
+    const arrive = (e) => {
+      if ((e.detail?.boite ?? 'moi') !== boite) return;
+      if (dossier === 'reception' && page === 0) charger();
+      else chargerCompteurs();
+    };
+    window.addEventListener('mimia:nouveau-mail', arrive);
+    return () => window.removeEventListener('mimia:nouveau-mail', arrive);
+  }, [boite, dossier, page, charger, chargerCompteurs]);
+
+  // LE BADGE DE L'ICÔNE DES MAILS SUIT LA BOÎTE OUVERTE (20/10/2026, voir
+  // BoutonMails) : un message lu ici fait baisser le compte en bas à gauche.
+  // Seulement une fois la boîte lue — avant, le 0 de départ ne veut rien dire.
+  useEffect(() => {
+    if (boite !== 'moi' || messages === null) return;
+    window.dispatchEvent(new CustomEvent('mimia:non-lus', { detail: { boite, nonLus } }));
+  }, [boite, nonLus, messages]);
+
+  // UN MESSAGE OUVERT PREND TOUT L'ÉCRAN DU TÉLÉPHONE (20/10/2026) : les icônes
+  // des mails et de l'administration, en bas à gauche, couvraient « Fermer le
+  // message ». La page le signale sur <html> ; la feuille de style les cache
+  // sous 900 px (voir `.raccourcis-admin`).
+  useEffect(() => {
+    const plein = Boolean(ouvert || redaction || enGrand);
+    document.documentElement.classList.toggle('messagerie-plein-ecran', plein);
+    return () => document.documentElement.classList.remove('messagerie-plein-ecran');
+  }, [ouvert, redaction, enGrand]);
+
   const deconnecter = async () => {
     // eslint-disable-next-line no-alert
     if (!window.confirm('Déconnecter votre boîte ? Le mot de passe enregistré sera effacé.')) return;
@@ -350,6 +414,12 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
       setOuvert(lecture.data);
       setDossierOuvert(dossierDeLecture);
       setReponse(brouillon?.data?.texte ?? '');
+      const ccDuBrouillon = lireAdresses(brouillon?.data?.copies);
+      const cciDuBrouillon = lireAdresses(brouillon?.data?.copiesCachees);
+      setCopies(ccDuBrouillon);
+      setCachees(cciDuBrouillon);
+      setCcVisible(ccDuBrouillon.length > 0);
+      setCciVisible(cciDuBrouillon.length > 0);
       if (brouillon?.data) setEtatBrouillon({ etat: 'enregistre', heure: new Date(brouillon.data.dateModification) });
 
       // La liste reflète le nouvel état sans recharger toute la boîte : une
@@ -424,6 +494,20 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
     }
   };
 
+  /** Le brouillon suit le texte ET les copies. */
+  const planifierBrouillon = ({ texte = reponse, cc = copies, cci = cachees } = {}) => {
+    aEnregistrer.current = {
+      messageOrigine: ouvert.identifiant,
+      destinataire: ouvert.deAdresse,
+      sujet: objetDeReponse(ouvert.sujet),
+      texte,
+      cc,
+      cci,
+    };
+    clearTimeout(minuteur.current);
+    minuteur.current = setTimeout(enregistrerMaintenant, 1500);
+  };
+
   const ecrire = (texte) => {
     setReponse(texte);
 
@@ -432,15 +516,27 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
     // rédaction laisse croire que celui-ci est déjà parti.
     if (envoye) setEnvoye(null);
 
-    aEnregistrer.current = {
-      messageOrigine: ouvert.identifiant,
-      destinataire: ouvert.deAdresse,
-      sujet: objetDeReponse(ouvert.sujet),
-      texte,
-    };
-    clearTimeout(minuteur.current);
-    minuteur.current = setTimeout(enregistrerMaintenant, 1500);
+    planifierBrouillon({ texte });
   };
+
+  const changerCopies = (liste) => { setCopies(liste); planifierBrouillon({ cc: liste }); };
+  const changerCachees = (liste) => { setCachees(liste); planifierBrouillon({ cci: liste }); };
+
+  // « Répondre » / « Répondre à tous » : les autres du fil entrent en copie, ou en sortent.
+  const autres = autresDuFil(ouvert, estSupport ? 'support@mimia.fr' : adresseBoite);
+  const aTous = autres.length > 0 && autres.every((a) => copies.some((c) => c.toLowerCase() === a.toLowerCase()));
+  const repondreATous = (oui) => {
+    const sans = copies.filter((c) => !autres.some((a) => a.toLowerCase() === c.toLowerCase()));
+    const liste = oui ? [...autres, ...sans] : sans;
+    setCopies(liste);
+    setCcVisible(liste.length > 0 || cciVisible);
+    planifierBrouillon({ cc: liste });
+  };
+  const suggestions = [
+    ...equipe,
+    ...(parents ?? []).map((p) => ({ nom: [p.prenom, p.nom].filter(Boolean).join(' '), mail: p.mail })),
+  ];
+  const copiesPretes = adressesValides(copies) && adressesValides(cachees);
 
   const envoyer = async () => {
     if (!ouvert || !reponse.trim()) return;
@@ -453,9 +549,13 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
     setErreur(null);
 
     try {
-      const { data } = await repondreMessage(ouvert.identifiant, reponse, boite);
+      const { data } = await repondreMessage(ouvert.identifiant, reponse, boite, { cc: copies, cci: cachees });
       setEnvoye(data ?? { message: 'Réponse envoyée.' });
       setReponse('');
+      setCopies([]);
+      setCachees([]);
+      setCcVisible(false);
+      setCciVisible(false);
       setEtatBrouillon(null);
       chargerCompteurs();
 
@@ -821,6 +921,12 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                   {' · '}
                   {new Date(ouvert.date).toLocaleString('fr-FR')}
                 </p>
+                {((ouvert.destinataires?.length ?? 0) > 1 || (ouvert.copies?.length ?? 0) > 0) && (
+                  <p className="messagerie__entete-copies">
+                    <span>À : {ouvert.destinataires.map(enClair).join(', ')}</span>
+                    {ouvert.copies?.length > 0 && <span>Cc : {ouvert.copies.map(enClair).join(', ')}</span>}
+                  </p>
+                )}
               </div>
 
               {ouvert.imagesBloquees && !images && (
@@ -960,6 +1066,51 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                     Inutile d’écrire « Bonjour » : la formule de salutation, avec le nom de la personne,
                     est ajoutée automatiquement en haut du message.
                   </span>
+                  {/* RÉPONDRE OU RÉPONDRE À TOUS (19/10/2026), quand le fil a d'autres personnes. */}
+                  {autres.length > 0 && (
+                    <div className="messagerie__mode-reponse" role="group" aria-label="À qui répondre">
+                      <button type="button" className={aTous ? '' : 'est-actif'} aria-pressed={!aTous} onClick={() => repondreATous(false)}>
+                        ↩ Répondre
+                      </button>
+                      <button type="button" className={aTous ? 'est-actif' : ''} aria-pressed={aTous} onClick={() => repondreATous(true)}>
+                        ↩↩ Répondre à tous
+                        <span className="messagerie__mode-compte">{autres.length + 1}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="messagerie__destinataires">
+                    <div className="messagerie__dest-ligne">
+                      <span className="messagerie__dest-libelle">À</span>
+                      <span className="messagerie__dest-valeur">{ouvert.repondreA || ouvert.deAdresse}</span>
+                      <span className="messagerie__dest-liens">
+                        {!ccVisible && <button type="button" onClick={() => setCcVisible(true)}>Cc</button>}
+                        {!cciVisible && <button type="button" onClick={() => setCciVisible(true)}>Cci</button>}
+                      </span>
+                    </div>
+                    {ccVisible && (
+                      <ChampAdresses
+                        id="msg-cc"
+                        libelle="Cc"
+                        valeur={copies}
+                        onChange={changerCopies}
+                        suggestions={suggestions}
+                        autoFocus={copies.length === 0}
+                      />
+                    )}
+                    {cciVisible && (
+                      <ChampAdresses
+                        id="msg-cci"
+                        libelle="Cci"
+                        valeur={cachees}
+                        onChange={changerCachees}
+                        suggestions={suggestions}
+                        autoFocus={cachees.length === 0}
+                        placeholder="Copie cachée : les autres ne la verront pas"
+                      />
+                    )}
+                  </div>
+
                   <label htmlFor="msg-reponse">Votre réponse</label>
                   <textarea
                     id="msg-reponse"
@@ -996,10 +1147,10 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                     <button
                       type="button"
                       className="btn btn--compact"
-                      disabled={envoi || !reponse.trim()}
+                      disabled={envoi || !reponse.trim() || !copiesPretes}
                       onClick={envoyer}
                     >
-                      {envoi ? 'Envoi…' : 'Envoyer la réponse'}
+                      {envoi ? 'Envoi…' : aTous ? 'Envoyer à tous' : 'Envoyer la réponse'}
                     </button>
 
                     {!envoye && etatBrouillon && (
@@ -1014,6 +1165,8 @@ export default function Messagerie({ boite = 'moi', parents = [] }) {
                     {envoye && (
                       <span className="messagerie__succes">
                         Envoyée à <strong>{envoye.destinataire}</strong>
+                        {envoye.copies?.length > 0 && <> · en copie : {envoye.copies.join(', ')}</>}
+                        {envoye.copiesCachees?.length > 0 && <> · en copie cachée : {envoye.copiesCachees.join(', ')}</>}
                         {envoye.accuse && (
                           <>
                             {' · '}

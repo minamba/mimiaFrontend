@@ -108,7 +108,10 @@ export default function Confidentialite() {
           Quand votre enfant parle au professeur, <strong>son audio est
           transmis à OpenAI</strong> pour être transcrit en texte, et le texte
           de la réponse y est renvoyé pour être lu à voix haute. Ces
-          transmissions ont lieu pendant la séance, en direct.
+          transmissions ont lieu pendant la séance, en direct. À l'école
+          primaire, du CP au CM2, en français, quand le professeur demande de
+          dire une syllabe ou de lire un mot, ce son peut aussi être analysé par
+          OpenAI pour vérifier ce que votre enfant a prononcé.
         </p>
         <p>
           <strong>Nous n'enregistrons aucun fichier audio.</strong> La voix
@@ -156,15 +159,19 @@ export default function Confidentialite() {
           vous nous le demandez.
         </p>
         <p>
-          <strong>Le cours importé avec un contrôle</strong> suit une règle
-          encore plus courte pour l'image. Il est transmis à Anthropic pour
-          être relevé en texte, et <strong>l'image est effacée dès que ce
-          relevé est fait</strong> — en général dans la minute, et au plus
-          tard après trois lectures en échec. Le texte reste attaché au
-          contrôle, pour que le professeur prépare et corrige avec la leçon de
-          votre enfant, puis il est <strong>effacé un mois après la date du
-          contrôle</strong> (deux si le bilan n'a pas encore été fait), ou plus
-          tôt si vous supprimez le contrôle.
+          <strong>Le cours importé avec un contrôle</strong> (photo, PDF,
+          document Word, Excel ou PowerPoint) est gardé sur nos serveurs, et
+          non chez un tiers, pour que votre enfant puisse le revoir pendant sa
+          préparation. Une photo ou un PDF est transmis à Anthropic pour être
+          relevé en texte ; le texte d'un document Word, Excel ou PowerPoint est
+          lu sur nos serveurs, sans tiers. <strong>Le fichier est effacé une
+          semaine après la date du contrôle</strong> (et jamais moins d'une
+          semaine après son envoi), ou plus tôt si votre enfant le retire ou si
+          vous supprimez le contrôle ; il n'est pas sauvegardé. Le texte relevé
+          reste attaché au contrôle, pour que le professeur prépare et corrige
+          avec la leçon de votre enfant, puis il est <strong>effacé un mois
+          après la date du contrôle</strong> (deux si le bilan n'a pas encore
+          été fait).
         </p>
         <p>
           <strong>Les contrôles passés</strong> sont allégés au même moment&nbsp;:
@@ -430,6 +437,10 @@ export default function Confidentialite() {
               <tr>
                 <td>Rapports d'orientation</td>
                 <td>Durée de vie du compte, comme les fiches et les comptes rendus</td>
+              </tr>
+              <tr>
+                <td>Fichier du cours importé avec un contrôle (photo, PDF, Word, Excel, PowerPoint)</td>
+                <td><strong>Une semaine après le contrôle</strong> (jamais moins d'une semaine après l'envoi), puis effacement du fichier&nbsp;; plus tôt si l'enfant le retire ou si le contrôle est supprimé. Non sauvegardé</td>
               </tr>
               <tr>
                 <td>Contrôles passés et texte du cours importé avec eux</td>

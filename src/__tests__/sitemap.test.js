@@ -14,7 +14,9 @@
 import fs from 'fs';
 import path from 'path';
 
-import { NON_INDEXEES, ORIGINE, PAGES } from '../lib/seo/pages';
+import {
+  FERMEES_AUX_ROBOTS, NON_INDEXEES, ORIGINE, PAGES,
+} from '../lib/seo/pages';
 
 const RACINE = path.resolve(__dirname, '..', '..');
 const sitemap = fs.readFileSync(path.join(RACINE, 'public', 'sitemap.xml'), 'utf8');
@@ -50,20 +52,29 @@ describe('sitemap.xml', () => {
 });
 
 describe('robots.txt', () => {
-  it('ferme chacun des chemins non indexés', () => {
-    NON_INDEXEES.forEach((chemin) => {
-      // `/eleves` est fermé par `/eleves/`, `/scan` par `/scan/` : un préfixe
-      // suffit, tant que la ligne commence bien par le chemin.
-      const ferme = new RegExp(`^Disallow: ${chemin}/?$`, 'm');
-      expect(robots).toMatch(ferme);
-    });
+  const fermes = () => [...robots.matchAll(/^Disallow: (.+)$/gm)]
+    .map((m) => m[1].trim().replace(/\/$/, ''));
+
+  it('ferme exactement les pages qui agissent à l\'ouverture', () => {
+    expect(fermes().sort()).toEqual([...FERMEES_AUX_ROBOTS].sort());
+  });
+
+  it('laisse lire les pages privées, pour que Google y voie le noindex (26/10/2026)', () => {
+    // Fermer une page qu'on veut hors de l'index la fait indexer QUAND MÊME,
+    // sans contenu, dès qu'un lien y mène : « Indexée malgré le blocage par le
+    // fichier robots.txt ». Le noindex n'agit que sur une page lue.
+    const lisibles = NON_INDEXEES.filter((p) => !FERMEES_AUX_ROBOTS.includes(p));
+    expect(lisibles).toEqual(expect.arrayContaining(['/code', '/profil', '/admin', '/eleves']));
+    lisibles.forEach((chemin) => expect(fermes()).not.toContain(chemin));
+  });
+
+  it('ne ferme que des chemins non indexés', () => {
+    FERMEES_AUX_ROBOTS.forEach((chemin) => expect(NON_INDEXEES).toContain(chemin));
   });
 
   it('ne ferme aucune page publique', () => {
-    const fermes = [...robots.matchAll(/^Disallow: (.+)$/gm)].map((m) => m[1].trim());
-
     PAGES.forEach((page) => {
-      fermes.forEach((ferme) => {
+      fermes().forEach((ferme) => {
         const prefixe = ferme.replace(/\/$/, '');
         expect(page.chemin === prefixe || page.chemin.startsWith(`${prefixe}/`)).toBe(false);
       });

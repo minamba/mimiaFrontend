@@ -13,7 +13,7 @@ import ForfaitRequis from './ForfaitRequis';
 import SuiviComplement from './SuiviComplement';
 import MeTester from './MeTester';
 import imageCerveau from '../../assets/me-tester/cerveau.webp';
-import useAccesForfait from '../../lib/hooks/useAccesForfait';
+import useAccesForfait, { fichesConsultables } from '../../lib/hooks/useAccesForfait';
 import useGlissement from '../../lib/hooks/useGlissement';
 import { dateCourte } from './MesFiches';
 import Loader from '../Loader';
@@ -106,7 +106,7 @@ export default function CoursFiches() {
   // L'élève de l'adresse, ou le parent dans son espace (16/10/2026).
   const { eleveId, estParent, chemin } = useProprietaireFiches();
   const naviguer = useNavigate();
-  const { ouvert: forfaitOuvert } = useAccesForfait(estParent ? null : eleveId);
+  const acces = useAccesForfait(estParent ? null : eleveId);
 
   const [cours, setCours] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -354,7 +354,8 @@ export default function CoursFiches() {
   };
 
   // SANS VRAI FORFAIT (16/10/2026) : la page d'un cours ne s'ouvre pas non plus.
-  if (forfaitOuvert === false) {
+  // En essai si (18/10/2026) : c'est là que l'on voit la fiche de l'essai.
+  if (!fichesConsultables(acces)) {
     return (
       <div className="mf-page">
         <Link to={chemin} className="lien-retour">{estParent ? '← Mes fiches personnelles' : '← Mes fiches de révision'}</Link>

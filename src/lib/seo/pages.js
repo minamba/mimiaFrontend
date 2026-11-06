@@ -39,7 +39,7 @@ export const PAGES = [
     chemin: '/',
     titre: 'Mimia — le professeur particulier de vos enfants',
     description:
-      "Un professeur par IA pour chaque enfant, du CP à la Terminale. Il ne donne jamais la réponse : il cherche où ça bloque, et reprend depuis là.",
+      "Une équipe pédagogique par IA pour chaque enfant, du CP à la Terminale. Ses professeurs ne donnent jamais la réponse : ils cherchent où ça bloque.",
     priorite: '1.0',
     frequence: 'weekly',
   },
@@ -113,6 +113,34 @@ export const NON_INDEXEES = [
   '/profil',
   '/admin',
   '/code',
+  '/scan',
+  '/callback',
+  '/silent-renew',
+  '/desabonnement',
+  '/donner-mon-avis',
+];
+
+/**
+ * CEUX QUE LES ROBOTS NE DOIVENT MÊME PAS OUVRIR — 26/10/2026.
+ *
+ * « Non indexé » et « fermé dans robots.txt » ne sont PAS la même chose, et les
+ * confondre a produit l'alerte « Indexée malgré le blocage par le fichier
+ * robots.txt » de la Search Console. Google trouvait le lien « Espace enfant »
+ * (/code) dans la barre de navigation ; robots.txt lui interdisait de lire la
+ * page ; il ne voyait donc jamais le `noindex` — et indexait l'adresse seule.
+ * Une page qu'on veut HORS de l'index doit être LISIBLE par le robot.
+ *
+ * Restent fermées les seules pages qui AGISSENT à l'ouverture, ou portent un
+ * jeton : un robot qui exécute le JavaScript (Google le fait) consommerait un
+ * lien de scan, un retour de connexion ou un désabonnement. Aucune n'est liée
+ * depuis une page publique : Google n'a aucune raison de les connaître.
+ *
+ * Le reste de NON_INDEXEES est lisible, et porte `noindex` deux fois : la
+ * balise posée par useMetaPage, et l'en-tête X-Robots-Tag posé par le serveur
+ * (Program.cs, `cheminsPrives`) — celui-là vaut même pour un robot qui
+ * n'exécute pas le JavaScript.
+ */
+export const FERMEES_AUX_ROBOTS = [
   '/scan',
   '/callback',
   '/silent-renew',

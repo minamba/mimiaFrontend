@@ -1,0 +1,400 @@
+/* L'ÉTAT DANS LA LISTE : la pastille d'avant, devenue un choix. */
+.signalement-etat-choix {
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+  padding: 5px 10px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/*
+ * LA COULEUR DE CHAQUE ÉTAT, SUR LE CHOIX AUSSI — Camara, le 03/11/2026 : « y'a aucune
+ * couleur sur le sélecteur ». Tous les champs du site reçoivent leur fond et leur texte
+ * d'une règle commune (App.css, « :root:not([data-theme='light']) :is(… select …) »),
+ * qui pèse plus lourd que la pastille. D'où ce sélecteur renforcé, et des couleurs qui
+ * passent par une variable : les `--duree-*` ont une valeur par thème.
+ */
+.signalement-etat-choix.signalement-etat--nouveau { --etat: var(--corail-texte, var(--corail)); }
+.signalement-etat-choix.signalement-etat--en_cours { --etat: var(--duree-3); }
+.signalement-etat-choix.signalement-etat--traite { --etat: var(--duree-1); }
+
+:root:root:root select.signalement-etat-choix {
+  border-color: color-mix(in srgb, var(--etat) 65%, transparent);
+  background-color: color-mix(in srgb, var(--etat) 18%, var(--surface));
+  color: var(--etat);
+  font-weight: 700;
+}
+
+:root:root:root select.signalement-etat-choix:hover:not(:disabled, :focus),
+:root:root:root select.signalement-etat-choix:focus {
+  border-color: var(--etat);
+  background-color: color-mix(in srgb, var(--etat) 26%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--etat) 24%, transparent);
+}
+
+.signalement-etat-choix:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.signalement-etat-choix option {
+  background: var(--surface);
+  color: var(--encre);
+}
+
+/* CE QUE PORTE LE SIGNALEMENT, sous sa description. */
+.signalement-ligne__joint {
+  display: block;
+  margin-top: 3px;
+  color: var(--encre-douce);
+  font-size: 12.5px;
+}
+
+/* L'APERÇU */
+.modale__boite.signalement-apercu {
+  max-width: 620px;
+}
+
+.signalement-apercu__titre {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-size: 20px;
+}
+
+.signalement-apercu__corps {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--encre) 28%, transparent) transparent;
+}
+
+/* RIEN NE SE COMPRIME, TOUT DÉFILE — Camara, le 06/11/2026 : « je trouve pas ça propre ». Dans ce cadre qui
+   défile, les enfants se laissaient écraser plutôt que de faire défiler : le choix de l'état devenait un trait
+   vide, et le champ du commentaire était coupé. */
+.signalement-apercu__corps > * { flex-shrink: 0; }
+
+.signalement-apercu__corps::-webkit-scrollbar { width: 8px; }
+.signalement-apercu__corps::-webkit-scrollbar-track { background: transparent; }
+.signalement-apercu__corps::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--encre) 28%, transparent);
+}
+
+.signalement-apercu__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  width: 100%;
+}
+
+.signalement-apercu__entete .signalement-etat-choix { min-width: 150px; }
+
+/*
+ * UN BLOC, UNE COULEUR — Camara, le 06/11/2026 : « mets les blocs dans des couleurs différentes ». Dans l'aperçu,
+ * chaque bloc est un encart teinté : la description en ambre, le jeu de test en bleu, les fichiers joints en
+ * violet, les commentaires en vert. Les mêmes blocs gardent leur allure sobre dans « Modifier ».
+ */
+.signalement-apercu__message,
+.signalement-apercu__test,
+.signalement-apercu .signalement-pieces,
+.signalement-apercu .signalement-notes {
+  --bloc: #9cc2ff;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--bloc) 32%, transparent);
+  border-left: 4px solid var(--bloc);
+  border-radius: var(--rayon);
+  background: color-mix(in srgb, var(--bloc) 8%, transparent);
+}
+
+.signalement-apercu__message { --bloc: #f5b94a; }
+.signalement-apercu__test { --bloc: #6ea8ff; }
+.signalement-apercu .signalement-pieces { --bloc: #b48cff; }
+.signalement-apercu .signalement-notes { --bloc: #5fd08a; }
+
+:root[data-theme='light'] .signalement-apercu__message { --bloc: #c98a12; }
+:root[data-theme='light'] .signalement-apercu__test { --bloc: #2f6fd6; }
+:root[data-theme='light'] .signalement-apercu .signalement-pieces { --bloc: #7d4fd6; }
+:root[data-theme='light'] .signalement-apercu .signalement-notes { --bloc: #23944f; }
+
+.signalement-apercu .signalement-pieces__titre,
+.signalement-apercu .signalement-notes__titre { color: var(--bloc); }
+
+/* Les cartes à l'intérieur (fichier, commentaire) restent lisibles sur la teinte du bloc. */
+.signalement-apercu .signalement-piece,
+.signalement-apercu .signalement-note {
+  border-color: color-mix(in srgb, var(--bloc) 30%, transparent);
+  background: color-mix(in srgb, var(--bloc) 6%, var(--surface));
+}
+
+/* LE JEU DE TEST D'UN SIGNALEMENT ADMIN : un encart plutôt que deux lignes serrées. */
+.signalement-apercu__test {
+  display: grid;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.signalement-apercu__test .signalement-apercu__etiquette:first-child { color: var(--bloc); }
+
+.signalement-apercu__test-tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.signalement-apercu__etiquette {
+  display: block;
+  color: var(--encre-douce);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.signalement-apercu__statut {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  --statut: var(--encre-douce);
+  border: 1px solid color-mix(in srgb, var(--statut) 55%, transparent);
+  background: color-mix(in srgb, var(--statut) 16%, transparent);
+  color: var(--statut);
+}
+.signalement-apercu__statut--ko { --statut: var(--corail-texte, var(--corail)); }
+.signalement-apercu__statut--ok { --statut: var(--duree-1); }
+.signalement-apercu__statut--a_tester,
+.signalement-apercu__statut--en_cours { --statut: var(--duree-3); }
+
+.signalement-apercu__competence {
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.signalement-apercu__meta {
+  margin: 0;
+  color: var(--encre-douce);
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+.signalement-apercu__message {
+  width: 100%;
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* LES COMMENTAIRES, en bas du signalement. */
+.signalement-formulaire__commentaires {
+  margin-top: 28px;
+}
+
+.signalement-notes {
+  width: 100%;
+  padding-top: 14px;
+  border-top: 1px solid var(--trait);
+}
+
+.signalement-notes__titre {
+  margin: 0;
+  font-size: 15px;
+}
+
+.signalement-notes__aide,
+.signalement-notes__vide {
+  margin: 2px 0 10px;
+  color: var(--encre-douce);
+  font-size: 13px;
+}
+
+.signalement-notes__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.signalement-note {
+  padding: 10px 12px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--papier);
+}
+
+.signalement-note__meta {
+  margin: 0 0 4px;
+  color: var(--encre-douce);
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.signalement-note__texte {
+  margin: 0;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.signalement-note textarea,
+.signalement-notes__ajout textarea {
+  width: 100%;
+  box-sizing: border-box;
+  /* La police du site, pas celle à chasse fixe que le navigateur donne aux zones de texte. */
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: var(--rayon);
+  resize: vertical;
+}
+
+.signalement-note__gestes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.signalement-notes__ajout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* LES FICHIERS JOINTS */
+.signalement-pieces {
+  width: 100%;
+  margin-bottom: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--trait);
+}
+
+.signalement-pieces__titre {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.signalement-pieces__vide {
+  margin: 0 0 10px;
+  color: var(--encre-douce);
+  font-size: 13px;
+}
+
+.signalement-pieces__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.signalement-pieces__documents {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.signalement-piece {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--papier);
+}
+
+.signalement-piece--image {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.signalement-piece--image img {
+  display: block;
+  width: 100%;
+  height: 130px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: rgb(0 0 0 / 0.25);
+}
+
+.signalement-piece__attente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 130px;
+  color: var(--encre-douce);
+  font-size: 13px;
+}
+
+.signalement-piece__nom {
+  min-width: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+.signalement-piece__gestes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.signalement-pieces__ajout {
+  margin-bottom: 0;
+}
+
+/* LE CHOIX DES FICHIERS, avant l'envoi. */
+.signalement-pieces-choix__refus {
+  margin: 6px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.signalement-pieces-choix__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signalement-pieces-choix__liste li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.signalement-pieces-choix__nom {
+  min-width: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}

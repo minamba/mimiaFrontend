@@ -126,3 +126,22 @@ describe('amorceSeule — un début de phrase qui ne peut pas être une réponse
     expect(amorceSeule('   ')).toBe(false);
   });
 });
+
+describe('au CP, le temps de se reprendre (Camara, le 03/11/2026)', () => {
+  test('une syllabe demandée attend le délai long, et non le plus court', () => {
+    expect(delaiAssemblage({ demandeProf: 'Dis NI.', fragment: 'mi', accumule: 'mi', classe: 'CP' })).toBe(DELAI_LONG);
+    expect(delaiAssemblage({ demandeProf: 'Dis NI.', fragment: 'mi', accumule: 'mi' })).toBe(DELAI_COURT);
+  });
+
+  test('un calcul aussi : le délai de réflexion serait plus court', () => {
+    expect(delaiAssemblage({ demandeProf: 'Combien font 2 et 3 ?', fragment: 'cinq', accumule: 'cinq', classe: 'CP' })).toBe(DELAI_LONG);
+  });
+
+  test.each(['CE1', 'CE2', '6e', 'Terminale générale', undefined, null])('%s ne change pas', (classe) => {
+    expect(delaiAssemblage({ demandeProf: 'Dis NI.', fragment: 'ni', accumule: 'ni', classe })).toBe(DELAI_COURT);
+  });
+
+  test('la casse et les espaces ne comptent pas', () => {
+    expect(delaiAssemblage({ fragment: 'mi', accumule: 'mi', classe: ' cp ' })).toBe(DELAI_LONG);
+  });
+});

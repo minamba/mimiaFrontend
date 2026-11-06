@@ -3,10 +3,11 @@ import iconeAutre from '../assets/autre.png';
 import iconeProfesseur from '../assets/prob_prof.png';
 import iconeTechnique from '../assets/prob_technique.png';
 import iconeSuggestion from '../assets/suggestion.png';
-import { creerSignalement } from '../lib/api/signalementsApi';
+import { creerSignalement, joindrePieceSignalement } from '../lib/api/signalementsApi';
+import ChoixPiecesSignalement from './ChoixPiecesSignalement';
 
 /** Le drapeau du bouton flottant — un trait, pas un emoji, pour rester net à toute taille d'écran. */
-function IconeDrapeau() {
+export function IconeDrapeau() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M5 21V4" />
@@ -30,7 +31,7 @@ function IconeEnvoye() {
  * 14/09/2026 : des images au-dessus du libellé plutôt que des pictogrammes au
  * trait à côté. Décoratives : le libellé, juste dessous, dit la catégorie.
  */
-const CATEGORIES = [
+export const CATEGORIES = [
   { code: 'PROFESSEUR', libelle: 'Problème avec un professeur', image: iconeProfesseur },
   { code: 'TECHNIQUE', libelle: 'Problème technique', image: iconeTechnique },
   { code: 'SUGGESTION', libelle: 'Suggestion', image: iconeSuggestion },
@@ -54,6 +55,10 @@ export default function BoutonSignalement() {
   const [description, setDescription] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
+  const [fichiers, setFichiers] = useState([]);
+
+  // Le message est parti, mais certains fichiers non : l'écran de confirmation le dit.
+  const [nonJoints, setNonJoints] = useState([]);
 
   const fermer = () => {
     setOuvert(false);
@@ -63,6 +68,8 @@ export default function BoutonSignalement() {
     setCategorie('TECHNIQUE');
     setDescription('');
     setErreur(null);
+    setFichiers([]);
+    setNonJoints([]);
   };
 
   // Échap referme, comme partout ailleurs dans l'application.
@@ -82,7 +89,14 @@ export default function BoutonSignalement() {
     setErreur(null);
 
     try {
-      await creerSignalement(categorie, description.trim());
+      const { data } = await creerSignalement(categorie, description.trim());
+
+      // LE SIGNALEMENT EST DÉJÀ ENREGISTRÉ : un fichier refusé ne le remet pas en cause,
+      // et réessayer depuis le formulaire l'enverrait deux fois.
+      const resultats = await Promise.allSettled(
+        fichiers.map((fichier) => joindrePieceSignalement(data?.id, fichier)),
+      );
+      setNonJoints(fichiers.filter((_, i) => resultats[i].status === 'rejected').map((f) => f.name));
       setEnvoye(true);
     } catch {
       setErreur("L'envoi a échoué. Réessayez dans un instant.");
@@ -112,6 +126,11 @@ export default function BoutonSignalement() {
                 <p className="modale__texte">
                   Votre message a bien été envoyé, il sera traité par l’équipe mimia.fr.
                 </p>
+                {nonJoints.length > 0 && (
+                  <div className="alert" role="alert">
+                    Ces fichiers n’ont pas pu être joints : {nonJoints.join(', ')}.
+                  </div>
+                )}
                 <div className="modale__actions">
                   <button type="button" className="btn" onClick={fermer}>Fermer</button>
                 </div>
@@ -178,6 +197,8 @@ export default function BoutonSignalement() {
                     {description.length}/{LONGUEUR_MAX}
                   </span>
                 </div>
+
+                <ChoixPiecesSignalement fichiers={fichiers} onChange={setFichiers} />
                 </div>
 
                 <div className="modale__actions">

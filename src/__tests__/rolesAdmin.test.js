@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import RolesAdmin from '../components/RolesAdmin';
-import { getRoles, creerRole } from '../lib/api/adminApi';
+import { getRoles, creerRole, modifierRole, definirCopieMinamba } from '../lib/api/adminApi';
 
 /*
  * L'ONGLET « RÔLES » — Camara, le 17/10/2026 : créer des rôles qui portent des
@@ -11,7 +11,10 @@ jest.mock('../lib/api/adminApi', () => ({
   creerRole: jest.fn(),
   modifierRole: jest.fn(),
   supprimerRole: jest.fn(),
+  definirCopieMinamba: jest.fn(),
 }));
+
+const COURRIELS = [{ code: 'test_pret', libelle: 'Signalement admin traité : prêt à être testé' }];
 
 const roles = [
   { id: 1, nom: 'Utilisateur', code: 'utilisateur', onglets: [], nombreComptes: 9, ouvreAdministration: false },
@@ -50,7 +53,70 @@ describe('l’onglet Rôles', () => {
     fireEvent.click(screen.getByLabelText('Idées'));
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
-    await waitFor(() => expect(creerRole).toHaveBeenCalledWith('Partenaire', ['stats', 'idees']));
+    await waitFor(() => expect(creerRole).toHaveBeenCalledWith('Partenaire', ['stats', 'idees'], []));
     await waitFor(() => expect(onChange).toHaveBeenCalled());
+  });
+});
+
+/*
+ * LES COURRIELS PORTÉS PAR LES RÔLES — Camara, le 06/11/2026 : « j'affecte les mails à un type d'utilisateur
+ * et tous ces utilisateurs recevront le mail », et une case à part pour minamba.camara@mimia.fr.
+ */
+describe('les courriels de signalement dans l’onglet Rôles', () => {
+  beforeEach(() => {
+    getRoles.mockResolvedValue({
+      data: {
+        roles: [
+          ...roles.slice(0, 3),
+          { ...roles[3], nom: 'Testeuse', courriels: ['test_pret'] },
+        ],
+        onglets: ['stats', 'parents', 'idees', 'cout'],
+        courriels: COURRIELS,
+        adresseMinamba: 'minamba.camara@mimia.fr',
+        copieMinamba: false,
+      },
+    });
+    modifierRole.mockResolvedValue({ data: {} });
+    creerRole.mockResolvedValue({ data: {} });
+    definirCopieMinamba.mockResolvedValue({});
+  });
+
+  it('la carte du rôle dit ce qu’il reçoit, et la modification garde la case cochée', async () => {
+    render(<RolesAdmin />);
+    const cartes = await screen.findAllByRole('listitem');
+    const testeuse = cartes[3];
+    expect(within(testeuse).getByText('Reçoit : Signalement admin traité : prêt à être testé')).toBeInTheDocument();
+
+    fireEvent.click(within(testeuse).getByRole('button', { name: 'Modifier' }));
+    const caseCourriel = screen.getByLabelText('Signalement admin traité : prêt à être testé');
+    expect(caseCourriel).toBeChecked();
+
+    fireEvent.click(caseCourriel);
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() => expect(modifierRole).toHaveBeenCalledWith(4, 'Testeuse', ['stats'], []));
+  });
+
+  it('un nouveau rôle peut recevoir le courriel', async () => {
+    render(<RolesAdmin />);
+    fireEvent.click(await screen.findByRole('button', { name: '+ Nouveau rôle' }));
+    fireEvent.change(screen.getByLabelText('Nom du rôle'), { target: { value: 'Testeurs' } });
+    fireEvent.click(screen.getByLabelText('Signalement admin traité : prêt à être testé'));
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(creerRole).toHaveBeenCalledWith('Testeurs', [], ['test_pret']));
+  });
+
+  it('la case de minamba.camara@mimia.fr se coche et se décoche', async () => {
+    render(<RolesAdmin />);
+    const copie = await screen.findByLabelText('Envoyer aussi à minamba.camara@mimia.fr');
+    expect(copie).not.toBeChecked();
+
+    fireEvent.click(copie);
+    await waitFor(() => expect(definirCopieMinamba).toHaveBeenCalledWith(true));
+    await waitFor(() => expect(copie).toBeChecked());
+
+    fireEvent.click(copie);
+    await waitFor(() => expect(definirCopieMinamba).toHaveBeenLastCalledWith(false));
+    await waitFor(() => expect(copie).not.toBeChecked());
   });
 });

@@ -111,11 +111,15 @@ function Details({ offre, lancement, modules = {} }) {
     'Suivi détaillé des activités de l’enfant',
     modules.orientation ? 'Une conseillère d’orientation dès la 3e' : null,
 
-    // FICHES ET JEUX (Camara, le 18/10/2026) : réservés aux formules payantes,
-    // jamais à l'essai. Sans chiffre : le nombre de cours de fiches par mois
-    // se règle côté serveur, une constante ici mentirait au premier changement.
-    offre.estEssai || !modules.fiches ? null : 'Fiches de révision générées à partir de ses cours',
-    offre.estEssai || !modules.jeux ? null : 'Accès aux jeux éducatifs',
+    // FICHES ET JEUX (Camara, le 18/10/2026) : pleins dans les formules
+    // payantes. Sans chiffre : le nombre de cours de fiches par mois se règle
+    // côté serveur, une constante ici mentirait au premier changement.
+    // À L'ESSAI, UN AVANT-GOÛT (le même jour) : une fiche de révision, et les
+    // deux premiers jeux de mathématiques.
+    !modules.fiches ? null
+      : offre.estEssai ? 'Une fiche de révision offerte' : 'Fiches de révision générées à partir de ses cours',
+    !modules.jeux ? null
+      : offre.estEssai ? 'Deux jeux de mathématiques à essayer' : 'Accès aux jeux éducatifs',
     'Bilan hebdomadaire par mail',
     offre.estEssai ? null : 'Un mois de pause offert par an',
   ].filter(Boolean);
@@ -460,7 +464,9 @@ export default function Tarifs() {
             et une accroche entièrement en encre pleine ne dit pas où elle
             porte. */}
         <h1>
-          Un professeur pour <em>chaque enfant</em>
+          {/* « UNE ÉQUIPE PÉDAGOGIQUE » — Camara, le 19/10/2026 : plus
+              représentatif que « un professeur », Mimia en a un par matière. */}
+          Une équipe pédagogique pour <em>chaque enfant</em>
         </h1>
 
         <p className="page__intro">
@@ -622,9 +628,13 @@ export default function Tarifs() {
                 jours. C'est une SEULE demi-heure, et les sept jours ne sont que
                 le délai pour l'utiliser : deux informations de nature
                 différente que la virgule mettait sur le même plan. */}
+            {/* SANS DÉLAI depuis le 18/10/2026 (`joursValidite` à 0) : la phrase
+                ne parle de jours que si l'offre en fixe encore. */}
             <p>
-              {heures(essai.heuresPot)} de cours offertes, une seule fois, à utiliser
-              dans les {essai.joursValidite} jours. Sans carte bancaire, sans
+              {heures(essai.heuresPot)} de cours offertes, une seule fois,{' '}
+              {essai.joursValidite > 0
+                ? `à utiliser dans les ${essai.joursValidite} jours.`
+                : 'à utiliser quand vous voulez, sans date limite.'} Sans carte bancaire, sans
               engagement — de quoi voir si le courant passe entre votre enfant et son
               professeur.
             </p>

@@ -75,6 +75,31 @@ describe('sans vrai forfait (16/10/2026)', () => {
   });
 });
 
+describe('en essai (18/10/2026)', () => {
+  it('deux jeux de maths sont ouverts, les autres grisés', () => {
+    mockAcces = { ouvert: false, motif: 'essai' };
+    mockRecherche = '';
+    render(<JeuxEleve />);
+
+    expect(screen.getByText(/Pendant l’essai, deux jeux de mathématiques sont ouverts/)).toBeInTheDocument();
+    const fermes = screen.getAllByRole('button', { name: /réservé aux familles abonnées/ });
+    const ouverts = [...document.querySelectorAll('.jeu-carte:not(.est-verrouille)')].map((b) => b.dataset.jeu);
+    expect(ouverts).toEqual(['marchande', 'balance']);
+    expect(fermes.length).toBeGreaterThan(2);
+
+    fireEvent.click(document.querySelector('[data-jeu="marchande"]'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('la carte du professeur ouvre un jeu de l’essai', () => {
+    mockAcces = { ouvert: false, motif: 'essai' };
+    mockRecherche = 'classe=CE2&jeu=marchande';
+    render(<JeuxEleve />);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
 describe('le lien vers un jeu précis', () => {
   it('ouvre le jeu demandé, à la classe demandée, quand elle est ouverte', () => {
     mockRecherche = 'classe=CE1&jeu=course-des-tables';

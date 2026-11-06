@@ -260,7 +260,17 @@ function reponseLongueSansConclusion(texte) {
  *   fragment — pas seulement le dernier morceau arrivé. C'est LUI qui dit si
  *   la réponse s'allonge, un fragment isolé ne le dirait pas.
  */
-export function delaiAssemblage({ demandeProf, fragment, accumule } = {}) {
+export function delaiAssemblage({
+  demandeProf, fragment, accumule, classe,
+} = {}) {
+  // AU CP, JAMAIS MOINS QUE LE DÉLAI LONG — décision de Camara, le 03/11/2026, sur un
+  // signalement : à « dis NI », un enfant a répondu « MI » et Adrien l'a corrigé
+  // aussitôt. Un enfant qui déchiffre dit « mi… », cherche, puis se reprend ; il
+  // n'avait qu'une seconde. S'il reparle, l'envoi s'annule (`onReprise`) et « mi… ni »
+  // part d'un seul bloc : le professeur voit qu'il s'est corrigé tout seul. Le prix,
+  // accepté : un simple « oui » part lui aussi plus tard, au CP seulement.
+  if (/^CP$/i.test(String(classe ?? '').trim())) return DELAI_LONG;
+
   if (fragmentInacheve(fragment)) return DELAI_LONG;
   if (demandeJustification(demandeProf)) return DELAI_LONG;
   if (reponseLongueSansConclusion(accumule ?? fragment)) return DELAI_LONG;
@@ -307,6 +317,66 @@ export const ATTENTE_TRANSCRIPTION_MAX_MS = 12000;
  * @param transcriptionEnCours  un morceau dit attend-il encore son texte ?
  * @param attenteMs             depuis combien de temps on attend déjà.
  */
+/**
+ * LE GARDIEN DE L'ENVOI AUTOMATIQUE — signalement de production du 03/11/2026, après
+ * trois correctifs ponctuels : « mes réponses ne sont pas parties, j'ai dû cliquer
+ * sur Envoyer ».
+ *
+ * L'ENVOI REPOSAIT SUR DES MINUTEURS QUE TROP DE CHOSES ANNULENT : un bruit de fond
+ * annulait l'envoi prévu et, tant qu'il durait, aucun silence ne venait le relancer ;
+ * un provisoire revenu après le silence, sans verdict derrière, restait affiché ; une
+ * redite écartée laissait le texte sans minuteur. Plutôt qu'un filet par chemin, une
+ * seule règle, qui ne dépend pas du chemin : DU TEXTE DICTÉ ATTEND, RIEN NE DOIT LE
+ * FAIRE PARTIR, ET PLUS RIEN N'ARRIVE ? IL PART.
+ *
+ * Les délais suivent ce qu'on peut encore attendre :
+ *   - plus rien ne s'entend et rien n'est en route : 3 s ;
+ *   - un morceau dit attend encore sa transcription : 12 s, le plafond du même calcul
+ *     que `doitAttendreAvantEnvoi` ;
+ *   - le micro entend du son, mais pas une voix (télévision, ventilateur) : 6 s ;
+ *   - il entend une voix : 20 s sans nouveau texte. Le fournisseur rend une phrase
+ *     toutes les dix à quinze secondes : en deçà, on couperait un enfant qui explique.
+ */
+export const GARDIEN_SILENCE_MS = 3000;
+export const GARDIEN_BRUIT_MS = 6000;
+export const GARDIEN_PAROLE_MS = 20000;
+
+/** Une voix entendue il y a moins que cela : l'élève est encore en train de parler. */
+export const GARDIEN_VOIX_RECENTE_MS = 2000;
+
+export function gardienDoitEnvoyer({
+  aDuTexte, minuteurArme, tapee, enPause, finie,
+  depuisTexteMs, parle, voixRecenteMs = Infinity, transcriptionEnCours,
+} = {}) {
+  // Un minuteur armé finit toujours par envoyer ; le clavier appartient à l'élève.
+  if (!aDuTexte || minuteurArme || tapee || enPause || finie) return false;
+
+  if (parle) {
+    return depuisTexteMs >= (voixRecenteMs < GARDIEN_VOIX_RECENTE_MS ? GARDIEN_PAROLE_MS : GARDIEN_BRUIT_MS);
+  }
+
+  return depuisTexteMs >= (transcriptionEnCours ? ATTENTE_TRANSCRIPTION_MAX_MS : GARDIEN_SILENCE_MS);
+}
+
+/**
+ * LE PROFESSEUR VIENT-IL DE DEMANDER UN SON TENU ? « ffff », « SSS », « mmm » : une même
+ * consonne au moins trois fois, seule. Camara, le 03/11/2026 : le micro n'écrit pas ces
+ * sons (voir `SON_TENU_MIN_S`), et sans ce signal l'enfant reste à souffler dans le vide.
+ *
+ * C'EST CE QUI GARDE LES BRUITS PARASITES DEHORS : sans cette demande, un son sans texte
+ * reste ce qu'il a toujours été, un bruit qu'on ignore.
+ */
+export function demandeSonTenu(texte) {
+  return /(?:^|[^a-zà-ÿ])([fsmnlrzvj])\1{2,}(?![a-zà-ÿ])/i.test(texte ?? '')
+    || /(?:^|[^a-zà-ÿ])(?:ch){3,}(?![a-zà-ÿ])/i.test(texte ?? '');
+}
+
+/**
+ * Le son transmis qu'il faut pour croire à un son tenu. La fin de chaque son part avec
+ * six dixièmes de traîne (TRAINE_MS) : une porte qui claque en compte déjà autant.
+ */
+export const SON_TENU_MIN_S = 0.9;
+
 export function doitAttendreAvantEnvoi({ parle, transcriptionEnCours, attenteMs = 0 } = {}) {
   if (attenteMs >= ATTENTE_TRANSCRIPTION_MAX_MS) return false;
 

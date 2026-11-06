@@ -449,11 +449,28 @@ describe('la création', () => {
   });
 
   it('sans vrai forfait, la page de création n’offre aucune étape', async () => {
-    mockAcces = { ouvert: false, motif: 'essai' };
+    mockAcces = { ouvert: false, motif: 'pause' };
     ouvrirCreation();
 
     expect(await screen.findByText('Les fiches de révision sont réservées aux familles abonnées.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir les formules' })).toHaveAttribute('href', '/tarifs');
+    expect(screen.queryByRole('radio', { name: 'Mathématiques' })).not.toBeInTheDocument();
+  });
+
+  // L'ESSAI (18/10/2026) : une fiche par famille, ensuite le message de Camara.
+  it('en essai, la première fiche se crée', async () => {
+    mockAcces = { ouvert: false, motif: 'essai', essaiFiches: 'libre' };
+    ouvrirCreation();
+
+    expect(await screen.findByRole('radio', { name: 'Mathématiques' })).toBeInTheDocument();
+    expect(screen.queryByText(/Il faut être abonné/)).not.toBeInTheDocument();
+  });
+
+  it('en essai, la fiche déjà créée, il faut être abonné pour continuer', async () => {
+    mockAcces = { ouvert: false, motif: 'essai', essaiFiches: 'utilise' };
+    ouvrirCreation();
+
+    expect(await screen.findByText('Il faut être abonné pour continuer à générer des fiches de révision.')).toBeInTheDocument();
     expect(screen.queryByRole('radio', { name: 'Mathématiques' })).not.toBeInTheDocument();
   });
 

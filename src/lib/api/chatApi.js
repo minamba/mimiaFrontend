@@ -46,6 +46,17 @@ export const quitterCours = (conversationId) =>
   httpClient.post(`/conversations/${conversationId}/quitter`);
 
 /**
+ * LA PAUSE DU COURS (03/11/2026) : le serveur décompte le forfait au tour de
+ * parole, sur le temps écoulé depuis le précédent. Il doit donc savoir combien de
+ * ce temps était de la pause, et ne pas conclure une séance simplement en pause.
+ */
+export const mettreCoursEnPause = (conversationId) =>
+  httpClient.post(`/conversations/${conversationId}/pause`);
+
+export const reprendreCours = (conversationId) =>
+  httpClient.post(`/conversations/${conversationId}/reprise`);
+
+/**
  * Le cours vient d'être coupé à l'échéance du forfait (essai ou formule,
  * 16/10/2026) : le serveur décompte ce qui restait et marque la sortie (le
  * compte rendu est dû).
@@ -69,7 +80,7 @@ export const terminerForfait = (conversationId) =>
  * @param signal   AbortSignal pour interrompre la génération
  */
 export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
-  const { secondesRestantes, pieceJointeIds, vitesseEcoute, ...flux } = options;
+  const { secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste = null, ...flux } = options;
 
   // Le chronomètre est tenu ici, dans le navigateur : le serveur ne sait pas
   // quelle durée l'élève a choisie ni quand il a commencé. Sans cette valeur,
@@ -78,9 +89,11 @@ export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
   // chronomètre : elle est choisie ici, dans le navigateur. Sans elle, le
   // professeur ne saurait pas de quel cran descendre quand l'élève demande
   // « plus lent », ni qu'il n'y en a plus en dessous.
+  // LE VERDICT DE LA VOIX part avec le son jugé (04/11/2026) : le serveur le
+  // garde sur le message, pour que la bulle le réaffiche au rechargement.
   return consommerFlux(
     `/conversations/${conversationId}/messages`,
-    { contenu, secondesRestantes, pieceJointeIds, vitesseEcoute },
+    { contenu, secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste },
     flux,
   );
 };

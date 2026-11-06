@@ -6,9 +6,22 @@ import {
 import { reduire, TYPES_ACCEPTES } from './PieceJointe';
 import ScanMobileModale from './ScanMobileModale';
 import { Icone } from './CopieControle';
+import ApercuCoursControle from './ApercuCoursControle';
 
 /** Au plus six documents par contrôle — le même plafond que le serveur. */
 export const DOCUMENTS_MAX = 6;
+
+/**
+ * Les images et PDF des pièces jointes, plus Word, Excel et PowerPoint récents
+ * (04/11/2026). Les anciens .doc/.xls/.ppt sont refusés par le serveur, avec le conseil.
+ */
+export const TYPES_COURS = `${TYPES_ACCEPTES},.docx,.xlsx,.pptx,`
+  + 'application/vnd.openxmlformats-officedocument.wordprocessingml.document,'
+  + 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,'
+  + 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+
+/** L'état affiché à côté d'un document. */
+export const ETAT_PURGE = 'Effacé une semaine après le contrôle';
 
 /** Le temps entre deux relevés, tant qu'un document est en cours de lecture. */
 const INTERVALLE_LECTURE = 3000;
@@ -19,9 +32,13 @@ const INTERVALLE_LECTURE = 3000;
  * compléter avec les notions du programme qui y manquent. Sans cours, rien ne
  * change : il prépare avec le programme officiel, comme avant.
  *
- * TOUS LES MOYENS DES COURS ORDINAIRES : importer un fichier (photo ou PDF),
- * prendre une photo sur téléphone, scanner avec le téléphone depuis
- * l'ordinateur.
+ * TOUS LES MOYENS DES COURS ORDINAIRES : importer un fichier (photo, PDF, et
+ * depuis le 04/11/2026 Word, Excel, PowerPoint), prendre une photo sur
+ * téléphone, scanner avec le téléphone depuis l'ordinateur.
+ *
+ * L'ÉLÈVE REVOIT SES DOCUMENTS — Camara, le 04/11/2026 : un bouton « Aperçu »
+ * par document tant que le fichier est sur le serveur ; il en est effacé une
+ * semaine après le contrôle, et la ligne le dit alors (`purge`).
  *
  * DEUX RÉGIMES
  * ------------
@@ -40,6 +57,7 @@ export default function CoursDuControle({
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [scanOuvert, setScanOuvert] = useState(false);
+  const [enApercu, setEnApercu] = useState(null);
 
   // UN TÉLÉPHONE PHOTOGRAPHIE AVEC SON APPAREIL NATIF — `capture` l'ouvre
   // directement. Sur ordinateur, on passe par le QR code. Même règle que la
@@ -159,9 +177,16 @@ export default function CoursDuControle({
   const bloque = disabled || envoi || plein;
   const scanPossible = !telephone && (controleId || onBesoinDuControle);
 
+  // L'ÉTAT D'UN DOCUMENT : lu ou en lecture tant que le fichier est là ; effacé
+  // une semaine après le contrôle (04/11/2026), et l'aperçu part avec lui.
+  const etatDe = (d) => {
+    if (d.purge) return ETAT_PURGE;
+    return d.lu ? 'Lu par ton professeur' : 'En lecture…';
+  };
+
   const elements = controleId
-    ? documents.map((d) => ({ cle: `d${d.id}`, nom: d.nomFichier, etat: d.lu ? 'Lu par ton professeur' : 'En lecture…', element: d }))
-    : enAttente.map((f, i) => ({ cle: `f${i}-${f.name}`, nom: f.name, etat: 'Sera envoyé avec le contrôle', element: f }));
+    ? documents.map((d) => ({ cle: `d${d.id}`, nom: d.nomFichier, etat: etatDe(d), element: d, consultable: Boolean(d.consultable) }))
+    : enAttente.map((f, i) => ({ cle: `f${i}-${f.name}`, nom: f.name, etat: 'Sera envoyé avec le contrôle', element: f, consultable: false }));
 
   return (
     <div className="cours-controle" role="group" aria-labelledby="cours-controle-titre">
@@ -170,18 +195,29 @@ export default function CoursDuControle({
       </p>
       <p className="champ__aide">
         Ton professeur préparera le contrôle en suivant ta leçon, puis ajoutera ce qui manque
-        du programme. Sans cours, il suit le programme officiel.
+        du programme. Sans cours, il suit le programme officiel. Photo, PDF, Word, Excel ou
+        PowerPoint : tu pourras les revoir ici jusqu’à une semaine après le contrôle.
       </p>
 
       {elements.length > 0 && (
         <ul className="cours-controle__liste">
-          {elements.map(({ cle, nom, etat, element }, index) => (
+          {elements.map(({ cle, nom, etat, element, consultable }, index) => (
             <li key={cle} className="cours-controle__document">
               <Icone />
               <span className="cours-controle__nom">{nom}</span>
-              <span className={`cours-controle__etat${etat === 'Lu par ton professeur' ? ' est-lu' : ''}`}>
+              <span className={`cours-controle__etat${etat === 'Lu par ton professeur' ? ' est-lu' : ''}${etat === ETAT_PURGE ? ' est-purge' : ''}`}>
                 {etat}
               </span>
+              {consultable && (
+                <button
+                  type="button"
+                  className="cours-controle__apercu"
+                  aria-label={`Aperçu de ${nom}`}
+                  onClick={() => setEnApercu(element)}
+                >
+                  Aperçu
+                </button>
+              )}
               <button
                 type="button"
                 className="cours-controle__retirer"
@@ -209,7 +245,7 @@ export default function CoursDuControle({
               hidden
               multiple
               disabled={bloque}
-              accept={TYPES_ACCEPTES}
+              accept={TYPES_COURS}
               onChange={(e) => {
                 const choisis = e.target.files;
                 ajouter(choisis);
@@ -245,6 +281,15 @@ export default function CoursDuControle({
             </button>
           )}
         </div>
+      )}
+
+      {enApercu && controleId && (
+        <ApercuCoursControle
+          eleveId={eleveId}
+          controleId={controleId}
+          document={enApercu}
+          onFermer={() => setEnApercu(null)}
+        />
       )}
 
       {scanOuvert && controleId && (

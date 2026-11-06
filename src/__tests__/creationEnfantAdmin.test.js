@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import CreationEnfantAdmin from '../components/CreationEnfantAdmin';
-import { creerEnfantPourParent } from '../lib/api/adminApi';
+import { creerEnfantPourParent, definirEtablissementEnfantAdmin } from '../lib/api/adminApi';
+import { chercherEtablissements } from '../lib/api/elevesApi';
 
 /*
  * CRÉER UN ENFANT POUR UN PARENT — Camara, le 16/10/2026 : depuis la ligne du
@@ -9,10 +10,23 @@ import { creerEnfantPourParent } from '../lib/api/adminApi';
 jest.mock('react-redux', () => ({
   useDispatch: () => jest.fn(),
   useSelector: (choisir) => choisir({
-    referentiel: { niveaux: [{ id: 3, code: 'CM1', libelle: 'CM1', cycle: 'Primaire', lv2Possible: false }], academies: [] },
+    referentiel: {
+      niveaux: [
+        { id: 3, code: 'CM1', libelle: 'CM1', cycle: 'Primaire', lv2Possible: false, ordre: 4 },
+        { id: 9, code: 'TROISIEME', libelle: '3e', cycle: 'Collège', lv2Possible: false, ordre: 9 },
+      ],
+      academies: [],
+    },
   }),
 }));
-jest.mock('../lib/api/adminApi', () => ({ creerEnfantPourParent: jest.fn() }));
+jest.mock('../lib/api/adminApi', () => ({ creerEnfantPourParent: jest.fn(), definirEtablissementEnfantAdmin: jest.fn() }));
+jest.mock('../lib/api/elevesApi', () => ({ chercherEtablissements: jest.fn() }));
+// Le module des besoins particuliers : éteint par défaut, allumé par un test.
+let mockBesoins = false;
+jest.mock('../lib/storage/modeTest', () => ({
+  ...jest.requireActual('../lib/storage/modeTest'),
+  useBesoinsParticuliers: () => mockBesoins,
+}));
 
 const parent = { id: 12, prenom: 'Hilda', nom: 'Camara', mail: 'hilda@example.fr' };
 
@@ -71,5 +85,81 @@ describe('la création d’un enfant par l’administration', () => {
     creerEnfantPourParent.mockRejectedValueOnce(new Error('Network Error'));
     fireEvent.click(screen.getByRole('button', { name: 'Créer le profil' }));
     expect(await screen.findByText(/Le serveur ne répond pas/)).toBeInTheDocument();
+  });
+});
+
+// L'ÉTABLISSEMENT À PARTIR DE LA 3e, EN DEUX TEMPS — Camara, le 20/10/2026.
+describe('l’établissement, à partir de la 3e', () => {
+  beforeEach(() => {
+    creerEnfantPourParent.mockReset();
+    definirEtablissementEnfantAdmin.mockReset();
+    chercherEtablissements.mockResolvedValue({
+      data: [{ uai: '0772296C', nom: 'Collège de la Mare Carrée', type: 'Collège', commune: 'Moissy-Cramayel' }],
+    });
+  });
+
+  it('absent en CM1, présent en 3e ; le profil d’abord, l’établissement ensuite avec l’identifiant reçu', async () => {
+    creerEnfantPourParent.mockResolvedValue({ data: { eleve: { id: 99, prenom: 'Syan' }, horsFormule: false } });
+    definirEtablissementEnfantAdmin.mockResolvedValue({ data: {} });
+    const onCree = jest.fn();
+    render(<CreationEnfantAdmin parent={parent} onCree={onCree} onFermer={jest.fn()} />);
+
+    remplir();
+    expect(screen.queryByLabelText('Collège ou lycée (facultatif)')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Classe'), { target: { value: '9' } });
+    const champ = screen.getByLabelText('Collège ou lycée (facultatif)');
+    fireEvent.change(champ, { target: { value: 'mare carrée' } });
+    fireEvent.click(await screen.findByRole('button', { name: /Mare Carrée/ }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Créer le profil' }));
+    await waitFor(() => expect(onCree).toHaveBeenCalled());
+
+    // Le profil part sans le code : sa route ne le connaît pas.
+    expect(creerEnfantPourParent.mock.calls[0][1]).not.toHaveProperty('etablissementUai');
+    expect(definirEtablissementEnfantAdmin).toHaveBeenCalledWith(99, '0772296C');
+  });
+
+  it('sans établissement choisi, un seul appel', async () => {
+    creerEnfantPourParent.mockResolvedValue({ data: { eleve: { id: 100 } } });
+    render(<CreationEnfantAdmin parent={parent} onCree={jest.fn()} onFermer={jest.fn()} />);
+
+    remplir();
+    fireEvent.change(screen.getByLabelText('Classe'), { target: { value: '9' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Créer le profil' }));
+
+    await waitFor(() => expect(creerEnfantPourParent).toHaveBeenCalled());
+    expect(definirEtablissementEnfantAdmin).not.toHaveBeenCalled();
+  });
+});
+
+// LES BESOINS PARTICULIERS DEPUIS L'ADMINISTRATION — Camara, le 20/10/2026.
+describe('les besoins particuliers', () => {
+  beforeEach(() => creerEnfantPourParent.mockReset());
+  afterEach(() => { mockBesoins = false; });
+
+  it('module allumé : le panneau est là, avec le rappel de l’accord, et les cases partent', async () => {
+    mockBesoins = true;
+    creerEnfantPourParent.mockResolvedValue({ data: { eleve: { id: 101 } } });
+    render(<CreationEnfantAdmin parent={parent} onCree={jest.fn()} onFermer={jest.fn()} />);
+
+    expect(screen.getByText(/c’est lui qui donne son accord/)).toBeInTheDocument();
+    remplir();
+    fireEvent.click(screen.getByRole('button', { name: 'Créer le profil' }));
+
+    await waitFor(() => expect(creerEnfantPourParent).toHaveBeenCalled());
+    expect(creerEnfantPourParent.mock.calls[0][1]).toMatchObject({ besoinsParticuliers: [], ecranAdapte: true });
+  });
+
+  it('module éteint : rien à l’écran, rien d’envoyé', async () => {
+    creerEnfantPourParent.mockResolvedValue({ data: { eleve: { id: 102 } } });
+    render(<CreationEnfantAdmin parent={parent} onCree={jest.fn()} onFermer={jest.fn()} />);
+
+    expect(screen.queryByText(/c’est lui qui donne son accord/)).not.toBeInTheDocument();
+    remplir();
+    fireEvent.click(screen.getByRole('button', { name: 'Créer le profil' }));
+
+    await waitFor(() => expect(creerEnfantPourParent).toHaveBeenCalled());
+    expect(creerEnfantPourParent.mock.calls[0][1]).not.toHaveProperty('besoinsParticuliers');
   });
 });

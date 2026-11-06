@@ -4,7 +4,10 @@ import FenetreEditionEnfant, { Section } from './FenetreEditionEnfant';
 import ChoixSpecialites from './ChoixSpecialites';
 import ChoixFilierePro from './ChoixFilierePro';
 import ChoixAcademie from './ChoixAcademie';
-import { creerEnfantPourParent } from '../lib/api/adminApi';
+import ChoixEtablissement, { classeAvecConseillere } from './ChoixEtablissement';
+import ChoixBesoins from './ChoixBesoins';
+import { useBesoinsParticuliers } from '../lib/storage/modeTest';
+import { creerEnfantPourParent, definirEtablissementEnfantAdmin } from '../lib/api/adminApi';
 import {
   grouperClasses, specialitesDeLaClasse, specialitesAEnvoyer, filiereDeLaClasse, filiereAEnvoyer,
   languesDeLaClasse, languesAEnvoyer, basculerLangue, serieAPreciser,
@@ -35,6 +38,10 @@ const VIDE = {
   sexe: '',
   niveauScolaireId: '',
   academieId: '',
+  // L'établissement, pour la conseillère d'orientation (20/10/2026).
+  etablissement: null,
+  // Les besoins particuliers (20/10/2026) : aucun, écran adapté d'office.
+  besoins: { besoins: [], ecranAdapte: true },
   lv2Espagnol: false,
   langues: [],
   specialites: [],
@@ -71,6 +78,18 @@ export default function CreationEnfantAdmin({ parent, onFermer, onCree }) {
   const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
   const filiereClasse = filiereDeLaClasse(niveaux, champs.niveauScolaireId);
   const aPreciser = serieAPreciser(niveaux, champs.niveauScolaireId);
+  // À PARTIR DE LA 3e, comme la conseillère (Camara, le 20/10/2026 : « quand je
+  // crée un enfant via l'administration, le bloc de l'établissement n'apparaît
+  // pas »). EN DEUX TEMPS, comme côté parent : le profil d'abord, pour obtenir
+  // l'identifiant, puis l'établissement par la route d'administration.
+  const avecEtablissement = classeAvecConseillere(niveaux, champs.niveauScolaireId);
+
+  // LES BESOINS PARTICULIERS, AUSSI DEPUIS L'ADMINISTRATION — Camara, le
+  // 20/10/2026 : « il manque le bloc pour savoir si l'enfant a des
+  // particularités ». Même panneau que le parent, quand le module est allumé.
+  // Cocher vaut accord sur des données sensibles : l'écran rappelle que c'est
+  // au nom du parent, avec ce qu'il a dit.
+  const besoinsActifs = useBesoinsParticuliers();
 
   const nomParent = [parent.prenom, parent.nom].filter(Boolean).join(' ') || parent.mail;
 
@@ -90,7 +109,25 @@ export default function CreationEnfantAdmin({ parent, onFermer, onCree }) {
         specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
         langues: languesAEnvoyer(champs.langues, languesClasse),
         ...filiereAEnvoyer(champs.filiere, filiereClasse),
+        // Envoyés seulement si le module est allumé : sinon rien n'est changé.
+        ...(besoinsActifs ? {
+          besoinsParticuliers: champs.besoins.besoins,
+          ecranAdapte: champs.besoins.ecranAdapte,
+        } : {}),
       });
+
+      // SECOND TEMPS : l'établissement, avec l'identifiant reçu. Un échec ici
+      // (annuaire injoignable) ne défait pas la création : l'enfant existe,
+      // l'établissement se posera dans sa fiche.
+      const uai = avecEtablissement ? champs.etablissement?.uai : null;
+      if (uai && data?.eleve?.id) {
+        try {
+          await definirEtablissementEnfantAdmin(data.eleve.id, uai);
+        } catch {
+          /* l'enfant est créé ; l'établissement reste à poser */
+        }
+      }
+
       onCree?.(data);
       onFermer();
     } catch (ex) {
@@ -225,14 +262,42 @@ export default function CreationEnfantAdmin({ parent, onFermer, onCree }) {
         </div>
       </Section>
 
-      <Section couleur="lieu" titre="Où il étudie" aide="Son académie fixe ses vacances. Facultative.">
+      <Section
+        couleur="lieu"
+        titre="Où il étudie"
+        aide={avecEtablissement
+          ? 'Son académie fixe ses vacances ; son établissement aide la conseillère d’orientation. Facultatifs.'
+          : 'Son académie fixe ses vacances. Facultative.'}
+      >
         <ChoixAcademie
           id="ce-academie"
           valeur={champs.academieId}
           onChange={(academieId) => setChamps((p) => ({ ...p, academieId }))}
           academies={academies}
         />
+
+        {avecEtablissement && (
+          <ChoixEtablissement
+            id="ce-etablissement"
+            valeur={champs.etablissement}
+            onChange={(etablissement) => setChamps((p) => ({ ...p, etablissement }))}
+          />
+        )}
       </Section>
+
+      {/* Les besoins particuliers ont leur panneau, titré et repliable. */}
+      {besoinsActifs && (
+        <div className="edition-enfant__besoins">
+          <p className="champ__aide champ__aide--alerte creation-enfant__accord">
+            À cocher seulement d’après ce que le parent vous a dit : c’est lui qui
+            donne son accord pour ces informations.
+          </p>
+          <ChoixBesoins
+            valeur={champs.besoins}
+            onChange={(besoins) => setChamps((p) => ({ ...p, besoins }))}
+          />
+        </div>
+      )}
     </FenetreEditionEnfant>
   );
 }

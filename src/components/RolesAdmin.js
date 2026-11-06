@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getRoles, creerRole, modifierRole, supprimerRole } from '../lib/api/adminApi';
+import { getRoles, creerRole, modifierRole, supprimerRole, definirCopieMinamba } from '../lib/api/adminApi';
 import { LIBELLES, BLOCS } from './DroitsAdmin';
 
 /**
@@ -15,19 +15,30 @@ import { LIBELLES, BLOCS } from './DroitsAdmin';
  *    la configuration du serveur et ne s'attribue à personne.
  *
  * Réservé au super-administrateur, comme le serveur le vérifie.
+ *
+ * LES COURRIELS (06/11/2026) — Camara : « j'affecte les mails à un type d'utilisateur et tous ces utilisateurs
+ * recevront le mail ». Un rôle coche les courriels que reçoivent ses comptes ; minamba.camara@mimia.fr, qui n'est
+ * pas un compte, a son interrupteur à part, en haut de l'onglet.
  */
-const VIDE = { id: null, nom: '', onglets: [], code: null };
+const VIDE = { id: null, nom: '', onglets: [], courriels: [], code: null };
 
 export default function RolesAdmin({ onChange = null }) {
-  const [donnees, setDonnees] = useState({ roles: null, onglets: [] });
+  const [donnees, setDonnees] = useState({ roles: null, onglets: [], courriels: [], adresseMinamba: '', copieMinamba: false });
   const [erreur, setErreur] = useState(null);
   const [edition, setEdition] = useState(null);
   const [envoi, setEnvoi] = useState(false);
+  const [copieEnCours, setCopieEnCours] = useState(false);
 
   const charger = useCallback(async () => {
     try {
       const { data } = await getRoles();
-      setDonnees({ roles: data.roles ?? [], onglets: data.onglets ?? [] });
+      setDonnees({
+        roles: data.roles ?? [],
+        onglets: data.onglets ?? [],
+        courriels: data.courriels ?? [],
+        adresseMinamba: data.adresseMinamba || 'minamba.camara@mimia.fr',
+        copieMinamba: !!data.copieMinamba,
+      });
     } catch {
       setErreur('Les rôles n’ont pas pu être chargés.');
     }
@@ -40,13 +51,33 @@ export default function RolesAdmin({ onChange = null }) {
     onglets: e.onglets.includes(cle) ? e.onglets.filter((c) => c !== cle) : [...e.onglets, cle],
   }));
 
+  const basculerCourriel = (code) => setEdition((e) => ({
+    ...e,
+    courriels: e.courriels.includes(code) ? e.courriels.filter((c) => c !== code) : [...e.courriels, code],
+  }));
+
+  const libelleCourriel = (code) => donnees.courriels.find((c) => c.code === code)?.libelle ?? code;
+
+  const changerCopie = async (actif) => {
+    setCopieEnCours(true);
+    setErreur(null);
+    try {
+      await definirCopieMinamba(actif);
+      setDonnees((d) => ({ ...d, copieMinamba: actif }));
+    } catch (e) {
+      setErreur(e?.response?.data?.message ?? 'Le réglage n’a pas pu être enregistré.');
+    } finally {
+      setCopieEnCours(false);
+    }
+  };
+
   const enregistrer = async (ev) => {
     ev.preventDefault();
     setEnvoi(true);
     setErreur(null);
     try {
-      if (edition.id) await modifierRole(edition.id, edition.nom.trim(), edition.onglets);
-      else await creerRole(edition.nom.trim(), edition.onglets);
+      if (edition.id) await modifierRole(edition.id, edition.nom.trim(), edition.onglets, edition.courriels);
+      else await creerRole(edition.nom.trim(), edition.onglets, edition.courriels);
       setEdition(null);
       await charger();
       onChange?.();
@@ -93,6 +124,25 @@ export default function RolesAdmin({ onChange = null }) {
       </header>
 
       {erreur && <div className="alert" role="alert">{erreur}</div>}
+
+      <div className="roles__copie">
+        <div>
+          <strong>Courriels de signalement</strong>
+          <p>
+            Quand un signalement admin passe à « Traité », le courriel « Prêt à être testé » part aux comptes
+            des rôles qui le reçoivent, et à {donnees.adresseMinamba} si la case est cochée.
+          </p>
+        </div>
+        <label className="droits__case roles__copie-case">
+          <input
+            type="checkbox"
+            checked={donnees.copieMinamba}
+            disabled={copieEnCours}
+            onChange={(e) => changerCopie(e.target.checked)}
+          />
+          <span>Envoyer aussi à {donnees.adresseMinamba}</span>
+        </label>
+      </div>
 
       {edition && (
         <form className="roles__edition" onSubmit={enregistrer}>
@@ -145,6 +195,25 @@ export default function RolesAdmin({ onChange = null }) {
             </span>
           </fieldset>
 
+          {donnees.courriels.length > 0 && (
+            <fieldset className="roles__droits">
+              <legend>Les courriels qu’il reçoit</legend>
+              <div className="droits__liste">
+                {donnees.courriels.map((c) => (
+                  <label key={c.code} className="droits__case">
+                    <input
+                      type="checkbox"
+                      checked={edition.courriels.includes(c.code)}
+                      onChange={() => basculerCourriel(c.code)}
+                    />
+                    <span>{c.libelle}</span>
+                  </label>
+                ))}
+              </div>
+              <span className="champ__aide">Chaque compte qui porte ce rôle reçoit les courriels cochés.</span>
+            </fieldset>
+          )}
+
           <div className="modale__actions">
             <button type="button" className="btn-ghost" onClick={() => setEdition(null)}>Annuler</button>
             <button type="submit" className="btn btn--compact" disabled={envoi}>
@@ -176,12 +245,20 @@ export default function RolesAdmin({ onChange = null }) {
                 : role.onglets.map((c) => LIBELLES[c] ?? c).join(' · '))}
             </p>
 
+            {(role.courriels ?? []).length > 0 && (
+              <p className="roles__onglets roles__courriels">
+                Reçoit : {role.courriels.map(libelleCourriel).join(' · ')}
+              </p>
+            )}
+
             {role.code !== 'super_admin' && role.code !== 'utilisateur' && (
               <div className="roles__actions">
                 <button
                   type="button"
                   className="btn-ghost btn-ghost--mini"
-                  onClick={() => setEdition({ id: role.id, nom: role.nom, onglets: role.onglets, code: role.code })}
+                  onClick={() => setEdition({
+                    id: role.id, nom: role.nom, onglets: role.onglets, courriels: role.courriels ?? [], code: role.code,
+                  })}
                 >
                   Modifier
                 </button>

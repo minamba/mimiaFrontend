@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import Messagerie from '../components/Messagerie';
 import {
-  getMessages, getMessage, supprimerMessages, getBrouillonPour, enregistrerBrouillon, getCompteursMessagerie,
+  getMessages, getMessage, supprimerMessages, getBrouillonPour, enregistrerBrouillon, getCompteursMessagerie, repondreMessage,
 } from '../lib/api/adminApi';
 
 /*
@@ -78,6 +78,40 @@ describe('les dossiers de la messagerie', () => {
     expect(within(pages).getByRole('button', { name: 'Page 3' })).toBeInTheDocument();
   });
 
+  // RÉPONDRE À TOUS (19/10/2026) : les autres du fil passent en copie, la boîte
+  // elle-même et l'expéditeur jamais ; un Cci s'ajoute d'un clic.
+  it('répondre à tous met les autres du fil en copie', async () => {
+    getMessages.mockResolvedValue({ data: { configuree: true, total: 1, messages: [recu(7, 'Rendez-vous')] } });
+    getMessage.mockResolvedValue({ data: {
+      ...recu(7, 'Rendez-vous'), html: null, texte: 'Bonjour à tous',
+      destinataires: [{ nom: 'Support', adresse: 'support@mimia.fr' }, { nom: 'Paul', adresse: 'paul@exemple.fr' }],
+      copies: [{ nom: null, adresse: 'jeanne@exemple.fr' }, { nom: 'Hilda', adresse: 'hilda@exemple.fr' }],
+    } });
+    repondreMessage.mockResolvedValue({ data: { destinataire: 'hilda@exemple.fr', copies: ['paul@exemple.fr', 'jeanne@exemple.fr'] } });
+    render(<Messagerie boite="support" />);
+
+    fireEvent.click(await screen.findByText('Rendez-vous'));
+    expect(await screen.findByText(/Cc : jeanne@exemple.fr, Hilda/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Répondre à tous/ }));
+    expect(screen.getByRole('button', { name: 'Retirer paul@exemple.fr' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retirer jeanne@exemple.fr' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retirer support@mimia.fr' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retirer hilda@exemple.fr' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cci' }));
+    const cci = screen.getByLabelText('Cci');
+    fireEvent.change(cci, { target: { value: 'moi@exemple.fr' } });
+    fireEvent.keyDown(cci, { key: 'Enter' });
+
+    fireEvent.change(screen.getByLabelText('Votre réponse'), { target: { value: 'Je confirme.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer à tous' }));
+
+    await waitFor(() => expect(repondreMessage).toHaveBeenCalledWith(
+      7, 'Je confirme.', 'support', { cc: ['paul@exemple.fr', 'jeanne@exemple.fr'], cci: ['moi@exemple.fr'] }));
+    expect(await screen.findByText(/en copie : paul@exemple.fr, jeanne@exemple.fr/)).toBeInTheDocument();
+  });
+
   it('une réponse commencée est gardée en brouillon', async () => {
     getMessages.mockResolvedValue({ data: { configuree: true, total: 1, messages: [recu(5, 'Question')] } });
     getMessage.mockResolvedValue({ data: { ...recu(5, 'Question'), html: null, texte: 'Bonjour' } });
@@ -93,7 +127,7 @@ describe('les dossiers de la messagerie', () => {
     jest.useRealTimers();
 
     await waitFor(() => expect(enregistrerBrouillon).toHaveBeenCalledWith(
-      { messageOrigine: 5, destinataire: 'hilda@exemple.fr', sujet: 'Re : Question', texte: 'Bonjour Hilda' }, 'support'));
+      { messageOrigine: 5, destinataire: 'hilda@exemple.fr', sujet: 'Re : Question', texte: 'Bonjour Hilda', cc: [], cci: [] }, 'support'));
     expect(await screen.findByText(/Brouillon enregistré à/)).toBeInTheDocument();
   });
 

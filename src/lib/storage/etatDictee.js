@@ -24,6 +24,30 @@
  */
 
 import { ouvreUneNouvelleDictee } from './comparaisonDictee';
+import { DEBUT_DICTEE } from './ardoise';
+
+/**
+ * CE QUI SE DIT AVANT LE CHOIX « CAHIER OU CLAVIER » — Camara, le 01/11/2026 :
+ * « le professeur me propose oralement de saisir au clavier ou sur mon cahier
+ * APRÈS que j'ai fait mon choix dans la fenêtre ; ça devrait se faire avant ».
+ *
+ * La voix retenait TOUT le message de la dictée jusqu'au clic, y compris la
+ * phrase qui pose la question — « D'accord, on repart sur les nombres de un à
+ * cinq ! Tu l'écris sur ton cahier ou au clavier ? ». L'enfant cliquait, PUIS
+ * entendait la question à laquelle il venait de répondre.
+ *
+ * Seule la DICTÉE doit attendre le clic : la phrase d'annonce se dit tout de
+ * suite. Rend le texte prononçable jusqu'à la borne d'ouverture de la dictée,
+ * ou une chaîne vide si la dictée commence d'emblée (rien à annoncer).
+ *
+ * @param parlable le texte prononçable, bornes comprises (`texteParle(…, { bornes: true })`)
+ */
+export function annonceAvantDictee(parlable) {
+  const texte = parlable ?? '';
+  const borne = texte.indexOf(DEBUT_DICTEE);
+
+  return borne > 0 ? texte.slice(0, borne) : '';
+}
 
 /**
  * La question « cahier ou clavier ? » doit-elle s'afficher ?

@@ -487,10 +487,13 @@ export default function Accueil() {
                 Camara tenait à mettre en avant le 12/09/2026, et le seul que
                 cette page ne peut pas prouver d'elle-même : la démonstration
                 à côté le montre, mais elle ne peut pas se faire entendre. */}
+            {/* TOUTE UNE ÉQUIPE, PAS UN PROFESSEUR — Camara, le 19/10/2026 :
+                « on dirait qu'on a qu'un prof alors que c'est toute une équipe
+                pédagogique ». Courte : une seule phrase. */}
             <p className="heros__pitch">
-              Un professeur particulier disponible quand votre enfant en a besoin,
-              qui <strong>lui parle en temps réel</strong>, détecte ses lacunes et
-              se souvient de sa progression.
+              Une équipe de professeurs particuliers qui{' '}
+              <strong>échangent en temps réel</strong> avec votre enfant,
+              identifient ses difficultés et suivent ses progrès.
             </p>
 
             {error && <div className="alert alert--heros">{error}</div>}

@@ -278,12 +278,18 @@ export const supprimerControle = (eleveId, controleId) =>
  * LE COURS DE L'ÉLÈVE, IMPORTÉ AVEC SON CONTRÔLE — Camara, le 26/09/2026.
  * Le professeur prépare en suivant sa leçon, puis s'en sert pour corriger la
  * copie. Chaque document : `{ id, nomFichier, typeMime, taille, nombrePages,
- * lu, dateCreation }` — `lu` passe à vrai une fois la transcription faite.
+ * lu, consultable, purge, genre, dateCreation }` — `lu` passe à vrai une fois
+ * la transcription faite ; `consultable` tant que le fichier est sur le disque
+ * (04/11/2026 : il est effacé une semaine après le contrôle, `purge` le dit) ;
+ * `genre` vaut image, pdf, word, excel, powerpoint ou autre.
  */
 export const getCoursControle = (eleveId, controleId) =>
   httpClient.get(`/eleves/${eleveId}/controles/${controleId}/cours`);
 
-/** Mêmes règles que les pièces jointes : images et PDF, 5 Mo, 10 pages ; le motif d'un refus est écrit pour l'élève. */
+/**
+ * Images et PDF (5 Mo, 10 pages), Word, Excel et PowerPoint récents (10 Mo) ; le
+ * motif d'un refus est écrit pour l'élève. 503 quand le dossier du serveur n'est pas prêt.
+ */
 export const ajouterCoursControle = (eleveId, controleId, fichier) => {
   const corps = new FormData();
   corps.append('fichier', fichier, fichier.name);
@@ -292,6 +298,14 @@ export const ajouterCoursControle = (eleveId, controleId, fichier) => {
 
 export const supprimerCoursControle = (eleveId, controleId, documentId) =>
   httpClient.delete(`/eleves/${eleveId}/controles/${controleId}/cours/${documentId}`);
+
+/** Le fichier tel que l'élève l'a envoyé, en blob ; 410 une fois purgé. */
+export const getFichierCoursControle = (eleveId, controleId, documentId) =>
+  httpClient.get(`/eleves/${eleveId}/controles/${controleId}/cours/${documentId}/fichier`, { responseType: 'blob' });
+
+/** `{ texte, lu, illisible }` : ce que le professeur lit, pour l'aperçu d'un Word, Excel ou PowerPoint. */
+export const getTexteCoursControle = (eleveId, controleId, documentId) =>
+  httpClient.get(`/eleves/${eleveId}/controles/${controleId}/cours/${documentId}/texte`);
 
 /** Le QR code pour photographier son cours avec le téléphone : `{ jeton, expireLe }`. */
 export const creerScanCoursControle = (eleveId, controleId) =>

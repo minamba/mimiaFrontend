@@ -55,3 +55,7 @@ secrets.*
 # Réglages d'éditeur, propres à une machine.
 .vscode/
 *.code-workspace.local
+
+# Le lot des schémas à importer (20/10/2026) : 1,4 Go de sources et d'images,
+# importé par l'administration (Planches › Importer un dossier), jamais versionné.
+/src/assets/schemas/

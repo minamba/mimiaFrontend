@@ -8,6 +8,8 @@ import {
 import { catalogue, plancheRecommandee, urlPlanche } from '../lib/storage/schemas';
 import { styleMatiere } from '../lib/couleurMatiere';
 import Loader from './Loader';
+import ImportDossierPlanches from './ImportDossierPlanches';
+import ProgressionPlanches from './ProgressionPlanches';
 
 /**
  * Les schémas, matière par matière.
@@ -388,6 +390,12 @@ export default function Planches() {
     [importees],
   );
 
+  // Les planches légendées importées : le total des barres de progression.
+  const legendees = useMemo(
+    () => (importees ?? []).filter((p) => (p.variante ?? 'legende') !== 'muette').length,
+    [importees],
+  );
+
   const requalifier = async () => {
     setRequalification(true);
     setBilanRequalif(null);
@@ -458,6 +466,15 @@ export default function Planches() {
         C'est ce que dit la mention <em>à importer</em>.
       </p>
 
+      {/* TOUT UN DOSSIER D'UN COUP (Camara, le 20/10/2026) : classes › matières
+          › schémas et leurs versions muettes. */}
+      <ImportDossierPlanches
+        figures={catalogue()}
+        matiereDeLaCle={matiereDeLaCle}
+        importees={importees}
+        onTermine={charger}
+      />
+
       {/* LA SECONDE CHANCE DES PLANCHES ÉCARTÉES.
 
           Le contrôle de langue s'est trompé deux fois, et dans les deux sens :
@@ -490,6 +507,28 @@ export default function Planches() {
       )}
 
       {bilanRequalif && <div className="alert alert--info">{bilanRequalif}</div>}
+
+      {/* OÙ EN SONT LES DESCRIPTIONS (20/10/2026) : deux barres, relues toutes
+          les vingt secondes, et le bouton qui relance la tâche de fond. */}
+      <ProgressionPlanches
+        totalLegendees={legendees}
+        decrire={(cle) => ({
+          titre: catalogue().find((f) => f.cle === cle)?.titre,
+          matiere: matiereDeLaCle(cle).libelle,
+        })}
+        // « Voir la planche » : sa matière s'ouvre, et la planche en grand.
+        onOuvrir={(cle) => {
+          for (const { matiere, figures } of groupes) {
+            const figure = figures.find((f) => f.cle === cle);
+            if (figure) {
+              setMatiereOuverte(matiere.code);
+              setApercu(figure);
+              return;
+            }
+          }
+        }}
+        onFini={charger}
+      />
 
       {/* La vue d'ensemble : une carte par matière, avec ce qui reste à faire.
           Une matière sans figure au catalogue reste affichée — savoir qu'il

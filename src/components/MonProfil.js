@@ -14,7 +14,7 @@ import MonAvis from './MonAvis';
 import Onglets from './Onglets';
 import ChampMotDePasse from './ChampMotDePasse';
 import CodeEnfant from './CodeEnfant';
-import ChoixEtablissement from './ChoixEtablissement';
+import ChoixEtablissement, { classeAvecConseillere } from './ChoixEtablissement';
 import ChoixAcademie from './ChoixAcademie';
 import ChoixBesoins from './ChoixBesoins';
 import FenetreEditionEnfant, { Section } from './FenetreEditionEnfant';
@@ -287,8 +287,6 @@ function Securite({ compte, saving, succes, onChanger }) {
 }
 
 // ---------------------------------------------------------------- enfants
-/** Collège ou lycée : là où la conseillère d'orientation a de quoi dire. */
-const auSecondaire = (eleve) => /coll|lyc/i.test(eleve?.niveauCycle ?? '');
 
 // Exportée pour les tests : choisir l'établissement, puis enregistrer.
 export function LigneEnfant({
@@ -365,7 +363,7 @@ export function LigneEnfant({
     // formulaire du profil ne le porte pas (un autre formulaire le réécrirait
     // à vide). Seulement s'il a changé.
     const nouveau = champs.etablissement?.uai ?? null;
-    if (auSecondaire(eleve) && nouveau !== (eleve.etablissementUai ?? null)) {
+    if (classeAvecConseillere(niveaux, champs.niveauScolaireId) && nouveau !== (eleve.etablissementUai ?? null)) {
       setErreurEtablissement(null);
       definirEtablissement(eleve.id, nouveau)
         .then(() => onEtablissement?.())
@@ -621,8 +619,8 @@ export function LigneEnfant({
 
             {/* L'ÉTABLISSEMENT, POUR LA CONSEILLÈRE D'ORIENTATION (11/10/2026) —
                 choisir ne fait que le retenir, « Enregistrer » l'envoie.
-                Collège et lycée. */}
-            {auSecondaire(eleve) && (
+                À partir de la 3e, comme la conseillère (18/10/2026). */}
+            {classeAvecConseillere(niveaux, champs.niveauScolaireId) && (
               <ChoixEtablissement
                 id={`e-etablissement-${eleve.id}`}
                 valeur={champs.etablissement}

@@ -56,6 +56,27 @@ const OUVERTURE_DICTEE = 'Je commence. Première phrase.';
 const FERMETURE_DICTEE = "Voilà, c'était la dernière phrase.";
 
 /**
+ * LES MÊMES ANNONCES POUR UNE DICTÉE DE MOTS — Camara, le 01/11/2026 : « quand
+ * je choisis une dictée de mots, le professeur dit "première phrase" alors
+ * qu'il devrait dire "premier mot" ». L'écran dit au lecteur le type de la
+ * dictée (`dicteeDeMots`), voir `typeDeLaDictee`.
+ */
+const OUVERTURE_DICTEE_MOTS = 'Je commence. Premier mot.';
+
+const FERMETURE_DICTEE_MOTS = "Voilà, c'était le dernier mot.";
+
+/** « Redis le mot » : l'annonce avant le morceau répété (01/11/2026). */
+const REDITE_MOT = 'Je répète le mot.';
+const REDITE_PHRASE = 'Je répète la phrase.';
+
+/**
+ * LE RAPPEL D'UN « ATTENDS ! » RESTÉ APPUYÉ — Camara, le 01/11/2026. Dit une
+ * fois par appui, au bout de trente secondes d'attente.
+ */
+const RAPPEL_ATTENTE = "Prends ton temps. Quand tu as fini d'écrire, appuie sur C'est bon.";
+const RAPPEL_ATTENTE_MS = 30000;
+
+/**
  * LA RELECTURE COMPLÈTE, APRÈS LA DERNIÈRE PHRASE — voulue par Camara le
  * 11/09/2026, comme en classe : une fois tout dicté, le professeur relit le
  * texte d'une traite, au débit normal, et l'élève se relit en même temps pour
@@ -186,6 +207,49 @@ const MOTS_SURVEILLES = 5;
 const FILET_PEU_DE_MOTS = 4000;
 
 /** Les mots que compte la garde du serveur : deux lettres ou chiffres au moins. */
+/**
+ * LE TEMPS LAISSÉ POUR ÉCRIRE UNE DICTÉE, CLASSE PAR CLASSE — Camara, le
+ * 01/11/2026 : « au CP le temps sera le plus long, tu réduis un peu ce temps
+ * jusqu'au collège, où les enfants sont censés écrire beaucoup plus vite ».
+ *
+ * `parSeconde` : caractères écrits à la main par seconde. `plancher` : le
+ * silence minimal, en secondes, même sur un mot de deux lettres — c'est lui
+ * qui compte dans une dictée de mots, où chaque morceau est court.
+ *
+ * Mesures de repère, audio retiré : « deux. » laisse 11 s au CP (4 s avant),
+ * 6 s au CE1, 5 s du CE2 au CM2, 3 s de la 6e à la 3e — paliers fixés par
+ * Camara le 01/11/2026. Un mot plus long au CP (« quatre. ») en reçoit un peu
+ * plus, au rythme d'un caractère toutes les deux secondes. Le lycée garde 2 s :
+ * on n'y fait que des dictées de phrases, où c'est la longueur qui compte.
+ */
+const RYTHMES_PAR_CLASSE = [
+  { classe: /^CP$/i, parSeconde: 0.5, plancher: 11 },
+  { classe: /^CE1$/i, parSeconde: 0.7, plancher: 5 },
+  { classe: /^CE2$/i, parSeconde: 0.9, plancher: 5 },
+  { classe: /^CM1$/i, parSeconde: 1.1, plancher: 5 },
+  { classe: /^CM2$/i, parSeconde: 1.3, plancher: 5 },
+  { classe: /^6e\b/i, parSeconde: 1.7, plancher: 3 },
+  { classe: /^5e\b/i, parSeconde: 2.0, plancher: 3 },
+  { classe: /^[34]e\b/i, parSeconde: 2.4, plancher: 3 },
+  { classe: /^(seconde|premi[eè]re|terminale)/i, parSeconde: 3.0, plancher: 2 },
+];
+
+/** Le rythme d'écriture d'une classe ; à défaut, celui de l'âge. */
+export function rythmeDEcriture(niveau, age) {
+  const libelle = typeof niveau === 'string' ? niveau.trim() : '';
+  const trouve = RYTHMES_PAR_CLASSE.find((r) => r.classe.test(libelle));
+  if (trouve) return { parSeconde: trouve.parSeconde, plancher: trouve.plancher };
+
+  // LE REPLI PAR L'ÂGE, sur les mêmes valeurs que les classes qu'il recouvre.
+  if (age <= 6) return { parSeconde: 0.5, plancher: 11 };
+  if (age <= 7) return { parSeconde: 0.7, plancher: 5 };
+  if (age <= 8) return { parSeconde: 0.9, plancher: 5 };
+  if (age <= 10) return { parSeconde: 1.2, plancher: 5 };
+  if (age <= 11) return { parSeconde: 1.7, plancher: 3 };
+  if (age <= 15) return { parSeconde: 2.4, plancher: 3 };
+  return { parSeconde: 3.0, plancher: 2 };
+}
+
 export function nombreDeMots(texte) {
   return (texte ?? '')
     .split(/\s+/)
@@ -379,29 +443,45 @@ async function serveurDisponible() {
 }
 
 // ---------------------------------------------------------------- repli navigateur
-let voixFr = null;
+/**
+ * LA VOIX DE REPLI RESPECTE LE GENRE DU PROFESSEUR — le 03/11/2026, sur un signalement
+ * de production : « Adrien a changé de voix, masculine puis féminine ». Le repli sur
+ * le navigateur prenait la première voix française « naturelle », presque toujours une
+ * voix de femme, quel que soit le professeur. Un passage en échec faisait donc parler
+ * Adrien en femme.
+ *
+ * LA MÊME LISTE QUE LE SERVEUR (`PromptsPedagogiques.ProfesseuresFemmes`).
+ */
+const PROFESSEURES = new Set([
+  'nora', 'marine', 'ines', 'lucia', 'giulia', 'lin', 'elodie', 'jeanne', 'camille', 'maelle',
+]);
 
-function choisirVoix() {
-  if (!navigateurSupporte) return null;
-  if (voixFr) return voixFr;
+/** Les voix d'homme françaises des systèmes courants, reconnues à leur nom. */
+const VOIX_D_HOMME = /\b(paul|henri|claude|mathieu|thomas|nicolas|r[ée]my|antoine|jean|fabrice|g[ée]rard|yves|daniel|alain|maxime|guillaume|j[ée]r[ôo]me|louis|pierre|eddy|grandpa|reed|rocko)\b/i;
 
-  const voix = window.speechSynthesis.getVoices();
-  const francaises = voix.filter((v) => v.lang?.toLowerCase().startsWith('fr'));
-  if (francaises.length === 0) return null;
+/**
+ * La voix du navigateur pour ce professeur. `plusGrave` : un homme sans voix d'homme
+ * sur cet appareil — on baisse celle qu'il y a, moins choquant qu'une voix de femme.
+ */
+export function voixPourProfesseur(voix, avatar) {
+  const francaises = (voix ?? []).filter((v) => v.lang?.toLowerCase().startsWith('fr'));
+  if (francaises.length === 0) return { voix: null, plusGrave: false };
 
-  voixFr =
-    francaises.find((v) => /natural/i.test(v.name)) ??
-    francaises.find((v) => /google/i.test(v.name)) ??
-    francaises[0];
+  const femme = PROFESSEURES.has(String(avatar ?? '').trim().toLowerCase());
+  const justes = francaises.filter((v) => VOIX_D_HOMME.test(v.name) !== femme);
+  const parmi = justes.length > 0 ? justes : francaises;
 
-  return voixFr;
+  return {
+    voix: parmi.find((v) => /natural/i.test(v.name))
+      ?? parmi.find((v) => /google/i.test(v.name))
+      ?? parmi[0],
+    plusGrave: !femme && justes.length === 0,
+  };
 }
 
-if (navigateurSupporte) {
-  window.speechSynthesis.onvoiceschanged = () => {
-    voixFr = null;
-    choisirVoix();
-  };
+function choisirVoix(avatar) {
+  if (!navigateurSupporte) return { voix: null, plusGrave: false };
+  return voixPourProfesseur(window.speechSynthesis.getVoices(), avatar);
 }
 
 /**
@@ -746,6 +826,10 @@ class PassageDiffuse {
  */
 class Lecteur {
   constructor() {
+    // LA PAUSE DU COURS — voir `mettreEnPause`.
+    this.enPause = false;
+    this.repriseAttendue = [];
+
     this.tampon = '';
 
     // Phrases complètes en attente d'atteindre la taille d'un passage.
@@ -929,6 +1013,33 @@ class Lecteur {
     this.supportDictee = null;
 
     /**
+     * La dictée en cours est-elle une dictée de MOTS ? Posé par l'écran : il
+     * décide de « premier mot » ou « première phrase » (01/11/2026).
+     */
+    this.dicteeDeMots = false;
+
+    /**
+     * CE QUI A ÉTÉ DICTÉ, ET CE QUE L'ÉLÈVE A VALIDÉ AU CLAVIER — 01/11/2026.
+     * Voir `attendreLaCopie` : au clavier, le morceau suivant attend que la
+     * copie ait rattrapé la voix.
+     */
+    this.dits = { phrases: 0, mots: 0 };
+    this.copie = { lignes: 0, mots: 0 };
+    this.attenteCopie = false;
+
+    /** « Attends ! » appuyé par l'élève — voir `suspendreDictee`. */
+    this.dicteeSuspendue = false;
+    this.minuteurRappel = null;
+    this.rappelFait = false;
+
+    /** Le dernier morceau dicté et DIT — celui que « Redis le mot » répète. */
+    this.dernierDicte = null;
+
+    /** Ce que l'écran sait de la dictée en cours — voir `signalerDictee`. */
+    this.dicteeSignalee = false;
+    this.surDicteeEnCours = null;
+
+    /**
      * Prévenu quand la relecture complète commence (`'en_cours'`), quand
      * elle s'achève (`'finie'`) et quand elle est coupée (`'interrompue'`).
      * L'écran s'en sert pour dire ce qui se passe et mettre en avant le
@@ -959,9 +1070,13 @@ class Lecteur {
   }
 
   /** Qui parle, et à qui. Détermine la voix et le débit. */
-  configurer({ avatar, age }) {
+  configurer({ avatar, age, niveau }) {
     if (avatar) this.avatar = avatar;
     if (age) this.age = age;
+
+    // La classe règle le temps laissé pour écrire une dictée — voir
+    // `rythmeDEcriture`.
+    if (niveau) this.classe = niveau;
   }
 
   /**
@@ -1043,25 +1158,30 @@ class Lecteur {
         // Le groupe en cours appartient au registre habituel : on le vide
         // avant de basculer, sinon la phrase d'annonce partirait elle aussi
         // avec la consigne de langue.
-        this.viderGroupe();
+        this.viderAvantBorne();
         this.langue = LANGUE_PAR_DEBUT_ECOUTE.get(morceau);
       } else if (morceau === FIN_ECOUTE) {
-        this.viderGroupe();
+        this.viderAvantBorne();
         this.langue = null;
       } else if (morceau === DEBUT_DICTEE) {
-        this.viderGroupe();
+        this.viderAvantBorne();
 
         // AVANT de basculer : cette phrase se dit à la voix normale, pas au
         // débit de dictée — et surtout elle ne doit pas recevoir le silence
         // qui suit une phrase dictée.
-        this.enfiler(OUVERTURE_DICTEE);
+        this.enfiler(this.dicteeDeMots ? OUVERTURE_DICTEE_MOTS : OUVERTURE_DICTEE);
 
         // Une dictée neuve — ou redonnée en entier — repart d'un texte vide :
         // la relecture ne doit redire que CE QUI VIENT D'ÊTRE DICTÉ.
         this.phrasesDictees = [];
+
+        // Et le compte de ce qui a été dit, que la copie au clavier doit
+        // rattraper avant le morceau suivant — voir `attendreLaCopie`.
+        this.dits = { phrases: 0, mots: 0 };
+        this.dernierDicte = null;
         this.dictee = true;
       } else if (morceau === FIN_DICTEE) {
-        this.viderGroupe();
+        this.viderAvantBorne();
 
         // LA PAUSE DE LA DERNIÈRE PHRASE EST DIFFÉRÉE, PAS SUPPRIMÉE.
         //
@@ -1088,7 +1208,7 @@ class Lecteur {
         // APRÈS la bascule : elle se dit normalement, et c'est elle qui porte
         // la pause différée de la dernière phrase. L'élève apprend donc que
         // c'est fini, PUIS il a son temps pour écrire.
-        this.enfiler(FERMETURE_DICTEE);
+        this.enfiler(this.dicteeDeMots ? FERMETURE_DICTEE_MOTS : FERMETURE_DICTEE);
 
         // Puis, APRÈS la pause que porte la fermeture — le temps d'écrire la
         // dernière phrase —, la relecture complète et la consigne de fin.
@@ -1097,6 +1217,23 @@ class Lecteur {
         this.alimenterMorceau(morceau);
       }
     }
+  }
+
+  /**
+   * UNE BORNE EST UN FAIT, COMME LA FIN DU FLUX — Camara, le 05/11/2026 : « il
+   * me fait pas écouter les syllabes ». « [FR]bi[/FR] » : « bi » n'a pas de
+   * point, donc il restait dans le tampon ; la borne de fin ne vidait que le
+   * groupe, puis remettait la langue à null, et « bi » partait à la fin du
+   * message SANS SA LANGUE. Le serveur ne reconnaissait ni un son de la banque
+   * ni un passage à habiller : la voix recevait « bi » nu et improvisait.
+   * C'était vrai de TOUS les passages d'écoute sans ponctuation, depuis
+   * toujours. Ce qui précède une borne est complet : il part tout de suite,
+   * avec la langue encore en vigueur.
+   */
+  viderAvantBorne() {
+    this.groupe += this.tampon;
+    this.tampon = '';
+    this.viderGroupe();
   }
 
   /**
@@ -1445,27 +1582,32 @@ class Lecteur {
    * évite qu'un passage anormalement long fige la séance une minute.
    */
   silenceDictee(texte, dureeAudio) {
-    // CARACTÈRES ÉCRITS PAR SECONDE, à la main, en écoutant.
+    // CARACTÈRES ÉCRITS PAR SECONDE, à la main, en écoutant — et le plancher,
+    // le silence minimal même sur un mot de deux lettres.
     //
     // Première calibration trop prudente — 1,6 pour un collégien — et le
     // résultat s est senti tout de suite : trente-six secondes de silence sur
     // une phrase de soixante-dix signes, six minutes pour douze lignes. À
     // quatorze ans on écrit plutôt deux caractères et demi par seconde, et
     // surtout on COMMENCE à écrire pendant qu on entend, pas après.
-    const parSeconde =
-      this.age <= 8 ? 1.0
-      : this.age <= 11 ? 1.6
-      : this.age <= 15 ? 2.4
-      : 3.0;
+    //
+    // PAR CLASSE DEPUIS LE 01/11/2026 — Camara, après une dictée de mots en
+    // CP : « il faut mettre plus de temps de pause entre chaque mot, le temps
+    // est trop court ». Tout le CP au CE2 partageait 1 caractère par seconde
+    // et un plancher de 2 s : « deux. » laissait quatre secondes à un enfant
+    // qui forme encore chaque lettre. Le CP a maintenant le plus long, et le
+    // temps raccourcit classe après classe jusqu'au collège, où l'on écrit
+    // vite. L'âge reste le repli quand la classe n'est pas connue.
+    const { parSeconde, plancher } = rythmeDEcriture(this.classe, this.age);
 
     const ecriture = texte.length / parSeconde;
 
-    // Plancher à 2 s : jamais d'enchaînement sec, même sur trois mots.
-    // Plafond à 45 s : un garde-fou contre un passage anormalement long, pas
+    // Plafond à 60 s : un garde-fou contre un passage anormalement long, pas
     // un réglage. À 30 s il se déclenchait sur presque toutes les phrases et
     // écrasait la différence entre un CE1 et un lycéen — le plafond faisait
-    // le calcul à la place du calcul.
-    return Math.min(Math.max(ecriture - dureeAudio, 2), 45);
+    // le calcul à la place du calcul. Monté de 45 à 60 s avec le rythme du CP,
+    // qui écrit une phrase de trente signes en une minute.
+    return Math.min(Math.max(ecriture - dureeAudio, plancher), 60);
   }
 
   demarrer() {
@@ -1495,6 +1637,13 @@ class Lecteur {
   async boucle(jeton) {
     for (;;) {
       if (jeton !== this.jeton) return;
+
+      // En pause, aucune phrase nouvelle ne démarre : c'est le seul verrou de la voix
+      // du navigateur, qui ne passe pas par le graphe audio.
+      if (this.enPause) {
+        await this.attendreLaReprise();
+        if (jeton !== this.jeton) return;
+      }
 
       // File vide : on attend la fin de ce qui est déjà programmé, PUIS on
       // regarde à nouveau. C'est indispensable — le texte arrive en flux, et
@@ -1648,6 +1797,35 @@ class Lecteur {
       // La boucle attend donc pour de bon. Rien n'est programmé pendant le
       // silence, donc rien n'est à reprogrammer pour l'écourter : il suffit de
       // réveiller l'attente.
+      // CE QUI VIENT D'ÊTRE DICTÉ, COMPTÉ — c'est ce que la copie au clavier
+      // doit avoir rattrapé avant le morceau suivant (voir `attendreLaCopie`).
+      // UN MOT REDIT N'EST PAS UN MOT DE PLUS : il n'avance pas le compte que
+      // la copie doit rattraper (voir `redireLeMot`).
+      if (phrase.dictee && !phrase.redite) {
+        this.dits = {
+          phrases: this.dits.phrases + 1,
+          mots: this.dits.mots + nombreDeMots(phrase.texte),
+        };
+
+        // Le dernier morceau DIT — et non le dernier mis en file : toute la
+        // dictée est en file dès le départ. C'est lui que « Redis le mot »
+        // répète.
+        this.dernierDicte = phrase;
+
+        // L'écran apprend ICI qu'une dictée se dit — voir `signalerDictee`.
+        this.signalerDictee(true);
+      }
+
+      // UNE PAROLE GLISSÉE AU MILIEU DE LA DICTÉE — « Je répète », le rappel
+      // d'un « Attends ! » resté appuyé. Pas de pause à elle : après elle, la
+      // voix reprend l'attente où elle l'avait laissée.
+      if (phrase.interlude) {
+        await this.attendreLaCopie(jeton);
+        if (jeton !== this.jeton) return;
+        this.prochaineFin = Math.max(this.prochaineFin, (this.contexte?.currentTime ?? 0) + 0.05);
+        continue;
+      }
+
       // La dernière phrase dictée : on calcule sa pause et on la met de côté.
       // L'annonce de fin passe d'abord.
       if (phrase.dictee && phrase.finDeDictee) {
@@ -1673,6 +1851,10 @@ class Lecteur {
 
         this.finPauseDictee = 0;
         this.viderPausesDictee();
+
+        // AU CLAVIER, LA PAUSE NE SUFFIT PAS : ON ATTEND SA COPIE.
+        await this.attendreLaCopie(jeton);
+        if (jeton !== this.jeton) return;
 
         // LA PHRASE SUIVANTE PART UN POIL APRÈS « MAINTENANT ».
         //
@@ -1705,6 +1887,16 @@ class Lecteur {
 
       this.finPauseDictee = 0;
       this.viderPausesDictee();
+
+      await this.attendreLaCopie(jeton);
+      if (jeton !== this.jeton) return;
+
+      // « Redis le mot » ou un rappel arrivé pendant cette dernière attente :
+      // la file n'est plus vide, la lecture reprend au lieu de s'arrêter.
+      if (this.file.length > 0) {
+        await this.boucle(jeton);
+        return;
+      }
     }
 
     if (jeton === this.jeton) {
@@ -1863,6 +2055,9 @@ class Lecteur {
     const passage = new PassageDiffuse(controleur);
     this.passages.add(passage);
 
+    // Le serveur dit que ce son vient de la banque : voir `obtenirSortieDirecte`.
+    const sansFiltre = reponse.headers?.get?.('X-Son-Banque') === '1';
+
     const lecteur = reponse.body.getReader();
 
     let amorce = 0;
@@ -1903,7 +2098,10 @@ class Lecteur {
           if (utiles === 0) continue;
 
           const tampon = this.construireTampon(bloc.subarray(0, utiles));
-          if (tampon) passage.pousser(tampon);
+          if (tampon) {
+            tampon.sansFiltre = sansFiltre;
+            passage.pousser(tampon);
+          }
 
           amorce += utiles;
           if (amorce >= AMORCE_OCTETS) liberer?.();
@@ -1990,7 +2188,12 @@ class Lecteur {
     // Le navigateur suspend le graphe tant que la page n'a pas été touchée.
     // On tente la reprise à chaque passage : le premier clic la débloque, où
     // qu'il tombe.
-    if (this.contexte.state === 'suspended') {
+    // EN PAUSE, LE GRAPHE RESTE ENDORMI, ET C'EST VOULU : ni réveil, ni bandeau
+    // « clique n'importe où ». Un graphe qui vient de naître pendant la pause (la
+    // page rechargée) est endormi de la même façon.
+    if (this.enPause) {
+      if (this.contexte.state === 'running') this.contexte.suspend?.()?.catch?.(() => {});
+    } else if (this.contexte.state === 'suspended') {
       this.contexte.resume().catch(() => {
         if (!silencieux) this.surBlocage?.();
       });
@@ -2002,7 +2205,7 @@ class Lecteur {
       // dort encore, on le dit — le bandeau « clique n'importe où ».
       if (!silencieux) {
         setTimeout(() => {
-          if (this.contexte?.state === 'suspended') this.surBlocage?.();
+          if (this.contexte?.state === 'suspended' && !this.enPause) this.surBlocage?.();
         }, BLOCAGE_CONSTATE_MS);
       }
     }
@@ -2077,7 +2280,12 @@ class Lecteur {
     // mais elle donne un point unique où poser le filtre. Sans elle, il
     // faudrait le répéter sur chaque source, et les sources vont et
     // viennent à chaque morceau.
-    const sortie = this.obtenirSortie(contexte);
+    //
+    // SAUF UN SON DE LA BANQUE, déjà choisi à l'oreille : le filtre change ce
+    // que Camara a validé (05/11/2026). Voir `obtenirSortieDirecte`.
+    const sortie = tampon.sansFiltre
+      ? this.obtenirSortieDirecte(contexte)
+      : this.obtenirSortie(contexte);
 
     source.connect(robinet).connect(sortie);
     source.robinet = robinet;
@@ -2190,6 +2398,197 @@ class Lecteur {
    * ferait démarrer la phrase suivante par-dessus la précédente — deux voix en
    * même temps, et une dictée incompréhensible.
    */
+  /**
+   * AU CLAVIER, LE MORCEAU SUIVANT ATTEND QUE LA COPIE AIT RATTRAPÉ LA VOIX —
+   * Camara, le 01/11/2026 : « quand l'enfant met plus de temps que la pause
+   * pour écrire "un", le professeur passe à "deux" ; quand il fait Entrée, il
+   * dit directement "trois". L'enfant a des mots de retard qu'il ne pourra pas
+   * rattraper. »
+   *
+   * Deux défauts faisaient ce décalage : la fin de la pause enchaînait sans
+   * regarder la copie, et chaque Entrée écourtait la pause en cours — même
+   * quand l'enfant validait le morceau d'AVANT. Au clavier, il dit lui-même où
+   * il en est : on s'en sert. La pause calculée reste le temps minimal ; s'il
+   * n'a pas fini à son terme, la voix l'attend.
+   *
+   * RATTRAPÉ = autant de lignes validées que de morceaux dictés, OU autant de
+   * mots tapés que de mots dictés. Le second compte couvre l'enfant qui tape
+   * « un deux » sur une seule ligne : sans lui, la dictée l'attendrait pour
+   * toujours.
+   *
+   * Au cahier, il n'y a aucun signal : la pause calculée reste seule.
+   */
+  copieRattrapee() {
+    return this.copie.lignes >= this.dits.phrases || this.copie.mots >= this.dits.mots;
+  }
+
+  /**
+   * LA VOIX DOIT-ELLE ENCORE ATTENDRE AVANT LE MORCEAU SUIVANT ?
+   *
+   * Au clavier, tant que la copie n'a pas rattrapé la voix. Au cahier — et
+   * partout —, tant que l'élève a appuyé sur « Attends ! » (01/11/2026, voir
+   * `suspendreDictee`) : au cahier l'écran ne sait pas où il en est, c'est
+   * donc lui qui le dit.
+   */
+  doitAttendre() {
+    // Ce qu'on a glissé en tête de file — un mot à redire, un rappel — passe
+    // toujours : c'est l'élève qui l'a demandé, ou c'est pour lui.
+    if (this.file[0]?.redite || this.file[0]?.interlude) return false;
+
+    if (this.dicteeSuspendue) return true;
+    return this.supportDictee === 'clavier' && !this.copieRattrapee();
+  }
+
+  async attendreLaCopie(jeton) {
+    while (jeton === this.jeton && this.doitAttendre()) {
+      // L'indicateur « ✍️ Écris… » reste allumé tant qu'on l'attend.
+      if (!this.attenteCopie) this.surPauseDictee?.(true);
+      this.attenteCopie = true;
+
+      // LE RAPPEL À VOIX HAUTE — Camara, le 01/11/2026. Un enfant de CP qui a
+      // appuyé sur « Attends ! » peut l'oublier, et ne lit pas forcément
+      // l'indicateur : au bout de trente secondes, le professeur le lui dit.
+      // Une fois par appui.
+      if (this.dicteeSuspendue && !this.minuteurRappel && !this.rappelFait) {
+        this.minuteurRappel = setTimeout(() => {
+          this.minuteurRappel = null;
+          if (jeton !== this.jeton || !this.dicteeSuspendue || !this.attenteCopie || this.enPause) return;
+
+          this.rappelFait = true;
+          this.insererEnTete(RAPPEL_ATTENTE, { interlude: true });
+          this.finirLecture?.();
+        }, RAPPEL_ATTENTE_MS);
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resoudre) => {
+        this.finirLecture = () => {
+          this.finirLecture = null;
+          resoudre();
+        };
+
+        if (jeton !== this.jeton) this.finirLecture();
+      });
+    }
+
+    clearTimeout(this.minuteurRappel);
+    this.minuteurRappel = null;
+
+    if (this.attenteCopie) {
+      this.attenteCopie = false;
+      if (jeton === this.jeton) this.surPauseDictee?.(false);
+    }
+  }
+
+  /**
+   * L'écran dit où en est la copie au clavier : à chaque ligne validée, et
+   * quand elle repart à zéro pour une nouvelle dictée.
+   *
+   * ENTRÉE N'ÉCOURTE LA PAUSE QUE SI L'ÉLÈVE A RATTRAPÉ LA VOIX. Valider le
+   * morceau d'avant ne doit pas faire partir le suivant : c'était tout le
+   * décalage relevé le 01/11/2026.
+   */
+  /**
+   * « ATTENDS ! » — Camara, le 01/11/2026, pour la dictée au cahier. L'écran
+   * n'y voit pas où en est l'enfant : la pause calculée par classe règle le
+   * rythme, et ce bouton sert quand il est en retard. Appuyé, le morceau
+   * suivant ne part plus — la pause en cours s'achève, puis la voix attend.
+   * Relâché (« C'est bon, continue »), elle repart tout de suite : il a fini,
+   * le reste de la pause n'a plus d'objet.
+   */
+  suspendreDictee(oui) {
+    this.dicteeSuspendue = Boolean(oui);
+
+    // Le rappel vaut pour CET appui : relâché, il est oublié ; rappuyé, il
+    // pourra revenir.
+    clearTimeout(this.minuteurRappel);
+    this.minuteurRappel = null;
+    this.rappelFait = false;
+
+    if (this.dicteeSuspendue) return;
+
+    if (this.attenteCopie) {
+      if (!this.doitAttendre()) this.finirLecture?.();
+      return;
+    }
+
+    this.sauterLaPause();
+  }
+
+  /**
+   * « REDIS LE MOT » — Camara, le 01/11/2026. Un enfant distrait qui n'a pas
+   * entendu « sept » ne pouvait pas le réentendre : le micro est coupé
+   * pendant la dictée, et « Attends ! » donne du temps, pas le mot.
+   *
+   * Le dernier morceau DIT est redit, précédé de « Je répète », avec sa
+   * pause d'écriture — sans avancer : il ne compte pas dans ce que la copie
+   * doit rattraper, et la dictée reprend ensuite là où elle en était. La
+   * pause en cours s'interrompt pour le dire tout de suite.
+   *
+   * @returns vrai si un morceau a été redemandé
+   */
+  redireLeMot() {
+    const dernier = this.dernierDicte;
+    if (!dernier || this.relectureEnCours) return false;
+
+    // L'ordre de la file : « Je répète », puis le mot. On les glisse en tête,
+    // le mot d'abord pour que l'annonce passe devant lui.
+    this.insererEnTete(dernier.texte, { redite: true, dictee: true, langue: dernier.langue });
+    this.insererEnTete(this.dicteeDeMots ? REDITE_MOT : REDITE_PHRASE, { interlude: true, langue: null });
+
+    // Réveille la boucle, qu'elle dorme sur la pause ou sur l'attente.
+    if (this.finPauseDictee) {
+      this.sauterLaPause();
+    } else if (this.attenteCopie) {
+      this.finirLecture?.();
+    }
+
+    this.demarrer();
+    return true;
+  }
+
+  /**
+   * Glisse un morceau EN TÊTE de la file, sans casser les préchargements :
+   * ils sont rangés dans le même ordre que la file (voir `precharger`), on
+   * en glisse donc un en tête aussi.
+   */
+  insererEnTete(texte, { interlude = false, redite = false, dictee = false, langue = null } = {}) {
+    const propre = prononcable((texte ?? '').trim(), { langue: this.matiereLangue });
+    if (!propre) return;
+
+    const phrase = {
+      texte: propre,
+      avatar: this.avatar,
+      age: this.age,
+      dictee,
+      langue,
+      vitesse: langue ? this.vitesseEcoute : null,
+      interlude,
+      redite,
+    };
+
+    this.file.unshift(phrase);
+
+    const entree = { phrase, promesse: this.charger(phrase, this.jeton), passage: null };
+    entree.promesse.then((passage) => { entree.passage = passage; }, () => {});
+    this.prechargements.unshift(entree);
+  }
+
+  noterCopie(lignes, mots) {
+    this.copie = { lignes: lignes ?? 0, mots: mots ?? 0 };
+
+    if (this.dicteeSuspendue || !this.copieRattrapee()) return;
+
+    // La voix l'attendait au-delà de sa pause : elle repart.
+    if (this.attenteCopie) {
+      this.finirLecture?.();
+      return;
+    }
+
+    // Il a fini avant la fin de la pause : elle n'a plus d'objet.
+    this.sauterLaPause();
+  }
+
   sauterLaPause() {
     // Aucune pause en cours : rien à écourter, et surtout rien à réveiller.
     // Sans ce test, on résoudrait l'attente d'un passage en train de JOUER et
@@ -2230,6 +2629,24 @@ class Lecteur {
   signalerRelecture(etat) {
     this.relectureEnCours = etat === 'en_cours';
     this.surRelectureDictee?.(etat);
+
+    // La relecture commence : on ne dicte plus mot à mot, les gestes de la
+    // dictée (« Attends ! », « Redis le mot ») n'ont plus d'objet.
+    if (etat === 'en_cours') this.signalerDictee(false);
+  }
+
+  /**
+   * LA VOIX DIT À L'ÉCRAN QU'ELLE DICTE — Camara, le 01/11/2026 : « Attends ! »
+   * et « Redis le mot » n'apparaissaient pas, la dictée en cours au cahier.
+   * L'écran les déduisait de son propre état (« dictée ouverte », « mode
+   * choisi »), que la mémoire du navigateur et les rechargements dérèglent.
+   * La voix, elle, SAIT : vrai au premier morceau dicté entendu, faux à la
+   * relecture ou à l'arrêt. Un fait de cette page, jamais relu d'ailleurs.
+   */
+  signalerDictee(oui) {
+    if (this.dicteeSignalee === oui) return;
+    this.dicteeSignalee = oui;
+    this.surDicteeEnCours?.(oui);
   }
 
   viderPausesDictee() {
@@ -2251,19 +2668,22 @@ class Lecteur {
     // tout ce qui est programmé part dans l'ordre.
     if (contexte.state === 'suspended' || contexte.state === 'interrupted') {
       return new Promise((resoudre) => {
-        function finir() {
+        function finir(suite) {
           contexte.removeEventListener?.('statechange', reveil);
           if (this.finirLecture === finir) this.finirLecture = null;
-          resoudre();
+          resoudre(suite);
         }
 
+        // AU RÉVEIL, LE SON PROGRAMMÉ RESTE À JOUER : on attend donc encore jusqu'à
+        // l'instant demandé. Sans cela, la reprise après une pause annonçait la fin
+        // de la voix en pleine phrase, et le micro se rouvrait sur le professeur.
         function reveil() {
           if (contexte.state !== 'running' && contexte.state !== 'closed') return;
-          finir.call(this);
+          finir.call(this, this.attendreJusqua(instant, jeton));
         }
 
         const surReveil = reveil.bind(this);
-        const surFin = finir.bind(this);
+        const surFin = () => finir.call(this);
         contexte.addEventListener?.('statechange', surReveil);
         this.finirLecture = surFin;
 
@@ -2275,7 +2695,11 @@ class Lecteur {
     if (reste <= 0) return Promise.resolve();
 
     return new Promise((resoudre) => {
-      const minuteur = setTimeout(resoudre, reste);
+      const minuteur = setTimeout(() => {
+        // Armé avant la pause, ce minuteur ignore que l'horloge s'est figée entre-temps.
+        if (this.enPause) resoudre(this.attendreJusqua(instant, jeton));
+        else resoudre();
+      }, reste);
 
       // Une interruption périme le jeton : on ne laisse pas la boucle dormir
       // jusqu'au bout d'un passage qu'on vient de couper.
@@ -2350,6 +2774,24 @@ class Lecteur {
     }
 
     return this.sortie;
+  }
+
+  /**
+   * LA SORTIE SANS FILTRE, POUR LES SONS DE LA BANQUE — Camara, le 05/11/2026 :
+   * « en cours il y a un traitement bizarre qui change la qualité ». Le filtre
+   * à 7 kHz a été posé contre les bips d'une voix OpenAI ; il s'appliquait aussi
+   * aux syllabes écoutées et validées une par une. L'indicateur de voix reste
+   * branché : les ondes de l'avatar bougent comme d'habitude.
+   */
+  obtenirSortieDirecte(contexte) {
+    this.obtenirSortie(contexte);
+    if (this.sortieDirecte) return this.sortieDirecte;
+
+    this.sortieDirecte = contexte.createGain();
+    this.sortieDirecte.connect(contexte.destination);
+    if (this.analyseur) this.sortieDirecte.connect(this.analyseur);
+
+    return this.sortieDirecte;
   }
 
   /**
@@ -2451,9 +2893,10 @@ class Lecteur {
       };
 
       const enonce = new SpeechSynthesisUtterance(texte);
-      const voix = choisirVoix();
+      const { voix, plusGrave } = choisirVoix(this.avatar);
 
       if (voix) enonce.voice = voix;
+      if (plusGrave) enonce.pitch = 0.7;
       enonce.lang = voix?.lang ?? 'fr-FR';
       // La vitesse choisie s'applique aussi à la voix de repli : elle ne sait
       // pas lire une consigne, mais elle sait changer de débit.
@@ -2477,22 +2920,90 @@ class Lecteur {
       this.finirLecture = finir;
 
       // Et pas davantage de son `end` : voir GARDE_NAVIGATEUR_MS.
-      garde = setTimeout(() => {
+      const surGarde = () => {
         if (fini) return;
+
+        // En pause, la voix du navigateur n'a pas de raison de finir.
+        if (this.enPause) {
+          garde = setTimeout(surGarde, 1000);
+          return;
+        }
+
         if (process.env.NODE_ENV !== 'production') {
           console.warn('[voix] la voix du navigateur n’a jamais fini : on passe à la suite.');
         }
         try { window.speechSynthesis.cancel(); } catch { /* moteur déjà arrêté */ }
         finir();
-      }, GARDE_NAVIGATEUR_MS + texte.length * MS_PAR_CARACTERE_NAVIGATEUR);
+      };
+
+      garde = setTimeout(surGarde, GARDE_NAVIGATEUR_MS + texte.length * MS_PAR_CARACTERE_NAVIGATEUR);
 
       window.speechSynthesis.speak(enonce);
     });
   }
 
+  /**
+   * LA PAUSE DU COURS — Camara, le 03/11/2026. La voix se fige au milieu de sa
+   * syllabe et reprend au même endroit : c'est toute la différence avec
+   * `arreter`, qui jette ce qui restait à dire.
+   *
+   * L'HORLOGE DU GRAPHE S'ARRÊTE AVEC LUI : tout ce qui est programmé attend, dans
+   * l'ordre, y compris les silences de dictée, qui sont du temps audio. La réponse
+   * encore en route continue d'arriver et s'empile.
+   */
+  mettreEnPause() {
+    this.enPause = true;
+
+    this.contexte?.suspend?.()?.catch?.(() => {});
+    this.audio?.pause?.();
+
+    if (navigateurSupporte) {
+      try { window.speechSynthesis.pause(); } catch { /* moteur déjà arrêté */ }
+    }
+  }
+
+  reprendreApresPause() {
+    if (!this.enPause) return;
+    this.enPause = false;
+
+    // Reprendre est un clic : le navigateur accepte le réveil, même après un
+    // rechargement où il aurait refusé.
+    this.contexte?.resume?.()?.catch?.(() => this.surBlocage?.());
+    this.audio?.play?.()?.catch?.(() => this.surBlocage?.());
+
+    if (navigateurSupporte) {
+      try { window.speechSynthesis.resume(); } catch { /* moteur déjà arrêté */ }
+    }
+
+    this.libererLaReprise();
+  }
+
+  attendreLaReprise() {
+    return new Promise((resoudre) => { this.repriseAttendue.push(resoudre); });
+  }
+
+  libererLaReprise() {
+    const enAttente = this.repriseAttendue;
+    this.repriseAttendue = [];
+    enAttente.forEach((resoudre) => resoudre());
+  }
+
   /** Coupe net : changement de page, ou l'élève reprend la parole. */
   arreter() {
     this.jeton += 1; // périme la boucle en cours
+
+    // Une boucle qui attendait la fin de la pause s'en va : son jeton est périmé.
+    this.libererLaReprise();
+
+    // La dictée s'arrête avec la voix : ses boutons disparaissent.
+    this.signalerDictee(false);
+
+    // Un « Attends ! » resté appuyé ne doit pas figer la dictée suivante, ni
+    // son rappel tomber au milieu d'autre chose.
+    this.dicteeSuspendue = false;
+    clearTimeout(this.minuteurRappel);
+    this.minuteurRappel = null;
+    this.rappelFait = false;
 
     // Une relecture coupée ne reprendra pas : l'écran doit le savoir, sans
     // quoi il annoncerait une relecture qui n'a plus lieu.

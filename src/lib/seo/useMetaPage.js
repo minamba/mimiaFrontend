@@ -70,7 +70,7 @@ export function appliquerMeta(chemin) {
   // marque qu'un onglet vide ou le titre de la page d'avant.
   const titre = page?.titre ?? 'Mimia — le professeur particulier de vos enfants';
   const description = page?.description
-    ?? "Un professeur par IA pour chaque enfant, du CP à la Terminale.";
+    ?? "Une équipe pédagogique par IA pour chaque enfant, du CP à la Terminale.";
 
   document.title = titre;
   poserMeta('meta[name="description"]', { name: 'description' }, description);
