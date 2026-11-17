@@ -21,7 +21,14 @@ jest.mock('../lib/api/abonnementApi', () => ({
 }));
 
 let mockOuvert = true;
-jest.mock('../lib/storage/modeTest', () => ({ useFichesRevision: () => mockOuvert }));
+let mockPodcasts = false;
+jest.mock('../lib/storage/modeTest', () => ({ useFichesRevision: () => mockOuvert, usePodcasts: () => mockPodcasts }));
+
+// LES PODCASTS (15/11/2026) : le même encadré, une autre source.
+jest.mock('../lib/api/mesPodcastsApi', () => ({
+  getPodcastsDuForfait: jest.fn(),
+  acheterPodcasts: jest.fn(),
+}));
 
 // Le forfait des heures n'est pas rendu ici : seules ses briques réutilisées.
 jest.mock('react-router-dom', () => ({
@@ -102,4 +109,45 @@ it('module éteint : rien', () => {
 
   expect(container).toBeEmptyDOMElement();
   expect(getFichesFamille).not.toHaveBeenCalled();
+});
+
+
+describe('les podcasts (15/11/2026)', () => {
+  // eslint-disable-next-line global-require
+  const { acheterPodcasts, getPodcastsDuForfait } = require('../lib/api/mesPodcastsApi');
+
+  beforeEach(() => {
+    mockPodcasts = true;
+    getPodcastsDuForfait.mockResolvedValue({
+      data: {
+        forfait: true,
+        credits: 3,
+        maximum: 10,
+        remiseLe: '2026-12-01T00:00:00Z',
+        enfants: [{ id: 1, prenom: 'Bilal', utilisees: 4 }],
+        packs: [{ code: 'PODCASTS5', libelle: '5 crédits de podcasts', fiches: 5, prixCentimes: 790 }],
+      },
+    });
+    acheterPodcasts.mockResolvedValue({ data: { urlPaiement: null, credits: 8 } });
+  });
+
+  afterEach(() => { mockPodcasts = false; });
+
+  it('dit les podcasts du mois et achète un pack de podcasts', async () => {
+    render(<FichesDuForfait module="podcasts" />);
+
+    expect(await screen.findByText('Podcasts')).toBeInTheDocument();
+    expect(screen.getByText('4 / 10 podcasts')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /\+5 crédits/ }));
+    expect(screen.getByText(/Ajouter 5 crédits de podcasts/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Confirmer/ }));
+    await waitFor(() => expect(acheterPodcasts).toHaveBeenCalledWith('PODCASTS5'));
+  });
+
+  it('module des podcasts éteint : rien', () => {
+    mockPodcasts = false;
+    const { container } = render(<FichesDuForfait module="podcasts" />);
+    expect(container).toBeEmptyDOMElement();
+  });
 });

@@ -48,6 +48,10 @@ export const getTunnel = (granularite, debut, fin) =>
 export const getAbonnementsFenetre = (granularite, debut, fin) =>
   httpClient.get('/admin/stats/abonnements', { params: { granularite, debut, fin } });
 
+/** Les parents derrière les barres « Entrées et sorties » (12/11/2026) : même fenêtre, mêmes règles. */
+export const getMouvementsAbonnements = (granularite, debut, fin) =>
+  httpClient.get('/admin/stats/abonnements/mouvements', { params: { granularite, debut, fin } });
+
 export const getSerieParents = (granularite) =>
   httpClient.get('/admin/stats/parents', { params: { granularite } });
 
@@ -186,6 +190,17 @@ export const getHistoriqueHeures = (id) =>
  * comme une panne. On le laisse à faux pour les corrections internes, celles
  * que le parent n'a jamais vues.
  */
+/**
+ * OFFRIR UN ABONNEMENT (13/11/2026) : `{ codeOffre, mois (null : sans fin), motif, prevenirLeParent }`. Refusé (400)
+ * si le parent a un abonnement payant en cours.
+ */
+export const offrirAbonnement = (id, offre) =>
+  httpClient.post(`/admin/parents/${id}/abonnement-offert`, offre);
+
+/** Arrête tout de suite l'abonnement offert d'un parent. */
+export const arreterAbonnementOffert = (id) =>
+  httpClient.delete(`/admin/parents/${id}/abonnement-offert`);
+
 export const ajusterHeures = (id, minutes, motif, prevenirLeParent) =>
   httpClient.post(`/admin/parents/${id}/heures`, { minutes, motif, prevenirLeParent });
 
@@ -457,6 +472,14 @@ export const definirBesoinsParticuliers = (actif) =>
 /** Allume ou éteint les fiches de révision que l'élève tire de son cours — 14/10/2026. */
 export const definirFichesRevision = (actif) =>
   httpClient.put('/reglages/fiches-revision', { actif });
+
+/** Les podcasts de l'élève (15/11/2026) : la carte de la grille, les routes et la tâche de fond. */
+export const definirPodcasts = (actif) =>
+  httpClient.put('/reglages/podcasts', { actif });
+
+/** Le bouton « Télécharger en MP3 » des podcasts (15/11/2026). */
+export const definirPodcastsTelechargement = (actif) =>
+  httpClient.put('/reglages/podcasts-telechargement', { actif });
 
 /** L'état de l'import de l'offre des lycées : en cours, nombre de lycées, derniers passages. */
 export const getImportOrientation = () => httpClient.get('/orientation/import');

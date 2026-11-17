@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { NavLink, Navigate } from 'react-router-dom';
 import useEspaceParent from '../../lib/hooks/useEspaceParent';
 import { EspaceFichesContext } from '../../lib/mesFiches/espaceFiches';
 import Loader from '../Loader';
+import PodcastsNonInclus from '../podcasts/PodcastsNonInclus';
 import './espaceParent.css';
 
 /**
@@ -19,6 +21,8 @@ import './espaceParent.css';
  */
 export default function EspaceParent({ children }) {
   const espace = useEspaceParent();
+  // PAS DE PODCASTS AVEC STARTER (Camara, le 15/11/2026) : le bouton reste, le clic ouvre la fenêtre.
+  const [podcastsBloques, setPodcastsBloques] = useState(false);
 
   if (espace === null) return <Loader texte="Ouverture de votre espace…" />;
   if (!espace.fiches) return <Navigate to="/eleves" replace />;
@@ -44,8 +48,32 @@ export default function EspaceParent({ children }) {
                 Mes fiches personnelles
               </NavLink>
             </li>
+            {/* MES PODCASTS — Camara, le 15/11/2026 : « dans mon espace parent je veux aussi la fonctionnalité podcast ». */}
+            {espace.podcasts && (
+              <li>
+                <NavLink
+                  to="/espace-parent/podcasts"
+                  onClick={(e) => {
+                    if (espace.podcastsInclus !== false) return;
+                    e.preventDefault();
+                    setPodcastsBloques(true);
+                  }}
+                  className={({ isActive }) => `espace-parent__item${isActive ? ' est-actif' : ''}`}
+                >
+                  <span className="espace-parent__icone" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                      <path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z" />
+                    </svg>
+                  </span>
+                  Mes podcasts
+                </NavLink>
+              </li>
+            )}
           </ul>
         </nav>
+        {podcastsBloques && <PodcastsNonInclus enfant={false} onFermer={() => setPodcastsBloques(false)} />}
         {espace.sansLimite && <p className="espace-parent__note">Compte administrateur : ni limite ni quota.</p>}
       </aside>
 

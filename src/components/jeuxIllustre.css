@@ -1,0 +1,277 @@
+/* ======================================================================================================
+   « MES JEUX », VUE DE L'ENFANT — maquette de Camara, 15/11/2026. Portée : `.jeux-illustre` (posée par JeuxEleve
+   quand c'est l'enfant), le décor commun vient de `page-decor-enfant` (styles/decorEnfant.css).
+
+   LA BANNIÈRE : l'illustration de la maquette (assets/jeux-illustre/banniere.webp — manette couronnée, fille au
+   poing levé, Fuji, pagode, cerisiers), titre, pastille et bouton retour EFFACÉS et redessinés ici. L'image est
+   calée sur la hauteur, tout se mesure en hauteurs de bannière (`cqh`, image de 2163 × 320) : sur un téléphone la
+   bannière a une hauteur fixe et l'image est coupée à droite, jamais le titre.
+
+   LES BADGES : chaque classe est un hexagone suspendu, sa petite scène en haut (assets/jeux-illustre/classe-*.webp),
+   son nom en bas. Choisie = or ; verrouillée = grise, cadenas. Rien ne s'anime en boucle (le panneau « Tu joues
+   ici » ne saute plus, la respiration du portail est coupée) : une page qui ralentit le PC, c'est déjà arrivé.
+   ====================================================================================================== */
+
+/* ------------------------------------------------------------------ la bannière */
+.jeux-illustre .jeux-banniere {
+  container-type: size;
+  position: relative;
+  aspect-ratio: 2163 / 320;
+  margin: 0 0 6px;
+  background: url('../assets/jeux-illustre/banniere.webp') left center / auto 100% no-repeat;
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 10%, #000 84%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 10%, #000 84%, transparent 100%);
+  mask-composite: intersect;
+}
+
+.jeux-illustre .jeux-banniere__retour {
+  position: absolute;
+  top: 9cqh;
+  left: 31cqh;
+  z-index: 1;
+  margin: 0;
+}
+
+.jeux-illustre .jeux-banniere__titre {
+  position: absolute;
+  top: 34cqh;
+  left: 100cqh;
+  margin: 0;
+  font-family: 'Lilita One', var(--display);
+  font-size: 34cqh;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: #fff;
+  transform: rotate(-2deg);
+  transform-origin: left center;
+  text-shadow:
+    3px 0 0 #102447, -3px 0 0 #102447, 0 3px 0 #102447, 0 -3px 0 #102447,
+    2px 2px 0 #102447, -2px 2px 0 #102447, 2px -2px 0 #102447, -2px -2px 0 #102447,
+    0 6px 0 #0a1830,
+    0 10px 18px rgba(0, 0, 0, 0.35);
+}
+
+.jeux-illustre .jeux-banniere__accent { color: #ffc93c; }
+
+.jeux-illustre .jeux-banniere__sous-titre {
+  position: absolute;
+  top: 78cqh;
+  left: 90cqh;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 90cqh - 8px);
+  margin: 0;
+  padding: 1.6cqh 6cqh 1.6cqh 4cqh;
+  border: 2px solid rgba(190, 150, 255, 0.85);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(48, 30, 120, 0.92) 0%, rgba(32, 40, 130, 0.92) 100%);
+  box-shadow: 0 0 0 3px rgba(160, 132, 255, 0.15), 0 0 18px rgba(150, 110, 255, 0.5);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: clamp(13px, 7.4cqh, 17px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.jeux-illustre .jeux-banniere__sous-titre::before {
+  content: '\2726';
+  color: #ffc93c;
+  text-shadow: 0 0 8px rgba(255, 201, 60, 0.8);
+}
+
+/* ------------------------------------------------------------------ la frise des badges */
+.jeux-illustre .frise--illustree .frise__piste {
+  gap: 12px;
+  padding: 50px 8px 14px;
+}
+
+/* Le chemin lumineux entre deux badges : à mi-hauteur de l'hexagone. */
+.jeux-illustre .frise--illustree .frise__case--chemin::before { top: 58px; left: -12px; width: 12px; }
+.jeux-illustre .frise--illustree .frise__case--chemin::after { top: 53px; left: -12px; width: 12px; }
+
+.jeux-illustre .frise--illustree .portail {
+  gap: 6px;
+  filter: drop-shadow(0 6px 10px rgba(0, 8, 40, 0.5)) drop-shadow(0 0 8px rgba(140, 170, 255, 0.35));
+}
+
+/* L'anneau qui suspend le badge. */
+.jeux-illustre .frise--illustree .portail::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #e6ecff;
+  border-radius: 50%;
+  background: #1a2a7a;
+  transform: translateX(-50%);
+}
+
+/* L'HEXAGONE : le cadre (dégradé clair) est l'arche elle-même, découpée ; l'intérieur bleu et la scène sont
+   découpés pareil, 3 px plus petits. */
+.jeux-illustre .frise--illustree .portail__arche {
+  width: 72px;
+  height: 108px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #f4f2ff 0%, #b7bfe8 45%, #e9e4ff 100%);
+  box-shadow: none;
+  clip-path: polygon(50% 0, 100% 15%, 100% 85%, 50% 100%, 0 85%, 0 15%);
+}
+
+.jeux-illustre .frise--illustree .portail__arche::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  background: linear-gradient(180deg, #2a48c8 0%, #1d35a8 55%, #172a8c 100%);
+  clip-path: polygon(50% 0, 100% 15%, 100% 85%, 50% 100%, 0 85%, 0 15%);
+}
+
+/* La respiration de « sa » classe : coupée ici (une animation sans fin de plus). */
+.jeux-illustre .frise--illustree .portail__arche::after { display: none; }
+
+.jeux-illustre .frise--illustree .portail__scene {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  height: 58%;
+  background-size: cover;
+  background-position: center bottom;
+  clip-path: polygon(50% 0, 100% 24%, 100% 100%, 0 100%, 0 24%);
+}
+
+.jeux-illustre .frise--illustree .portail__voute,
+.jeux-illustre .frise--illustree .portail__gemme { display: none; }
+
+/* Le nom de la classe, en bas de l'hexagone : en vrai texte. */
+.jeux-illustre .frise--illustree .portail__ecriteau {
+  position: absolute;
+  top: 66px;
+  left: 0;
+  right: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+  font-family: 'Lilita One', var(--display);
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 2px 0 rgba(10, 20, 70, 0.8), 0 0 10px rgba(130, 160, 255, 0.6);
+}
+
+/* « MA CLASSE » : l'étiquette dorée sous le badge. */
+.jeux-illustre .frise--illustree .portail__mienne {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffe07a, #f5a800);
+  color: #3b2400;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* « Tu joues ici » : une bulle dorée, immobile. */
+.jeux-illustre .frise--illustree .portail__curseur {
+  top: -46px;
+  animation: none;
+  transform: translate(-50%, 0);
+}
+
+.jeux-illustre .frise--illustree .portail__curseur-texte {
+  padding: 5px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffe58a 0%, #ffc93c 100%);
+  color: #2a1c00;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 8, 30, 0.5), 0 0 12px rgba(255, 200, 60, 0.5);
+}
+
+.jeux-illustre .frise--illustree .portail__curseur-fleche { border-top-color: #ffcf4a; }
+
+/* LA CLASSE CHOISIE : le cadre et l'intérieur passent à l'or, la scène se réchauffe. */
+.jeux-illustre .frise--illustree .portail.est-choisi .portail__arche {
+  background: linear-gradient(180deg, #fff1b8 0%, #ffc53d 50%, #f59e0b 100%);
+}
+
+.jeux-illustre .frise--illustree .portail.est-choisi .portail__arche::before {
+  background: linear-gradient(180deg, #f59e0b 0%, #e07a12 55%, #b65a0c 100%);
+}
+
+.jeux-illustre .frise--illustree .portail.est-choisi .portail__scene {
+  filter: sepia(0.55) saturate(1.5) hue-rotate(-12deg) brightness(1.05);
+}
+
+.jeux-illustre .frise--illustree .portail.est-choisi {
+  filter: drop-shadow(0 6px 10px rgba(40, 20, 0, 0.5)) drop-shadow(0 0 14px rgba(255, 190, 60, 0.75));
+}
+
+/* SANS JEU ENCORE (ouverte, mais rien d'écrit) : un peu éteinte, jamais cadenassée. */
+.jeux-illustre .frise--illustree .portail.est-eteint .portail__scene { filter: saturate(0.6) brightness(0.8); }
+
+/* VERROUILLÉE : grise, la scène presque éteinte, le cadenas au milieu. */
+.jeux-illustre .frise--illustree .portail.est-verrouille .portail__arche {
+  background: linear-gradient(180deg, #c9cbd6 0%, #8d91a3 50%, #b9bccb 100%);
+}
+
+.jeux-illustre .frise--illustree .portail.est-verrouille .portail__arche::before {
+  background: linear-gradient(180deg, #5c6178 0%, #474b60 55%, #3a3d50 100%);
+}
+
+.jeux-illustre .frise--illustree .portail.est-verrouille .portail__scene {
+  filter: grayscale(0.85) brightness(0.55);
+}
+
+.jeux-illustre .frise--illustree .portail__cadenas {
+  top: 20px;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+}
+
+.jeux-illustre .frise--illustree .portail.est-verrouille .portail__ecriteau {
+  border: 0;
+  background: none;
+  color: #e3e6ef;
+}
+
+@media (max-width: 720px) {
+  .jeux-illustre .jeux-banniere {
+    aspect-ratio: auto;
+    height: 150px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .jeux-illustre .jeux-banniere__retour { left: 4cqh; top: 6cqh; }
+  .jeux-illustre .jeux-banniere__titre { top: 38cqh; font-size: 26cqh; }
+
+  /* LA PASTILLE PASSE SOUS LA BANNIÈRE — Camara, le 16/11/2026 : « sur mobile, le badge “Réviser en jouant…”
+     mange l'image, on ne voit pas la manette derrière ». Posée juste sous l'illustration, centrée ; la bannière
+     lui garde sa place. */
+  .jeux-illustre .jeux-banniere { margin-bottom: 56px; }
+
+  .jeux-illustre .jeux-banniere__sous-titre {
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    font-size: 12.5px;
+  }
+}

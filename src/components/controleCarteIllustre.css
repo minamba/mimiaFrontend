@@ -1,0 +1,449 @@
+/* ======================================================================================================
+   LA CARTE ILLUSTRÉE D'UN CONTRÔLE À VENIR — Camara, le 16/11/2026, d'après sa maquette : cadre lumineux, icône de
+   matière dans un carré, pastille de matière à petits traits, titre en italique au trait doré, date, délai en
+   pastille, scène de la matière fondue à droite, encadré « Préparation » à la barre lumineuse, pastille d'état,
+   gros bouton doré, vagues seigaiha. « À adapter en fonction des matières » : couleurs (`--cci-bord`, `--cci-haut`,
+   `--cci-bas`) et scène (`--cci-scene`) viennent de la matière (MesControles.js, `habillage`) ; sans scène connue,
+   la teinte de la matière (`--matiere-claire`) et pas de décor.
+
+   Deux endroits : l'accueil (`.ctr-illu`) et la page des contrôles (`.cpi`, onglet À venir ; les passées gardent
+   leur carte). Les sélecteurs commencent par `:root .controles-liste > .controle-carte.cci` : plus forts que ceux
+   des deux pages (`:root .cpi .controle-carte`, `:root .ctr-illu .controle-carte`), sans `!important`.
+   Rien ne s'anime en boucle ; la carte est un calque à elle (overflow), jamais la page.
+   ====================================================================================================== */
+
+/* DEUX COLONNES — Camara, le 16/11/2026 : « je voudrais que ce soit par deux colonnes au lieu d'une ». Une carte
+   prend au moins 360 px : deux par ligne dans le bloc de l'accueil, une seule sur un téléphone. La carte se
+   resserre d'elle-même quand elle est étroite (délai sous l'icône, bouton pleine largeur : container query). */
+:root .controles-liste.controles-liste:has(> .cci) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 18px;
+}
+
+:root .controles-liste > .controle-carte.cci {
+  --accent: var(--cci-bord, var(--matiere-claire, #6fe3ff));
+  container-type: inline-size;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 20px 22px 24px;
+  border: 2px solid color-mix(in srgb, var(--accent) 80%, #fff);
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--cci-haut, #1b2f8a) 70%, transparent), transparent 60%),
+    linear-gradient(165deg, #10215f 0%, #0b1745 58%, color-mix(in srgb, var(--cci-bas, #0a1440) 55%, #0a1440) 100%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent) 12%, transparent),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+  color: #e8ecff;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+:root .controles-liste > .controle-carte.cci:hover {
+  transform: none;
+  border-color: color-mix(in srgb, var(--accent) 95%, #fff);
+  box-shadow:
+    0 0 28px color-mix(in srgb, var(--accent) 55%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent) 14%, transparent),
+    0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Le dessin au trait de la page des contrôles (chat, omamori) ne sert pas ici : la scène de la matière le remplace. */
+:root .controles-liste > .controle-carte.cci::before { display: none; }
+
+/* LES VAGUES SEIGAIHA en bas, dans les deux coins, à la couleur de la matière. */
+:root .controles-liste > .controle-carte.cci::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 46px;
+  background:
+    radial-gradient(circle at 50% 100%,
+      transparent 0 7px,
+      color-mix(in srgb, var(--accent) 60%, #9fb4ff) 7px 8.5px,
+      transparent 8.5px 13px,
+      color-mix(in srgb, var(--accent) 60%, #9fb4ff) 13px 14.5px,
+      transparent 14.5px 19px,
+      color-mix(in srgb, var(--accent) 60%, #9fb4ff) 19px 20.5px,
+      transparent 20.5px) 0 100% / 42px 21px repeat-x,
+    radial-gradient(circle at 50% 100%,
+      transparent 0 7px,
+      color-mix(in srgb, var(--accent) 60%, #9fb4ff) 7px 8.5px,
+      transparent 8.5px 13px,
+      color-mix(in srgb, var(--accent) 60%, #9fb4ff) 13px 14.5px,
+      transparent 14.5px 19px,
+      color-mix(in srgb, var(--accent) 60%, #9fb4ff) 19px 20.5px,
+      transparent 20.5px) 21px calc(100% - 11px) / 42px 21px repeat-x;
+  z-index: -1;
+  opacity: 0.3;
+  -webkit-mask-image: linear-gradient(90deg, #000 0 20%, transparent 36% 64%, #000 80% 100%);
+  mask-image: linear-gradient(90deg, #000 0 20%, transparent 36% 64%, #000 80% 100%);
+  pointer-events: none;
+}
+
+/* LA SCÈNE DE LA MATIÈRE, fondue vers la gauche et vers le bas, derrière le haut de la carte. */
+:root .controles-liste > .controle-carte.cci .cci__scene {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(60%, 560px);
+  height: 62%;
+  background: var(--cci-scene, none) center 40% / cover no-repeat;
+  z-index: -1;
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 60%), linear-gradient(180deg, #000 40%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 60%), linear-gradient(180deg, #000 40%, transparent 100%);
+  mask-composite: intersect;
+  pointer-events: none;
+}
+
+
+/* -------------------------------------------------------------------------------------------- le haut */
+:root .controles-liste > .controle-carte.cci .cci__tete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+:root .controles-liste > .controle-carte.cci .cci__icone {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 2px solid color-mix(in srgb, var(--accent) 75%, #fff);
+  border-radius: 16px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--accent) 55%, #1b2f8a) 0%, color-mix(in srgb, var(--accent) 22%, #0b1745) 100%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-size: 28px;
+  line-height: 1;
+}
+
+:root .controles-liste > .controle-carte.cci .cci__ident {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+:root .controles-liste > .controle-carte.cci .controle-carte__matiere {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 80%, #fff);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(8, 16, 60, 0.6));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 35%, transparent);
+  color: #f1fbff;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* Les petits traits obliques après la pastille. */
+:root .controles-liste > .controle-carte.cci .controle-carte__matiere::after {
+  content: '';
+  width: 20px;
+  height: 11px;
+  margin-right: -32px;
+  background: repeating-linear-gradient(115deg, var(--accent) 0 3px, transparent 3px 7px);
+  opacity: 0.9;
+}
+
+:root .controles-liste > .controle-carte.cci .controle-carte__titre {
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 0;
+  font-family: 'Rubik', var(--sans);
+  font-style: italic;
+  font-weight: 900;
+  font-size: clamp(20px, 4cqw, 28px);
+  line-height: 1.15;
+  color: #fff;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 10px rgba(5, 10, 40, 0.6);
+}
+
+/* Le trait doré après le titre (un élément à part : le ::after du titre reste la nappe qui rend la carte cliquable). */
+:root .controles-liste > .controle-carte.cci .cci__titre-ligne {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 100%;
+}
+
+:root .controles-liste > .controle-carte.cci .cci__trait {
+  flex: none;
+  width: 54px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd56a, rgba(255, 213, 106, 0));
+  margin-bottom: 0.55em;
+  transform: skewX(-25deg);
+}
+
+:root .controles-liste > .controle-carte.cci .controle-carte__quand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #d7defb;
+  font-size: 14.5px;
+}
+
+/* La page des contrôles posait déjà un calendrier dessiné devant la date : ici, c'est l'icône du composant. */
+:root .controles-liste > .controle-carte.cci .controle-carte__quand::before { display: none; }
+
+:root .controles-liste > .controle-carte.cci .cci__icone-ligne {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+}
+
+/* Le délai, en pastille à liseré en haut à droite ; plus chaud quand le contrôle approche. */
+:root .controles-liste > .controle-carte.cci .controle-carte__delai {
+  align-self: start;
+  padding: 6px 14px;
+  border: 1.5px solid rgba(200, 180, 255, 0.75);
+  border-radius: 999px;
+  background: rgba(40, 26, 110, 0.72);
+  box-shadow: 0 0 12px rgba(160, 130, 255, 0.35);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+:root .controles-liste > .controle-carte.cci .controle-carte__delai.est-proche {
+  border-color: rgba(255, 200, 110, 0.85);
+  background: rgba(110, 60, 10, 0.72);
+  box-shadow: 0 0 12px rgba(255, 180, 80, 0.4);
+}
+
+:root .controles-liste > .controle-carte.cci .controle-carte__delai.est-imminent {
+  border-color: rgba(255, 140, 110, 0.9);
+  background: rgba(130, 30, 20, 0.78);
+  box-shadow: 0 0 14px rgba(255, 110, 80, 0.5);
+}
+
+/* ------------------------------------------------------------------------------------- la préparation */
+:root .controles-liste > .controle-carte.cci .cci__preparation {
+  padding: 12px 18px 14px;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 35%, rgba(160, 190, 255, 0.4));
+  border-radius: 18px;
+  background: rgba(8, 18, 66, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:root .controles-liste > .controle-carte.cci .preparation { margin: 0; gap: 8px; }
+
+:root .controles-liste > .controle-carte.cci .preparation__ligne { color: #e8ecff; }
+
+:root .controles-liste > .controle-carte.cci .preparation__libelle {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+:root .controles-liste > .controle-carte.cci .preparation__libelle::before { content: '📖\00a0\00a0'; }
+
+:root .controles-liste > .controle-carte.cci .preparation__valeur {
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+:root .controles-liste > .controle-carte.cci .preparation__jauge {
+  height: 12px;
+  border: 1px solid rgba(160, 190, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* La barre lumineuse vert-cyan dès que la révision avance ; le palier « fragile » garde sa couleur d'alerte. */
+:root .controles-liste > .controle-carte.cci .preparation__jauge span.est-acquis,
+:root .controles-liste > .controle-carte.cci .preparation__jauge span.est-encours {
+  background: linear-gradient(90deg, #2fe0a6 0%, #4fd8e0 100%);
+  box-shadow: 0 0 10px rgba(79, 216, 224, 0.65);
+}
+
+:root .controles-liste > .controle-carte.cci .preparation__jauge span.est-fragile {
+  box-shadow: 0 0 8px rgba(255, 170, 80, 0.55);
+}
+
+:root .controles-liste > .controle-carte.cci .preparation__attente {
+  margin: 2px 0 0;
+  color: #cfd8ff;
+  font-style: italic;
+  font-size: 13.5px;
+}
+
+/* ------------------------------------------------------------------- l'état et le mot du professeur */
+:root .controles-liste > .controle-carte.cci .cci__etat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+
+:root .controles-liste > .controle-carte.cci .pastille-pret {
+  align-self: center;
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+:root .controles-liste > .controle-carte.cci .cci__mot {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0;
+  padding-left: 16px;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+:root .controles-liste > .controle-carte.cci .cci__mot-titre {
+  color: color-mix(in srgb, var(--accent) 65%, #fff);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+:root .controles-liste > .controle-carte.cci .cci__mot-titre::before { content: '💬\00a0'; }
+
+:root .controles-liste > .controle-carte.cci .cci__mot-texte {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: #dfe6ff;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------------------------------------------ le bouton */
+:root .controles-liste > .controle-carte.cci .cci__action {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(100%, 420px);
+  margin: 4px 0 6px;
+  padding: 13px 28px;
+  border: 2px solid rgba(255, 240, 180, 0.85);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe27a 0%, #ffc935 55%, #f5a800 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(255, 200, 60, 0.55),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+  color: #2a1700;
+  font-size: 17px;
+  font-weight: 800;
+  white-space: normal;
+}
+
+:root .controles-liste > .controle-carte.cci .cci__action::before,
+:root .controles-liste > .controle-carte.cci .cci__action::after { content: none; }
+
+:root .controles-liste > .controle-carte.cci .cci__action:hover { filter: brightness(1.05); }
+
+:root .controles-liste > .controle-carte.cci .cci__action-icone {
+  color: #8a2f00;
+  font-size: 0.85em;
+}
+
+/* LES MODES SAISONNIERS : le bouton prend la couleur des boutons de la saison (or en Black Friday). */
+:root[data-saison] .controles-liste > .controle-carte.cci .cci__action {
+  border-color: color-mix(in srgb, var(--corail-btn, #e8562f) 40%, #fff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn, #e8562f) 70%, #fff) 0%, var(--corail-btn, #e8562f) 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 0 16px color-mix(in srgb, var(--corail-btn, #e8562f) 50%, transparent);
+  color: #fff;
+}
+
+:root[data-saison] .controles-liste > .controle-carte.cci .cci__action-icone { color: inherit; }
+
+:root[data-saison='black-friday'] .controles-liste > .controle-carte.cci .cci__action { color: #141414; }
+
+/* ------------------------------------------------------------------------- une carte étroite (téléphone, tablette) */
+@container (max-width: 460px) {
+  :root .controles-liste > .controle-carte.cci .cci__tete { grid-template-columns: auto minmax(0, 1fr); }
+
+  :root .controles-liste > .controle-carte.cci .controle-carte__delai {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  :root .controles-liste > .controle-carte.cci .cci__icone {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 22px;
+  }
+
+  :root .controles-liste > .controle-carte.cci .cci__scene {
+    width: 100%;
+    height: 48%;
+    opacity: 0.4;
+  }
+
+  :root .controles-liste > .controle-carte.cci .cci__mot {
+    flex-basis: 100%;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  :root .controles-liste > .controle-carte.cci .cci__action { width: 100%; font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .controles-liste > .controle-carte.cci { transition: none; }
+}
+
+/* ------------------------------------------------------------------------------------------- plus compacte
+   CAMARA, LE 17/11/2026 : « les cards des contrôles sont vraiment grosses, faut réduire un peu leur taille ». Le même
+   dessin, resserré : marges, icône, titre, encadré de préparation, pastilles et bouton ; une carte peut descendre à
+   280 px (trois par ligne sur un ordinateur). Mêmes sélecteurs que plus haut : ce bloc, venu après, l'emporte. */
+:root .controles-liste.controles-liste:has(> .cci) {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+
+:root .controles-liste > .controle-carte.cci { gap: 10px; padding: 14px 16px 18px; border-radius: 20px; }
+:root .controles-liste > .controle-carte.cci::after { height: 34px; }
+:root .controles-liste > .controle-carte.cci .cci__tete { gap: 10px; }
+:root .controles-liste > .controle-carte.cci .cci__icone { width: 44px; height: 44px; border-radius: 12px; font-size: 21px; }
+:root .controles-liste > .controle-carte.cci .controle-carte__titre { margin-top: 2px; font-size: clamp(16px, 3.4cqw, 21px); }
+:root .controles-liste > .controle-carte.cci .cci__trait { width: 40px; height: 5px; }
+:root .controles-liste > .controle-carte.cci .controle-carte__quand { font-size: 13px; }
+:root .controles-liste > .controle-carte.cci .cci__icone-ligne { width: 15px; height: 15px; }
+:root .controles-liste > .controle-carte.cci .controle-carte__delai { padding: 4px 11px; font-size: 12.5px; }
+:root .controles-liste > .controle-carte.cci .cci__preparation { padding: 9px 13px 10px; }
+:root .controles-liste > .controle-carte.cci .preparation { gap: 6px; }
+:root .controles-liste > .controle-carte.cci .preparation__libelle { font-size: 14px; }
+:root .controles-liste > .controle-carte.cci .preparation__valeur { font-size: 16px; }
+:root .controles-liste > .controle-carte.cci .preparation__jauge { height: 9px; }
+:root .controles-liste > .controle-carte.cci .preparation__attente { font-size: 12.5px; }
+:root .controles-liste > .controle-carte.cci .cci__etat { gap: 8px 14px; }
+:root .controles-liste > .controle-carte.cci .pastille-pret { padding: 4px 11px; font-size: 12.5px; }
+:root .controles-liste > .controle-carte.cci .cci__mot { padding-left: 12px; }
+:root .controles-liste > .controle-carte.cci .cci__mot-titre { font-size: 12px; }
+:root .controles-liste > .controle-carte.cci .cci__mot-texte { font-size: 12.5px; line-height: 1.35; }
+:root .controles-liste > .controle-carte.cci .cci__action { margin: 2px 0 4px; padding: 10px 20px; font-size: 15px; }
+
+@container (max-width: 460px) {
+  :root .controles-liste > .controle-carte.cci .cci__icone { width: 40px; height: 40px; font-size: 19px; }
+  :root .controles-liste > .controle-carte.cci .cci__action { font-size: 14.5px; }
+}

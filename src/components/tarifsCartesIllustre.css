@@ -1,0 +1,487 @@
+/* ======================================================================================================
+   LES CARTES DES FORMULES — maquette de Camara, 16/11/2026 (« je veux ça pour les prix »).
+
+   - LE RYTHME : une pilule nuit, « Au mois » en bleu lumineux, « 1 mois offert » en pastille verte ;
+   - LES CARTES : du verre bleu nuit au liseré lumineux, chacune avec son décor en haut à droite —
+     Starter le cerisier, Solo le Fuji, Duo le torii, Famille la maison à lanterne (dessinée ici en SVG) ;
+   - le nom en serif, la mention « OFFRE DE LANCEMENT » en pastille rouge DESSOUS, le prix en grand ;
+   - les coches vertes, les heures offertes en orange, « Tous les avantages de …, plus : » dans un cadre ;
+   - un filet orné au-dessus du prix annuel (une fleur de cerisier sur la carte choisie) ;
+   - les boutons : pilule bleue à vagues et chevron ; la carte CHOISIE (Duo par défaut) passe en orange,
+     liseré compris ; « Votre formule actuelle » en vert ;
+   - les rubans : « Recommandé » bleu, « Le plus choisi » orange couronné, tous deux entre deux lauriers ;
+   - la page : cerisier en haut à gauche, lune et Fuji en haut à droite, vagues dans les coins du bas.
+
+   Nuit dans tous les thèmes (les encres sont redéfinies dans la carte) ; en mode saisonnier, `--illu-*` et
+   `--corail-btn`. Sélecteurs forts : App.css, chargé après, pèse jusqu'à 0,3,0 sur les cartes et 0,5,0 sur
+   les rubans saisonniers. Le seul mouvement est le reflet du ruban « Le plus choisi », déjà là avant.
+   ====================================================================================================== */
+
+section.page--tarifs-illu {
+  --tf-lueur: #6fb6ff;
+  --tf-panneau: #142a72;
+  --tf-panneau-2: #0a1746;
+  --tf-texte: #f3f6ff;
+  --tf-doux: #c6d0ee;
+  --tf-vert: #6ee39a;
+  --tf-chaud: #ff6a35;
+  --tf-orange: #ff8a52;
+}
+
+:root[data-da='blue-sky'][data-saison] section.page--tarifs-illu {
+  --tf-lueur: color-mix(in srgb, var(--illu-accent) 80%, #ffffff);
+  --tf-panneau: var(--illu-panneau);
+  --tf-panneau-2: var(--illu-panneau-2);
+  --tf-texte: var(--illu-texte);
+  --tf-doux: var(--illu-texte-doux);
+  --tf-chaud: var(--corail-btn);
+  --tf-orange: color-mix(in srgb, var(--corail-btn) 70%, #ffffff);
+}
+
+/* ------------------------------------------------------------------ le rythme */
+section.page--tarifs-illu > .rythme.rythme {
+  position: relative;
+  z-index: 2;
+  padding: 5px;
+  border: 1.5px solid color-mix(in srgb, var(--tf-lueur) 55%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tf-lueur) 10%, var(--tf-panneau)), var(--tf-panneau-2));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tf-lueur) 30%, transparent), inset 0 0 14px color-mix(in srgb, var(--tf-lueur) 10%, transparent);
+}
+
+section.page--tarifs-illu > .rythme button {
+  padding: 10px 26px;
+  border: 1.5px solid transparent;
+  color: color-mix(in srgb, var(--tf-texte) 88%, transparent);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+section.page--tarifs-illu > .rythme button.actif {
+  border-color: color-mix(in srgb, var(--tf-lueur) 70%, #ffffff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tf-lueur) 55%, #2a5cf0) 0%, #1d47c9 100%);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--tf-lueur) 60%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+:root[data-da='blue-sky'][data-saison] section.page--tarifs-illu > .rythme button.actif {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 70%, #ffffff) 0%, var(--corail-btn) 100%);
+}
+
+/* Black Friday : le texte noir sur l'or, comme les autres boutons pleins de ce mode. */
+:root[data-da='blue-sky'][data-saison='black-friday'] section.page--tarifs-illu > .rythme button.actif { color: #141414; }
+
+section.page--tarifs-illu .rythme .rythme__gain {
+  padding: 3px 11px;
+  border: 1px solid rgba(126, 240, 168, 0.45);
+  background: rgba(32, 150, 84, 0.28);
+  color: #86f2ae;
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ le décor de la page */
+section.page--tarifs-illu .tarifs { position: relative; }
+
+section.page--tarifs-illu .tarifs::before {
+  content: '';
+  position: absolute;
+  inset: -104px 0 -46px;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    url('../assets/tarifs/cerisier.webp') left -6px top 0 / 210px auto no-repeat,
+    url('../assets/tarifs/fuji-sommet.webp') right 84px top 30px / 190px auto no-repeat,
+    radial-gradient(circle at calc(100% - 52px) 52px, rgba(226, 236, 255, 0.85) 0 24px, rgba(170, 200, 255, 0.2) 25px, transparent 48px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.4' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom 0 / 190px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.4' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right -10px bottom 0 / 190px auto no-repeat;
+}
+
+/* ------------------------------------------------------------------ les cartes */
+section.page--tarifs-illu .tarifs > .tarif.tarif {
+  --encre: var(--tf-texte);
+  --encre-douce: var(--tf-doux);
+  --trait: color-mix(in srgb, var(--tf-lueur) 35%, transparent);
+
+  z-index: 1;
+  padding: 26px 20px 20px;
+  border: 1.5px solid color-mix(in srgb, var(--tf-lueur) 62%, transparent);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 0%, color-mix(in srgb, var(--tf-lueur) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--tf-panneau) 0%, var(--tf-panneau-2) 100%);
+  color: var(--tf-texte);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tf-lueur) 16%, transparent),
+    0 0 22px color-mix(in srgb, var(--tf-lueur) 26%, transparent),
+    0 20px 50px rgba(0, 0, 0, 0.35),
+    inset 0 0 30px color-mix(in srgb, var(--tf-lueur) 8%, transparent);
+  transform: none;
+}
+
+section.page--tarifs-illu .tarifs > .tarif.tarif:not(.tarif--choisie):is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--tf-lueur) 85%, #ffffff);
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 0%, color-mix(in srgb, var(--tf-lueur) 20%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--tf-panneau) 0%, var(--tf-panneau-2) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tf-lueur) 28%, transparent),
+    0 0 30px color-mix(in srgb, var(--tf-lueur) 40%, transparent),
+    0 20px 50px rgba(0, 0, 0, 0.35);
+  transform: translateY(-3px);
+}
+
+/* LES AUTRES CARTES EN RETRAIT — Camara, le 16/11/2026 : « on voit pas trop l'offre qui est sélectionnée ». Les
+   cartes non choisies sont assombries ; elles se rallument presque entièrement sous la souris ou au clavier.
+   Sauf celle de la formule ACTUELLE : son tampon vert doit rester vif (maquette du 16/11), et un filtre sur la carte
+   grisait son texte blanc sans recours possible. */
+section.page--tarifs-illu .tarifs > .tarif.tarif:not(.tarif--choisie):not(:has(.btn--actuelle)) {
+  filter: brightness(0.8) saturate(0.9);
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s, background 0.18s, filter 0.18s;
+}
+
+section.page--tarifs-illu .tarifs > .tarif.tarif:not(.tarif--choisie):not(:has(.btn--actuelle)):is(:hover, :focus-visible) { filter: brightness(0.97); }
+
+/* La carte choisie : le liseré et le halo passent à l'orange. */
+section.page--tarifs-illu .tarifs > .tarif.tarif.tarif--choisie {
+  padding: 25.5px 19.5px 19.5px;
+  border: 2px solid color-mix(in srgb, var(--tf-chaud) 85%, #ffd2b8);
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 0%, color-mix(in srgb, var(--tf-chaud) 16%, transparent), transparent 70%),
+    linear-gradient(180deg, var(--tf-panneau) 0%, var(--tf-panneau-2) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tf-chaud) 40%, transparent),
+    0 0 28px color-mix(in srgb, var(--tf-chaud) 55%, transparent),
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    inset 0 0 26px color-mix(in srgb, var(--tf-chaud) 14%, transparent);
+  transform: translateY(-4px);
+}
+
+/* Le décor de chaque formule, en haut à droite. */
+section.page--tarifs-illu .tarifs > .tarif::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: var(--tf-decor-l, 150px);
+  height: var(--tf-decor-h, 72px);
+  background: var(--tf-decor, none);
+  filter: var(--tf-decor-filtre, none);
+  pointer-events: none;
+}
+
+section.page--tarifs-illu .tarifs > .tarif--starter {
+  --tf-decor: url('../assets/tarifs/cerisier.webp') right top / contain no-repeat;
+  --tf-decor-l: 112px;
+  --tf-decor-h: 56px;
+}
+
+/* Le Fuji : seulement la montagne, le lac est coupé par la hauteur du décor. */
+section.page--tarifs-illu .tarifs > .tarif--solo {
+  --tf-decor: url('../assets/tarifs/fuji-sommet.webp') right top 10px / 150px auto no-repeat;
+  --tf-decor-l: 150px;
+  --tf-decor-h: 56px;
+}
+
+section.page--tarifs-illu .tarifs > .tarif--duo {
+  --tf-decor: url('../assets/controles-illustre/torii-cerisiers.webp') right top / contain no-repeat;
+  --tf-decor-l: 170px;
+  --tf-decor-h: 66px;
+}
+
+/* La maison à lanterne, dessinée ; un rameau de cerisier devant. */
+section.page--tarifs-illu .tarifs > .tarif--famille {
+  --tf-decor:
+    url('../assets/tarifs/cerisier.webp') left 0 top 0 / 56px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 70'%3E%3Crect x='38' y='18' width='26' height='11' rx='1' fill='%23ffb860'/%3E%3Cpath d='M51 18v11' stroke='%23633011' stroke-width='1.2'/%3E%3Cpath d='M24 20Q51 4 78 20L73 23Q51 12 29 23Z' fill='%23182a62' stroke='%238fa6ec' stroke-width='1.1'/%3E%3Crect x='22' y='36' width='58' height='30' fill='%23ffa54a'/%3E%3Cpath d='M41 36v30M61 36v30' stroke='%23633011' stroke-width='2'/%3E%3Cpath d='M31 36v30M51 36v30M71 36v30M22 51h58' stroke='%23b8641f' stroke-width='.9'/%3E%3Cpath d='M6 37Q51 14 96 37L88 41Q51 23 14 41Z' fill='%231f3678' stroke='%238fa6ec' stroke-width='1.1'/%3E%3Cpath d='M15 41v4' stroke='%238fa6ec'/%3E%3Crect x='10.5' y='45' width='9' height='12' rx='3.5' fill='%23ffb347' stroke='%23c4560f' stroke-width='.8'/%3E%3C/svg%3E") right top / auto 100% no-repeat;
+  --tf-decor-l: 116px;
+  --tf-decor-h: 56px;
+  --tf-decor-filtre: drop-shadow(0 0 10px rgba(255, 170, 80, 0.35));
+}
+
+/* Le contenu passe devant le décor. */
+section.page--tarifs-illu .tarif > :not(.tarif__ruban) { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------------------ le nom, la mention, le prix */
+section.page--tarifs-illu .tarif .tarif__nom.tarif__nom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 8, 30, 0.5);
+}
+
+section.page--tarifs-illu .tarif .tarif__nom .tarif__mention.tarif__mention {
+  padding: 4px 11px;
+  border: 1.5px solid rgba(255, 196, 176, 0.75);
+  background: linear-gradient(180deg, #f2603f 0%, #c92f26 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(80, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgba(242, 96, 63, 0.45);
+}
+
+:root[data-da='blue-sky'][data-saison] section.page--tarifs-illu .tarif .tarif__nom .tarif__mention.tarif__mention {
+  border-color: color-mix(in srgb, var(--corail-btn) 40%, #ffffff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 75%, #ffffff) 0%, var(--corail-btn) 100%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--corail-btn) 50%, transparent);
+}
+
+section.page--tarifs-illu .tarif .tarif__accroche { margin: 14px 0 16px; font-size: 14px; line-height: 1.5; color: var(--tf-doux); }
+
+section.page--tarifs-illu .tarif .tarif__prix { flex-wrap: wrap; gap: 4px 8px; }
+
+section.page--tarifs-illu .tarif .tarif__prix strong {
+  font-family: var(--display);
+  font-size: clamp(30px, 2.7vw, 36px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--tf-lueur) 35%, transparent);
+}
+
+section.page--tarifs-illu .tarif .tarif__prix span { font-size: 14px; color: var(--tf-doux); }
+section.page--tarifs-illu .tarif .tarif__unitaire { margin-top: 7px; font-size: 13px; color: var(--tf-doux); }
+
+/* ------------------------------------------------------------------ la liste */
+section.page--tarifs-illu .tarif .tarif__details { gap: 10px; margin-top: 18px; }
+
+section.page--tarifs-illu .tarif .tarif__details li { padding-left: 24px; font-size: 13.5px; line-height: 1.45; color: var(--tf-texte); }
+
+section.page--tarifs-illu .tarif .tarif__details li::before {
+  top: -1px;
+  color: var(--tf-vert);
+  font-size: 15px;
+  font-weight: 800;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--tf-vert) 45%, transparent);
+}
+
+section.page--tarifs-illu .tarif .tarif__detail--promo strong { color: var(--tf-orange); font-weight: 800; }
+section.page--tarifs-illu .tarif .tarif__detail--promo { gap: 2px; }
+section.page--tarifs-illu .tarif .tarif__total { color: #fff; font-weight: 800; }
+section.page--tarifs-illu .tarif .tarif__details li .tarif__au-lieu { color: var(--tf-doux); font-size: 12.5px; }
+section.page--tarifs-illu .tarif .tarif__plus { font-size: 13px; color: var(--tf-doux); }
+
+/* « Tous les avantages de …, plus : » dans son cadre de verre. */
+section.page--tarifs-illu .tarif .tarif__heritage {
+  gap: 10px;
+  margin: 18px 0 2px;
+  padding: 11px 13px;
+  border: 1.5px solid color-mix(in srgb, var(--tf-lueur) 38%, transparent);
+  border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tf-lueur) 12%, transparent), color-mix(in srgb, var(--tf-lueur) 4%, transparent));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+section.page--tarifs-illu .tarif .tarif__heritage-coche { color: var(--tf-vert); font-size: 15px; font-weight: 800; }
+
+/* ------------------------------------------------------------------ le filet orné et le prix annuel */
+section.page--tarifs-illu .tarif .tarif__annuel {
+  margin: 20px 0 16px;
+  padding-top: 24px;
+  border-top: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 16'%3E%3Cg fill='none' stroke='%23a9c8ff' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M15 9a3.5 3.5 0 1 1 3.5 3.5c-2 0-3-1.5-3-3M29 9a3.5 3.5 0 1 0-3.5 3.5c2 0 3-1.5 3-3M18.5 12.5Q22 12 22 7.5Q22 12 25.5 12.5M3 9h9M32 9h9'/%3E%3C/g%3E%3C/svg%3E") center top / 44px 16px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--tf-lueur) 60%, transparent)) left 8px / calc(50% - 22px) 1.5px no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--tf-lueur) 60%, transparent), transparent) right 8px / calc(50% - 22px) 1.5px no-repeat;
+  color: var(--tf-doux);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+section.page--tarifs-illu .tarifs > .tarif--choisie .tarif__annuel {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='%23ffd3de' stroke='%23ff8fab' stroke-width='.6'%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(72 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(144 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(216 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(288 10 10)'/%3E%3C/g%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ff6f91'/%3E%3C/svg%3E") center top -2px / 20px 20px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--tf-chaud) 85%, #ffffff)) left 8px / calc(50% - 18px) 1.5px no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--tf-chaud) 85%, #ffffff), transparent) right 8px / calc(50% - 18px) 1.5px no-repeat;
+}
+
+/* ------------------------------------------------------------------ les boutons */
+section.page--tarifs-illu .tarif .btn.btn {
+  gap: 7px;
+  min-height: 46px;
+  margin-top: 0;
+  padding: 8px 10px;
+  border-width: 2px;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Le chevron des boutons d'action. */
+section.page--tarifs-illu .tarif .btn.btn:not(.btn--actuelle)::after {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-left: 2px;
+  border-top: 2.5px solid currentColor;
+  border-right: 2.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* Les vagues, en bas à gauche de chaque bouton. */
+section.page--tarifs-illu .tarif .btn.btn--fantome,
+section.page--tarifs-illu .tarif .btn.btn--fantome:hover:not(:disabled) {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.34' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M20 15a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E") left 6px bottom -1px / 84px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-teinte) 70%, #9cc2ff) 0%, var(--btn-teinte) 58%, color-mix(in srgb, var(--btn-teinte) 78%, #0a1a50) 100%);
+}
+
+section.page--tarifs-illu .tarif .btn.btn--fantome:hover:not(:disabled) {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.4' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M20 15a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E") left 6px bottom -1px / 84px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-teinte) 60%, #b4d0ff) 0%, color-mix(in srgb, var(--btn-teinte) 90%, #ffffff) 58%, var(--btn-teinte) 100%);
+}
+
+/* Le bouton de la carte choisie : orange, une fleur de cerisier devant le texte. */
+section.page--tarifs-illu .tarif .btn.btn--principal,
+section.page--tarifs-illu .tarif .btn.btn--principal:hover:not(:disabled) {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.3' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M20 15a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E") left 6px bottom -1px / 84px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-plein) 62%, #ffc56e) 0%, var(--btn-plein) 58%, color-mix(in srgb, var(--btn-plein) 82%, #7a1504) 100%);
+}
+
+section.page--tarifs-illu .tarif .btn.btn--principal::before {
+  content: '';
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-right: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='%23ffffff' fill-opacity='.92'%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(72 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(144 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(216 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(288 10 10)'/%3E%3C/g%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ff8a5c'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* « VOTRE FORMULE ACTUELLE » — maquette de Camara, 16/11/2026 : une pilule sombre teintée de vert, un liseré menthe
+   lumineux et son halo, le texte en BLANC gras derrière une coche verte, des vagues vertes dans les deux coins du bas.
+   La teinte reste `--sarcelle` : elle suit la saison comme avant. */
+section.page--tarifs-illu .tarif .btn.btn--actuelle.btn--actuelle {
+  /* La même pilule que les autres boutons : la règle commune des pilules exclut `--actuelle`. */
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--sarcelle) 70%, #ffffff);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%2386efac' stroke-opacity='.32' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M20 15a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E") left 12px bottom -1px / 62px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%2386efac' stroke-opacity='.32' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M20 15a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E") right 12px bottom -1px / 62px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--sarcelle) 26%, #0b2230) 0%, color-mix(in srgb, var(--sarcelle) 14%, #071a26) 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 20, 20, 0.5);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--sarcelle) 35%, transparent),
+    0 0 16px color-mix(in srgb, var(--sarcelle) 60%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--sarcelle) 22%, transparent);
+}
+
+section.page--tarifs-illu .tarif .btn.btn--actuelle.btn--actuelle::before {
+  margin-right: 6px;
+  color: color-mix(in srgb, var(--sarcelle) 85%, #ffffff);
+  font-size: 1.3em;
+  font-weight: 900;
+  text-shadow: 0 0 8px color-mix(in srgb, var(--sarcelle) 60%, transparent);
+}
+
+/* ------------------------------------------------------------------ les rubans */
+section.page--tarifs-illu .tarif .tarif__ruban.tarif__ruban.tarif__ruban {
+  top: -17px;
+  left: 18px;
+  z-index: 2;
+  padding: 5px 27px 6px;
+  border: 1.5px solid rgba(255, 214, 176, 0.85);
+  border-radius: 8px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E") left 8px center / 12px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg transform='translate(14 0) scale(-1 1)' fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E") right 8px center / 12px auto no-repeat,
+    linear-gradient(180deg, #ff9455 0%, #e8481f 100%);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(90, 20, 0, 0.45);
+  box-shadow: 0 0 14px rgba(255, 110, 50, 0.6), 0 4px 10px rgba(0, 0, 0, 0.35);
+  transform: rotate(-3deg);
+}
+
+section.page--tarifs-illu .tarif .tarif__ruban.tarif__ruban--recommande.tarif__ruban {
+  border-color: rgba(186, 214, 255, 0.85);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E") left 8px center / 12px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg transform='translate(14 0) scale(-1 1)' fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E") right 8px center / 12px auto no-repeat,
+    linear-gradient(180deg, #4c8dff 0%, #1c4fd0 100%);
+  text-shadow: 0 1px 2px rgba(0, 20, 80, 0.45);
+  box-shadow: 0 0 14px rgba(76, 141, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* La couronne au-dessus de « Le plus choisi ». */
+section.page--tarifs-illu .tarifs > .tarif--vedette::before {
+  content: '';
+  position: absolute;
+  top: -32px;
+  left: 12px;
+  z-index: 3;
+  width: 24px;
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M2 6l5 4 5-8 5 8 5-4-2 12H4Z' fill='%23ffd34d' stroke='%23c47f00' stroke-width='1.3' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  transform: rotate(-14deg);
+  filter: drop-shadow(0 0 6px rgba(255, 200, 60, 0.6));
+  pointer-events: none;
+}
+
+/* En mode saisonnier, « Le plus choisi » prend la couleur des boutons de la saison. */
+:root[data-da='blue-sky'][data-saison] section.page--tarifs-illu .tarif .tarif__ruban.tarif__ruban:not(.tarif__ruban--recommande) {
+  border-color: color-mix(in srgb, var(--corail-btn) 40%, #ffffff);
+  background-color: var(--corail-btn);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg transform='translate(14 0) scale(-1 1)' fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 72%, #ffffff) 0%, var(--corail-btn) 55%, color-mix(in srgb, var(--corail-btn) 78%, #000000) 100%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--corail-btn) 60%, transparent), 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* Black Friday : l'or foncé et le texte blanc voulus le 15/11 ; Soldes d'hiver : le bleu glacier à texte marine. */
+:root[data-da='blue-sky'][data-saison='black-friday'] section.page--tarifs-illu .tarif .tarif__ruban.tarif__ruban:not(.tarif__ruban--recommande) {
+  background-color: #b08000;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 24'%3E%3Cg transform='translate(14 0) scale(-1 1)' fill='%23ffffff' fill-opacity='.9'%3E%3Cpath d='M11 23C5 19 3 12 6 2' fill='none' stroke='%23ffffff' stroke-width='1.2'/%3E%3Cellipse cx='5' cy='18' rx='1.8' ry='3.4' transform='rotate(-40 5 18)'/%3E%3Cellipse cx='3.6' cy='12' rx='1.7' ry='3.2' transform='rotate(-15 3.6 12)'/%3E%3Cellipse cx='4.4' cy='6.5' rx='1.6' ry='3' transform='rotate(10 4.4 6.5)'/%3E%3Cellipse cx='9' cy='14' rx='1.5' ry='2.8' transform='rotate(35 9 14)'/%3E%3Cellipse cx='8.6' cy='8' rx='1.4' ry='2.6' transform='rotate(40 8.6 8)'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(180deg, #c99400 0%, #9a6c00 100%);
+  border-color: rgba(255, 214, 102, 0.75);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(60, 35, 0, 0.7);
+}
+
+:root[data-da='blue-sky'][data-saison='soldes-hiver'] section.page--tarifs-illu .tarif .tarif__ruban.tarif__ruban:not(.tarif__ruban--recommande) {
+  background-color: var(--corail);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--corail) 70%, #ffffff), var(--corail));
+  color: #0a2350;
+  text-shadow: none;
+}
+
+/* Les lauriers des rubans saisonniers : à leur place. */
+:root[data-da='blue-sky'][data-saison] section.page--tarifs-illu .tarif .tarif__ruban.tarif__ruban:not(.tarif__ruban--recommande) {
+  background-position: left 8px center, right 8px center, 0 0;
+  background-size: 12px auto, 12px auto, auto;
+  background-repeat: no-repeat;
+}
+
+/* ------------------------------------------------------------------ téléphone */
+@media (max-width: 760px) {
+  /* Sur téléphone, le cerisier, le Fuji et la lune tomberaient sur le rythme : seules les vagues restent. */
+  section.page--tarifs-illu .tarifs::before {
+    inset: 0 0 -40px;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.4' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom 0 / 120px auto no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.4' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right -10px bottom 0 / 120px auto no-repeat;
+  }
+
+  section.page--tarifs-illu > .rythme button { padding: 9px 16px; font-size: 15px; }
+  section.page--tarifs-illu .tarif .tarif__nom.tarif__nom { font-size: 28px; }
+  section.page--tarifs-illu .tarifs > .tarif.tarif { padding: 24px 18px 18px; }
+  section.page--tarifs-illu .tarifs > .tarif.tarif.tarif--choisie { padding: 23.5px 17.5px 17.5px; }
+}

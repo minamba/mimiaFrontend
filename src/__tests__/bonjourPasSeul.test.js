@@ -37,6 +37,25 @@ describe('un groupe de moins de cinq mots attend la suite', () => {
     expect(envois).toEqual([]);
   });
 
+  test('la consigne de lecture a son propre passage, derrière un bravo de cinq mots ou plus (08/11/2026)', () => {
+    lecteur.alimenter('Bravo Zakariya, comme dans ballon, tu as trouvé ! ');
+    lecteur.alimenter('Voici une autre image : lis à voix haute la syllabe en couleur. ');
+    jest.advanceTimersByTime(5000);
+
+    expect(envois).toEqual([
+      'Bravo Zakariya, comme dans ballon, tu as trouvé !',
+      'Voici une autre image : lis à voix haute la syllabe en couleur.',
+    ]);
+  });
+
+  test('derrière un bravo de moins de cinq mots, elle part avec lui (08/11/2026)', () => {
+    lecteur.alimenter('Bravo Zakariya ! ');
+    lecteur.alimenter('Voici une autre image : lis à voix haute la syllabe en couleur. ');
+    jest.advanceTimersByTime(5000);
+
+    expect(envois).toEqual(['Bravo Zakariya ! Voici une autre image : lis à voix haute la syllabe en couleur.']);
+  });
+
   test('il part avec la phrase suivante, en un seul envoi', () => {
     lecteur.alimenter('Salut Mins ! ');
     jest.advanceTimersByTime(2500);

@@ -1,0 +1,1 @@
+hospital : retirer la grosse frange blanche sous les personnages et devant le batiment, garder le reste de la scene.

@@ -1,4 +1,5 @@
 import { cleSchema, schemaDeLaBibliotheque } from './schemas';
+import { estUneFigure, svgDeFigure } from '../figureGeo';
 
 /**
  * Le schéma que le professeur trace au tableau.
@@ -76,11 +77,15 @@ const CADRE_DEFAUT = '0 0 400 300';
  */
 export function estUnSchema(contenu) {
   if (typeof contenu !== 'string') return false;
-  return contenu.trimStart().startsWith('<svg') || cleSchema(contenu) !== null;
+  return contenu.trimStart().startsWith('<svg') || cleSchema(contenu) !== null || estUneFigure(contenu);
 }
 
-/** Le SVG à rendre : celui de la bibliothèque, ou celui qu'on a reçu. */
+/**
+ * Le SVG à rendre : celui de la bibliothèque, celui que l'écran construit d'une figure de géométrie (11/11/2026, voir
+ * `figureGeo.js`), ou celui qu'on a reçu. Les trois passent ensuite par le même assainissement.
+ */
 export function svgDuContenu(contenu) {
+  if (estUneFigure(contenu)) return svgDeFigure(contenu);
   const cle = cleSchema(contenu);
   return cle ? schemaDeLaBibliotheque(cle) : contenu;
 }

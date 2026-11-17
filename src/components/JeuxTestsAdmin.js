@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import banniere from '../assets/banban.webp';
 import {
@@ -6,6 +6,7 @@ import {
   ajouterTestAuJeu,
   changerStatutLigneDeTest,
   creerJeuTest,
+  deplacerLigneDeTest,
   getJeuTest,
   getJeuxTests,
   modifierJeuTest,
@@ -18,12 +19,13 @@ import {
 import { getMatieres, getNiveaux } from '../lib/api/referentielApi';
 import { murMatiere, styleMatiere } from '../lib/couleurMatiere';
 import {
-  dateLisible, jourLisible, libelleSection, libelleStatut, lignesDuTest,
-  SECTIONS, STATUTS_JEU, STATUTS_LIGNE,
+  dateLisible, jourLisible, libelleSection, libelleStatut, lignesDuTest, positionApresDeplacement,
+  SECTIONS, STATUTS_JEU, STATUTS_LIGNE, compteParStatut, regrouperParMatiere,
 } from '../lib/jeuxTests';
 import { grouperClasses } from '../lib/niveauxScolaires';
 import { exporterJeuTestEnPdf } from './JeuTestPdf';
 import './jeuxTestsAdmin.css';
+import { Corbeille, Crayon, Deplacer, Oeil } from './IconesActions';
 
 /**
  * L'ONGLET « JEUX DE TESTS » — Camara, le 04/11/2026 : des carnets de test par section et
@@ -44,34 +46,6 @@ const motifDe = (e, repli) => e?.response?.data?.message ?? repli;
 
 /** Ce que `styleMatiere` et `murMatiere` savent lire : le code d'abord, le libellé en repli. */
 const matiereDuTest = (test) => ({ matiereCode: test.matiereCode, matiereLibelle: test.matiere });
-
-/* Les trois mêmes dessins que le carnet d'idées : « pour aperçu l'icône d'œil, pour
-   modifier un crayon, pour supprimer une corbeille ». */
-const Oeil = () => (
-  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M1.5 12S5 5.5 12 5.5 22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12z" />
-    <circle cx="12" cy="12" r="3.2" />
-  </svg>
-);
-
-const Crayon = () => (
-  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M16.5 3.5a2.1 2.1 0 013 3L7.5 18.5l-4 1 1-4z" />
-    <path d="M14.5 5.5l4 4" />
-  </svg>
-);
-
-const Corbeille = () => (
-  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M4 7h16" />
-    <path d="M9 7V4.8A.8.8 0 019.8 4h4.4a.8.8 0 01.8.8V7" />
-    <path d="M6.5 7l.8 12.2a1 1 0 001 .8h7.4a1 1 0 001-.8L17.5 7" />
-    <path d="M10 11v6M14 11v6" />
-  </svg>
-);
 
 const IconeExport = () => (
   <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none"
@@ -116,6 +90,80 @@ function BoutonCrayon({ libelle, onClick }) {
     <button type="button" className="idee-action idee-action--modifier" title="Modifier" aria-label={libelle} onClick={onClick}>
       <Crayon />
     </button>
+  );
+}
+
+/** « Déplacer » : un clic prend la ligne, un second clic y renonce. */
+function BoutonDeplacer({ libelle, actif, onClick }) {
+  return (
+    <button
+      type="button"
+      className="idee-action jeux-tests__action-deplacer"
+      title={actif ? 'Annuler le déplacement' : 'Déplacer'}
+      aria-label={libelle}
+      aria-pressed={actif}
+      onClick={onClick}
+    >
+      <Deplacer />
+    </button>
+  );
+}
+
+/**
+ * UN ENDROIT OÙ POSER LA LIGNE PRISE, entre deux lignes de son test. Rien juste au-dessus et juste en-dessous d'elle :
+ * elle y est déjà. Au clic et non au glisser : ça marche pareil au doigt, et sur un long tableau.
+ */
+function Emplacement({
+  depart, rang, occupe, onPlacer,
+}) {
+  if (depart < 0 || rang === depart || rang === depart + 1) return null;
+
+  return (
+    <tr className="jeux-tests__emplacement">
+      <td colSpan={6}>
+        <button
+          type="button"
+          className="jeux-tests__placer"
+          disabled={occupe}
+          onClick={() => onPlacer(positionApresDeplacement(depart, rang))}
+        >
+          Placer ici
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+/**
+ * UN LONG COMMENTAIRE NE DÉFORME PLUS LE TABLEAU — Camara, le 08/11/2026 : une colonne étroite et une ligne haute d'un
+ * écran. Cinq lignes au plus ; « Lire tout » ouvre l'aperçu, seulement si le texte est vraiment coupé à cette largeur.
+ */
+function CommentaireCourt({ texte, libelle, onLire }) {
+  const zone = useRef(null);
+  const [coupe, setCoupe] = useState(false);
+
+  useEffect(() => {
+    const element = zone.current;
+    if (!element) return undefined;
+
+    const mesurer = () => setCoupe(element.scrollHeight > element.clientHeight + 1);
+    mesurer();
+
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(element);
+    return () => observateur.disconnect();
+  }, [texte]);
+
+  return (
+    <>
+      <div ref={zone} className="jeux-tests__commentaire">{texte}</div>
+      {coupe && (
+        <button type="button" className="jeux-tests__lire-tout" aria-label={libelle} onClick={onLire}>
+          Lire tout
+        </button>
+      )}
+    </>
   );
 }
 
@@ -431,11 +479,13 @@ function FormulaireTest({
   );
 }
 
-/** Tous les champs d'une ligne, dont la date du test effectué au calendrier. */
+/**
+ * Les champs d'une ligne. PAS DE DATE ICI — Camara, le 08/11/2026 : le serveur pose le jour et l'heure dès qu'un élément
+ * change.
+ */
 function FenetreLigne({ ligne, onEnvoyer, onFermer }) {
   const [competence, setCompetence] = useState(ligne.competence ?? '');
   const [statut, setStatut] = useState(ligne.statut);
-  const [dateEffectuee, setDateEffectuee] = useState(ligne.dateEffectuee?.slice(0, 10) ?? '');
   const [commentaire, setCommentaire] = useState(ligne.commentaire ?? '');
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -448,7 +498,6 @@ function FenetreLigne({ ligne, onEnvoyer, onFermer }) {
       await onEnvoyer({
         competence: competence.trim(),
         statut,
-        dateEffectuee: dateEffectuee || null,
         commentaire: commentaire.trim() || null,
       });
     } catch (e) {
@@ -485,16 +534,6 @@ function FenetreLigne({ ligne, onEnvoyer, onFermer }) {
           </div>
 
           <p className="jeux-tests__mention">Créé le {dateLisible(ligne.dateCreation)}</p>
-
-          <div className="champ">
-            <label htmlFor="ligne-date">Date du test effectué</label>
-            <input
-              id="ligne-date"
-              type="date"
-              value={dateEffectuee}
-              onChange={(e) => setDateEffectuee(e.target.value)}
-            />
-          </div>
 
           <div className="champ">
             <label htmlFor="ligne-commentaire">Commentaire</label>
@@ -593,6 +632,15 @@ function FicheJeu({
   const [ligneEditee, setLigneEditee] = useState(null);
   const [ligneVue, setLigneVue] = useState(null);
 
+  // LA LIGNE QU'ON DÉPLACE (08/11/2026) : Échap y renonce.
+  const [ligneDeplacee, setLigneDeplacee] = useState(null);
+  useEffect(() => {
+    if (!ligneDeplacee) return undefined;
+    const surTouche = (e) => { if (e.key === 'Escape') setLigneDeplacee(null); };
+    window.addEventListener('keydown', surTouche);
+    return () => window.removeEventListener('keydown', surTouche);
+  }, [ligneDeplacee]);
+
   // LES BLOCS REPLIÉS — Camara, le 05/11/2026 : « un bouton Déplier / Replier ; replié, on voit
   // juste le titre avec le nombre de lignes du bloc », et « par défaut c'est plié ». On garde donc
   // les blocs DÉPLIÉS : tout le reste est replié. Un bloc où l'on vient d'ajouter quelque chose
@@ -666,6 +714,13 @@ function FicheJeu({
     } finally {
       setOccupe(null);
     }
+  };
+
+  /** La ligne posée reste en évidence un instant : c'est elle qu'on cherche des yeux à sa nouvelle place. */
+  const placer = (ligneId, position) => {
+    setLigneDeplacee(null);
+    setLigneEnEvidence(ligneId);
+    return agir(`deplacer-${ligneId}`, () => deplacerLigneDeTest(jeu.id, ligneId, position), "La ligne n'a pas pu être déplacée.");
   };
 
   const exporter = async () => {
@@ -746,7 +801,14 @@ function FicheJeu({
 
       {jeu.tests.length === 0 && !ajout && <p className="etat-vide">Aucun test dans ce jeu.</p>}
 
-      {jeu.tests.map((test) => (
+      {/* REGROUPÉS PAR MATIÈRE — Camara, le 07/11/2026. Un titre par matière, ses tests dessous. */}
+      {regrouperParMatiere(jeu.tests).map((groupe) => (
+        <div key={groupe.cle} className="jeux-tests__groupe">
+          <h3 className="jeux-tests__groupe-titre" style={styleMatiere({ matiereCode: groupe.matiereCode, matiereLibelle: groupe.matiere })}>
+            {groupe.matiere}
+            <span className="jeux-tests__groupe-compte">{groupe.tests.length} test{groupe.tests.length > 1 ? 's' : ''}</span>
+          </h3>
+      {groupe.tests.map((test) => (
         <section key={test.id} className="jeux-tests__test" style={styleMatiere(matiereDuTest(test))}>
           {testEdite === test.id ? (
             <FormulaireTest
@@ -767,6 +829,19 @@ function FicheJeu({
                 <p className="jeux-tests__test-details">
                   <span className="jeux-tests__test-matiere">{test.matiere}</span>
                   <span className="jeux-tests__test-compte">{lignesDuTest(test.lignes.length)}</span>
+                  {test.lignes.length > 0 && (
+                    <span className="jeux-tests__compte-statuts" aria-label="Lignes par statut">
+                      {compteParStatut(test.lignes).map(({ code, libelle, nombre }) => (
+                        <span
+                          key={code}
+                          className={`jeux-tests__compte-statut jeux-tests__puce--${code}${nombre === 0 ? ' jeux-tests__compte-statut--zero' : ''}`}
+                          title={`${nombre} ${libelleStatut(code)}`}
+                        >
+                          {libelle} <strong>{nombre}</strong>
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </p>
               </div>
               <div className="jeux-tests__actions">
@@ -818,12 +893,22 @@ function FicheJeu({
                 <tbody>
                   {test.lignes.map((ligne, index) => {
                     const nom = ligne.competence || `ligne ${index + 1}`;
+                    const classes = [
+                      ligne.id === ligneEnEvidence && 'jeux-tests__ligne--ciblee',
+                      ligne.id === ligneDeplacee && 'jeux-tests__ligne--deplacee',
+                    ].filter(Boolean).join(' ');
 
                     return (
+                      <Fragment key={ligne.id}>
+                      <Emplacement
+                        depart={test.lignes.findIndex((l) => l.id === ligneDeplacee)}
+                        rang={index}
+                        occupe={occupe !== null}
+                        onPlacer={(position) => placer(ligneDeplacee, position)}
+                      />
                       <tr
-                        key={ligne.id}
                         id={`jeux-tests-ligne-${ligne.id}`}
-                        className={ligne.id === ligneEnEvidence ? 'jeux-tests__ligne--ciblee' : undefined}
+                        className={classes || undefined}
                       >
                         <td className="jeux-tests__cellule-competence">
                           {ligne.competence || <em className="jeux-tests__a-remplir">À renseigner</em>}
@@ -845,10 +930,25 @@ function FicheJeu({
                         </td>
                         <td className="jeux-tests__cellule-date" data-libelle="Créé le">{dateLisible(ligne.dateCreation)}</td>
                         <td className="jeux-tests__cellule-date" data-libelle="Effectué le">{jourLisible(ligne.dateEffectuee)}</td>
-                        <td className="jeux-tests__cellule-commentaire">{ligne.commentaire}</td>
+                        <td className="jeux-tests__cellule-commentaire">
+                          {ligne.commentaire && (
+                            <CommentaireCourt
+                              texte={ligne.commentaire}
+                              libelle={`Lire tout le commentaire de ${nom}`}
+                              onLire={() => setLigneVue(ligne.id)}
+                            />
+                          )}
+                        </td>
                         <td className="jeux-tests__cellule-actions">
                           <div className="jeux-tests__actions">
                             <BoutonOeil libelle={`Aperçu de ${nom}`} onClick={() => setLigneVue(ligne.id)} />
+                            {test.lignes.length > 1 && (
+                              <BoutonDeplacer
+                                libelle={`Déplacer ${nom}`}
+                                actif={ligne.id === ligneDeplacee}
+                                onClick={() => setLigneDeplacee((avant) => (avant === ligne.id ? null : ligne.id))}
+                              />
+                            )}
                             <BoutonCrayon libelle={`Modifier ${nom}`} onClick={() => setLigneEditee(ligne.id)} />
                             <BoutonCorbeille
                               libelle={`Supprimer ${nom}`}
@@ -858,13 +958,22 @@ function FicheJeu({
                           </div>
                         </td>
                       </tr>
+                      </Fragment>
                     );
                   })}
+                  <Emplacement
+                    depart={test.lignes.findIndex((l) => l.id === ligneDeplacee)}
+                    rang={test.lignes.length}
+                    occupe={occupe !== null}
+                    onPlacer={(position) => placer(ligneDeplacee, position)}
+                  />
                 </tbody>
               </table>
             </div>
           )}
         </section>
+      ))}
+        </div>
       ))}
 
       {enApercu && (

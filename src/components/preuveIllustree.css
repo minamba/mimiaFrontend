@@ -1,0 +1,158 @@
+/* ======================================================================================================
+   LA BANDE « UNE VRAIE CONVERSATION · UN TABLEAU · UNE MÉMOIRE · UN VRAI SUIVI » — maquette de Camara,
+   16/11/2026. Une carte de verre bleu nuit au liseré lumineux, quatre colonnes séparées par de fins traits de
+   lumière, les titres en serif blanc soulignés d'un trait bleu, une vague lumineuse en bas.
+
+   Elle reste nuit dans tous les thèmes (comme le bandeau final et les cartes dictée/écoute), donc ses textes
+   sont écrits en clair. Sélecteurs forts : la règle « verre » de Blue Sky et celle du thème clair
+   (`:is(.preuve, .final)`) pèsent 0,4,0. La bande est masquée sous 860 px (App.css) : rien à prévoir pour le
+   téléphone. Aucune animation en boucle.
+   ====================================================================================================== */
+
+:root .landing section.preuve.preuve {
+  position: relative;
+  gap: 0;
+  padding: 30px 8px 44px;
+  border: 1.5px solid rgba(122, 170, 255, 0.6);
+  border-radius: 26px;
+  background-color: #0d1d5c;
+  background-image:
+    radial-gradient(ellipse 5px 3px at 31% 22%, rgba(255, 182, 210, 0.85) 98%, transparent),
+    radial-gradient(ellipse 4px 2.5px at 47% 76%, rgba(255, 182, 210, 0.7) 98%, transparent),
+    radial-gradient(ellipse 5px 3px at 69% 18%, rgba(255, 182, 210, 0.8) 98%, transparent),
+    radial-gradient(ellipse 4px 2.5px at 93% 46%, rgba(255, 182, 210, 0.75) 98%, transparent),
+    radial-gradient(ellipse 4px 2.5px at 12% 34%, rgba(255, 182, 210, 0.75) 98%, transparent),
+    radial-gradient(ellipse 60% 70% at 50% 0%, rgba(70, 120, 255, 0.22), transparent 70%),
+    linear-gradient(180deg, #13277a 0%, #0c1a55 100%);
+  background-size: auto;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 0 0 1px rgba(80, 140, 255, 0.2),
+    0 0 30px rgba(70, 130, 255, 0.35),
+    0 24px 60px rgba(2, 8, 30, 0.45),
+    inset 0 0 40px rgba(90, 150, 255, 0.14);
+  overflow: hidden;
+}
+
+/* Les vagues japonaises (seigaiha), dans les deux coins du bas seulement (les pétales sont sur le fond). */
+:root .landing section.preuve.preuve::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 100%, transparent 0 18%, rgba(140, 180, 255, 0.5) 19% 23%, transparent 24% 38%, rgba(140, 180, 255, 0.5) 39% 43%, transparent 44% 58%, rgba(140, 180, 255, 0.5) 59% 63%, transparent 64%) 0 0 / 44px 22px,
+    radial-gradient(circle at 50% 100%, transparent 0 18%, rgba(140, 180, 255, 0.5) 19% 23%, transparent 24% 38%, rgba(140, 180, 255, 0.5) 39% 43%, transparent 44% 58%, rgba(140, 180, 255, 0.5) 59% 63%, transparent 64%) 22px 11px / 44px 22px;
+  opacity: 0.55;
+  -webkit-mask-image:
+    radial-gradient(ellipse 22% 60% at 0% 100%, #000 30%, transparent 100%),
+    radial-gradient(ellipse 20% 55% at 100% 100%, #000 30%, transparent 100%);
+  mask-image:
+    radial-gradient(ellipse 22% 60% at 0% 100%, #000 30%, transparent 100%),
+    radial-gradient(ellipse 20% 55% at 100% 100%, #000 30%, transparent 100%);
+  pointer-events: none;
+}
+
+/* La vague lumineuse en bas de la bande. */
+:root .landing section.preuve.preuve::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 70px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 70' preserveAspectRatio='none'%3E%3Cpath d='M0 52 C 160 70 300 18 470 40 S 760 66 1000 22' fill='none' stroke='%237fb2ff' stroke-width='2.2' stroke-opacity='0.75'/%3E%3Cpath d='M0 52 C 160 70 300 18 470 40 S 760 66 1000 22 L1000 70 L0 70 Z' fill='%23214aa8' fill-opacity='0.35'/%3E%3C/svg%3E")
+    center bottom / 100% 100% no-repeat;
+  filter: drop-shadow(0 0 6px rgba(110, 160, 255, 0.6));
+  pointer-events: none;
+}
+
+.landing section.preuve .preuve__item {
+  position: relative;
+  z-index: 1;
+  gap: 6px;
+  padding: 0 14px;
+}
+
+/* Les traits de lumière entre deux colonnes. */
+.landing section.preuve .preuve__item + .preuve__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6%;
+  bottom: 4%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(140, 180, 255, 0.45) 30%, rgba(140, 180, 255, 0.45) 70%, transparent);
+}
+
+.landing section.preuve .preuve__icone {
+  width: 118px;
+  height: 118px;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 14px rgba(90, 150, 255, 0.45));
+}
+
+/* Les titres : serif blanc, un trait bleu lumineux dessous. */
+:root .landing section.preuve.preuve .preuve__item strong {
+  position: relative;
+  padding-bottom: 12px;
+  font-family: var(--display);
+  font-size: clamp(18px, 1.75vw, 24px);
+  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 10, 40, 0.5);
+}
+
+.landing section.preuve .preuve__item strong::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 58%;
+  height: 3px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, #6fb0ff 20%, #9fd0ff 50%, #6fb0ff 80%, transparent);
+  box-shadow: 0 0 8px rgba(110, 170, 255, 0.7);
+  transform: translateX(-50%);
+}
+
+:root .landing section.preuve.preuve .preuve__item span:last-child {
+  max-width: 24ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(226, 234, 255, 0.88);
+}
+
+/* ------------------------------------------------------------------ en mode saisonnier
+   Camara, le 16/11/2026 : la bande suit la saison. Fond, liseré et halo en `--illu-*` ; la vague du bas et les
+   traits sous les titres à la couleur de la saison ; les vagues japonaises passent en gris neutre. */
+:root[data-da='blue-sky'][data-saison] .landing section.preuve.preuve {
+  border-color: var(--illu-bord-fort);
+  background-image: linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 30px var(--illu-lueur), 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.preuve.preuve::before { filter: grayscale(1); opacity: 0.35; }
+
+:root[data-da='blue-sky'][data-saison] .landing section.preuve.preuve::after {
+  background: var(--illu-bord-fort);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 70' preserveAspectRatio='none'%3E%3Cpath d='M0 52 C 160 70 300 18 470 40 S 760 66 1000 22' fill='none' stroke='%23000' stroke-width='2.2'/%3E%3Cpath d='M0 52 C 160 70 300 18 470 40 S 760 66 1000 22 L1000 70 L0 70 Z' fill='%23000' fill-opacity='0.25'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 70' preserveAspectRatio='none'%3E%3Cpath d='M0 52 C 160 70 300 18 470 40 S 760 66 1000 22' fill='none' stroke='%23000' stroke-width='2.2'/%3E%3Cpath d='M0 52 C 160 70 300 18 470 40 S 760 66 1000 22 L1000 70 L0 70 Z' fill='%23000' fill-opacity='0.25'/%3E%3C/svg%3E") center bottom / 100% 100% no-repeat;
+  filter: drop-shadow(0 0 6px var(--illu-lueur));
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.preuve .preuve__item + .preuve__item::before {
+  background: linear-gradient(180deg, transparent, var(--illu-bord) 30%, var(--illu-bord) 70%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.preuve .preuve__icone { filter: drop-shadow(0 0 14px var(--illu-lueur)); }
+
+:root[data-da='blue-sky'][data-saison] .landing section.preuve .preuve__item strong::after {
+  background: linear-gradient(90deg, transparent, var(--illu-accent) 20%, color-mix(in srgb, var(--illu-accent) 60%, #fff) 50%, var(--illu-accent) 80%, transparent);
+  box-shadow: 0 0 8px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.preuve.preuve .preuve__item span:last-child { color: var(--illu-texte-doux); }

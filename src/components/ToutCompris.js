@@ -24,7 +24,8 @@ const BRIQUES = [
   { icone: '🎧', libelle: 'Dictées et oral' },
   { icone: '✅', libelle: 'Contrôles' },
   { icone: '🎓', libelle: 'Examens' },
-  { icone: '🧭', libelle: 'Orientation', orientation: true },
+  // « dès Solo » (14/11/2026) : le prix au-dessus est celui de Starter, qui n'a pas la conseillère.
+  { icone: '🧭', libelle: 'Orientation (dès Solo)', orientation: true },
   { icone: '📊', libelle: 'Suivi parent' },
 ];
 

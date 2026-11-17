@@ -4,6 +4,10 @@ import casquePng from '../assets/casque.webp';
 import enceintePng from '../assets/enceinte.webp';
 import { estIOS } from '../lib/storage/appareil';
 import useAccesForfait from '../lib/hooks/useAccesForfait';
+// LA FENÊTRE DE LA DURÉE, D'APRÈS LA MAQUETTE DE CAMARA (16/11/2026) : cartes néon, horloge, cerisiers.
+import './dureeIllustre.css';
+// LA FENÊTRE DU CASQUE, D'APRÈS SA MAQUETTE (16/11/2026) : la même famille, deux grandes cartes lumineuses.
+import './casqueIllustre.css';
 
 /*
  * AVANT D'ENTRER EN SÉANCE : LA DURÉE, PUIS LE CASQUE.
@@ -48,6 +52,8 @@ function CadranDuree({ minutes }) {
       {/* Boîtier : le cercle extérieur et les repères des quarts d'heure. */}
       <circle className="duree__boitier" cx="24" cy="24" r="19" />
       <path className="duree__repere" d="M24 3.5 v3 M44.5 24 h-3 M24 44.5 v-3 M3.5 24 h3" />
+      {/* Les huit repères intermédiaires : une vraie horloge (16/11/2026). */}
+      <path className="duree__repere duree__repere--fin" d={REPERES_FINS} />
 
       {/* Secteur écoulé : c'est lui qui porte la couleur pleine. */}
       <path className="duree__secteur" d={`M24 24 L24 ${24 - R} A${R} ${R} 0 ${grandArc} 1 ${x} ${y} Z`} />
@@ -58,6 +64,13 @@ function CadranDuree({ minutes }) {
     </svg>
   );
 }
+
+/** Les repères des heures autres que 12, 3, 6 et 9 : de petits traits sur le bord du boîtier. */
+const REPERES_FINS = [1, 2, 4, 5, 7, 8, 10, 11].map((h) => {
+  const a = (h / 12) * 2 * Math.PI;
+  const p = (r) => `${(24 + r * Math.sin(a)).toFixed(2)} ${(24 - r * Math.cos(a)).toFixed(2)}`;
+  return `M${p(19.5)} L${p(17.5)}`;
+}).join(' ');
 
 /* ------------------------------------------ séances de test, administration
    Séances courtes servant à vérifier le comportement de FIN : la conclusion,
@@ -118,8 +131,13 @@ const DUREES_TEST = [
  */
 export function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
   return (
-    <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-casque">
+    <div className="modale casque-illu" role="dialog" aria-modal="true" aria-labelledby="titre-casque">
       <div className="modale__boite modale__boite--casque">
+        {/* LE DÉCOR DE LA MAQUETTE (16/11/2026) : purement décoratif, masqué aux lecteurs d'écran. */}
+        <span className="casque-illu__petales" aria-hidden="true" />
+        <span className="casque-illu__branche" aria-hidden="true">🌸🌸🌸</span>
+        <span className="casque-illu__maison" aria-hidden="true">🏯</span>
+
         <h2 id="titre-casque">Tu as un casque ou des écouteurs ?</h2>
 
         <p className="modale__texte">
@@ -170,29 +188,37 @@ export function ChoixCasque({ matiere, onRepondre, onAnnuler }) {
             className="casque-option casque-option--oui"
             onClick={() => onRepondre(true)}
           >
+            <span className="casque-option__fleurs" aria-hidden="true">🌸</span>
             <span className="casque-option__icone" aria-hidden="true">
               <img src={casquePng} alt="" />
+              <span className="casque-option__etincelles" />
             </span>
             <span className="casque-option__titre">Oui, j’ai un casque</span>
             <span className="casque-option__detail">
               Je peux interrompre le prof en parlant
             </span>
+            <span className="casque-option__vagues" aria-hidden="true" />
           </button>
 
           <button
             type="button"
-            className="casque-option"
+            className="casque-option casque-option--non"
             onClick={() => onRepondre(false)}
           >
+            <span className="casque-option__fleurs" aria-hidden="true">🌸</span>
             <span className="casque-option__icone" aria-hidden="true">
               <img src={enceintePng} alt="" />
+              <span className="casque-option__ondes" />
             </span>
             <span className="casque-option__titre">Non, haut-parleur</span>
             <span className="casque-option__detail">
               J’attends que le prof ait fini pour parler
             </span>
+            <span className="casque-option__vagues" aria-hidden="true" />
           </button>
         </div>
+
+        <span className="casque-illu__filet" aria-hidden="true" />
 
         <div className="modale__actions">
           <button type="button" className="btn-ghost" onClick={onAnnuler}>
@@ -219,8 +245,11 @@ export function ChoixDuree({
   matiere, onValider, onAnnuler, estAdmin, calme = false, essai = false,
 }) {
   return (
-    <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-duree">
+    <div className="modale duree-illu" role="dialog" aria-modal="true" aria-labelledby="titre-duree">
       <div className="modale__boite modale__boite--duree">
+        {/* Décor seulement : la branche de cerisier, les pétales, la traînée de lumière. */}
+        <span className="duree-illu__branche" aria-hidden="true">🌸🌸🌸</span>
+        <span className="duree-illu__petales" aria-hidden="true" />
         <h2 id="titre-duree">Combien de temps aujourd'hui ?</h2>
 
         <p className="modale__texte">
@@ -248,8 +277,10 @@ export function ChoixDuree({
                 {duree.minutes}
                 <span className="duree__unite">min</span>
               </span>
+              <span className="duree__sep" aria-hidden="true">✦</span>
               <span className="duree__libelle">{duree.libelle}</span>
               <span className="duree__detail">{duree.detail}</span>
+              <span className="duree__fleur" aria-hidden="true">🌸</span>
             </button>
           ))}
         </div>
@@ -257,6 +288,14 @@ export function ChoixDuree({
         {essai && (
           <p className="modale__note duree__essai">
             Pendant l’essai gratuit : {DUREE_MAX_ESSAI} minutes au plus, et 30 minutes en tout.
+          </p>
+        )}
+
+        {/* LA CONSEILLÈRE PENDANT L'ESSAI (Camara, le 15/11/2026) : on la découvre, et on sait ce qui suit. */}
+        {essai && matiere?.code === 'ORIENTATION' && (
+          <p className="modale__note duree__essai">
+            La conseillère d’orientation est ouverte pendant l’essai. Ensuite, elle est incluse uniquement
+            à partir de l’abonnement Solo (pas dans Starter).
           </p>
         )}
 
@@ -281,6 +320,8 @@ export function ChoixDuree({
             <span>{test.detail}</span>
           </button>
         ))}
+
+        <div className="duree-illu__separateur" aria-hidden="true"><span>🌸</span></div>
 
         <div className="modale__actions">
           <button type="button" className="btn-ghost" onClick={onAnnuler}>

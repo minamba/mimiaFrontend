@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useOffreLancement } from '../lib/storage/modeTest';
+import './reboursIllustre.css';
 
 /**
  * LE COMPTE À REBOURS DE L'OFFRE DE LANCEMENT.
@@ -89,7 +90,13 @@ export default function CompteARebours() {
           ordre : ce qu’on gagne, puis le temps qu’il reste. L’inverse
           presse quelqu’un qui ne sait pas encore pourquoi. */}
       <div className="rebours__offre">
-        <span className="rebours__mention">{offre.texte}</span>
+        <span className="rebours__mention">
+          {/* Le torii de la maquette de Camara (16/11/2026), dessiné en trait : il suit la couleur de l'étiquette. */}
+          <svg className="rebours__torii" viewBox="0 0 24 22" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="M2 3.5c3 1 17 1 20 0M4 8h16M7 3.8V21M17 3.8V21M12 4.4V8" />
+          </svg>
+          {offre.texte}
+        </span>
 
         <p className="rebours__phrase">
           {/* LE NOMBRE VIENT DU SERVEUR, qui le lit dans le pack réglé en

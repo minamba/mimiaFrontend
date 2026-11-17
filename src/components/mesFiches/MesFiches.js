@@ -10,11 +10,15 @@ import Loader from '../Loader';
 import JaugeQuota, { quotaEpuise } from './JaugeQuota';
 import ForfaitRequis from './ForfaitRequis';
 import { sessionEleve } from '../../lib/storage/sessionEleve';
+import { useVueIllustree } from '../../lib/vueIllustree';
 import { MESSAGE_ESSAI_FICHES } from '../../lib/hooks/useAccesForfait';
 import MeTester from './MeTester';
 import imageCerveau from '../../assets/me-tester/cerveau.webp';
 import './mesFiches.css';
 import './mesFichesPages.css';
+import './fichesIllustre.css';
+import { paletteDeMatiere, sceneDeMatiere } from '../../lib/scenesMatieres';
+import AchatCredits from './AchatCredits';
 
 /**
  * MES FICHES DE RÉVISION — l'espace de l'élève (Camara, le 14/10/2026).
@@ -102,7 +106,7 @@ function CreditsParent({ quota }) {
       {n > 0
         ? <><strong>{n} crédit{n > 1 ? 's' : ''}</strong> de fiches disponible{n > 1 ? 's' : ''} : les crédits de votre famille, partagés avec vos enfants.</>
         : <>Vous n’avez plus de crédits de fiches.</>}
-      {' '}<Link to="/profil?onglet=forfait">Acheter des crédits</Link>
+      {' '}<AchatCredits module="fiches" className="mf-credits-parent__achat" />
     </p>
   );
 }
@@ -138,6 +142,7 @@ function NoteEssai({ etat }) {
 
 export default function MesFiches() {
   const { eleveId, estParent, chemin, retour } = useProprietaireFiches();
+  const vueIllustree = useVueIllustree();
   const [donnees, setDonnees] = useState(null);
   const [erreur, setErreur] = useState(null);
 
@@ -192,8 +197,13 @@ export default function MesFiches() {
   const [aTester, setATester] = useState(null);
   const testable = (cours) => Boolean(donnees?.actif) && !fermee && cours.etat === 'pret' && (cours.fiches?.length ?? 0) > 0;
 
+  // LA PAGE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026, d'après sa maquette : décor commun, bannière à la fille
+  // au crayon, cartes aux couleurs et à la scène de leur matière (lib/scenesMatieres.js). Aussi pour le parent dans
+  // l'espace de son enfant (16/11/2026, lib/vueIllustree.js) ; jamais dans l'espace parent.
+  const illustre = vueIllustree && !estParent;
+
   return (
-    <div className="mf-page">
+    <div className={`mf-page${illustre ? ' page-decor-enfant mf-illustre' : ''}`}>
       {retour && <Link to={retour.to} className="lien-retour">{retour.libelle}</Link>}
 
       {/* UN BANDEAU, PLUS UNE LIGNE — Camara, le 16/10/2026 : « améliore le
@@ -215,14 +225,16 @@ export default function MesFiches() {
         </div>
         {/* PAS DE BOUTON EN DOUBLE — Camara, le 14/10/2026 : sans aucune fiche,
             celui de l'encadré « Créer ma première fiche » suffit. */}
+        {/* SUR LA BANNIÈRE ILLUSTRÉE, LE MÊME BOUTON QUE « CRÉER UN PODCAST » — Camara, le 16/11/2026 : même pilule
+            orange, même place (à droite, au milieu de la hauteur), une icône dessinée et plus de « + ». */}
         {peutCreer && groupes.length > 0 && (
           <Link to={`${chemin}/nouvelle`} className="btn mf-entete__bouton">
-            + Créer une fiche
+            {illustre ? <><span className="mf-entete__crayon" aria-hidden="true" />Créer une fiche</> : '+ Créer une fiche'}
           </Link>
         )}
         {donnees?.actif && !fermee && essaiUtilise && groupes.length > 0 && (
           <button type="button" className="btn mf-entete__bouton" onClick={() => setEssaiVu(true)}>
-            + Créer une fiche
+            {illustre ? <><span className="mf-entete__crayon" aria-hidden="true" />Créer une fiche</> : '+ Créer une fiche'}
           </button>
         )}
       </header>
@@ -292,10 +304,14 @@ export default function MesFiches() {
         <section
           key={groupe.id}
           className="mf-matiere"
-          style={groupe.couleur ? styleCategorie(groupe.couleur) : styleMatiere(groupe.code)}
+          style={groupe.couleur
+            ? styleCategorie(groupe.couleur)
+            : { ...styleMatiere(groupe.code), ...(illustre ? paletteDeMatiere({ code: groupe.code }) : {}) }}
           aria-labelledby={`mf-matiere-${groupe.id}`}
         >
           <h2 id={`mf-matiere-${groupe.id}`} className="mf-matiere__titre">
+            {/* La pastille ronde de la matière : un médaillon de sa scène (vue illustrée de l'enfant). */}
+            {illustre && sceneDeMatiere(groupe.code) && <span className="mf-matiere__pastille" aria-hidden="true" />}
             {groupe.libelle}
             <span className="mf-matiere__compte">
               {groupe.cours.length} cours
@@ -308,8 +324,8 @@ export default function MesFiches() {
                 <Link to={`${chemin}/cours/${cours.id}`} className="mf-cours">
                   <PileDeFiches cours={cours} />
                   <span className="mf-cours__texte">
-                    <span className="mf-cours__titre">{cours.titre ?? 'Ton cours'}</span>
-                    <span className="mf-cours__date">Importé le {dateCourte(cours.dateCreation)}</span>
+                    <span className="mf-cours__titre">{cours.titre ?? (cours.libre ? 'Ta fiche libre' : 'Ton cours')}</span>
+                    <span className="mf-cours__date">{cours.libre ? 'Créée le' : 'Importé le'} {dateCourte(cours.dateCreation)}</span>
                     <span className="mf-cours__types">
                     {typesDuCours(cours).map((t) => (
                       <span key={t.code} className={`mf-badge fdr-feuille--${t.code}`}>
@@ -317,7 +333,9 @@ export default function MesFiches() {
                       </span>
                     ))}
                     {ETATS[cours.etat] && (
-                      <span className={`mf-cours__etat est-${cours.etat}`}>{ETATS[cours.etat]}</span>
+                      <span className={`mf-cours__etat est-${cours.etat}`}>
+                        {cours.libre && cours.etat === 'a_lire' ? 'Lecture de ton texte…' : ETATS[cours.etat]}
+                      </span>
                     )}
                     </span>
                   </span>

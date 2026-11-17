@@ -1,0 +1,12 @@
+{
+  "attendu": 242,
+  "valides": 242,
+  "classes": {
+    "CP": 53,
+    "CE1": 63,
+    "CE2": 40,
+    "CM1": 46,
+    "CM2": 40
+  },
+  "erreurs": []
+}

@@ -1,0 +1,518 @@
+/* ======================================================================================================
+   « VOS ENFANTS », LA PAGE DU PARENT — maquette de Camara, 16/11/2026.
+
+   L'en-tête : cerisier en haut à gauche, « Vos enfants » en gras souligné d'orange avec ses éclats, les boutons
+   « Administration » et « Mon compte » avec leur icône. Le bandeau du forfait en verre lumineux (icône de la
+   famille, heures en vert, nuages, « Voir mon forfait » couronné). Chaque enfant : une carte lumineuse, un
+   bandeau haut avec son PORTRAIT (lib/avatarEnfant.js), son prénom, sa classe en pastille jaune et son âge ;
+   puis l'activité, « Reprendre le cours » en pilule cyan, et trois pilules : calendrier (indigo), fiche (vert),
+   code (bleu).
+
+   Portée : `.page--enfants-illu` (ListeEleves.js). Reste NUIT dans tous les thèmes ; en mode saisonnier, les
+   cartes prennent les couleurs `--illu-*`. Sélecteurs forts : les règles Blue Sky de ces cartes pèsent jusqu'à
+   0,5,0. Aucune animation en boucle.
+   ====================================================================================================== */
+
+.page--enfants-illu {
+  --ee-lueur: #5fb8ff;
+  --ee-panneau: #13286f;
+  --ee-panneau-2: #0b1a4e;
+
+  position: relative;
+}
+
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu {
+  --ee-lueur: color-mix(in srgb, var(--illu-accent) 80%, #ffffff);
+  --ee-panneau: var(--illu-panneau);
+  --ee-panneau-2: var(--illu-panneau-2);
+}
+
+/* ------------------------------------------------------------------ l'en-tête */
+.page--enfants-illu .page__entete { position: relative; align-items: center; }
+
+/* Le cerisier, en haut à gauche de la page. */
+.page--enfants-illu .page__entete::before {
+  content: '';
+  position: absolute;
+  top: -44px;
+  left: -96px;
+  width: 130px;
+  height: 60px;
+  background: url('../assets/tarifs/cerisier.webp') center / contain no-repeat;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+.page--enfants-illu .page__entete h1 {
+  position: relative;
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: clamp(32px, 4vw, 46px);
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Le trait orange sous le titre, et les éclats au bout. */
+.page--enfants-illu .page__entete h1::after {
+  width: 110%;
+  height: 4px;
+  margin-top: 10px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #ff6a2b, #ffb36b 60%, transparent);
+}
+
+.page--enfants-illu .page__entete h1::before {
+  content: '';
+  position: absolute;
+  top: -14px;
+  right: -40px;
+  width: 30px;
+  height: 26px;
+  background: url('../assets/boutons/eclats.webp') center / contain no-repeat;
+}
+
+.page--enfants-illu .page__sous-titre { font-size: 17px; color: #eaf1ff; }
+
+/* Les icônes des deux boutons pleins. */
+.page--enfants-illu :is(.page__bouton-admin, .page__bouton-compte)::before {
+  content: '';
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  background: currentColor;
+  -webkit-mask: var(--icone-bouton) center / contain no-repeat;
+  mask: var(--icone-bouton) center / contain no-repeat;
+}
+
+.page--enfants-illu .page__bouton-admin {
+  --icone-bouton: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M10.3 2h3.4l.6 2.8 1.7.7 2.4-1.6 2.4 2.4-1.6 2.4.7 1.7 2.8.6v3.4l-2.8.6-.7 1.7 1.6 2.4-2.4 2.4-2.4-1.6-1.7.7-.6 2.8h-3.4l-.6-2.8-1.7-.7-2.4 1.6-2.4-2.4 1.6-2.4-.7-1.7L2 13.7v-3.4l2.8-.6.7-1.7-1.6-2.4 2.4-2.4 2.4 1.6 1.7-.7ZM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z'/%3E%3C/svg%3E");
+}
+
+.page--enfants-illu .page__bouton-compte {
+  --icone-bouton: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='7.5' r='4.5'/%3E%3Cpath d='M3.5 21c.6-4.6 4.1-7.5 8.5-7.5s7.9 2.9 8.5 7.5Z'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------------ le forfait */
+.page--enfants-illu .reste-forfait.reste-forfait {
+  gap: 8px 18px;
+  margin-bottom: 22px;
+  padding: 12px 20px;
+  border: 2px solid color-mix(in srgb, var(--ee-lueur) 80%, #ffffff);
+  border-radius: 24px;
+  background:
+    url('../assets/boutons/nuages-droite.webp') right 23% bottom -3px / auto 62% no-repeat,
+    url('../assets/boutons/nuages-gauche.webp') right 33% bottom -3px / auto 46% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--ee-lueur) 18%, var(--ee-panneau)) 0%, var(--ee-panneau-2) 100%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ee-lueur) 30%, transparent),
+    0 0 24px color-mix(in srgb, var(--ee-lueur) 45%, transparent),
+    inset 0 0 26px color-mix(in srgb, var(--ee-lueur) 12%, transparent);
+}
+
+.page--enfants-illu .reste-forfait.reste-forfait::before { display: none; }
+
+.page--enfants-illu .reste-forfait__offre {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 18px;
+  border-right: 1px solid color-mix(in srgb, var(--ee-lueur) 40%, transparent);
+  font-size: 17px;
+}
+
+/* La famille, en orange, devant la formule. */
+.page--enfants-illu .reste-forfait__offre::before {
+  content: '';
+  width: 32px;
+  height: 26px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 36'%3E%3Cg fill='%23ffb347' stroke='%23e07b12' stroke-width='1.2'%3E%3Ccircle cx='9' cy='11' r='5.5'/%3E%3Ccircle cx='35' cy='11' r='5.5'/%3E%3Cpath d='M1 30c0-6 3.6-10 8-10s8 4 8 10Z'/%3E%3Cpath d='M27 30c0-6 3.6-10 8-10s8 4 8 10Z'/%3E%3Ccircle cx='22' cy='9' r='7' fill='%23ffc56e'/%3E%3Cpath d='M11 35c0-8 4.9-13 11-13s11 5 11 13Z' fill='%23ffc56e'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 8px rgba(255, 170, 70, 0.45));
+}
+
+.page--enfants-illu .reste-forfait__temps { font-size: 17px; font-weight: 700; color: #fff; }
+
+.page--enfants-illu .reste-forfait__temps strong {
+  margin-right: 5px;
+  font-family: var(--sans);
+  font-size: 34px;
+  font-weight: 800;
+}
+
+/* « Voir mon forfait », couronné, avec ses éclats. */
+.page--enfants-illu .reste-forfait__lien {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border: 2px solid color-mix(in srgb, var(--corail-btn) 42%, #ffdcae);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 62%, #ffc56e) 0%, var(--corail-btn) 58%, color-mix(in srgb, var(--corail-btn) 82%, #7a1504) 100%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--corail-btn) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-size: 15px;
+}
+
+.page--enfants-illu .reste-forfait:hover .reste-forfait__lien {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 55%, #ffd27f) 0%, color-mix(in srgb, var(--corail-btn) 92%, #ffffff) 58%, var(--corail-btn) 100%);
+}
+
+.page--enfants-illu .reste-forfait__lien::before {
+  content: '';
+  width: 19px;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M2 6l5 4 5-8 5 8 5-4-2 12H4Z' fill='%23ffd34d' stroke='%23c47f00' stroke-width='1.3' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.page--enfants-illu .reste-forfait__lien::after {
+  content: '';
+  position: absolute;
+  top: -16px;
+  left: -20px;
+  width: 24px;
+  height: 21px;
+  background: url('../assets/boutons/eclats.webp') center / contain no-repeat;
+  transform: scaleX(-1);
+}
+
+/* ------------------------------------------------------------------ les cartes des enfants */
+.page--enfants-illu .eleves { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+
+.page--enfants-illu .eleve-case {
+  overflow: hidden;
+  padding-bottom: 14px;
+  border: 2px solid color-mix(in srgb, var(--ee-lueur) 80%, #ffffff);
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--ee-panneau) 0%, var(--ee-panneau-2) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ee-lueur) 25%, transparent),
+    0 0 24px color-mix(in srgb, var(--ee-lueur) 40%, transparent),
+    0 20px 50px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.page--enfants-illu .eleve-case:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ee-lueur) 40%, transparent),
+    0 0 32px color-mix(in srgb, var(--ee-lueur) 55%, transparent),
+    0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+/* Le bouton de l'enfant n'est plus une carte : un bloc transparent dans la carte. */
+:root .page--enfants-illu .eleve-case .eleve-carte.eleve-carte,
+:root .page--enfants-illu .eleve-case .eleve-carte.eleve-carte:hover {
+  gap: 9px;
+  height: auto;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+  overflow: visible;
+  transform: none;
+}
+
+.page--enfants-illu .eleve-carte__bande { display: none; }
+
+/* Le bandeau du haut : le portrait, le prénom, la classe et l'âge, sur un ciel à nuages. */
+.page--enfants-illu .eleve-carte__haut {
+  position: relative;
+  align-items: stretch;
+  gap: 12px;
+  min-height: 128px;
+  margin: 0 -14px;
+  padding: 0 16px 0 14px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ee-lueur) 60%, transparent);
+  background:
+    url('../assets/boutons/nuages-droite.webp') right -6px bottom -4px / auto 30% no-repeat,
+    url('../assets/boutons/nuages-gauche.webp') left 34% bottom -4px / auto 22% no-repeat,
+    radial-gradient(ellipse 80% 90% at 30% 100%, color-mix(in srgb, var(--ee-lueur) 30%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ee-lueur) 22%, var(--ee-panneau)) 0%, var(--ee-panneau) 100%);
+}
+
+/* Le portrait, ROND comme dans le choix de l'avatar (16/11) : les silhouettes par défaut sont des carrés à fond
+   gris, les avatars au choix des bustes détourés ; le cercle les met tous à égalité. */
+.page--enfants-illu .eleve-carte__portrait {
+  flex: none;
+  align-self: center;
+  width: 96px;
+  height: 96px;
+  border: 3px solid color-mix(in srgb, var(--ee-lueur) 70%, #ffffff);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--ee-lueur) 45%, #ffffff), color-mix(in srgb, var(--ee-lueur) 35%, var(--ee-panneau)) 75%);
+  object-fit: cover;
+  object-position: top;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--ee-lueur) 50%, transparent), 0 4px 10px rgba(0, 8, 30, 0.4);
+}
+
+.page--enfants-illu .eleve-carte__initiale {
+  align-self: center;
+  width: 72px;
+  height: 72px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  font-size: 30px;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ee-lueur) 50%, transparent);
+}
+
+.page--enfants-illu .eleve-carte__identite {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.page--enfants-illu .eleve-carte__identite strong {
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 10px rgba(0, 8, 30, 0.5);
+}
+
+/* Les éclats, à côté du prénom. */
+.page--enfants-illu .eleve-carte__identite strong { position: relative; align-self: flex-start; max-width: calc(100% - 30px); }
+
+.page--enfants-illu .eleve-carte__identite strong::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: calc(100% + 5px);
+  width: 19px;
+  height: 17px;
+  background: url('../assets/boutons/eclats.webp') center / contain no-repeat;
+}
+
+:root .page--enfants-illu .eleve-carte__badges .badge {
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe680 0%, #ffc93c 100%);
+  color: #14204a;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: normal;
+  box-shadow: 0 0 10px rgba(255, 200, 60, 0.4);
+}
+
+:root .page--enfants-illu .eleve-carte__badges .badge.badge--discret {
+  border: 1.5px solid rgba(200, 220, 255, 0.7);
+  background: rgba(8, 20, 60, 0.45);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.page--enfants-illu .eleve-carte__activite { margin-top: 2px; font-size: 14px; color: #eaf1ff; }
+.page--enfants-illu .eleve-carte__activite .pastille { width: 8px; height: 8px; }
+.page--enfants-illu .eleve-carte__activite--actif .pastille { background: #3ddc84; box-shadow: 0 0 8px rgba(61, 220, 132, 0.7); }
+.page--enfants-illu .eleve-carte__activite--froid .pastille { background: #ff6b3d; box-shadow: 0 0 8px rgba(255, 107, 61, 0.6); }
+.page--enfants-illu .eleve-carte__activite--neuf .pastille { background: #b8c4e0; border: 0; }
+
+/* « Reprendre le cours » : la pilule cyan lumineuse. */
+:root .page--enfants-illu .eleve-carte .eleve-carte__action {
+  justify-content: flex-start;
+  gap: 11px;
+  margin: 2px 0 4px;
+  padding: 9px 16px;
+  border: 2px solid color-mix(in srgb, var(--ee-lueur) 85%, #ffffff);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ee-lueur) 22%, var(--ee-panneau)), var(--ee-panneau-2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--ee-lueur) 45%, transparent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.page--enfants-illu .eleve-carte__action > span:last-child { margin-left: auto; font-size: 18px; }
+.page--enfants-illu .eleve-carte:hover .eleve-carte__lecture { transform: none; }
+
+.page--enfants-illu .eleve-carte__lecture {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 13px solid var(--ee-lueur);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ee-lueur) 70%, transparent));
+}
+
+/* Les trois pilules : calendrier, fiche, code. */
+:root .page--enfants-illu .eleve-case > .eleve-bandeau.eleve-bandeau {
+  --pilule: #4f5fd8;
+
+  margin: 8px 14px 0;
+  padding: 9px 16px;
+  border: 1.5px solid color-mix(in srgb, var(--pilule) 70%, #ffffff);
+  border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pilule) 90%, #ffffff) 0%, color-mix(in srgb, var(--pilule) 70%, #0a1440) 100%);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--pilule) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 800;
+  width: auto;
+}
+
+:root .page--enfants-illu .eleve-case > .eleve-bandeau--fiche.eleve-bandeau { --pilule: #148a6a; }
+:root .page--enfants-illu .eleve-case > .eleve-bandeau--code.eleve-bandeau { --pilule: #2a4fa8; }
+
+/* EN MODE SAISONNIER (Camara, 16/11/2026 : « tout doit s'adapter aux thèmes ») : les trois pilules prennent le
+   panneau de la saison, un soupçon de leur couleur (calendrier, fiche, code) pour rester reconnaissables, et le
+   liseré de la saison. */
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case > .eleve-bandeau.eleve-bandeau {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--pilule) 30%, var(--illu-panneau-3)) 0%, color-mix(in srgb, var(--pilule) 16%, var(--illu-panneau-2)) 100%);
+  box-shadow: 0 0 12px var(--illu-lueur), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.page--enfants-illu .eleve-bandeau__emoji { width: 24px; font-size: 18px; }
+.page--enfants-illu .eleve-bandeau__fleche { font-size: 18px; }
+
+/* La tuile d'ajout, à la même hauteur que les cartes. */
+.page--enfants-illu .eleve-ajout {
+  min-height: 170px;
+  border: 2px dashed color-mix(in srgb, var(--ee-lueur) 70%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--ee-panneau-2) 60%, transparent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.page--enfants-illu .eleve-ajout__signe {
+  width: 52px;
+  height: 52px;
+  border-width: 2px;
+  font-size: 28px;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--ee-lueur) 45%, transparent);
+}
+
+/* Le Fuji, en bas à droite de la page. */
+.page--enfants-illu::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  bottom: -30px;
+  z-index: -1;
+  width: 260px;
+  height: 140px;
+  background: url('../assets/offre/fuji.webp') center bottom / contain no-repeat;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .page--enfants-illu .page__entete::before { left: -16px; top: -26px; width: 100px; height: 46px; }
+  .page--enfants-illu .reste-forfait__offre { padding-right: 0; border-right: 0; font-size: 16px; }
+  .page--enfants-illu .reste-forfait__temps strong { font-size: 30px; }
+  .page--enfants-illu .eleve-carte__haut { min-height: 116px; }
+  .page--enfants-illu .eleve-carte__portrait { width: 86px; height: 86px; }
+  .page--enfants-illu .eleve-ajout { min-height: 140px; }
+  :root .page--enfants-illu .eleve-case > .eleve-bandeau.eleve-bandeau { padding: 9px 14px; font-size: 14px; }
+  :root .page--enfants-illu .eleve-carte .eleve-carte__action { font-size: 14.5px; }
+}
+
+/* « Mon avis sur Mimia » : la pilule bleue lumineuse de la maquette, à côté des deux boutons pleins. */
+:root .page--enfants-illu .page__entete-actions .bouton-avis {
+  border: 2px solid color-mix(in srgb, var(--ee-lueur) 85%, #ffffff);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ee-lueur) 22%, var(--ee-panneau)), var(--ee-panneau-2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--ee-lueur) 45%, transparent);
+  color: #fff;
+}
+
+:root .page--enfants-illu .page__entete-actions .bouton-avis .bouton-avis__texte { color: #fff; }
+
+/* LE PRÉNOM TIENT TOUJOURS SUR UNE LIGNE — Camara, le 16/11/2026 (« Zakariya » passait à la ligne). La taille
+   se calcule sur la largeur de la colonne (`cqi`) et le nombre de lettres (`--lettres`, posé par ListeEleves.js),
+   les éclats compris ; entre 14 et 25 px (réduit le 16/11). */
+.page--enfants-illu .eleve-carte__identite { container-type: inline-size; }
+
+:root .page--enfants-illu .eleve-carte__identite strong {
+  max-width: calc(100% - 28px);
+  font-size: clamp(14px, calc((100cqi - 28px) / (var(--lettres, 6) * 0.54)), 25px);
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+/* « VOIR LE TUTO » (17/11/2026) : l'or du bouton de la page d'un enfant, avec le liseré clair des pilules du site. */
+:root .page--enfants-illu .page__entete-actions .bouton-tuto {
+  border: 2px solid #fff0b8;
+  padding: 10px 18px;
+}
+
+/* « VOIR LE TUTO » (17/11/2026) : sur ordinateur, fixé en haut à droite de l'écran, sous la barre du haut — la place
+   de « Signaler », en haut ; sur téléphone, sur la ligne de « Vos enfants », tout à droite. */
+.page--enfants-illu .page__entete { position: relative; }
+
+:root .page--enfants-illu .page__tuto-enfants {
+  position: fixed;
+  top: 84px;
+  right: 24px;
+  z-index: 40;
+}
+
+/* SUR TÉLÉPHONE (Camara, le 17/11/2026 : « sur mobile c'est mal représenté au niveau des boutons ») : la rangée
+   débordait de l'écran. Les boutons passent à la ligne, centrés, un peu plus petits. */
+@media (max-width: 620px) {
+  .page--enfants-illu .page__entete-actions {
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+
+  :root .page--enfants-illu .page__entete-actions :is(.btn, .bouton-tuto) {
+    padding: 9px 14px;
+    font-size: 14px;
+  }
+
+  .page--enfants-illu :is(.page__bouton-admin, .page__bouton-compte)::before { width: 16px; height: 16px; margin-right: 7px; }
+}
+
+@media (max-width: 900px) {
+  :root .page--enfants-illu .page__tuto-enfants {
+    position: absolute;
+    top: 6px;
+    right: 0;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
+
+/* « VOIR LE TUTO » PLUS VISIBLE — Camara, le 17/11/2026 : « mets un petit effet sur le bouton ». Un liseré clair, un halo
+   doré, et le reflet qui balaie le bouton toutes les quatre secondes, le même que sur le ruban « Le plus choisi » des
+   tarifs (ruban-reflet-or, App.css). Immobile si l'appareil demande moins d'animations. */
+:root .page--enfants-illu .page__tuto-enfants {
+  overflow: hidden;
+  border: 2px solid #fff3c4;
+  box-shadow:
+    0 0 0 3px rgba(255, 200, 80, 0.35),
+    0 0 22px rgba(255, 190, 60, 0.75),
+    0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+:root .page--enfants-illu .page__tuto-enfants::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  animation: ruban-reflet-or 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .page--enfants-illu .page__tuto-enfants::after { animation: none; display: none; }
+}

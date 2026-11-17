@@ -6,13 +6,14 @@ import { ajouterCoursControle, creerControle, modifierControle } from '../lib/ap
 import iconeVoix from '../assets/voix.png';
 import ChoixHeure from './ChoixHeure';
 import CoursDuControle from './CoursDuControle';
+import './controleFormIllustre.css';
 
 /**
  * Le pictogramme de l'en-tête : une feuille de contrôle, dessinée au trait
  * comme les autres icônes du produit (la coche du calendrier, le sablier) —
  * jamais un emoji, dont le rendu change d'un système à l'autre.
  */
-function IconeControle() {
+export function IconeControle() {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -374,9 +375,23 @@ export default function ControleForm({
             {edition ? 'Modifier le contrôle' : 'Ajouter un contrôle'}
           </strong>
           <span className="controle-form__soustitre">
-            {sousTitre ?? 'Ton professeur pourra t’aider à le préparer.'}
+            {/* La majuscule ici et plus par `::first-letter`, qui ne s'applique pas à une boîte flex (la date a
+                désormais son icône de calendrier devant). */}
+            {sousTitre
+              ? sousTitre.charAt(0).toUpperCase() + sousTitre.slice(1)
+              : 'Ton professeur pourra t’aider à le préparer.'}
           </span>
         </span>
+
+        {/* LA CROIX DE LA MAQUETTE (Camara, 16/11/2026) : le même geste que « Annuler ». */}
+        <button
+          type="button"
+          className="controle-form__fermer"
+          aria-label="Fermer"
+          onClick={cree ? onEnregistre : onAnnule}
+        >
+          ×
+        </button>
       </header>
 
       {erreur && <div className="alert">{erreur}</div>}

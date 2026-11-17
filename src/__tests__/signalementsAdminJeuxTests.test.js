@@ -145,6 +145,27 @@ describe('le bouton à côté du bouclier', () => {
 });
 
 describe('l’onglet « Signalements Admin »', () => {
+  test('on y ajoute un signalement, et la liste se rafraîchit (08/11/2026)', async () => {
+    admin.getSignalementsAdmin.mockResolvedValue({ data: [] });
+    render(<SignalementsAdmin admin />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Ajouter un signalement admin' }));
+    await userEvent.type(screen.getByLabelText('Description'), 'La voix coupe la syllabe');
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(await screen.findByText('Signalement enregistré')).toBeInTheDocument();
+    expect(admin.creerSignalementAdmin).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(admin.getSignalementsAdmin).toHaveBeenCalledTimes(2));
+  });
+
+  test('l’onglet des parents garde son propre bouton', async () => {
+    admin.getSignalements.mockResolvedValue({ data: [] });
+    render(<SignalementsAdmin />);
+
+    expect(await screen.findByRole('button', { name: 'Ajouter un signalement' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ajouter un signalement admin' })).not.toBeInTheDocument();
+  });
+
   test('sa liste, avec le jeu de test et la ligne de chacun', async () => {
     admin.getSignalementsAdmin.mockResolvedValue({
       data: [{
@@ -162,6 +183,46 @@ describe('l’onglet « Signalements Admin »', () => {
     expect(screen.getByText('Rester sur les syllabes · KO')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ajouter un signalement' })).not.toBeInTheDocument();
     expect(admin.getSignalements).not.toHaveBeenCalled();
+  });
+
+  test('changer l’état garde la ligne de test : jamais « Ligne supprimée » pour une ligne qui existe (06/11/2026)', async () => {
+    const avant = {
+      id: 6, estAdmin: true, parentMail: 'ceo@mimia.fr', categorie: 'TECHNIQUE', description: 'Bug',
+      etat: 'nouveau', dateCreation: '2026-11-05T20:00:00', nombrePieces: 0, nombreCommentaires: 0, ligneDeTestId: 5,
+      test: { ligneId: 5, jeuId: 7, testId: 21, jeuTitre: 'Tests CP', classe: 'CP', testTitre: 'Test CP', competence: 'Syllabes', statut: 'ko' },
+    };
+    admin.getSignalementsAdmin.mockResolvedValueOnce({ data: [avant] })
+      .mockResolvedValueOnce({ data: [{ ...avant, etat: 'traite', test: { ...avant.test, statut: 'a_tester' } }] });
+    // La réponse du serveur ne porte pas la ligne : `test` y vaut null.
+    admin.modifierSignalement.mockResolvedValue({ data: { ...avant, etat: 'traite', test: null } });
+
+    render(<SignalementsAdmin admin />);
+    await userEvent.selectOptions(await screen.findByRole('combobox', { name: /État/ }), 'traite');
+
+    expect(await screen.findByText('Syllabes · À tester')).toBeInTheDocument();
+    expect(screen.queryByText('Ligne supprimée')).not.toBeInTheDocument();
+    expect(screen.getByText('Tests CP › Test CP')).toBeInTheDocument();
+  });
+
+  test('rouvert après un test KO : un badge, avec le nombre de fois (06/11/2026)', async () => {
+    admin.getSignalementsAdmin.mockResolvedValue({
+      data: [
+        {
+          id: 1, estAdmin: true, parentMail: 'ceo@mimia.fr', categorie: 'TECHNIQUE', description: 'Rouvert deux fois',
+          etat: 'nouveau', dateCreation: '2026-11-05T20:00:00', nombrePieces: 0, nombreCommentaires: 0,
+          reouvertures: 2, rouvertLe: '2026-11-06T13:32:00',
+        },
+        {
+          id: 2, estAdmin: true, parentMail: 'ceo@mimia.fr', categorie: 'TECHNIQUE', description: 'Jamais rouvert',
+          etat: 'nouveau', dateCreation: '2026-11-05T20:00:00', nombrePieces: 0, nombreCommentaires: 0, reouvertures: 0,
+        },
+      ],
+    });
+
+    render(<SignalementsAdmin admin />);
+
+    expect(await screen.findByText('Rouvert après test ×2')).toBeInTheDocument();
+    expect(screen.getAllByText(/Rouvert après test/)).toHaveLength(1);
   });
 
   test('le jeu de test est un lien : un clic ouvre le jeu sur la ligne du signalement', async () => {

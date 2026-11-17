@@ -10,12 +10,18 @@ import { libelleProgrammes } from '../lib/storage/anneeScolaire';
 import Avatar from './Avatar';
 import FondCraie from './FondCraie';
 import MotifMatiere from './MotifMatiere';
+import { murMatiere } from '../lib/couleurMatiere';
+import { imageDuMur } from '../lib/mursMatiere';
 import AvisClients from './AvisClients';
 import FicheProfesseur from './FicheProfesseur';
 import Faq from './Faq';
 import ApercuParent from './ApercuParent';
 import Comparatif from './Comparatif';
 import ExercicesLangue from './ExercicesLangue';
+import './preuveIllustree.css';
+import './parentsIllustre.css';
+import './herosIllustre.css';
+import './remonteeIllustree.css';
 import JeuxApercu from './JeuxApercu';
 import BandeauPromo from './BandeauPromo';
 import CompteARebours from './CompteARebours';
@@ -291,7 +297,22 @@ function Seance() {
 function Remontee() {
   return (
     <div className="remontee" aria-hidden="true">
+      {/* LES ICÔNES DE LA MAQUETTE DE CAMARA (16/11/2026), dessinées en SVG : la carte « ¼ + ½ », deux parts
+          égales, la calculatrice. Le reste (cartes lumineuses, flèches vertes) est dans remonteeIllustree.css. */}
       <div className="remontee__noeud remontee__noeud--bloque">
+        <span className="remontee__icone">
+          <svg viewBox="0 0 48 48">
+            <rect x="5" y="9" width="38" height="33" rx="6" fill="#f4f7ff" stroke="#1f3b8a" strokeWidth="2.5" />
+            <path d="M5 15a6 6 0 0 1 6-6h26a6 6 0 0 1 6 6v3H5Z" fill="#ff6b7a" stroke="#1f3b8a" strokeWidth="2.5" />
+            <text x="15" y="30" fontSize="9" fontWeight="800" fill="#1f3b8a" textAnchor="middle">1</text>
+            <path d="M11.5 32.5h7" stroke="#1f3b8a" strokeWidth="1.6" />
+            <text x="15" y="40" fontSize="9" fontWeight="800" fill="#1f3b8a" textAnchor="middle">4</text>
+            <text x="24" y="36" fontSize="9" fontWeight="800" fill="#1f3b8a" textAnchor="middle">+</text>
+            <text x="33" y="30" fontSize="9" fontWeight="800" fill="#1f3b8a" textAnchor="middle">1</text>
+            <path d="M29.5 32.5h7" stroke="#1f3b8a" strokeWidth="1.6" />
+            <text x="33" y="40" fontSize="9" fontWeight="800" fill="#1f3b8a" textAnchor="middle">2</text>
+          </svg>
+        </span>
         <span className="remontee__niveau">6e</span>
         <span className="remontee__libelle">Additionner des fractions</span>
         <span className="remontee__etat">bloqué</span>
@@ -299,7 +320,16 @@ function Remontee() {
 
       <div className="remontee__lien"><span /></div>
 
-      <div className="remontee__noeud">
+      <div className="remontee__noeud remontee__noeud--fragile">
+        <span className="remontee__icone">
+          <svg viewBox="0 0 48 48">
+            <circle cx="12" cy="24" r="9.5" fill="#f4f7ff" stroke="#1f3b8a" strokeWidth="2.2" />
+            <path d="M12 24V14.5A9.5 9.5 0 0 1 21.5 24Z" fill="#ffa53a" stroke="#1f3b8a" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M21.5 22h5M21.5 26h5" stroke="#f4f7ff" strokeWidth="2.2" strokeLinecap="round" />
+            <circle cx="36" cy="24" r="9.5" fill="#f4f7ff" stroke="#1f3b8a" strokeWidth="2.2" />
+            <path d="M36 24V14.5A9.5 9.5 0 0 1 44.2 19.2ZM36 24l8.2-4.8A9.5 9.5 0 0 1 45.5 24Z" fill="#ffa53a" stroke="#1f3b8a" strokeWidth="1.8" strokeLinejoin="round" />
+          </svg>
+        </span>
         <span className="remontee__niveau">6e</span>
         <span className="remontee__libelle">Fractions égales</span>
         <span className="remontee__etat remontee__etat--fragile">fragile</span>
@@ -308,6 +338,17 @@ function Remontee() {
       <div className="remontee__lien"><span /></div>
 
       <div className="remontee__noeud remontee__noeud--cause">
+        <span className="remontee__icone">
+          <svg viewBox="0 0 48 48">
+            <rect x="9" y="5" width="30" height="38" rx="6" fill="#5aa8ff" stroke="#1f3b8a" strokeWidth="2.5" />
+            <rect x="14" y="10" width="20" height="8" rx="2" fill="#dff0ff" stroke="#1f3b8a" strokeWidth="1.8" />
+            <g fill="#f4f7ff" stroke="#1f3b8a" strokeWidth="1.6">
+              <rect x="14" y="22" width="8" height="7" rx="2" /><rect x="26" y="22" width="8" height="7" rx="2" fill="#ffa53a" />
+              <rect x="14" y="32" width="8" height="7" rx="2" /><rect x="26" y="32" width="8" height="7" rx="2" />
+            </g>
+            <path d="M16.3 25.5h3.4M18 23.8v3.4M28.3 24l3.4 3M31.7 24l-3.4 3M16.3 35.5h3.4M28.3 34.6h3.4M28.3 36.4h3.4" stroke="#1f3b8a" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        </span>
         <span className="remontee__niveau">CM2</span>
         <span className="remontee__libelle">Multiplication posée</span>
         <span className="remontee__etat remontee__etat--cause">la vraie cause</span>
@@ -775,7 +816,12 @@ export default function Accueil() {
                 <button
                   type="button"
                   className="prof"
-                  style={{ '--teinte': prof.couleur }}
+                  // LE DÉCOR DU COURS EN FOND (Camara, le 16/11/2026) : le même que le bandeau de la page de cours.
+                  data-mur={murMatiere({ code: prof.code })}
+                  style={{
+                    '--teinte': prof.couleur,
+                    '--prof-decor': `url(${imageDuMur(murMatiere({ code: prof.code }))})`,
+                  }}
                   aria-haspopup="dialog"
                   onClick={() => setProfOuvert(prof)}
                 >
@@ -901,14 +947,16 @@ export default function Accueil() {
           <div className="prix-phare">
             <div className="prix-phare__montant">
               <span className="prix-phare__depuis">À partir de</span>
-              <strong>39,90 €<small>/mois</small></strong>
+              {/* STARTER (14/11/2026) : « à partir de » suit la formule la moins chère, sinon la phrase devient
+                  fausse. 19,90 € pour 4 h, soit 4,98 € l'heure (Solo : 4,43 € ; 4 h 30 et 4,42 € jusqu'au 14/11). */}
+              <strong>19,90 €<small>/mois</small></strong>
               {/* Le prix à l'heure a migré dans la confrontation, plus bas :
                   l'afficher aux deux endroits ferait lire deux fois le même
                   chiffre à quelques centimètres d'écart. */}
             </div>
 
             <ul className="prix-phare__points">
-              <li>9 h de cours par mois, quand il en a besoin</li>
+              <li>4 h de cours par mois, quand il en a besoin</li>
               <li>Toutes les matières, du CP à la Terminale</li>
               <li>Sans engagement : vous arrêtez quand vous voulez</li>
             </ul>
@@ -935,7 +983,7 @@ export default function Accueil() {
 
               <div className="prix-phare__camp prix-phare__camp--nous">
                 <span className="prix-phare__qui">Avec Mimia</span>
-                <strong className="prix-phare__combien">4,43 €</strong>
+                <strong className="prix-phare__combien">4,98 €</strong>
                 <span className="prix-phare__unite">l’heure</span>
               </div>
             </div>

@@ -3,6 +3,15 @@ import iconeExamen from '../assets/exam.png';
 import { styleMatiere } from '../lib/couleurMatiere';
 import BarrePreparation from './BarrePreparation';
 import PastillePret from './PastillePret';
+import { vueIllustree } from '../lib/vueIllustree';
+import illuExamen from '../assets/controles-illustre/examen.webp';
+import illuTorii from '../assets/controles-illustre/torii-cerisiers.webp';
+import illuLaurierGauche from '../assets/controles-illustre/laurier-gauche.webp';
+import illuLaurierDroit from '../assets/controles-illustre/laurier-droit.webp';
+import illuEcole from '../assets/controles-illustre/ecole.webp';
+import illuCerisiersGauche from '../assets/controles-illustre/cerisiers-gauche.webp';
+import illuCerisiersDroite from '../assets/controles-illustre/cerisiers-droite.webp';
+import './controlesIllustre.css';
 
 /**
  * « Préparation au brevet » — la section posée sous « Mes contrôles ».
@@ -22,20 +31,53 @@ import PastillePret from './PastillePret';
  * carte porte donc un verdict et un bouton par matière.
  */
 
+/**
+ * L'ICÔNE D'UNE ÉPREUVE, D'APRÈS SA MATIÈRE — vue illustrée de l'enfant (15/11/2026). Reconnue au libellé, comme les
+ * couleurs (`styleMatiere`) : n'importe quelle épreuve du brevet ou du bac en a une, et un livre à défaut.
+ */
+// L'ORDRE COMPTE : du plus précis au plus large (« éducation physique et sportive » n'est pas de la physique,
+// « sciences économiques et sociales » pas des sciences, « histoire des arts » pas de l'histoire-géo).
+const ICONES = [
+  [/philo/, '🦉'],
+  [/sport/, '🏅'],
+  [/\barts?\b|cinema|theatre|musique|danse|cirque/, '🎨'],
+  [/sanitaire|sante|pse/, '🩺'],
+  [/econom|gestion|management|droit|\bses\b/, '📈'],
+  [/numerique|informatique|\bnsi\b/, '💻'],
+  [/math/, '🧮'],
+  [/histoire|geo|hggsp|politique/, '🌍'],
+  [/svt|vie et de la terre|biolog|vivant|biotech/, '🍃'],
+  [/physique|chimie|science|spcl|ingenieur/, '🧪'],
+  [/francais|litterature|lettres|\bhlp\b|latin|grec|antiquite/, '📖'],
+  [/anglais|espagnol|allemand|italien|chinois|arabe|langue|llcer/, '🗣️'],
+];
+
+export function iconeEpreuve(epreuve) {
+  const texte = `${epreuve?.matieres?.[0]?.libelle ?? ''} ${epreuve?.libelle ?? ''}`
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return ICONES.find(([motif]) => motif.test(texte))?.[1] ?? '📘';
+}
+
 /** « Continuer la préparation avec Salim », quand l'épreuve a plusieurs professeurs. */
 export const libellePreparation = (matiere, plusieurs) => {
   const verbe = (matiere.nombrePreparations ?? 0) > 0 ? 'Continuer la préparation' : 'Commencer à réviser';
   return plusieurs && matiere.profPrenom ? `${verbe} avec ${matiere.profPrenom}` : verbe;
 };
 
-export function EpreuveCarte({ epreuve, eleveId, onPreparer }) {
+export function EpreuveCarte({ epreuve, eleveId, onPreparer, illustre = false }) {
   const plusieurs = epreuve.matieres.length > 1;
 
   return (
     <li
-      className="controle-carte epreuve-carte"
+      className={`controle-carte epreuve-carte${illustre ? ' ctr-epreuve' : ''}`}
       style={styleMatiere({ matiereLibelle: epreuve.matieres[0]?.libelle })}
     >
+      {illustre && (
+        <>
+          <span className="ctr-epreuve__icone" aria-hidden="true">{iconeEpreuve(epreuve)}</span>
+          <span className="ctr-epreuve__trait" aria-hidden="true">{iconeEpreuve(epreuve)}</span>
+        </>
+      )}
       <div className="controle-carte__haut">
         <span className="controle-carte__matiere">
           <span className="controle-carte__point" aria-hidden="true" />
@@ -84,10 +126,21 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
 
   if (nombre === 0 && !aRenseigner && notes.length === 0) return null;
 
+  // LA VUE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026 (maquette « Préparation au brevet ») : la copie EXAM et sa
+  // médaille, le torii et les cerisiers, les lauriers autour du titre, l'école en bas.
+  // Aussi pour le parent dans l'espace de son enfant (16/11/2026) : voir lib/vueIllustree.js.
+  const illustre = vueIllustree();
+
   return (
     // Même destination que « Mes contrôles » : le détail d'une épreuve
     // renvoie ici, et non en haut d'une page longue.
-    <section className="controles-section examen-section" id="preparation-examen">
+    <section className={`controles-section examen-section${illustre ? ' ctr-illu ctr-illu--examen' : ''}`} id="preparation-examen">
+      {illustre && (
+        <>
+          <img className="ctr-illu__deco ctr-illu__deco--gauche" src={illuExamen} alt="" aria-hidden="true" />
+          <img className="ctr-illu__deco ctr-illu__deco--droite" src={illuTorii} alt="" aria-hidden="true" />
+        </>
+      )}
       <div className="controles-section__entete">
         <div className="controles-section__titre">
           {/* LA MÊME ILLUSTRATION QUI DÉBORDE QUE « MES CONTRÔLES » — Camara,
@@ -99,7 +152,11 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
           </span>
 
           <div>
-            <h2>{examen.titreSection}</h2>
+            <h2>
+              {illustre && <img className="ctr-illu__laurier" src={illuLaurierGauche} alt="" aria-hidden="true" />}
+              {examen.titreSection}
+              {illustre && <img className="ctr-illu__laurier" src={illuLaurierDroit} alt="" aria-hidden="true" />}
+            </h2>
             {/* L'ANNÉE DE L'ÉPREUVE, PAS LA « SESSION ». Le bac de français de
                 juin 2027 compte officiellement pour la session 2028 : écrire
                 « session 2027 » serait faux, et « session 2028 » ferait croire
@@ -156,9 +213,18 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
             epreuve={epreuve}
             eleveId={eleveId}
             onPreparer={onPreparer}
+            illustre={illustre}
           />
         ))}
       </ul>
+
+      {illustre && (
+        <div className="ctr-illu__pied" aria-hidden="true">
+          <img className="ctr-illu__pied-cerisiers" src={illuCerisiersGauche} alt="" />
+          <img className="ctr-illu__pied-ecole" src={illuEcole} alt="" />
+          <img className="ctr-illu__pied-cerisiers ctr-illu__pied-cerisiers--droite" src={illuCerisiersDroite} alt="" />
+        </div>
+      )}
     </section>
   );
 }

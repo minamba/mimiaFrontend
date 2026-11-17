@@ -1,0 +1,483 @@
+/* ======================================================================================================
+   MES PODCASTS, ILLUSTRÉ — d'après la maquette de Camara (15/11/2026). Vue de l'enfant seulement : la racine de la
+   page porte `page-decor-enfant` (le fond commun) et `podi` (cette feuille). Tout est préfixé par `.podi`.
+
+   LA BANNIÈRE est l'image de la maquette, titre / sous-titre / bouton effacés (assets/podcasts-illustre) ; ils sont
+   redessinés ici, placés en pourcentages de l'image et dimensionnés en `cqw` (largeur de la bannière).
+   LES CARTES prennent les couleurs et la scène de leur matière (lib/scenesMatieres.js, variables posées sur le <li>).
+   Rien ne s'anime en boucle.
+   ====================================================================================================== */
+/* La maquette est large : la page aussi, dans la vue de l'enfant. */
+.mf-page.podi { max-width: 1160px; }
+
+.podi .lien-retour {
+  border: 1.5px solid rgba(160, 180, 255, 0.55);
+  border-radius: 16px;
+  background: rgba(6, 16, 60, 0.75);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------------------------------------- la bannière */
+.podi-banniere {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 1421 / 257;
+  margin-bottom: 22px;
+  border-radius: 3.1% / 17%;
+  background: center / 100% 100% no-repeat;
+  box-shadow: 0 0 26px rgba(150, 110, 255, 0.35), 0 16px 36px rgba(0, 0, 0, 0.35);
+}
+
+.podi-banniere__titre {
+  position: absolute;
+  top: 26%;
+  left: 34.4%;
+  width: 32.6%;
+  margin: 0;
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: 4.9cqw;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-align: center;
+  white-space: nowrap;
+  color: #fff;
+  filter: drop-shadow(0 0.25cqw 0.5cqw rgba(0, 0, 0, 0.45));
+}
+
+.podi-banniere__titre span {
+  font-style: italic;
+  background: linear-gradient(180deg, #ffe08a 0%, #ffb23e 55%, #ff8a2a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.podi-banniere__sous-titre {
+  position: absolute;
+  top: 60%;
+  left: 27.5%;
+  width: 46.5%;
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: max(13px, 1.55cqw);
+  line-height: 1.45;
+  text-align: center;
+  color: #f2f4ff;
+  text-shadow: 0 1px 6px rgba(5, 10, 50, 0.6);
+}
+
+.podi-banniere__creer {
+  position: absolute;
+  top: 39.5%;
+  left: 75.4%;
+  width: 23.2%;
+  height: 29.5%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+  border: 0.18cqw solid rgba(255, 220, 180, 0.7);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffa24a 0%, #f2701e 60%, #d95510 100%);
+  box-shadow:
+    inset 0 0.2cqw 0 rgba(255, 255, 255, 0.45),
+    0 0 1.6cqw rgba(255, 120, 40, 0.55),
+    0 0.5cqw 1.2cqw rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: max(13px, 1.85cqw);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.podi-banniere__creer:hover,
+.podi-banniere__creer:focus-visible {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+/* Le micro du bouton, dessiné (blanc). */
+.podi-micro {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  flex: none;
+  background: center / contain no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Crect x='9' y='3' width='6' height='11' rx='3' fill='white'/%3E%3Cpath d='M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7'/%3E%3C/svg%3E");
+}
+
+/* ------------------------------------------------------------------------------------------- la jauge */
+.podi-jauge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 26px;
+  padding: 18px 28px 18px 22px;
+  border: 2px solid rgba(200, 180, 255, 0.55);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #0b1d5c 0%, #06144a 100%);
+  box-shadow: 0 0 22px rgba(150, 110, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.podi-jauge__icone {
+  width: 86px;
+  height: auto;
+  flex: none;
+}
+
+.podi .podi-jauge .mf-quota {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+}
+
+.podi .podi-jauge .mf-quota__titre {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.podi .podi-jauge .mf-quota__compte {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.podi .podi-jauge .mf-quota__compte strong {
+  font-size: 30px;
+  color: #4ee36b;
+}
+
+.podi .podi-jauge .mf-quota__jauge {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.podi .podi-jauge .mf-quota__plein {
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7dff8a 0%, #2ccf4a 100%);
+  box-shadow: 0 0 10px rgba(80, 230, 110, 0.6);
+}
+
+.podi .podi-jauge .mf-quota__reste,
+.podi .podi-jauge .mf-quota__legende {
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ------------------------------------------------------------------------------------------- les cartes */
+.podi .pod-matiere { margin-top: 0; }
+.podi .pod-matiere__titre { display: none; }
+
+.podi .pod-cartes {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.podi-carte {
+  position: relative;
+  list-style: none;
+}
+
+.podi-carte__lien {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 140px;
+  padding: 14px 24px 14px 20px;
+  overflow: hidden;
+  border: 2.5px solid color-mix(in srgb, var(--carte-bord) 85%, #fff);
+  border-radius: 30px;
+  background: linear-gradient(90deg, var(--carte-haut) 0%, var(--carte-bas) 100%);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--carte-bord) 50%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #fff;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* La scène de la matière, en fond à droite, fondue vers la gauche. */
+.podi-carte__lien::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 58%;
+  background: var(--scene, none) center 65% / cover no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 65%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 65%);
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.podi-carte__lien > * { position: relative; z-index: 1; }
+
+.podi-carte__lien:hover,
+.podi-carte__lien:focus-visible {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 28px color-mix(in srgb, var(--carte-bord) 70%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+
+/* La vignette : la scène de la matière, comme une photo posée de biais. */
+.podi-carte__vignette {
+  flex: none;
+  width: 150px;
+  height: 108px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  background: var(--scene, none) center 70% / cover no-repeat;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  transform: rotate(-4deg);
+}
+
+.podi-carte__vignette.est-vide {
+  background: linear-gradient(135deg, var(--bouton-clair), var(--bouton-fonce));
+}
+
+.podi-carte__texte {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.podi-carte__matiere {
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--bouton-clair), var(--bouton-fonce));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--bouton-fonce) 50%, transparent);
+  color: #10163a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.podi-carte__titre {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--sans);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* L'onde devant le titre : cinq barres fixes, à la couleur du liseré. */
+.podi-onde {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 30px;
+  flex: none;
+}
+
+.podi-onde i {
+  display: block;
+  width: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--carte-bord) 70%, #fff);
+  box-shadow: 0 0 6px var(--carte-bord);
+}
+
+.podi-onde i:nth-child(1) { height: 12px; }
+.podi-onde i:nth-child(2) { height: 22px; }
+.podi-onde i:nth-child(3) { height: 30px; }
+.podi-onde i:nth-child(4) { height: 20px; }
+.podi-onde i:nth-child(5) { height: 12px; }
+
+.podi-carte__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 34px;
+  padding-left: 46px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.podi-carte__meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.podi-icone {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  background: center / contain no-repeat;
+}
+
+.podi-icone--pile {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M12 3 2 8l10 5 10-5z' fill='white'/%3E%3Cpath d='m2 12 10 5 10-5M2 16l10 5 10-5'/%3E%3C/svg%3E");
+}
+
+.podi-icone--agenda {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2M7 17h2M11 17h2'/%3E%3C/svg%3E");
+}
+
+/* Le gros bouton de lecture, rond et brillant. */
+.podi-carte__jouer {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 82px;
+  height: 82px;
+  border: 3px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, var(--bouton-clair) 0%, var(--bouton-fonce) 75%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--bouton-fonce) 70%, transparent),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4);
+}
+
+.podi-triangle {
+  width: 0;
+  height: 0;
+  margin-left: 6px;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  border-left: 24px solid #fff;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.podi-carte.est-a_lire .podi-carte__jouer,
+.podi-carte.est-a_generer .podi-carte__jouer,
+.podi-carte.est-notions .podi-carte__jouer,
+.podi-carte.est-echec .podi-carte__jouer { opacity: 0.45; }
+
+.podi-carte__supprimer {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(5, 10, 40, 0.55);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.podi-carte:hover .podi-carte__supprimer,
+.podi-carte__supprimer:focus-visible { opacity: 1; }
+
+@media (hover: none) {
+  .podi-carte__supprimer { opacity: 0.8; }
+}
+
+/* ------------------------------------------------------------------------------- les messages de la page */
+.podi .mf-vide {
+  border: 2px solid rgba(190, 170, 255, 0.45);
+  border-radius: 22px;
+  background: rgba(8, 16, 60, 0.78);
+  color: #fff;
+}
+
+.podi .mf-vide p,
+.podi .mf-vide strong { color: #fff; }
+
+/* ------------------------------------------------------------------------------- sur un téléphone */
+@media (max-width: 760px) {
+  .podi-banniere {
+    aspect-ratio: auto;
+    min-height: 220px;
+    padding: 22px 16px 18px 42%;
+    border-radius: 22px;
+    background-size: cover;
+    background-position: 6% center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  /* Un voile sous le texte : sur un téléphone, il passe sur le garçon et les ondes. */
+  .podi-banniere::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent 18%, rgba(10, 14, 60, 0.82) 46%, rgba(10, 14, 60, 0.9) 100%);
+    pointer-events: none;
+  }
+
+  .podi-banniere > * { position: relative; z-index: 1; }
+
+  .podi-banniere__titre,
+  .podi-banniere__sous-titre,
+  .podi-banniere__creer {
+    position: relative;
+    inset: auto;
+    width: auto;
+    height: auto;
+  }
+
+  .podi-banniere__titre { font-size: 30px; text-align: left; }
+  .podi-banniere__sous-titre { font-size: 13.5px; text-align: left; }
+  .podi-banniere__creer { align-self: flex-start; padding: 10px 18px; font-size: 15px; gap: 8px; border-width: 2px; }
+
+  .podi-jauge { padding: 14px 16px; gap: 12px; }
+  .podi-jauge__icone { width: 52px; }
+  .podi .podi-jauge .mf-quota__titre { font-size: 17px; }
+
+  .podi-carte__lien { gap: 12px; min-height: 0; padding: 12px 14px; border-radius: 22px; }
+  .podi-carte__lien::after { width: 70%; opacity: 0.25; }
+  .podi-carte__vignette { width: 78px; height: 60px; border-width: 2px; border-radius: 12px; }
+  .podi-carte__titre { font-size: 17px; gap: 8px; }
+  .podi-onde { display: none; }
+  .podi-carte__meta { padding-left: 0; gap: 4px 16px; font-size: 13.5px; }
+  .podi-carte__jouer { width: 52px; height: 52px; }
+  .podi-triangle { border-top-width: 10px; border-bottom-width: 10px; border-left-width: 16px; margin-left: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .podi-carte__lien,
+  .podi-banniere__creer { transition: none; }
+}
+
+/* « CRÉER UN PODCAST » SUIT LA SAISON — Camara, le 16/11/2026 (« tout doit s'adapter aux thèmes ») : la pilule prend
+   la couleur des boutons de la saison (or en Black Friday, bleu en soldes d'hiver…). La bannière est une
+   illustration : elle ne change pas. « Créer une fiche » fait de même (fichesIllustre.css). */
+:root[data-da='blue-sky'][data-saison] .podi-banniere__creer {
+  border-color: color-mix(in srgb, var(--corail-btn) 40%, #ffffff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 65%, #ffffff) 0%, var(--corail-btn) 60%, color-mix(in srgb, var(--corail-btn) 80%, #000000) 100%);
+  box-shadow:
+    inset 0 0.2cqw 0 rgba(255, 255, 255, 0.45),
+    0 0 1.6cqw color-mix(in srgb, var(--corail-btn) 55%, transparent),
+    0 0.5cqw 1.2cqw rgba(0, 0, 0, 0.3);
+}
+
+/* Black Friday : l'or plus foncé du ruban « Le plus choisi », pour que le texte et le micro blancs se lisent. */
+:root[data-da='blue-sky'][data-saison='black-friday'] .podi-banniere__creer {
+  background: linear-gradient(180deg, #c99400 0%, #9a6c00 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(60, 35, 0, 0.7);
+}

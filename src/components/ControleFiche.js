@@ -13,6 +13,10 @@ import Loader from './Loader';
 import PastillePret from './PastillePret';
 import { delaiControle, jourControle } from './MesControles';
 import { useAffichageEleve } from '../lib/besoins';
+import { vueIllustree } from '../lib/vueIllustree';
+import { paletteDeMatiere, sceneDeMatiere } from '../lib/scenesMatieres';
+import { iconeEpreuve } from './PreparationExamen';
+import './controleFicheIllustre.css';
 
 /**
  * La fiche d'un contrôle : ce qu'il est, où en est sa préparation, et par quoi
@@ -58,6 +62,20 @@ function IconeCrayon() {
     </svg>
   );
 }
+
+/** Le calendrier de la pastille du délai (vue de l'enfant). */
+function IconeCalendrier() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="16" rx="3" />
+      <path d="M8 3v4M16 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+    </svg>
+  );
+}
+
+/** « hier », « il y a 3 jours » : le temps écoulé depuis un contrôle passé. */
+export const ilYa = (jours) => (jours <= 1 ? 'hier' : `il y a ${jours} jours`);
 
 function IconeCorbeille() {
   return (
@@ -141,8 +159,21 @@ export default function ControleFiche() {
     (a, b) => ORDRE.indexOf(a.etat) - ORDRE.indexOf(b.etat),
   );
 
+  // LA FICHE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026 : sa maquette, « qui s'adapte à n'importe quel contrôle ».
+  // Les couleurs et la scène de la bannière viennent de la matière du contrôle (lib/scenesMatieres.js) ; sans scène
+  // connue, la bannière garde son dégradé. Le parent garde la fiche d'avant. Rien n'isole la page (pas de z-index,
+  // ni filtre, ni transformation sur sa racine) : les fenêtres qu'elle ouvre passent au-dessus du pied de page.
+  // Aussi pour le parent dans l'espace de son enfant (16/11/2026) : voir lib/vueIllustree.js.
+  const illustre = vueIllustree();
+  const matiere = matieres.find((m) => m.id === controle.matiereId);
+  const scene = illustre ? sceneDeMatiere(matiere?.code) : null;
+  const style = {
+    ...styleMatiere({ matiereLibelle: controle.matiereLibelle }),
+    ...(illustre && matiere ? paletteDeMatiere(matiere) : {}),
+  };
+
   return (
-    <section className="page controle-page" style={styleMatiere({ matiereLibelle: controle.matiereLibelle })}>
+    <section className={`page controle-page${illustre ? ' page-decor-enfant cfi' : ''}`} style={style}>
       {/* LE RETOUR SUIT LE CHEMIN PARCOURU, pas la place de la page dans
           l'arborescence. Relevé par Camara le 13/09/2026 : arrivé depuis ses
           cours, l'enfant était renvoyé vers la liste des contrôles — une page
@@ -158,14 +189,25 @@ export default function ControleFiche() {
       <article className="controle-fiche">
 
       <header className="controle-fiche__entete">
+        {scene && (
+          <span className="cfi-scene" aria-hidden="true" style={{ backgroundImage: `url(${scene.image})` }} />
+        )}
+
         <div className="controle-fiche__haut">
           <span className="controle-fiche__matiere">
-            <span className="controle-fiche__point" aria-hidden="true" />
+            {illustre ? (
+              <span className="cfi-icone" aria-hidden="true">{iconeEpreuve({ libelle: controle.matiereLibelle })}</span>
+            ) : (
+              <span className="controle-fiche__point" aria-hidden="true" />
+            )}
             {controle.matiereLibelle}
           </span>
 
           <span className={`controle-fiche__badge${passe ? ' est-passe' : ''}`}>
-            {passe ? 'contrôle passé' : delaiControle(controle.joursRestants)}
+            {illustre && <IconeCalendrier />}
+            {passe
+              ? (illustre ? ilYa(-controle.joursRestants) : 'contrôle passé')
+              : delaiControle(controle.joursRestants)}
           </span>
         </div>
 
@@ -331,6 +373,10 @@ export default function ControleFiche() {
           seulement dans la fenêtre du contrôle : l'enfant qui n'avait pas son
           cahier sous la main en créant le contrôle l'ajoute plus tard, là où
           il vient préparer. Il sert aussi à la correction de la copie. */}
+      {illustre && (
+        <div className="cfi-separateur" aria-hidden="true"><span>✦</span></div>
+      )}
+
       <section className="controle-fiche__cours">
         <CoursDuControle eleveId={eleveId} controleId={controle.id} />
       </section>
@@ -359,6 +405,7 @@ export default function ControleFiche() {
             className="btn"
             onClick={() => setOuverture('controle')}
           >
+            {illustre && <span className="cfi-bouton-icone" aria-hidden="true">🚀</span>}
             Préparer ce contrôle
           </button>
         )}
@@ -371,6 +418,7 @@ export default function ControleFiche() {
             className="btn"
             onClick={() => setOuverture('bilan')}
           >
+            {illustre && <span className="cfi-bouton-icone" aria-hidden="true">💬</span>}
             Faire le point sur ce contrôle
           </button>
         )}

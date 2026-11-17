@@ -6,6 +6,8 @@ import {
   definirConseillere,
   definirBesoinsParticuliers,
   definirFichesRevision,
+  definirPodcasts,
+  definirPodcastsTelechargement,
   definirStyleSaison,
   definirPlacesAffluence,
   definirOffreLancement,
@@ -917,6 +919,8 @@ export default function Modes() {
     // Les besoins particuliers (11/10/2026) : éteints par défaut.
     besoinsParticuliers: false,
     fichesRevision: false,
+    podcasts: false,
+    podcastsTelechargement: false,
   });
   const [chargement, setChargement] = useState(true);
   const [envoi, setEnvoi] = useState(null);
@@ -1011,6 +1015,8 @@ export default function Modes() {
 
           besoinsParticuliers: Boolean(data?.besoinsParticuliers),
           fichesRevision: Boolean(data?.fichesRevision),
+          podcasts: Boolean(data?.podcasts),
+          podcastsTelechargement: Boolean(data?.podcastsTelechargement),
         });
 
         setLus(true);
@@ -1139,6 +1145,36 @@ export default function Modes() {
       setReglages((etat) => ({ ...etat, fichesRevision: !etat.fichesRevision }));
     } catch {
       setErreur("Les fiches de révision n'ont pas pu être enregistrées.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
+  /** LES PODCASTS DE L'ÉLÈVE — Camara, le 15/11/2026. Éteints, la carte quitte la grille et plus rien ne s'enregistre. */
+  const basculerPodcasts = async () => {
+    setEnvoi('MODULE_PODCASTS');
+    setErreur(null);
+
+    try {
+      await definirPodcasts(!reglages.podcasts);
+      setReglages((etat) => ({ ...etat, podcasts: !etat.podcasts }));
+    } catch {
+      setErreur("Les podcasts n'ont pas pu être enregistrés.");
+    } finally {
+      setEnvoi(null);
+    }
+  };
+
+  /** Le bouton « Télécharger en MP3 » sous chaque épisode (15/11/2026). */
+  const basculerTelechargementPodcasts = async () => {
+    setEnvoi('PODCASTS_TELECHARGEMENT');
+    setErreur(null);
+
+    try {
+      await definirPodcastsTelechargement(!reglages.podcastsTelechargement);
+      setReglages((etat) => ({ ...etat, podcastsTelechargement: !etat.podcastsTelechargement }));
+    } catch {
+      setErreur("Le téléchargement des podcasts n'a pas pu être enregistré.");
     } finally {
       setEnvoi(null);
     }
@@ -1525,6 +1561,50 @@ export default function Modes() {
           ]}
           note="Éteint, la carte disparaît et plus rien ne se génère ; les fiches déjà faites restent, et le travail en attente reprend au rallumage."
         />
+
+        <Interrupteur
+          titre="Podcasts de l’élève"
+          actif={reglages.podcasts}
+          connu={lus}
+          occupe={envoi === 'MODULE_PODCASTS'}
+          onBasculer={basculerPodcasts}
+          description="L’élève importe son cours ou dit son sujet ; chaque notion devient un épisode audio de 3 à 6 minutes, raconté par le professeur de la matière, avec sa voix."
+          effets={[
+            'Une carte « Mes podcasts » sur la page de l’enfant, une pastille sur celle du parent.',
+            'Un épisode par notion choisie : le texte (Claude), puis la voix (comme en séance), compressée en Opus (~1 Mo pour 5 minutes).',
+            'Coût estimé : environ 0,10 à 0,20 $ par épisode — à mesurer au premier vrai podcast.',
+            '10 PODCASTS par mois et par enfant, compteur à part des fiches ; ensuite les crédits de podcasts de la famille (5 à 7,90 €, 10 à 12,90 €).',
+            '40 pages par cours au plus ; au-delà de 10 pages, le cours compte pour 2.',
+            'L’audio est rangé sur le disque (dossier de l’audio des archives), le texte en base.',
+          ]}
+          note="Éteint, la carte disparaît et plus rien ne s’enregistre ; les podcasts déjà faits restent, et le travail en attente reprend au rallumage."
+        >
+          {/* LE TÉLÉCHARGEMENT EN MP3 — Camara, le 15/11/2026 : « que je pourrais afficher ou pas à partir de l'admin ». */}
+          <div className="mode__sous-reglage">
+            <div className="mode__sous-texte">
+              <strong>Bouton « Télécharger en MP3 »</strong>
+              <span>
+                {reglages.podcastsTelechargement
+                  ? 'Affiché sous chaque épisode : l’élève et le parent peuvent garder l’audio en MP3.'
+                  : 'Masqué : les épisodes s’écoutent seulement sur Mimia.'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              className={`bascule bascule--mini ${reglages.podcastsTelechargement ? 'bascule--active' : ''}`}
+              onClick={basculerTelechargementPodcasts}
+              disabled={envoi === 'PODCASTS_TELECHARGEMENT' || !lus}
+              role="switch"
+              aria-checked={reglages.podcastsTelechargement}
+              aria-label="Bouton Télécharger en MP3 des podcasts"
+            >
+              <span className="bascule__piste">
+                <span className="bascule__bouton" />
+              </span>
+            </button>
+          </div>
+        </Interrupteur>
 
         <ModeConseillere
           conseillere={reglages.conseillere}

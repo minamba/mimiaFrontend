@@ -1,0 +1,3 @@
+Construction exacte : nombre ou forme géométrique
+Sujet : le drapeau de l'Angleterre
+Source : construction exacte documentée dans produire.py

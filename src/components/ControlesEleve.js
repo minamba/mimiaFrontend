@@ -9,6 +9,8 @@ import Onglets from './Onglets';
 import OuvertureSeance from './OuvertureSeance';
 import { ControleCarte } from './MesControles';
 import { useAffichageEleve } from '../lib/besoins';
+import { vueIllustree } from '../lib/vueIllustree';
+import './controlesPageIllustre.css';
 
 /**
  * REGROUPÉS PAR MATIÈRE, ET C'EST LE PROFESSEUR QUI SIGNE LE GROUPE.
@@ -53,6 +55,22 @@ function grouperParMatiere(controles) {
  * seulement une fois la préparation consolidée : c'est le point 11 du dossier,
  * volontairement laissé de côté.
  */
+/** La fleur de cerisier du titre (vue illustrée de l'enfant) : cinq pétales au trait. */
+function FleurCerisier() {
+  return (
+    <svg className="cpi-fleur" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      {[0, 72, 144, 216, 288].map((angle) => (
+        <path
+          key={angle}
+          d="M24 24 C17 17 17 7 24 4 C31 7 31 17 24 24 Z"
+          transform={`rotate(${angle} 24 24)`}
+        />
+      ))}
+      <circle cx="24" cy="24" r="3.2" />
+    </svg>
+  );
+}
+
 const ONGLETS = [
   { cle: 'avenir', libelle: 'À venir' },
   { cle: 'passes', libelle: 'Passés' },
@@ -116,8 +134,14 @@ export default function ControlesEleve() {
 
   const groupes = controles !== null ? grouperParMatiere(controles) : [];
 
+  // LA VUE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026 (maquette « Mes contrôles », onglets À venir / Passés) :
+  // le décor commun des pages de l'enfant et cette page restylée (controlesPageIllustre.css, préfixe `cpi`).
+  // Les cartes restent `ControleCarte`, habillées par la feuille. Le parent, dans l'espace de son enfant, a la même (16/11/2026).
+  // Aussi pour le parent dans l'espace de son enfant (16/11/2026) : voir lib/vueIllustree.js.
+  const illustre = vueIllustree();
+
   return (
-    <section className="page page--large">
+    <section className={`page page--large${illustre ? ' page-decor-enfant cpi' : ''}`}>
       <Link to={`/eleves/${eleveId}/matieres#mes-controles`} className="lien-retour">← Retour</Link>
 
       {ouverture && (
@@ -136,7 +160,15 @@ export default function ControlesEleve() {
       )}
 
       <header className="controles-page__entete">
-        <h1>Mes contrôles</h1>
+        {illustre ? (
+          <h1 className="cpi-titre">
+            <FleurCerisier />
+            <span className="cpi-titre__texte">Mes contrôles</span>
+            <span className="cpi-titre__traits" aria-hidden="true" />
+          </h1>
+        ) : (
+          <h1>Mes contrôles</h1>
+        )}
         <BoutonAjoutControle onClick={() => setFormulaire(true)} />
       </header>
 
@@ -179,6 +211,7 @@ export default function ControlesEleve() {
                 onPreparer={preparer}
                 onBilan={faireLePoint}
                 passe={onglet === 'passes'}
+                illustre={illustre}
               />
             ))}
           </ul>

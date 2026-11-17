@@ -48,6 +48,8 @@ const PAR_DEFAUT = {
 
   // LES FICHES DE RÉVISION DE L'ÉLÈVE (14/10/2026) : éteintes tant qu'on n'a rien lu.
   fichesRevision: false,
+  podcasts: false,
+  podcastsTelechargement: false,
 
   // LA CONSEILLÈRE D'ORIENTATION (18/10/2026) : éteinte tant qu'on n'a rien lu.
   conseillereOrientation: false,
@@ -123,6 +125,8 @@ function interroger() {
 
           // La carte « Mes fiches de révision » de la grille de l'enfant.
           fichesRevision: Boolean(data?.fichesRevision),
+          podcasts: Boolean(data?.podcasts),
+          podcastsTelechargement: Boolean(data?.podcastsTelechargement),
 
           // La ligne « conseillère d'orientation » de la page des tarifs.
           conseillereOrientation: Boolean(data?.conseillereOrientation),
@@ -333,6 +337,16 @@ export function useBesoinsParticuliers() {
  */
 export function useFichesRevision() {
   return Boolean(useDrapeaux().fichesRevision);
+}
+
+/** Les podcasts de l'élève sont-ils ouverts ? (15/11/2026) — la carte de la grille et les pages du module en dépendent. */
+export function usePodcasts() {
+  return Boolean(useDrapeaux().podcasts);
+}
+
+/** Le bouton « Télécharger en MP3 » sous chaque épisode est-il affiché ? (15/11/2026, choisi dans Admin › Modes). */
+export function usePodcastsTelechargement() {
+  return Boolean(useDrapeaux().podcastsTelechargement);
 }
 
 /** La conseillère d'orientation est-elle allumée ? (18/10/2026) — la page des tarifs l'annonce alors. */

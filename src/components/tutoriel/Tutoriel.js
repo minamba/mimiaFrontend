@@ -3,7 +3,9 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import TestMicro from './TestMicro';
-import { ETAPES, avancement, titreDeLEtape } from '../../lib/tutoriel/etapes';
+import {
+  ETAPES, apresLaPartie, avancement, titreDeLEtape,
+} from '../../lib/tutoriel/etapes';
 import './tutoriel.css';
 
 /** Le temps laissé à une cible pour apparaître, avant de sauter l'étape. */
@@ -25,6 +27,9 @@ const MARGE_TROU = 8;
 const MARGE_BULLE = 14;
 
 const trouver = (selecteur) => (selecteur ? document.querySelector(selecteur) : null);
+
+/** La porte d'une visite n'est pas sur cette page : toute sa visite se saute. */
+const sansSaPorte = (etape) => Boolean(etape.si) && !trouver(etape.si);
 
 /** Le rectangle éclairé, gardé dans l'écran même quand la cible le dépasse. */
 function rectangleDe(element) {
@@ -71,38 +76,88 @@ const memeRectangle = (a, b) => a && b
  * d'examen cette année, carte de matière fermée) fait sauter l'étape, et
  * « Passer » reste affiché en permanence.
  *
- * @param onScene appelé avec vrai ou faux : la démonstration du cours s'affiche
- *                ou se retire, selon ce que demande l'étape.
- * @param onFin   appelé à la fin comme à « Passer ».
+ * « PRÉCÉDENT » — Camara, le 08/11/2026. Il revient à la dernière étape VUE, et non à
+ * l'étape d'avant dans la liste : une étape absente se resauterait aussitôt, et le parent
+ * retomberait là d'où il vient sans comprendre. D'où `vues`, où ne s'inscrit que ce qui
+ * a été à l'écran.
+ *
+ * @param etapes    le parcours : celui de la page de l'enfant, ou celui de sa fiche.
+ * @param onScene   appelé avec l'écran de démonstration que demande l'étape et sa vue,
+ *                  ou null : l'écran s'affiche, change ou se retire.
+ * @param onFenetre appelé au retour avec 'duree', 'casque' ou null : la fenêtre que
+ *                  l'étape retrouvée éclaire. Sans elle, une étape qui attend la fenêtre
+ *                  suivante, ou sa fermeture, repartirait toute seule en avant.
+ * @param onFin     appelé à la fin comme à « Passer ».
  */
-export default function Tutoriel({ onScene, onFin }) {
-  const [index, setIndex] = useState(0);
+export default function Tutoriel({
+  etapes = ETAPES, onScene, onFenetre, onFin,
+}) {
+  const [{ index, vues }, setParcours] = useState({ index: 0, vues: [] });
   const [trou, setTrou] = useState(null);
   const [position, setPosition] = useState(null);
 
   const bulleRef = useRef(null);
-  const etape = ETAPES[index];
-  const derniere = index === ETAPES.length - 1;
+  const derniereVue = useRef(null);
+  const etape = etapes[index];
+  const derniere = index === etapes.length - 1;
+
+  // LA DERNIÈRE BULLE QUE CE PARENT VERRA, même si la liste continue : ce qui reste après
+  // a sa porte absente de cette page. On n'y écrit pas « Suivant » pour tout refermer.
+  const finale = derniere || etapes.slice(index + 1).every(sansSaPorte);
 
   const avancer = useCallback(() => {
     setTrou(null);
-    setIndex((i) => {
-      if (i >= ETAPES.length - 1) return i;
-      return i + 1;
+    setParcours((avant) => {
+      if (avant.index >= etapes.length - 1) return avant;
+      return {
+        index: avant.index + 1,
+        vues: derniereVue.current === avant.index ? [...avant.vues, avant.index] : avant.vues,
+      };
     });
-  }, []);
+  }, [etapes]);
+
+  const reculer = () => {
+    if (vues.length === 0) return;
+
+    const retrouvee = vues[vues.length - 1];
+    setTrou(null);
+    setParcours({ index: retrouvee, vues: vues.slice(0, -1) });
+    onFenetre?.(etapes[retrouvee].fenetre ?? null);
+  };
+
+  // SAUTER UNE PARTIE. La fenêtre ouverte, s'il y en a une, se referme ; l'étape quittée
+  // reste dans `vues` : « Précédent » y ramène, fenêtre comprise.
+  const suiteDeLaPartie = etapes === ETAPES ? apresLaPartie(index) : null;
+  const passerLaPartie = () => {
+    setTrou(null);
+    setParcours({ index: suiteDeLaPartie, vues: [...vues, index] });
+    onFenetre?.(ETAPES[suiteDeLaPartie].fenetre ?? null);
+  };
+
+  // Une étape est vue quand sa bulle est là : aussitôt sans cible, sinon une fois la
+  // cible éclairée.
+  useEffect(() => {
+    if (!etape.cible || trou) derniereVue.current = index;
+  }, [etape, index, trou]);
 
   // LA SCÈNE SUIT L'ÉTAPE, À L'ARRIVÉE SUR ELLE. Pas à chaque rendu : le clic sur
   // « Quitter » retire la démonstration avant de changer d'étape, et un effet
   // continu la remettrait aussitôt.
   useEffect(() => {
-    onScene?.(etape.scene === 'cours');
+    if (sansSaPorte(etape)) onScene?.(null, null);
+    else onScene?.(etape.scene ?? null, etape.vue ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
   // TROUVER LA CIBLE. Elle peut arriver un peu après : une modale qui s'ouvre, un
   // bloc dont les données se chargent. Passé le délai, l'étape se saute.
   useEffect(() => {
+    if (sansSaPorte(etape)) {
+      if (derniere) onFin?.();
+      else avancer();
+      return undefined;
+    }
+
     if (!etape.cible) {
       setTrou(null);
       return undefined;
@@ -250,7 +305,7 @@ export default function Tutoriel({ onScene, onFin }) {
       : { haut, gauche }));
   }, [trou, index]);
 
-  const part = avancement(index);
+  const part = finale ? 100 : avancement(index, etapes.length);
   const attendClic = Boolean(etape.action);
 
   return createPortal(
@@ -306,7 +361,7 @@ export default function Tutoriel({ onScene, onFin }) {
 
         <span className="tuto__pourcent">{part} %</span>
 
-        {!derniere && (
+        {!finale && (
           <button type="button" className="tuto__passer" onClick={onFin}>
             Passer le tutoriel
           </button>
@@ -326,19 +381,43 @@ export default function Tutoriel({ onScene, onFin }) {
 
           {etape.composant === 'micro' && <TestMicro />}
 
-          {attendClic ? (
+          {attendClic && (
             <p className="tuto__action">
               <span aria-hidden="true">👉</span> {etape.action}
             </p>
-          ) : (
+          )}
+
+          {(vues.length > 0 || !attendClic || suiteDeLaPartie !== null) && (
             <div className="tuto__actions">
-              <button
-                type="button"
-                className="tuto-bouton"
-                onClick={derniere ? onFin : avancer}
-              >
-                {etape.suivant ?? 'Suivant'}
-              </button>
+              {vues.length > 0 && (
+                <button
+                  type="button"
+                  className="tuto-bouton tuto-bouton--discret tuto__precedent"
+                  onClick={reculer}
+                >
+                  Précédent
+                </button>
+              )}
+
+              {suiteDeLaPartie !== null && (
+                <button
+                  type="button"
+                  className="tuto-bouton tuto-bouton--discret tuto__sauter"
+                  onClick={passerLaPartie}
+                >
+                  Passer l’étape
+                </button>
+              )}
+
+              {!attendClic && (
+                <button
+                  type="button"
+                  className="tuto-bouton tuto__suite"
+                  onClick={finale ? onFin : avancer}
+                >
+                  {finale ? 'Terminer' : (etape.suivant ?? 'Suivant')}
+                </button>
+              )}
             </div>
           )}
         </div>

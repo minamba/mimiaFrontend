@@ -506,20 +506,12 @@ h1, h2, h3 {
    le parent qui revient. Elle prend donc la couleur de la marque en texte et
    en liseré, ce qui la distingue d'un coup d'œil de la navigation grise à sa
    gauche ET du bouton corail plein à sa droite. */
+/* DEVENUE UN BOUTON PLEIN le 16/11/2026 (maquette de Camara) : ses couleurs viennent du style commun des
+   boutons, en fin de fichier ; il ne garde ici que sa taille. */
 .navbar__right .navbar__connexion {
   padding-left: 20px;
   padding-right: 20px;
-  border-color: color-mix(in srgb, var(--corail-texte) 70%, var(--trait));
-  color: var(--corail-texte);
   font-size: 14.5px;
-  font-weight: 600;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-}
-
-.navbar__right .navbar__connexion:hover {
-  background: color-mix(in srgb, var(--corail-texte) 10%, var(--surface));
-  border-color: var(--corail-texte);
-  color: var(--corail-texte);
 }
 
 /* Niveau 1 — l'inscription. Elle avait la couleur d'un bouton principal mais
@@ -2018,6 +2010,41 @@ h1, h2, h3 {
   cursor: default;
 }
 
+/* UN ÉTAT QU'ON VOIT — Camara, le 15/11/2026, capture en Black Friday : « ma formule actuelle n'est pas visible, je
+   ne vois pas le texte, il faudrait faire autre chose ». Deux causes : la règle de Black Friday qui passe en NOIR le
+   texte de tous les boutons pleins (or) l'attrapait aussi, texte noir sur fond transparent ; et, partout, un simple
+   contour vert se lisait comme un bouton éteint. Un fond vert léger, une coche, du gras et une encre claire : un
+   tampon « c'est la vôtre », lisible dans tous les modes. */
+/* LA COULEUR DU THÈME — Camara, le même jour : « en fonction du thème, fais en sorte que le bouton soit toujours
+   visible ». Le vert fixe jurait sur certains modes (or et noir, tricolore…) : le tampon prend l'accent secondaire
+   du thème (--sarcelle : vert en Blue Sky, or clair en Black Friday, cyan en Cyber Monday, menthe ailleurs),
+   éclairci vers le blanc sur les thèmes sombres, foncé vers le noir sur le thème clair. Contraste mesuré sur la
+   carte dans chaque mode : voir la mémoire du projet. */
+.btn.btn--actuelle,
+.btn.btn--actuelle:disabled {
+  background: color-mix(in srgb, var(--sarcelle) 16%, transparent);
+  border: 1.5px solid var(--sarcelle);
+  color: color-mix(in srgb, var(--sarcelle) 55%, #ffffff);
+  font-weight: 700;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sarcelle) 32%, transparent);
+}
+
+.btn.btn--actuelle::before {
+  content: '✓';
+  margin-right: 6px;
+  font-weight: 800;
+}
+
+/* Sur une ligne dans les cartes de formules : coche comprise, le texte passait à la ligne. */
+.tarif .btn.btn--actuelle { padding-left: 10px; padding-right: 10px; white-space: nowrap; font-size: 14px; }
+
+:root[data-theme='light'] .btn.btn--actuelle,
+:root[data-theme='light'] .btn.btn--actuelle:disabled {
+  background: color-mix(in srgb, var(--sarcelle) 12%, #ffffff);
+  color: color-mix(in srgb, var(--sarcelle) 60%, #000000);
+  box-shadow: none;
+}
+
 .btn--fantome {
   background: transparent;
   border-color: var(--trait);
@@ -2611,6 +2638,38 @@ h1, h2, h3 {
 }
 
 .prof > span { font-size: 13px; color: var(--encre-douce); }
+
+/* LES CARTES DE L'ÉQUIPE PRENNENT LE DÉCOR DU COURS — Camara, le 16/11/2026 : « pour les profs de la page d'accueil,
+   mets les fonds d'écran qui sont dans les pages de cours, adaptés à la taille de la carte ». Le même `--mur` que le
+   bandeau du cours (data-mur, via murMatiere) ; l'image couvre la carte, calée sur son haut, sous un voile qui
+   s'assombrit vers le bas pour garder le prénom et la matière lisibles. Une matière sans décor (les langues sans mur
+   propre) prend celui du français, comme dans le cours.
+   L'IMAGE EST DONNÉE PAR LE CODE (`--prof-decor`, lib/mursMatiere.js) et non par la feuille : passer par la variable
+   `--mur` du cours a laissé les cartes noires dans le navigateur de Camara (16/11/2026), sans qu'on en trouve la cause. */
+/* `:root[data-da] .landing` EN PLUS : en Blue Sky (et donc en mode saisonnier), la page d'accueil repeint toutes ses
+   cartes en « verre clair » (`:root[data-da='blue-sky'] .landing :is(.tuile, .prof, …)`), règle plus forte que
+   `.prof[data-mur]` seule — c'est elle qui laissait les cartes noires chez Camara le 16/11/2026. */
+.prof[data-mur],
+:root[data-da] .landing .prof[data-mur] {
+  border-color: color-mix(in srgb, var(--signature) 45%, transparent);
+  background:
+    linear-gradient(180deg, rgba(8, 12, 40, 0.35) 0%, rgba(8, 12, 40, 0.55) 45%, rgba(8, 12, 40, 0.88) 100%),
+    var(--prof-decor, none) center 30% / cover no-repeat,
+    #0b1240;
+}
+
+.prof[data-mur] strong { color: #fff; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6); }
+.prof[data-mur] > span { color: rgba(255, 255, 255, 0.88); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+.prof[data-mur] > .prof__voir { color: #fff; }
+
+/* Le portrait se détache du décor : un anneau à la couleur du professeur. */
+.prof[data-mur] .avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--signature), 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Le motif dessiné ferait doublon avec le décor. */
+.prof[data-mur] .motif-matiere { display: none; }
 
 /* LA CARTE EST UN BOUTON — Camara, le 15/09/2026 : elle ouvre la fiche du
    professeur. Les réglages du navigateur pour un bouton sont effacés, pour
@@ -3229,6 +3288,117 @@ button.prof:focus-visible {
   color: rgba(255, 255, 255, 0.78);
 }
 
+/* « ESSAYEZ CE SOIR », D'APRÈS LA MAQUETTE DE CAMARA (16/11/2026) : la nuit aux cerisiers, la lune et la pagode,
+   textes et bouton effacés (assets/accueil-final.webp) puis redessinés ici. `:root[data-da] .landing` en plus : le
+   thème Blue Sky remplace sinon le fond de la carte par son verre (`:is(.preuve, .final)`). */
+.final,
+:root[data-da] .landing section.final {
+  position: relative;
+  padding: clamp(48px, 6vw, 72px) clamp(20px, 4vw, 40px);
+  border: 2px solid rgba(150, 175, 255, 0.55);
+  border-radius: 28px;
+  background-color: #13225e;
+  background-image: url('./assets/accueil-final.webp');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 0 0 4px rgba(120, 140, 255, 0.12),
+    0 0 34px rgba(120, 150, 255, 0.35),
+    0 30px 70px rgba(0, 0, 0, 0.45);
+}
+
+.final h2 {
+  font-size: clamp(26px, 3.6vw, 42px);
+  text-shadow: 0 3px 14px rgba(5, 10, 40, 0.55);
+}
+
+/* « ce soir » : le corail de la maquette, ses trois rayons au-dessus et son trait de pinceau dessous. */
+.final .titre-accent {
+  position: relative;
+  display: inline-block;
+}
+
+.final .titre-accent::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -0.62em;
+  width: 1.1em;
+  height: 0.5em;
+  transform: translateX(-30%);
+  background:
+    linear-gradient(#ff7a5c, #ff7a5c) 0 60% / 0.07em 0.4em no-repeat,
+    linear-gradient(#ff7a5c, #ff7a5c) 50% 0 / 0.07em 0.46em no-repeat,
+    linear-gradient(#ff7a5c, #ff7a5c) 100% 60% / 0.07em 0.4em no-repeat;
+  pointer-events: none;
+}
+
+.final .titre-accent::after {
+  content: '';
+  position: absolute;
+  left: -4%;
+  right: -2%;
+  bottom: -0.16em;
+  height: 0.1em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 122, 92, 0), #ff7a5c 18%, #ff6a3d 82%, rgba(255, 106, 61, 0));
+  transform: rotate(-2deg);
+  pointer-events: none;
+}
+
+.final p { color: rgba(235, 240, 255, 0.86); }
+
+/* Le bouton : la pilule orange lumineuse de la maquette. */
+.final .btn.btn--principal {
+  padding: 16px 44px;
+  border: 2px solid rgba(255, 200, 160, 0.6);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff8a4c 0%, #f2541b 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    0 0 26px rgba(255, 110, 50, 0.55),
+    0 10px 22px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-weight: 800;
+}
+
+/* EN MODE SAISONNIER, LA CARTE PREND LA COULEUR DE LA SAISON — Camara, le 16/11/2026 : « le bloc ne s'adapte pas
+   quand je change de thème ». L'illustration garde ses formes et sa lumière (la lune, la pagode, les cerisiers) mais
+   prend la teinte de la saison : `luminosity` ne garde que la lumière de l'image, la couleur vient du calque dessous,
+   tiré de l'accent de la saison (`--corail`). Or et noir en Black Friday, magenta en Cyber Monday… sans une image par
+   saison. Le liseré et la lueur suivent. */
+:root[data-da='blue-sky'][data-saison] .landing section.final {
+  background-color: color-mix(in srgb, var(--corail) 42%, #07070c);
+  background-blend-mode: luminosity;
+  border-color: color-mix(in srgb, var(--corail) 70%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--corail) 14%, transparent),
+    0 0 34px color-mix(in srgb, var(--corail) 38%, transparent),
+    0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-da='blue-sky'][data-saison] .final .titre-accent { color: var(--corail-texte, var(--corail)); }
+
+:root[data-da='blue-sky'][data-saison] .final .titre-accent::after {
+  background: linear-gradient(90deg, transparent, var(--corail) 18%, var(--corail) 82%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .final .titre-accent::before {
+  background:
+    linear-gradient(var(--corail), var(--corail)) 0 60% / 0.07em 0.4em no-repeat,
+    linear-gradient(var(--corail), var(--corail)) 50% 0 / 0.07em 0.46em no-repeat,
+    linear-gradient(var(--corail), var(--corail)) 100% 60% / 0.07em 0.4em no-repeat;
+}
+
+/* En mode saisonnier, le bouton prend la couleur de la saison, comme tous les autres. */
+:root[data-da='blue-sky'][data-saison] .final .btn.btn--principal {
+  background: var(--corail-btn);
+  border-color: color-mix(in srgb, var(--corail-btn) 60%, #fff);
+}
+
 /* ===================================================== pages applicatives */
 .page { max-width: 900px; margin: 0 auto; padding: 40px 28px 64px; }
 .page--etroite { max-width: 500px; }
@@ -3538,25 +3708,25 @@ button.prof:focus-visible {
    phrase, qui cassait en laissant un « ? » seul sur sa ligne, et le badge de
    classe flottait sans fond à côté.
 
-   La boule monte donc à la hauteur du « Bonjour », en haut à droite, et la
-   phrase reprend TOUTE la largeur sous le titre. Le titre lui réserve sa place
-   à droite pour ne jamais passer dessous. */
+   La boule montait alors à la hauteur du « Bonjour », en haut à droite, dans
+   56 px que le titre lui réservait. DEPUIS QUE « VOIR LE TUTO » L'ACCOMPAGNE
+   (02/11/2026), le groupe ne tenait plus dans ces 56 px et recouvrait le
+   prénom (Camara, le 07/11/2026 : « la boule et le bouton Voir le tuto sont
+   mal placés sur mobile »). Le groupe passe donc SOUS la question, aligné à
+   droite, et le titre reprend toute la largeur. */
 @media (max-width: 560px) {
   .grille-matieres__entete {
-    position: relative;
     display: block;
   }
 
   .grille-matieres__actions {
-    position: absolute;
-    top: -4px;
-    right: 0;
+    justify-content: flex-end;
+    margin: 14px 0 26px;
   }
 
-  .salutation { margin-bottom: 26px; }
+  .salutation { margin-bottom: 0; }
 
   .salutation h1 {
-    padding-right: 56px;
     font-size: 30px;
     line-height: 1.15;
   }
@@ -3601,6 +3771,39 @@ button.prof:focus-visible {
   background: transparent;
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* LA BOULE DANS UNE BULLE, AVEC SON TEXTE — Camara, le 07/11/2026 : « comme le
+   bouton Signaler ». Même corail, même galbe ; la boule garde sa rotation. */
+.bouton-avis {
+  width: auto;
+  gap: 8px;
+  padding: 4px 18px 4px 6px;
+  background: var(--corail-btn);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.bouton-avis:hover { background: var(--corail-btn-survol); }
+
+.bouton-avis .bouton-avis__icone {
+  width: 38px;
+  height: 38px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Sur téléphone, le groupe est calé en haut à droite dans la place que le
+   « Bonjour » lui réserve (56 px, voir plus bas) : la bulle garde la boule
+   seule, le texte reviendrait écraser le titre. */
+@media (max-width: 560px) {
+  /* Camara, le 07/11/2026 : « sur mobile, laisse juste la boule de cristal ». Le médaillon d'avant, sans bulle. */
+  .bouton-avis { width: 46px; padding: 0; background: transparent; box-shadow: none; }
+  .bouton-avis:hover { background: transparent; }
+  .bouton-avis .bouton-avis__icone { width: 52px; height: 52px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.28)); }
+  .bouton-avis__texte { display: none; }
 }
 
 .bouton-theme:hover,
@@ -3862,6 +4065,21 @@ button.prof:focus-visible {
   color: var(--encre-douce);
 }
 
+/* LA CONSEILLÈRE PENDANT L'ESSAI (15/11/2026) : « incluse à partir de Solo », lisible d'un coup d'œil — une
+   pastille à la teinte de la carte, pas une ligne grise de plus. */
+.matiere-carte__mention {
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--teinte, var(--corail)) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--teinte, var(--corail)) 45%, transparent);
+  color: var(--encre);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+}
+
 .matiere-carte__pied {
   display: flex;
   align-items: center;
@@ -4066,6 +4284,10 @@ button.prof:focus-visible {
 }
 
 .badge--discret { background: var(--surface-2); color: var(--encre-douce); font-weight: 400; }
+
+/* Abonnement offert par l’administration (13/11/2026). */
+.badge--offert { background: color-mix(in srgb, var(--serie-3) 16%, var(--surface-2)); color: var(--encre); }
+.case-offrir { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
 /* L'état d'activité porte une pastille EN PLUS du texte : la couleur seule
    exclurait les daltoniens, et le texte seul se lit moins vite. */
@@ -6972,6 +7194,15 @@ button.eleve-bandeau {
   max-height: 90dvh;
 }
 
+/* L'AVIS « SUR TÉLÉPHONE » (12/11/2026) — voir AvisMobile.js. Au-dessus de tout le reste de la page. */
+.avis-mobile { z-index: 80; }
+.avis-mobile__boite { align-items: center; text-align: center; gap: 10px; overflow-y: auto; }
+.avis-mobile__icone { font-size: 44px; line-height: 1; }
+.avis-mobile__titre { margin: 0; font-size: 21px; }
+.avis-mobile__texte { margin: 0; font-size: 15px; line-height: 1.5; color: var(--encre); }
+.avis-mobile__texte--bientot { color: var(--encre-douce); font-size: 14px; }
+.avis-mobile__bouton { margin-top: 8px; min-width: 180px; }
+
 /* La SEULE partie qui défile. Les marges négatives lui rendent toute la
    largeur du dialogue — sinon la barre de défilement apparaîtrait à 26 pixels
    du bord, flottante au milieu de rien. */
@@ -7537,6 +7768,19 @@ html.defilement-bloque body {
 .fiche__entete h2 { margin-bottom: 4px; }
 .fiche__sous-titre { margin: 0; font-size: 15px; color: var(--encre); }
 .fiche__parent { margin: 4px 0 0; font-size: 13.5px; color: var(--encre-douce); }
+
+/* LE BOUTON « FERMER » NE SORT PLUS DE L'ÉCRAN — Camara, le 11/11/2026 (fiche d'un enfant ouverte depuis l'admin,
+   sur téléphone). L'en-tête restait sur une ligne : avatar, texte, bouton. L'adresse du parent, sans espace où se
+   couper, élargissait le texte et poussait le bouton dehors. Sur téléphone : le texte prend la place qui reste et se
+   coupe, le bouton passe dessous, à droite. Même correction pour « Retour » côté parent. */
+@media (max-width: 640px) {
+  .fiche__entete { flex-wrap: wrap; gap: 12px 14px; }
+  /* 60 % au départ : sur un téléphone, il ne reste plus la place du bouton à côté, et il passe à la ligne. */
+  .fiche__entete > div { flex: 1 1 60%; min-width: 0; }
+  .fiche__entete .fiche__parent { overflow-wrap: anywhere; }
+  .fiche__entete > .btn-ghost { margin-left: auto; }
+  .fiche__entete--colore { padding: 16px; }
+}
 
 /* L'en-tête porte la couleur d'identité de l'enfant — la même que sa carte
    dans la liste et que son prénom sur la page des matières. Un parent de
@@ -8211,6 +8455,26 @@ html.defilement-bloque body {
   --mur: url('./assets/walls/w_artd.webp');
 }
 
+.chat__tete[data-mur='chinois'] {
+  /* Chinois (16/11/2026). */
+  --mur: url('./assets/walls/w_chinois.webp');
+}
+
+.chat__tete[data-mur='arabe'] {
+  /* Arabe (16/11/2026). */
+  --mur: url('./assets/walls/w_arabe.webp');
+}
+
+.chat__tete[data-mur='allemand'] {
+  /* Allemand (16/11/2026). */
+  --mur: url('./assets/walls/w_allemand.webp');
+}
+
+.chat__tete[data-mur='italien'] {
+  /* Italien (16/11/2026). */
+  --mur: url('./assets/walls/w_italien.webp');
+}
+
 .chat__tete[data-mur='sport'] {
   /* EPPCS : la piste et le terrain. */
   --mur: url('./assets/walls/w_sport.webp');
@@ -8230,6 +8494,10 @@ html.defilement-bloque body {
 .chat__tete[data-mur='droit_economie']::before,
 .chat__tete[data-mur='sante']::before,
 .chat__tete[data-mur='arts']::before,
+.chat__tete[data-mur='chinois']::before,
+.chat__tete[data-mur='arabe']::before,
+.chat__tete[data-mur='allemand']::before,
+.chat__tete[data-mur='italien']::before,
 .chat__tete[data-mur='sport']::before { display: block; }
 
 @media (max-width: 1040px) {
@@ -9511,14 +9779,48 @@ html.defilement-bloque body {
 
 /* AU TABLEAU (06/11/2026, voulu par Camara) : centrée sur l'ardoise, un peu plus grande. */
 /* « Agrandis l'image encore » (Camara, même jour) : elle prend presque toute la largeur du tableau. */
+/* « Les images ne s'adaptent pas à la forme du tableau » (Camara, même jour) : la carte, carrée et réglée sur la
+   largeur, dépassait en hauteur d'un tableau en paysage — rognée en haut, barre de défilement, bandes vertes sur
+   les côtés. Désormais la carte PREND TOUTE LA SURFACE, quelle que soit sa forme, et l'image s'y loge entière
+   (`object-fit: contain`), le mot en dessous. */
+.ardoise__surface--image { padding: 12px 12px 20px; overflow: hidden; }
+
+/* LA LECTURE À VOIX HAUTE (06/11/2026) : le texte à lire en gros caractères, bien espacés — un enfant de CP suit
+   les mots du doigt. Seulement pendant l'exercice ; le reste du tableau garde sa taille. */
+.ardoise__surface--lecture .ardoise__contenu {
+  font-size: clamp(24px, 2.6vw, 34px);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  word-spacing: 0.12em;
+}
+
 .image-mot--tableau {
-  width: min(94%, 520px);
-  margin: auto;
+  flex: 1;
+  align-self: stretch;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 12px 12px 10px;
   box-sizing: border-box;
 }
-.image-mot--tableau .image-mot__image { width: 100%; height: auto; aspect-ratio: 1 / 1; }
-.image-mot--tableau .image-mot__mot { font-size: clamp(26px, 4vw, 38px); }
+.image-mot--tableau .image-mot__image {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.image-mot--tableau .image-mot__mot { flex: none; font-size: clamp(26px, 4vw, 38px); line-height: 1.1; }
+
+/* Sur téléphone, le tableau n'a plus de hauteur fixe (collé en bas, 42vh au plus) : l'image reçoit la sienne. */
+@media (max-width: 1040px) {
+  .image-mot--tableau .image-mot__image { flex: none; height: min(26vh, 240px); }
+}
 
 .image-mot__image {
   display: block;
@@ -9533,6 +9835,58 @@ html.defilement-bloque body {
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+/* LE MOT À LIRE (07/11/2026) : écrit en grand, seul, en écriture d'école ; son dessin vient une fois lu. */
+.image-mot__a-lire {
+  margin: 0;
+  color: #1a2b4c;
+  font-family: Andika, 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+  font-size: clamp(54px, 9vw, 110px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .image-mot__a-lire { font-size: 48px; }
+}
+
+/* UN NOMBRE À LIRE, ÉCRIT AU TABLEAU (12/11/2026) — la même craie que le mot à lire, en chiffres. Une fraction en
+   étage, l'exposant en haut, la racine coiffée de sa barre. Une écriture scolaire : chiffres larges, « 1 » et « 7 » nets. */
+.nombre-tableau {
+  margin: 0;
+  color: #1a2b4c;
+  font-family: Andika, 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+  font-size: clamp(48px, 8vw, 104px);
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  font-variant-numeric: lining-nums;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+}
+.nombre-tableau__signe { margin-right: 0.08em; }
+.nombre-tableau__fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8em;
+  line-height: 1.05;
+}
+.nombre-tableau__num { padding: 0 0.15em 0.04em; border-bottom: 0.07em solid currentColor; }
+.nombre-tableau__den { padding: 0.04em 0.15em 0; }
+.nombre-tableau__exposant { font-size: 0.5em; vertical-align: 0.9em; margin-left: 0.04em; }
+.nombre-tableau__racine { display: inline-flex; align-items: flex-start; }
+.nombre-tableau__sous-racine { border-top: 0.07em solid currentColor; padding: 0 0.08em; margin-top: 0.1em; }
+
+@media (max-width: 520px) {
+  .nombre-tableau { font-size: 42px; }
 }
 
 @keyframes image-mot-arrive {
@@ -9690,6 +10044,55 @@ html.defilement-bloque body {
 }
 
 .alert--chat { margin: 0 0 10px; }
+
+/* « APPUIE ET PARLE », AU CP (12/11/2026) — un gros bouton qu'un enfant de six ans trouve sans chercher. Bleu pour
+   parler, vert pour « j'ai fini », avec un halo qui respire pendant qu'il parle. */
+.parole-cp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+.parole-cp__bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(100%, 420px);
+  min-height: 64px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #2f7bff, #1f56d6);
+  box-shadow: 0 8px 22px rgba(31, 86, 214, 0.35);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.parole-cp__bouton span { font-size: 26px; }
+.parole-cp__bouton:hover:not(:disabled) { transform: translateY(-1px); }
+.parole-cp__bouton:active:not(:disabled) { transform: scale(0.98); }
+.parole-cp__bouton:disabled { opacity: 0.55; cursor: default; box-shadow: none; }
+.parole-cp__bouton--fini {
+  background: linear-gradient(135deg, #2fbf71, #1d9a57);
+  box-shadow: 0 0 0 0 rgba(47, 191, 113, 0.55);
+  animation: parole-cp-halo 1.6s ease-out infinite;
+}
+.parole-cp__aide { font-size: 14px; color: var(--encre-douce); text-align: center; }
+@keyframes parole-cp-halo {
+  0% { box-shadow: 0 0 0 0 rgba(47, 191, 113, 0.55); }
+  70% { box-shadow: 0 0 0 16px rgba(47, 191, 113, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(47, 191, 113, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .parole-cp__bouton--fini { animation: none; }
+}
+@media (max-width: 640px) {
+  .parole-cp__bouton { min-height: 58px; font-size: 20px; }
+}
 
 .chat__saisie {
   display: flex;
@@ -10112,7 +10515,10 @@ html.defilement-bloque body {
   grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
   gap: 18px;
   margin-top: 30px;
-  align-items: start;
+  /* MÊME HAUTEUR POUR TOUTES LES CARTES (14/11/2026, Camara : « c'est moche ») : depuis que les formules ne listent
+     que leurs différences, Starter est bien plus haute que les autres. Les cartes s'étirent sur la rangée, et la liste
+     (flex: 1) pousse le prix annuel et le bouton en bas : les boutons s'alignent d'une carte à l'autre. */
+  align-items: stretch;
 }
 
 .tarif {
@@ -10150,8 +10556,10 @@ html.defilement-bloque body {
 .tarif:not(.tarif--choisie):hover,
 .tarif:not(.tarif--choisie):focus-visible {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--corail) 55%, var(--trait));
-  background: color-mix(in srgb, var(--corail) 3%, var(--surface));
+  /* PLUS D'ORANGE AU SURVOL (14/11/2026) : l'orange reste à la carte choisie (Duo par défaut) et à son bouton ; un
+     liseré orange sous la souris faisait croire à une deuxième carte mise en avant. */
+  border-color: var(--trait-bouton);
+  background: color-mix(in srgb, #fff 3%, var(--surface));
   box-shadow: var(--ombre);
 }
 
@@ -10174,6 +10582,70 @@ html.defilement-bloque body {
   font-weight: 600;
 }
 
+/* « Recommandé » sur Solo (14/11/2026) : le bleu du halo de ban2.png, plus vif que --marque pour se détacher des
+   cartes sombres ; texte blanc à 6,8:1. */
+.tarif__ruban--recommande { background: #0058c2; }
+
+/* « LE PLUS CHOISI » LISIBLE DANS CHAQUE MODE SAISONNIER — Camara, le 15/11/2026, capture en Black Friday : « pas trop
+   visible ». Le ruban prenait --corail, l'accent CLAIR de la déclinaison (or, bleu glacier, jaune crayon, orange), avec
+   un texte blanc écrit en dur : 1,9:1 sur l'or. Il prend la couleur des BOUTONS, faite pour porter du blanc ; là où
+   elle est elle-même claire, le texte passe au sombre. Blue Sky seul et le style d'origine ne bougent pas. */
+:root[data-da='blue-sky'][data-saison] .tarif__ruban:not(.tarif__ruban--recommande) {
+  background: var(--corail-btn);
+}
+
+/* LE REFLET ET LE HALO, DANS TOUS LES MODES — Camara, le 15/11/2026 : d'abord en Black Friday (« un petit effet »),
+   puis « je veux mettre cet effet sur tous les modes ». Le ruban « Le plus choisi » garde la couleur de son mode ;
+   s'y ajoutent un halo de cette couleur et un reflet qui le balaie toutes les quatre secondes. Le style d'origine,
+   Blue Sky et chaque déclinaison. « Recommandé » n'en a pas : une seule carte doit attirer l'œil. Immobile si
+   l'appareil demande moins d'animations. */
+.tarif__ruban:not(.tarif__ruban--recommande) {
+  overflow: hidden;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--corail) 55%, transparent), 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* BLACK FRIDAY : UN OR PLUS FONCÉ, TEXTE BLANC — Camara, le 15/11/2026 : « je ne veux pas l'écriture en noir, remets
+   en blanc, mais mets le badge dans un jaune un peu plus foncé ». Un or profond en dégradé, une bordure dorée ; le
+   blanc s'y lit, aidé d'une ombre portée. */
+:root[data-da='blue-sky'][data-saison='black-friday'] .tarif__ruban:not(.tarif__ruban--recommande) {
+  background: linear-gradient(180deg, #c99400 0%, #9a6c00 100%);
+  border: 1px solid rgba(255, 214, 102, 0.75);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(60, 35, 0, 0.7);
+  box-shadow: 0 0 12px rgba(245, 179, 1, 0.55), 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.tarif__ruban:not(.tarif__ruban--recommande)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 244, 200, 0.75) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  animation: ruban-reflet-or 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ruban-reflet-or {
+  0%, 60% { left: -60%; }
+  100% { left: 130%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarif__ruban:not(.tarif__ruban--recommande)::after { animation: none; display: none; }
+}
+
+/* Soldes d'hiver : son bouton est bleu, comme « Recommandé » sur la carte voisine. Le ruban garde le bleu glacier,
+   en texte marine, pour ne pas confondre les deux étiquettes. */
+:root[data-da='blue-sky'][data-saison='soldes-hiver'] .tarif__ruban:not(.tarif__ruban--recommande) {
+  background: var(--corail);
+  color: #0a2350;
+}
+
 .tarif__nom { margin: 0; font-size: 21px; }
 .tarif__accroche { margin: 5px 0 18px; font-size: 13.5px; line-height: 1.5; color: var(--encre-douce); }
 
@@ -10183,7 +10655,9 @@ html.defilement-bloque body {
 
 .tarif__unitaire { margin: 4px 0 0; font-size: 12.5px; color: var(--encre-douce); }
 
-.tarif__details { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 9px; flex: 1; }
+/* `align-content: start` (14/11/2026) : depuis que les cartes ont la même hauteur, la grille répartissait la hauteur
+   en trop ENTRE les lignes — trois lignes de Duo espacées sur toute la carte. Elles restent serrées, le vide va dessous. */
+.tarif__details { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 9px; flex: 1; align-content: start; }
 
 .tarif__details li {
   position: relative;
@@ -10199,6 +10673,30 @@ html.defilement-bloque body {
   color: var(--sarcelle);
   font-weight: 600;
 }
+
+.tarif__details li .tarif__au-lieu { display: block; color: var(--encre-douce); font-size: 12.5px; }
+
+/* « Tous les avantages de …, plus : » (14/11/2026) — la formule précédente résumée en une ligne, avant ce qui change.
+   DISCRET, UNE SEULE COULEUR : un fond à peine plus clair que la carte, la coche des listes. Plus vif, il attirait
+   l'œil autant que le prix. */
+.tarif__heritage {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 20px 0 -4px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, #fff 5%, var(--surface));
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+.tarif__heritage-coche { flex: none; color: var(--sarcelle); font-weight: 600; }
+
+.tarif__suite { flex: 1; }
+
+/* La phrase qui dit l'écart en clair, sous les différences (« Deux fois plus d'heures… »). */
+.tarif__plus { margin: 12px 0 0; font-size: 13px; line-height: 1.5; color: var(--encre-douce); font-style: italic; }
 
 .tarif__annuel {
   margin: 18px 0 14px;
@@ -14412,6 +14910,26 @@ html.defilement-bloque body {
   font-weight: 700;
 }
 
+/* SON PORTRAIT À LA PLACE DE L'INITIALE (16/11/2026) : rond, comme dans le choix de l'avatar et la page des parents,
+   sur un fond clair (les silhouettes par défaut ont le leur, les avatars choisis sont détourés), avec un liseré. */
+.navbar__eleve-portrait {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 2px solid color-mix(in srgb, var(--serie-1, #4c6ef5) 55%, #ffffff);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #eef4ff, #b9cdf5 80%);
+  object-fit: cover;
+  object-position: top;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--serie-1, #4c6ef5) 45%, transparent);
+}
+
+/* En mode saisonnier, le liseré et le halo du portrait prennent ceux de la saison (16/11/2026). */
+:root[data-da='blue-sky'][data-saison] .navbar__eleve-portrait {
+  border-color: var(--illu-bord-fort);
+  box-shadow: 0 0 10px var(--illu-lueur);
+}
+
 
 
 /* ================================================================== */
@@ -15067,6 +15585,34 @@ html.defilement-bloque body {
    de fond en administration, et App.css est une seule feuille globale pour
    tout le site. Deux `.file__nombre` différents, ce sont deux écrans qui se
    déforment l'un l'autre sans que personne comprenne pourquoi. */
+
+/* « ACCÈS ADMINISTRATEUR » (06/11/2026) : un lien discret au pied de la file — les parents ne le cherchent pas,
+   l'administrateur le trouve. */
+.salle__admin {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 18px 0 0;
+}
+
+.salle__admin-lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  opacity: 0.6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.salle__admin-lien:hover,
+.salle__admin-lien:focus-visible { opacity: 1; }
+.salle__admin-lien:disabled { cursor: wait; }
+
+.salle__admin-refus { font-size: 13px; opacity: 0.8; }
 
 .salle__rang {
   display: flex;
@@ -16648,6 +17194,76 @@ html.defilement-bloque body {
 .frequentation__chiffre--alerte strong { color: #c58a12; }
 .frequentation__chiffre--sortie strong { color: var(--serie-1); }
 
+/* ------------------------------------------- les parents derrière les barres (12/11/2026) */
+.mouvements-abo {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-l, 16px);
+  background: var(--surface);
+}
+.mouvements-abo__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+.mouvements-abo__titre { margin: 0; font-size: 16px; }
+.mouvements-abo__vide { margin: 0; color: var(--encre-douce); font-size: 14px; }
+.mouvements-abo__tableau { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mouvements-abo__tableau th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--encre-douce);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--trait);
+}
+.mouvements-abo__tableau td { padding: 10px; border-bottom: 1px solid var(--trait); vertical-align: middle; }
+.mouvements-abo__tableau tr:last-child td { border-bottom: 0; }
+.mouvements-abo__date { white-space: nowrap; color: var(--encre-douce); }
+.mouvements-abo__nom { font-weight: 600; }
+.mouvements-abo__mail { overflow-wrap: anywhere; }
+.mouvements-abo__mail a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.mouvements-abo__type {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid currentColor;
+}
+.mouvements-abo__type--entree { color: var(--serie-2); }
+.mouvements-abo__type--alerte { color: #c58a12; }
+.mouvements-abo__type--sortie { color: var(--serie-1); }
+.mouvements-abo__type--offert { color: var(--serie-3); }
+
+/* Sur téléphone : une carte par mouvement, le type et la date en tête, puis le parent, son mail et l'offre. */
+@media (max-width: 640px) {
+  .mouvements-abo { padding: 14px; }
+  .mouvements-abo__tableau thead { display: none; }
+  .mouvements-abo__tableau,
+  .mouvements-abo__tableau tbody { display: block; }
+  .mouvements-abo__tableau tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "type date" "nom nom" "mail mail" "offre offre";
+    gap: 4px 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--trait);
+  }
+  .mouvements-abo__tableau tr:last-child { border-bottom: 0; }
+  .mouvements-abo__tableau td { display: block; padding: 0; border: 0; min-width: 0; }
+  .mouvements-abo__tableau td:nth-child(2) { grid-area: type; }
+  .mouvements-abo__date { grid-area: date; font-size: 12.5px; align-self: center; }
+  .mouvements-abo__nom { grid-area: nom; }
+  .mouvements-abo__mail { grid-area: mail; font-size: 13.5px; }
+  .mouvements-abo__offre { grid-area: offre; font-size: 12.5px; color: var(--encre-douce); }
+}
+
 
 /* ------------------------------------------------------------------ tunnel
    Trois étapes en ligne, avec le taux de passage entre chacune. */
@@ -17640,20 +18256,33 @@ html.defilement-bloque body {
    même rangée s'annulent — on ne sait plus laquelle compte. */
 .tarif__mention {
   display: inline-block;
-  margin-left: 8px;
-  padding: 3px 8px;
+  flex-shrink: 0;
+  padding: 3px 7px;
   border-radius: 999px;
   background: var(--corail-btn);
   font-family: var(--sans);
-  font-size: 10.5px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.03em;
   line-height: 1.4;
   color: #fff;
+  white-space: nowrap;
 
   /* Le titre est en serif à 26 px ; la mention ne doit pas être entraînée
      par sa ligne de base, sinon elle flotte au-dessus du mot « Solo ». */
   vertical-align: middle;
+}
+
+/* LA MENTION TOUJOURS À CÔTÉ DU TITRE — Camara, le 15/11/2026 : « les badges ne
+   sont pas tous à côté des titres ». Sur « Starter » et « Famille », plus longs
+   que « Solo » et « Duo », elle passait à la ligne. Le titre devient une rangée
+   (nom, puis mention centrée sur lui), la pastille est resserrée et ne se coupe
+   jamais ; elle ne passe dessous que sur une carte trop étroite pour les deux. */
+.tarif__nom:has(.tarif__mention) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
 }
 
 /* --------------------------------------- la ligne d'heures, avant / après */
@@ -17680,6 +18309,13 @@ html.defilement-bloque body {
 .tarif__detail--promo strong {
   color: var(--corail-texte);
   font-weight: 700;
+}
+
+/* « + 5 h par mois · 9 h au total » (15/11/2026) : le total en gras, pour le repérer d'une carte à l'autre. */
+.tarif__total {
+  font-weight: 700;
+  color: var(--encre);
+  white-space: nowrap;
 }
 
 /* ================================================== le compte à rebours
@@ -18941,6 +19577,29 @@ html.defilement-bloque body {
 
 .carte-mienne--fiches .carte-mienne__texte { flex: 0 1 auto; }
 
+/* MES PODCASTS (15/11/2026) : une porte à part, comme les fiches, sur toute la ligne — en violet, la couleur de
+   l'audio, pour ne se confondre ni avec le bleu des fiches ni avec les jeux. */
+.carte-mienne.carte-mienne--podcasts {
+  grid-column: 1 / -1;
+  justify-content: center;
+  gap: 18px;
+  background: linear-gradient(135deg, #7c5cff, color-mix(in srgb, #7c5cff 58%, black));
+}
+
+.carte-mienne--podcasts .carte-mienne__texte { flex: 0 1 auto; }
+
+/* FICHES ET PODCASTS CÔTE À CÔTE — Camara, le 15/11/2026 : « je veux qu'ils soient sur la même ligne comme Ma carte
+   et Mon calendrier ». Quand les deux sont là, chacune reprend la demi-largeur et la mise en page des deux du haut :
+   l'icône et le texte à gauche, la flèche au bord. Leurs couleurs restent. Une seule : toute la ligne, comme avant.
+   Sur téléphone, la grille passe déjà à une colonne. */
+.carte-mienne.carte-mienne--paire {
+  grid-column: auto;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.carte-mienne--paire .carte-mienne__texte { flex: 1 1 auto; }
+
 /* LE MOTIF DE GAUCHE. Pas de miroir : ce n'est plus le même dessin retourné
    mais une console, et une console à l'envers a sa croix directionnelle du
    mauvais côté. Elle penche simplement dans l'autre sens au survol. */
@@ -19568,6 +20227,19 @@ html.defilement-bloque body {
 
 .jour-detail__heure {
   color: var(--encre-douce);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+/* « PRÉPARER AVEC LE PROF » / « FAIRE LE POINT » au bout de la ligne d'un contrôle (16/11/2026) : une petite pilule
+   du site, calée à droite ; elle passe sous la ligne quand la place manque. */
+.jour-detail__section li:has(.jour-detail__preparer) { flex-wrap: wrap; }
+.jour-detail__section li:has(.jour-detail__preparer) .jour-detail__sujet { flex: 1 1 8em; min-width: 0; }
+
+.jour-detail__section li .jour-detail__preparer.btn {
+  flex: none;
+  margin-left: auto;
+  padding: 5px 12px;
   font-size: 12.5px;
   white-space: nowrap;
 }
@@ -24480,15 +25152,10 @@ html.defilement-bloque body {
     }
   }
 
-  /* SUR TÉLÉPHONE, LA BOULE D'AVIS RESTE EN HAUT À DROITE. La règle juste
-     au-dessus la passait en `position: relative` pour la garder devant le
-     voile : plus précise que le placement du téléphone, elle la faisait
-     tomber sous la phrase. Elle reste devant le voile, en position absolue. */
-  @media (max-width: 560px) {
-    :root[data-da='blue-sky'] .grille-matieres__entete > .grille-matieres__actions {
-      position: absolute;
-    }
-  }
+  /* Sur téléphone, le groupe boule + « Voir le tuto » est dans le flux, sous la
+     question (voir « SUR TÉLÉPHONE, LE BONJOUR SE LISAIT MAL ») : la règle qui
+     le remettait ici en position absolue l'envoyait sur la première carte
+     (Camara, le 07/11/2026). La position relative au-dessus suffit au voile. */
 
   /* PAS DE CHOIX DU THÈME EN BLUE SKY — Camara, le 15/09/2026. Le style impose
      le sombre (`appliquerTheme`) : le bouton lune/soleil ne ferait plus rien,
@@ -26574,7 +27241,10 @@ html.defilement-bloque body {
 
 /* « CONFIRMER » ET « ANNULER » RESTENT DANS LE CADRE — Camara, le 06/11/2026 : « le bouton Confirmer et Annuler
    ne sont pas visibles ». Quatre boutons sur une ligne sortaient du tableau ; ils passent désormais à la ligne. */
-.signalements__cellule-actions { width: 1%; min-width: 200px; }
+/* TROIS ICÔNES SUR UNE LIGNE (06/11/2026) : 3 × 32 px + 2 espaces = 108 px, plus les 2 × 14 px de marge de la case
+   (comptés dans la largeur) — 120 px les faisait chevaucher sur deux lignes. « Confirmer / Annuler » passe dessous. */
+.signalements__cellule-actions { width: 1%; min-width: 150px; }
+.signalements__cellule-actions .idee-action { flex-shrink: 0; }
 .signalements__cellule-actions .actions {
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -26611,9 +27281,12 @@ html.defilement-bloque body {
 
   .signalements__tableau thead { display: none; }
 
+  /* LA CATÉGORIE SE COUPE, L'ÉTAT GARDE SA PLACE — Camara, le 11/11/2026 (captures sur téléphone) : avec
+     « auto 1fr », « Problème avec un professeur » passait SOUS le menu d'état. La catégorie prend ce qui reste
+     et va à la ligne ; le menu d'état garde sa largeur. */
   .signalements__tableau tr {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       "description description"
       "parent      parent"
@@ -26624,6 +27297,19 @@ html.defilement-bloque body {
     padding: 14px 16px;
     border-bottom: var(--trait-carte);
   }
+
+  /* LE JEU DE TEST A SA LIGNE (signalements admin) : sans place prévue, la grille le rangeait après les boutons. */
+  .signalements__tableau--admin tr {
+    grid-template-areas:
+      "description description"
+      "parent      parent"
+      "categorie   etat"
+      "test        test"
+      "date        date"
+      "actions     actions";
+  }
+
+  .signalements__cellule-test { grid-area: test; font-size: 13.5px; }
 
   /* Le cadre du tableau ferme déjà la dernière carte : son filet ferait
      une double ligne au bas de la liste. */
@@ -26667,16 +27353,31 @@ html.defilement-bloque body {
     font-weight: 600;
   }
 
-  /* Les boutons restent sur une ligne et se serrent plutôt que de sortir. */
+  /* Les boutons restent sur une ligne et se serrent plutôt que de sortir.
+     LA LARGEUR DE L'ORDINATEUR NE SUIT PLUS — Camara, le 11/11/2026 : les trois icônes s'empilaient, rognées à
+     gauche de la carte. `width: 1%` (qui serre la colonne du tableau sur ordinateur) restait actif sur téléphone,
+     et la case ne faisait plus que quelques pixels. Ici, toute la largeur de la carte. */
   .signalements__cellule-actions {
     grid-area: actions;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 8px;
+    width: auto;
+    min-width: 0;
   }
 
-  .signalements__cellule-actions .actions { flex-wrap: wrap; gap: 8px; }
+  .signalements__cellule-actions .actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .signalements__cellule-categorie { overflow-wrap: anywhere; }
+  .signalements__cellule-etat { min-width: 0; }
 }
 
 /* --------------------------------------- la grille tarifaire des fournisseurs */
@@ -35130,6 +35831,10 @@ body:has(.cookies) .bouton-signalement { display: none; }
   background: radial-gradient(circle at 35% 35%, #f5b301 0 35%, #111111 36% 100%);
 }
 
+.mode__declinaison[data-saison-apercu='cyber-monday'] .mode__declinaison-pastille {
+  background: linear-gradient(135deg, #ff3fd2 0 50%, #22e4ff 50% 100%);
+}
+
 .mode__declinaison[data-saison-apercu='back-to-school'] .mode__declinaison-pastille {
   background: linear-gradient(135deg, #1a8a63 0 60%, #ffc83d 60% 80%, #d62839 80% 100%);
 }
@@ -35442,6 +36147,80 @@ body:has(.cookies) .bouton-signalement { display: none; }
     --bs-encre-teintee-4: #e6e6e6;
   }
 
+/* ------------------------------------------------------------ CYBER MONDAY
+     Ajoutée le 15/11/2026 (Camara). Nuit violette, néons MAGENTA à gauche et
+     CYAN à droite — le gabarit commun des fonds, recoloré. Cartes indigo,
+     liseré et liens magenta, accent secondaire cyan, boutons magenta profond
+     (texte blanc lisible : 5,2:1). */
+  :root[data-da='blue-sky'][data-saison='cyber-monday'] {
+    --marque: #120a2e;
+    --papier: #0b0620;
+    --surface: #1b1245;
+    --surface-2: rgba(255, 255, 255, 0.06);
+    --encre-douce: #cfc8ee;
+    --trait: rgba(150, 220, 255, 0.26);
+    --trait-bouton: rgba(207, 200, 238, 0.5);
+    --contour: rgba(207, 200, 238, 0.42);
+    --corail: #ff3fd2;
+    --corail-sombre: #f01fc0;
+    --corail-texte: #ff7ae3;
+    --corail-btn: #c2187f;
+    --corail-btn-survol: #a01268;
+    /* Le cyan des néons : « Voir la méthode », les coches, le chiffre des heures. */
+    --sarcelle: #5cf2ff;
+    --ombre: 0 18px 50px rgba(5, 0, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --ombre-l: 0 30px 80px rgba(5, 0, 20, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+
+    --bs-voile-fond: linear-gradient(rgba(5, 0, 20, 0.28), rgba(5, 0, 20, 0.28));
+    --bs-fond-bloc: #130b34;
+    --bs-degrade-bloc: linear-gradient(170deg, #22175a 0%, #1a114a 55%, #120a36 100%);
+    --bs-fond-carte: #1a1148;
+    --bs-degrade-carte: linear-gradient(170deg, #2e1f7a 0%, #24186a 38%, #1b1252 72%, #120a38 100%);
+
+    --bs-lueur: 120 230 255;
+    --bs-lueur-2: 190 170 255;
+    --bs-lueur-3: 34 228 255;
+    /* Le halo du survol en MAGENTA, sur des cartes indigo. */
+    --bs-halo: 255 63 210;
+    --bs-halo-titre: 34 200 255;
+    --bs-nuit: 14 8 40;
+    --bs-nuit-2: 15 9 44;
+    --bs-nuit-3: 17 10 48;
+    --bs-barre: 10 6 30;
+    --bs-pied: 8 5 24;
+    --bs-ombre-rgb: 5 0 20;
+    --bs-marine: 40 20 100;
+    --bs-accent: 255 63 210;
+    --bs-encre-douce-rgb: 207 200 238;
+    --bs-bandeau-base: #140c36;
+    --bs-lisere: #3b2a85;
+    --bs-bleu-fonce: #1a1048;
+    --bs-encre-marine: #160d40;
+    --bs-encre-marine-2: #1c1250;
+    --bs-accent-plein: #ff3fd2;
+    --bs-accent-clair: #ffc4f2;
+    --bs-vert: #5cf2ff;
+    --bs-encre-teintee: #efeaff;
+    --bs-encre-teintee-2: #f4f0ff;
+    --bs-encre-teintee-3: #d4ccf2;
+    --bs-verre-haut: 110 80 230;
+    --bs-verre-milieu: 50 30 140;
+    --bs-verre-bas: 22 12 75;
+    --bs-encre-claire-rgb: 240 236 255;
+    --bs-lueur-4: 190 170 255;
+    --bs-demo-haut: #2e1f7a;
+    --bs-demo-milieu: #24186a;
+    --bs-demo-bas: #1b1252;
+    --bs-chat-fil: #0d0824;
+    --bs-chat-haut: #2e1f7a;
+    --bs-chat-milieu: #24186a;
+    --bs-chat-bas: #1a1150;
+    --bs-chat-bulle: #24186a;
+    --bs-encre-douce-plein: #cfc8ee;
+    --bs-encre-marine-3: #0f0828;
+    --bs-encre-teintee-4: #e2dcf8;
+  }
+
 /* ---------------------------------------------------------- BACK TO SCHOOL
      Le tableau vert, le bureau en bois, les crayons jaunes et orange, la pomme
      rouge ; néons jaunes et blancs. Fond clair au centre, comme l'été : voile
@@ -35538,6 +36317,11 @@ body:has(.cookies) .bouton-signalement { display: none; }
     background-image: var(--bs-voile-fond), url('./assets/saisons/black_friday_bg.webp');
   }
 
+  :root[data-da='blue-sky'][data-saison='cyber-monday'] body,
+  :root[data-da='blue-sky'][data-saison='cyber-monday'] .maintenance.maintenance--blue-sky {
+    background-image: var(--bs-voile-fond), url('./assets/saisons/cyber_monday_bg.webp');
+  }
+
   :root[data-da='blue-sky'][data-saison='back-to-school'] body,
   :root[data-da='blue-sky'][data-saison='back-to-school'] .maintenance.maintenance--blue-sky {
     background-image: var(--bs-voile-fond), url('./assets/saisons/back_to_school_bg.webp');
@@ -35567,6 +36351,10 @@ body:has(.cookies) .bouton-signalement { display: none; }
 
     :root[data-da='blue-sky'][data-saison='black-friday'] body::before {
       background-image: var(--bs-voile-fond), url('./assets/saisons/black_friday_bg.webp');
+    }
+
+    :root[data-da='blue-sky'][data-saison='cyber-monday'] body::before {
+      background-image: var(--bs-voile-fond), url('./assets/saisons/cyber_monday_bg.webp');
     }
 
     :root[data-da='blue-sky'][data-saison='back-to-school'] body::before {
@@ -35631,10 +36419,14 @@ body:has(.cookies) .bouton-signalement { display: none; }
      portent la couleur pleine des boutons avec un texte blanc écrit en dur —
      liste relevée dans App.css le 29/09/2026 — passent au texte noir. Les
      boutons « fantôme » et « danger » ont leur propre fond : ils sont exclus. */
+  /* Sauf « Votre formule actuelle » (15/11/2026) : un état sur fond vert léger, pas un bouton or. */
+  /* « Mon avis sur Mimia » (15/11/2026, Camara : « fais en sorte que l'écriture soit visible ») : la même bulle que
+     « Signaler », oubliée dans cette liste. */
   :root[data-da='blue-sky'][data-saison='black-friday'] :is(
-    .btn:not(.btn--fantome):not(.btn--danger),
+    .btn:not(.btn--fantome):not(.btn--danger):not(.btn--actuelle),
     .carrousel__fleche:hover:not(:disabled),
     .bouton-signalement,
+    .bouton-avis,
     .signalement-modale__badge,
     .tarif__mention,
     .apercu__fleche:hover
@@ -43008,6 +43800,41 @@ html:has(
   .reste-forfait__lien { margin-left: 0; flex-basis: 100%; text-align: center; }
 }
 
+/* LE BANDEAU SUIT LE MODE SAISONNIER — Camara, le 15/11/2026, capture en Black
+   Friday : « la barre des heures ne s'adapte pas à la couleur du thème choisi ».
+   Le bleu et le corail écrits en dur plus haut restent ceux de Blue Sky et du
+   site d'origine ; une déclinaison (soldes, French Days, Black Friday, Back to
+   School) prend son verre, son liseré et son bouton dans sa propre palette.
+   Le chiffre « normal » prend l'accent secondaire (--sarcelle) : le menthe
+   jurait sur le noir et or. */
+:root[data-da='blue-sky'][data-saison] .reste-forfait {
+  border-left-color: var(--corail);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 55%, rgba(255, 255, 255, 0.03) 100%),
+    linear-gradient(120deg, rgb(var(--bs-verre-haut) / 0.4) 0%, rgb(var(--bs-verre-bas) / 0.35) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 10px 30px rgb(var(--bs-ombre-rgb) / 0.45);
+}
+
+:root[data-da='blue-sky'][data-saison] .reste-forfait:focus-visible { outline-color: var(--corail); }
+
+:root[data-da='blue-sky'][data-saison] .reste-forfait--normal .reste-forfait__temps strong { color: var(--sarcelle); }
+
+:root[data-da='blue-sky'][data-saison] .reste-forfait__lien {
+  background: var(--corail-btn);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px color-mix(in srgb, var(--corail-btn) 40%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .reste-forfait:hover .reste-forfait__lien { background: var(--corail-btn-survol); }
+
+/* BLACK FRIDAY : le bouton est OR, le texte blanc ne s'y lit pas (même règle
+   que les autres boutons de la déclinaison). Et « peu d'heures » passe à
+   l'orange : l'ambre ne se distinguait plus de l'or du chiffre normal. */
+:root[data-da='blue-sky'][data-saison='black-friday'] .reste-forfait__lien { color: #141414; }
+:root[data-da='blue-sky'][data-saison='black-friday'] .reste-forfait--bas .reste-forfait__temps strong { color: #ff8a4c; }
+
 /* ===== « ATTENDS ! » PENDANT UNE DICTÉE AU CAHIER — 01/11/2026 =====
    Un gros bouton qu'un enfant de CP trouve sans chercher, le stylo à la
    main : corail pour « Attends ! », sarcelle quand il est appuyé et propose
@@ -43098,3 +43925,808 @@ html:has(
 
 /* La fenêtre « nouveau jeu de test » passe au-dessus du signalement qui l'a ouverte. */
 .signalement-admin-jeu { z-index: 1400; }
+
+/* ======================================================================================================
+   LA VUE DE L'ENFANT, D'APRÈS LA MAQUETTE DE CAMARA (15/11/2026) : « pour la vue des enfants sur les cours,
+   je veux que ce soit comme ça ».
+
+   LES CINQ CARTES SONT LES ILLUSTRATIONS DE LA MAQUETTE (assets/accueil-cartes), titres et sous-titres effacés :
+   l'icône, le décor (Fuji, torii, cerisiers, château), la flèche et le liseré sont dans l'image. Le texte est
+   redessiné ici, en vrai texte (le tutoriel, les verrous et les messages en dépendent).
+
+   L'IMAGE EST CALÉE SUR LA HAUTEUR (`auto 100%`, à gauche) : tout se mesure en hauteurs de carte (`cqh`).
+   `--tx` = où commence le texte, `--tw` = sa largeur, en hauteurs de carte, relevés sur la maquette. Sur un écran
+   large la carte a les proportions de l'image ; sur un téléphone elle a une hauteur fixe et l'image est coupée à
+   droite (le décor et la flèche), jamais l'icône ni le texte.
+   ====================================================================================================== */
+.cartes-mienne--illustrees {
+  gap: 18px;
+}
+
+.cartes-mienne--illustrees .carte-mienne {
+  --tx: 1.34;
+  --tw: 2.35;
+  --decalage: 0;
+  --lueur: rgba(45, 212, 191, 0.35);
+  container-type: size;
+  position: relative;
+  display: block;
+  aspect-ratio: 758 / 161;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 3.4% / 16%;
+  background-color: transparent;
+  box-shadow: 0 0 18px var(--lueur), 0 10px 24px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.cartes-mienne--illustrees .carte-mienne:hover,
+.cartes-mienne--illustrees .carte-mienne:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 0 26px var(--lueur), 0 14px 30px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.05);
+}
+
+/* L'IMAGE, SUR UN CALQUE : `cqh` y vaut la hauteur de la carte (sur la carte elle-même, il vaudrait celle de la
+   fenêtre). Elle hérite de l'image posée sur la carte, que la carte n'affiche pas (`background-size: 0 0`). */
+.cartes-mienne--illustrees .carte-mienne {
+  background-size: 0 0;
+  background-repeat: no-repeat;
+}
+
+.cartes-mienne--illustrees .carte-mienne::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: inherit;
+  background-position: calc(var(--decalage) * -100cqh) center;
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.cartes-mienne--illustrees .carte-mienne .carte-mienne__texte { z-index: 1; }
+
+/* Ce qui est déjà DANS l'image : l'icône, son halo, le motif de fond, la flèche. */
+.cartes-mienne--illustrees .carte-mienne .carte-mienne__icone-zone,
+.cartes-mienne--illustrees .carte-mienne .motif-matiere,
+.cartes-mienne--illustrees .carte-mienne .carte-mienne__fleche {
+  display: none;
+}
+
+.cartes-mienne--illustrees .carte-mienne--carte {
+  background-image: url('./assets/accueil-cartes/carte.webp');
+  --tx: 1.342;
+}
+
+.cartes-mienne--illustrees .carte-mienne--calendrier {
+  background-image: url('./assets/accueil-cartes/calendrier.webp');
+  --tx: 1.335;
+  --tw: 2.2;
+  aspect-ratio: 765 / 161;
+}
+
+.cartes-mienne--illustrees .carte-mienne.carte-mienne--fiches {
+  background-image: url('./assets/accueil-cartes/fiches.webp');
+  --tx: 1.369;
+  --tw: 2.2;
+  --lueur: rgba(59, 130, 246, 0.4);
+  aspect-ratio: 758 / 160;
+  grid-column: auto;
+  background-color: transparent;
+}
+
+.cartes-mienne--illustrees .carte-mienne.carte-mienne--podcasts {
+  background-image: url('./assets/accueil-cartes/podcasts.webp');
+  --tx: 1.344;
+  --tw: 2.32;
+  --lueur: rgba(139, 92, 246, 0.45);
+  aspect-ratio: 765 / 160;
+  grid-column: auto;
+  background-color: transparent;
+}
+
+/* Fiches ou podcasts SEULS (l'autre module éteint) : une demi-carte, au milieu de la ligne. */
+.cartes-mienne--illustrees .carte-mienne--fiches:not(.carte-mienne--paire),
+.cartes-mienne--illustrees .carte-mienne--podcasts:not(.carte-mienne--paire) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - 9px);
+}
+
+.cartes-mienne--illustrees .carte-mienne.carte-mienne--jeux {
+  background-image: url('./assets/accueil-cartes/jeux.webp');
+  --tx: 1.895;
+  --tw: 3.4;
+  --lueur: rgba(139, 92, 246, 0.45);
+  aspect-ratio: 1544 / 153;
+  grid-column: 1 / -1;
+  border-radius: 1.7% / 17%;
+  background-color: transparent;
+}
+
+/* LE TEXTE, à la place de celui de la maquette : titre épais cerné de nuit, sous-titre clair dessous. */
+.cartes-mienne--illustrees .carte-mienne .carte-mienne__texte {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--tx) - var(--decalage)) * 100cqh);
+  width: min(calc(var(--tw) * 100cqh), calc(100% - (var(--tx) - var(--decalage)) * 100cqh - 10px));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4cqh;
+  padding-bottom: 2cqh;
+  text-align: left;
+}
+
+.cartes-mienne--illustrees .carte-mienne .carte-mienne__texte strong {
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: 20cqh;
+  line-height: 1.05;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow:
+    2px 0 0 #0b1a45, -2px 0 0 #0b1a45, 0 2px 0 #0b1a45, 0 -2px 0 #0b1a45,
+    1.5px 1.5px 0 #0b1a45, -1.5px 1.5px 0 #0b1a45, 1.5px -1.5px 0 #0b1a45, -1.5px -1.5px 0 #0b1a45,
+    0 4px 8px rgba(0, 0, 0, 0.35);
+}
+
+.cartes-mienne--illustrees .carte-mienne .carte-mienne__texte > span {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 12.6cqh;
+  line-height: 1.32;
+  color: #f2f5ff;
+  opacity: 1;
+  text-shadow: 0 1px 4px rgba(5, 15, 50, 0.55);
+}
+
+/* Les cartes fermées (sans forfait) : grisées comme avant, l'image avec. */
+.cartes-mienne--illustrees .carte-mienne.est-verrouillee {
+  filter: grayscale(0.85) brightness(0.85);
+  opacity: 0.8;
+}
+
+@media (max-width: 720px) {
+  .cartes-mienne--illustrees .carte-mienne,
+  .cartes-mienne--illustrees .carte-mienne.carte-mienne--fiches,
+  .cartes-mienne--illustrees .carte-mienne.carte-mienne--podcasts,
+  .cartes-mienne--illustrees .carte-mienne.carte-mienne--jeux,
+  .cartes-mienne--illustrees .carte-mienne--calendrier {
+    aspect-ratio: auto;
+    height: 104px;
+    width: 100%;
+    grid-column: auto;
+    justify-self: stretch;
+  }
+
+  .cartes-mienne--illustrees .carte-mienne--fiches:not(.carte-mienne--paire),
+  .cartes-mienne--illustrees .carte-mienne--podcasts:not(.carte-mienne--paire) { width: 100%; }
+
+  /* La manette a du vide à sa gauche dans l'image : on le saute, pour laisser la place au texte. */
+  .cartes-mienne--illustrees .carte-mienne.carte-mienne--jeux { --decalage: 0.55; }
+
+  /* UN TITRE TROP LONG PASSE À LA LIGNE — Camara, le 17/11/2026 : « Mes fiches de révision » sortait de la carte. Sur
+     téléphone, la carte est étroite : le titre peut tenir sur deux lignes, un peu plus petit ; les courts n'en
+     prennent qu'une. */
+  .cartes-mienne--illustrees .carte-mienne .carte-mienne__texte strong {
+    font-size: 18cqh;
+    line-height: 1.08;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* L'image est coupée à droite, son liseré avec : on le redessine tout autour. */
+  .cartes-mienne--illustrees .carte-mienne::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border: 2px solid rgba(200, 240, 255, 0.65);
+    border-radius: inherit;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.25);
+    pointer-events: none;
+  }
+
+  .cartes-mienne--illustrees .carte-mienne,
+  .cartes-mienne--illustrees .carte-mienne.carte-mienne--jeux { border-radius: 18px; }
+
+  .cartes-mienne--illustrees .carte-mienne .carte-mienne__texte strong { font-size: 20cqh; }
+  .cartes-mienne--illustrees .carte-mienne .carte-mienne__texte > span { font-size: 12.5cqh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartes-mienne--illustrees .carte-mienne { transition: none; }
+}
+
+/* L'EN-TÊTE DE L'ENFANT : le prénom en grand et sans trait, la classe en pastille jaune, les deux boutons brillants. */
+.grille--enfant .salutation h1 {
+  font-size: clamp(28px, 3.4vw, 38px);
+}
+
+.grille--enfant .salutation__prenom::after { display: none; }
+
+/* « BONJOUR BILAL » AU PINCEAU — Camara, le 16/11/2026, d'après sa maquette (« c'est cette écriture que je veux ») :
+   aucune police n'a ces traits effilés. « Bonjour » ne change jamais : c'est donc SON lettrage, découpé dans la maquette
+   avec la branche de cerisier, la vague bleue et le pétale (assets/salutation/bonjour.webp, fond retiré ; une version
+   à l'encre pour le thème clair, bonjour-clair.webp). Le mot reste écrit dans la page, transparent, pour les lecteurs
+   d'écran et la recherche. Le prénom, lui, change : il est écrit en Mr Dafoe (Google Fonts, public/index.html), la
+   police au pinceau la plus proche, à la couleur claire de l'enfant, lumineux. Rien ne bouge en boucle (la main garde
+   son salut, deux fois à l'arrivée). */
+:root .grille--enfant .salutation h1 {
+  gap: 0.1em;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1;
+  font-weight: 400;
+}
+
+:root .grille--enfant .salutation h1 > span:first-child {
+  display: inline-block;
+  flex: none;
+  width: 6.2em;
+  height: 2.32em; /* l'image fait 824 × 308 */
+  margin: -0.35em 0 -0.25em -0.35em;
+  background: url('./assets/salutation/bonjour.webp') center / contain no-repeat;
+  color: transparent;
+  font-size: 1em;
+  overflow: hidden;
+  user-select: none;
+}
+
+:root .grille--enfant .salutation__prenom {
+  margin-left: 0.12em;
+  padding: 0.05em 0.12em 0.1em 0.05em;
+  font-family: 'Mr Dafoe', 'Kaushan Script', cursive;
+  font-weight: 400;
+  font-size: 1.7em;
+  line-height: 1;
+  color: var(--teinte-claire, #5eead4);
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--teinte-claire, #5eead4) 80%, transparent),
+    0 0 22px color-mix(in srgb, var(--teinte-claire, #5eead4) 55%, transparent),
+    0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+:root .grille--enfant .salutation__main {
+  font-size: 0.95em;
+  filter: drop-shadow(0 0 8px rgba(255, 210, 90, 0.55));
+}
+
+/* SUR TÉLÉPHONE, SUR UNE SEULE LIGNE — Camara, le 16/11/2026 : le titre se règle sur la largeur de l'écran pour que
+   « Bonjour Bilal 👋 » tienne d'un trait ; seul un prénom très long passe encore à la ligne (le retour est gardé). */
+@media (max-width: 560px) {
+  :root .grille--enfant .salutation h1 {
+    gap: 0.06em;
+    font-size: min(7vw, 36px);
+  }
+}
+
+/* En thème clair : le « Bonjour » à l'encre (l'ivoire disparaîtrait sur le pâle), le prénom à la teinte foncée. */
+:root[data-theme='light']:not([data-da='blue-sky']) .grille--enfant .salutation h1 > span:first-child {
+  background-image: url('./assets/salutation/bonjour-clair.webp');
+}
+:root[data-theme='light']:not([data-da='blue-sky']) .grille--enfant .salutation__prenom {
+  color: var(--teinte, #0f766e);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--teinte-claire, #5eead4) 45%, transparent);
+}
+
+.grille--enfant .badge--classe {
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe680 0%, #ffc93c 100%);
+  box-shadow: 0 0 0 2px rgba(255, 214, 90, 0.25), 0 4px 12px rgba(255, 196, 60, 0.35);
+  color: #14204a;
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.grille--enfant .salutation__ligne {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* Le blanc seulement sur le thème sombre : sur le clair, la couleur de texte habituelle. */
+:root:not([data-theme='light']) .grille--enfant .salutation__ligne { color: #eef1ff; }
+
+.grille--enfant .bouton-avis {
+  background: linear-gradient(180deg, #ff6a3d 0%, #e23d1a 55%, #c22f12 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 2px rgba(255, 120, 80, 0.35),
+    0 0 18px rgba(255, 90, 50, 0.45),
+    0 6px 16px rgba(0, 0, 0, 0.3);
+  font-size: 16px;
+  font-weight: 700;
+  padding: 5px 22px 5px 6px;
+}
+
+.grille--enfant .bouton-tuto {
+  padding: 12px 24px;
+  background: linear-gradient(180deg, #ffe58a 0%, #ffc93c 55%, #f5a800 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 0 0 2px rgba(255, 214, 90, 0.35),
+    0 0 18px rgba(255, 196, 60, 0.45),
+    0 6px 16px rgba(0, 0, 0, 0.3);
+  color: #14204a;
+  font-size: 17px;
+}
+
+@media (max-width: 560px) {
+  .grille--enfant .bouton-avis { padding: 0; background: transparent; box-shadow: none; }
+}
+
+/* ======================================================================================================
+   LES CARTES DE PROFESSEURS ILLUSTRÉES — Camara, le 15/11/2026 : « pour les cards des professeurs je veux des
+   choses comme ça, dans ce style-là pour tous les professeurs en fonction de la matière ; touche pas à la photo ».
+   Vue de l'enfant seulement (`.grille--enfant`), cartes `.matiere-case--illustree` (GrilleMatieres.js).
+
+   LE CADRE : un dégradé à la couleur de la scène (`--carte-haut` → `--carte-bas`), un liseré lumineux.
+   LE PORTRAIT : le même, en grand (150 px).
+   LA SCÈNE (`--scene`, lib/scenesMatieres.js) : sur un calque, du bas du portrait jusqu'au-dessus de
+   « Commencer ». Son haut, effacé dans la maquette, reçoit le titre ; il se fond dans le cadre.
+   Sans scène : le même cadre, aux couleurs du professeur.
+   `:root` en tête de chaque règle : celles du thème Blue Sky (`:root[data-da] :is(.matiere-carte, …)`) pèsent autant.
+   ====================================================================================================== */
+:root .grille--enfant .matieres-grille {
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 18px;
+}
+
+:root .grille--enfant .matiere-case.matiere-case--illustree {
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--carte-bord) 75%, transparent);
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--carte-haut) 0%, var(--carte-haut) 50%, var(--carte-bas) 100%);
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--carte-bord) 40%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* La conseillère garde son halo tournant : son cadre ne coupe donc pas ce qui dépasse. */
+:root .grille--enfant .matiere-case--illustree.matiere-case--conseillere { overflow: visible; }
+
+:root .grille--enfant .matiere-case.matiere-case--illustree:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 28px color-mix(in srgb, var(--carte-bord) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 18px 36px rgba(0, 0, 0, 0.4);
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-carte {
+  position: relative;
+  z-index: 0;
+  gap: 1.2cqw;
+  padding: 6cqw 6cqw 5cqw;
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: #fff;
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-carte:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Une carte avec scène : portrait + scène + bouton.
+   PLUS COMPACTE — Camara, le 16/11/2026 : « les cards je les trouve un peu longues ». La scène visible est
+   plafonnée à 108 % de la largeur (`--scene-h`) : une scène plus haute (orientation, maths, histoire…) perd le haut
+   de son image, le ciel calme qui se fondait déjà dans le cadre ; le bas, contre « Commencer », reste entier. */
+:root .grille--enfant .matiere-case--scene .matiere-carte {
+  --scene-h: min(var(--scene-ratio) * 100cqw, 108cqw);
+  min-height: calc(6cqw + 124px + var(--scene-h) + 17cqw);
+}
+
+/* SUR TÉLÉPHONE, PLUS COURTES ENCORE — Camara, le 17/11/2026 : « sur mobile les cards des professeurs sont très
+   longues ». Une carte y prend toute la largeur : la scène, mesurée sur cette largeur, devenait immense. Plafonnée à
+   70 % de la largeur, elle perd encore son ciel ; le bas, contre « Commencer », reste entier. */
+@media (max-width: 560px) {
+  :root .grille--enfant .matiere-case--scene .matiere-carte { --scene-h: min(var(--scene-ratio) * 100cqw, 70cqw); }
+}
+
+:root .grille--enfant .matiere-case--scene .matiere-carte::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  top: calc(6cqw + 120px);
+  bottom: 17cqw;
+  /* Calée en BAS, contre « Commencer » : une carte étirée par sa voisine prend l'air au-dessus, pas en dessous. */
+  /* Une ombre légère sur la scène (Camara, le 16/11/2026 : « un tout petit peu d'ombre sur les wallpapers des
+     cards ») : le dégradé assombrit l'image d'un cran, un peu plus vers le bas, où se pose « Commencer ». */
+  background:
+    linear-gradient(180deg, rgba(6, 10, 34, 0.12) 0%, rgba(6, 10, 34, 0.22) 60%, rgba(6, 10, 34, 0.32) 100%),
+    var(--scene) center bottom / 100% auto no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, transparent calc(100% - var(--scene-h)), #000 calc(100% - var(--scene-h) * 0.5));
+  mask-image: linear-gradient(180deg, transparent calc(100% - var(--scene-h)), #000 calc(100% - var(--scene-h) * 0.5));
+  pointer-events: none;
+}
+
+/* Déjà dans la scène, ou de trop sur ce fond : le halo et le motif. */
+:root .grille--enfant .matiere-case--illustree .matiere-carte__halo { display: none; }
+:root .grille--enfant .matiere-case--scene .motif-matiere { display: none; }
+:root .grille--enfant .matiere-case--illustree .motif-matiere { color: #fff; opacity: 0.12; }
+
+/* Le portrait : un anneau lumineux à la couleur de la carte. */
+:root .grille--enfant .matiere-case--illustree .matiere-carte__avatar {
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--carte-bord) 80%, #fff),
+    0 0 22px color-mix(in srgb, var(--carte-bord) 70%, transparent);
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-carte__titre {
+  margin-top: 2cqw;
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(18px, 8cqw, 26px);
+  line-height: 1.05;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45), 0 0 18px color-mix(in srgb, var(--carte-bord) 45%, transparent);
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-carte__prof {
+  font-size: clamp(13px, 5cqw, 16px);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-carte__promesse {
+  margin-bottom: 4cqw;
+  font-size: clamp(12.5px, 4.6cqw, 15px);
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* « COMMENCER → » : une pilule brillante, aux couleurs de la carte, texte sombre. */
+:root .grille--enfant .matiere-case--illustree .matiere-carte__pied {
+  position: relative;
+  z-index: 1;
+  padding: 3.6cqw 5cqw;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--bouton-clair) 0%, var(--bouton-fonce) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.5),
+    0 0 16px color-mix(in srgb, var(--bouton-fonce) 55%, transparent),
+    0 6px 14px rgba(0, 0, 0, 0.3);
+  color: #16163a;
+  font-size: clamp(14px, 5.6cqw, 17px);
+  font-weight: 800;
+}
+
+/* LES PASTILLES (fiches, dictées, compréhensions, conversations, évaluations, rapports) : des rangées sombres
+   dans le cadre, l'emoji sur un rond blanc, le compte en bulle. */
+:root .grille--enfant .matiere-case.matiere-case--illustree .matiere-fiches {
+  --bande-fond: rgba(12, 14, 40, 0.62);
+  --bande-encre: #fff;
+  margin: 0 3cqw 1.8cqw;
+  padding: 1.8cqw 3cqw;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(12, 14, 40, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: clamp(12.5px, 4.5cqw, 14px);
+  line-height: 1.25;
+}
+
+:root .grille--enfant .matiere-case.matiere-case--illustree .matiere-fiches:hover {
+  background: rgba(20, 22, 60, 0.75);
+  transform: none;
+}
+
+:root .grille--enfant .matiere-case.matiere-case--illustree .matiere-fiches--notes { color: #7ee2a1; }
+
+:root .grille--enfant .matiere-case--illustree .matiere-fiches__emoji {
+  width: 9.5cqw;
+  height: 9.5cqw;
+  max-width: 30px;
+  max-height: 30px;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-fiches__compte {
+  background: #0b0d22;
+  color: #ffe08a;
+  font-weight: 800;
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-fiches--nouveautes .matiere-fiches__emoji::after {
+  box-shadow: 0 0 0 2px rgba(12, 14, 40, 0.9);
+}
+
+/* La dernière pastille garde un peu d'air avant le bord du cadre. */
+:root .grille--enfant .matiere-case--illustree .matiere-fiches:last-child { margin-bottom: 3cqw; }
+
+/* Une matière à venir : le même cadre, éteint. */
+:root .grille--enfant .matiere-case--illustree .matiere-carte--bientot {
+  border-radius: 20px;
+  filter: grayscale(0.5) brightness(0.8);
+}
+
+:root .grille--enfant .matiere-case--illustree .matiere-carte__mention {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(10, 12, 40, 0.55);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .grille--enfant .matiere-case.matiere-case--illustree { transition: none; }
+}
+
+/* L'ACCUEIL DE L'ENFANT, PLUS COMPACT — Camara, le 15/11/2026 : « les éléments sont un peu trop gros ». La page est
+   moins large : les cartes du haut (mesurées en hauteurs de carte) et les cartes de professeurs rapetissent d'autant. */
+:root .page.page--large.grille--enfant { max-width: 1040px; }
+:root .grille--enfant .badge--classe { font-size: 15px; padding: 4px 12px; }
+:root .grille--enfant .salutation__ligne { font-size: 16px; }
+:root .grille--enfant .bouton-tuto { padding: 10px 20px; font-size: 15px; }
+:root .grille--enfant .bouton-avis { font-size: 14.5px; }
+
+/* « MON AVIS » ET « VOIR LE TUTO » À LA HAUTEUR DU « BONJOUR » — Camara, le 17/11/2026 (sur PC). Le groupe était calé
+   en haut de l'en-tête, au-dessus du lettrage ; il descend au milieu du « Bonjour ». Le téléphone garde sa place. */
+@media (min-width: 561px) {
+  :root .grille--enfant .grille-matieres__actions { margin-top: 24px; }
+}
+
+/* SON PORTRAIT SUR LA LIGNE DU RETOUR — Camara, le 17/11/2026. Rond comme partout (choix, « Vos enfants », barre du
+   haut), un anneau lumineux ; à droite de « ← Mes enfants ». Vue du parent seulement. */
+.grille--enfant .grille-enfant__haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.grille--enfant .grille-enfant__haut .lien-retour { margin: 0; }
+
+.grille--enfant .grille-enfant__portrait {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border: 3px solid rgba(160, 200, 255, 0.85);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #eef4ff, #b9cdf5 80%);
+  object-fit: cover;
+  object-position: top;
+  box-shadow: 0 0 0 1px rgba(150, 190, 255, 0.35), 0 0 18px rgba(90, 150, 255, 0.55), 0 8px 18px rgba(0, 8, 30, 0.4);
+}
+
+:root[data-da='blue-sky'][data-saison] .grille--enfant .grille-enfant__portrait {
+  border-color: var(--illu-bord-fort);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 18px var(--illu-lueur), 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 560px) {
+  .grille--enfant .grille-enfant__portrait { width: 56px; height: 56px; }
+}
+
+/* « MON AVIS SUR MIMIA » ET « VOIR LE TUTO » COMME LES AUTRES BOUTONS — Camara, le 16/11/2026 : « les boutons n'ont pas
+   la même shape que les autres boutons de l'appli ». Ils gardent leur couleur (le rouge de la saison, l'or), et
+   prennent ce qui fait les pilules du site : le liseré clair de 2 px, le trait de pinceau blanc en bas à droite
+   (assets/boutons/trait-pinceau.webp, en `::after` pour ne pas toucher à leurs dégradés saisonniers) et l'ombre du
+   texte. Sur téléphone, « Mon avis » reste la boule seule : ni liseré ni trait. */
+:root .grille--enfant :is(.bouton-avis, .bouton-tuto) {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--btn-lisere-clair);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+:root .grille--enfant .bouton-avis { --btn-lisere-clair: color-mix(in srgb, var(--corail-btn) 42%, #ffdcae); }
+:root .grille--enfant .bouton-tuto { --btn-lisere-clair: #fff0b8; text-shadow: none; }
+
+:root .grille--enfant :is(.bouton-avis, .bouton-tuto)::after {
+  content: '';
+  position: absolute;
+  right: 9%;
+  bottom: 5%;
+  height: 26%;
+  aspect-ratio: 142 / 37;
+  background: url('./assets/boutons/trait-pinceau.webp') center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* Sur l'or du tuto, le trait blanc se perdrait : il passe en bleu nuit translucide, comme le texte. */
+:root .grille--enfant .bouton-tuto::after { filter: brightness(0.15) sepia(1) hue-rotate(190deg) saturate(3); opacity: 0.45; }
+
+@media (max-width: 560px) {
+  :root .grille--enfant .bouton-avis { overflow: visible; border: 0; }
+  :root .grille--enfant .bouton-avis::after { display: none; }
+}
+
+/* « MON AVIS SUR MIMIA » EN MODE SAISONNIER — Camara, le 16/11/2026 : « l'écriture du bouton des avis n'est pas
+   super visible ». Le Black Friday passe le texte des boutons en noir (fond or), mais ce bouton gardait son rouge
+   écrit en dur : noir sur rouge. Il prend maintenant la couleur des boutons de la saison, comme les autres — or et
+   texte noir en Black Friday, magenta et texte blanc en Cyber Monday… Le mode classique garde son rouge. */
+:root[data-da='blue-sky'][data-saison] .page.grille--enfant .bouton-avis {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--corail-btn) 82%, #fff) 0%,
+    var(--corail-btn) 55%,
+    color-mix(in srgb, var(--corail-btn) 85%, #000) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 2px color-mix(in srgb, var(--corail-btn) 35%, transparent),
+    0 0 18px color-mix(in srgb, var(--corail-btn) 45%, transparent),
+    0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 560px) {
+  :root[data-da='blue-sky'][data-saison] .page.grille--enfant .bouton-avis { background: transparent; box-shadow: none; }
+}
+
+/* ======================================================================================================
+   LES BOUTONS DU SITE, D'APRÈS LA MAQUETTE DE CAMARA — 16/11/2026 : « les boutons du site, je veux qu'ils
+   aient tous ce style ». Des pilules au liseré lumineux, sur deux familles :
+
+   - LE BOUTON PLEIN (`.btn`, hors `--fantome` et `--actuelle`) : dégradé chaud tiré de `--corail-btn` (il
+     suit donc la saison), liseré clair, halo, et un trait de pinceau blanc en bas à droite
+     (assets/boutons/trait-pinceau.webp, découpé dans la maquette) ;
+   - LE BOUTON BLEU (`.btn--fantome`, `.btn-ghost`) : dégradé bleu, liseré bleu clair, halo, et des nuages
+     japonais en bas (nuages-gauche/droite.webp). Ses variantes colorées (danger, modifier, code, retirer,
+     accent, créer) gardent leur couleur : elle devient la teinte de la pilule (`--btn-teinte`).
+
+   Les décors sont blancs et translucides : ils vont sur toutes les teintes. Ce bloc est EN FIN DE FICHIER,
+   et c'est voulu : à poids égal, il passe devant les anciennes règles de base. Les variantes `:where()` ne
+   pèsent rien : les boutons qui ont un style propre dans leur contexte (plus lourd) le gardent. Aucune
+   animation en boucle.
+   ====================================================================================================== */
+.btn:where(:not(.btn--fantome, .btn--actuelle)) {
+  --btn-plein: var(--corail-btn);
+  border: 2px solid color-mix(in srgb, var(--btn-plein) 42%, #ffdcae);
+  border-radius: 999px;
+  background:
+    url('./assets/boutons/trait-pinceau.webp') right 9% bottom 5% / auto 26% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-plein) 62%, #ffc56e) 0%, var(--btn-plein) 58%, color-mix(in srgb, var(--btn-plein) 82%, #7a1504) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--btn-plein) 30%, transparent),
+    0 0 14px color-mix(in srgb, var(--btn-plein) 55%, transparent),
+    0 6px 16px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+.btn:where(:not(.btn--fantome, .btn--actuelle)):hover:not(:disabled) {
+  background:
+    url('./assets/boutons/trait-pinceau.webp') right 9% bottom 5% / auto 26% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-plein) 55%, #ffd27f) 0%, color-mix(in srgb, var(--btn-plein) 92%, #ffffff) 58%, var(--btn-plein) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--btn-plein) 40%, transparent),
+    0 0 20px color-mix(in srgb, var(--btn-plein) 70%, transparent),
+    0 8px 20px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn.btn--danger { --btn-plein: var(--danger-fort); color: var(--danger-encre); }
+
+.btn--fantome,
+.btn-ghost {
+  --btn-teinte: #2f63c6;
+  --btn-lisere: color-mix(in srgb, var(--btn-teinte) 35%, #cfe1ff);
+  border: 2px solid var(--btn-lisere);
+  border-radius: 999px;
+  background:
+    url('./assets/boutons/nuages-gauche.webp') left 7% bottom -3px / auto 40% no-repeat,
+    url('./assets/boutons/nuages-droite.webp') right 7% bottom -3px / auto 36% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-teinte) 76%, #8fb8ff) 0%, var(--btn-teinte) 60%, color-mix(in srgb, var(--btn-teinte) 80%, #0a1a50) 100%);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--btn-teinte) 40%, transparent),
+    0 0 12px color-mix(in srgb, var(--btn-teinte) 50%, transparent),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 10, 40, 0.3);
+}
+
+.btn--fantome:hover:not(:disabled),
+.btn-ghost:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--btn-lisere) 60%, #ffffff);
+  background:
+    url('./assets/boutons/nuages-gauche.webp') left 7% bottom -3px / auto 40% no-repeat,
+    url('./assets/boutons/nuages-droite.webp') right 7% bottom -3px / auto 36% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-teinte) 66%, #a8c8ff) 0%, color-mix(in srgb, var(--btn-teinte) 90%, #ffffff) 60%, var(--btn-teinte) 100%);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--btn-teinte) 50%, transparent),
+    0 0 18px color-mix(in srgb, var(--btn-teinte) 65%, transparent),
+    0 6px 16px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* EN MODE SAISONNIER, la pilule bleue jurerait (« les cards restent en bleu », Camara, 15/11/2026) : elle
+   prend un fond sombre teinté de la couleur de la saison, et un liseré à cette couleur. `:where()` : les
+   variantes colorées, plus bas, gardent la leur. */
+:where(:root[data-saison]) :is(.btn--fantome, .btn-ghost) {
+  --btn-teinte: color-mix(in srgb, var(--corail-btn) 32%, #16161e);
+  --btn-lisere: color-mix(in srgb, var(--corail-btn) 75%, #ffffff);
+}
+
+/* Les petits boutons : les nuages restent, plus discrets. */
+.btn-ghost--mini { background-size: auto 36%, auto 32%, auto; }
+
+/* Les variantes colorées : leur couleur devient celle de la pilule. */
+.btn-ghost.btn-ghost--danger { --btn-teinte: #c93a4a; }
+.btn-ghost.btn-ghost--modifier { --btn-teinte: color-mix(in srgb, var(--action-modifier) 80%, #003b38); }
+.btn-ghost.btn-ghost--code { --btn-teinte: color-mix(in srgb, var(--action-code) 85%, #0b2a6b); }
+.btn-ghost.btn-ghost--retirer { --btn-teinte: color-mix(in srgb, var(--action-retirer) 80%, #5c0a22); }
+.btn-ghost.btn-ghost--accent { --btn-teinte: var(--corail-btn); }
+.btn-ghost.btn-ghost--creer { --btn-teinte: color-mix(in srgb, var(--sarcelle) 65%, #003a35); }
+
+.btn-ghost.est-actif,
+.btn-ghost--code.est-actif {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--btn-teinte) 55%, transparent),
+    0 0 18px color-mix(in srgb, var(--btn-teinte) 70%, transparent);
+}
+
+/* LA BARRE DU HAUT : ses règles propres (fond `--surface`, encre de page) sont plus lourdes que la base ;
+   elles sont reprises ici. « Tarifs » et « J'ai un code » en bleu, « Connexion » en plein, avec ses éclats
+   jaunes au-dessus du coin (assets/boutons/eclats.webp), comme dans la maquette. */
+.navbar__right > .btn-ghost,
+.navbar__right .navbar__lien-direct,
+.navbar__right .navbar__lien-direct:hover {
+  border-color: var(--btn-lisere);
+  color: #fff;
+  font-weight: 600;
+}
+
+.navbar__right > .btn-ghost:not(:hover) {
+  background:
+    url('./assets/boutons/nuages-gauche.webp') left 7% bottom -3px / auto 40% no-repeat,
+    url('./assets/boutons/nuages-droite.webp') right 7% bottom -3px / auto 36% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--btn-teinte) 76%, #8fb8ff) 0%, var(--btn-teinte) 60%, color-mix(in srgb, var(--btn-teinte) 80%, #0a1a50) 100%);
+}
+
+.navbar__right .navbar__sortie,
+.navbar__right .navbar__sortie:hover {
+  --btn-teinte: var(--rouge-sortie-plein);
+  border-color: color-mix(in srgb, var(--rouge-sortie-plein) 40%, #ffd0d0);
+  color: #fff;
+}
+
+.navbar__right .navbar__connexion {
+  position: relative;
+  overflow: visible;
+  color: #fff;
+}
+
+.navbar__right .navbar__connexion::after {
+  content: '';
+  position: absolute;
+  top: -15px;
+  right: -13px;
+  width: 24px;
+  height: 21px;
+  background: url('./assets/boutons/eclats.webp') center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* Les icônes de la barre (étiquette, code, silhouette) : du trait, à la couleur du texte. */
+.navbar__icone {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-right: 7px;
+}

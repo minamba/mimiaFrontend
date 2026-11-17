@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getSerieVisites, getAbonnementsFenetre, getTunnel } from '../lib/api/adminApi';
+import {
+  getSerieVisites, getAbonnementsFenetre, getTunnel, getMouvementsAbonnements,
+} from '../lib/api/adminApi';
 import { useEvenementsAdmin } from '../lib/hooks/useEvenementsAdmin';
 import Graphique from './Graphique';
 
@@ -126,6 +128,80 @@ function Etape({ valeur, libelle, precedent }) {
   );
 }
 
+const TYPES_MOUVEMENT = {
+  abonnement: { libelle: 'Abonnement payant', ton: 'entree' },
+  offert: { libelle: 'Abonnement offert', ton: 'offert' },
+  demande: { libelle: 'Demande de résiliation', ton: 'alerte' },
+  resiliation: { libelle: 'Résiliation effective', ton: 'sortie' },
+};
+
+/**
+ * LES PARENTS DERRIÈRE LES BARRES — Camara, le 12/11/2026 : « en bas du tableau, une liste avec le nom, prénom et mail
+ * du parent qui a pris un abonnement ou a demandé une résiliation, ainsi que les résiliations effectives ». Même
+ * fenêtre et mêmes règles que le graphique : la liste recoupe ses chiffres.
+ */
+function ListeMouvements({ mouvements, chargement }) {
+  const [filtre, setFiltre] = useState('tous');
+  const affiches = filtre === 'tous' ? mouvements : mouvements.filter((m) => m.type === filtre);
+
+  if (chargement) return null;
+
+  return (
+    <section className="mouvements-abo" aria-label="Parents concernés">
+      <div className="mouvements-abo__entete">
+        <h3 className="mouvements-abo__titre">Les parents concernés</h3>
+        <div className="segmente" role="group" aria-label="Type de mouvement">
+          {[['tous', 'Tous'], ...Object.entries(TYPES_MOUVEMENT).map(([cle, t]) => [cle, t.libelle])].map(([cle, libelle]) => (
+            <button key={cle} type="button" className={filtre === cle ? 'actif' : ''} onClick={() => setFiltre(cle)}>
+              {libelle}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {affiches.length === 0 ? (
+        <p className="mouvements-abo__vide">Aucun mouvement sur cette période.</p>
+      ) : (
+        <table className="mouvements-abo__tableau">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Mouvement</th>
+              <th scope="col">Parent</th>
+              <th scope="col">Mail</th>
+              <th scope="col">Offre</th>
+            </tr>
+          </thead>
+          <tbody>
+            {affiches.map((m) => {
+              const type = TYPES_MOUVEMENT[m.type] ?? { libelle: m.type, ton: 'entree' };
+              const nom = [m.prenom, m.nom].filter(Boolean).join(' ') || 'Sans nom';
+              return (
+                <tr key={`${m.type}-${m.parentId}-${m.date}`}>
+                  <td className="mouvements-abo__date">
+                    {/* Une date UTC de la base, sans fuseau : on la lit comme telle, puis à l'heure de Paris. */}
+                    {new Date(/(Z|[+-]\d\d:\d\d)$/.test(`${m.date}`) ? m.date : `${m.date}Z`).toLocaleString('fr-FR', {
+                      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                    })}
+                  </td>
+                  <td>
+                    <span className={`mouvements-abo__type mouvements-abo__type--${type.ton}`}>{type.libelle}</span>
+                  </td>
+                  <td className="mouvements-abo__nom">{nom}</td>
+                  <td className="mouvements-abo__mail">
+                    {m.mail ? <a href={`mailto:${m.mail}`}>{m.mail}</a> : '—'}
+                  </td>
+                  <td className="mouvements-abo__offre">{m.offre ?? '—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
 /** Un chiffre de tête, avec sa légende. */
 function Chiffre({ valeur, libelle, ton }) {
   return (
@@ -144,6 +220,7 @@ export default function Frequentation() {
   const [visites, setVisites] = useState([]);
   const [visiteurs, setVisiteurs] = useState(0);
   const [abonnements, setAbonnements] = useState([]);
+  const [mouvements, setMouvements] = useState([]);
 
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
@@ -164,16 +241,22 @@ export default function Frequentation() {
       // LES DEUX APPELS PARTENT ENSEMBLE, sur la MÊME fenêtre. Les enchaîner
       // doublerait l'attente, et les laisser dériver ferait afficher des
       // visites d'août à côté d'abonnements de septembre.
-      const [v, a, t] = await Promise.all([
+      const [v, a, t, m] = await Promise.all([
         getSerieVisites(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)),
         getAbonnementsFenetre(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)),
         getTunnel(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)),
+        // La liste ne doit pas faire tomber les graphiques : une panne ici rend une liste vide.
+        Promise.resolve()
+          .then(() => getMouvementsAbonnements(reglage.granularite, pourLeServeur(debut), pourLeServeur(fin)))
+          .then((r) => r ?? { data: [] })
+          .catch(() => ({ data: [] })),
       ]);
 
       setVisites(v.data?.points ?? []);
       setVisiteurs(v.data?.visiteurs ?? 0);
       setAbonnements(a.data ?? []);
       setTunnel(t.data ?? null);
+      setMouvements(Array.isArray(m.data) ? m.data : []);
     } catch {
       if (!silencieux) setErreur("La fréquentation n'a pas pu être chargée.");
     } finally {
@@ -326,6 +409,8 @@ export default function Frequentation() {
         donnees={abonnements}
         type="barres"
       />
+
+      <ListeMouvements mouvements={mouvements} chargement={chargement} />
     </div>
   );
 }

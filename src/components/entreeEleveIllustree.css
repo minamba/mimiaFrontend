@@ -1,0 +1,303 @@
+/* ======================================================================================================
+   L'ENTRÉE DES ÉLÈVES ILLUSTRÉE — maquette de Camara, 16/11/2026 (« améliore la page de connexion de l'élève »).
+
+   La bulle devient une carte de verre bleu nuit au liseré lumineux : le Fuji en haut à droite, le torii à
+   gauche du titre, des vagues japonaises en bas à gauche (découpés dans la maquette : assets/entree-eleve).
+   Le cartable dans son médaillon orange lumineux ; « ESPACE ÉLÈVE » entre deux traits ; « Bonjour ! » au
+   pinceau (le lettrage de la maquette, EntreeEleve.js) ; la consigne en clair ; le champ au liseré corail
+   lumineux ; « C'est parti → » en pilule corail, une fleur de cerisier à gauche et des vagues à droite ;
+   l'aide dans un cadre en pointillés lumineux, l'ampoule dans son rond, un filet avant le texte. Sur grand
+   écran, des branches de cerisier dans les coins de la page.
+
+   Nuit dans tous les thèmes ; en mode saisonnier, `--illu-*` et `--corail-btn`. Sélecteurs forts : App.css,
+   chargé après, pèse jusqu'à 0,3,0 (le bouton au survol). Aucune animation ajoutée.
+   ====================================================================================================== */
+
+section.entree-eleve--illu {
+  --ee-lueur: #7fb6ff;
+  --ee-corail: #f5735f;
+  --ee-carte-haut: #0f3aa0;
+  --ee-carte-bas: #1a347f;
+
+  position: relative;
+  max-width: 560px;
+}
+
+:root[data-da='blue-sky'][data-saison] section.entree-eleve--illu {
+  --ee-lueur: color-mix(in srgb, var(--illu-accent) 80%, #ffffff);
+  --ee-corail: var(--corail-btn);
+  --ee-carte-haut: color-mix(in srgb, var(--illu-accent) 18%, var(--illu-panneau));
+  --ee-carte-bas: var(--illu-panneau-2);
+}
+
+/* ------------------------------------------------------------------ la carte */
+section.entree-eleve--illu .entree-eleve__bulle {
+  z-index: 1;
+  margin-top: 74px;
+  padding: 82px 38px 38px;
+  border: 2px solid color-mix(in srgb, var(--ee-lueur) 75%, #ffffff);
+  border-radius: 34px;
+  background:
+    url('../assets/entree-eleve/fuji.webp') right 0 top 18px / 170px auto no-repeat,
+    url('../assets/entree-eleve/torii.webp') left 14px top 118px / 92px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.35' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -6px bottom 0 / 130px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%236f9cff' stroke-opacity='.45' stroke-width='7' stroke-linecap='round'%3E%3Cpath d='M30 8h46M6 24h84M40 36h40'/%3E%3C/g%3E%3C/svg%3E") left 22px top 34px / 92px auto no-repeat,
+    linear-gradient(180deg, var(--ee-carte-haut) 0%, color-mix(in srgb, var(--ee-carte-haut) 40%, var(--ee-carte-bas)) 45%, var(--ee-carte-bas) 100%);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ee-lueur) 30%, transparent),
+    0 0 28px color-mix(in srgb, var(--ee-lueur) 50%, transparent),
+    0 30px 70px rgba(0, 8, 30, 0.55),
+    inset 0 0 40px color-mix(in srgb, var(--ee-lueur) 16%, transparent);
+}
+
+/* Le médaillon du cartable : orange lumineux, un anneau clair. */
+section.entree-eleve--illu .entree-eleve__medaillon {
+  width: 134px;
+  height: 134px;
+  background: radial-gradient(circle at 50% 40%, #ff9a7e 0%, #f2675a 60%, #e0524f 100%);
+  box-shadow:
+    0 0 0 5px rgba(255, 196, 172, 0.55),
+    0 0 0 7px color-mix(in srgb, var(--ee-lueur) 25%, transparent),
+    0 0 34px rgba(255, 120, 90, 0.65),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+section.entree-eleve--illu .entree-eleve__cartable { width: 118px; height: 118px; }
+section.entree-eleve--illu .entree-eleve__etincelle { color: #ffe08a; font-size: 18px; text-shadow: 0 0 8px rgba(255, 220, 120, 0.8); }
+section.entree-eleve--illu .entree-eleve__etincelle--1 { top: -4px; right: -14px; }
+section.entree-eleve--illu .entree-eleve__etincelle--2 { bottom: 14px; left: -16px; font-size: 13px; }
+
+/* « ESPACE ÉLÈVE » dans sa pastille, entre deux traits. */
+section.entree-eleve--illu .entree-eleve__etiquette {
+  position: relative;
+  margin: 0 0 4px;
+  padding: 6px 22px;
+  border: 2px solid color-mix(in srgb, var(--ee-corail) 85%, #ffd2c4);
+  background: color-mix(in srgb, var(--ee-corail) 16%, rgba(30, 20, 70, 0.55));
+  color: color-mix(in srgb, var(--ee-corail) 45%, #ffffff);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ee-corail) 35%, transparent);
+}
+
+section.entree-eleve--illu .entree-eleve__etiquette::before,
+section.entree-eleve--illu .entree-eleve__etiquette::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 46px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+section.entree-eleve--illu .entree-eleve__etiquette::before { right: calc(100% + 12px); background: linear-gradient(90deg, transparent, var(--ee-corail)); }
+section.entree-eleve--illu .entree-eleve__etiquette::after { left: calc(100% + 12px); background: linear-gradient(90deg, var(--ee-corail), transparent); }
+
+/* « Bonjour ! » au pinceau. */
+section.entree-eleve--illu .entree-eleve__titre { margin: 0; line-height: 0; }
+
+section.entree-eleve--illu .entree-eleve__bonjour {
+  display: block;
+  width: min(300px, 82%);
+  height: auto;
+  margin: 6px auto 4px;
+  filter: drop-shadow(0 3px 10px rgba(0, 8, 30, 0.45));
+}
+
+section.entree-eleve--illu .entree-eleve__note {
+  margin: 10px auto 26px;
+  max-width: 32ch;
+  color: #e3ebff;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------ le champ */
+/* Poids 0,4,2 : la règle sombre commune à tous les champs (App.css, `:root:not([data-theme='light']) :is(input…)`)
+   pèse 0,3,1, et 0,5,1 au survol. */
+section.entree-eleve--illu .entree-eleve__forme input.entree-eleve__code.entree-eleve__code {
+  padding: 18px 12px;
+  border: 2px solid var(--ee-corail);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--ee-lueur) 12%, rgba(10, 30, 90, 0.7));
+  color: #ffffff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ee-corail) 35%, transparent),
+    0 0 18px color-mix(in srgb, var(--ee-corail) 45%, transparent),
+    inset 0 0 18px rgba(0, 10, 40, 0.45);
+}
+
+section.entree-eleve--illu .entree-eleve__forme input.entree-eleve__code.entree-eleve__code::placeholder { color: #cfe0ff; opacity: 0.9; }
+
+section.entree-eleve--illu .entree-eleve__forme input.entree-eleve__code.entree-eleve__code:hover:not(:disabled, :focus) { border-color: color-mix(in srgb, var(--ee-corail) 85%, #ffffff); }
+
+section.entree-eleve--illu .entree-eleve__forme input.entree-eleve__code.entree-eleve__code:focus,
+section.entree-eleve--illu .entree-eleve__forme input.entree-eleve__code.entree-eleve__code:hover:not(:disabled):focus {
+  border-color: color-mix(in srgb, var(--ee-corail) 75%, #ffffff);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--ee-corail) 25%, transparent),
+    0 0 26px color-mix(in srgb, var(--ee-corail) 60%, transparent),
+    inset 0 0 18px rgba(0, 10, 40, 0.45);
+}
+
+section.entree-eleve--illu .entree-eleve__erreur {
+  border-color: rgba(255, 140, 140, 0.55);
+  background: rgba(255, 90, 90, 0.16);
+  color: #ffc4c4;
+}
+
+/* ------------------------------------------------------------------ « C'est parti → » */
+section.entree-eleve--illu .entree-eleve__bouton.btn {
+  min-height: 64px;
+  border: 2px solid rgba(255, 218, 204, 0.85);
+  border-radius: 999px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='%23ffd9df' stroke='%23ff9fb0' stroke-width='.6'%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(72 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(144 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(216 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(288 10 10)'/%3E%3C/g%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ff6f91'/%3E%3C/svg%3E") left 26px center / 30px 30px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.35' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M60 30a15 15 0 0 1 30 0M65 30a10 10 0 0 1 20 0M70 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M45 15a15 15 0 0 1 30 0'/%3E%3C/g%3E%3C/svg%3E") right 18px bottom -1px / 120px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--ee-corail) 55%, #ffc08e) 0%, var(--ee-corail) 55%, color-mix(in srgb, var(--ee-corail) 85%, #b8243a) 100%);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(120, 20, 20, 0.4);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ee-corail) 35%, transparent),
+    0 0 24px color-mix(in srgb, var(--ee-corail) 60%, transparent),
+    0 10px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+section.entree-eleve--illu .entree-eleve__bouton.btn:hover:not(:disabled) {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='%23ffd9df' stroke='%23ff9fb0' stroke-width='.6'%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(72 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(144 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(216 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(288 10 10)'/%3E%3C/g%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ff6f91'/%3E%3C/svg%3E") left 26px center / 30px 30px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.42' stroke-width='1.3'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M5 30a10 10 0 0 1 20 0M10 30a5 5 0 0 1 10 0M30 30a15 15 0 0 1 30 0M35 30a10 10 0 0 1 20 0M40 30a5 5 0 0 1 10 0M60 30a15 15 0 0 1 30 0M65 30a10 10 0 0 1 20 0M70 30a5 5 0 0 1 10 0M15 15a15 15 0 0 1 30 0M45 15a15 15 0 0 1 30 0'/%3E%3C/g%3E%3C/svg%3E") right 18px bottom -1px / 120px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--ee-corail) 45%, #ffd0a0) 0%, color-mix(in srgb, var(--ee-corail) 90%, #ffffff) 55%, var(--ee-corail) 100%);
+}
+
+/* Le code pas encore complet : le bouton attend, un peu en retrait, sans s'éteindre. */
+section.entree-eleve--illu .entree-eleve__bouton.btn:disabled { opacity: 0.88; }
+
+/* ------------------------------------------------------------------ l'aide */
+section.entree-eleve--illu .entree-eleve__aide {
+  position: relative;
+  z-index: 1;
+  gap: 18px;
+  margin-top: 26px;
+  padding: 18px 22px;
+  border: 2px dashed color-mix(in srgb, var(--ee-lueur) 70%, transparent);
+  border-radius: 22px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ee-carte-haut) 70%, transparent), color-mix(in srgb, var(--ee-carte-bas) 70%, transparent));
+  color: #e3ebff;
+  font-size: 15px;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ee-lueur) 30%, transparent);
+}
+
+section.entree-eleve--illu .entree-eleve__aide-icone {
+  width: 54px;
+  height: 54px;
+  background: radial-gradient(circle, rgba(255, 214, 110, 0.22), rgba(255, 255, 255, 0.06) 70%);
+  font-size: 26px;
+  box-shadow: 0 0 16px rgba(255, 200, 90, 0.3);
+}
+
+section.entree-eleve--illu .entree-eleve__aide > span:last-child {
+  padding-left: 18px;
+  border-left: 1.5px solid color-mix(in srgb, var(--ee-lueur) 50%, transparent);
+}
+
+/* ------------------------------------------------------------------ les cerisiers des coins (grand écran) */
+@media (min-width: 1100px) {
+  section.entree-eleve--illu::before {
+    content: '';
+    position: absolute;
+    inset: -30px -300px -120px;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      url('../assets/entree-eleve/cerisier-haut.webp') left top / 280px auto no-repeat,
+      url('../assets/entree-eleve/cerisier-bas.webp') right bottom / 270px auto no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.3' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right 40px top 10px / 170px auto no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cc0ff' stroke-opacity='.3' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left 30px bottom 20px / 190px auto no-repeat;
+  }
+}
+
+/* ------------------------------------------------------------------ téléphone */
+@media (max-width: 480px) {
+  section.entree-eleve--illu .entree-eleve__bulle {
+    margin-top: 66px;
+    padding: 74px 20px 26px;
+    border-radius: 28px;
+    background-size: 120px auto, 64px auto, 100px auto, 70px auto, auto;
+    background-position: right 0 top 16px, left 6px top 112px, left -6px bottom 0, left 14px top 28px, 0 0;
+  }
+
+  section.entree-eleve--illu .entree-eleve__medaillon { width: 118px; height: 118px; }
+  section.entree-eleve--illu .entree-eleve__cartable { width: 102px; height: 102px; }
+  section.entree-eleve--illu .entree-eleve__etiquette::before,
+  section.entree-eleve--illu .entree-eleve__etiquette::after { width: 26px; }
+  section.entree-eleve--illu .entree-eleve__bonjour { width: min(240px, 78%); }
+  section.entree-eleve--illu .entree-eleve__note { font-size: 15.5px; }
+  section.entree-eleve--illu .entree-eleve__bouton.btn { min-height: 58px; font-size: 20px; background-size: 26px 26px, 96px auto, auto; background-position: left 20px center, right 12px bottom -1px, 0 0; }
+  section.entree-eleve--illu .entree-eleve__aide { padding: 14px 16px; gap: 12px; font-size: 14px; }
+  section.entree-eleve--illu .entree-eleve__aide-icone { width: 44px; height: 44px; font-size: 22px; }
+  section.entree-eleve--illu .entree-eleve__aide > span:last-child { padding-left: 12px; }
+}
+
+/* ------------------------------------------------------------------ en mode saisonnier
+   Camara, le 16/11/2026 : « tout doit s'adapter aux thèmes, French Days, hiver… ». Le Fuji et le torii de la
+   maquette sont fondus sur SON bleu : sur une autre saison, ils laissaient des rectangles bleus. Ils cèdent la place
+   aux mêmes motifs détourés (le Fuji des tarifs, le torii des contrôles) ; les vagues et les traits passent en blanc
+   translucide ; le médaillon, le champ et l'aide prennent les couleurs de la saison. */
+:root[data-da='blue-sky'][data-saison] section.entree-eleve--illu .entree-eleve__bulle {
+  background:
+    url('../assets/tarifs/fuji-sommet.webp') right 12px top 30px / 150px auto no-repeat,
+    url('../assets/controles-illustre/torii-cerisiers.webp') left 4px top 116px / 130px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -6px bottom 0 / 130px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%23ffffff' stroke-opacity='.22' stroke-width='7' stroke-linecap='round'%3E%3Cpath d='M30 8h46M6 24h84M40 36h40'/%3E%3C/g%3E%3C/svg%3E") left 22px top 34px / 92px auto no-repeat,
+    linear-gradient(180deg, var(--ee-carte-haut) 0%, var(--ee-carte-bas) 100%);
+  border-color: var(--illu-bord-fort);
+  box-shadow:
+    0 0 0 1px var(--illu-bord),
+    0 0 28px var(--illu-lueur),
+    0 30px 70px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px color-mix(in srgb, var(--ee-lueur) 12%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] section.entree-eleve--illu .entree-eleve__medaillon {
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--ee-corail) 60%, #ffffff) 0%, var(--ee-corail) 62%, color-mix(in srgb, var(--ee-corail) 80%, #000000) 100%);
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--ee-corail) 40%, #ffffff),
+    0 0 0 7px var(--illu-bord),
+    0 0 34px color-mix(in srgb, var(--ee-corail) 60%, transparent),
+    0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-da='blue-sky'][data-saison] section.entree-eleve--illu .entree-eleve__forme input.entree-eleve__code.entree-eleve__code {
+  background: color-mix(in srgb, var(--ee-lueur) 8%, var(--illu-panneau-2));
+}
+
+:root[data-da='blue-sky'][data-saison] section.entree-eleve--illu .entree-eleve__aide {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 18px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] section.entree-eleve--illu .entree-eleve__aide > span:last-child { border-left-color: var(--illu-bord); }
+
+@media (min-width: 1100px) {
+  :root[data-da='blue-sky'][data-saison] section.entree-eleve--illu::before {
+    background:
+      url('../assets/entree-eleve/cerisier-haut.webp') left top / 280px auto no-repeat,
+      url('../assets/entree-eleve/cerisier-bas.webp') right bottom / 270px auto no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right 40px top 10px / 170px auto no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left 30px bottom 20px / 190px auto no-repeat;
+  }
+}
+
+@media (max-width: 480px) {
+  :root[data-da='blue-sky'][data-saison] section.entree-eleve--illu .entree-eleve__bulle {
+    background-size: 110px auto, 96px auto, 100px auto, 70px auto, auto;
+    background-position: right 8px top 24px, left 0 top 108px, left -6px bottom 0, left 14px top 28px, 0 0;
+  }
+}

@@ -38,6 +38,7 @@ import {
   specialitesAEnvoyer,
 } from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
+import ChoixAvatar from './ChoixAvatar';
 import {
   getHistoriqueEvaluations,
   getHistoriqueRapports,
@@ -55,9 +56,11 @@ import {
   getCopieEleve,
   getDicteeEleve,
   getMesOnglets,
+  arreterAbonnementOffert,
 } from '../lib/api/adminApi';
 import RolesAdmin from './RolesAdmin';
 import CreationEnfantAdmin from './CreationEnfantAdmin';
+import OffrirAbonnementAdmin from './OffrirAbonnementAdmin';
 import ChoixEleve from './ChoixEleve';
 import FicheEleve from './FicheEleve';
 import Graphique from './Graphique';
@@ -617,7 +620,8 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
   // 15/10/2026 les fiches de révision que leurs enfants génèrent. Additionnés
   // poste par poste plutôt que déduits du total : sinon les frais de fond
   // resteraient dedans le jour où l'API en ajoute un.
-  const famillesDollars = (cout?.dialogueDollars ?? 0) + (cout?.voixDollars ?? 0) + (cout?.fichesDollars ?? 0);
+  const famillesDollars = (cout?.dialogueDollars ?? 0) + (cout?.voixDollars ?? 0) + (cout?.fichesDollars ?? 0)
+    + (cout?.podcastsDollars ?? 0);
 
   const postes = cout?.postes ?? [];
 
@@ -773,6 +777,25 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
                       </small>
                     </span>
                     <strong>{(cout?.fichesDollars ?? 0).toFixed(2)} $</strong>
+                  </li>
+
+                  {/* LES PODCASTS — Camara, le 15/11/2026 : « je veux une ligne podcasts avec le montant, même si
+                      c'est lié à Gemini ; ça ne vient pas de la discussion avec les élèves ». Le texte et la voix des
+                      épisodes, sortis des frais de fond et de la synthèse vocale des cours. */}
+                  <li>
+                    <span>
+                      Podcasts
+                      <small>
+                        {(cout?.podcastsEpisodes ?? 0).toLocaleString('fr-FR')} épisode{(cout?.podcastsEpisodes ?? 0) > 1 ? 's' : ''}
+                        {' · '}
+                        texte {(cout?.podcastsTexteDollars ?? 0).toFixed(2)} $
+                        {' · '}
+                        voix {(cout?.podcastsVoixDollars ?? 0).toFixed(2)} $
+                        {' · '}
+                        {(cout?.podcastsAppels ?? 0).toLocaleString('fr-FR')} appel{(cout?.podcastsAppels ?? 0) > 1 ? 's' : ''}
+                      </small>
+                    </span>
+                    <strong>{(cout?.podcastsDollars ?? 0).toFixed(2)} $</strong>
                   </li>
                 </ul>
               </section>
@@ -1171,6 +1194,22 @@ export default function Admin() {
   /** Le parent pour qui l'on crée un enfant (16/10/2026), ou null. */
   const [creationEnfantPour, setCreationEnfantPour] = useState(null);
 
+  /** Le parent à qui l'on offre un abonnement (13/11/2026), ou null. */
+  const [offrirPour, setOffrirPour] = useState(null);
+
+  // ARRÊTER UN ABONNEMENT OFFERT (13/11/2026) : tout de suite, sur
+  // confirmation ; le parent repasse sans forfait.
+  const arreterOffre = async (p) => {
+    const nom = [p.prenom, p.nom].filter(Boolean).join(' ') || p.mail;
+    if (!window.confirm(`Arrêter maintenant l’abonnement offert à ${nom} ? Ses cours s’arrêtent aussitôt.`)) return;
+    try {
+      await arreterAbonnementOffert(p.id);
+    } catch (ex) {
+      window.alert(ex?.response?.data?.message ?? 'L’abonnement offert n’a pas pu être arrêté. Réessayez.');
+    }
+    dispatch(chargerAdmin());
+  };
+
   // LA CRÉATION SE DIT (16/10/2026) : sans un mot, on ne savait pas si
   // l'enfant existait — la liste se recharge, mais son compteur seul ne se
   // remarque pas. Le message s'efface tout seul après huit secondes.
@@ -1515,6 +1554,7 @@ export default function Admin() {
     niveaux.find((n) => String(n.id) === String(classeEdition))?.lv2Possible,
   );
   const specialitesEdition = specialitesDeLaClasse(niveaux, classeEdition);
+  const choisirAvatarEdition = useCallback((avatar) => setEdition((ed) => (ed ? { ...ed, avatar } : ed)), []);
 
   /**
    * LA CRÉATION D'UN PARENT, EN TROIS APPELS ET DANS CET ORDRE : l'identité
@@ -2344,6 +2384,35 @@ export default function Admin() {
                       >
                         Crédit fiche
                       </button>
+                      {/* OFFRIR UN ABONNEMENT (13/11/2026). Un abonnement offert
+                          en cours se montre et s'arrête ici ; sinon on l'offre.
+                          Un abonnement payant en cours : le serveur refuse et
+                          la fenêtre affiche son message. */}
+                      {p.abonnementOffert ? (
+                        <>
+                          <span className="badge badge--offert" title="Abonnement offert par l’administration">
+                            Offert {p.offertJusquau
+                              ? `jusqu’au ${new Date(p.offertJusquau).toLocaleDateString('fr-FR')}`
+                              : 'sans fin'}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-ghost btn-ghost--mini"
+                            onClick={() => arreterOffre(p)}
+                          >
+                            Arrêter l’offre
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-ghost btn-ghost--mini"
+                          onClick={() => setOffrirPour(p)}
+                          title="Associer une formule à ce parent, sans paiement"
+                        >
+                          Offrir
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="btn-ghost btn-ghost--mini"
@@ -2516,6 +2585,7 @@ export default function Admin() {
                           nom: e.nom ?? '',
                           age: e.age,
                           sexe: e.sexe ?? 0,
+                          avatar: e.avatar ?? '',
                           academieId: e.academieId ?? null,
                           niveauScolaireId: e.niveauScolaireId ?? '',
                           lv2Espagnol: Boolean(e.lv2Espagnol),
@@ -2583,6 +2653,14 @@ export default function Admin() {
           Cette dernière est déjà une chaîne de ternaires sur trois
           opérations ; y greffer une quatrième branche aurait rendu les
           quatre illisibles pour économiser un composant. */}
+      {offrirPour && (
+        <OffrirAbonnementAdmin
+          parent={offrirPour}
+          onFermer={() => setOffrirPour(null)}
+          onOffert={() => dispatch(chargerAdmin())}
+        />
+      )}
+
       {creationEnfantPour && (
         <CreationEnfantAdmin
           parent={creationEnfantPour}
@@ -3116,6 +3194,16 @@ export default function Admin() {
                     Détermine les accords du professeur quand il lui parle.
                   </span>
                 </div>
+
+                {/* SON AVATAR, comme côté parent (16/11/2026) — facultatif, invisible tant qu'il n'y a pas
+                    d'avatars (ni de classe choisie). Envoyé tel quel : '' ramène à celui par défaut. */}
+                <ChoixAvatar
+                  classe={niveaux.find((n) => String(n.id) === String(edition.niveauScolaireId))?.code}
+                  sexe={edition.sexe}
+                  valeur={edition.avatar ?? ''}
+                  onChange={choisirAvatarEdition}
+                  prenom={edition.prenom || null}
+                />
 
                 <div className="champ">
                   <label htmlFor="ed-academie">Académie</label>

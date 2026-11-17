@@ -1,0 +1,384 @@
+/* ======================================================================================================
+   « COMBIEN DE TEMPS AUJOURD'HUI ? », D'APRÈS LA MAQUETTE DE CAMARA (16/11/2026). Portée : `.modale.duree-illu`
+   (ChoixDuree, OuvertureSeance.js). Grand cadre bleu nuit lumineux, branche de cerisier, titre serif avec un trait
+   rose, puis une carte néon par durée (cyan, vert, or, rose — une 5e en violet) : horloge au trait lumineux, nombre
+   en serif italique, séparateur ✦, libellé, détail, vagues seigaiha et fleur en bas, coins décorés.
+   Le panneau reste sombre dans TOUS les thèmes (ses textes ont leurs propres couleurs) ; en mode saisonnier, le
+   cadre et le fond suivent la saison (`--illu-*`, styles/decorEnfant.css), les couleurs des durées restent.
+   Rien ne s'anime en boucle ; pas de flou d'arrière-plan.
+   ====================================================================================================== */
+:root .modale.duree-illu .modale__boite--duree {
+  --duree-fond: #0c1a52;
+  --duree-fond-2: #0a1440;
+  --duree-bord: rgba(150, 175, 255, 0.6);
+  --duree-lueur: rgba(110, 150, 255, 0.4);
+  --duree-texte: #f3f6ff;
+  --duree-texte-doux: #c6d0f0;
+  position: relative;
+  max-width: 900px;
+  padding: 30px 32px 22px;
+  /* Défile en vertical quand l'écran est trop court (téléphone) : « Annuler » reste atteignable. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 2px solid var(--duree-bord);
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 80% at 90% 0%, rgba(255, 150, 200, 0.12), transparent 55%),
+    radial-gradient(90% 70% at 0% 100%, rgba(120, 150, 255, 0.16), transparent 60%),
+    linear-gradient(180deg, var(--duree-fond) 0%, var(--duree-fond-2) 100%);
+  box-shadow:
+    0 0 0 4px rgba(120, 140, 255, 0.1),
+    0 0 36px var(--duree-lueur),
+    0 30px 70px rgba(0, 0, 0, 0.5);
+  color: var(--duree-texte);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Le décor : la branche de cerisier en haut à droite, quelques pétales, une traînée de lumière en bas à gauche. */
+:root .modale.duree-illu .duree-illu__branche {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  font-size: 26px;
+  letter-spacing: -6px;
+  transform: rotate(-12deg);
+  filter: drop-shadow(0 0 8px rgba(255, 150, 200, 0.5));
+  pointer-events: none;
+}
+
+:root .modale.duree-illu .duree-illu__petales {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(4px 2.5px at 82% 22%, rgba(255, 170, 210, 0.85), transparent 70%),
+    radial-gradient(4px 2.5px at 92% 34%, rgba(255, 170, 210, 0.75), transparent 70%),
+    radial-gradient(2px 2px at 8% 14%, rgba(255, 255, 255, 0.9), transparent 70%),
+    radial-gradient(1.6px 1.6px at 64% 9%, rgba(255, 255, 255, 0.8), transparent 70%),
+    radial-gradient(1.6px 1.6px at 30% 92%, rgba(255, 255, 255, 0.7), transparent 70%),
+    radial-gradient(3px 2px at 18% 88%, rgba(255, 170, 210, 0.7), transparent 70%),
+    radial-gradient(120% 40% at -10% 112%, rgba(255, 190, 140, 0.18), transparent 60%);
+}
+
+:root .modale.duree-illu .modale__boite--duree > h2 {
+  position: relative;
+  align-self: flex-start;
+  margin: 0;
+  padding-bottom: 10px;
+  font-family: var(--display);
+  font-size: clamp(22px, 3.2vw, 32px);
+  font-weight: 700;
+  color: var(--duree-texte);
+  text-shadow: 0 2px 12px rgba(5, 10, 40, 0.5);
+}
+
+/* Les étincelles autour du titre, et le trait rose dessous. */
+:root .modale.duree-illu .modale__boite--duree > h2::before {
+  content: '✦';
+  margin-right: 0.35em;
+  font-size: 0.6em;
+  vertical-align: 0.5em;
+  color: #ffe7a6;
+  text-shadow: 0 0 8px rgba(255, 220, 140, 0.8);
+}
+
+:root .modale.duree-illu .modale__boite--duree > h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 8%;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 120, 170, 0), #ff7aa8 15%, #ff9fc4 70%, rgba(255, 159, 196, 0));
+  box-shadow: 0 0 10px rgba(255, 120, 170, 0.5);
+}
+
+:root .modale.duree-illu .modale__boite--duree > .modale__texte {
+  position: relative;
+  margin: 12px 0 0;
+  color: var(--duree-texte-doux);
+}
+
+/* ---------------------------------------------------------------------------------------------- les cartes */
+:root .modale.duree-illu .durees {
+  position: relative;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+
+:root .modale.duree-illu .duree {
+  --neon: #3ee6ff;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  gap: 4px;
+  min-height: 250px;
+  padding: 22px 14px 44px;
+  border: 2px solid color-mix(in srgb, var(--neon) 75%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(90% 60% at 50% 18%, color-mix(in srgb, var(--neon) 22%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--neon) 16%, #0a1440) 0%, color-mix(in srgb, var(--neon) 6%, #070f33) 100%);
+  box-shadow:
+    0 0 16px color-mix(in srgb, var(--neon) 45%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--neon) 18%, transparent);
+  color: var(--duree-texte);
+}
+
+:root .modale.duree-illu .duree:nth-child(2) { --neon: #6fe36a; }
+:root .modale.duree-illu .duree:nth-child(3) { --neon: #ffb347; }
+:root .modale.duree-illu .duree:nth-child(4) { --neon: #ff6f9a; }
+:root .modale.duree-illu .duree:nth-child(5) { --neon: #b48cff; }
+
+/* Les coins décorés (haut gauche, bas droit) : deux équerres fines. */
+:root .modale.duree-illu .duree::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  opacity: 0.7;
+  background:
+    linear-gradient(var(--neon), var(--neon)) left top / 14px 1.5px no-repeat,
+    linear-gradient(var(--neon), var(--neon)) left top / 1.5px 14px no-repeat,
+    linear-gradient(var(--neon), var(--neon)) right bottom / 14px 1.5px no-repeat,
+    linear-gradient(var(--neon), var(--neon)) right bottom / 1.5px 14px no-repeat;
+  transition: none;
+}
+
+/* Les vagues seigaiha en bas de la carte, à la couleur de la durée. */
+:root .modale.duree-illu .duree::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  height: 38px;
+  opacity: 0.4;
+  background:
+    radial-gradient(circle at 50% 100%, transparent 7px, var(--neon) 7.5px, var(--neon) 8.5px, transparent 9px,
+      transparent 12px, var(--neon) 12.5px, var(--neon) 13.5px, transparent 14px) 0 100% / 28px 16px repeat-x,
+    radial-gradient(circle at 50% 100%, transparent 7px, var(--neon) 7.5px, var(--neon) 8.5px, transparent 9px,
+      transparent 12px, var(--neon) 12.5px, var(--neon) 13.5px, transparent 14px) 14px calc(100% - 9px) / 28px 16px repeat-x;
+  pointer-events: none;
+}
+
+:root .modale.duree-illu .duree:hover,
+:root .modale.duree-illu .duree:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--neon);
+  background:
+    radial-gradient(90% 60% at 50% 18%, color-mix(in srgb, var(--neon) 30%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--neon) 22%, #0a1440) 0%, color-mix(in srgb, var(--neon) 8%, #070f33) 100%);
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--neon) 60%, transparent),
+    inset 0 0 22px color-mix(in srgb, var(--neon) 24%, transparent);
+  outline: none;
+}
+
+:root .modale.duree-illu .duree:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* L'horloge néon : le boîtier et l'aiguille lumineux, le secteur effacé (l'aiguille dit la durée). */
+:root .modale.duree-illu .duree__cadran {
+  width: 78px;
+  height: 78px;
+  margin-bottom: 8px;
+  color: var(--neon);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--neon) 70%, transparent));
+}
+
+:root .modale.duree-illu .duree__boitier { opacity: 1; stroke-width: 1.8; }
+:root .modale.duree-illu .duree__repere { opacity: 0.95; stroke-width: 1.6; }
+:root .modale.duree-illu .duree__repere--fin { opacity: 0.6; stroke-width: 1.1; }
+:root .modale.duree-illu .duree__secteur { opacity: 0; }
+:root .modale.duree-illu .duree__aiguille { stroke-width: 2.4; }
+
+:root .modale.duree-illu .duree__minutes {
+  gap: 6px;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: clamp(34px, 4.2vw, 46px);
+  font-weight: 700;
+  color: var(--neon);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--neon) 55%, transparent);
+}
+
+:root .modale.duree-illu .duree__unite {
+  font-style: normal;
+  font-size: 15px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--neon) 60%, #fff);
+  text-shadow: none;
+}
+
+/* Le séparateur ✦ entre deux filets. */
+:root .modale.duree-illu .duree__sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 86%;
+  margin: 6px 0 2px;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--neon) 50%, #fff);
+}
+
+:root .modale.duree-illu .duree__sep::before,
+:root .modale.duree-illu .duree__sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--neon) 70%, #fff));
+}
+
+:root .modale.duree-illu .duree__sep::after { transform: scaleX(-1); }
+
+:root .modale.duree-illu .duree__libelle {
+  margin-top: 2px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+}
+
+:root .modale.duree-illu .duree__detail {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--duree-texte-doux);
+}
+
+:root .modale.duree-illu .duree__fleur {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 18px;
+  filter: hue-rotate(0deg) drop-shadow(0 0 6px color-mix(in srgb, var(--neon) 60%, transparent));
+  opacity: 0.9;
+}
+
+/* L'essai : les durées trop longues, éteintes. */
+:root .modale.duree-illu .duree.duree--grisee,
+:root .modale.duree-illu .duree:disabled {
+  filter: grayscale(0.85) brightness(0.7);
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Le calme (TDAH) : « Conseillé pour toi » en pastille, au-dessus de l'horloge. */
+:root .modale.duree-illu .duree--conseillee {
+  border-width: 3px;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--neon) 30%, transparent),
+    0 0 26px color-mix(in srgb, var(--neon) 60%, transparent);
+}
+
+:root .modale.duree-illu .duree--conseillee .conseille-pour-toi {
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--neon);
+  color: #071030;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Les notes (essai, conseillère) et les durées de test (administration) : lisibles sur le panneau sombre. */
+:root .modale.duree-illu .modale__note {
+  position: relative;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 210, 120, 0.4);
+  border-radius: 14px;
+  background: rgba(255, 190, 80, 0.1);
+  color: #ffe6b0;
+}
+
+:root .modale.duree-illu .duree-test {
+  position: relative;
+  border-color: rgba(200, 210, 255, 0.4);
+  color: var(--duree-texte-doux);
+}
+
+:root .modale.duree-illu .duree-test:hover { color: #fff; border-color: #fff; }
+
+/* Le séparateur à la fleur, puis « Annuler » à droite. */
+:root .modale.duree-illu .duree-illu__separateur {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 6px;
+  font-size: 14px;
+}
+
+:root .modale.duree-illu .duree-illu__separateur::before,
+:root .modale.duree-illu .duree-illu__separateur::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(190, 200, 255, 0.55));
+}
+
+:root .modale.duree-illu .duree-illu__separateur::after { transform: scaleX(-1); }
+
+/* Le séparateur à la fleur tient lieu du filet habituel au-dessus des boutons. */
+:root .modale.duree-illu .modale__boite > .modale__actions {
+  position: relative;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 0;
+}
+
+:root .modale.duree-illu .modale__actions .btn-ghost {
+  padding: 11px 30px;
+  border: 2px solid rgba(140, 170, 255, 0.75);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(40, 70, 170, 0.55), rgba(20, 35, 100, 0.55));
+  box-shadow: 0 0 14px rgba(110, 150, 255, 0.35);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+:root .modale.duree-illu .modale__actions .btn-ghost:hover { border-color: #fff; }
+
+/* ----------------------------------------------------------------------------------- modes saisonniers */
+:root[data-da='blue-sky'][data-saison] .modale.duree-illu .modale__boite--duree {
+  --duree-fond: var(--illu-panneau);
+  --duree-fond-2: var(--illu-panneau-2);
+  --duree-bord: var(--illu-bord-fort);
+  --duree-lueur: var(--illu-lueur);
+  --duree-texte-doux: #e6e8f2;
+}
+
+:root[data-da='blue-sky'][data-saison] .modale.duree-illu .modale__actions .btn-ghost {
+  border-color: var(--illu-bord-fort);
+  background: var(--illu-panneau-2);
+  box-shadow: 0 0 14px var(--illu-lueur);
+}
+
+/* ---------------------------------------------------------------------------------------- petits écrans */
+@media (max-width: 760px) {
+  :root .modale.duree-illu .modale__boite--duree { padding: 24px 18px 18px; border-radius: 22px; }
+  :root .modale.duree-illu .durees { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  :root .modale.duree-illu .duree { min-height: 0; padding: 16px 10px 38px; }
+  :root .modale.duree-illu .duree__cadran { width: 58px; height: 58px; }
+  :root .modale.duree-illu .duree__minutes { font-size: 32px; }
+  :root .modale.duree-illu .duree__libelle { font-size: 17px; }
+  :root .modale.duree-illu .duree__detail { font-size: 12.5px; }
+  :root .modale.duree-illu .duree-illu__branche { font-size: 20px; }
+}
+
+@media (max-width: 360px) {
+  :root .modale.duree-illu .durees { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .modale.duree-illu .duree { transition: none; }
+}

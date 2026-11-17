@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import FenetreEditionEnfant, { Section } from './FenetreEditionEnfant';
 import ChoixSpecialites from './ChoixSpecialites';
@@ -6,6 +6,7 @@ import ChoixFilierePro from './ChoixFilierePro';
 import ChoixAcademie from './ChoixAcademie';
 import ChoixEtablissement, { classeAvecConseillere } from './ChoixEtablissement';
 import ChoixBesoins from './ChoixBesoins';
+import ChoixAvatar from './ChoixAvatar';
 import { useBesoinsParticuliers } from '../lib/storage/modeTest';
 import { creerEnfantPourParent, definirEtablissementEnfantAdmin } from '../lib/api/adminApi';
 import {
@@ -36,6 +37,8 @@ const VIDE = {
   nom: '',
   age: '',
   sexe: '',
+  // L'avatar (16/11/2026), facultatif : '' = celui par defaut.
+  avatar: '',
   niveauScolaireId: '',
   academieId: '',
   // L'établissement, pour la conseillère d'orientation (20/10/2026).
@@ -73,6 +76,7 @@ export default function CreationEnfantAdmin({ parent, onFermer, onCree }) {
   const set = (nom) => (e) => setChamps((p) => ({ ...p, [nom]: e.target.value }));
 
   const niveauChoisi = niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId));
+  const choisirAvatar = useCallback((avatar) => setChamps((p) => ({ ...p, avatar })), []);
   const lv2Possible = Boolean(niveauChoisi?.lv2Possible);
   const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
   const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
@@ -103,6 +107,7 @@ export default function CreationEnfantAdmin({ parent, onFermer, onCree }) {
         nom: champs.nom.trim(),
         age: Number(champs.age),
         sexe: Number(champs.sexe),
+        avatar: champs.avatar || null,
         niveauScolaireId: Number(champs.niveauScolaireId),
         academieId: champs.academieId ? Number(champs.academieId) : null,
         lv2Espagnol: lv2Possible && champs.lv2Espagnol,
@@ -221,6 +226,15 @@ export default function CreationEnfantAdmin({ parent, onFermer, onCree }) {
             </span>
           )}
         </div>
+
+        {/* SON AVATAR, comme côté parent (16/11/2026) — facultatif, invisible tant qu'il n'y a pas d'avatars. */}
+        <ChoixAvatar
+          classe={niveauChoisi?.code}
+          sexe={champs.sexe}
+          valeur={champs.avatar}
+          onChange={choisirAvatar}
+          prenom={champs.prenom.trim() || null}
+        />
 
         <div className="enfant-ligne__options">
           {lv2Possible && (

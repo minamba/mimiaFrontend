@@ -1,5 +1,6 @@
 import { API_BASE_URL, enTeteAuth } from '../api/httpClient';
 import { mesurerEcoute, mesurerMicro } from '../api/mesuresApi';
+import { enTeteBillet } from '../affluence/salleDAttente';
 
 /**
  * Écoute en flux : le micro part vers notre serveur, les transcriptions
@@ -737,9 +738,24 @@ export const ecouteTempsReel = {
       retirerEnVolJusqua(dernierVieux);
     };
 
-    /** Un texte est revenu : la plus ancienne phrase close n'a plus à être renvoyée. */
+    /**
+     * Un texte est revenu : la plus ancienne phrase close n'a plus à être renvoyée.
+     *
+     * ET S'IL EST REVENU AVANT NOTRE ORDRE DE FIN DE TOUR, TOUT CE QUI EST PARTI
+     * EST TRANSCRIT — Camara, le 07/11/2026 : « il me met en erreur alors que
+     * j'ai rien dit », une maman aussi. Sur une syllabe, le fournisseur clôt la
+     * phrase lui-même (détection sémantique) et le verdict arrive AVANT les
+     * 850 ms de silence qui déclenchent notre ordre. Il n'y avait alors aucune
+     * fin dans la copie en vol, et on ne retirait rien : la syllabe y restait.
+     * Notre ordre partait ensuite sur un tampon presque vide, sans réponse ;
+     * huit secondes, « oreille morte », et la copie était RENVOYÉE : la même
+     * syllabe, transcrite une seconde fois, jugée contre l'image suivante.
+     * Mesuré : trois « transcriptions » de 9,5 à 11 s dans MesureVoix, une par
+     * réponse fantôme.
+     */
     const libererPremierePhrase = () => {
-      retirerEnVolJusqua(enVol.findIndex((element) => element.fin));
+      const premiereFin = enVol.findIndex((element) => element.fin);
+      retirerEnVolJusqua(premiereFin >= 0 ? premiereFin : enVol.length - 1);
     };
 
     // La reconnexion : combien d'échecs d'affilée, et la tentative programmée.
@@ -1185,7 +1201,9 @@ export const ecouteTempsReel = {
         // d'agir, sans quoi une vieille fermeture programmerait un rappel
         // par-dessus une liaison qui marche.
         const liaison = new WebSocket(
-          `${base}/api/ecoute/${cible}?access_token=${encodeURIComponent(entete)}`,
+          // Le billet de la salle d'attente en paramètre : un WebSocket ne porte pas d'en-tête choisi.
+          `${base}/api/ecoute/${cible}?access_token=${encodeURIComponent(entete)}${
+            enTeteBillet() ? `&billet=${encodeURIComponent(enTeteBillet())}` : ''}`,
         );
         liaison.binaryType = 'arraybuffer';
         socket = liaison;

@@ -7,6 +7,8 @@
  * pendant le streaming, une balise arrive souvent coupée en deux fragments.
  */
 
+import { envelopperFigures } from '../figureGeo';
+
 const OUVERTURE = '[ARDOISE]';
 const FERMETURE = '[/ARDOISE]';
 
@@ -434,6 +436,16 @@ const SUPPORT_SON = '[SUPPORT_SON]';
 
 /** La question « des mots ou des phrases ? » avant une dictée — voir typeDictee.js. */
 const TYPE_DICTEE = '[TYPE_DICTEE]';
+/** L'exercice de lecture à voix haute (06/11/2026) : voir `lib/lectureAVoixHaute.js`. Ni affiché, ni dit. */
+const EXERCICE_LECTURE = '[EXERCICE_LECTURE]';
+/** Devant ce que l'enfant a lu au micro (06/11/2026) : pour le professeur seulement. */
+const LU_A_VOIX_HAUTE = '[LU_A_VOIX_HAUTE]';
+/**
+ * LA LECTURE EN IMAGES (07/11/2026) : la carte du choix de l'exercice, et la syllabe ou le mot à lire, que le tableau
+ * montre (voir `lib/lectureDImage.js`). Ni affichés, ni dits : surtout pas la cible, l'enfant doit la LIRE.
+ */
+const CHOIX_EXERCICE_SONS = /\[CHOIX_EXERCICE_SONS(?::[a-z]+)?\]/gi;
+const LECTURE_IMAGE = /\[LECTURE_IMAGE:[^\]]*\][^[]*\[\/LECTURE_IMAGE\]/gi;
 
 /** Marqueur posé par le professeur au moment où le contrôle commence. */
 export const EVAL_DEBUT = '[DEBUT_EVALUATION]';
@@ -937,6 +949,10 @@ function retirerMarqueurs(texte) {
     .split(SUPPORT_ECRIT).join('')
     .split(SUPPORT_SON).join('')
     .split(TYPE_DICTEE).join('')
+    .split(EXERCICE_LECTURE).join('')
+    .split(LU_A_VOIX_HAUTE).join('')
+    .replace(CHOIX_EXERCICE_SONS, '')
+    .replace(LECTURE_IMAGE, '')
     .split(CORRECTION_TERMINEE).join('')
     .replace(ERREUR_CORRECTION, '')
     // La forme à cible porte un paramètre : elle se retire par motif, sinon
@@ -947,7 +963,10 @@ function retirerMarqueurs(texte) {
     .replace(JEU_PROPOSE, '')
     // La note de l'application, si le professeur l'a recopiée — voir
     // NOTE_APPLICATION : ni affichée, ni dite, même ouverte.
-    .replace(NOTE_APPLICATION, '');
+    .replace(NOTE_APPLICATION, '')
+    // [A_ECOUTER] (14/11/2026) : la balise tombe, le nombre reste — il est fait pour être ENTENDU. L'écran, lui, l'a
+    // déjà remplacé par 🔊 avant d'arriver ici (voir `masquerPourLEcran`, reponseADictee.js).
+    .replace(/\[\/?A_ECOUTER\]/gi, '');
 
   const blocs = [
     [EVAL_OUVERTURE, EVAL_FERMETURE],
@@ -993,7 +1012,8 @@ export function decouper(texte) {
   // La dictée et l’écoute en langue étudiée sont retirées AVANT tout le
   // reste : ce sont les seules choses du flux qui s’entendent sans jamais
   // se voir.
-  let reste = retirerEcouteLangue(retirerDictees(retirerMarqueurs(texte)));
+  // Une figure posée hors du tableau y est rangée (11/11/2026) — voir `envelopperFigures`.
+  let reste = retirerEcouteLangue(retirerDictees(retirerMarqueurs(envelopperFigures(texte))));
 
   // UNE BALISE COUPÉE EN DEUX NE S'AFFICHE PAS.
   //
@@ -1086,10 +1106,11 @@ export function extraireArdoises(texte) {
  * le dire.
  */
 export function ardoiseOuverte(texte) {
-  const dernier = (texte ?? '').lastIndexOf(OUVERTURE);
+  const complet = envelopperFigures(texte ?? '');
+  const dernier = complet.lastIndexOf(OUVERTURE);
   if (dernier === -1) return false;
 
-  return !texte.slice(dernier + OUVERTURE.length).includes(FERMETURE);
+  return !complet.slice(dernier + OUVERTURE.length).includes(FERMETURE);
 }
 
 export function texteParle(texte, { bornes = false } = {}) {
@@ -1112,7 +1133,8 @@ export function texteParle(texte, { bornes = false } = {}) {
   // moment de la mise en file. Invisibles, jamais prononçables, elles ne
   // coûtent rien au découpage incrémental — qui continue de travailler sur
   // une simple chaîne et ses index.
-  let reste = retirerMarqueurs(texte)
+  // Une figure hors du tableau ne se prononce pas plus qu'une figure dedans — voir `envelopperFigures`.
+  let reste = retirerMarqueurs(envelopperFigures(texte ?? ''))
     .split(DICTEE_CLAVIER).join(bornes ? DEBUT_DICTEE : '')
     .split(DICTEE_OUVERTURE).join(bornes ? DEBUT_DICTEE : '')
     .split(DICTEE_FERMETURE).join(bornes ? FIN_DICTEE : '');

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ouvrirSession } from '../lib/api/sessionEleveApi';
 import { accueilEleve, ouvrirSessionEleve } from '../lib/storage/sessionEleve';
 import imageSac from '../assets/sac.png';
+import imageBonjour from '../assets/entree-eleve/bonjour.webp';
+import './entreeEleveIllustree.css';
 
 /**
  * L'entrée des enfants : leur code, et rien d'autre.
@@ -86,7 +88,7 @@ export default function EntreeEleve() {
   };
 
   return (
-    <section className="page entree-eleve">
+    <section className="page entree-eleve entree-eleve--illu">
       {/* UNE BULLE, ET NON PLUS UN FORMULAIRE POSÉ SUR LE FOND — Camara, le
           15/09/2026 : « la y'a pas de bulle ». Pour un enfant, une carte avec
           son cartable en tête dit « c'est ici, c'est pour toi » avant même
@@ -103,7 +105,11 @@ export default function EntreeEleve() {
 
         <p className="entree-eleve__etiquette">Espace élève</p>
 
-        <h1>Bonjour !</h1>
+        {/* « BONJOUR ! » AU PINCEAU — maquette de Camara, 16/11/2026 : le lettrage découpé dans la maquette, son trait
+            orange compris ; le texte reste celui du titre pour les lecteurs d'écran (`alt`). */}
+        <h1 className="entree-eleve__titre">
+          <img className="entree-eleve__bonjour" src={imageBonjour} alt="Bonjour !" />
+        </h1>
         <p className="entree-eleve__note">
           Tape le code que tes parents t’ont donné pour retrouver tes cours.
         </p>

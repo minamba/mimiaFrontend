@@ -46,6 +46,10 @@ export const ajouterPage = (eleveId, coursId, fichier) => {
   return httpClient.post(`${base(eleveId)}/cours/${coursId}/pages`, corps);
 };
 
+/** Le texte d'une fiche libre, écrit ou dicté (06/11/2026) : il remplace le précédent. */
+export const ecrireTexteCours = (eleveId, coursId, texte) =>
+  httpClient.put(`${base(eleveId)}/cours/${coursId}/texte`, { texte });
+
 export const supprimerPage = (eleveId, coursId, pageId) =>
   httpClient.delete(`${base(eleveId)}/cours/${coursId}/pages/${pageId}`);
 

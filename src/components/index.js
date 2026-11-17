@@ -26,6 +26,7 @@ export { default as Graphique } from './Graphique';
 export { default as RouteProtegee } from './RouteProtegee';
 export { default as VerrouEleve } from './VerrouEleve';
 export { default as VerrouMaintenance } from './VerrouMaintenance';
+export { default as VerrouConditions } from './VerrouConditions';
 export { default as VerrouAffluence } from './VerrouAffluence';
 export { default as Maintenance } from './Maintenance';
 export { default as EntreeEleve } from './EntreeEleve';

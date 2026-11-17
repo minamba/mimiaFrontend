@@ -1,0 +1,327 @@
+/* ======================================================================================================
+   « MA CARTE » ILLUSTRÉE — Camara, le 15/11/2026 : la page de l'enfant d'après sa maquette. Portée :
+   `.carte-illustree` (posée avec `page-decor-enfant` sur la racine de Progression quand l'enfant est connecté).
+   Bannière, encadré du score, pastilles et décors des rangées : assets/carte-illustre (découpés dans la maquette,
+   textes effacés) ; le texte, les jauges et le dépliage restent ceux de la page.
+   `:root` en tête : les règles du thème Blue Sky (`:root[data-da] .parcours__…`) pèsent autant.
+   ====================================================================================================== */
+:root .carte-illustree {
+  max-width: 900px;
+}
+
+/* LA BANNIÈRE : l'illustration (bloc-notes, ruban, garçon, Fuji), le titre et la phrase posés dessus. */
+:root .carte-illustree .carte-illustree__banniere {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 804 / 148;
+  margin: 0 0 18px;
+  border-radius: 3.7cqw;
+  background: center / 100% 100% no-repeat;
+  box-shadow: 0 0 22px rgba(150, 120, 255, 0.45), 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+:root .carte-illustree .carte-illustree__titre {
+  position: absolute;
+  left: 21%;
+  top: 9%;
+  margin: 0;
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 7.4cqw;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(90deg, #ffffff 0 34%, #ffe27a 34% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 #1a1550) drop-shadow(0 0 10px rgba(255, 220, 120, 0.35));
+}
+
+:root .carte-illustree .carte-illustree__ruban {
+  position: absolute;
+  left: 23.5%;
+  top: 63%;
+  width: 40%;
+  margin: 0;
+  transform: rotate(-4deg);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-style: italic;
+  font-size: 2.35cqw;
+  line-height: 1.1;
+  text-align: center;
+  color: #1c1846;
+}
+
+/* LE SCORE : l'encadré aux nuages, le chiffre entre les lauriers. */
+:root .carte-illustree .parcours__score {
+  container-type: inline-size;
+  aspect-ratio: 889 / 205;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 3.4% 0 0;
+  border: 0;
+  border-radius: 3.4cqw;
+  background: transparent center / 100% 100% no-repeat;
+  box-shadow: 0 0 22px rgba(150, 120, 255, 0.4), 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+:root .carte-illustree .parcours__score > strong {
+  margin-top: 0.6cqw;
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: 7.6cqw;
+  line-height: 1;
+  color: #cfe8ff;
+  text-shadow: 0 0 14px rgba(150, 200, 255, 0.7), 0 2px 0 #20307a;
+}
+
+:root .carte-illustree .parcours__score > span {
+  margin-top: 1.8cqw;
+  font-size: max(13px, 2cqw);
+  font-weight: 700;
+  color: #fff;
+}
+
+:root .carte-illustree .parcours__jauge {
+  max-width: none;
+  width: 59%;
+  height: max(10px, 2cqw);
+  margin: 1.4cqw 0 1.2cqw;
+  border: 2px solid rgba(200, 200, 255, 0.55);
+  background: rgba(10, 16, 60, 0.6);
+}
+
+:root .carte-illustree .parcours__jauge > span {
+  background: linear-gradient(90deg, #4fd8ff, #7af0ff);
+  box-shadow: 0 0 10px rgba(80, 220, 255, 0.8);
+}
+
+:root .carte-illustree .parcours__score small {
+  font-size: max(12px, 1.6cqw);
+  color: #e6e9ff;
+}
+
+/* LES RANGÉES (matières et années) : sombres, liseré lumineux, la pastille ronde, le décor au milieu. */
+:root .carte-illustree .parcours__matiere {
+  margin-bottom: 10px;
+  border: 2px solid rgba(190, 170, 255, 0.55);
+  border-radius: 16px;
+  background: linear-gradient(90deg, rgba(20, 28, 100, 0.92), rgba(28, 30, 110, 0.88));
+  box-shadow: 0 0 14px rgba(140, 120, 255, 0.3);
+}
+
+:root .carte-illustree .parcours__matiere > summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto auto 1fr minmax(120px, 40%);
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  row-gap: 4px;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px 18px 8px 14px;
+}
+
+/* Le décor de la matière, au milieu de la rangée, fondu sur les côtés. */
+:root .carte-illustree .parcours__matiere > summary::before {
+  content: '';
+  position: absolute;
+  left: 22%;
+  width: 33%;
+  top: 0;
+  bottom: 0;
+  background: var(--decor, none) center / auto 100% no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+/* LES PANORAMAS DE CAMARA (15/11/2026, 1400 × 200) : sur toute la rangée, et non un motif au centre. Un voile
+   sombre aux deux bouts garde le nom (à gauche) et le compte + la barre (à droite) lisibles sur l'illustration. */
+:root .carte-illustree .parcours__matiere--panorama > summary {
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+:root .carte-illustree .parcours__matiere--panorama > summary::before {
+  left: 0;
+  width: 100%;
+  background:
+    linear-gradient(90deg,
+      rgba(10, 14, 60, 0.94) 0%, rgba(10, 14, 60, 0.8) 26%, rgba(10, 14, 60, 0.35) 40%,
+      rgba(10, 14, 60, 0.12) 50%,
+      rgba(10, 14, 60, 0.45) 60%, rgba(10, 14, 60, 0.9) 74%, rgba(10, 14, 60, 0.94) 100%),
+    var(--decor, none) center / cover no-repeat;
+  -webkit-mask-image: none;
+  mask-image: none;
+  opacity: 1;
+}
+
+:root .carte-illustree .parcours__icone,
+:root .carte-illustree .parcours__matiere > summary .parcours__pastille {
+  grid-row: 1 / 3;
+  position: relative;
+  z-index: 1;
+}
+
+:root .carte-illustree .parcours__icone {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+:root .carte-illustree .parcours__matiere > summary .parcours__pastille {
+  width: 30px;
+  height: 30px;
+  margin: 0 7px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25), 0 0 12px rgba(255, 255, 255, 0.2);
+}
+
+:root .carte-illustree .parcours__matiere > summary strong {
+  grid-row: 1 / 3;
+  position: relative;
+  z-index: 1;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Le compte au-dessus de la jauge, à droite. */
+:root .carte-illustree .parcours__compte {
+  grid-column: 4;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+:root .carte-illustree .parcours__mini {
+  grid-column: 4;
+  grid-row: 2;
+  width: 100%;
+  height: 12px;
+  position: relative;
+  z-index: 1;
+  border: 2px solid rgba(190, 200, 255, 0.5);
+  background: rgba(10, 16, 60, 0.65);
+}
+
+:root .carte-illustree .parcours__mini > span {
+  background: linear-gradient(90deg, #4ee05c, #8cff7a) !important;
+  box-shadow: 0 0 8px rgba(110, 255, 120, 0.7);
+}
+
+/* Le dépliage : les notions sur un fond sombre lisible. */
+:root .carte-illustree .parcours__domaine {
+  margin: 0 12px 12px;
+  padding: 4px 14px 12px;
+  border-radius: 12px;
+  background: rgba(8, 12, 50, 0.6);
+}
+
+:root .carte-illustree .parcours__domaine-nom { color: #b9c2ff; }
+:root .carte-illustree .parcours__notion { color: #dfe4ff; }
+:root .carte-illustree .parcours__notion.est-acquise,
+:root .carte-illustree .parcours__notion.est-en-cours,
+:root .carte-illustree .parcours__notion.est-fragile { color: #fff; }
+:root .carte-illustree .parcours__notion.est-a-decouvrir { color: #9aa4d6; }
+
+/* LE SÉPARATEUR : « Tu as aussi consolidé … », un livre, deux filets à losange. */
+:root .carte-illustree .parcours__avant-titre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 22px 0 14px;
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+}
+
+:root .carte-illustree .parcours__avant-titre::before,
+:root .carte-illustree .parcours__avant-titre::after {
+  content: '';
+  flex: 1 1 40px;
+  max-width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f5c451);
+  -webkit-mask: none;
+}
+
+:root .carte-illustree .parcours__avant-titre::after {
+  background: linear-gradient(90deg, #f5c451, transparent);
+}
+
+:root .carte-illustree .parcours__avant-livre {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+}
+
+/* L'ENCADRÉ D'INFO, en bas. */
+:root .carte-illustree .parcours__note {
+  position: relative;
+  margin: 18px 0 30px;
+  padding: 16px 18px 16px 58px;
+  border: 2px solid rgba(190, 170, 255, 0.55);
+  border-radius: 16px;
+  background: rgba(20, 28, 100, 0.85);
+  box-shadow: 0 0 14px rgba(140, 120, 255, 0.3);
+  font-size: 14px;
+  line-height: 1.5;
+  color: #eef0ff;
+}
+
+:root .carte-illustree .parcours__note::before {
+  content: 'i';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  font-family: Georgia, serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+}
+
+/* La fanfare, lisible sur la nuit. */
+:root .carte-illustree .parcours__fanfare {
+  border-color: rgba(120, 255, 140, 0.5);
+  background: rgba(20, 60, 60, 0.85);
+}
+
+:root .carte-illustree .parcours__fanfare-texte strong,
+:root .carte-illustree .parcours__fanfare-texte ul,
+:root .carte-illustree .parcours__fanfare-texte p { color: #fff; }
+
+@media (max-width: 640px) {
+  :root .carte-illustree .parcours__matiere > summary {
+    grid-template-columns: auto 1fr minmax(90px, 38%);
+    column-gap: 10px;
+    padding: 8px 12px;
+  }
+
+  :root .carte-illustree .parcours__matiere > summary::before { left: 30%; width: 34%; opacity: 0.5; }
+  :root .carte-illustree .parcours__compte,
+  :root .carte-illustree .parcours__mini { grid-column: 3; }
+  :root .carte-illustree .parcours__matiere > summary strong { font-size: 15px; }
+  :root .carte-illustree .parcours__icone { width: 36px; height: 36px; }
+  :root .carte-illustree .parcours__avant-titre { font-size: 15px; }
+  :root .carte-illustree .carte-illustree__ruban { font-size: 2.6cqw; }
+}

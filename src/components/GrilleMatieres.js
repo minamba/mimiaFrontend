@@ -5,8 +5,9 @@ import { chargerReferentiel } from '../lib/actions/referentielActions';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { couleurEleve, couleurEleveClaire } from '../lib/couleurEleve';
 import { sessionEleve } from '../lib/storage/sessionEleve';
+import { useVueIllustree } from '../lib/vueIllustree';
 import { cycleDuNiveau } from '../lib/niveauCycle';
-import { useFichesRevision, useJeuxOuverts } from '../lib/storage/modeTest';
+import { useFichesRevision, useJeuxOuverts, usePodcasts } from '../lib/storage/modeTest';
 import {
   getNombreFiches, getEvaluations, getMatieresEleve, getNombreDictees,
   getNombreComprehensionsOrales,
@@ -23,15 +24,21 @@ import iconeCarte from '../assets/carte.png';
 import iconeCalendrier from '../assets/calendrier.png';
 import iconeJeux from '../assets/games.webp';
 import iconeCahier from '../assets/cahier.webp';
+import iconeCasque from '../assets/casque.webp';
 import PreparationExamen from './PreparationExamen';
 import ControleForm from './ControleForm';
 import { ChoixCasque, ChoixDuree } from './OuvertureSeance';
 import Tutoriel from './tutoriel/Tutoriel';
+import AvisMobile from './AvisMobile';
 import CoursDemonstration from './tutoriel/CoursDemonstration';
+import VisiteDemonstration from './tutoriel/VisiteDemonstration';
 import { getProfil, marquerTutorielVu } from '../lib/api/profilApi';
 import useAncreSection from '../lib/hooks/useAncreSection';
 import useAccesForfait, { fichesConsultables, messageForfait } from '../lib/hooks/useAccesForfait';
+import PodcastsNonInclus from './podcasts/PodcastsNonInclus';
 import { useAffichageEleve } from '../lib/besoins';
+import { paletteDeMatiere, sceneDeMatiere } from '../lib/scenesMatieres';
+import { avatarEnfant } from '../lib/avatarEnfant';
 
 /**
  * Ce qu'on promet à l'élève pour chaque matière, en une phrase.
@@ -51,7 +58,7 @@ const estConseillere = (matiere) => matiere?.code === 'ORIENTATION';
 
 function CarteMatiere({
   matiere, onOuvrir, fiches, evaluations, dictees, comprehensionsOrales,
-  expressionsOrales, expressionsEcrites, eleveId, rapportsOrientation, repereTuto,
+  expressionsOrales, expressionsEcrites, eleveId, rapportsOrientation, repereTuto, mention = null, illustree = false,
 }) {
   const total = fiches?.total ?? 0;
   const nouveautes = fiches?.nouveautes ?? 0;
@@ -74,7 +81,8 @@ function CarteMatiere({
       <MotifMatiere code={matiere.code} />
 
       <span className="matiere-carte__avatar">
-        <Avatar nom={matiere.profAvatar} couleur={matiere.profCouleur} taille={64} />
+        {/* LA CARTE ILLUSTRÉE (vue de l'enfant, 15/11/2026) : le même portrait, en grand. */}
+        <Avatar nom={matiere.profAvatar} couleur={matiere.profCouleur} taille={illustree ? 124 : 64} />
       </span>
 
       <strong className="matiere-carte__titre">{matiere.libelle}</strong>
@@ -90,6 +98,10 @@ function CarteMatiere({
           disait. Une matière se décrit maintenant à un seul endroit. */}
       <span className="matiere-carte__promesse">{matiere.promesse ?? ''}</span>
 
+      {/* LA CONSEILLÈRE PENDANT L'ESSAI (Camara, le 15/11/2026) : ouverte, mais « spécifie bien qu'elle est dispo
+          uniquement à partir de l'abonnement Solo ». */}
+      {mention && <span className="matiere-carte__mention">{mention}</span>}
+
       <span className="matiere-carte__pied">
         {matiere.active ? (
           <>
@@ -102,21 +114,31 @@ function CarteMatiere({
     </>
   );
 
+  // LES CARTES DE PROFESSEURS ILLUSTRÉES — Camara, le 15/11/2026 : la scène de la matière sous le portrait, le cadre et
+  // le bouton à ses couleurs (lib/scenesMatieres.js). Vue de l'enfant seulement.
+  const habillage = illustree
+    ? ` matiere-case--illustree${sceneDeMatiere(matiere.code) ? ' matiere-case--scene' : ''}`
+    : '';
+  const style = illustree
+    ? { '--teinte': matiere.profCouleur, ...paletteDeMatiere(matiere) }
+    : { '--teinte': matiere.profCouleur };
+
   if (!matiere.active) {
     // Un <div> et non un <button> désactivé : rien à activer ici, et un bouton
     // grisé invite quand même au clic. On le sort aussi du parcours clavier.
-    return (
-      <div className="matiere-carte matiere-carte--bientot" style={{ '--teinte': matiere.profCouleur }}>
+    const bientot = (
+      <div className="matiere-carte matiere-carte--bientot" style={illustree ? undefined : style}>
         <span className="ruban">Bientôt</span>
         {contenu}
       </div>
     );
+    return illustree ? <div className={`matiere-case${habillage}`} style={style}>{bientot}</div> : bientot;
   }
 
   return (
     <div
-      className={`matiere-case${estConseillere(matiere) ? ' matiere-case--conseillere' : ''}`}
-      style={{ '--teinte': matiere.profCouleur }}
+      className={`matiere-case${estConseillere(matiere) ? ' matiere-case--conseillere' : ''}${habillage}`}
+      style={style}
     >
       <button type="button" className="matiere-carte" data-tuto={repereTuto} onClick={onOuvrir}>
         {contenu}
@@ -286,7 +308,7 @@ export default function GrilleMatieres() {
   // démonstration. La matière de la démonstration survit à la fermeture des
   // deux fenêtres, puisqu'elles se referment pour y entrer.
   const [tutoriel, setTutoriel] = useState(false);
-  const [demoAffichee, setDemoAffichee] = useState(false);
+  const [scene, setScene] = useState(null);
   const [demoMatiere, setDemoMatiere] = useState(null);
   const [demoDuree, setDemoDuree] = useState(null);
 
@@ -303,6 +325,10 @@ export default function GrilleMatieres() {
   // une session enfant change l'adresse, donc l'écran se remet à jour au bon
   // moment sans qu'on ait à partager un état.
   const enfant = sessionEleve();
+  // LA VUE ILLUSTRÉE (en-tête brillant, grandes cartes, cartes de professeurs) : pour l'enfant ET pour le parent
+  // dans l'espace de son enfant — Camara, le 16/11/2026 (lib/vueIllustree.js). `enfant` reste pour ce qui dépend
+  // du lecteur : textes, « Mes enfants », tutoriel, messages de forfait.
+  const illustre = useVueIllustree();
 
   // Matière choisie, en attente de la durée. Null = aucune fenêtre ouverte.
   const [enAttente, setEnAttente] = useState(null);
@@ -378,7 +404,9 @@ export default function GrilleMatieres() {
       id: eleve.id,
       prenom: eleve.prenom,
       niveauLibelle: eleve.niveauLibelle,
+      niveauCode: eleve.niveauCode,
       sexe: eleve.sexe,
+      avatar: eleve.avatar,
       // Le cycle décide de la porte des jeux — voir `useJeuxOuverts`.
       cycle: eleve.niveauCycle,
     }
@@ -387,9 +415,16 @@ export default function GrilleMatieres() {
         id: enfant.eleveId,
         prenom: enfant.prenom,
         niveauLibelle: enfant.niveau,
+        niveauCode: enfant.niveauCode,
+        sexe: enfant.sexe,
+        avatar: enfant.avatar,
         cycle: enfant.cycle,
       }
       : null;
+
+  const portrait = identite
+    ? avatarEnfant({ avatar: identite.avatar, sexe: identite.sexe, niveauCode: identite.niveauCode || identite.niveauLibelle })
+    : null;
 
   // LES JEUX S'OUVRENT CYCLE PAR CYCLE — Camara, le 20/09/2026. Trois
   // interrupteurs d'administration, et cet enfant n'est concerné que par
@@ -405,12 +440,28 @@ export default function GrilleMatieres() {
 
   // Les fiches de révision de l'élève (14/10/2026) : un interrupteur, pas de cycle.
   const fichesOuvertes = useFichesRevision();
+  // LES PODCASTS (15/11/2026) : un interrupteur, comme les fiches.
+  const podcastsOuverts = usePodcasts();
 
   // EN ESSAI, EN PAUSE OU SANS FORFAIT, LA CARTE DES FICHES EST DÉSACTIVÉE
   // (Camara, le 16/10/2026) et dit pourquoi. `false` seulement quand on sait.
   // SAUF EN ESSAI (18/10/2026) : une fiche offerte, la carte mène à la page.
-  const { ouvert: forfaitOuvert, motif: motifForfait } = useAccesForfait(identite?.id);
+  const {
+    ouvert: forfaitOuvert, motif: motifForfait, conseillere: conseillereIncluse, podcasts: podcastsInclus,
+  } = useAccesForfait(identite?.id);
+  // À PARTIR DE SOLO (Camara, le 15/11/2026) : podcasts et conseillère fermés en essai et avec Starter. « Le bouton
+  // est visible mais l'utilisateur est bloqué avec un message » : la carte reste, le clic ouvre la fenêtre.
+  // null, 'podcasts' ou 'conseillere'.
+  const [reserveSolo, setReserveSolo] = useState(null);
+  const clicPodcasts = (e) => {
+    if (podcastsInclus !== false) return;
+    e.preventDefault();
+    setReserveSolo('podcasts');
+  };
   const fichesFermees = !fichesConsultables({ ouvert: forfaitOuvert, motif: motifForfait });
+  // FICHES ET PODCASTS SUR LA MÊME LIGNE (Camara, le 15/11/2026), comme « Ma carte » et « Mon calendrier » ;
+  // seule, la carte des fiches garde toute la ligne (une demi-carte à côté d'un vide).
+  const paire = fichesOuvertes && podcastsOuverts ? ' carte-mienne--paire' : '';
 
   useEffect(() => {
     if (matieres.length === 0) dispatch(chargerReferentiel());
@@ -577,13 +628,26 @@ export default function GrilleMatieres() {
 
   const finirTutoriel = () => {
     setTutoriel(false);
-    setDemoAffichee(false);
+    setScene(null);
     setDemoMatiere(null);
     setDemoDuree(null);
 
     // « Passer » peut tomber sur l'une des deux fenêtres ouvertes.
     setEnAttente(null);
     setDureeChoisie(null);
+  };
+
+  // « PRÉCÉDENT » REMET LA FENÊTRE DE L'ÉTAPE RETROUVÉE. En sortant de la démonstration,
+  // les deux fenêtres sont déjà refermées : leur matière et leur durée sont restées là.
+  // « PASSER L'ÉTAPE » les ferme : on garde les deux, pour pouvoir y revenir.
+  const fenetreDuTutoriel = (fenetre) => {
+    const matiere = enAttente ?? demoMatiere;
+    const duree = dureeChoisie ?? demoDuree;
+
+    setDemoMatiere(matiere);
+    setDemoDuree(duree);
+    setEnAttente(fenetre ? matiere : null);
+    setDureeChoisie(fenetre === 'casque' ? duree : null);
   };
 
   useEffect(() => {
@@ -603,17 +667,40 @@ export default function GrilleMatieres() {
   }
 
   return (
-    <section className="page page--large">
+    // LA VUE DE L'ENFANT, D'APRÈS LA MAQUETTE DE CAMARA (15/11/2026) : « pour la vue des enfants, je veux que ce soit
+    // comme ça » — cartes illustrées (`cartes-mienne--illustrees`), en-tête et boutons brillants (`grille--enfant`).
+    <section className={`page page--large${illustre ? ' grille--enfant' : ''}`}>
+      {/* SUR TÉLÉPHONE, UN MOT À L'ARRIVÉE (12/11/2026) — voir AvisMobile. Jamais par-dessus le tutoriel. */}
+      <AvisMobile masque={tutoriel} />
+
+      {reserveSolo && (
+        <PodcastsNonInclus enfant={Boolean(enfant)} quoi={reserveSolo} onFermer={() => setReserveSolo(null)} />
+      )}
+
       {/* DEUX ÉTAPES, ET LA DURÉE D’ABORD. La question du casque tient à
           l’équipement, pas au cours : la poser en premier ferait commencer
           par de l’intendance quelqu’un qui vient travailler. */}
-      {tutoriel && <Tutoriel onScene={setDemoAffichee} onFin={finirTutoriel} />}
+      {tutoriel && (
+        <Tutoriel
+          onScene={(nom, vue) => setScene(nom ? { nom, vue } : null)}
+          onFenetre={fenetreDuTutoriel}
+          onFin={finirTutoriel}
+        />
+      )}
 
-      {tutoriel && demoAffichee && (
+      {tutoriel && scene?.nom === 'cours' && (
         <CoursDemonstration
           matiere={demoMatiere ?? matiereTuto}
           duree={demoDuree}
-          onQuitter={() => setDemoAffichee(false)}
+          onQuitter={() => setScene(null)}
+        />
+      )}
+
+      {tutoriel && scene && scene.nom !== 'cours' && (
+        <VisiteDemonstration
+          scene={scene.nom}
+          vue={scene.vue}
+          classe={identite?.niveauCode ?? identite?.niveauLibelle}
         />
       )}
 
@@ -674,7 +761,18 @@ export default function GrilleMatieres() {
           se referme — il clique, il est renvoyé, et il ne comprend pas
           pourquoi. Un enfant n'a d'ailleurs pas de « retour » à faire : ses
           matières SONT son point de départ. */}
-      {!enfant && (
+      {/* SON PORTRAIT EN HAUT DE SA PAGE — Camara, le 17/11/2026 : « au même niveau que le bouton retour “Mes enfants”,
+          je veux l'avatar de l'enfant ». Vue illustrée, à droite de la ligne du retour. LE PARENT SEULEMENT (Camara, le
+          même jour) : l'enfant entré par son code a déjà son portrait dans la barre du haut. L'avatar choisi par le
+          parent, sinon celui par défaut ; rien si aucun ne convient. */}
+      {illustre && portrait && !enfant ? (
+        <div className="grille-enfant__haut">
+          <Link to="/eleves" className="lien-retour">
+            <span aria-hidden="true">←</span> Mes enfants
+          </Link>
+          <img className="grille-enfant__portrait" src={portrait} alt={identite?.prenom ? `Avatar de ${identite.prenom}` : ''} />
+        </div>
+      ) : !enfant && (
         <Link to="/eleves" className="lien-retour">
           <span aria-hidden="true">←</span> Mes enfants
         </Link>
@@ -705,7 +803,9 @@ export default function GrilleMatieres() {
           suffit à les renvoyer à la ligne suivante, sans toucher au style
           partagé de `.lien-retour` — qui sert aussi de simple bouton de
           retour sur d'autres pages, où il doit rester sur sa ligne. */}
-      {identite && !enfant && (
+      {/* LES PASTILLES DU PARENT CÈDENT LA PLACE AUX GRANDES CARTES dans la vue illustrée (16/11/2026) : mêmes portes,
+          mêmes verrous, mêmes `data-tuto` (le tutoriel du parent les retrouve sur les grandes cartes). */}
+      {identite && !enfant && !illustre && (
         <div className="liens-carte">
           {/* LES ILLUSTRATIONS EN BADGE — Camara, le 15/09/2026 : `carte.png` et
               `calendrier.png`, les mêmes que sur la page de l'enfant, à la
@@ -736,6 +836,17 @@ export default function GrilleMatieres() {
             <Link to={`/eleves/${identite.id}/mes-fiches`} className="lien-carte lien-carte--badge" data-tuto="fiches">
               <img className="lien-carte__badge" src={iconeCahier} alt="" />
               Mes fiches de révision
+            </Link>
+          )}
+          {podcastsOuverts && !fichesFermees && (
+            <Link
+              to={`/eleves/${identite.id}/mes-podcasts`}
+              className="lien-carte lien-carte--badge"
+              data-tuto="podcasts"
+              onClick={clicPodcasts}
+            >
+              <img className="lien-carte__badge" src={iconeCasque} alt="" />
+              Mes podcasts
             </Link>
           )}
           {fichesOuvertes && fichesFermees && (
@@ -816,9 +927,9 @@ export default function GrilleMatieres() {
           pourtant ce que cet écran demande de choisir. Ordre naturel
           maintenant : on l accueille, on lui montre sa carte, puis ses
           matières. */}
-      {identite && enfant && (
-        <div className="cartes-mienne">
-          <Link to={`/eleves/${identite.id}/progression`} className="carte-mienne" data-tuto="carte">
+      {identite && illustre && (
+        <div className="cartes-mienne cartes-mienne--illustrees">
+          <Link to={`/eleves/${identite.id}/progression`} className="carte-mienne carte-mienne--carte" data-tuto="carte">
             <MotifMatiere code="CARTE" />
             <span className="carte-mienne__icone-zone">
               <span className="carte-mienne__halo" aria-hidden="true" />
@@ -836,7 +947,7 @@ export default function GrilleMatieres() {
             <span className="carte-mienne__fleche" aria-hidden="true">→</span>
           </Link>
 
-          <Link to={`/eleves/${identite.id}/calendrier`} className="carte-mienne" data-tuto="calendrier">
+          <Link to={`/eleves/${identite.id}/calendrier`} className="carte-mienne carte-mienne--calendrier" data-tuto="calendrier">
             <MotifMatiere code="CALENDRIER" />
             <span className="carte-mienne__icone-zone">
               <span className="carte-mienne__halo" aria-hidden="true" />
@@ -859,7 +970,7 @@ export default function GrilleMatieres() {
               place — l'enfant sait que la porte existe —, grisée, et dit ce
               qu'il manque au lieu de mener à une page fermée. */}
           {fichesOuvertes && fichesFermees && (
-            <div className="carte-mienne carte-mienne--fiches est-verrouillee" aria-disabled="true" data-tuto="fiches">
+            <div className={`carte-mienne carte-mienne--fiches est-verrouillee${paire}`} aria-disabled="true" data-tuto="fiches">
               <MotifMatiere code="FICHES" />
               <span className="carte-mienne__icone-zone">
                 <span className="carte-mienne__icone" aria-hidden="true">
@@ -874,7 +985,7 @@ export default function GrilleMatieres() {
             </div>
           )}
           {fichesOuvertes && !fichesFermees && (
-            <Link to={`/eleves/${identite.id}/mes-fiches`} className="carte-mienne carte-mienne--fiches" data-tuto="fiches">
+            <Link to={`/eleves/${identite.id}/mes-fiches`} className={`carte-mienne carte-mienne--fiches${paire}`} data-tuto="fiches">
               <MotifMatiere code="FICHES" />
               <span className="carte-mienne__icone-zone">
                 <span className="carte-mienne__halo" aria-hidden="true" />
@@ -885,6 +996,39 @@ export default function GrilleMatieres() {
               <span className="carte-mienne__texte">
                 <strong>Mes fiches de révision</strong>
                 <span>Importe ton cours, ta fiche est prête en un instant</span>
+              </span>
+              <span className="carte-mienne__fleche" aria-hidden="true">→</span>
+            </Link>
+          )}
+
+          {/* MES PODCASTS — Camara, le 15/11/2026 : son cours, raconté par son professeur. Une porte à part, comme les
+              fiches ; grisée sans vrai forfait (même règle : l'essai en offre un). */}
+          {podcastsOuverts && fichesFermees && (
+            <div className={`carte-mienne carte-mienne--podcasts est-verrouillee${paire}`} aria-disabled="true" data-tuto="podcasts">
+              <span className="carte-mienne__icone-zone">
+                <span className="carte-mienne__icone" aria-hidden="true"><img src={iconeCasque} alt="" /></span>
+              </span>
+              <span className="carte-mienne__texte">
+                <strong>Mes podcasts</strong>
+                <span>{messageForfait(Boolean(enfant), 'cette fonctionnalité')}</span>
+              </span>
+              <span className="carte-mienne__fleche" aria-hidden="true">🔒</span>
+            </div>
+          )}
+          {podcastsOuverts && !fichesFermees && (
+            <Link
+              to={`/eleves/${identite.id}/mes-podcasts`}
+              className={`carte-mienne carte-mienne--podcasts${paire}`}
+              data-tuto="podcasts"
+              onClick={clicPodcasts}
+            >
+              <span className="carte-mienne__icone-zone">
+                <span className="carte-mienne__halo" aria-hidden="true" />
+                <span className="carte-mienne__icone" aria-hidden="true"><img src={iconeCasque} alt="" /></span>
+              </span>
+              <span className="carte-mienne__texte">
+                <strong>Mes podcasts</strong>
+                <span>Ton cours raconté par ton professeur, à écouter partout</span>
               </span>
               <span className="carte-mienne__fleche" aria-hidden="true">→</span>
             </Link>
@@ -938,6 +1082,12 @@ export default function GrilleMatieres() {
                  directement à la seconde question, avec la durée de la
                  précédente. */
               onOuvrir={() => {
+                // LA CONSEILLÈRE, À PARTIR DE SOLO (Camara, le 15/11/2026) : sa carte reste visible et normale ;
+                // en essai ou avec Starter, le clic ouvre la fenêtre au lieu de la séance.
+                if (estConseillere(matiere) && conseillereIncluse === false) {
+                  setReserveSolo('conseillere');
+                  return;
+                }
                 setDureeChoisie(null);
                 setControleEnAttente(null);
                 setEpreuveEnAttente(null);
@@ -951,6 +1101,10 @@ export default function GrilleMatieres() {
               expressionsEcrites={expressionsEcrites[matiere.id]}
               rapportsOrientation={rapportsOrientation}
               eleveId={eleveId}
+              illustree={illustre}
+              mention={estConseillere(matiere) && motifForfait === 'essai'
+                ? 'Pendant l’essai seulement : incluse à partir de l’abonnement Solo'
+                : null}
               repereTuto={
                 estConseillere(matiere)
                   ? 'conseillere'

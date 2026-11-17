@@ -1,0 +1,32 @@
+/* LA FENÊTRE DES CONDITIONS GÉNÉRALES — Camara, le 08/11/2026. Par-dessus tout : elle bloque le site. */
+.modale:has(> .conditions-fenetre) { z-index: 2000; }
+
+.modale__boite.conditions-fenetre { max-width: 480px; }
+
+.modale__boite.conditions-fenetre--lecture { max-width: 820px; }
+
+.conditions-fenetre__titre {
+  margin: 0 0 14px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.conditions-fenetre__texte { margin: 0 0 16px; line-height: 1.5; }
+
+.conditions-fenetre__consulter { width: 100%; margin-bottom: 16px; }
+
+.conditions-fenetre__note {
+  margin: 0 0 4px;
+  color: var(--encre-douce);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.conditions-fenetre .alert { margin-top: 12px; }
+
+/* Le texte a déjà les marges de la fenêtre : celles de sa page le feraient flotter au milieu. */
+.conditions-fenetre--lecture .legal {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}

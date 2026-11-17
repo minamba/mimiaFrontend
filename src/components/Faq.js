@@ -77,7 +77,7 @@ export const QUESTIONS = [
   {
     question: 'Combien ça coûte, et puis-je arrêter quand je veux ?',
     reponse:
-      "Les formules commencent à 39,90 € par mois ; avec Duo et Famille, plusieurs enfants partagent un même pot d'heures. L'abonnement est sans engagement : vous le résiliez depuis votre espace, sans avoir à nous écrire, et il s'arrête à la fin de la période en cours.",
+      "Les formules commencent à 19,90 € par mois ; avec Duo et Famille, plusieurs enfants partagent un même pot d'heures. L'abonnement est sans engagement : vous le résiliez depuis votre espace, sans avoir à nous écrire, et il s'arrête à la fin de la période en cours.",
     liens: [
       { to: '/tarifs', libelle: 'Voir les formules' },
       { to: '/cgv', libelle: 'Conditions de vente' },

@@ -1,0 +1,6 @@
+{
+  "lot": "242 cartes de vocabulaire anglais CP-CM2",
+  "controle": "Images finales inspectees pendant la composition et les retouches. Legendes anglaises et traductions francaises composees separement.",
+  "retouches_resolues": ["leg", "foot", "hand", "five", "hen", "shower", "fog", "spider", "dolphin", "cap", "scarf", "bathroom", "stairs", "wind", "windy", "snow", "snowy", "winter", "hospital", "stand", "pumpkin", "toe", "hot", "summer", "short"],
+  "notes": "Les fichiers qa-*.txt et retouches-qa.json sont les observations de travail anterieures, resolues dans les fichiers finaux. Les sources et prompts sont conserves. Aucun mot du PDF ajoute ou omis."
+}

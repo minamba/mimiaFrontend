@@ -1,0 +1,146 @@
+/* ======================================================================================================
+   « CONÇU POUR LES ENFANTS. PENSÉ POUR RASSURER LES PARENTS. » — maquette de Camara, 16/11/2026.
+
+   Plus une seule carte à compartiments : six cartes séparées, en deux colonnes, chacune en verre bleu nuit
+   au liseré lumineux. L'illustration à gauche, le titre en serif blanc souligné d'un trait de pinceau (orange
+   sur une carte sur deux, bleu sur l'autre), le texte dessous, aligné à gauche. Un reflet de lumière dans le
+   coin bas droit.
+
+   Les cartes restent nuit dans tous les thèmes (textes écrits en clair). Sélecteurs forts, et c'est voulu :
+   les règles Blue Sky de la grille pèsent jusqu'à 0,5,0 (survol) et celles des cases jusqu'à 0,7,0
+   (`.point:nth-last-child(2):nth-child(odd)`). Le halo du portrait de Maëlle ne respire plus : aucune
+   animation en boucle (elles ralentissent le PC de Camara).
+   ====================================================================================================== */
+
+/* La grille n'est plus une carte : un simple rangement de six cartes. */
+:root .landing section.parents .parents__grille.parents__grille,
+:root .landing section.parents .parents__grille.parents__grille:hover {
+  gap: 22px;
+  margin-top: 14px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+:root .landing section.parents .parents__grille .point.point.point {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(110px, 38%) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 18px;
+  align-items: start;
+  min-height: 210px;
+  padding: 26px 28px 26px 18px;
+  border: 1.5px solid rgba(122, 170, 255, 0.55);
+  border-radius: 20px;
+  background-color: #0f2068;
+  background-image:
+    radial-gradient(ellipse 45% 30% at 100% 100%, rgba(120, 110, 255, 0.35), transparent 70%),
+    linear-gradient(160deg, transparent 72%, rgba(90, 160, 255, 0.18) 80%, transparent 88%),
+    linear-gradient(180deg, #15297e 0%, #0d1c5a 100%);
+  box-shadow:
+    0 0 0 1px rgba(80, 140, 255, 0.16),
+    0 0 24px rgba(70, 130, 255, 0.3),
+    0 20px 50px rgba(2, 8, 30, 0.4),
+    inset 0 0 30px rgba(90, 150, 255, 0.1);
+  text-align: left;
+  overflow: hidden;
+}
+
+.landing section.parents .parents__grille .point__icone {
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 170px;
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0;
+  filter: drop-shadow(0 0 16px rgba(90, 150, 255, 0.4));
+}
+
+/* Maëlle : son portrait rond garde son liseré violet, mais immobile. */
+.landing section.parents .parents__grille .point__icone--portrait {
+  max-width: 150px;
+  animation: none;
+  box-shadow: 0 0 0 6px rgb(139 92 246 / 0.22), 0 0 26px 6px rgb(167 139 250 / 0.4);
+  filter: none;
+}
+
+.landing section.parents .parents__grille .point h3 {
+  position: relative;
+  align-self: end;
+  margin: 4px 0 0;
+  padding-bottom: 14px;
+  font-family: var(--display);
+  font-size: clamp(19px, 1.9vw, 25px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff;
+  text-wrap: balance;
+}
+
+/* Le trait de pinceau sous le titre : orange, ou bleu une carte sur deux. */
+.landing section.parents .parents__grille .point h3::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 3px;
+  width: min(240px, 85%);
+  height: 4px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, #ff9a4d 18%, #ffb36b 55%, transparent);
+  box-shadow: 0 0 8px rgba(255, 150, 80, 0.55);
+}
+
+.landing section.parents .parents__grille .point:nth-child(even) h3::after {
+  background: linear-gradient(90deg, transparent, #4fb3ff 18%, #8fdcff 55%, transparent);
+  box-shadow: 0 0 8px rgba(90, 170, 255, 0.6);
+}
+
+:root .landing section.parents .parents__grille .point.point.point p {
+  margin: 12px 0 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: rgba(226, 234, 255, 0.88);
+  text-wrap: pretty;
+}
+
+@media (max-width: 900px) {
+  :root .landing section.parents .parents__grille.parents__grille { gap: 16px; }
+}
+
+@media (max-width: 520px) {
+  :root .landing section.parents .parents__grille .point.point.point {
+    grid-template-columns: 96px minmax(0, 1fr);
+    column-gap: 14px;
+    min-height: 0;
+    padding: 20px 16px 20px 12px;
+  }
+  .landing section.parents .parents__grille .point h3 { font-size: 18px; padding-bottom: 11px; }
+  :root .landing section.parents .parents__grille .point.point.point p { font-size: 14.5px; }
+}
+
+/* ------------------------------------------------------------------ en mode saisonnier
+   Camara, le 16/11/2026 : les six cartes suivent la saison (`--illu-*`). Le trait sous le titre reste orange
+   une carte sur deux ; l'autre prend l'accent de la saison. */
+:root[data-da='blue-sky'][data-saison] .landing section.parents .parents__grille .point.point.point {
+  border-color: var(--illu-bord-fort);
+  background-image:
+    radial-gradient(ellipse 45% 30% at 100% 100%, var(--illu-lueur), transparent 70%),
+    linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 24px var(--illu-lueur), 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.parents .parents__grille .point__icone { filter: drop-shadow(0 0 16px var(--illu-lueur)); }
+
+:root[data-da='blue-sky'][data-saison] .landing section.parents .parents__grille .point:nth-child(even) h3::after {
+  background: linear-gradient(90deg, transparent, var(--illu-accent) 18%, color-mix(in srgb, var(--illu-accent) 55%, #fff) 55%, transparent);
+  box-shadow: 0 0 8px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.parents .parents__grille .point.point.point p { color: var(--illu-texte-doux); }

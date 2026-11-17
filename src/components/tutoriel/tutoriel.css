@@ -141,11 +141,43 @@
   color: rgba(255, 255, 255, 0.92);
 }
 
+/* TROIS EMPLACEMENTS FIXES, DU DÉBUT À LA FIN — Camara, le 08/11/2026 : « le design est
+   instable ». Chaque bouton a sa place et sa taille, qu'il soit seul ou non, et quel que
+   soit son libellé : aucun ne bouge ni ne passe à la ligne d'une bulle à l'autre. */
 .tuto__actions {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   margin-top: 14px;
 }
+
+.tuto__actions .tuto-bouton {
+  grid-row: 1;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 6px;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.tuto__precedent { grid-column: 1; }
+.tuto__sauter { grid-column: 2; }
+.tuto__suite { grid-column: 3; }
+
+/* « Précédent » et « Passer l'étape » : du blanc, pour se détacher du verre bleu de la
+   bulle sans faire concurrence à « Suivant », seul en orange. */
+.tuto__actions .tuto-bouton--discret {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(3, 10, 30, 0.3);
+  color: #16356b;
+}
+
+.tuto__actions .tuto-bouton--discret:hover { background: #e4ecfb; }
+
+/* « Précédent » a sa couleur à lui : l'or de la consigne (`.tuto__action`). */
+.tuto__actions .tuto__precedent { background: #ffc46b; }
+.tuto__actions .tuto__precedent:hover { background: #ffd48e; }
 
 .tuto__action {
   margin: 14px 0 0;
@@ -407,24 +439,74 @@
 .tuto-demo .ardoise { height: calc(100vh - 70px); }
 .tuto-demo .chat__fil { flex: 1; }
 
+/* LA VISITE DES PORTES : la vraie page, avec de quoi remonter ses derniers blocs au-dessus
+   de la bulle. Le mot « exemple » reste à l'écran, pour que personne n'y cherche son enfant. */
+.tuto-visite { padding-bottom: 240px; }
+
+/* Une carte moins haute : la bulle tient dessous, sans cacher la réponse qu'elle commente. */
+.tuto-visite .mt-pile { height: 190px; }
+
+.tuto-visite__exemple {
+  width: fit-content;
+  max-width: calc(100% - 28px);
+  margin: 0 auto 14px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 196, 107, 0.16);
+  color: #ffc46b;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Sur la fiche : le retour à gauche, le bouton de reprise à droite. */
+.fiche-tuto-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.fiche-tuto-barre .lien-retour { margin-bottom: 0; }
+
 /* Le bouton de reprise, sur la page de l'enfant. */
+/* MIS EN VALEUR — Camara, le 08/11/2026. Le même or que « Précédent », des couleurs fixes
+   pour qu'il ressorte autant sur les deux thèmes. Pas d'animation : il attire l'œil sans
+   distraire un enfant qui travaille sur la même page. */
 .bouton-tuto {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  border: 1px solid var(--contour);
+  padding: 10px 18px;
+  border: 0;
   border-radius: 999px;
-  background: var(--surface);
-  color: var(--encre);
+  background: linear-gradient(180deg, #ffd48e 0%, #ffb74d 100%);
+  box-shadow: 0 0 0 3px rgba(255, 196, 107, 0.25), 0 6px 18px rgba(255, 183, 77, 0.35);
+  color: #16356b;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   white-space: nowrap;
   cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.bouton-tuto:hover { border-color: var(--corail); }
+.bouton-tuto:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px rgba(255, 196, 107, 0.4), 0 8px 22px rgba(255, 183, 77, 0.5);
+}
+
+.bouton-tuto:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bouton-tuto { transition: none; }
+  .bouton-tuto:hover { transform: none; }
+}
 
 /* SUR TÉLÉPHONE, LE TABLEAU PASSE SOUS LA DISCUSSION. Le vrai cours le colle en bas
    de l'écran, replié derrière un bouton : déplié et collé ici, il recouvrirait la

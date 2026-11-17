@@ -9,8 +9,12 @@ import {
   useEssaisOuverts,
   useFichesRevision,
   useOffreLancement,
+  usePodcasts,
 } from '../lib/storage/modeTest';
 import Loader from './Loader';
+import imageCalendrierEssai from '../assets/tarifs/calendrier-essai.webp';
+import './tarifsIllustre.css';
+import './tarifsCartesIllustre.css';
 
 /**
  * Formule que le visiteur voulait prendre avant d'être envoyé se connecter.
@@ -81,7 +85,120 @@ const heures = (h) => {
  * `modules` (18/10/2026) : fiches, jeux et conseillère s'allument et s'éteignent
  * dans Admin › Modes ; une formule n'annonce que ce qui est réellement ouvert.
  */
-function Details({ offre, lancement, modules = {} }) {
+/**
+ * CE QUE CETTE FORMULE AJOUTE À LA PRÉCÉDENTE — Camara, le 14/11/2026 : « les offres reprennent une phrase du genre
+ * “tous les avantages de l'offre précédente”, juste on met en avant les différences ». Tout se déduit des
+ * colonnes (enfants, heures, plafond) : aucune formule n'est nommée ici, et une ligne identique n'est pas répétée.
+ */
+/** L'offre de lancement, en court : « 12 h le 1er mois (3 h offertes) » (Camara, le 15/11/2026). */
+const premierMois = (pot, lancement) => `${heures(pot + lancement)} le 1er mois (${heures(lancement)} offertes)`;
+
+// `avecConseillere` vient du serveur (OffreTarif) ; absent = incluse, comme avant le 14/11/2026.
+const aLaConseillere = (offre) => offre?.avecConseillere !== false;
+// `avecPodcasts` (15/11/2026) : ni Starter ni l'essai. Absent (une API d'avant) = rien d'annoncé, plutôt qu'à tort.
+const aLesPodcasts = (offre) => offre?.avecPodcasts === true;
+const LIGNE_PODCASTS = 'Accès aux podcasts de ses cours';
+
+export function differences(offre, precedente, lancement = 0, modules = {}) {
+  const plusieurs = offre.nombreEnfantsMax > 1;
+  const lignes = [];
+
+  if (offre.nombreEnfantsMax !== precedente.nombreEnfantsMax) {
+    lignes.push(plusieurs ? `Jusqu'à ${offre.nombreEnfantsMax} enfants` : 'Un enfant');
+  }
+
+  // LES HEURES EN PLUS, ET LE TOTAL ENTRE PARENTHÈSES — Camara, le 15/11/2026 : « au lieu de mettre 9 h, on prend
+  // les 4 h du Starter + 5 h et on met en parenthèse le total ». « + 5 h de cours par mois (9 h au total) » : la
+  // carte dit ce qu'elle ajoute à la précédente, comme le reste de la liste. Des heures qui ne montent pas (cas
+  // théorique) gardent le chiffre seul.
+  //
+  // PLUS COURT, LE MÊME JOUR (Camara : « tu ne trouves pas que ça fait long ? ») : « + 5 h par mois · 9 h au total »,
+  // le total en gras ; « de cours » et « à partager entre les enfants » (redit par la ligne du plafond) sont partis.
+  const ajout = offre.heuresPot - precedente.heuresPot;
+  const ligneHeures = ajout > 0
+    ? { plein: `+ ${heures(ajout)} par mois`, total: `${heures(offre.heuresPot)} au total` }
+    : { plein: `${heures(offre.heuresPot)} par mois` };
+
+  if (lancement > 0) {
+    // L'offre de lancement dessous, en couleur. La ligne des heures n'est PAS barrée ici : barrer « + 5 h » ferait
+    // croire qu'on ne les a pas ; c'est le premier mois qui en a davantage.
+    lignes.push({ cle: 'heures-promo', ...ligneHeures, fort: premierMois(offre.heuresPot, lancement) });
+  } else if (ajout !== 0) {
+    lignes.push({ cle: 'heures', ...ligneHeures });
+  }
+
+  // Le plafond ne se dit que là où il apparaît (première formule à plusieurs enfants) ou s'il change.
+  if (plusieurs && (precedente.nombreEnfantsMax <= 1 || offre.heuresPlafondEnfant !== precedente.heuresPlafondEnfant)) {
+    lignes.push(`${heures(offre.heuresPlafondEnfant)} max. par enfant`);
+  }
+
+  // LA CONSEILLÈRE, LÀ OÙ ELLE ARRIVE (Starter n'en a pas, 14/11/2026) — seulement si le module est allumé.
+  if (modules.orientation && aLaConseillere(offre) && !aLaConseillere(precedente)) {
+    lignes.push('Une conseillère d’orientation dès la 3e');
+  }
+
+  // LES PODCASTS, LÀ OÙ ILS ARRIVENT — Camara, le 15/11/2026 : « dans la partie Solo, ajoute l'accès aux podcasts ».
+  if (modules.podcasts && aLesPodcasts(offre) && !aLesPodcasts(precedente)) {
+    lignes.push(LIGNE_PODCASTS);
+  }
+
+  return lignes;
+}
+
+/**
+ * L'ÉCART EN UNE PHRASE (14/11/2026) : une carte qui n'ajoute que des heures paraissait vide. Dit seulement quand c'est
+ * exact — même nombre d'enfants, heures exactement doublées (Starter → Solo) — sinon rien.
+ */
+export function phraseDEcart(offre, precedente) {
+  if (!precedente || offre.nombreEnfantsMax !== precedente.nombreEnfantsMax) return null;
+  if (offre.heuresPot !== 2 * precedente.heuresPot) return null;
+  return 'Deux fois plus d’heures pour accompagner votre enfant régulièrement.';
+}
+
+function Lignes({ lignes }) {
+  return (
+    <ul className="tarif__details">
+      {lignes.map((ligne) =>
+        typeof ligne === 'string' ? (
+          <li key={ligne}>{ligne}</li>
+        ) : ligne.barre || ligne.plein ? (
+          <li key={ligne.cle} className="tarif__detail--promo">
+            {ligne.barre ? (
+              <span className="tarif__barre">{ligne.barre}</span>
+            ) : (
+              <span>
+                {ligne.plein}
+                {ligne.total && <> · <b className="tarif__total">{ligne.total}</b></>}
+              </span>
+            )}
+            {ligne.fort && <strong>{ligne.fort}</strong>}
+          </li>
+        ) : (
+          <li key={ligne.cle}>
+            {ligne.fort}
+            <span className="tarif__au-lieu">{ligne.apres}</span>
+          </li>
+        ))}
+    </ul>
+  );
+}
+
+function Details({ offre, lancement, modules = {}, precedente = null }) {
+  // Une formule qui en suit une autre : « Tous les avantages de …, plus : » et seulement ce qui change.
+  if (precedente) {
+    // Un seul bloc qui prend la hauteur libre : la phrase reste collée à la liste, le vide va dessous.
+    return (
+      <div className="tarif__suite">
+        <p className="tarif__heritage">
+          <span className="tarif__heritage-coche" aria-hidden="true">✓</span>
+          <span>Tous les avantages de {precedente.libelle}, plus&nbsp;:</span>
+        </p>
+        <Lignes lignes={differences(offre, precedente, lancement, modules)} />
+        {phraseDEcart(offre, precedente) && <p className="tarif__plus">{phraseDEcart(offre, precedente)}</p>}
+      </div>
+    );
+  }
+
   const lignes = [
     offre.nombreEnfantsMax > 1
       ? `Jusqu'à ${offre.nombreEnfantsMax} enfants`
@@ -95,21 +212,23 @@ function Details({ offre, lancement, modules = {} }) {
     lancement > 0
       ? {
           cle: 'heures-promo',
-          barre: `${heures(offre.heuresPot)} de cours par mois`,
-          fort: `${heures(offre.heuresPot + lancement)} le premier mois, `
-              + `dont ${heures(lancement)} offertes`,
+          barre: `${heures(offre.heuresPot)} par mois`,
+          fort: premierMois(offre.heuresPot, lancement),
         }
-      : `${heures(offre.heuresPot)} de cours par mois, à partager`,
+      : `${heures(offre.heuresPot)} de cours par mois${offre.nombreEnfantsMax > 1 ? ', à partager entre les enfants' : ''}`,
 
     offre.nombreEnfantsMax > 1
-      ? `${heures(offre.heuresPlafondEnfant)} maximum pour un seul enfant`
+      ? `${heures(offre.heuresPlafondEnfant)} max. par enfant`
       : null,
     'Toutes les matières disponibles',
 
     // Camara, le 18/10/2026 : ce que la séance apporte en plus des cours.
     'Préparation aux contrôles et aux examens (brevet, bac)',
     'Suivi détaillé des activités de l’enfant',
-    modules.orientation ? 'Une conseillère d’orientation dès la 3e' : null,
+    // À L'ESSAI (15/11/2026) : à découvrir, et l'on dit qu'elle n'est incluse qu'à partir de Solo.
+    !modules.orientation || !aLaConseillere(offre) ? null
+      : offre.estEssai ? 'La conseillère d’orientation à découvrir (dès la 3e), incluse ensuite à partir de Solo'
+        : 'Une conseillère d’orientation dès la 3e',
 
     // FICHES ET JEUX (Camara, le 18/10/2026) : pleins dans les formules
     // payantes. Sans chiffre : le nombre de cours de fiches par mois se règle
@@ -120,23 +239,13 @@ function Details({ offre, lancement, modules = {} }) {
       : offre.estEssai ? 'Une fiche de révision offerte' : 'Fiches de révision générées à partir de ses cours',
     !modules.jeux ? null
       : offre.estEssai ? 'Deux jeux de mathématiques à essayer' : 'Accès aux jeux éducatifs',
+    // Une formule en tête de liste qui les inclut les annonce (Starter et l'essai, non).
+    modules.podcasts && aLesPodcasts(offre) ? LIGNE_PODCASTS : null,
     'Bilan hebdomadaire par mail',
     offre.estEssai ? null : 'Un mois de pause offert par an',
   ].filter(Boolean);
 
-  return (
-    <ul className="tarif__details">
-      {lignes.map((ligne) =>
-        typeof ligne === 'string' ? (
-          <li key={ligne}>{ligne}</li>
-        ) : (
-          <li key={ligne.cle} className="tarif__detail--promo">
-            <span className="tarif__barre">{ligne.barre}</span>
-            <strong>{ligne.fort}</strong>
-          </li>
-        ))}
-    </ul>
-  );
+  return <Lignes lignes={lignes} />;
 }
 
 export default function Tarifs() {
@@ -161,6 +270,7 @@ export default function Tarifs() {
     fiches: useFichesRevision(),
     jeux: useDesJeuxOuverts(),
     orientation: useConseillereOrientation(),
+    podcasts: usePodcasts(),
   };
 
   const [formules, setFormules] = useState([]);
@@ -335,6 +445,25 @@ export default function Tarifs() {
     }
   };
 
+  // LES PRIX AU CENTRE DE L'ÉCRAN — Camara, le 16/11/2026 : « quand on clique sur Tarifs, sur PC, je veux que ça
+  // scrolle pour bien avoir les prix au centre ». Une fois les formules affichées, la page descend jusqu'au choix
+  // « Au mois / À l'année », juste sous la barre du haut et la dernière ligne de l'accroche : les quatre cartes
+  // tiennent alors dans l'écran. Sur PC seulement (le téléphone garde le haut de page), et pas si l'adresse vise
+  // déjà un endroit (#…).
+  useEffect(() => {
+    if (chargement || window.location.hash) return undefined;
+    if (!window.matchMedia?.('(min-width: 900px) and (min-height: 600px)')?.matches) return undefined;
+
+    const image = window.requestAnimationFrame(() => {
+      const rythme = document.querySelector('.page--tarifs-illu > .rythme');
+      if (!rythme) return;
+      const barre = document.querySelector('.navbar')?.getBoundingClientRect().bottom ?? 0;
+      const haut = rythme.getBoundingClientRect().top + window.scrollY - Math.max(0, barre) - 46;
+      if (haut > window.scrollY + 20) window.scrollTo?.({ top: haut, behavior: 'smooth' });
+    });
+    return () => window.cancelAnimationFrame(image);
+  }, [chargement]);
+
   if (chargement) return <Loader texte="Chargement des tarifs…" />;
 
   /**
@@ -452,7 +581,7 @@ export default function Tarifs() {
   const payantes = formules.filter((f) => !f.estEssai);
 
   return (
-    <section className="page page--large">
+    <section className="page page--large page--tarifs-illu">
       {/* L'en-tête de la page commerciale, en présentation d'accroche : c'est
           le seul écran que voit un parent qui n'a pas encore de compte, il
           mérite plus qu'un titre de page administrative. */}
@@ -515,11 +644,13 @@ export default function Tarifs() {
           une formule parmi trois EST un choix unique, et l'écrire ainsi donne
           la navigation aux flèches et l'annonce vocale sans code en plus. */}
       <div className="tarifs" role="radiogroup" aria-label="Formules d'abonnement">
-        {payantes.map((offre) => (
+        {payantes.map((offre, rang) => (
           <article
             key={offre.code}
             className={[
               'tarif',
+              // La formule nommée (16/11/2026) : chaque carte a son décor (cerisier, Fuji, torii, maison).
+              `tarif--${String(offre.code).toLowerCase()}`,
               choisie === offre.code ? 'tarif--choisie' : '',
               offre.code === 'DUO' ? 'tarif--vedette' : '',
             ]
@@ -540,6 +671,9 @@ export default function Tarifs() {
             }}
           >
             {offre.code === 'DUO' && <span className="tarif__ruban">Le plus choisi</span>}
+            {/* RECOMMANDÉ, SUR SOLO — Camara, le 14/11/2026 : un petit badge bleu. Même place que le ruban de Duo
+                (les deux cartes ne le portent jamais ensemble), en bleu pour ne pas se confondre avec lui. */}
+            {offre.code === 'SOLO' && <span className="tarif__ruban tarif__ruban--recommande">Recommandé</span>}
 
             <h2 className="tarif__nom">
               {offre.libelle}
@@ -549,7 +683,9 @@ export default function Tarifs() {
                   étiquettes empilées sur une même carte s'annulent — on ne
                   sait plus laquelle compte. */}
               {enPromotion(offre) && (
-                <span className="tarif__mention">({lancement.texte})</span>
+                // SANS PARENTHÈSES (15/11/2026) : dans une pastille, elles ne disent rien et coûtaient la place qui
+                // manquait à « Starter » et « Famille » pour garder la mention à côté du titre.
+                <span className="tarif__mention">{lancement.texte}</span>
               )}
             </h2>
             <p className="tarif__accroche">{offre.accroche}</p>
@@ -578,7 +714,12 @@ export default function Tarifs() {
               )
             )}
 
-            <Details offre={offre} lancement={enPromotion(offre) ? lancement.heures : 0} modules={modules} />
+            <Details
+              offre={offre}
+              lancement={enPromotion(offre) ? lancement.heures : 0}
+              modules={modules}
+              precedente={rang > 0 ? payantes[rang - 1] : null}
+            />
 
             {/* La contrepartie de l'autre rythme, pour que le choix reste
                 réversible sans remonter en haut de page. */}
@@ -622,7 +763,10 @@ export default function Tarifs() {
           autant — c'est la porte d'entrée qu'on ferme, pas ce qui est promis. */}
       {essai && essaisOuverts && (
         <div className="tarif-essai">
-          <div>
+          {/* LE BANDEAU ILLUSTRÉ — maquette de Camara, 16/11/2026 : le calendrier coché à gauche (découpé dans
+              sa maquette), cerisier et nuage en décor (tarifsIllustre.css). */}
+          <img className="tarif-essai__icone" src={imageCalendrierEssai} alt="" />
+          <div className="tarif-essai__texte">
             <strong>Essayez d'abord</strong>
             {/* « 0,5 h de cours, 7 jours » se lisait comme un essai de sept
                 jours. C'est une SEULE demi-heure, et les sept jours ne sont que
@@ -630,13 +774,13 @@ export default function Tarifs() {
                 différente que la virgule mettait sur le même plan. */}
             {/* SANS DÉLAI depuis le 18/10/2026 (`joursValidite` à 0) : la phrase
                 ne parle de jours que si l'offre en fixe encore. */}
+            {/* LA PHRASE DE LA MAQUETTE (16/11/2026), plus courte : ce qui est offert en gras, puis les
+                trois garanties. Les jours ne sont cités que si l'offre en fixe encore. */}
             <p>
-              {heures(essai.heuresPot)} de cours offertes, une seule fois,{' '}
+              <b>{heures(essai.heuresPot)} de cours offertes,</b> une seule fois,{' '}
               {essai.joursValidite > 0
-                ? `à utiliser dans les ${essai.joursValidite} jours.`
-                : 'à utiliser quand vous voulez, sans date limite.'} Sans carte bancaire, sans
-              engagement — de quoi voir si le courant passe entre votre enfant et son
-              professeur.
+                ? `à utiliser dans les ${essai.joursValidite} jours, sans carte bancaire.`
+                : 'à utiliser quand vous voulez, sans date limite et sans carte bancaire.'}
             </p>
           </div>
 
@@ -646,11 +790,12 @@ export default function Tarifs() {
             return (
               <button
                 type="button"
-                className={`btn btn--compact ${etat.actuelle ? 'btn--actuelle' : ''}`}
+                className={`btn btn--compact tarif-essai__bouton ${etat.actuelle ? 'btn--actuelle' : ''}`}
                 onClick={() => choisir(essai)}
                 disabled={etat.eteint}
               >
                 {etat.texte}
+                {!etat.eteint && <span className="tarif-essai__fleche" aria-hidden="true">→</span>}
               </button>
             );
           })()}
@@ -658,7 +803,7 @@ export default function Tarifs() {
       )}
 
       {recharges.length > 0 && (
-        <div className="separateur">
+        <div className="separateur separateur--recharges">
           <h2>Besoin de plus un mois donné ?</h2>
           <p>
             Une semaine de révisions, un contrôle qui approche : vous ajoutez des
@@ -671,6 +816,9 @@ export default function Tarifs() {
       <div className="recharges">
         {recharges.map((pack) => (
           <div key={pack.code} className="recharge-carte">
+            <svg className="recharge-carte__chrono" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="13.5" r="8" /><path d="M12 9.5v4l2.5 1.6M9.5 2.5h5" />
+            </svg>
             <strong>{heures(pack.heures)}</strong>
             <span>{euros(pack.prixCentimes)}</span>
           </div>
@@ -678,6 +826,9 @@ export default function Tarifs() {
       </div>
 
       <p className="tarifs__mention">
+        <svg className="tarifs__info" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6M12 7.5v.01" />
+        </svg>
         Prix TTC. Les heures non utilisées ne se reportent pas d'un mois sur
         l'autre — en revanche vous pouvez mettre votre abonnement en pause un
         mois par an, sans rien perdre.

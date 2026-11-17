@@ -398,3 +398,29 @@
   font-size: 13.5px;
   overflow-wrap: anywhere;
 }
+
+/* ROUVERT APRÈS UN TEST (06/11/2026) : traité, puis repassé KO par le testeur. Ambre, pour se voir sans crier. */
+.signalement-rouvert {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  background: rgba(251, 191, 36, 0.14);
+  color: #fcd34d;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.signalements__cellule-description .signalement-rouvert { display: table; }
+
+/* LE CHOIX DE FICHIERS ET LE BOUTON « COLLER » CÔTE À CÔTE (11/11/2026) — voir collerFichiers. */
+.signalement-pieces-choix__entree {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.signalement-pieces-choix__entree input[type='file'] { flex: 1 1 220px; min-width: 0; }

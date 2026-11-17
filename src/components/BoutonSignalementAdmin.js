@@ -102,8 +102,11 @@ export function FenetreNouveauJeu({ onTermine, onAnnule }) {
  * la même description que le « Signaler » des parents, et en plus de quoi le RATTACHER À UN JEU DE TEST : la
  * compétence, le jeu, puis son bloc. Enregistré, il pose une ligne « KO » dans ce bloc (compétence = le champ,
  * commentaire = la description). Il se retrouve dans l'onglet « Signalements Admin ».
+ *
+ * AUSSI DANS CET ONGLET — Camara, le 08/11/2026 : « je ne peux ajouter que via le bouton du menu ». Le même formulaire ;
+ * `libelle` en fait un bouton écrit, et `onEnregistre` rafraîchit la liste derrière lui.
  */
-export default function BoutonSignalementAdmin() {
+export default function BoutonSignalementAdmin({ libelle = null, onEnregistre = null }) {
   const [ouvert, setOuvert] = useState(false);
   const [envoye, setEnvoye] = useState(null);
   const [categorie, setCategorie] = useState('TECHNIQUE');
@@ -195,6 +198,7 @@ export default function BoutonSignalementAdmin() {
       setNonJoints(fichiers.filter((_, i) => resultats[i].status === 'rejected').map((f) => f.name));
       const bloc = jeu?.tests?.find((t) => String(t.id) === String(testId));
       setEnvoye({ jeu: relie ? (nomDuJeu(jeu) || jeu?.classe) : null, bloc: bloc?.titre ?? null });
+      onEnregistre?.();
     } catch (er) {
       setErreur(er?.response?.data?.message ?? 'L’envoi a échoué. Réessaie dans un instant.');
     } finally {
@@ -213,15 +217,21 @@ export default function BoutonSignalementAdmin() {
 
   return (
     <>
-      <button
-        type="button"
-        className="bouton-mails bouton-mails--signalement"
-        aria-label="Signalement admin"
-        title="Signalement admin, relié aux jeux de test"
-        onClick={() => setOuvert(true)}
-      >
-        <img src={iconeSignalAdmin} alt="" width="64" height="64" />
-      </button>
+      {libelle ? (
+        <button type="button" className="btn btn--compact" onClick={() => setOuvert(true)}>
+          {libelle}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="bouton-mails bouton-mails--signalement"
+          aria-label="Signalement admin"
+          title="Signalement admin, relié aux jeux de test"
+          onClick={() => setOuvert(true)}
+        >
+          <img src={iconeSignalAdmin} alt="" width="64" height="64" />
+        </button>
+      )}
 
       {ouvert && createPortal(
         <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-signalement-admin">

@@ -1,0 +1,162 @@
+/* ======================================================================================================
+   LE BANDEAU DE L'OFFRE DE LANCEMENT ET SON COMPTE À REBOURS — maquette de Camara, 16/11/2026.
+
+   Une carte bleu nuit au liseré lumineux ; derrière la phrase, le Fuji et son arc de lumière, avec leurs
+   pétales (assets/offre/fuji.webp, découpé dans la maquette, la phrase effacée), et d'autres pétales en bas à
+   gauche. L'étiquette « Offre de lancement » en contour corail, avec un torii ; « 3 h de cours offertes » en
+   corail gras, le reste de la phrase en serif blanc ; les cases du compteur en verre nuit au liseré bleu.
+   Le bouton garde le style commun des boutons pleins (fin d'App.css).
+
+   La carte reste nuit dans tous les thèmes : ses textes sont donc écrits en clair. `.rebours.rebours` :
+   les règles de base (App.css) pèsent 0,1,0, `--urgent` aussi. Aucune animation en boucle.
+   ====================================================================================================== */
+
+.rebours.rebours {
+  position: relative;
+  gap: 18px 34px;
+  padding: 24px 30px;
+  border: 1.5px solid rgba(96, 160, 255, 0.6);
+  border-radius: 24px;
+  background:
+    url('../assets/offre/petales-bas.webp') left 26px bottom 14px / 30px auto no-repeat,
+    url('../assets/offre/fuji.webp') left 41% bottom 0 / auto 100% no-repeat,
+    radial-gradient(ellipse 50% 90% at 62% 100%, rgba(70, 120, 255, 0.18), transparent 70%),
+    linear-gradient(180deg, #12266e 0%, #0b1a52 100%);
+  box-shadow:
+    0 0 0 1px rgba(80, 140, 255, 0.18),
+    0 0 26px rgba(70, 130, 255, 0.32),
+    0 20px 50px rgba(2, 8, 30, 0.4),
+    inset 0 0 30px rgba(90, 150, 255, 0.1);
+  color: #fff;
+}
+
+.rebours.rebours .rebours__mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 18px 5px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--corail) 75%, #ffb38a);
+  border-radius: 999px 999px 999px 999px / 999px 999px 999px 999px;
+  background: color-mix(in srgb, var(--corail) 10%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--corail) 30%, transparent);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--corail) 80%, #ffd2b8);
+}
+
+.rebours__torii {
+  flex: none;
+  width: 22px;
+  height: 20px;
+}
+
+.rebours.rebours .rebours__phrase {
+  margin-top: 12px;
+  font-family: var(--display);
+  font-size: clamp(17px, 1.9vw, 24px);
+  font-weight: 500;
+  line-height: 1.35;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 8, 30, 0.6);
+}
+
+.rebours.rebours .rebours__phrase strong {
+  font-family: var(--sans);
+  font-weight: 800;
+  color: color-mix(in srgb, var(--corail) 85%, #ffb08a);
+}
+
+/* ---------------------------------------------------------- l'échéance */
+.rebours.rebours .rebours__fin {
+  border-left-color: rgba(140, 180, 255, 0.3);
+}
+
+.rebours.rebours .rebours__libelle {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-align: center;
+}
+
+.rebours.rebours .rebours__cases { gap: 12px; justify-content: center; }
+
+.rebours.rebours .rebours__case {
+  min-width: 82px;
+  padding: 10px 12px 9px;
+  border: 1.5px solid rgba(96, 160, 255, 0.7);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(20, 40, 110, 0.85), rgba(8, 18, 60, 0.9));
+  box-shadow: 0 0 12px rgba(70, 140, 255, 0.3), inset 0 0 12px rgba(90, 150, 255, 0.12);
+}
+
+.rebours.rebours .rebours__case strong {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.rebours.rebours .rebours__case small {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(226, 234, 255, 0.92);
+}
+
+.rebours.rebours .rebours__bouton {
+  padding: 15px 34px;
+  font-size: 17px;
+}
+
+/* Le dernier jour : liseré et cases au corail. */
+.rebours.rebours--urgent {
+  border-color: color-mix(in srgb, var(--corail) 75%, #ffffff);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--corail) 30%, transparent),
+    0 0 26px color-mix(in srgb, var(--corail) 40%, transparent),
+    0 20px 50px rgba(2, 8, 30, 0.4);
+}
+
+.rebours.rebours--urgent .rebours__case { border-color: color-mix(in srgb, var(--corail) 70%, transparent); }
+.rebours.rebours--urgent .rebours__libelle { color: color-mix(in srgb, var(--corail) 70%, #ffffff); }
+
+@media (max-width: 820px) {
+  .rebours.rebours {
+    padding: 20px 18px 22px;
+    background-size: 24px auto, 62% auto, auto, auto;
+    background-position: left 14px bottom 10px, right -4% top 26px, center, center;
+  }
+  .rebours.rebours .rebours__fin { border-top-color: rgba(140, 180, 255, 0.3); }
+  .rebours.rebours .rebours__libelle { text-align: left; }
+  .rebours.rebours .rebours__cases { justify-content: flex-start; }
+}
+
+/* ------------------------------------------------------------------ en mode saisonnier
+   Camara, le 16/11/2026 : le bandeau suit la saison (`--illu-*`) ; le Fuji et les pétales sont des illustrations,
+   ils restent. */
+:root[data-da='blue-sky'][data-saison] .rebours.rebours {
+  border-color: var(--illu-bord-fort);
+  background:
+    url('../assets/offre/petales-bas.webp') left 26px bottom 14px / 30px auto no-repeat,
+    url('../assets/offre/fuji.webp') left 41% bottom 0 / auto 100% no-repeat,
+    linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 26px var(--illu-lueur), 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-da='blue-sky'][data-saison] .rebours.rebours .rebours__fin { border-left-color: var(--illu-bord); }
+
+:root[data-da='blue-sky'][data-saison] .rebours.rebours .rebours__case {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(180deg, var(--illu-panneau-3), var(--illu-panneau-2));
+  box-shadow: 0 0 12px var(--illu-lueur);
+}
+
+@media (max-width: 820px) {
+  :root[data-da='blue-sky'][data-saison] .rebours.rebours {
+    background-size: 24px auto, 62% auto, auto;
+    background-position: left 14px bottom 10px, right -4% top 26px, center;
+  }
+  :root[data-da='blue-sky'][data-saison] .rebours.rebours .rebours__fin { border-top-color: var(--illu-bord); }
+}

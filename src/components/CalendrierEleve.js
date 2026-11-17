@@ -2,6 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import iconeCalendrier from '../assets/calendrier.png';
 import { getCalendrier } from '../lib/api/elevesApi';
 import { CalendrierContenu } from './CalendrierContenu';
+import { useVueIllustree } from '../lib/vueIllustree';
+import './calendrierIllustre.css';
 
 /**
  * « MON CALENDRIER », LE PENDANT DE « MA CARTE ».
@@ -28,9 +30,13 @@ import { CalendrierContenu } from './CalendrierContenu';
 export default function CalendrierEleve() {
   const { eleveId } = useParams();
   const navigate = useNavigate();
+  // LA VUE DE L'ENFANT, D'APRÈS LA MAQUETTE DE CAMARA (15/11/2026) : le décor commun des pages de l'enfant, la
+  // bannière illustrée et le calendrier habillé (calendrierIllustre.css, portée `cal-illu`). Aussi pour le parent dans
+  // l'espace de son enfant (Camara, le 16/11/2026) : voir lib/vueIllustree.js.
+  const enfant = useVueIllustree();
 
   return (
-    <section className="page calendrier-eleve">
+    <section className={`page calendrier-eleve${enfant ? ' page-decor-enfant cal-illu' : ''}`}>
       <button type="button" className="btn-ghost calendrier-eleve__retour" onClick={() => navigate(-1)}>
         ← Retour
       </button>
@@ -41,13 +47,22 @@ export default function CalendrierEleve() {
           qui mène ici : l'enfant retrouve en haut de la page ce sur quoi il
           vient de cliquer. Ici et pas dans `CalendrierContenu` : la fenêtre
           de l'administration a déjà son propre titre. */}
-      <header className="bandeau-page">
-        <img className="bandeau-page__illustration" src={iconeCalendrier} alt="" />
-        <div>
-          <h1>Mon calendrier</h1>
-          <p>Tes vacances, tes cours, tes évaluations à venir</p>
-        </div>
-      </header>
+      {enfant ? (
+        <header className="cal-illu__banniere">
+          <div className="cal-illu__textes">
+            <h1>Mon calendrier</h1>
+            <p>Tes vacances, tes cours, tes évaluations à venir</p>
+          </div>
+        </header>
+      ) : (
+        <header className="bandeau-page">
+          <img className="bandeau-page__illustration" src={iconeCalendrier} alt="" />
+          <div>
+            <h1>Mon calendrier</h1>
+            <p>Tes vacances, tes cours, tes évaluations à venir</p>
+          </div>
+        </header>
+      )}
 
       <CalendrierContenu eleveId={eleveId} chargerCalendrier={getCalendrier} />
     </section>

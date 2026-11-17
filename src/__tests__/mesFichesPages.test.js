@@ -260,13 +260,24 @@ describe('l’espace : par matière, du plus récent au plus ancien', () => {
     expect(screen.queryByRole('link', { name: /Créer/ })).not.toBeInTheDocument();
   });
 
-  it('le parent n’achète pas ici : il est envoyé vers Mon forfait', async () => {
+  // « ACHETER DES CRÉDITS » SUR LA PAGE (Camara, le 16/11/2026) : un bouton pour le parent, qui ouvre l'encadré de
+  // Mon forfait dans une fenêtre ; rien n'est payé sans passer par sa confirmation.
+  it('le parent a un bouton « Acheter des crédits » ; rien ne se paie sans confirmation', async () => {
     api.getMesFiches.mockResolvedValue({ data: { actif: true, cours: [], quota: quota(20) } });
     ouvrir({ eleveId: '7' }, <MesFiches />);
 
     expect(await screen.findByText(/Ses 20 cours du mois sont utilisés et la famille n’a plus de crédit/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Mon forfait/ })).toHaveAttribute('href', '/profil?onglet=forfait');
-    expect(screen.queryByRole('button', { name: /Payer/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Acheter des crédits' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Payer|Confirmer/ })).not.toBeInTheDocument();
+  });
+
+  it('un enfant entré par son code ne voit pas le bouton d’achat', async () => {
+    enSessionEnfant();
+    api.getMesFiches.mockResolvedValue({ data: { actif: true, cours: [], quota: quota(20) } });
+    ouvrir({ eleveId: '7' }, <MesFiches />);
+
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Acheter des crédits' })).not.toBeInTheDocument();
   });
 
   it('éteint, n’offre pas de créer', async () => {
@@ -278,8 +289,19 @@ describe('l’espace : par matière, du plus récent au plus ancien', () => {
   });
 });
 
+/** À L'ARRIVÉE, LA FENÊTRE DU CHOIX (06/11/2026) : « À partir d'un cours » ou « Libre ». */
+// Sans forfait, la page ne montre pas de fenêtre : il n'y a rien à choisir.
+const choisirMode = (nom = /À partir d’un cours/) => {
+  const bouton = screen.queryByRole('button', { name: nom });
+  if (bouton) fireEvent.click(bouton);
+};
+
 describe('la création', () => {
-  const ouvrirCreation = () => ouvrir({ eleveId: '7' }, <NouveauCours />);
+  const ouvrirCreation = () => {
+    const rendu = ouvrir({ eleveId: '7' }, <NouveauCours />);
+    choisirMode();
+    return rendu;
+  };
 
   it('ses matières ouvertes seulement, sans la conseillère', async () => {
     ouvrirCreation();
@@ -531,6 +553,24 @@ describe('un cours', () => {
     ouvrirCours();
 
     expect(await screen.findByText('Je lis ton cours…')).toBeInTheDocument();
+  });
+
+  it('une fiche libre (06/11/2026) : on lit ce qu’il a écrit, pas « son cours »', async () => {
+    api.getCours.mockResolvedValue({ data: { ...coursLu, titre: null, libre: true, etat: 'a_lire', notions: [] } });
+    ouvrirCours();
+
+    expect(await screen.findByText('Je lis ce que tu as écrit…')).toBeInTheDocument();
+    expect(screen.getByText('Je repère les notions de ton sujet. Ça prend quelques secondes.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ta fiche libre' })).toBeInTheDocument();
+    expect(screen.getByText(/^Créée le/)).toBeInTheDocument();
+    expect(screen.queryByText('Je lis ton cours…')).not.toBeInTheDocument();
+  });
+
+  it('une fiche libre à notions : « Ton sujet contient… »', async () => {
+    api.getCours.mockResolvedValue({ data: { ...coursLu, libre: true } });
+    ouvrirCours();
+
+    expect(await screen.findByText(/Ton sujet contient \d+ notions/)).toBeInTheDocument();
   });
 
   it('toutes les notions sont cochées ; seules celles gardées sont demandées', async () => {
@@ -879,6 +919,7 @@ describe('une famille administratrice', () => {
       },
     });
     ouvrir({ eleveId: '7' }, <NouveauCours />);
+    choisirMode();
     fireEvent.click(await screen.findByRole('radio', { name: 'Mathématiques' }));
     fireEvent.click(screen.getByRole('radio', { name: /Fiche visuelle/ }));
 
@@ -887,9 +928,78 @@ describe('une famille administratrice', () => {
 
   it('sans réponse du serveur, garde les plafonds de tout le monde', async () => {
     ouvrir({ eleveId: '7' }, <NouveauCours />);
+    choisirMode();
     fireEvent.click(await screen.findByRole('radio', { name: 'Mathématiques' }));
     fireEvent.click(screen.getByRole('radio', { name: /Fiche visuelle/ }));
 
     expect(await screen.findByText(/photos ou PDF, 20 pages au plus/)).toBeInTheDocument();
+  });
+});
+
+describe('à partir d’un cours ou libre (06/11/2026)', () => {
+  beforeEach(() => {
+    mockRecherche = new URLSearchParams();
+    mockNaviguer.mockClear();
+    getMatieresEleve.mockResolvedValue({ data: [{ id: 1, code: 'MATHS', libelle: 'Mathématiques', active: true }] });
+    api.getQuota.mockResolvedValue({ data: quota(0) });
+  });
+
+  it('demande d’abord comment créer la fiche ; fermer sans choisir ramène à ses fiches', async () => {
+    ouvrir({ eleveId: '7' }, <NouveauCours />);
+
+    expect(screen.getByRole('dialog', { name: /Comment veux-tu créer ta fiche/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /À partir d’un cours/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Libre/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+    expect(mockNaviguer).toHaveBeenCalled();
+  });
+
+  it('libre : un bloc pour écrire à la place de l’import, et le texte part avec la fiche', async () => {
+    api.creerCours.mockResolvedValue({ data: { id: 42 } });
+    api.ecrireTexteCours.mockResolvedValue({ data: { id: 1 } });
+    api.envoyerCours.mockResolvedValue({});
+    ouvrir({ eleveId: '7' }, <NouveauCours />);
+    choisirMode(/Libre/);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText('Importer mon cours')).not.toBeInTheDocument();
+    expect(screen.getByText('Écris ou dicte ce que tu veux réviser')).toBeInTheDocument();
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'Mathématiques' }));
+    fireEvent.click(screen.getByRole('radio', { name: /Fiche visuelle/ }));
+
+    const creer = screen.getByRole('button', { name: 'Créer ma fiche' });
+    expect(creer).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Ce que tu veux réviser'), { target: { value: 'Le théorème de Pythagore' } });
+    expect(creer).toBeEnabled();
+    fireEvent.click(creer);
+
+    await waitFor(() => expect(api.envoyerCours).toHaveBeenCalledWith('7', 42));
+    expect(api.creerCours).toHaveBeenCalledWith('7', 1, 'visuelle', null);
+    expect(api.ecrireTexteCours).toHaveBeenCalledWith('7', 42, 'Le théorème de Pythagore');
+    expect(mockNaviguer).toHaveBeenCalledWith(expect.stringContaining('/cours/42'));
+  });
+
+  it('« Changer » rouvre le choix, et le fermer garde le mode d’avant', async () => {
+    ouvrir({ eleveId: '7' }, <NouveauCours />);
+    choisirMode(/Libre/);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Changer' }));
+    expect(screen.getByRole('dialog', { name: /Comment veux-tu créer ta fiche/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+
+    expect(mockNaviguer).not.toHaveBeenCalled();
+    expect(screen.getByText('Écris ou dicte ce que tu veux réviser')).toBeInTheDocument();
+  });
+
+  it('compléter un cours : pas de fenêtre, on importe des pages', async () => {
+    mockRecherche = new URLSearchParams('complement=9');
+    api.getCours.mockResolvedValue({ data: { id: 9, titre: 'Thalès', matiereId: 1 } });
+    ouvrir({ eleveId: '7' }, <NouveauCours />);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(await screen.findByText('Importe ton cours')).toBeInTheDocument();
   });
 });

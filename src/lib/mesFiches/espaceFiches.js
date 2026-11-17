@@ -38,6 +38,21 @@ export function useProprietaireFiches() {
   };
 }
 
+/**
+ * LES PODCASTS (15/11/2026) : les mêmes pages pour l'élève et pour le parent dans son espace (Camara : « dans mon
+ * espace parent je veux aussi la fonctionnalité podcast »).
+ */
+export const cheminPodcasts = (eleveId) =>
+  (eleveId === PARENT ? '/espace-parent/podcasts' : `/eleves/${eleveId}/mes-podcasts`);
+
+export function useProprietairePodcasts() {
+  const parent = useContext(EspaceFichesContext);
+  const { eleveId, coursId } = useParams();
+
+  if (parent) return { eleveId: PARENT, coursId, estParent: true, chemin: cheminPodcasts(PARENT) };
+  return { eleveId, coursId, estParent: false, chemin: cheminPodcasts(eleveId) };
+}
+
 /** Les teintes d'une catégorie de parent, au format de `styleMatiere`. */
 export const styleCategorie = (couleur) => ({
   '--matiere': couleur,

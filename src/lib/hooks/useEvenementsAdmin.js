@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { API_BASE_URL, enTeteAuth } from '../api/httpClient';
+import { avecBillet } from '../affluence/salleDAttente';
 
 /**
  * Écoute les événements admin en direct — « signalement », « visite » — et
@@ -62,7 +63,7 @@ export function useEvenementsAdmin(onEvenement) {
           if (arrete) return;
 
           reponse = await fetch(`${API_BASE_URL}/admin/evenements`, {
-            headers: entete ? { Authorization: entete } : {},
+            headers: avecBillet(entete ? { Authorization: entete } : {}),
           });
 
           // Partis entre-temps : on referme ce qui vient d'arriver plutôt que

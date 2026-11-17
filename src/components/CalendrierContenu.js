@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { styleMatiere } from '../lib/couleurMatiere';
 import { getMatieresEleve } from '../lib/api/elevesApi';
 import ControleForm from './ControleForm';
+import OuvertureSeance from './OuvertureSeance';
+import { useAffichageEleve } from '../lib/besoins';
 
 /**
  * Le contenu du calendrier d'un enfant — la reliure, le mois, sa légende, sa
@@ -48,6 +50,14 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
   // Les matières de l'élève, pour la combobox du formulaire — chargées une
   // seule fois, pas à chaque mois affiché.
   const [matieres, setMatieres] = useState([]);
+
+  // PRÉPARER LE CONTRÔLE, OU EN FAIRE LE POINT, D'ICI — Camara, le 16/11/2026 : « quand on a un contrôle, je veux un
+  // bouton qui permet d'aller directement à la préparation avec le professeur » ; une fois le contrôle passé, le
+  // bouton cède la place à « Faire le point ». Le même départ que la page « Mes contrôles » : la durée et le casque
+  // (OuvertureSeance), puis la séance avec le mode du contrôle (`controle` ou `bilan`).
+  const navigate = useNavigate();
+  const { calme } = useAffichageEleve(eleveId);
+  const [ouverture, setOuverture] = useState(null);
 
   useEffect(() => {
     let vivant = true;
@@ -166,6 +176,21 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
 
   return (
     <>
+      {ouverture && (
+        <OuvertureSeance
+          eleveId={eleveId}
+          calme={calme}
+          matiere={matieres.find((m) => m.id === ouverture.controle.matiereId)
+            ?? { id: ouverture.controle.matiereId, profPrenom: 'Ton professeur' }}
+          onAnnuler={() => setOuverture(null)}
+          onOuvrir={(duree, casque) => navigate(
+            `/eleves/${eleveId}/matieres/${ouverture.controle.matiereId}/chat`
+            + `?duree=${duree}&casque=${casque ? 1 : 0}`
+            + `&mode=${ouverture.mode}&controleId=${ouverture.controle.id}`,
+          )}
+        />
+      )}
+
       {jourDetail && modeFormulaire && (
         <div className="modale" role="dialog" aria-modal="true" aria-label="Ajouter un contrôle">
           <div className="modale__boite jour-detail">
@@ -253,7 +278,7 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
                 )}
 
                 <section className="jour-detail__section">
-                  <h3>Contrôles à venir</h3>
+                  <h3>{jourDetail < AUJOURDHUI_MINUIT ? 'Contrôles passés' : 'Contrôles à venir'}</h3>
                   <ul>
                     {controlesDuJour(jourDetail).map((c, i) => (
                       <li key={i} style={styleMatiere({ matiereLibelle: c.matiereLibelle })}>
@@ -272,6 +297,19 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
                         {c.heureControle && (
                           <span className="jour-detail__heure">{c.heureControle.slice(0, 5)}</span>
                         )}
+
+                        {/* Avant le jour du contrôle (et le jour même) : la préparation ; le lendemain : le bilan. */}
+                        <button
+                          type="button"
+                          className="btn btn--compact jour-detail__preparer"
+                          onClick={() => {
+                            const passe = new Date(c.dateControle) < AUJOURDHUI_MINUIT;
+                            setOuverture({ controle: c, mode: passe ? 'bilan' : 'controle' });
+                            fermerDetail();
+                          }}
+                        >
+                          {new Date(c.dateControle) < AUJOURDHUI_MINUIT ? 'Faire le point' : 'Préparer avec le prof'}
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -576,7 +614,7 @@ const messageDecompte = (prochaineVacances) => {
  * même style que la lune et le soleil du bouton de thème : un trait qui
  * porte sa propre couleur, plutôt qu'une image que le système impose.
  */
-function IconeSablier() {
+export function IconeSablier() {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -615,7 +653,7 @@ const LIBELLE_ZONE = {
 /** La grille du mois : les jours du mois, entourés des jours voisins nécessaires
  * pour compléter des semaines entières — grisés, mais affichés, pour que la
  * grille ne saute jamais d'une semaine incomplète à l'autre. */
-function grilleDuMois(annee, moisIndex0) {
+export function grilleDuMois(annee, moisIndex0) {
   const premier = new Date(annee, moisIndex0, 1);
   const dernier = new Date(annee, moisIndex0 + 1, 0);
 
@@ -647,7 +685,7 @@ function grilleDuMois(annee, moisIndex0) {
  * matière, et le détail — lesquelles, à quelle heure — reste entièrement
  * dans la fenêtre qui s'ouvre au clic.
  */
-function Coche() {
+export function Coche() {
   return (
     <svg
       className="calendrier-jour__coche-icone"
@@ -674,7 +712,7 @@ function Coche() {
  * reconnaissable à cette taille — c'est lui qui porte l'idée, la copie
  * n'ajoutait qu'un fond qui ne se voyait plus.
  */
-function IconeEvaluation() {
+export function IconeEvaluation() {
   return (
     <svg
       className="calendrier-jour__coche-icone"

@@ -82,7 +82,30 @@ const { getProfil, marquerTutorielVu } = require('../lib/api/profilApi');
 
 // Dans la bulle seulement : la page a aussi son propre titre « Mes contrôles ».
 const titre = (texte) => screen.findByText(texte, { selector: '.tuto__titre' }, { timeout: 4000 });
-const suivant = () => fireEvent.click(screen.getByRole('button', { name: /^(Suivant|Commencer)$/ }));
+const BOUTON_SUITE = /^(Suivant|Commencer|Entrer)$/;
+const suivant = () => {
+  const bulle = document.querySelector('.tuto__bulle');
+  const bouton = [...bulle.querySelectorAll('button')].find((b) => BOUTON_SUITE.test(b.textContent.trim()));
+  fireEvent.click(bouton);
+};
+
+// À travers une visite : on clique sur la suite jusqu'à l'étape voulue.
+const jusqua = async (texte) => {
+  /* eslint-disable no-await-in-loop -- une étape après l'autre, comme le parent. */
+  for (let i = 0; i < ETAPES.length; i += 1) {
+    await waitFor(() => expect(document.querySelector('.tuto__titre')).toBeInTheDocument(), { timeout: 4000 });
+
+    const avant = document.querySelector('.tuto__titre').textContent;
+    if (avant === texte) return;
+
+    suivant();
+    await waitFor(() => {
+      expect(document.querySelector('.tuto__titre')?.textContent).not.toBe(avant);
+    }, { timeout: 4000 });
+  }
+  /* eslint-enable no-await-in-loop */
+  await titre(texte);
+};
 
 beforeEach(() => {
   mockSession = null;
@@ -154,12 +177,9 @@ test('le parcours complet : jamais de vrai cours', async () => {
   suivant();
 
   await titre('Ma carte');
-  suivant();
-  await titre('Mon calendrier');
-  suivant();
+  await jusqua('Un professeur par matière');
 
   // Le clic sur la vraie carte ouvre la vraie fenêtre des durées.
-  await titre('Un professeur par matière');
   fireEvent.click(document.querySelector('[data-tuto="professeur"]'));
 
   await titre('La durée du cours');
@@ -214,6 +234,191 @@ test('le parcours complet : jamais de vrai cours', async () => {
 
   expect(mockNavigate).not.toHaveBeenCalled();
 }, 40000);
+
+describe('le bouton « Précédent »', () => {
+  const precedent = () => fireEvent.click(screen.getByRole('button', { name: 'Précédent' }));
+
+  // Une étape qui se déclenche sur une fenêtre repartirait en avant au bout d'une sonde :
+  // on laisse passer ce délai avant de vérifier qu'elle tient.
+  const tient = async (texte) => {
+    await new Promise((fin) => { setTimeout(fin, 300); });
+    expect(await titre(texte)).toBeInTheDocument();
+  };
+
+  test('rien à la première étape, puis il ramène en arrière, barre comprise', async () => {
+    render(<Tutoriel onFin={() => {}} />);
+
+    expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
+
+    suivant();
+    await titre('D’abord, le micro');
+    expect(screen.getByRole('progressbar', { name: 'Avancée du tutoriel' }))
+      .toHaveAttribute('aria-valuenow', String(avancement(1)));
+
+    precedent();
+    await titre('Bienvenue sur Mimia');
+    expect(screen.getByRole('progressbar', { name: 'Avancée du tutoriel' }))
+      .toHaveAttribute('aria-valuenow', '0');
+    expect(screen.queryByRole('button', { name: 'Précédent' })).not.toBeInTheDocument();
+  });
+
+  test('les étapes sautées ne comptent pas : il revient à la dernière vue', async () => {
+    render(
+      <>
+        <a href="/carte" data-tuto="carte">Ma carte</a>
+        <Tutoriel onFin={() => {}} />
+      </>,
+    );
+
+    suivant();
+    await titre('D’abord, le micro');
+    suivant();
+    await titre('Ma carte');
+    suivant();
+
+    // Calendrier, jeux, fiches, durée, casque… rien de tout ça sur cette page.
+    await screen.findByText('Vous voici en cours', { selector: '.tuto__titre' }, { timeout: 20000 });
+
+    precedent();
+    expect(await titre('Ma carte')).toBeInTheDocument();
+    await tient('Ma carte');
+
+    precedent();
+    expect(await titre('D’abord, le micro')).toBeInTheDocument();
+  }, 30000);
+
+  test('à travers les fenêtres et la démonstration : chaque étape retrouve son écran', async () => {
+    getProfil.mockResolvedValue({ data: { tutorielVu: false } });
+    render(<GrilleMatieres />);
+
+    await titre('Bienvenue sur Mimia');
+    suivant();
+    await titre('D’abord, le micro');
+    suivant();
+    await titre('Ma carte');
+    await jusqua('Un professeur par matière');
+
+    // Les durées → le professeur : la fenêtre se referme, et l'étape attend le clic.
+    expect(screen.getByRole('button', { name: 'Précédent' })).toBeInTheDocument();
+    fireEvent.click(document.querySelector('[data-tuto="professeur"]'));
+    await titre('La durée du cours');
+
+    precedent();
+    await tient('Un professeur par matière');
+    expect(document.querySelector('.modale__boite--duree')).not.toBeInTheDocument();
+
+    fireEvent.click(document.querySelector('[data-tuto="professeur"]'));
+    await titre('La durée du cours');
+    fireEvent.click(screen.getByRole('button', { name: /25/ }));
+
+    // Le casque → les durées : on retrouve la première fenêtre.
+    await titre('Le mode casque');
+    precedent();
+    await tient('La durée du cours');
+    expect(document.querySelector('.modale__boite--duree')).toBeInTheDocument();
+    expect(document.querySelector('.modale__boite--casque')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /35/ }));
+    await titre('Le mode casque');
+    suivant();
+    await titre('Le mode haut-parleur');
+    suivant();
+    await titre('À vous de choisir');
+    fireEvent.click(document.querySelector('.casque-option--oui'));
+
+    // Le cours → le choix : la démonstration part, la fenêtre du casque revient.
+    await titre('Vous voici en cours');
+    expect(document.querySelector('[data-tuto="demo-chrono"]')).toHaveTextContent('35:00');
+
+    precedent();
+    await tient('À vous de choisir');
+    expect(document.querySelector('[data-tuto-demo]')).not.toBeInTheDocument();
+    expect(document.querySelector('.modale__boite--casque')).toBeInTheDocument();
+
+    // Et on repart, avec la durée choisie.
+    fireEvent.click(document.querySelector('.casque-option--oui'));
+    await titre('Vous voici en cours');
+    expect(document.querySelector('[data-tuto="demo-chrono"]')).toHaveTextContent('35:00');
+    suivant();
+
+    await titre('Le temps restant');
+    suivant();
+    await titre('La pause');
+    suivant();
+    await titre('La détection automatique de la voix');
+    suivant();
+    await titre('Envoyer un document');
+    suivant();
+    await titre('L’appareil photo');
+    suivant();
+    await titre('Le scanner');
+    suivant();
+    await titre('Le tableau');
+    suivant();
+
+    await titre('Quitter le cours');
+    fireEvent.click(document.querySelector('[data-tuto="demo-quitter"]'));
+
+    // Mes contrôles → Quitter : la démonstration revient.
+    await titre('Mes contrôles');
+    precedent();
+    await tient('Quitter le cours');
+    expect(document.querySelector('[data-tuto-demo]')).toBeInTheDocument();
+
+    // JAMAIS DE VRAI COURS, même après des allers-retours.
+    expect(mockNavigate).not.toHaveBeenCalled();
+  }, 60000);
+
+  test('« Passer l’étape » dans les fenêtres : elles se ferment, et on y revient', async () => {
+    const passer = () => fireEvent.click(screen.getByRole('button', { name: 'Passer l’étape' }));
+
+    getProfil.mockResolvedValue({ data: { tutorielVu: false } });
+    render(<GrilleMatieres />);
+
+    await titre('Bienvenue sur Mimia');
+    suivant();
+    await titre('D’abord, le micro');
+    suivant();
+    await titre('Ma carte');
+    await jusqua('Un professeur par matière');
+    fireEvent.click(document.querySelector('[data-tuto="professeur"]'));
+    await titre('La durée du cours');
+
+    // Tout le cours est sauté, sans démonstration et sans vrai cours.
+    passer();
+    await titre('Mes contrôles');
+    expect(document.querySelector('.modale__boite--duree')).not.toBeInTheDocument();
+    expect(document.querySelector('[data-tuto-demo]')).not.toBeInTheDocument();
+
+    precedent();
+    await tient('La durée du cours');
+    expect(document.querySelector('.modale__boite--duree')).toBeInTheDocument();
+
+    // Et le cours reprend normalement depuis là.
+    fireEvent.click(screen.getByRole('button', { name: /25/ }));
+    await titre('Le mode casque');
+    passer();
+    await titre('Mes contrôles');
+    expect(document.querySelector('.modale__boite--casque')).not.toBeInTheDocument();
+
+    precedent();
+    await tient('Le mode casque');
+    expect(document.querySelector('.modale__boite--casque')).toBeInTheDocument();
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  }, 60000);
+
+  test('chaque étape qui dépend d’une fenêtre déclare laquelle', () => {
+    const fenetres = ETAPES.filter((e) => e.fenetre).map((e) => [e.id, e.fenetre]);
+
+    expect(fenetres).toEqual([
+      ['durees', 'duree'],
+      ['casque', 'casque'],
+      ['haut-parleur', 'casque'],
+      ['casque-choix', 'casque'],
+    ]);
+  });
+});
 
 test('sans tutoriel, le choix du casque ouvre bien le vrai cours', async () => {
   getProfil.mockResolvedValue({ data: { tutorielVu: true } });

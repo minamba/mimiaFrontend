@@ -31,7 +31,7 @@ import { render, screen, act } from '@testing-library/react';
 
 import VerrouAffluence from '../components/VerrouAffluence';
 import {
-  enTeteBillet, etatSalle, signalerAffluence,
+  avecBillet, enTeteBillet, etatSalle, signalerAffluence,
 } from '../lib/affluence/salleDAttente';
 
 let mockChemin = '/';
@@ -43,6 +43,18 @@ jest.mock('react-router-dom', () => ({
 
 // Le style « Blue Sky » est lu par l'écran d'attente ; il n'est pas le sujet.
 jest.mock('../lib/storage/modeTest', () => ({ useBlueSky: () => false }));
+
+// LA CONNEXION (06/11/2026) : le guichet reçoit le jeton, qui fait entrer un administrateur.
+let mockJeton = null;
+const mockLogin = jest.fn();
+jest.mock('../lib/storage/authService', () => ({
+  authService: { getAccessToken: () => Promise.resolve(mockJeton), login: () => mockLogin() },
+}));
+
+/** Le jeton se lit avant l'appel : quelques tours de promesses. */
+const laisserPartir = async () => {
+  for (let i = 0; i < 5; i += 1) await Promise.resolve(); // eslint-disable-line no-await-in-loop
+};
 
 const BILLET = '8f14e45f-ceea-467a-9f42-0b3c9d1a2b3c';
 
@@ -141,7 +153,7 @@ describe('la relance', () => {
     // LE DÉCALAGE ALÉATOIRE VA JUSQU'À +30 % : on laisse passer la fenêtre
     // entière. C'est lui qui empêche mille navigateurs de revenir à la même
     // seconde, et c'est pour cela qu'on ne teste pas une heure exacte.
-    act(() => { jest.advanceTimersByTime(5_000); });
+    await act(async () => { jest.advanceTimersByTime(5_000); await laisserPartir(); });
     expect(global.fetch).toHaveBeenCalledTimes(1);
     expect(global.fetch.mock.calls[0][0]).toContain('/affluence/billet');
     expect(global.fetch.mock.calls[0][0]).toContain(BILLET);
@@ -158,7 +170,7 @@ describe('la relance', () => {
 
     await act(async () => {
       jest.advanceTimersByTime(5_000);
-      await Promise.resolve();
+      await laisserPartir();
     });
 
     expect(screen.getByText('Le site')).toBeInTheDocument();
@@ -178,5 +190,106 @@ describe('les adresses qui restent ouvertes', () => {
     expect(screen.getByText('Retour de connexion')).toBeInTheDocument();
 
     mockChemin = '/';
+  });
+});
+
+describe('l’accès administrateur (06/11/2026)', () => {
+  beforeEach(() => { mockJeton = null; mockLogin.mockClear(); mockChemin = '/'; });
+
+  test('non connecté, le lien mène à la connexion', async () => {
+    render(<VerrouAffluence><p>Le site</p></VerrouAffluence>);
+    act(() => { signalerAffluence({ billet: BILLET, rang: 3, devant: 2, rappelDans: 30 }); });
+
+    await act(async () => { screen.getByRole('button', { name: 'Accès administrateur' }).click(); await laisserPartir(); });
+
+    expect(mockLogin).toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  test('connecté, le guichet reçoit le jeton et l’administrateur entre tout de suite', async () => {
+    mockJeton = 'jeton-admin';
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ salle: true, admis: true, administrateur: true }) }));
+    render(<VerrouAffluence><p>Le site</p></VerrouAffluence>);
+    act(() => { signalerAffluence({ billet: BILLET, rang: 3, devant: 2, rappelDans: 30 }); });
+
+    await act(async () => { screen.getByRole('button', { name: 'Accès administrateur' }).click(); await laisserPartir(); });
+
+    expect(global.fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer jeton-admin');
+    expect(screen.getByText('Le site')).toBeInTheDocument();
+  });
+
+  test('connecté sans être administrateur, il garde sa place et on le lui dit', async () => {
+    mockJeton = 'jeton-parent';
+    render(<VerrouAffluence><p>Le site</p></VerrouAffluence>);
+    act(() => { signalerAffluence({ billet: BILLET, rang: 3, devant: 2, rappelDans: 30 }); });
+
+    await act(async () => { screen.getByRole('button', { name: 'Accès administrateur' }).click(); await laisserPartir(); });
+
+    expect(screen.queryByText('Le site')).not.toBeInTheDocument();
+    expect(screen.getByText(/Ce compte n.est pas administrateur/)).toBeInTheDocument();
+  });
+});
+
+describe('un visiteur, un seul billet (06/11/2026)', () => {
+  test('dix refus sans billet au chargement : une seule demande au guichet', async () => {
+    await act(async () => {
+      for (let i = 0; i < 10; i += 1) signalerAffluence({ code: 'AFFLUENCE', billet: null, rappelDans: 1 });
+      await laisserPartir();
+    });
+
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(global.fetch.mock.calls[0][0]).toMatch(/\/affluence\/billet$/);
+    expect(etatSalle().rang).toBe(5);
+  });
+
+  test('F5 : refusé sans billet puis admis par le guichet, l’écran d’attente ne s’affiche jamais (07/11/2026)', async () => {
+    // L'état de la file vit dans le module : le test d'avant l'a laissé « en file ». On entre d'abord.
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ salle: true, admis: true, billet: BILLET }) }));
+    await act(async () => {
+      signalerAffluence({ code: 'AFFLUENCE', billet: null });
+      await laisserPartir();
+    });
+    expect(etatSalle().enFile).toBe(false);
+
+    let repondre;
+    global.fetch = jest.fn(() => new Promise((resoudre) => { repondre = resoudre; }));
+
+    render(<VerrouAffluence><p>Le site</p></VerrouAffluence>);
+
+    await act(async () => {
+      signalerAffluence({ code: 'AFFLUENCE', billet: null, rappelDans: 1 });
+      await laisserPartir();
+    });
+
+    // Le guichet n'a pas encore répondu : ni l'écran d'attente, ni le site dont les appels ont été refusés.
+    expect(screen.queryByText('Vous êtes en file d\'attente')).not.toBeInTheDocument();
+    expect(screen.queryByText('Le site')).not.toBeInTheDocument();
+
+    await act(async () => {
+      repondre({ ok: true, json: () => Promise.resolve({ salle: true, admis: true, billet: BILLET }) });
+      await laisserPartir();
+    });
+
+    expect(screen.getByText('Le site')).toBeInTheDocument();
+    expect(etatSalle().enFile).toBe(false);
+  });
+
+  test('refusé sans billet et vraiment en file : l’écran d’attente s’affiche après la réponse du guichet', async () => {
+    render(<VerrouAffluence><p>Le site</p></VerrouAffluence>);
+
+    await act(async () => {
+      signalerAffluence({ code: 'AFFLUENCE', billet: null, rappelDans: 1 });
+      await laisserPartir();
+    });
+
+    expect(screen.getByText('Vous êtes en file d\'attente')).toBeInTheDocument();
+  });
+
+  test('les appels faits sans axios portent le billet', () => {
+    expect(avecBillet({ A: '1' })).toEqual({ A: '1' });
+    window.sessionStorage.setItem('mimia-billet', BILLET);
+    expect(avecBillet({ A: '1' })).toEqual({ A: '1', 'X-Billet': BILLET });
   });
 });

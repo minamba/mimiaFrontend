@@ -1,0 +1,478 @@
+/* ======================================================================================================
+   LA FICHE D'UN CONTRÔLE, VUE DE L'ENFANT — Camara, le 15/11/2026 : sa maquette (grand cadre lumineux, bannière avec
+   la pastille de matière, le titre, la date, le délai en orange ; « Préparation » ; « Ton cours » et ses pièces ;
+   « Préparer ce contrôle », « Modifier », « Supprimer »), « qui s'adapte à n'importe quel contrôle ».
+
+   Portée : `.cfi`, posée avec `page-decor-enfant` sur la racine de ControleFiche quand l'enfant est connecté.
+   Couleurs : `--matiere` / `--matiere-claire` (styleMatiere) et la palette de la scène (`--carte-haut`, `--carte-bas`,
+   `--carte-bord`, paletteDeMatiere) — n'importe quelle matière. La scène de la matière à droite de la bannière.
+
+   AUCUNE PROPRIÉTÉ QUI ISOLE (isolation, z-index, transform, filter, backdrop-filter) sur la racine NI sur le cadre :
+   la fenêtre d'ouverture de séance est dessinée DANS le cadre ; isolée, elle passerait sous le pied de page.
+   `:root` en tête : le thème Blue Sky habille `.controle-fiche` avec la même force.
+   ====================================================================================================== */
+:root .page.cfi {
+  --cfi-haut: var(--carte-haut, color-mix(in srgb, var(--matiere, #7c5cff) 45%, #0b1240));
+  --cfi-bas: var(--carte-bas, color-mix(in srgb, var(--matiere, #7c5cff) 25%, #0b1240));
+  --cfi-bord: var(--carte-bord, color-mix(in srgb, var(--matiere-claire, #a78bfa) 70%, #fff));
+  --cfi-texte: #eef1ff;
+  --cfi-doux: #c9d0f0;
+  --cfi-panneau: rgba(14, 22, 66, 0.72);
+  max-width: 780px;
+}
+
+/* « ← Mes cours » : une pilule à liseré lumineux. */
+:root .page.cfi .lien-retour {
+  display: inline-flex;
+  align-items: center;
+  padding: 6.5px 14.5px;
+  border: 1.5px solid color-mix(in srgb, var(--cfi-bord) 70%, transparent);
+  border-radius: 999px;
+  background: rgba(8, 14, 48, 0.7);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--cfi-bord) 35%, transparent);
+}
+
+/* LE GRAND CADRE LUMINEUX. */
+:root .page.cfi .controle-fiche {
+  position: relative;
+  margin-top: 18px;
+  border: 2px solid color-mix(in srgb, var(--cfi-bord) 80%, transparent);
+  border-radius: 30px;
+  background-color: #0c1650;
+  background-image: linear-gradient(180deg, rgba(20, 30, 90, 0.92) 0%, rgba(10, 16, 56, 0.96) 100%);
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--cfi-bord) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 24px 50px rgba(0, 0, 0, 0.45);
+  color: var(--cfi-texte);
+}
+
+/* LA BANNIÈRE : dégradé de la matière, scène fondue à droite. */
+:root .page.cfi .controle-fiche__entete {
+  position: relative;
+  overflow: hidden;
+  min-height: 142.5px;
+  padding: 21px 24px 21px 37px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--cfi-bord) 45%, transparent);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 255, 255, 0.08), transparent 55%),
+    linear-gradient(120deg, var(--cfi-haut) 0%, var(--cfi-bas) 100%);
+}
+
+/* Le trait jaune vertical, devant le titre. */
+:root .page.cfi .controle-fiche__entete::before {
+  content: '';
+  position: absolute;
+  left: 26px;
+  top: 74px;
+  width: 5px;
+  height: 46px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe58a, #ffc24a);
+  box-shadow: 0 0 10px rgba(255, 210, 90, 0.7);
+}
+
+.cfi-scene {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  /* JAMAIS PLUS LARGE QUE L'IMAGE — Camara, le 15/11/2026 : « l'image est floue ». Les 7 scènes découpées dans sa
+     première maquette (maths, histoire-géo, anglais, espagnol, physique-chimie, SVT, orientation) ne font que 360 px
+     de large : à 56 % d'une bannière de 760 px, elles étaient agrandies (deux fois sur un écran haute définition).
+     Les 17 scènes de Camara font 720 px. Le vrai remède : les 7 en haute définition (liste à la fin du PDF). */
+  width: min(56%, 360px);
+  background-position: center 62%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.55) 32%, #000 62%);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.55) 32%, #000 62%);
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+/* Le texte passe devant la scène (z-index LOCAL : la bannière coupe ce qui déborde, rien ne remonte au-dessus des
+   fenêtres, qui sont à 50). */
+:root .page.cfi .controle-fiche__haut,
+:root .page.cfi .controle-fiche__entete h1,
+:root .page.cfi .controle-fiche__quand {
+  position: relative;
+  z-index: 1;
+}
+
+:root .page.cfi .controle-fiche__haut {
+  margin-bottom: 14px;
+}
+
+/* La pastille de matière : icône et nom en capitales, sur une pilule claire à liseré. */
+:root .page.cfi .controle-fiche__matiere {
+  gap: 6.5px;
+  padding: 5px 13px 5px 9.5px;
+  border: 1.5px solid color-mix(in srgb, var(--cfi-bord) 80%, transparent);
+  border-radius: 999px;
+  background: rgba(8, 14, 48, 0.62);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cfi-bord) 35%, transparent);
+}
+
+.cfi-icone { font-size: 14px; line-height: 1; letter-spacing: 0; }
+
+/* Le délai : la pilule orange (couleur des saisons : --corail-btn). Passé : une pilule sombre. */
+:root .page.cfi .controle-fiche__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6.5px;
+  padding: 6.5px 14.5px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn, #f07a3c) 70%, #fff) 0%, var(--corail-btn, #f07a3c) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 16px color-mix(in srgb, var(--corail-btn, #f07a3c) 55%, transparent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+:root .page.cfi .controle-fiche__badge.est-passe {
+  background: rgba(8, 14, 48, 0.72);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+  color: var(--cfi-doux);
+}
+
+:root .page.cfi .controle-fiche__badge svg { flex-shrink: 0; }
+
+:root .page.cfi .controle-fiche__entete h1 {
+  max-width: 62%;
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-size: clamp(24px, 3.2vw, 32px);
+  font-weight: 700;
+  line-height: 1.12;
+  color: #fff;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+:root .page.cfi .controle-fiche__quand {
+  font-size: 14px;
+  color: var(--cfi-texte);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+:root .page.cfi .controle-fiche__corps {
+  padding: 21px 24px 17.5px;
+}
+
+/* « PRÉPARATION » ET LE BILAN : un encadré à liseré, une icône devant le titre, des vagues seigaiha en bas à droite. */
+:root .page.cfi .controle-fiche__resume {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 17.5px;
+  border: 1.5px solid color-mix(in srgb, var(--cfi-bord) 45%, transparent);
+  border-radius: 20px;
+  background: var(--cfi-panneau);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Les vagues ne couvrent que le coin : un masque les efface ailleurs. */
+:root .page.cfi .controle-fiche__resume::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 220px;
+  height: 90px;
+  background:
+    radial-gradient(circle at 50% 100%, transparent 16px, rgba(170, 190, 255, 0.28) 17px, transparent 19px,
+      transparent 24px, rgba(170, 190, 255, 0.2) 25px, transparent 27px) 0 0 / 56px 30px;
+  -webkit-mask-image: radial-gradient(130% 120% at 100% 100%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(130% 120% at 100% 100%, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+
+:root .page.cfi .preparation__ligne { align-items: center; }
+
+:root .page.cfi .preparation__libelle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16.5px;
+  font-weight: 800;
+  color: #fff;
+}
+
+:root .page.cfi .preparation__libelle::before {
+  content: '📋';
+  font-size: 17.5px;
+}
+
+:root .page.cfi .preparation__valeur {
+  font-size: 17.5px;
+  font-weight: 800;
+  color: #fff;
+}
+
+:root .page.cfi .preparation__jauge {
+  height: 12px;
+  margin-top: 6px;
+  border: 1px solid rgba(170, 190, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(120, 140, 220, 0.22);
+}
+
+:root .page.cfi .preparation__attente {
+  font-style: italic;
+  font-size: 13px;
+  color: var(--cfi-doux);
+}
+
+:root .page.cfi .controle-pret { margin-top: 12px; }
+
+:root .page.cfi .pastille-pret {
+  padding: 5px 13px;
+  border: 1.5px solid rgba(200, 210, 255, 0.35);
+  background: rgba(10, 16, 52, 0.6);
+  font-size: 12px;
+}
+
+:root .page.cfi .controle-pret__mot,
+:root .page.cfi .controle-bilan,
+:root .page.cfi .controle-bilan__attente,
+:root .page.cfi .controle-fiche__derniere {
+  color: var(--cfi-texte);
+}
+
+:root .page.cfi .controle-bilan__ressenti,
+:root .page.cfi .controle-bilan__attente {
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+:root .page.cfi .controle-bilan__note strong {
+  font-size: 35px;
+  color: var(--matiere-claire, #7fe3ff);
+}
+
+/* LES NOTIONS : des rangées sombres à liseré. */
+:root .page.cfi .controle-fiche__notions h2 { color: #fff; }
+
+:root .page.cfi .controle-notion {
+  padding: 9.5px 11px;
+  border: 1px solid rgba(170, 190, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(10, 16, 52, 0.55);
+}
+
+:root .page.cfi .controle-notion__libelle { color: #fff; }
+:root .page.cfi .controle-notion__etat { color: var(--cfi-doux); }
+
+/* LE SÉPARATEUR ÉTOILÉ. */
+.cfi-separateur {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 26px 0 18px;
+  color: #ffe08a;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.cfi-separateur::before,
+.cfi-separateur::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, rgba(170, 190, 255, 0.55), transparent);
+}
+
+.cfi-separateur span { text-shadow: 0 0 12px rgba(255, 220, 120, 0.9); }
+
+/* « TON COURS (FACULTATIF) » ET SES PIÈCES. */
+:root .page.cfi .controle-fiche__cours {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+:root .page.cfi .cours-controle__titre {
+  display: flex;
+  align-items: center;
+  gap: 9.5px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #fff;
+}
+
+:root .page.cfi .cours-controle__titre::before {
+  content: '🎓';
+  font-size: 21px;
+}
+
+:root .page.cfi .cours-controle__titre .champ__option {
+  font-weight: 400;
+  color: var(--cfi-doux);
+}
+
+:root .page.cfi .cours-controle .champ__aide {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--cfi-texte);
+}
+
+:root .page.cfi .cours-controle__document {
+  gap: 9.5px;
+  padding: 9.5px 14.5px;
+  border: 1.5px solid color-mix(in srgb, var(--cfi-bord) 45%, transparent);
+  border-radius: 16px;
+  background: rgba(16, 26, 80, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+:root .page.cfi .cours-controle__document .copie-controle__icone {
+  width: 30px;
+  height: 30px;
+}
+
+:root .page.cfi .cours-controle__nom {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+}
+
+:root .page.cfi .cours-controle__etat { color: var(--cfi-doux); font-weight: 600; }
+:root .page.cfi .cours-controle__etat.est-lu { color: #7ee2a1; font-size: 14.5px; }
+:root .page.cfi .cours-controle__etat.est-lu::before { content: '✓ '; }
+:root .page.cfi .cours-controle__etat { font-size: 14px; }
+
+:root .page.cfi .cours-controle__apercu {
+  padding: 5px 13px;
+  border: 1.5px solid rgba(200, 215, 255, 0.6);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+}
+
+:root .page.cfi .cours-controle__apercu::before {
+  content: '👁';
+  margin-right: 6px;
+}
+
+:root .page.cfi .cours-controle__apercu:hover { background: rgba(200, 215, 255, 0.14); }
+
+:root .page.cfi .cours-controle__retirer { color: var(--cfi-doux); font-size: 20px; }
+
+:root .page.cfi .cours-controle__boutons { gap: 14px; margin-top: 14px; }
+
+:root .page.cfi .cours-controle__bouton {
+  padding: 9.5px 17.5px;
+  border: 1.5px solid color-mix(in srgb, var(--cfi-bord) 70%, transparent);
+  border-radius: 14px;
+  background: rgba(10, 16, 52, 0.55);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--cfi-bord) 25%, transparent);
+}
+
+:root .page.cfi .cours-controle__bouton:hover {
+  background: color-mix(in srgb, var(--cfi-bord) 18%, rgba(10, 16, 52, 0.55));
+}
+
+/* LA BARRE DU BAS : préparer (orange), modifier (vert), supprimer (rouge, à droite). */
+:root .page.cfi .controle-fiche__actions {
+  position: relative;
+  gap: 13px;
+  padding: 17.5px 24px 21px;
+  border-top: 1.5px solid rgba(170, 190, 255, 0.22);
+  border-radius: 0 0 28px 28px;
+  background: rgba(8, 14, 48, 0.55);
+}
+
+:root .page.cfi .controle-fiche__actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn, #f07a3c) 70%, #fff) 0%, var(--corail-btn, #f07a3c) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    0 0 20px color-mix(in srgb, var(--corail-btn, #f07a3c) 55%, transparent),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+  font-size: 16.5px;
+  font-weight: 800;
+}
+
+.cfi-bouton-icone { font-size: 17.5px; line-height: 1; }
+
+:root .page.cfi .btn-action {
+  padding: 9.5px 17.5px;
+  border-width: 1.5px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+:root .page.cfi .btn-action svg { width: 19px; height: 19px; }
+
+:root .page.cfi .btn-action--modifier {
+  border-color: rgba(110, 230, 160, 0.6);
+  background: rgba(40, 140, 90, 0.18);
+  color: #8ff0b8;
+}
+
+:root .page.cfi .btn-action--supprimer {
+  border-color: rgba(255, 120, 110, 0.6);
+  background: rgba(160, 40, 40, 0.16);
+  color: #ff9a8f;
+}
+
+/* THÈME CLAIR : le cadre garde sa nuit (c'est une illustration), le texte reste clair dessus. */
+:root[data-theme='light'] .page.cfi .controle-fiche { color: var(--cfi-texte); }
+
+/* BLACK FRIDAY : bouton et délai sont dorés (--corail-btn) : texte sombre, comme les autres boutons de la saison. */
+:root[data-da='blue-sky'][data-saison='black-friday'] .page.cfi .controle-fiche__badge:not(.est-passe),
+:root[data-da='blue-sky'][data-saison='black-friday'] .page.cfi .controle-fiche__actions .btn {
+  color: #141414;
+}
+
+/* TÉLÉPHONE ET TABLETTE ÉTROITE. */
+@media (max-width: 640px) {
+  :root .page.cfi .controle-fiche { border-radius: 22px; }
+
+  :root .page.cfi .controle-fiche__entete {
+    min-height: 0;
+    padding: 18px 18px 18px 30px;
+  }
+
+  :root .page.cfi .controle-fiche__entete::before { left: 14px; top: 66px; height: 36px; }
+
+  :root .page.cfi .controle-fiche__haut { flex-wrap: wrap; }
+
+  .cfi-scene {
+    width: 100%;
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 70%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 70%);
+  }
+
+  :root .page.cfi .controle-fiche__entete h1 { max-width: none; font-size: 26px; }
+  :root .page.cfi .controle-fiche__corps { padding: 18px 16px; }
+  :root .page.cfi .controle-fiche__resume { padding: 16px; }
+  :root .page.cfi .cours-controle__titre { font-size: 19px; }
+
+  :root .page.cfi .cours-controle__document { flex-wrap: wrap; padding: 10px 12px; }
+  :root .page.cfi .cours-controle__nom { flex: 1 1 60%; min-width: 0; overflow-wrap: anywhere; }
+
+  :root .page.cfi .cours-controle__boutons { flex-direction: column; }
+  :root .page.cfi .cours-controle__bouton { justify-content: center; }
+
+  :root .page.cfi .controle-fiche__actions { padding: 16px; border-radius: 0 0 20px 20px; }
+  :root .page.cfi .controle-fiche__actions .btn { width: 100%; justify-content: center; font-size: 17px; }
+  :root .page.cfi .controle-fiche__actions .btn-action { flex: 1; justify-content: center; }
+  :root .page.cfi .controle-fiche__actions .btn-action--supprimer { margin-left: 0; }
+}

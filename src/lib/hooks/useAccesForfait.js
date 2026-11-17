@@ -17,20 +17,50 @@ import { getAccesForfait } from '../api/elevesApi';
  * des fiches.
  */
 export default function useAccesForfait(eleveId) {
-  const [acces, setAcces] = useState({ ouvert: null, motif: null, essaiFiches: null });
+  // `conseillere` (14/11/2026) : faux seulement quand le serveur dit que la formule n'en a pas (Starter) ; null tant
+  // qu'on ne sait pas, et en cas d'erreur — la carte reste ouverte, le serveur garde la porte des séances.
+  // `podcasts` (15/11/2026) : pareil — faux seulement quand la formule n'en a pas (Starter).
+  const [acces, setAcces] = useState({ ouvert: null, motif: null, essaiFiches: null, conseillere: null, podcasts: null });
 
   useEffect(() => {
     if (!eleveId) return undefined;
     let vivant = true;
-    // Dans une promesse dès le départ : une réponse vide ou un appel qui
-    // échoue avant même de partir tombent dans le même filet (ouvert).
-    Promise.resolve()
-      .then(() => getAccesForfait(eleveId))
-      .then(({ data }) => {
-        if (vivant) setAcces({ ouvert: data?.ouvert !== false, motif: data?.motif ?? null, essaiFiches: data?.essaiFiches ?? null });
-      })
-      .catch(() => { if (vivant) setAcces({ ouvert: true, motif: null, essaiFiches: null }); });
-    return () => { vivant = false; };
+    let minuteur = null;
+
+    // UNE LECTURE RATÉE SE RETENTE AVANT D'OUVRIR — Camara, le 15/11/2026 : un parent en essai, sur téléphone, avait
+    // tous les jeux de la classe de son enfant ouverts. Une erreur de lecture ouvrait tout pour la durée de la page ;
+    // sur un téléphone, une lecture échoue pour un rien (réseau qui hésite, refus de la salle d'attente juste après
+    // un rechargement, jeton qu'on renouvelle). On retente donc trois fois (1 s, 2 s, 4 s), en restant « on ne sait
+    // pas » ; ce n'est qu'au bout que l'on ouvre, comme avant.
+    const ESSAIS = [1000, 2000, 4000];
+    const lire = (rang) => {
+      // Dans une promesse dès le départ : une réponse vide ou un appel qui
+      // échoue avant même de partir tombent dans le même filet.
+      Promise.resolve()
+        .then(() => getAccesForfait(eleveId))
+        .then(({ data }) => {
+          if (vivant) {
+            setAcces({
+              ouvert: data?.ouvert !== false,
+              motif: data?.motif ?? null,
+              essaiFiches: data?.essaiFiches ?? null,
+              conseillere: data?.conseillere !== false,
+              podcasts: data?.podcasts !== false,
+            });
+          }
+        })
+        .catch(() => {
+          if (!vivant) return;
+          if (rang < ESSAIS.length) {
+            minuteur = setTimeout(() => lire(rang + 1), ESSAIS[rang]);
+            return;
+          }
+          setAcces({ ouvert: true, motif: null, essaiFiches: null, conseillere: true, podcasts: true });
+        });
+    };
+    lire(0);
+
+    return () => { vivant = false; clearTimeout(minuteur); };
   }, [eleveId]);
 
   return acces;

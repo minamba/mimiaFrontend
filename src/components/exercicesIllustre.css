@@ -1,0 +1,250 @@
+/* ======================================================================================================
+   « LA DICTÉE » ET « L'ÉCOUTE », SUR LA PAGE D'ACCUEIL — maquette de Camara, 16/11/2026.
+
+   Deux cartes de verre bleu nuit, liseré lumineux, un ornement de cerisier au bout du titre
+   (assets/exercices/ornement.webp). LA DICTÉE se pose sur le vrai tableau de la maquette — cadre de bois,
+   branche de cerisier, chat et Fuji à la craie, brosse et craies — dont le texte a été EFFACÉ
+   (assets/exercices/tableau.webp) : la correction affichée reste celle du produit (`ContenuTableau`).
+   LES VITESSES sont quatre vignettes : le même garçon, de l'escargot à l'éclair (vitesse-*.webp, leurs noms
+   effacés, redessinés ici en vrai texte).
+
+   Les cartes restent nuit dans tous les thèmes (c'est une illustration, comme le bandeau final) ; le numéro
+   suit `--corail`, donc la saison. Sélecteurs volontairement forts : la règle « verre » du mode Blue Sky
+   (`:root[data-da='blue-sky'] .landing :is(.exercices__carte…)`) pèse 0,4,0. Aucune animation en boucle.
+   ====================================================================================================== */
+
+:root .landing section.exercices article.exercices__carte {
+  position: relative;
+  padding: 28px 26px 24px;
+  border: 1.5px solid rgba(122, 170, 255, 0.55);
+  border-radius: 22px;
+  background-color: transparent;
+  background-image:
+    linear-gradient(rgba(140, 180, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140, 180, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(22, 42, 118, 0.9) 0%, rgba(13, 26, 80, 0.94) 100%);
+  background-size: 34px 34px, 34px 34px, auto;
+  box-shadow:
+    0 0 0 1px rgba(80, 140, 255, 0.18),
+    0 0 26px rgba(70, 130, 255, 0.32),
+    0 24px 60px rgba(2, 8, 30, 0.45),
+    inset 0 0 34px rgba(90, 150, 255, 0.12);
+  color: #fff;
+}
+
+:root .landing section.exercices article.exercices__carte:hover {
+  border-color: rgba(150, 192, 255, 0.8);
+  box-shadow:
+    0 0 0 1px rgba(80, 140, 255, 0.3),
+    0 0 32px rgba(90, 150, 255, 0.45),
+    0 24px 60px rgba(2, 8, 30, 0.45),
+    inset 0 0 34px rgba(90, 150, 255, 0.14);
+}
+
+/* ------------------------------------------------------------------ le titre et son ornement */
+.landing section.exercices .exercices__tete {
+  position: relative;
+  padding-right: 84px;
+}
+
+.landing section.exercices .exercices__tete::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  width: 100px;
+  height: 38px;
+  background: url('../assets/exercices/ornement.webp') right center / contain no-repeat;
+  pointer-events: none;
+}
+
+.landing section.exercices .exercices__num {
+  font-size: 26px;
+  color: var(--corail, #ff7a45);
+}
+
+.landing section.exercices .exercices__tete h3 {
+  font-family: var(--display);
+  font-size: clamp(18px, 1.72vw, 24px);
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.landing section.exercices .exercices__texte,
+.landing section.exercices .exercices__note {
+  color: rgba(226, 234, 255, 0.86);
+}
+
+.landing section.exercices .exercices__texte { font-size: 16px; line-height: 1.55; }
+.landing section.exercices .exercices__note { margin-top: 18px; font-size: 14px; }
+
+/* ------------------------------------------------------------------ le tableau noir */
+/* L'image fait 702 × 578 ; la zone d'ardoise va de 4 à 96 % en largeur, de 4 à 91 % en hauteur. Le texte
+   garde sa marge à droite : le chat (en haut) et le Fuji (en bas) restent visibles. */
+.landing section.exercices .exercices__carte > .exercices__tableau {
+  --craie: #f4f7f2;
+
+  container-type: inline-size;
+  flex: none;
+  aspect-ratio: 702 / 578;
+  margin: auto 0;
+  padding: 8% 15% 13% 8%;
+  border: 0;
+  border-radius: 6px;
+  background: url('../assets/exercices/tableau.webp') center / 100% 100% no-repeat;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  align-items: center;
+}
+
+.landing section.exercices .exercices__tableau .ardoise__contenu {
+  margin: 0;
+  font-size: clamp(11px, 3.5cqi, 16px); /* cqi = la largeur INTÉRIEURE du tableau, marges déduites */
+  font-weight: 700;
+  line-height: 2;
+  color: var(--craie);
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+/* ------------------------------------------------------------------ le choix de la vitesse */
+.landing section.exercices .exercices__vitesses {
+  position: relative;
+  padding: 16px 18px 18px;
+  border: 1.5px solid rgba(122, 170, 255, 0.5);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(120, 170, 255, 0.16) 0 12%, transparent 12.5% 16%, rgba(120, 170, 255, 0.12) 16.5% 20%, transparent 20.5%),
+    linear-gradient(180deg, rgba(36, 64, 160, 0.5) 0%, rgba(22, 42, 120, 0.5) 100%);
+  box-shadow: inset 0 0 24px rgba(90, 150, 255, 0.12);
+}
+
+.landing section.exercices .exercices__question {
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.landing section.exercices .exercices__boutons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Chaque vignette : la scène, le nom en bas, en vrai texte. */
+.landing section.exercices .exercices__vitesse {
+  position: relative;
+  justify-content: flex-end;
+  aspect-ratio: 296 / 155;
+  padding: 0 8px 3.2%;
+  border: 1.5px solid rgba(140, 180, 255, 0.45);
+  border-radius: 14px;
+  background: #0f2160 var(--vignette) center / cover no-repeat;
+  box-shadow: 0 6px 16px rgba(2, 8, 30, 0.4);
+  overflow: hidden;
+}
+
+.landing section.exercices .exercices__vitesse[data-vitesse='tres_lent'] { --vignette: url('../assets/exercices/vitesse-tres_lent.webp'); }
+.landing section.exercices .exercices__vitesse[data-vitesse='lent'] { --vignette: url('../assets/exercices/vitesse-lent.webp'); }
+.landing section.exercices .exercices__vitesse[data-vitesse='normal'] { --vignette: url('../assets/exercices/vitesse-normal.webp'); }
+.landing section.exercices .exercices__vitesse[data-vitesse='rapide'] { --vignette: url('../assets/exercices/vitesse-rapide.webp'); }
+
+.landing section.exercices .exercices__vitesse strong {
+  font-size: clamp(14px, 1.6vw, 19px);
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 6, 30, 0.85), 0 0 2px rgba(0, 6, 30, 0.9);
+}
+
+/* La vitesse choisie : liseré turquoise lumineux, comme dans la maquette. */
+.landing section.exercices .exercices__vitesse.est-choisie {
+  border: 2px solid #6ff0d8;
+  background-color: #0f2160;
+  box-shadow: 0 0 0 1px rgba(111, 240, 216, 0.35), 0 0 18px rgba(111, 240, 216, 0.45), 0 6px 16px rgba(2, 8, 30, 0.4);
+}
+
+/* ------------------------------------------------------------------ l'extrait audio */
+.landing section.exercices .exercices__audio {
+  margin-top: 16px;
+  padding: 14px 18px 16px;
+  border: 1.5px solid rgba(122, 170, 255, 0.5);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(36, 64, 160, 0.45) 0%, rgba(22, 42, 120, 0.45) 100%);
+}
+
+.landing section.exercices .exercices__audio figcaption {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.landing section.exercices .exercices__audio .lecteur {
+  --piste-lue: #3ddc97;
+  --piste-reste: rgba(150, 175, 230, 0.28);
+  --papier: #0b1640;
+
+  border: 1px solid rgba(122, 170, 255, 0.35);
+  background: #0b1640;
+  color: #fff;
+}
+
+/* Le chrono suit l'encre de la page : en thème clair, il devenait foncé sur la pastille nuit. */
+.landing section.exercices .exercices__audio .lecteur__temps { color: rgba(226, 234, 255, 0.9); }
+
+/* ------------------------------------------------------------------ téléphone */
+@media (max-width: 720px) {
+  :root .landing section.exercices article.exercices__carte { padding: 22px 16px 20px; }
+  .landing section.exercices .exercices__tete { padding-right: 70px; }
+  .landing section.exercices .exercices__tete::after { width: 74px; height: 30px; top: -8px; }
+  .landing section.exercices .exercices__boutons { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .landing section.exercices .exercices__vitesse { padding-bottom: 1.5%; }
+  .landing section.exercices .exercices__vitesse strong { font-size: 13px; }
+  .landing section.exercices .exercices__question { font-size: 16px; }
+  .landing section.exercices .exercices__audio figcaption { font-size: 14px; }
+  /* Sur téléphone, le tableau prend toute la largeur de la carte, l'écriture se resserre ; et s'il manque
+     encore de la place, le tableau grandit (overflow visible : l'aspect-ratio cède au contenu) plutôt que de
+     couper la dictée. */
+  .landing section.exercices .exercices__carte > .exercices__tableau {
+    margin: 4px -6px;
+    padding: 6% 9% 12% 6%;
+    overflow: visible;
+  }
+  .landing section.exercices .exercices__tableau .ardoise__contenu {
+    font-size: 11px;
+    line-height: 1.75;
+  }
+}
+
+/* ------------------------------------------------------------------ en mode saisonnier
+   Camara, le 16/11/2026 : « tout doit s'adapter quand je change de thème (Black Friday, French Days…) ».
+   Cartes, panneaux et liserés prennent les variables `--illu-*` (styles/decorEnfant.css), que chaque saison
+   recalcule ; le tableau et les vignettes sont des illustrations : elles ne se recolorent pas. */
+:root[data-da='blue-sky'][data-saison] .landing section.exercices article.exercices__carte,
+:root[data-da='blue-sky'][data-saison] .landing section.exercices article.exercices__carte:hover {
+  border-color: var(--illu-bord-fort);
+  background-image: linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 26px var(--illu-lueur), 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.exercices :is(.exercices__vitesses, .exercices__audio) {
+  border-color: var(--illu-bord);
+  background: linear-gradient(180deg, var(--illu-panneau-3), var(--illu-panneau));
+  box-shadow: inset 0 0 20px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.exercices .exercices__vitesse { border-color: var(--illu-bord); }
+
+:root[data-da='blue-sky'][data-saison] .landing section.exercices .exercices__vitesse.est-choisie {
+  border-color: var(--illu-accent);
+  box-shadow: 0 0 0 1px var(--illu-accent), 0 0 18px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.exercices .exercices__audio .lecteur {
+  --piste-lue: var(--illu-accent);
+  --papier: var(--illu-panneau-2);
+
+  border-color: var(--illu-bord);
+  background: var(--illu-panneau-2);
+}
+
+:root[data-da='blue-sky'][data-saison] .landing section.exercices :is(.exercices__texte, .exercices__note) { color: var(--illu-texte-doux); }

@@ -1,4 +1,9 @@
 import { useSyncExternalStore } from 'react';
+import { authService } from '../storage/authService';
+// L'en-tête d'autorisation se décide à UN seul endroit (session enfant ou parent) :
+// on l'emprunte, on ne le refait pas. Import circulaire sans danger, la fonction
+// n'est appelée qu'après le chargement des deux modules.
+import { enTeteAuth } from '../api/httpClient';
 
 /**
  * LA SALLE D'ATTENTE, CÔTÉ NAVIGATEUR.
@@ -40,6 +45,11 @@ const BATTEMENT = 30_000;
 let etat = {
   /** La salle nous retient-elle ? */
   enFile: false,
+  /**
+   * Refusé sans billet, on demande au guichet si l'on est vraiment en file. Voir `signalerAffluence` :
+   * pendant cette demande, on ne montre PAS l'écran d'attente, le guichet laisse presque toujours entrer.
+   */
+  verification: false,
   rang: 0,
   devant: 0,
   attenteSecondes: null,
@@ -121,14 +131,29 @@ function arreterBattement() {
  * PAR `fetch` ET NON PAR LE CLIENT HTTP : celui-ci intercepte les 503 pour
  * alimenter cette file. L'y faire passer serait une boucle.
  */
-async function demander() {
+/** UNE SEULE DEMANDE AU GUICHET À LA FOIS : deux en même temps prendraient deux rangs. */
+let enVol = null;
+
+function demander() {
+  if (!enVol) enVol = demanderAuGuichet().finally(() => { enVol = null; });
+  return enVol;
+}
+
+async function demanderAuGuichet() {
   try {
     const jeton = lireBillet();
     const url = `${BASE}/affluence/billet${jeton ? `?jeton=${jeton}` : ''}`;
-    const reponse = await fetch(url, { headers: { Accept: 'application/json' } });
+    // LE JETON DE CONNEXION VOYAGE AUSSI ICI (06/11/2026) : c'est à lui que le
+    // guichet reconnaît un administrateur, admis sans prendre de place.
+    const headers = { Accept: 'application/json' };
+    const entete = await enTeteAuth().catch(() => null);
+    if (entete) headers.Authorization = entete;
+    const reponse = await fetch(url, { headers });
 
     if (!reponse.ok) {
-      // Le guichet lui-même ne répond pas : on réessaie, sans rien conclure.
+      // Le guichet lui-même ne répond pas : on réessaie, sans rien conclure. Si l'on vérifiait, l'écran
+      // d'attente s'affiche : le serveur a bien refusé, on ne peut pas montrer le site.
+      if (etat.verification) definir({ verification: false, enFile: true });
       planifier(10);
       return;
     }
@@ -139,7 +164,7 @@ async function demander() {
 
     if (place.admis) {
       clearTimeout(minuteur);
-      definir({ enFile: false, rang: 0, devant: 0, attenteSecondes: null });
+      definir({ enFile: false, verification: false, rang: 0, devant: 0, attenteSecondes: null });
       if (place.salle) demarrerBattement();
       else arreterBattement();
       return;
@@ -147,6 +172,7 @@ async function demander() {
 
     definir({
       enFile: true,
+      verification: false,
       rang: place.rang ?? 0,
       devant: place.devant ?? 0,
       attenteSecondes: place.attenteSecondes ?? null,
@@ -155,6 +181,7 @@ async function demander() {
   } catch {
     // Réseau coupé : on retente. Le serveur garde la place quelques secondes
     // encore, et une erreur passagère ne doit pas renvoyer en queue.
+    if (etat.verification) definir({ verification: false, enFile: true });
     planifier(10);
   }
 }
@@ -166,10 +193,43 @@ async function demander() {
  * plus au pire moment : le serveur a déjà pris le rang, il n'y a qu'à
  * l'afficher.
  */
-export function signalerAffluence(donnees) {
-  if (donnees?.billet) poserBillet(donnees.billet);
+/**
+ * « ACCÈS ADMINISTRATEUR » (Camara, le 06/11/2026), depuis l'écran de la file :
+ * connecté, on redemande tout de suite au guichet, qui le laisse entrer ; sinon,
+ * on part se connecter — le retour recharge la page, et la file avec.
+ */
+export async function entrerCommeAdministrateur() {
+  // Une session d'enfant n'est jamais administrateur : il faut se connecter.
+  const entete = await enTeteAuth().catch(() => null);
+  if (!entete || entete.startsWith('Eleve ')) {
+    authService.login();
+    return 'connexion';
+  }
+  clearTimeout(minuteur);
+  await demander();
+  return etat.enFile ? 'refuse' : 'entre';
+}
 
+export function signalerAffluence(donnees) {
   arreterBattement();
+
+  // REFUSÉ SANS BILLET (06/11/2026) : le serveur n'en crée plus à chaque appel —
+  // une page en lançait dix à la fois, et un seul visiteur prenait dix rangs. On
+  // va chercher LE billet au guichet, une seule fois.
+  //
+  // ET SANS MONTRER L'ÉCRAN D'ATTENTE TANT QUE LE GUICHET N'A PAS RÉPONDU — Camara, le 07/11/2026 : « au
+  // chargement ou en faisant F5, on voit rapidement la page de file d'attente ». Un F5 rend le billet
+  // (`pagehide`, voir `rendre`) : les premiers appels de la page suivante partent sans, le serveur les
+  // refuse, et le guichet, aussitôt interrogé, laisse entrer. L'écran s'affichait le temps de cet
+  // aller-retour. On attend sa réponse sur une page vide ; il ne s'affiche que si l'on est vraiment en file.
+  if (!donnees?.billet) {
+    if (!etat.enFile) definir({ verification: true });
+    clearTimeout(minuteur);
+    demander();
+    return;
+  }
+
+  poserBillet(donnees.billet);
   definir({
     enFile: true,
     rang: donnees?.rang ?? 1,
@@ -177,6 +237,16 @@ export function signalerAffluence(donnees) {
     attenteSecondes: donnees?.attenteSecondes ?? null,
   });
   planifier(donnees?.rappelDans ?? 5);
+}
+
+/**
+ * Le billet pour les appels faits sans axios (flux du cours, voix, événements) :
+ * sans lui, un visiteur pourtant entré était refusé dès que la salle était
+ * allumée (06/11/2026).
+ */
+export function avecBillet(entetes = {}) {
+  const jeton = lireBillet();
+  return jeton ? { ...entetes, 'X-Billet': jeton } : entetes;
 }
 
 /**

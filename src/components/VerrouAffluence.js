@@ -30,11 +30,16 @@ const OUVERTES = ['/callback', '/silent-renew'];
  * permanence sans rien coûter.
  */
 export default function VerrouAffluence({ children }) {
-  const { enFile } = useSalleDAttente();
+  const { enFile, verification } = useSalleDAttente();
   const { pathname } = useLocation();
 
-  if (!enFile) return children;
   if (OUVERTES.includes(pathname)) return children;
+
+  // REFUSÉ SANS BILLET, LE GUICHET EST INTERROGÉ (07/11/2026) : ni le site, dont les appels viennent
+  // d'être refusés, ni l'écran d'attente, qui s'affichait un instant à chaque F5. Le fond seul, le temps
+  // d'une réponse ; le site revient ensuite, et recharge ce qui avait été refusé.
+  if (verification) return null;
+  if (!enFile) return children;
 
   return <SalleDAttente />;
 }

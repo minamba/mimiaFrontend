@@ -1,0 +1,7 @@
+wind : gros residus blancs autour des rubans de vent. Refaire seulement des feuilles emportees par le vent avec quelques traits de mouvement nets, sans personne ni ruban lumineux.
+snow : residus blancs sous la plateforme. Preferer une illustration simple de flocons qui tombent au-dessus d'un petit tas de neige, sans personnages, ou editer la source nette du lot anglais-sons.
+windy : retirer les deux rubans cyan et tous leurs residus; garder arbre penche et feuilles emportees. Le dessin nettoye peut aussi servir a wind pour respecter les feuilles soufflees du PDF.
+snowy : nettoyer la petite frange blanche sous la plateforme de neige en preservant toute la scene.
+hot : gros halo rouge autour du soleil. Verifier aussi la source chaud du lot mots-CP ; sinon refaire seulement thermometre rouge et soleil sans halo ni personnage.
+winter : nettoyer la frange blanche sous le sol de neige, ou refaire un bonhomme de neige seul sans personne.
+summer : remplacer la nouvelle scene aux contours blancs sales par la source beach de cette collection, qui montre deja une plage en plein ete et a ete inspectee.

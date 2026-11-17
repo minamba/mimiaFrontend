@@ -5,6 +5,14 @@ import BarrePreparation from './BarrePreparation';
 import BoutonAjoutControle from './BoutonAjoutControle';
 import BoutonControlesPasses from './BoutonControlesPasses';
 import PastillePret from './PastillePret';
+import { vueIllustree } from '../lib/vueIllustree';
+import illuPressePapiers from '../assets/controles-illustre/presse-papiers.webp';
+import illuFuji from '../assets/controles-illustre/fuji-cerisiers.webp';
+import './controlesIllustre.css';
+import { SCENES } from '../lib/scenesMatieres';
+import { universDeMatiere } from '../lib/carteIllustree';
+import { iconeEpreuve } from './PreparationExamen';
+import './controleCarteIllustre.css';
 
 /**
  * « Mes contrôles » — la section posée sous les cartes de matières.
@@ -45,11 +53,116 @@ const urgence = (jours) => {
   return 'lointain';
 };
 
+/**
+ * LA CARTE ILLUSTRÉE D'UN CONTRÔLE À VENIR — Camara, le 16/11/2026 (maquette : icône de matière, pastille, titre au
+ * trait doré, délai, encadré « Préparation », pastille d'état, gros bouton doré), « adaptée en fonction des
+ * matières » : l'icône, les couleurs et la scène de droite viennent de la matière du contrôle. Le contrôle ne porte
+ * que le libellé de sa matière : l'univers se lit dessus (lib/carteIllustree.js), la scène dans lib/scenesMatieres.js.
+ * Vue de l'enfant seulement (`illustre`) ; les contrôles PASSÉS gardent leur carte (validée par Camara le 15/11).
+ */
+function habillage(controle) {
+  const cle = universDeMatiere(controle.matiereLibelle);
+  const scene = cle ? SCENES[cle] : null;
+  if (!scene) return {};
+  return {
+    '--cci-scene': `url(${scene.image})`,
+    '--cci-bord': scene.bord,
+    '--cci-haut': scene.haut,
+    '--cci-bas': scene.bas,
+  };
+}
+
+function IconeCalendrier() {
+  return (
+    <svg className="cci__icone-ligne" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M9 14l2 2 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CarteIllustree({ controle, onPreparer, retour }) {
+  const preparation = controle.preparation;
+  const commence = (controle.nombrePreparations ?? 0) > 0;
+  const style = habillage(controle);
+  const avecScene = Boolean(style['--cci-scene']);
+
+  return (
+    <li
+      className={`controle-carte cci${avecScene ? ' cci--scene' : ''}`}
+      style={{ ...styleMatiere({ matiereLibelle: controle.matiereLibelle }), ...style }}
+    >
+      <span className="cci__scene" aria-hidden="true" />
+
+      <div className="cci__tete">
+        <span className="cci__icone" aria-hidden="true">{iconeEpreuve({ libelle: controle.matiereLibelle })}</span>
+
+        <div className="cci__ident">
+          <span className="controle-carte__matiere">{controle.matiereLibelle}</span>
+          {/* Le lien couvre toute la carte (son ::after, voulu le 13/09/2026) : le trait doré est donc un élément à
+              part, juste après lui. */}
+          <span className="cci__titre-ligne">
+            <Link
+              to={`/eleves/${controle.eleveId}/controles/${controle.id}${retour ? `?retour=${retour}` : ''}`}
+              className="controle-carte__titre"
+            >
+              {controle.sujet || 'Sujet à préciser'}
+            </Link>
+            <span className="cci__trait" aria-hidden="true" />
+          </span>
+          <p className="controle-carte__quand">
+            <IconeCalendrier />
+            <span className="controle-carte__jour">{jourControle(controle.dateControle)}</span>
+            {controle.heureControle && ` · ${controle.heureControle.slice(0, 5)}`}
+          </p>
+        </div>
+
+        <span className={`controle-carte__delai est-${urgence(controle.joursRestants)}`}>
+          <span aria-hidden="true">⏳ </span>
+          {delaiControle(controle.joursRestants)}
+        </span>
+      </div>
+
+      <div className="cci__preparation">
+        <BarrePreparation
+          pourcent={preparation?.pourcent}
+          perimetreConnu={preparation?.perimetreConnu ?? false}
+          compact
+        />
+      </div>
+
+      <div className="cci__etat">
+        <PastillePret statut={preparation?.pretStatut} titre={preparation?.pretObservation} />
+        {/* « OBJECTIF » DE LA MAQUETTE : le contrôle n'en porte pas. La seule phrase qui en tienne lieu est l'avis du
+            professeur sur la préparation (`pretObservation`) : affichée seulement quand elle existe. */}
+        {preparation?.pretObservation && (
+          <p className="cci__mot">
+            <span className="cci__mot-titre">Le mot de ton professeur</span>
+            <span className="cci__mot-texte">{preparation.pretObservation}</span>
+          </p>
+        )}
+      </div>
+
+      <button
+        type="button"
+        className="btn btn--compact controle-carte__action cci__action"
+        onClick={() => onPreparer?.(controle)}
+      >
+        <span className="cci__action-icone" aria-hidden="true">▶</span>
+        {commence ? 'Continuer la préparation' : 'Commencer à réviser'}
+      </button>
+    </li>
+  );
+}
+
 export function ControleCarte({
-  controle, onPreparer, onBilan = null, passe = false, retour = null,
+  controle, onPreparer, onBilan = null, passe = false, retour = null, illustre = false,
 }) {
   const preparation = controle.preparation;
   const commence = (controle.nombrePreparations ?? 0) > 0;
+
+  if (illustre && !passe) return <CarteIllustree controle={controle} onPreparer={onPreparer} retour={retour} />;
 
   return (
     <li
@@ -160,10 +273,21 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
   // pour ne pas faire clignoter « Pas encore de contrôle » à chaque ouverture.
   if (controles === null || controles === undefined) return null;
 
+  // LA VUE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026 (maquette « Mes contrôles ») : le presse-papiers et son chat à
+  // gauche, le Fuji et les cerisiers à droite, un cadre lumineux (controlesIllustre.css).
+  // Aussi pour le parent dans l'espace de son enfant (16/11/2026) : voir lib/vueIllustree.js.
+  const illustre = vueIllustree();
+
   return (
     // L'IDENTIFIANT EST UNE DESTINATION, pas une décoration : les pages de
     // détail renvoient ici par `#mes-controles` plutôt qu'en haut de la page.
-    <section className="controles-section" id="mes-controles">
+    <section className={`controles-section${illustre ? ' ctr-illu' : ''}`} id="mes-controles">
+      {illustre && (
+        <>
+          <img className="ctr-illu__deco ctr-illu__deco--gauche" src={illuPressePapiers} alt="" aria-hidden="true" />
+          <img className="ctr-illu__deco ctr-illu__deco--droite" src={illuFuji} alt="" aria-hidden="true" />
+        </>
+      )}
       <div className="controles-section__entete">
         <div className="controles-section__titre">
           {/* L'ILLUSTRATION QUI DÉBORDE — Camara, le 14/09/2026 : la
@@ -202,6 +326,16 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
 
       {controles.length === 0 ? (
         <div className="fiches-vide">
+          {illustre && (
+            <span className="ctr-illu__calendrier">
+              <svg viewBox="0 0 48 48" aria-hidden="true">
+              <rect x="6" y="10" width="36" height="32" rx="6" fill="none" stroke="currentColor" strokeWidth="3" />
+              <path d="M6 19h36" stroke="currentColor" strokeWidth="3" />
+              <path d="M16 6v8M32 6v8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              <path d="M14 26h4M22 26h4M30 26h4M14 33h4M22 33h4M30 33h4" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            </span>
+          )}
           <p className="fiches-vide__titre">Pas encore de contrôle prévu.</p>
           <p>
             Ajoute ton prochain contrôle : ton professeur pourra te le rappeler
@@ -221,6 +355,7 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
                 key={controle.id}
                 controle={{ ...controle, eleveId }}
                 onPreparer={onPreparer}
+                illustre={illustre}
               />
             ))}
           </ul>

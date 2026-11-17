@@ -9,8 +9,11 @@ import AvisModale from './AvisModale';
  * vraiment, contrairement à la page d'accueil publique ou « Mon compte ».
  *
  * UN MÉDAILLON ILLUSTRÉ DEPUIS LE 14/09/2026 — Camara : `note.png`, la boule
- * orange aux étoiles, remplace l'étoile dessinée. Comme pour le thème, le
- * bouton s'efface derrière la pièce ronde (voir `.bouton-avis` dans App.css).
+ * orange aux étoiles, remplace l'étoile dessinée.
+ *
+ * DANS UNE BULLE, AVEC SON TEXTE — Camara, le 07/11/2026 : « je veux que ce
+ * soit dans une bulle avec un texte "Mon avis sur Mimia" », comme le bouton
+ * « Signaler ». La boule seule ne disait pas ce qu'elle ouvrait.
  */
 export default function BoutonAvis() {
   const [ouvert, setOuvert] = useState(false);
@@ -24,8 +27,9 @@ export default function BoutonAvis() {
         aria-label="Donner votre avis sur Mimia"
         title="Donner votre avis sur Mimia"
       >
-        {/* Décorative : l'intitulé du bouton dit déjà ce qu'il fait. */}
+        {/* Décorative : le texte du bouton dit déjà ce qu'il fait. */}
         <img className="bouton-avis__icone" src={iconeNote} alt="" />
+        <span className="bouton-avis__texte">Mon avis sur Mimia</span>
       </button>
 
       {ouvert && <AvisModale onFermer={() => setOuvert(false)} />}

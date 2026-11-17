@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../api/httpClient';
+import { avecBillet } from '../affluence/salleDAttente';
 
 /**
  * Le comptage des visites du site public.
@@ -97,7 +98,7 @@ export function signalerVisite() {
   // site, il n'a pas à voir passer une erreur de compteur dans sa console.
   fetch(`${API_BASE_URL}/visites`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: avecBillet({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ visiteur }),
     keepalive: true,
   }).catch(() => {});

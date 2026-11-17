@@ -59,3 +59,7 @@ secrets.*
 # Le lot des schémas à importer (20/10/2026) : 1,4 Go de sources et d'images,
 # importé par l'administration (Planches › Importer un dossier), jamais versionné.
 /src/assets/schemas/
+
+# Les originaux des avatars des enfants (PNG 1024 px, 150 Mo) : le site sert leur copie WebP 320 px de
+# src/assets/avatars-enfants. Gardés ici pour les reconvertir, jamais versionnés.
+/sources-images

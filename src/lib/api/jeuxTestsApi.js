@@ -32,10 +32,14 @@ export const supprimerTestDuJeu = (id, testId) => httpClient.delete(`${BASE}/${i
 export const ajouterLigneDeTest = (id, testId) => httpClient.post(`${BASE}/${id}/tests/${testId}/lignes`);
 
 export const modifierLigneDeTest = (id, ligneId, {
-  competence, statut, dateEffectuee, commentaire,
+  competence, statut, commentaire,
 }) => httpClient.put(`${BASE}/${id}/lignes/${ligneId}`, {
-  competence, statut, dateEffectuee, commentaire,
+  competence, statut, commentaire,
 });
+
+/** `position` : son rang une fois déplacée, à partir de 0 (tout en haut du test). */
+export const deplacerLigneDeTest = (id, ligneId, position) =>
+  httpClient.put(`${BASE}/${id}/lignes/${ligneId}/position`, { position });
 
 /** Le choix dans la liste : le statut seul, pour ne rien écraser d'autre. */
 export const changerStatutLigneDeTest = (id, ligneId, statut) =>

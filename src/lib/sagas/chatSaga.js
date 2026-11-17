@@ -1,5 +1,8 @@
-import { call, cancel, fork, put, take, takeLatest } from 'redux-saga/effects';
+import {
+  call, cancel, fork, put, select, take, takeLatest,
+} from 'redux-saga/effects';
 import { eventChannel, END } from 'redux-saga';
+import { lignesIncomprises } from '../figureGeo';
 import {
   getConversations,
   creerConversation,
@@ -88,7 +91,7 @@ function* ouvrirConversationSaga(action) {
  */
 function creerCanalStream(
   conversationId, contenu, annonce, secondesRestantes, pieceJointeIds, dureeChoisieMinutes,
-  controleId, mode, epreuveCode, vitesseEcoute, sonJuste = null,
+  controleId, mode, epreuveCode, vitesseEcoute, sonJuste = null, figureIncomprise = null,
 ) {
   return eventChannel((emit) => {
     const controller = new AbortController();
@@ -133,7 +136,7 @@ function creerCanalStream(
     else {
       flux = envoyerMessageStream(
         conversationId, contenu,
-        { ...options, secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste },
+        { ...options, secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste, figureIncomprise },
       );
     }
 
@@ -170,10 +173,20 @@ function* envoyerMessageSaga(action) {
     controleId = null, mode = null, epreuveCode = null, vitesseEcoute = null, sonJuste = null,
   } = action.payload;
 
+  // LA FIGURE QUE L'ÉCRAN N'A PAS PU DESSINER (11/11/2026) : lue dans le dernier message du professeur, renvoyée avec
+  // le message de l'élève. Seulement pour un message de l'élève : une annonce ou un accueil n'en a pas besoin.
+  let figureIncomprise = null;
+  if (contenu !== null && !annonce) {
+    const messages = yield select((etat) => etat?.chat?.messages ?? []);
+    const dernierProf = [...messages].reverse().find((m) => m.role === 'assistant');
+    const lignes = lignesIncomprises(dernierProf?.contenu ?? '');
+    if (lignes.length > 0) figureIncomprise = lignes;
+  }
+
   const canal = yield call(
     creerCanalStream,
     conversationId, contenu, annonce, secondesRestantes, pieceJointeIds, dureeChoisieMinutes,
-    controleId, mode, epreuveCode, vitesseEcoute, sonJuste,
+    controleId, mode, epreuveCode, vitesseEcoute, sonJuste, figureIncomprise,
   );
 
   try {

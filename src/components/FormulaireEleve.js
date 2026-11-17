@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { submitEleve, resetEleve } from '../lib/actions/elevesActions';
@@ -10,6 +10,7 @@ import {
 } from '../lib/niveauxScolaires';
 import ChoixSpecialites from './ChoixSpecialites';
 import ChoixFilierePro from './ChoixFilierePro';
+import ChoixAvatar from './ChoixAvatar';
 import ChoixBesoins from './ChoixBesoins';
 import ChoixAcademie from './ChoixAcademie';
 import ChoixEtablissement, { classeAvecConseillere } from './ChoixEtablissement';
@@ -38,6 +39,8 @@ export default function FormulaireEleve() {
     age: '',
     niveauScolaireId: '',
     sexe: '',
+    // L'avatar (16/11/2026), facultatif : '' = celui par défaut. Voir `ChoixAvatar`.
+    avatar: '',
     academieId: '',
     // L'établissement, pour la conseillère d'orientation (18/10/2026).
     etablissement: null,
@@ -55,6 +58,7 @@ export default function FormulaireEleve() {
   // dit classe par classe (`lv2Possible`). Ailleurs elle n'est ni montrée ni
   // envoyée cochée : un CE2 n'a pas de LV2.
   const niveauChoisi = niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId));
+  const choisirAvatar = useCallback((avatar) => setChamps((c) => ({ ...c, avatar })), []);
   const lv2Possible = Boolean(niveauChoisi?.lv2Possible);
   const specialitesClasse = specialitesDeLaClasse(niveaux, champs.niveauScolaireId);
   const languesClasse = languesDeLaClasse(niveaux, champs.niveauScolaireId);
@@ -111,6 +115,7 @@ export default function FormulaireEleve() {
         nom: champs.nom.trim(),
         age: Number(champs.age),
         sexe: Number(champs.sexe),
+        avatar: champs.avatar || null,
         niveauScolaireId: Number(champs.niveauScolaireId),
         academieId: champs.academieId ? Number(champs.academieId) : null,
         // EN DEUX TEMPS (18/10/2026) : la route de l'établissement demande
@@ -290,6 +295,15 @@ export default function FormulaireEleve() {
               bonnes spécialités.
             </span>
           </div>
+
+          {/* SON AVATAR, d'après sa classe (16/11/2026) — facultatif, invisible tant qu'il n'y a pas d'avatars. */}
+          <ChoixAvatar
+            classe={niveauChoisi?.code ?? niveauChoisi?.libelle}
+            sexe={champs.sexe}
+            valeur={champs.avatar}
+            onChange={choisirAvatar}
+            prenom={champs.prenom.trim() || null}
+          />
 
           {/* SES LANGUES, SES SPÉCIALITÉS ET SA FILIÈRE, sous la classe qui les
               décide. Rien ne s'affiche quand la classe n'en a pas. */}

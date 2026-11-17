@@ -79,8 +79,8 @@ export default function Comparatif() {
               <td data-colonne="Prof particulier">30 à 50 € l’heure</td>
               <td data-colonne="ChatGPT">gratuit, ou 20 €/mois</td>
               <td className="comparatif__nous" data-colonne="Mimia">
-                39,90 €/mois
-                <small>9 h de cours, soit 4,43 € l’heure</small>
+                dès 19,90 €/mois
+                <small>4 h de cours, soit 4,98 € l’heure</small>
               </td>
             </tr>
           </tbody>

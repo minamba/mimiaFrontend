@@ -1,0 +1,2662 @@
+[
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-0",
+    "affiche": "0",
+    "se_lit": "zéro",
+    "fichier": "CP/Mathématiques/nb-0.webp",
+    "notation": "0",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-1",
+    "affiche": "1",
+    "se_lit": "un",
+    "fichier": "CP/Mathématiques/nb-1.webp",
+    "notation": "1",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-2",
+    "affiche": "2",
+    "se_lit": "deux",
+    "fichier": "CP/Mathématiques/nb-2.webp",
+    "notation": "2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-3",
+    "affiche": "3",
+    "se_lit": "trois",
+    "fichier": "CP/Mathématiques/nb-3.webp",
+    "notation": "3",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-4",
+    "affiche": "4",
+    "se_lit": "quatre",
+    "fichier": "CP/Mathématiques/nb-4.webp",
+    "notation": "4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-5",
+    "affiche": "5",
+    "se_lit": "cinq",
+    "fichier": "CP/Mathématiques/nb-5.webp",
+    "notation": "5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-6",
+    "affiche": "6",
+    "se_lit": "six",
+    "fichier": "CP/Mathématiques/nb-6.webp",
+    "notation": "6",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-7",
+    "affiche": "7",
+    "se_lit": "sept",
+    "fichier": "CP/Mathématiques/nb-7.webp",
+    "notation": "7",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-8",
+    "affiche": "8",
+    "se_lit": "huit",
+    "fichier": "CP/Mathématiques/nb-8.webp",
+    "notation": "8",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-9",
+    "affiche": "9",
+    "se_lit": "neuf",
+    "fichier": "CP/Mathématiques/nb-9.webp",
+    "notation": "9",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-10",
+    "affiche": "10",
+    "se_lit": "dix",
+    "fichier": "CP/Mathématiques/nb-10.webp",
+    "notation": "10",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-11",
+    "affiche": "11",
+    "se_lit": "onze",
+    "fichier": "CP/Mathématiques/nb-11.webp",
+    "notation": "11",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-12",
+    "affiche": "12",
+    "se_lit": "douze",
+    "fichier": "CP/Mathématiques/nb-12.webp",
+    "notation": "12",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-13",
+    "affiche": "13",
+    "se_lit": "treize",
+    "fichier": "CP/Mathématiques/nb-13.webp",
+    "notation": "13",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-14",
+    "affiche": "14",
+    "se_lit": "quatorze",
+    "fichier": "CP/Mathématiques/nb-14.webp",
+    "notation": "14",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-15",
+    "affiche": "15",
+    "se_lit": "quinze",
+    "fichier": "CP/Mathématiques/nb-15.webp",
+    "notation": "15",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-16",
+    "affiche": "16",
+    "se_lit": "seize",
+    "fichier": "CP/Mathématiques/nb-16.webp",
+    "notation": "16",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-17",
+    "affiche": "17",
+    "se_lit": "dix-sept",
+    "fichier": "CP/Mathématiques/nb-17.webp",
+    "notation": "17",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-18",
+    "affiche": "18",
+    "se_lit": "dix-huit",
+    "fichier": "CP/Mathématiques/nb-18.webp",
+    "notation": "18",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-19",
+    "affiche": "19",
+    "se_lit": "dix-neuf",
+    "fichier": "CP/Mathématiques/nb-19.webp",
+    "notation": "19",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-20",
+    "affiche": "20",
+    "se_lit": "vingt",
+    "fichier": "CP/Mathématiques/nb-20.webp",
+    "notation": "20",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-21",
+    "affiche": "21",
+    "se_lit": "vingt et un",
+    "fichier": "CP/Mathématiques/nb-21.webp",
+    "notation": "21",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-22",
+    "affiche": "22",
+    "se_lit": "vingt-deux",
+    "fichier": "CP/Mathématiques/nb-22.webp",
+    "notation": "22",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-23",
+    "affiche": "23",
+    "se_lit": "vingt-trois",
+    "fichier": "CP/Mathématiques/nb-23.webp",
+    "notation": "23",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-24",
+    "affiche": "24",
+    "se_lit": "vingt-quatre",
+    "fichier": "CP/Mathématiques/nb-24.webp",
+    "notation": "24",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-25",
+    "affiche": "25",
+    "se_lit": "vingt-cinq",
+    "fichier": "CP/Mathématiques/nb-25.webp",
+    "notation": "25",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-26",
+    "affiche": "26",
+    "se_lit": "vingt-six",
+    "fichier": "CP/Mathématiques/nb-26.webp",
+    "notation": "26",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-27",
+    "affiche": "27",
+    "se_lit": "vingt-sept",
+    "fichier": "CP/Mathématiques/nb-27.webp",
+    "notation": "27",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-28",
+    "affiche": "28",
+    "se_lit": "vingt-huit",
+    "fichier": "CP/Mathématiques/nb-28.webp",
+    "notation": "28",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 2,
+    "identifiant": "nb-29",
+    "affiche": "29",
+    "se_lit": "vingt-neuf",
+    "fichier": "CP/Mathématiques/nb-29.webp",
+    "notation": "29",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-30",
+    "affiche": "30",
+    "se_lit": "trente",
+    "fichier": "CP/Mathématiques/nb-30.webp",
+    "notation": "30",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-31",
+    "affiche": "31",
+    "se_lit": "trente et un",
+    "fichier": "CP/Mathématiques/nb-31.webp",
+    "notation": "31",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-32",
+    "affiche": "32",
+    "se_lit": "trente-deux",
+    "fichier": "CP/Mathématiques/nb-32.webp",
+    "notation": "32",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-33",
+    "affiche": "33",
+    "se_lit": "trente-trois",
+    "fichier": "CP/Mathématiques/nb-33.webp",
+    "notation": "33",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-34",
+    "affiche": "34",
+    "se_lit": "trente-quatre",
+    "fichier": "CP/Mathématiques/nb-34.webp",
+    "notation": "34",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-35",
+    "affiche": "35",
+    "se_lit": "trente-cinq",
+    "fichier": "CP/Mathématiques/nb-35.webp",
+    "notation": "35",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-36",
+    "affiche": "36",
+    "se_lit": "trente-six",
+    "fichier": "CP/Mathématiques/nb-36.webp",
+    "notation": "36",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-37",
+    "affiche": "37",
+    "se_lit": "trente-sept",
+    "fichier": "CP/Mathématiques/nb-37.webp",
+    "notation": "37",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-38",
+    "affiche": "38",
+    "se_lit": "trente-huit",
+    "fichier": "CP/Mathématiques/nb-38.webp",
+    "notation": "38",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-39",
+    "affiche": "39",
+    "se_lit": "trente-neuf",
+    "fichier": "CP/Mathématiques/nb-39.webp",
+    "notation": "39",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-40",
+    "affiche": "40",
+    "se_lit": "quarante",
+    "fichier": "CP/Mathématiques/nb-40.webp",
+    "notation": "40",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-41",
+    "affiche": "41",
+    "se_lit": "quarante et un",
+    "fichier": "CP/Mathématiques/nb-41.webp",
+    "notation": "41",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-42",
+    "affiche": "42",
+    "se_lit": "quarante-deux",
+    "fichier": "CP/Mathématiques/nb-42.webp",
+    "notation": "42",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-43",
+    "affiche": "43",
+    "se_lit": "quarante-trois",
+    "fichier": "CP/Mathématiques/nb-43.webp",
+    "notation": "43",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-44",
+    "affiche": "44",
+    "se_lit": "quarante-quatre",
+    "fichier": "CP/Mathématiques/nb-44.webp",
+    "notation": "44",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-45",
+    "affiche": "45",
+    "se_lit": "quarante-cinq",
+    "fichier": "CP/Mathématiques/nb-45.webp",
+    "notation": "45",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-46",
+    "affiche": "46",
+    "se_lit": "quarante-six",
+    "fichier": "CP/Mathématiques/nb-46.webp",
+    "notation": "46",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-47",
+    "affiche": "47",
+    "se_lit": "quarante-sept",
+    "fichier": "CP/Mathématiques/nb-47.webp",
+    "notation": "47",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-48",
+    "affiche": "48",
+    "se_lit": "quarante-huit",
+    "fichier": "CP/Mathématiques/nb-48.webp",
+    "notation": "48",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-49",
+    "affiche": "49",
+    "se_lit": "quarante-neuf",
+    "fichier": "CP/Mathématiques/nb-49.webp",
+    "notation": "49",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-50",
+    "affiche": "50",
+    "se_lit": "cinquante",
+    "fichier": "CP/Mathématiques/nb-50.webp",
+    "notation": "50",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-51",
+    "affiche": "51",
+    "se_lit": "cinquante et un",
+    "fichier": "CP/Mathématiques/nb-51.webp",
+    "notation": "51",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-52",
+    "affiche": "52",
+    "se_lit": "cinquante-deux",
+    "fichier": "CP/Mathématiques/nb-52.webp",
+    "notation": "52",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-53",
+    "affiche": "53",
+    "se_lit": "cinquante-trois",
+    "fichier": "CP/Mathématiques/nb-53.webp",
+    "notation": "53",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-54",
+    "affiche": "54",
+    "se_lit": "cinquante-quatre",
+    "fichier": "CP/Mathématiques/nb-54.webp",
+    "notation": "54",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-55",
+    "affiche": "55",
+    "se_lit": "cinquante-cinq",
+    "fichier": "CP/Mathématiques/nb-55.webp",
+    "notation": "55",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-56",
+    "affiche": "56",
+    "se_lit": "cinquante-six",
+    "fichier": "CP/Mathématiques/nb-56.webp",
+    "notation": "56",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-57",
+    "affiche": "57",
+    "se_lit": "cinquante-sept",
+    "fichier": "CP/Mathématiques/nb-57.webp",
+    "notation": "57",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-58",
+    "affiche": "58",
+    "se_lit": "cinquante-huit",
+    "fichier": "CP/Mathématiques/nb-58.webp",
+    "notation": "58",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-59",
+    "affiche": "59",
+    "se_lit": "cinquante-neuf",
+    "fichier": "CP/Mathématiques/nb-59.webp",
+    "notation": "59",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-60",
+    "affiche": "60",
+    "se_lit": "soixante",
+    "fichier": "CP/Mathématiques/nb-60.webp",
+    "notation": "60",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 3,
+    "identifiant": "nb-61",
+    "affiche": "61",
+    "se_lit": "soixante et un",
+    "fichier": "CP/Mathématiques/nb-61.webp",
+    "notation": "61",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-62",
+    "affiche": "62",
+    "se_lit": "soixante-deux",
+    "fichier": "CP/Mathématiques/nb-62.webp",
+    "notation": "62",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-63",
+    "affiche": "63",
+    "se_lit": "soixante-trois",
+    "fichier": "CP/Mathématiques/nb-63.webp",
+    "notation": "63",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-64",
+    "affiche": "64",
+    "se_lit": "soixante-quatre",
+    "fichier": "CP/Mathématiques/nb-64.webp",
+    "notation": "64",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-65",
+    "affiche": "65",
+    "se_lit": "soixante-cinq",
+    "fichier": "CP/Mathématiques/nb-65.webp",
+    "notation": "65",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-66",
+    "affiche": "66",
+    "se_lit": "soixante-six",
+    "fichier": "CP/Mathématiques/nb-66.webp",
+    "notation": "66",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-67",
+    "affiche": "67",
+    "se_lit": "soixante-sept",
+    "fichier": "CP/Mathématiques/nb-67.webp",
+    "notation": "67",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-68",
+    "affiche": "68",
+    "se_lit": "soixante-huit",
+    "fichier": "CP/Mathématiques/nb-68.webp",
+    "notation": "68",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-69",
+    "affiche": "69",
+    "se_lit": "soixante-neuf",
+    "fichier": "CP/Mathématiques/nb-69.webp",
+    "notation": "69",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-70",
+    "affiche": "70",
+    "se_lit": "soixante-dix",
+    "fichier": "CP/Mathématiques/nb-70.webp",
+    "notation": "70",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-71",
+    "affiche": "71",
+    "se_lit": "soixante et onze",
+    "fichier": "CP/Mathématiques/nb-71.webp",
+    "notation": "71",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-72",
+    "affiche": "72",
+    "se_lit": "soixante-douze",
+    "fichier": "CP/Mathématiques/nb-72.webp",
+    "notation": "72",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-73",
+    "affiche": "73",
+    "se_lit": "soixante-treize",
+    "fichier": "CP/Mathématiques/nb-73.webp",
+    "notation": "73",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-74",
+    "affiche": "74",
+    "se_lit": "soixante-quatorze",
+    "fichier": "CP/Mathématiques/nb-74.webp",
+    "notation": "74",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-75",
+    "affiche": "75",
+    "se_lit": "soixante-quinze",
+    "fichier": "CP/Mathématiques/nb-75.webp",
+    "notation": "75",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-76",
+    "affiche": "76",
+    "se_lit": "soixante-seize",
+    "fichier": "CP/Mathématiques/nb-76.webp",
+    "notation": "76",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-77",
+    "affiche": "77",
+    "se_lit": "soixante-dix-sept",
+    "fichier": "CP/Mathématiques/nb-77.webp",
+    "notation": "77",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-78",
+    "affiche": "78",
+    "se_lit": "soixante-dix-huit",
+    "fichier": "CP/Mathématiques/nb-78.webp",
+    "notation": "78",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-79",
+    "affiche": "79",
+    "se_lit": "soixante-dix-neuf",
+    "fichier": "CP/Mathématiques/nb-79.webp",
+    "notation": "79",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-80",
+    "affiche": "80",
+    "se_lit": "quatre-vingts",
+    "fichier": "CP/Mathématiques/nb-80.webp",
+    "notation": "80",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-81",
+    "affiche": "81",
+    "se_lit": "quatre-vingt-un",
+    "fichier": "CP/Mathématiques/nb-81.webp",
+    "notation": "81",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-82",
+    "affiche": "82",
+    "se_lit": "quatre-vingt-deux",
+    "fichier": "CP/Mathématiques/nb-82.webp",
+    "notation": "82",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-83",
+    "affiche": "83",
+    "se_lit": "quatre-vingt-trois",
+    "fichier": "CP/Mathématiques/nb-83.webp",
+    "notation": "83",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-84",
+    "affiche": "84",
+    "se_lit": "quatre-vingt-quatre",
+    "fichier": "CP/Mathématiques/nb-84.webp",
+    "notation": "84",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-85",
+    "affiche": "85",
+    "se_lit": "quatre-vingt-cinq",
+    "fichier": "CP/Mathématiques/nb-85.webp",
+    "notation": "85",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-86",
+    "affiche": "86",
+    "se_lit": "quatre-vingt-six",
+    "fichier": "CP/Mathématiques/nb-86.webp",
+    "notation": "86",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-87",
+    "affiche": "87",
+    "se_lit": "quatre-vingt-sept",
+    "fichier": "CP/Mathématiques/nb-87.webp",
+    "notation": "87",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-88",
+    "affiche": "88",
+    "se_lit": "quatre-vingt-huit",
+    "fichier": "CP/Mathématiques/nb-88.webp",
+    "notation": "88",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-89",
+    "affiche": "89",
+    "se_lit": "quatre-vingt-neuf",
+    "fichier": "CP/Mathématiques/nb-89.webp",
+    "notation": "89",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-90",
+    "affiche": "90",
+    "se_lit": "quatre-vingt-dix",
+    "fichier": "CP/Mathématiques/nb-90.webp",
+    "notation": "90",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-91",
+    "affiche": "91",
+    "se_lit": "quatre-vingt-onze",
+    "fichier": "CP/Mathématiques/nb-91.webp",
+    "notation": "91",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-92",
+    "affiche": "92",
+    "se_lit": "quatre-vingt-douze",
+    "fichier": "CP/Mathématiques/nb-92.webp",
+    "notation": "92",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 4,
+    "identifiant": "nb-93",
+    "affiche": "93",
+    "se_lit": "quatre-vingt-treize",
+    "fichier": "CP/Mathématiques/nb-93.webp",
+    "notation": "93",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-94",
+    "affiche": "94",
+    "se_lit": "quatre-vingt-quatorze",
+    "fichier": "CP/Mathématiques/nb-94.webp",
+    "notation": "94",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-95",
+    "affiche": "95",
+    "se_lit": "quatre-vingt-quinze",
+    "fichier": "CP/Mathématiques/nb-95.webp",
+    "notation": "95",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-96",
+    "affiche": "96",
+    "se_lit": "quatre-vingt-seize",
+    "fichier": "CP/Mathématiques/nb-96.webp",
+    "notation": "96",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-97",
+    "affiche": "97",
+    "se_lit": "quatre-vingt-dix-sept",
+    "fichier": "CP/Mathématiques/nb-97.webp",
+    "notation": "97",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-98",
+    "affiche": "98",
+    "se_lit": "quatre-vingt-dix-huit",
+    "fichier": "CP/Mathématiques/nb-98.webp",
+    "notation": "98",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-99",
+    "affiche": "99",
+    "se_lit": "quatre-vingt-dix-neuf",
+    "fichier": "CP/Mathématiques/nb-99.webp",
+    "notation": "99",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CP",
+    "page": 5,
+    "identifiant": "nb-100",
+    "affiche": "100",
+    "se_lit": "cent",
+    "fichier": "CP/Mathématiques/nb-100.webp",
+    "notation": "100",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-101",
+    "affiche": "101",
+    "se_lit": "cent un",
+    "fichier": "CE1/Mathématiques/nb-101.webp",
+    "notation": "101",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-108",
+    "affiche": "108",
+    "se_lit": "cent huit",
+    "fichier": "CE1/Mathématiques/nb-108.webp",
+    "notation": "108",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-110",
+    "affiche": "110",
+    "se_lit": "cent dix",
+    "fichier": "CE1/Mathématiques/nb-110.webp",
+    "notation": "110",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-115",
+    "affiche": "115",
+    "se_lit": "cent quinze",
+    "fichier": "CE1/Mathématiques/nb-115.webp",
+    "notation": "115",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-120",
+    "affiche": "120",
+    "se_lit": "cent vingt",
+    "fichier": "CE1/Mathématiques/nb-120.webp",
+    "notation": "120",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-170",
+    "affiche": "170",
+    "se_lit": "cent soixante-dix",
+    "fichier": "CE1/Mathématiques/nb-170.webp",
+    "notation": "170",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-180",
+    "affiche": "180",
+    "se_lit": "cent quatre-vingts",
+    "fichier": "CE1/Mathématiques/nb-180.webp",
+    "notation": "180",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-190",
+    "affiche": "190",
+    "se_lit": "cent quatre-vingt-dix",
+    "fichier": "CE1/Mathématiques/nb-190.webp",
+    "notation": "190",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-199",
+    "affiche": "199",
+    "se_lit": "cent quatre-vingt-dix-neuf",
+    "fichier": "CE1/Mathématiques/nb-199.webp",
+    "notation": "199",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-200",
+    "affiche": "200",
+    "se_lit": "deux cents",
+    "fichier": "CE1/Mathématiques/nb-200.webp",
+    "notation": "200",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-208",
+    "affiche": "208",
+    "se_lit": "deux cent huit",
+    "fichier": "CE1/Mathématiques/nb-208.webp",
+    "notation": "208",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-250",
+    "affiche": "250",
+    "se_lit": "deux cent cinquante",
+    "fichier": "CE1/Mathématiques/nb-250.webp",
+    "notation": "250",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-271",
+    "affiche": "271",
+    "se_lit": "deux cent soixante et onze",
+    "fichier": "CE1/Mathématiques/nb-271.webp",
+    "notation": "271",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-300",
+    "affiche": "300",
+    "se_lit": "trois cents",
+    "fichier": "CE1/Mathématiques/nb-300.webp",
+    "notation": "300",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-345",
+    "affiche": "345",
+    "se_lit": "trois cent quarante-cinq",
+    "fichier": "CE1/Mathématiques/nb-345.webp",
+    "notation": "345",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-391",
+    "affiche": "391",
+    "se_lit": "trois cent quatre-vingt-onze",
+    "fichier": "CE1/Mathématiques/nb-391.webp",
+    "notation": "391",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-400",
+    "affiche": "400",
+    "se_lit": "quatre cents",
+    "fichier": "CE1/Mathématiques/nb-400.webp",
+    "notation": "400",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-470",
+    "affiche": "470",
+    "se_lit": "quatre cent soixante-dix",
+    "fichier": "CE1/Mathématiques/nb-470.webp",
+    "notation": "470",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-491",
+    "affiche": "491",
+    "se_lit": "quatre cent quatre-vingt-onze",
+    "fichier": "CE1/Mathématiques/nb-491.webp",
+    "notation": "491",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-500",
+    "affiche": "500",
+    "se_lit": "cinq cents",
+    "fichier": "CE1/Mathématiques/nb-500.webp",
+    "notation": "500",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-512",
+    "affiche": "512",
+    "se_lit": "cinq cent douze",
+    "fichier": "CE1/Mathématiques/nb-512.webp",
+    "notation": "512",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-600",
+    "affiche": "600",
+    "se_lit": "six cents",
+    "fichier": "CE1/Mathématiques/nb-600.webp",
+    "notation": "600",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-666",
+    "affiche": "666",
+    "se_lit": "six cent soixante-six",
+    "fichier": "CE1/Mathématiques/nb-666.webp",
+    "notation": "666",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-700",
+    "affiche": "700",
+    "se_lit": "sept cents",
+    "fichier": "CE1/Mathématiques/nb-700.webp",
+    "notation": "700",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-709",
+    "affiche": "709",
+    "se_lit": "sept cent neuf",
+    "fichier": "CE1/Mathématiques/nb-709.webp",
+    "notation": "709",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-780",
+    "affiche": "780",
+    "se_lit": "sept cent quatre-vingts",
+    "fichier": "CE1/Mathématiques/nb-780.webp",
+    "notation": "780",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-800",
+    "affiche": "800",
+    "se_lit": "huit cents",
+    "fichier": "CE1/Mathématiques/nb-800.webp",
+    "notation": "800",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-871",
+    "affiche": "871",
+    "se_lit": "huit cent soixante et onze",
+    "fichier": "CE1/Mathématiques/nb-871.webp",
+    "notation": "871",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-880",
+    "affiche": "880",
+    "se_lit": "huit cent quatre-vingts",
+    "fichier": "CE1/Mathématiques/nb-880.webp",
+    "notation": "880",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 6,
+    "identifiant": "nb-900",
+    "affiche": "900",
+    "se_lit": "neuf cents",
+    "fichier": "CE1/Mathématiques/nb-900.webp",
+    "notation": "900",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 7,
+    "identifiant": "nb-960",
+    "affiche": "960",
+    "se_lit": "neuf cent soixante",
+    "fichier": "CE1/Mathématiques/nb-960.webp",
+    "notation": "960",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 7,
+    "identifiant": "nb-999",
+    "affiche": "999",
+    "se_lit": "neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CE1/Mathématiques/nb-999.webp",
+    "notation": "999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE1",
+    "page": 7,
+    "identifiant": "nb-1000",
+    "affiche": "1 000",
+    "se_lit": "mille",
+    "fichier": "CE1/Mathématiques/nb-1000.webp",
+    "notation": "1 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-1001",
+    "affiche": "1 001",
+    "se_lit": "mille un",
+    "fichier": "CE2/Mathématiques/nb-1001.webp",
+    "notation": "1 001",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-1010",
+    "affiche": "1 010",
+    "se_lit": "mille dix",
+    "fichier": "CE2/Mathématiques/nb-1010.webp",
+    "notation": "1 010",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-1100",
+    "affiche": "1 100",
+    "se_lit": "mille cent",
+    "fichier": "CE2/Mathématiques/nb-1100.webp",
+    "notation": "1 100",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-1200",
+    "affiche": "1 200",
+    "se_lit": "mille deux cents",
+    "fichier": "CE2/Mathématiques/nb-1200.webp",
+    "notation": "1 200",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-1500",
+    "affiche": "1 500",
+    "se_lit": "mille cinq cents",
+    "fichier": "CE2/Mathématiques/nb-1500.webp",
+    "notation": "1 500",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-1999",
+    "affiche": "1 999",
+    "se_lit": "mille neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CE2/Mathématiques/nb-1999.webp",
+    "notation": "1 999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-2000",
+    "affiche": "2 000",
+    "se_lit": "deux mille",
+    "fichier": "CE2/Mathématiques/nb-2000.webp",
+    "notation": "2 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-2008",
+    "affiche": "2 008",
+    "se_lit": "deux mille huit",
+    "fichier": "CE2/Mathématiques/nb-2008.webp",
+    "notation": "2 008",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-2026",
+    "affiche": "2 026",
+    "se_lit": "deux mille vingt-six",
+    "fichier": "CE2/Mathématiques/nb-2026.webp",
+    "notation": "2 026",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-2470",
+    "affiche": "2 470",
+    "se_lit": "deux mille quatre cent soixante-dix",
+    "fichier": "CE2/Mathématiques/nb-2470.webp",
+    "notation": "2 470",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-3000",
+    "affiche": "3 000",
+    "se_lit": "trois mille",
+    "fichier": "CE2/Mathématiques/nb-3000.webp",
+    "notation": "3 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-3333",
+    "affiche": "3 333",
+    "se_lit": "trois mille trois cent trente-trois",
+    "fichier": "CE2/Mathématiques/nb-3333.webp",
+    "notation": "3 333",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-4091",
+    "affiche": "4 091",
+    "se_lit": "quatre mille quatre-vingt-onze",
+    "fichier": "CE2/Mathématiques/nb-4091.webp",
+    "notation": "4 091",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-4500",
+    "affiche": "4 500",
+    "se_lit": "quatre mille cinq cents",
+    "fichier": "CE2/Mathématiques/nb-4500.webp",
+    "notation": "4 500",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-5000",
+    "affiche": "5 000",
+    "se_lit": "cinq mille",
+    "fichier": "CE2/Mathématiques/nb-5000.webp",
+    "notation": "5 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-5780",
+    "affiche": "5 780",
+    "se_lit": "cinq mille sept cent quatre-vingts",
+    "fichier": "CE2/Mathématiques/nb-5780.webp",
+    "notation": "5 780",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-6300",
+    "affiche": "6 300",
+    "se_lit": "six mille trois cents",
+    "fichier": "CE2/Mathématiques/nb-6300.webp",
+    "notation": "6 300",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-7071",
+    "affiche": "7 071",
+    "se_lit": "sept mille soixante et onze",
+    "fichier": "CE2/Mathématiques/nb-7071.webp",
+    "notation": "7 071",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-7999",
+    "affiche": "7 999",
+    "se_lit": "sept mille neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CE2/Mathématiques/nb-7999.webp",
+    "notation": "7 999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-8000",
+    "affiche": "8 000",
+    "se_lit": "huit mille",
+    "fichier": "CE2/Mathématiques/nb-8000.webp",
+    "notation": "8 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-8180",
+    "affiche": "8 180",
+    "se_lit": "huit mille cent quatre-vingts",
+    "fichier": "CE2/Mathématiques/nb-8180.webp",
+    "notation": "8 180",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-9000",
+    "affiche": "9 000",
+    "se_lit": "neuf mille",
+    "fichier": "CE2/Mathématiques/nb-9000.webp",
+    "notation": "9 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-9090",
+    "affiche": "9 090",
+    "se_lit": "neuf mille quatre-vingt-dix",
+    "fichier": "CE2/Mathématiques/nb-9090.webp",
+    "notation": "9 090",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-9999",
+    "affiche": "9 999",
+    "se_lit": "neuf mille neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CE2/Mathématiques/nb-9999.webp",
+    "notation": "9 999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CE2",
+    "page": 8,
+    "identifiant": "nb-10000",
+    "affiche": "10 000",
+    "se_lit": "dix mille",
+    "fichier": "CE2/Mathématiques/nb-10000.webp",
+    "notation": "10 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-10500",
+    "affiche": "10 500",
+    "se_lit": "dix mille cinq cents",
+    "fichier": "CM1/Mathématiques/nb-10500.webp",
+    "notation": "10 500",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-12345",
+    "affiche": "12 345",
+    "se_lit": "douze mille trois cent quarante-cinq",
+    "fichier": "CM1/Mathématiques/nb-12345.webp",
+    "notation": "12 345",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-20000",
+    "affiche": "20 000",
+    "se_lit": "vingt mille",
+    "fichier": "CM1/Mathématiques/nb-20000.webp",
+    "notation": "20 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-45080",
+    "affiche": "45 080",
+    "se_lit": "quarante-cinq mille quatre-vingts",
+    "fichier": "CM1/Mathématiques/nb-45080.webp",
+    "notation": "45 080",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-70071",
+    "affiche": "70 071",
+    "se_lit": "soixante-dix mille soixante et onze",
+    "fichier": "CM1/Mathématiques/nb-70071.webp",
+    "notation": "70 071",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-99999",
+    "affiche": "99 999",
+    "se_lit": "quatre-vingt-dix-neuf mille neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CM1/Mathématiques/nb-99999.webp",
+    "notation": "99 999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-100000",
+    "affiche": "100 000",
+    "se_lit": "cent mille",
+    "fichier": "CM1/Mathématiques/nb-100000.webp",
+    "notation": "100 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-101010",
+    "affiche": "101 010",
+    "se_lit": "cent un mille dix",
+    "fichier": "CM1/Mathématiques/nb-101010.webp",
+    "notation": "101 010",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-250000",
+    "affiche": "250 000",
+    "se_lit": "deux cent cinquante mille",
+    "fichier": "CM1/Mathématiques/nb-250000.webp",
+    "notation": "250 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-480300",
+    "affiche": "480 300",
+    "se_lit": "quatre cent quatre-vingt mille trois cents",
+    "fichier": "CM1/Mathématiques/nb-480300.webp",
+    "notation": "480 300",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-600006",
+    "affiche": "600 006",
+    "se_lit": "six cent mille six",
+    "fichier": "CM1/Mathématiques/nb-600006.webp",
+    "notation": "600 006",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-999999",
+    "affiche": "999 999",
+    "se_lit": "neuf cent quatre-vingt-dix-neuf mille neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CM1/Mathématiques/nb-999999.webp",
+    "notation": "999 999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-1000000",
+    "affiche": "1 000 000",
+    "se_lit": "un million",
+    "fichier": "CM1/Mathématiques/nb-1000000.webp",
+    "notation": "1 000 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-0v5",
+    "affiche": "0,5",
+    "se_lit": "zéro virgule cinq",
+    "fichier": "CM1/Mathématiques/nb-0v5.webp",
+    "notation": "0,5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-0v25",
+    "affiche": "0,25",
+    "se_lit": "zéro virgule vingt-cinq",
+    "fichier": "CM1/Mathématiques/nb-0v25.webp",
+    "notation": "0,25",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-1v2",
+    "affiche": "1,2",
+    "se_lit": "un virgule deux",
+    "fichier": "CM1/Mathématiques/nb-1v2.webp",
+    "notation": "1,2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-2v5",
+    "affiche": "2,5",
+    "se_lit": "deux virgule cinq",
+    "fichier": "CM1/Mathématiques/nb-2v5.webp",
+    "notation": "2,5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-3v75",
+    "affiche": "3,75",
+    "se_lit": "trois virgule soixante-quinze",
+    "fichier": "CM1/Mathématiques/nb-3v75.webp",
+    "notation": "3,75",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-7v08",
+    "affiche": "7,08",
+    "se_lit": "sept virgule zéro huit",
+    "fichier": "CM1/Mathématiques/nb-7v08.webp",
+    "notation": "7,08",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-10v05",
+    "affiche": "10,05",
+    "se_lit": "dix virgule zéro cinq",
+    "fichier": "CM1/Mathématiques/nb-10v05.webp",
+    "notation": "10,05",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "nb-12v4",
+    "affiche": "12,4",
+    "se_lit": "douze virgule quatre",
+    "fichier": "CM1/Mathématiques/nb-12v4.webp",
+    "notation": "12,4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "fr-1-2",
+    "affiche": "1/2",
+    "se_lit": "un demi",
+    "fichier": "CM1/Mathématiques/fr-1-2.webp",
+    "notation": "1/2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "fr-1-3",
+    "affiche": "1/3",
+    "se_lit": "un tiers",
+    "fichier": "CM1/Mathématiques/fr-1-3.webp",
+    "notation": "1/3",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "fr-1-4",
+    "affiche": "1/4",
+    "se_lit": "un quart",
+    "fichier": "CM1/Mathématiques/fr-1-4.webp",
+    "notation": "1/4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "fr-3-4",
+    "affiche": "3/4",
+    "se_lit": "trois quarts",
+    "fichier": "CM1/Mathématiques/fr-3-4.webp",
+    "notation": "3/4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "fr-2-3",
+    "affiche": "2/3",
+    "se_lit": "deux tiers",
+    "fichier": "CM1/Mathématiques/fr-2-3.webp",
+    "notation": "2/3",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM1",
+    "page": 9,
+    "identifiant": "fr-5-10",
+    "affiche": "5/10",
+    "se_lit": "cinq dixièmes",
+    "fichier": "CM1/Mathématiques/fr-5-10.webp",
+    "notation": "5/10",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-1200000",
+    "affiche": "1 200 000",
+    "se_lit": "un million deux cent mille",
+    "fichier": "CM2/Mathématiques/nb-1200000.webp",
+    "notation": "1 200 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-3450000",
+    "affiche": "3 450 000",
+    "se_lit": "trois millions quatre cent cinquante mille",
+    "fichier": "CM2/Mathématiques/nb-3450000.webp",
+    "notation": "3 450 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-10000000",
+    "affiche": "10 000 000",
+    "se_lit": "dix millions",
+    "fichier": "CM2/Mathématiques/nb-10000000.webp",
+    "notation": "10 000 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-25600080",
+    "affiche": "25 600 080",
+    "se_lit": "vingt-cinq millions six cent mille quatre-vingts",
+    "fichier": "CM2/Mathématiques/nb-25600080.webp",
+    "notation": "25 600 080",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-100000000",
+    "affiche": "100 000 000",
+    "se_lit": "cent millions",
+    "fichier": "CM2/Mathématiques/nb-100000000.webp",
+    "notation": "100 000 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-999999999",
+    "affiche": "999 999 999",
+    "se_lit": "neuf cent quatre-vingt-dix-neuf millions neuf cent quatre-vingt-dix-neuf mille neuf cent quatre-vingt-dix-neuf",
+    "fichier": "CM2/Mathématiques/nb-999999999.webp",
+    "notation": "999 999 999",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-1000000000",
+    "affiche": "1 000 000 000",
+    "se_lit": "un milliard",
+    "fichier": "CM2/Mathématiques/nb-1000000000.webp",
+    "notation": "1 000 000 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-2500000000",
+    "affiche": "2 500 000 000",
+    "se_lit": "deux milliards cinq cents millions",
+    "fichier": "CM2/Mathématiques/nb-2500000000.webp",
+    "notation": "2 500 000 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-0v001",
+    "affiche": "0,001",
+    "se_lit": "zéro virgule zéro zéro un",
+    "fichier": "CM2/Mathématiques/nb-0v001.webp",
+    "notation": "0,001",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-0v125",
+    "affiche": "0,125",
+    "se_lit": "zéro virgule cent vingt-cinq",
+    "fichier": "CM2/Mathématiques/nb-0v125.webp",
+    "notation": "0,125",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-3v141",
+    "affiche": "3,141",
+    "se_lit": "trois virgule cent quarante et un",
+    "fichier": "CM2/Mathématiques/nb-3v141.webp",
+    "notation": "3,141",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-12v007",
+    "affiche": "12,007",
+    "se_lit": "douze virgule zéro zéro sept",
+    "fichier": "CM2/Mathématiques/nb-12v007.webp",
+    "notation": "12,007",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-45v6",
+    "affiche": "45,6",
+    "se_lit": "quarante-cinq virgule six",
+    "fichier": "CM2/Mathématiques/nb-45v6.webp",
+    "notation": "45,6",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "nb-100v01",
+    "affiche": "100,01",
+    "se_lit": "cent virgule zéro un",
+    "fichier": "CM2/Mathématiques/nb-100v01.webp",
+    "notation": "100,01",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "fr-7-10",
+    "affiche": "7/10",
+    "se_lit": "sept dixièmes",
+    "fichier": "CM2/Mathématiques/fr-7-10.webp",
+    "notation": "7/10",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "fr-25-100",
+    "affiche": "25/100",
+    "se_lit": "vingt-cinq centièmes",
+    "fichier": "CM2/Mathématiques/fr-25-100.webp",
+    "notation": "25/100",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "fr-3-5",
+    "affiche": "3/5",
+    "se_lit": "trois cinquièmes",
+    "fichier": "CM2/Mathématiques/fr-3-5.webp",
+    "notation": "3/5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "fr-5-8",
+    "affiche": "5/8",
+    "se_lit": "cinq huitièmes",
+    "fichier": "CM2/Mathématiques/fr-5-8.webp",
+    "notation": "5/8",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "fr-7-4",
+    "affiche": "7/4",
+    "se_lit": "sept quarts",
+    "fichier": "CM2/Mathématiques/fr-7-4.webp",
+    "notation": "7/4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "CM2",
+    "page": 10,
+    "identifiant": "fr-3-1000",
+    "affiche": "3/1000",
+    "se_lit": "trois millièmes",
+    "fichier": "CM2/Mathématiques/fr-3-1000.webp",
+    "notation": "3/1000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-12000000000",
+    "affiche": "12 000 000 000",
+    "se_lit": "douze milliards",
+    "fichier": "6e/Mathématiques/nb-12000000000.webp",
+    "notation": "12 000 000 000",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-304050607",
+    "affiche": "304 050 607",
+    "se_lit": "trois cent quatre millions cinquante mille six cent sept",
+    "fichier": "6e/Mathématiques/nb-304050607.webp",
+    "notation": "304 050 607",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-0v75",
+    "affiche": "0,75",
+    "se_lit": "zéro virgule soixante-quinze",
+    "fichier": "6e/Mathématiques/nb-0v75.webp",
+    "notation": "0,75",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-0v09",
+    "affiche": "0,09",
+    "se_lit": "zéro virgule zéro neuf",
+    "fichier": "6e/Mathématiques/nb-0v09.webp",
+    "notation": "0,09",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-104v05",
+    "affiche": "104,05",
+    "se_lit": "cent quatre virgule zéro cinq",
+    "fichier": "6e/Mathématiques/nb-104v05.webp",
+    "notation": "104,05",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-3v5",
+    "affiche": "3,5",
+    "se_lit": "trois virgule cinq",
+    "fichier": "6e/Mathématiques/nb-3v5.webp",
+    "notation": "3,5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "nb-2026v26",
+    "affiche": "2 026,26",
+    "se_lit": "deux mille vingt-six virgule vingt-six",
+    "fichier": "6e/Mathématiques/nb-2026v26.webp",
+    "notation": "2 026,26",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "fr-1-5",
+    "affiche": "1/5",
+    "se_lit": "un cinquième",
+    "fichier": "6e/Mathématiques/fr-1-5.webp",
+    "notation": "1/5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "fr-2-7",
+    "affiche": "2/7",
+    "se_lit": "deux septièmes",
+    "fichier": "6e/Mathématiques/fr-2-7.webp",
+    "notation": "2/7",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "fr-11-6",
+    "affiche": "11/6",
+    "se_lit": "onze sixièmes",
+    "fichier": "6e/Mathématiques/fr-11-6.webp",
+    "notation": "11/6",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "fr-9-4",
+    "affiche": "9/4",
+    "se_lit": "neuf quarts",
+    "fichier": "6e/Mathématiques/fr-9-4.webp",
+    "notation": "9/4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "6e",
+    "page": 11,
+    "identifiant": "fr-13-100",
+    "affiche": "13/100",
+    "se_lit": "treize centièmes",
+    "fichier": "6e/Mathématiques/fr-13-100.webp",
+    "notation": "13/100",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m1",
+    "affiche": "−1",
+    "se_lit": "moins un",
+    "fichier": "5e/Mathématiques/nb-m1.webp",
+    "notation": "−1",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m5",
+    "affiche": "−5",
+    "se_lit": "moins cinq",
+    "fichier": "5e/Mathématiques/nb-m5.webp",
+    "notation": "−5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m12",
+    "affiche": "−12",
+    "se_lit": "moins douze",
+    "fichier": "5e/Mathématiques/nb-m12.webp",
+    "notation": "−12",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-p4",
+    "affiche": "+4",
+    "se_lit": "plus quatre",
+    "fichier": "5e/Mathématiques/nb-p4.webp",
+    "notation": "+4",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m100",
+    "affiche": "−100",
+    "se_lit": "moins cent",
+    "fichier": "5e/Mathématiques/nb-m100.webp",
+    "notation": "−100",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m0v5",
+    "affiche": "−0,5",
+    "se_lit": "moins zéro virgule cinq",
+    "fichier": "5e/Mathématiques/nb-m0v5.webp",
+    "notation": "−0,5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m3v7",
+    "affiche": "−3,7",
+    "se_lit": "moins trois virgule sept",
+    "fichier": "5e/Mathématiques/nb-m3v7.webp",
+    "notation": "−3,7",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "nb-m2026",
+    "affiche": "−2 026",
+    "se_lit": "moins deux mille vingt-six",
+    "fichier": "5e/Mathématiques/nb-m2026.webp",
+    "notation": "−2 026",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "fr-5-3",
+    "affiche": "5/3",
+    "se_lit": "cinq tiers",
+    "fichier": "5e/Mathématiques/fr-5-3.webp",
+    "notation": "5/3",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "fr-m2-5",
+    "affiche": "−2/5",
+    "se_lit": "moins deux cinquièmes",
+    "fichier": "5e/Mathématiques/fr-m2-5.webp",
+    "notation": "−2/5",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "fr-m1-2",
+    "affiche": "−1/2",
+    "se_lit": "moins un demi",
+    "fichier": "5e/Mathématiques/fr-m1-2.webp",
+    "notation": "−1/2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "5e",
+    "page": 12,
+    "identifiant": "fr-7-9",
+    "affiche": "7/9",
+    "se_lit": "sept neuvièmes",
+    "fichier": "5e/Mathématiques/fr-7-9.webp",
+    "notation": "7/9",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-10-2",
+    "affiche": "102",
+    "se_lit": "dix au carré (ou dix puissance deux)",
+    "fichier": "4e/Mathématiques/pu-10-2.webp",
+    "notation": "10²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-10-3",
+    "affiche": "103",
+    "se_lit": "dix au cube (ou dix puissance trois)",
+    "fichier": "4e/Mathématiques/pu-10-3.webp",
+    "notation": "10³",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-10-6",
+    "affiche": "106",
+    "se_lit": "dix puissance six",
+    "fichier": "4e/Mathématiques/pu-10-6.webp",
+    "notation": "10⁶",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-10-m1",
+    "affiche": "10−1",
+    "se_lit": "dix puissance moins un",
+    "fichier": "4e/Mathématiques/pu-10-m1.webp",
+    "notation": "10⁻¹",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-10-m3",
+    "affiche": "10−3",
+    "se_lit": "dix puissance moins trois",
+    "fichier": "4e/Mathématiques/pu-10-m3.webp",
+    "notation": "10⁻³",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-2-3",
+    "affiche": "23",
+    "se_lit": "deux au cube (ou deux puissance trois)",
+    "fichier": "4e/Mathématiques/pu-2-3.webp",
+    "notation": "2³",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-3-2",
+    "affiche": "32",
+    "se_lit": "trois au carré",
+    "fichier": "4e/Mathématiques/pu-3-2.webp",
+    "notation": "3²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-5-2",
+    "affiche": "52",
+    "se_lit": "cinq au carré",
+    "fichier": "4e/Mathématiques/pu-5-2.webp",
+    "notation": "5²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-pm2-2",
+    "affiche": "(−2)2",
+    "se_lit": "moins deux, le tout au carré",
+    "fichier": "4e/Mathématiques/pu-pm2-2.webp",
+    "notation": "(−2)²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "pu-m2-2",
+    "affiche": "−22",
+    "se_lit": "moins deux au carré (le carré de deux, avec le signe moins)",
+    "fichier": "4e/Mathématiques/pu-m2-2.webp",
+    "notation": "−2²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "sci-2v5-4",
+    "affiche": "2,5 × 104",
+    "se_lit": "deux virgule cinq fois dix puissance quatre",
+    "fichier": "4e/Mathématiques/sci-2v5-4.webp",
+    "notation": "2,5 × 10⁴",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "sci-3-m2",
+    "affiche": "3 × 10−2",
+    "se_lit": "trois fois dix puissance moins deux",
+    "fichier": "4e/Mathématiques/sci-3-m2.webp",
+    "notation": "3 × 10⁻²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "sci-1v5-8",
+    "affiche": "1,5 × 108",
+    "se_lit": "un virgule cinq fois dix puissance huit",
+    "fichier": "4e/Mathématiques/sci-1v5-8.webp",
+    "notation": "1,5 × 10⁸",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "4e",
+    "page": 13,
+    "identifiant": "sci-6v02-23",
+    "affiche": "6,02 × 1023",
+    "se_lit": "six virgule zéro deux fois dix puissance vingt-trois",
+    "fichier": "4e/Mathématiques/sci-6v02-23.webp",
+    "notation": "6,02 × 10²³",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-9",
+    "affiche": "√9",
+    "se_lit": "racine carrée de neuf",
+    "fichier": "3e/Mathématiques/rac-9.webp",
+    "notation": "√9",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-16",
+    "affiche": "√16",
+    "se_lit": "racine carrée de seize",
+    "fichier": "3e/Mathématiques/rac-16.webp",
+    "notation": "√16",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-25",
+    "affiche": "√25",
+    "se_lit": "racine carrée de vingt-cinq",
+    "fichier": "3e/Mathématiques/rac-25.webp",
+    "notation": "√25",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-2",
+    "affiche": "√2",
+    "se_lit": "racine carrée de deux",
+    "fichier": "3e/Mathématiques/rac-2.webp",
+    "notation": "√2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-50",
+    "affiche": "√50",
+    "se_lit": "racine carrée de cinquante",
+    "fichier": "3e/Mathématiques/rac-50.webp",
+    "notation": "√50",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-3-2",
+    "affiche": "3√2",
+    "se_lit": "trois racine carrée de deux",
+    "fichier": "3e/Mathématiques/rac-3-2.webp",
+    "notation": "3√2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "rac-m3",
+    "affiche": "−√3",
+    "se_lit": "moins racine carrée de trois",
+    "fichier": "3e/Mathématiques/rac-m3.webp",
+    "notation": "−√3",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "pu-10-m6",
+    "affiche": "10−6",
+    "se_lit": "dix puissance moins six",
+    "fichier": "3e/Mathématiques/pu-10-m6.webp",
+    "notation": "10⁻⁶",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "3e",
+    "page": 14,
+    "identifiant": "ex-2-3-x10",
+    "affiche": "2/3 × 10",
+    "se_lit": "deux tiers fois dix",
+    "fichier": "3e/Mathématiques/ex-2-3-x10.webp",
+    "notation": "2/3 × 10",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-pi",
+    "affiche": "π",
+    "se_lit": "pi",
+    "fichier": "Lycée/Mathématiques/ly-pi.webp",
+    "notation": "π",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-2pi",
+    "affiche": "2π",
+    "se_lit": "deux pi",
+    "fichier": "Lycée/Mathématiques/ly-2pi.webp",
+    "notation": "2π",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-pi-2",
+    "affiche": "π/2",
+    "se_lit": "pi sur deux",
+    "fichier": "Lycée/Mathématiques/ly-pi-2.webp",
+    "notation": "π/2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-rac3-2",
+    "affiche": "√3/2",
+    "se_lit": "racine de trois sur deux",
+    "fichier": "Lycée/Mathématiques/ly-rac3-2.webp",
+    "notation": "√3/2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-0v333",
+    "affiche": "0,333…",
+    "se_lit": "zéro virgule trois trois trois, et ainsi de suite",
+    "fichier": "Lycée/Mathématiques/ly-0v333.webp",
+    "notation": "0,333…",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-abs-m3",
+    "affiche": "|−3|",
+    "se_lit": "valeur absolue de moins trois",
+    "fichier": "Lycée/Mathématiques/ly-abs-m3.webp",
+    "notation": "|−3|",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-int-0-1",
+    "affiche": "[0 ; 1]",
+    "se_lit": "l’intervalle fermé de zéro à un",
+    "fichier": "Lycée/Mathématiques/ly-int-0-1.webp",
+    "notation": "[0 ; 1]",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-int-minf-2",
+    "affiche": "]−∞ ; 2]",
+    "se_lit": "l’intervalle de moins l’infini à deux, deux compris",
+    "fichier": "Lycée/Mathématiques/ly-int-minf-2.webp",
+    "notation": "]−∞ ; 2]",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-sci-1v6-m19",
+    "affiche": "1,6 × 10−19",
+    "se_lit": "un virgule six fois dix puissance moins dix-neuf",
+    "fichier": "Lycée/Mathématiques/ly-sci-1v6-m19.webp",
+    "notation": "1,6 × 10⁻¹⁹",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-e",
+    "affiche": "e",
+    "se_lit": "e (la constante d’Euler, Terminale)",
+    "fichier": "Lycée/Mathématiques/ly-e.webp",
+    "notation": "e",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-e-2",
+    "affiche": "e2",
+    "se_lit": "e au carré",
+    "fichier": "Lycée/Mathématiques/ly-e-2.webp",
+    "notation": "e²",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-ln2",
+    "affiche": "ln 2",
+    "se_lit": "logarithme népérien de deux",
+    "fichier": "Lycée/Mathématiques/ly-ln2.webp",
+    "notation": "ln 2",
+    "etat": "vérifié"
+  },
+  {
+    "classe": "Lycée",
+    "page": 15,
+    "identifiant": "ly-i",
+    "affiche": "i",
+    "se_lit": "i (nombre complexe, maths expertes)",
+    "fichier": "Lycée/Mathématiques/ly-i.webp",
+    "notation": "i",
+    "etat": "vérifié"
+  }
+]

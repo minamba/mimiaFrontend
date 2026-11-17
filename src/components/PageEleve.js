@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import {
+  useCallback, useEffect, useRef, useState,
+} from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   getBilanEleve,
@@ -6,7 +8,11 @@ import {
   getHistoriqueEvaluations,
   getHistoriqueRapports,
 } from '../lib/api/elevesApi';
+import { getProfil, marquerTutorielFicheVu } from '../lib/api/profilApi';
+import { sessionEleve } from '../lib/storage/sessionEleve';
+import { ETAPES_FICHE } from '../lib/tutoriel/etapes';
 import FicheEleve from './FicheEleve';
+import Tutoriel from './tutoriel/Tutoriel';
 
 /**
  * La fiche d'un enfant, en page.
@@ -67,11 +73,45 @@ export default function PageEleve() {
     charger();
   }, [charger]);
 
+  // LE TUTORIEL DE LA FICHE (08/11/2026) : une fois par compte parent, et seulement quand
+  // elle a quelque chose à montrer. Noté « vu » dès le départ, comme celui de la page de
+  // l'enfant. Jamais pour un enfant connecté avec son code : le profil lui est fermé.
+  const enfant = Boolean(sessionEleve());
+  const [tutoriel, setTutoriel] = useState(false);
+  const pourLeTutoriel = !chargement && (fiche?.nombreCours ?? 0) > 0;
+  const dejaDemande = useRef(false);
+
+  useEffect(() => {
+    if (!pourLeTutoriel || enfant || dejaDemande.current) return undefined;
+    dejaDemande.current = true;
+    let vivant = true;
+
+    getProfil()
+      .then(({ data }) => {
+        if (!vivant || data?.tutorielFicheVu !== false) return;
+        setTutoriel(true);
+        marquerTutorielFicheVu().catch(() => {});
+      })
+      .catch(() => {});
+
+    return () => { vivant = false; };
+  }, [pourLeTutoriel, enfant]);
+
   return (
     <section className="page page--large">
-      <Link to={retour.to} className="lien-retour">
-        <span aria-hidden="true">←</span> {retour.libelle}
-      </Link>
+      {tutoriel && <Tutoriel etapes={ETAPES_FICHE} onFin={() => setTutoriel(false)} />}
+
+      <div className="fiche-tuto-barre">
+        <Link to={retour.to} className="lien-retour">
+          <span aria-hidden="true">←</span> {retour.libelle}
+        </Link>
+
+        {fiche && !enfant && (
+          <button type="button" className="bouton-tuto" onClick={() => setTutoriel(true)}>
+            <span aria-hidden="true">🎓</span> Voir le tuto
+          </button>
+        )}
+      </div>
 
       <FicheEleve
         enPage

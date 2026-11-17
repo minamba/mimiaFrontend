@@ -20,10 +20,18 @@ export const MAUVAISE_ECOUTE = 'Mauvaise écoute';
 /** Le serveur écrit toujours ce verdict sous cette forme : c'est ce qui le distingue d'une prononciation. */
 export const estVerdictDEcoute = (contenu) => /^\s*j.ai entendu (?:le mot|la syllabe)\b/i.test(contenu ?? '');
 
-export default function VerdictSon({ juste, ecoute = false }) {
-  const texte = ecoute
-    ? (juste ? BONNE_ECOUTE : MAUVAISE_ECOUTE)
-    : (juste ? BONNE_PRONONCIATION : ON_REESSAIE);
+/**
+ * LA LECTURE EN IMAGES — Camara, le 07/11/2026 : l'écoute à l'envers. Jugée comme l'écoute, par ce que le micro a écrit :
+ * il peut se tromper, d'où « On réessaie » plutôt qu'un « mauvaise » qui accuserait l'enfant.
+ */
+export const BONNE_LECTURE = 'Bonne lecture';
+
+export default function VerdictSon({ juste, ecoute = false, lecture = false }) {
+  const texte = lecture
+    ? (juste ? BONNE_LECTURE : ON_REESSAIE)
+    : ecoute
+      ? (juste ? BONNE_ECOUTE : MAUVAISE_ECOUTE)
+      : (juste ? BONNE_PRONONCIATION : ON_REESSAIE);
 
   return (
     <span className={`verdict-son verdict-son--${juste ? 'juste' : 'faux'}`} role="status">

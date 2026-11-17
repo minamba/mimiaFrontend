@@ -11,10 +11,12 @@ import {
   supprimerSignalement,
 } from '../lib/api/adminApi';
 import { useEvenementsAdmin } from '../lib/hooks/useEvenementsAdmin';
+import BoutonSignalementAdmin from './BoutonSignalementAdmin';
 import ChoixPiecesSignalement from './ChoixPiecesSignalement';
 import CommentairesSignalement from './CommentairesSignalement';
 import PiecesSignalement from './PiecesSignalement';
 import './signalementsAdmin.css';
+import { Corbeille, Crayon, Oeil } from './IconesActions';
 
 const CATEGORIES = [
   { code: 'PROFESSEUR', libelle: 'Problème avec un professeur' },
@@ -114,6 +116,25 @@ function ChoixEtat({ signalement, occupe, onChange }) {
   );
 }
 
+/**
+ * ROUVERT APRÈS UN TEST — Camara, le 06/11/2026 : traité, puis repassé KO par le testeur dans le jeu de test.
+ * Le signalement est revenu « Nouveau » ; le badge dit pourquoi, quand, et combien de fois.
+ */
+function BadgeRouvert({ signalement }) {
+  if (!signalement.reouvertures) return null;
+  const quand = signalement.rouvertLe ? new Date(signalement.rouvertLe).toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  }) : null;
+  return (
+    <span
+      className="signalement-rouvert"
+      title={quand ? `Repassé KO par le testeur le ${quand}` : 'Repassé KO par le testeur'}
+    >
+      Rouvert après test{signalement.reouvertures > 1 ? ` ×${signalement.reouvertures}` : ''}
+    </span>
+  );
+}
+
 /** Lire un signalement en entier, et ses commentaires, sans passer par « Modifier ». */
 function Apercu({
   signalement, occupe, onFermer, onModifier, onChangeEtat, onCommentaires, onPieces, onOuvrirJeu,
@@ -142,6 +163,7 @@ function Apercu({
             <ChoixEtat signalement={signalement} occupe={occupe} onChange={onChangeEtat} />
           </div>
 
+          <BadgeRouvert signalement={signalement} />
           <p className="signalement-apercu__message">{signalement.description}</p>
 
           {signalement.estAdmin && (signalement.test ? (
@@ -411,7 +433,11 @@ export default function SignalementsAdmin({ admin = false, onOuvrirJeu = null })
         etat,
       });
 
-      setSignalements((liste) => liste.map((s) => (s.id === signalement.id ? { ...s, ...data } : s)));
+      // LA LIGNE DE TEST N'EST PAS DANS LA RÉPONSE (Camara, 06/11/2026 : « dans le jeu de test, il y a écrit
+      // Ligne supprimée ») : `test: null` venait écraser celle de la liste. On la garde, puis on relit la liste —
+      // passer à « Traité » remet justement la ligne « À tester », son statut a changé.
+      setSignalements((liste) => liste.map((s) => (s.id === signalement.id ? { ...s, ...data, test: s.test } : s)));
+      if (admin) charger({ silencieux: true });
     } catch (e) {
       // La liste n'a pas bougé : le choix revient de lui-même à l'état réel.
       setErreur(e?.response?.data?.message ?? "L'état n'a pas pu être changé.");
@@ -502,6 +528,10 @@ export default function SignalementsAdmin({ admin = false, onOuvrirJeu = null })
             Ajouter un signalement
           </button>
         )}
+
+        {admin && (
+          <BoutonSignalementAdmin libelle="Ajouter un signalement admin" onEnregistre={() => charger({ silencieux: true })} />
+        )}
       </div>
 
       {affiches.length === 0 ? (
@@ -516,7 +546,7 @@ export default function SignalementsAdmin({ admin = false, onOuvrirJeu = null })
 
               Les classes ci-dessous ne servent QUE là : au-delà de 640 px, le
               tableau reste un tableau. Même recette que le carnet d'idées. */}
-          <table className="signalements__tableau">
+          <table className={`signalements__tableau${admin ? ' signalements__tableau--admin' : ''}`}>
             <thead>
               <tr>
                 <th scope="col">{admin ? 'Auteur' : 'Parent'}</th>
@@ -539,6 +569,7 @@ export default function SignalementsAdmin({ admin = false, onOuvrirJeu = null })
                   </td>
                   <td className="signalements__cellule-categorie">{libelleCategorie(s.categorie)}</td>
                   <td className="signalements__cellule-description">
+                    <BadgeRouvert signalement={s} />
                     {tronquer(s.description, 80)}
                     {contenuJoint(s) && (
                       <span className="signalement-ligne__joint">{contenuJoint(s)}</span>
@@ -562,20 +593,27 @@ export default function SignalementsAdmin({ admin = false, onOuvrirJeu = null })
                       faisait perdre son comportement de cellule (bordure décalée sous les boutons, 06/11/2026). */}
                   <td className="signalements__cellule-actions">
                     <div className="actions">
+                    {/* DES ICÔNES ET NON DES MOTS (Camara, 06/11/2026) : un œil, un crayon, une corbeille, comme
+                        dans les jeux de test et le carnet d'idées. Le mot reste dans l'infobulle et pour le lecteur
+                        d'écran. */}
                     <button
                       type="button"
-                      className="btn-ghost btn-ghost--mini"
+                      className="idee-action idee-action--apercu"
+                      title="Aperçu"
+                      aria-label="Aperçu"
                       onClick={() => setApercuId(s.id)}
                     >
-                      Aperçu
+                      <Oeil />
                     </button>
 
                     <button
                       type="button"
-                      className="btn-ghost btn-ghost--mini"
+                      className="idee-action idee-action--modifier"
+                      title="Modifier"
+                      aria-label="Modifier"
                       onClick={() => setFormulaire(s)}
                     >
-                      Modifier
+                      <Crayon />
                     </button>
 
                     {aSupprimer === s.id ? (
@@ -600,10 +638,12 @@ export default function SignalementsAdmin({ admin = false, onOuvrirJeu = null })
                     ) : (
                       <button
                         type="button"
-                        className="btn-ghost btn-ghost--mini btn-ghost--danger"
+                        className="idee-action idee-action--supprimer"
+                        title="Supprimer"
+                        aria-label="Supprimer"
                         onClick={() => setASupprimer(s.id)}
                       >
-                        Supprimer
+                        <Corbeille />
                       </button>
                     )}
                     </div>

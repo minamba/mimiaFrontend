@@ -12,7 +12,9 @@ import { DEFI, TRANQUILLE, coeursDeLaClasse } from '../lib/jeux/coeurs';
 import ChoixDuMode from './jeux/ChoixDuMode';
 import FinDuDefi from './jeux/FinDuDefi';
 import FriseDesClasses from './jeux/FriseDesClasses';
+import './jeuxIllustre.css';
 import { sessionEleve } from '../lib/storage/sessionEleve';
+import { useVueIllustree } from '../lib/vueIllustree';
 import useAccesForfait from '../lib/hooks/useAccesForfait';
 import { noterActivite } from '../lib/api/elevesApi';
 import { styleMatiere } from '../lib/couleurMatiere';
@@ -318,6 +320,9 @@ export default function JeuxEleve() {
 
   const eleve = liste.find((e) => String(e.id) === String(eleveId));
   const enfant = sessionEleve();
+  // LA VUE ILLUSTRÉE (bannière, badges) : pour l'enfant ET pour le parent dans l'espace de son enfant (16/11/2026).
+  // `enfant` reste pour ce qui dépend du lecteur (textes, « Voir les formules »).
+  const illustre = useVueIllustree();
 
   // MÊME FILET QUE POUR LE CYCLE : une session ouverte avant le 21/09/2026 ne
   // porte pas son code de classe. Au primaire — les seuls jeux existants — le
@@ -409,7 +414,19 @@ export default function JeuxEleve() {
   // position de la page et le jeu ouvert ; à la fermeture, on y revient, et le
   // focus retourne sur la carte de ce jeu.
   const retour = useRef(null);
+
+  // UN CLIC AVANT DE SAVOIR N'OUVRE PAS LE JEU — Camara, le 15/11/2026 : un parent en essai, sur téléphone, ouvrait
+  // tous les jeux de la classe de son enfant (et seulement de celle-là : c'est la page qu'on voit en arrivant, pendant
+  // que le forfait se lit encore). Les cartes ne sont pas grisées tant qu'on ne sait pas — un abonné ne doit pas voir
+  // sa page verrouillée en arrivant —, mais le jeu cliqué attend la réponse : il s'ouvre si le forfait le permet,
+  // sinon la fenêtre « Il faut être abonné » s'affiche.
+  const [enAttente, setEnAttente] = useState(null);
+
   const ouvrir = useCallback((cle) => {
+    if (forfaitOuvert === null) {
+      setEnAttente(cle);
+      return;
+    }
     if (estFerme(cle)) {
       setVerrouVu(true);
       return;
@@ -418,7 +435,15 @@ export default function JeuxEleve() {
     setOuvert(cle);
     setMode(null);
     setFinDefi(null);
-  }, [estFerme]);
+  }, [estFerme, forfaitOuvert]);
+
+  // La réponse est arrivée : le jeu cliqué entre-temps s'ouvre, ou dit pourquoi il ne s'ouvre pas.
+  useEffect(() => {
+    if (enAttente === null || forfaitOuvert === null) return;
+    const cle = enAttente;
+    setEnAttente(null);
+    ouvrir(cle);
+  }, [enAttente, forfaitOuvert, ouvrir]);
 
   useEffect(() => {
     // Au chargement, on ne bouge rien : la page s'ouvre où elle doit.
@@ -574,8 +599,15 @@ export default function JeuxEleve() {
   return (
     // UN JEU OUVERT PREND LA PLACE — Camara, le 08/10/2026 : « sur PC, pour les
     // jeux, augmenter le zoom de 25 %, c'est trop petit ». Voir `.page--jeu-ouvert`.
-    <section ref={page} className={`page page--large${enPartie ? ' page--jeu-ouvert' : ''}`}>
-      <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour">← Mes cours</Link>
+    // LA VUE DE L'ENFANT, D'APRÈS LA MAQUETTE DE CAMARA (15/11/2026) : le décor commun, la bannière illustrée et
+    // les badges de classe (voir jeuxIllustre.css). Pendant une partie, l'en-tête reste le compact d'avant.
+    <section
+      ref={page}
+      className={`page page--large${enPartie ? ' page--jeu-ouvert' : ''}${illustre ? ' page-decor-enfant jeux-illustre' : ''}`}
+    >
+      {!(illustre && !enPartie) && (
+        <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour">← Mes cours</Link>
+      )}
 
       {jeuxFermes && (
         <p className="jeux-verrou" role="note">
@@ -605,6 +637,15 @@ export default function JeuxEleve() {
         </div>
       )}
 
+      {illustre && !enPartie ? (
+        <div className="jeux-banniere">
+          <Link to={`/eleves/${eleveId}/matieres`} className="lien-retour jeux-banniere__retour">← Mes cours</Link>
+          <h1 className="jeux-banniere__titre">
+            Mes <span className="jeux-banniere__accent">jeux</span>
+          </h1>
+          <p className="jeux-banniere__sous-titre">Réviser en jouant, quelques minutes suffisent.</p>
+        </div>
+      ) : (
       <div className="jeux-entete">
         <span className="jeux-entete__icone" aria-hidden="true">
           <img src={iconeJeux} alt="" />
@@ -620,6 +661,7 @@ export default function JeuxEleve() {
           </p>
         </div>
       </div>
+      )}
 
       {/* `tabIndex={-1}` : la zone n'entre pas dans l'ordre de tabulation,
           mais elle peut RECEVOIR le focus quand on le lui donne. C'est ce qui
@@ -694,6 +736,7 @@ export default function JeuxEleve() {
               // Au lycée, l'année choisie reste dans la voie de l'élève : une
               // terminale STMG qui regarde « 1re » retrouve la 1re techno.
               onChoisir={(code) => setRegardee(classeDansSaVoie(code, niveauCode))}
+              illustree={illustre}
             />
 
             {jeux.length === 0 ? (

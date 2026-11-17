@@ -1,5 +1,6 @@
 import { useBlueSky } from '../lib/storage/modeTest';
-import { useSalleDAttente } from '../lib/affluence/salleDAttente';
+import { useState } from 'react';
+import { entrerCommeAdministrateur, useSalleDAttente } from '../lib/affluence/salleDAttente';
 import logoFondClair from '../assets/logo-fond-clair.png';
 import logoFondSombre from '../assets/logo-fond-sombre.png';
 
@@ -33,6 +34,16 @@ import logoFondSombre from '../assets/logo-fond-sombre.png';
 export default function SalleDAttente() {
   const blueSky = useBlueSky();
   const { rang, devant, attenteSecondes } = useSalleDAttente();
+  const [essai, setEssai] = useState('');
+
+  // UN ADMINISTRATEUR N'ATTEND PAS (06/11/2026) : connecté, le guichet le fait
+  // entrer sans prendre de place ; sinon, il passe d'abord par la connexion. Si
+  // l'écran reste là, c'est que ce compte n'est pas administrateur.
+  const accesAdministrateur = async () => {
+    setEssai('en-cours');
+    const issue = await entrerCommeAdministrateur();
+    if (issue === 'refuse') setEssai('refuse');
+  };
 
   return (
     <div className={`maintenance${blueSky ? ' maintenance--blue-sky' : ''}`}>
@@ -91,6 +102,22 @@ export default function SalleDAttente() {
         <p className="maintenance__texte maintenance__texte--doux">
           Rien n&apos;est en panne&nbsp;: nous limitons le nombre de personnes à
           la fois pour que les cours de ceux qui sont entrés se passent bien.
+        </p>
+
+        <p className="salle__admin">
+          <button
+            type="button"
+            className="salle__admin-lien"
+            disabled={essai === 'en-cours'}
+            onClick={accesAdministrateur}
+          >
+            Accès administrateur
+          </button>
+          {essai === 'refuse' && (
+            <span className="salle__admin-refus" role="status">
+              Ce compte n&apos;est pas administrateur : vous gardez votre place.
+            </span>
+          )}
         </p>
       </main>
     </div>

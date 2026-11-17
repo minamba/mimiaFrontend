@@ -7,13 +7,22 @@
  * doit se distinguer des jours d'avant.
  */
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { CalendrierContenu } from '../components/CalendrierContenu';
 import { getMatieresEleve } from '../lib/api/elevesApi';
 
+const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   Link: ({ to, children, ...reste }) => <a href={to} {...reste}>{children}</a>,
+  useNavigate: () => mockNavigate,
 }));
+
+jest.mock('../lib/besoins', () => ({ useAffichageEleve: () => ({ calme: false }) }));
+
+// La fenêtre d'avant séance (durée, casque) : réduite à son bouton « Commencer ».
+jest.mock('../components/OuvertureSeance', () => ({ onOuvrir }) => (
+  <button type="button" onClick={() => onOuvrir(30, true)}>Commencer la séance</button>
+));
 
 jest.mock('../lib/api/elevesApi', () => ({
   getMatieresEleve: jest.fn(),
@@ -100,4 +109,41 @@ test('un contrôle passé ne respire plus', async () => {
 
   expect(container.querySelector('.calendrier-jour--controle-passe')).not.toBeNull();
   expect(container.querySelector('.calendrier-jour--controle')).toBeNull();
+});
+
+/**
+ * PRÉPARER LE CONTRÔLE, OU EN FAIRE LE POINT, DEPUIS LE CALENDRIER (Camara, le 16/11/2026) : dans la fenêtre du jour,
+ * chaque contrôle a son bouton — « Préparer avec le prof » jusqu'au jour même, « Faire le point » ensuite — qui ouvre
+ * la séance avec le mode du contrôle.
+ */
+test('« Préparer avec le prof » ouvre la séance de préparation du contrôle', async () => {
+  const { container } = render(
+    <CalendrierContenu eleveId="9" chargerCalendrier={calendrierAvec([controleLe(new Date())])} />,
+  );
+  await screen.findAllByText('Contrôle');
+
+  fireEvent.click(container.querySelector('.calendrier-jour--controle-aujourdhui'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Préparer avec le prof' }));
+  expect(screen.queryByRole('button', { name: 'Faire le point' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Commencer la séance' }));
+
+  expect(mockNavigate).toHaveBeenCalledWith('/eleves/9/matieres/1/chat?duree=30&casque=1&mode=controle&controleId=42');
+});
+
+test('un contrôle passé propose « Faire le point » à la place', async () => {
+  const aujourdhui = new Date();
+  const hier = new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() - 1);
+  if (hier.getMonth() !== aujourdhui.getMonth()) return;
+
+  const { container } = render(
+    <CalendrierContenu eleveId="9" chargerCalendrier={calendrierAvec([controleLe(hier)])} />,
+  );
+  await screen.findAllByText('Contrôle');
+
+  fireEvent.click(container.querySelector('.calendrier-jour--controle-passe'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Faire le point' }));
+  expect(screen.queryByRole('button', { name: 'Préparer avec le prof' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Commencer la séance' }));
+
+  expect(mockNavigate).toHaveBeenCalledWith('/eleves/9/matieres/1/chat?duree=30&casque=1&mode=bilan&controleId=42');
 });

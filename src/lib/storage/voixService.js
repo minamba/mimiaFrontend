@@ -12,12 +12,15 @@
  * silence, et un prof qui met cinq secondes à répondre paraît cassé.
  */
 
+import { estATaire, sansPhrasesATaire } from '../lectureAVoixHaute';
 import httpClient, { API_BASE_URL, enTeteAuth } from '../api/httpClient';
 import {
   DEBUT_DICTEE, FIN_DICTEE, FIN_ECOUTE, LANGUE_PAR_DEBUT_ECOUTE,
 } from './ardoise';
 import { epelerLesChoix } from './epellation';
 import { VITESSE_PAR_DEFAUT, facteurNavigateur } from './vitesseEcoute';
+import { avecBillet } from '../affluence/salleDAttente';
+import { contientConsigneDeLecture, estConsigneDeLecture } from '../lectureDImage';
 
 /**
  * Toutes les bornes de contrôle que le flux peut porter, réunies en une
@@ -826,6 +829,10 @@ class PassageDiffuse {
  */
 class Lecteur {
   constructor() {
+    // LA LECTURE À VOIX HAUTE (06/11/2026) : les phrases du texte au tableau que l'élève doit LIRE. Une phrase
+    // du professeur qui en contient une ne part pas à la voix. Voir `lib/lectureAVoixHaute.js`.
+    this.aTaire = [];
+
     // LA PAUSE DU COURS — voir `mettreEnPause`.
     this.enPause = false;
     this.repriseAttendue = [];
@@ -1063,6 +1070,13 @@ class Lecteur {
     this.ecouteEnCours = false;
     this.minuteurEcoute = null;
 
+    /**
+     * LA VOIX COMMENCE LA CONSIGNE DE LECTURE (08/11/2026) : l'écran montre alors l'image suivante, ni avant, ni
+     * pendant le bravo qui porte encore sur celle d'avant. Voir `estConsigneDeLecture`.
+     */
+    this.surConsigneLecture = null;
+    this.minuteurConsigne = null;
+
     // Incrémenté par arreter(). Une boucle dont le jeton a changé se sait
     // périmée et se retire — c'est ce qui garantit qu'un professeur interrompu
     // ne reprend pas la parole trois phrases plus loin.
@@ -1230,8 +1244,13 @@ class Lecteur {
    * toujours. Ce qui précède une borne est complet : il part tout de suite,
    * avec la langue encore en vigueur.
    */
+  /** Les phrases à ne jamais prononcer pendant l'exercice de lecture (normalisées) ; vide hors de lui. */
+  taire(phrases) {
+    this.aTaire = Array.isArray(phrases) ? phrases : [];
+  }
+
   viderAvantBorne() {
-    this.groupe += this.tampon;
+    this.groupe += sansPhrasesATaire(this.tampon, this.aTaire);
     this.tampon = '';
     this.viderGroupe();
   }
@@ -1283,6 +1302,14 @@ class Lecteur {
     this.tampon = reste;
 
     phrases.forEach((phrase) => {
+      // LA PHRASE À LIRE NE SE SOUFFLE PAS : l'élève la lit au tableau.
+      if (estATaire(phrase, this.aTaire)) return;
+
+      // LA CONSIGNE DE LECTURE COMMENCE SON PROPRE PASSAGE (08/11/2026) : c'est son début qui
+      // amène l'image suivante. Sauf derrière un bravo de moins de cinq mots, que la garde
+      // contre les redites ne surveille pas (MOTS_SURVEILLES) : il part avec elle, l'image aussi.
+      if (estConsigneDeLecture(phrase) && nombreDeMots(this.groupe) >= MOTS_SURVEILLES) this.viderGroupe();
+
       this.groupe += phrase;
 
       // EN DICTÉE, CHAQUE PHRASE PART SEULE.
@@ -1420,7 +1447,7 @@ class Lecteur {
     clearTimeout(this.minuteurGroupe);
     this.minuteurGroupe = null;
 
-    this.groupe += this.tampon;
+    this.groupe += sansPhrasesATaire(this.tampon, this.aTaire);
     this.tampon = '';
     this.viderGroupe();
   }
@@ -1677,6 +1704,13 @@ class Lecteur {
       this.enCours = { phrase, passage };
 
       if (phrase.relecture === 'debut') this.signalerRelecture('en_cours');
+
+      // LA BOUCLE A DE L'AVANCE SUR L'OREILLE : la consigne commence quand le son déjà programmé est joué.
+      if (contientConsigneDeLecture(phrase.texte)) {
+        clearTimeout(this.minuteurConsigne);
+        const avantConsigne = Math.max(0, this.prochaineFin - (this.contexte?.currentTime ?? 0));
+        this.minuteurConsigne = setTimeout(() => this.surConsigneLecture?.(), avantConsigne * 1000);
+      }
 
       // Le passage s'annonce tout de suite ; sa fin, elle, attend que le son
       // DÉJÀ PROGRAMMÉ soit joué — la boucle a de l'avance sur l'oreille, et
@@ -2034,10 +2068,10 @@ class Lecteur {
     const reponse = await fetch(`${API_BASE_URL}/voix/synthese`, {
       method: 'POST',
       signal: controleur.signal,
-      headers: {
+      headers: avecBillet({
         'Content-Type': 'application/json',
         ...(entete ? { Authorization: entete } : {}),
-      },
+      }),
       body: JSON.stringify({
         texte, avatar, age,
         dictee: Boolean(dictee),
@@ -3015,6 +3049,10 @@ class Lecteur {
     // L'indicateur de dictée tombe avec le reste : il annonce une attente qui
     // n'aura pas lieu.
     this.viderPausesDictee();
+
+    // Une consigne coupée n'annonce plus rien : c'est l'écran qui libère l'image.
+    clearTimeout(this.minuteurConsigne);
+    this.minuteurConsigne = null;
 
     // Le filet doit tomber avec le reste : sinon il se déclencherait après
     // l'interruption et prononcerait la fin de la phrase qu'on vient de couper.

@@ -1,0 +1,35 @@
+/* « ACHETER DES CRÉDITS » SUR LES PAGES DES FICHES ET DES PODCASTS (16/11/2026) — le bouton (pilule du site,
+   `.btn`) et la fenêtre qui reprend l'encadré de « Mon forfait ». Parent seulement (AchatCredits.js). */
+.achat-credits__bouton.btn { margin-top: 6px; }
+
+.mf-credits-parent .achat-credits__bouton.btn { margin: 0 0 0 8px; vertical-align: middle; }
+
+.modale__boite.achat-credits__fenetre {
+  position: relative;
+  max-width: 560px;
+  padding: 30px 24px 24px;
+}
+
+/* L'encadré de Mon forfait, posé dans la fenêtre : sans sa marge de page. */
+.achat-credits__fenetre .quota { margin: 0; }
+
+.achat-credits__fermer {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--trait);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--encre);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.achat-credits__fermer:hover { border-color: var(--corail); }
+
+.achat-credits__message { margin: 8px 40px 0 0; }

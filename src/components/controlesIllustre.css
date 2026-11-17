@@ -1,0 +1,420 @@
+/* ======================================================================================================
+   « MES CONTRÔLES » ET LA PRÉPARATION À L'EXAMEN, VUE DE L'ENFANT — Camara, le 15/11/2026 (maquette « Mes contrôles /
+   Préparation au brevet ») : « ça doit ressembler à ça, mais que tout s'adapte proprement ».
+
+   Portée : `.ctr-illu` (posée par MesControles et PreparationExamen quand `sessionEleve()` est vrai). Le parent garde
+   l'ancienne vue, et les cartes réutilisées ailleurs (page des contrôles, fiche d'une épreuve) ne changent pas.
+   Illustrations découpées dans la maquette : assets/controles-illustre/.
+
+   S'ADAPTE : brevet ou bac, 1 à 6 épreuves et plus, noms longs, une ou plusieurs matières par épreuve, tous les états.
+   Les couleurs d'une épreuve viennent de SA matière (`--matiere-claire`, posé par `styleMatiere`), son icône aussi
+   (`iconeEpreuve`). Le panneau est toujours sombre (thème clair compris) : ses couleurs de texte sont redéfinies ici.
+   Les boutons d'action gardent la couleur des boutons du site (`--corail-btn`), qui suit les modes saisonniers.
+   `:root` + classe doublée en tête : les règles Blue Sky (`:root[data-da] .controles-section`) pèsent autant.
+   ====================================================================================================== */
+:root .ctr-illu.controles-section {
+  --encre: #f3f6ff;
+  --encre-douce: #c3cdec;
+  --trait: rgba(140, 180, 255, 0.22);
+  --surface: rgba(16, 30, 78, 0.72);
+  --surface-2: rgba(255, 255, 255, 0.07);
+  --ctr-bord: rgba(120, 180, 255, 0.6);
+  --ctr-lueur: rgba(80, 150, 255, 0.38);
+
+  position: relative;
+  margin-top: 72px;
+  padding: 40px 30px 30px;
+  border: 2px solid var(--ctr-bord);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(14, 32, 86, 0.93) 0%, rgba(10, 22, 62, 0.93) 100%);
+  box-shadow: 0 0 24px var(--ctr-lueur), inset 0 0 34px rgba(80, 150, 255, 0.1);
+  color: var(--encre);
+  overflow: visible;
+}
+
+:root .ctr-illu.examen-section { margin-top: 84px; }
+
+/* --------------------------------------------------------------------------------------------- les décors */
+:root .ctr-illu .controles-section__icone { display: none; }
+
+.ctr-illu__deco {
+  position: absolute;
+  z-index: 1;
+  height: auto;
+  pointer-events: none;
+}
+
+.ctr-illu__deco--gauche {
+  top: -54px;
+  left: 18px;
+  width: clamp(120px, 15%, 190px);
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.35));
+}
+
+.ctr-illu--examen .ctr-illu__deco--gauche {
+  top: -46px;
+  width: clamp(110px, 13%, 165px);
+}
+
+.ctr-illu__deco--droite {
+  top: 8px;
+  right: 10px;
+  width: clamp(170px, 24%, 300px);
+  opacity: 0.95;
+}
+
+/* --------------------------------------------------------------------------------------------- l'en-tête */
+/* Une colonne centrée : le titre, puis (quand il y a des contrôles) les deux boutons dessous — à droite, ils
+   cachaient le Fuji et serraient le titre. */
+:root .ctr-illu .controles-section__entete {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+:root .ctr-illu .controles-section__tous {
+  display: inline-block;
+  margin-top: 18px;
+  color: #9ec9ff;
+  font-weight: 700;
+}
+
+:root .ctr-illu.controles-section h2 {
+  font-family: var(--sans);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-size: clamp(26px, 3.2vw, 38px);
+  color: #fff;
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+
+:root .ctr-illu.controles-section h2::after {
+  width: 90px;
+  height: 5px;
+  margin-left: -45px;
+}
+
+.ctr-illu__laurier {
+  flex: none;
+  width: auto;
+  height: 1.5em;
+  filter: drop-shadow(0 0 8px rgba(255, 210, 110, 0.5));
+}
+
+:root .ctr-illu .controles-section__titre p {
+  font-size: 16px;
+  color: var(--encre-douce);
+}
+
+/* ------------------------------------------------------------------------------------- l'état sans contrôle */
+:root .ctr-illu .fiches-vide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 28px 30px;
+  border: 1px solid rgba(140, 180, 255, 0.28);
+  border-radius: 22px;
+  background:
+    repeating-radial-gradient(circle at 0 100%, rgba(140, 180, 255, 0.13) 0 2px, transparent 2px 13px)
+      left bottom / 170px 120px no-repeat,
+    repeating-radial-gradient(circle at 100% 100%, rgba(140, 180, 255, 0.13) 0 2px, transparent 2px 13px)
+      right bottom / 170px 120px no-repeat,
+    rgba(48, 80, 150, 0.32);
+  text-align: center;
+  color: var(--encre-douce);
+}
+
+.ctr-illu__calendrier {
+  display: block;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 10px;
+  color: #8ec5ff;
+  filter: drop-shadow(0 0 10px rgba(110, 170, 255, 0.6));
+}
+
+.ctr-illu__calendrier svg { width: 100%; height: 100%; }
+
+:root .ctr-illu .fiches-vide__titre {
+  margin-bottom: 8px;
+  font-size: 21px;
+  font-weight: 800;
+  color: #fff;
+}
+
+:root .ctr-illu .fiches-vide__actions,
+:root .ctr-illu .controles-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 18px;
+}
+
+:root .ctr-illu .fiches-vide__actions { margin-top: 20px; }
+
+:root .ctr-illu .btn-controle {
+  padding: 12px 24px 12px 14px;
+  font-size: 16px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    0 0 18px color-mix(in srgb, var(--controle-avenir) 45%, transparent);
+}
+
+:root .ctr-illu .btn-controle--passes {
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    0 0 18px color-mix(in srgb, var(--controle-passe) 45%, transparent);
+}
+
+/* -------------------------------------------------------------------- les cartes (contrôles et épreuves) */
+:root .ctr-illu .controles-liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 22px;
+}
+
+:root .ctr-illu .controle-carte {
+  --accent: var(--matiere-claire, #8ec5ff);
+  padding: 20px 22px 22px;
+  border: 2px solid color-mix(in srgb, var(--accent) 75%, transparent);
+  border-radius: 22px;
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 55%),
+    rgba(16, 30, 78, 0.86);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:root .ctr-illu .controle-carte::before { display: none; }
+
+:root .ctr-illu .controle-carte:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+:root .ctr-illu .controle-carte__matiere {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+:root .ctr-illu .controle-carte__point { display: none; }
+
+:root .ctr-illu .controle-carte__titre {
+  font-family: var(--sans);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+:root .ctr-illu .controle-carte__quand { color: var(--encre-douce); }
+
+/* Le bouton d'action : une pilule pleine, flèche devant, centrée. */
+:root .ctr-illu .controle-carte__action {
+  align-self: center;
+  width: min(100%, 440px);
+  margin-top: 8px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn, #e8562f) 78%, #fff) 0%, var(--corail-btn, #e8562f) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    0 0 14px color-mix(in srgb, var(--corail-btn, #e8562f) 45%, transparent);
+  font-size: 16px;
+  font-weight: 700;
+  white-space: normal;
+}
+
+:root .ctr-illu .controle-carte__action::before { content: '→\00a0\00a0'; }
+
+/* La barre de préparation et sa pastille, sur fond sombre. */
+:root .ctr-illu .preparation__libelle { color: var(--encre-douce); font-size: 15px; }
+:root .ctr-illu .preparation__valeur { color: #fff; font-size: 16px; }
+:root .ctr-illu .preparation__jauge { background: rgba(255, 255, 255, 0.12); }
+
+/* La pastille garde les couleurs de son état (pas commencée, pas prêt, bientôt, prêt) : seule sa place change. */
+:root .ctr-illu .pastille-pret { align-self: flex-start; }
+
+/* -------------------------------------------------------------------------------------------- l'épreuve */
+:root .ctr-illu .ctr-epreuve {
+  position: relative;
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 8px;
+  align-content: start;
+}
+
+.ctr-epreuve__icone {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 44px;
+  line-height: 1;
+  text-align: center;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--matiere-claire, #8ec5ff) 65%, transparent));
+}
+
+/* Le petit dessin au trait de la maquette : un emoji grisé y faisait une tache, on ne le montre pas. */
+.ctr-epreuve__trait { display: none; }
+
+:root .ctr-illu .ctr-epreuve .controle-carte__haut,
+:root .ctr-illu .ctr-epreuve .controle-carte__titre {
+  grid-column: 2;
+}
+
+:root .ctr-illu .ctr-epreuve .preparation,
+:root .ctr-illu .ctr-epreuve .epreuve-carte__matieres {
+  grid-column: 1 / -1;
+}
+
+:root .ctr-illu .epreuve-carte__matieres {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+:root .ctr-illu .epreuve-carte__matiere {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+:root .ctr-illu .epreuve-carte__matiere .controle-carte__action { margin-top: 0; flex: 1 1 220px; }
+
+/* Plusieurs professeurs : le nom de la matière à gauche, séparé d'un trait ; son état et son bouton à droite. */
+:root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) {
+  display: grid;
+  grid-template-columns: minmax(90px, max-content) minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+:root .ctr-illu .epreuve-carte__libelle {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding-right: 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 700;
+  color: #fff;
+}
+
+:root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) .pastille-pret { grid-column: 2; margin-top: 0; }
+:root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) .controle-carte__action { grid-column: 2; width: 100%; }
+
+/* -------------------------------------------------------------------------- la préparation, en un chiffre */
+:root .ctr-illu .examen-section__global {
+  margin-bottom: 24px;
+  padding: 18px 24px;
+  border: 1px solid rgba(140, 180, 255, 0.3);
+  border-radius: 20px;
+  background: rgba(48, 80, 150, 0.32);
+}
+
+:root .ctr-illu .examen-section__global .preparation__libelle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Le petit histogramme devant « Préparation ». */
+:root .ctr-illu .examen-section__global .preparation__libelle::before {
+  content: '';
+  width: 20px;
+  height: 18px;
+  background:
+    linear-gradient(#8ea8ff, #8ea8ff) 0 100% / 4px 45% no-repeat,
+    linear-gradient(#8ea8ff, #8ea8ff) 8px 100% / 4px 75% no-repeat,
+    linear-gradient(#8ea8ff, #8ea8ff) 16px 100% / 4px 100% no-repeat;
+}
+
+:root .ctr-illu .examen-section__global .preparation__valeur { font-size: 20px; }
+:root .ctr-illu .examen-section__global .preparation__jauge { height: 12px; }
+:root .ctr-illu .examen-section__explication { color: var(--encre-douce); }
+
+:root .ctr-illu .examen-section__alerte,
+:root .ctr-illu .examen-section__note {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--encre);
+}
+
+/* ------------------------------------------------------------------------------------- l'école, en bas */
+.ctr-illu__pied {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 104px;
+  margin: 26px -30px -30px;
+  border-radius: 0 0 26px 26px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ctr-illu__pied img { display: block; height: 100%; width: auto; }
+.ctr-illu__pied-ecole { max-width: 56%; object-fit: contain; object-position: bottom; }
+.ctr-illu__pied-cerisiers { max-width: 24%; object-fit: cover; object-position: left bottom; }
+.ctr-illu__pied-cerisiers--droite { object-position: right bottom; }
+
+/* ------------------------------------------------------------------------------------------- téléphone */
+@media (max-width: 760px) {
+  :root .ctr-illu.controles-section {
+    margin-top: 60px;
+    padding: 34px 16px 20px;
+    border-radius: 22px;
+  }
+
+  .ctr-illu__deco--gauche,
+  .ctr-illu--examen .ctr-illu__deco--gauche { top: -40px; left: 8px; width: 96px; }
+
+  .ctr-illu__deco--droite { display: none; }
+
+  :root .ctr-illu .controles-section__entete { margin-top: 18px; }
+  :root .ctr-illu.controles-section h2 { gap: 8px; }
+
+  :root .ctr-illu .fiches-vide { padding: 22px 16px 24px; }
+  :root .ctr-illu .fiches-vide__actions .btn-controle,
+  :root .ctr-illu .controles-section__actions .btn-controle { width: 100%; justify-content: center; }
+
+  :root .ctr-illu .ctr-epreuve { grid-template-columns: 48px minmax(0, 1fr); padding: 18px 16px 18px; }
+  .ctr-epreuve__icone { font-size: 36px; }
+  /* Sur téléphone, le bouton prend la ligne entière sous la pastille : serré à côté, son texte se cassait. */
+  :root .ctr-illu .epreuve-carte__matiere .controle-carte__action { flex-basis: 100%; }
+  /* Plusieurs professeurs, sur téléphone : la matière au-dessus de son état et de son bouton. */
+  :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) { grid-template-columns: minmax(0, 1fr); }
+  :root .ctr-illu .epreuve-carte__libelle { grid-row: auto; border-right: 0; padding-right: 0; }
+  :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) .pastille-pret,
+  :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) .controle-carte__action { grid-column: 1; }
+
+  .ctr-illu__pied { height: 76px; margin: 20px -16px -20px; }
+  .ctr-illu__pied-cerisiers { display: none; }
+  .ctr-illu__pied { justify-content: center; }
+  .ctr-illu__pied-ecole { max-width: 100%; }
+}

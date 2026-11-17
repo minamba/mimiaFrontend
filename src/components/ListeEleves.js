@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { chargerEleves, selectionnerEleve } from '../lib/actions/elevesActions';
@@ -9,6 +9,12 @@ import QuotaEnfants from './QuotaEnfants';
 import CodeEnfant from './CodeEnfant';
 import BoutonAvis from './BoutonAvis';
 import ResteForfait from './ResteForfait';
+import { avatarEnfant } from '../lib/avatarEnfant';
+import Tutoriel from './tutoriel/Tutoriel';
+import { ETAPES_ENFANTS } from '../lib/tutoriel/etapes';
+import { getProfil, marquerTutorielEnfantsVu } from '../lib/api/profilApi';
+import './tutoriel/tutoriel.css';
+import './listeElevesIllustre.css';
 
 /**
  * Ancienneté en clair. « 2026-07-26T20:18 » ne dit rien à un parent ;
@@ -69,6 +75,29 @@ export default function ListeEleves() {
 
   const complet = capacite !== null && !capacite.peutAjouter;
 
+  // LE TUTORIEL DE « VOS ENFANTS » (17/11/2026) : une fois par compte parent, quand la page montre au moins un enfant
+  // (un nouvel inscrit n'a encore aucune carte à expliquer : il le voit en revenant ici après son premier enfant).
+  // Noté « vu » dès le départ, comme les deux autres. Les comptes d'avant l'ont déjà « vu » (migration).
+  const [tutoriel, setTutoriel] = useState(false);
+  const dejaDemande = useRef(false);
+  const aDesEnfants = !loading && liste.length > 0;
+
+  useEffect(() => {
+    if (!aDesEnfants || dejaDemande.current) return undefined;
+    dejaDemande.current = true;
+    let vivant = true;
+
+    getProfil()
+      .then(({ data }) => {
+        if (!vivant || data?.tutorielEnfantsVu !== false) return;
+        setTutoriel(true);
+        marquerTutorielEnfantsVu().catch(() => {});
+      })
+      .catch(() => {});
+
+    return () => { vivant = false; };
+  }, [aDesEnfants]);
+
   const ouvrir = (eleve) => {
     dispatch(selectionnerEleve(eleve));
     navigate(`/eleves/${eleve.id}/matieres`);
@@ -77,8 +106,18 @@ export default function ListeEleves() {
   if (loading) return <Loader texte="Chargement des profils…" />;
 
   return (
-    <section className="page page--large">
+    <section className="page page--large page--enfants-illu">
+      {tutoriel && <Tutoriel etapes={ETAPES_ENFANTS} onFin={() => setTutoriel(false)} />}
+
       <div className="page__entete">
+        {/* « VOIR LE TUTO » — Camara, le 17/11/2026 : sur la ligne de « Vos enfants », tout à droite (téléphone) ; sur
+            ordinateur, fixé en haut à droite de l'écran, à la place de « Signaler » mais en haut. Il relance la visite. */}
+        {liste.length > 0 && (
+          <button type="button" className="bouton-tuto page__tuto-enfants" data-tuto="revoir-enfants" onClick={() => setTutoriel(true)}>
+            <span aria-hidden="true">🎓</span> Voir le tuto
+          </button>
+        )}
+
         <div>
           <h1>Vos enfants</h1>
           <p className="page__sous-titre">
@@ -188,6 +227,7 @@ export default function ListeEleves() {
           {liste.map((eleve) => {
             const activite = derniereFois(eleve.derniereActivite);
             const couleur = couleurEleve(eleve);
+            const portrait = avatarEnfant(eleve);
 
             return (
               <li key={eleve.id}>
@@ -207,12 +247,20 @@ export default function ListeEleves() {
                     <span className="eleve-carte__bande" aria-hidden="true" />
 
                     <span className="eleve-carte__haut">
-                      <span className="eleve-carte__initiale">
-                        {eleve.prenom?.charAt(0)?.toUpperCase()}
-                      </span>
+                      {/* LE PORTRAIT DE L'ENFANT — maquette de Camara, 16/11/2026 (voir lib/avatarEnfant.js) ;
+                          l'initiale reste quand il n'y en a pas. */}
+                      {portrait ? (
+                        <img className="eleve-carte__portrait" src={portrait} alt="" />
+                      ) : (
+                        <span className="eleve-carte__initiale">
+                          {eleve.prenom?.charAt(0)?.toUpperCase()}
+                        </span>
+                      )}
 
                       <span className="eleve-carte__identite">
-                        <strong>{eleve.prenom}</strong>
+                        {/* TOUJOURS SUR UNE LIGNE — Camara, le 16/11/2026 : « Zakariya » passait sur deux lignes. Le
+                            nombre de lettres règle la taille du texte (listeElevesIllustre.css). */}
+                        <strong style={{ '--lettres': Math.max(4, eleve.prenom?.length ?? 0) }}>{eleve.prenom}</strong>
                         <span className="eleve-carte__badges">
                           <span className="badge">{eleve.niveauLibelle}</span>
                           <span className="badge badge--discret">{eleve.age} ans</span>
@@ -226,6 +274,7 @@ export default function ListeEleves() {
                     </span>
 
                     <span className="eleve-carte__action">
+                      <span className="eleve-carte__lecture" aria-hidden="true" />
                       {eleve.derniereActivite ? 'Reprendre le cours' : 'Commencer'}
                       <span aria-hidden="true">→</span>
                     </span>

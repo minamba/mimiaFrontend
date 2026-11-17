@@ -21,6 +21,7 @@ import {
 } from '../lib/storage/departSeance';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { retirerMarqueursApplication } from '../lib/storage/texteAffiche';
+import { masquerPourLEcran } from '../lib/reponseADictee';
 import { voixService, nombreDeMots } from '../lib/storage/voixService';
 import {
   marquerCopieAuCahier,
@@ -86,6 +87,10 @@ import micFermePng from '../assets/mic_b.png';
 import micOuvertPng from '../assets/mic_o.png';
 import hautParleurPng from '../assets/haut_parleur.webp';
 import { camera } from '../lib/storage/camera';
+import {
+  CLE_MAINS_LIBRES, CLE_MAINS_LIBRES_CP, estClasseCP, mainsLibresAuDepart, texteDeFinDeParole,
+} from '../lib/storage/appuiPourParler';
+import { formeDuNombre, libelleDuNombre } from '../lib/nombresALire';
 import { delaiAssemblage, doitAttendreAvantEnvoi, amorceSeule, gardienDoitEnvoyer, demandeSonTenu, SON_TENU_MIN_S } from '../lib/storage/tourEleve';
 import { estUnSchema } from '../lib/storage/schemaSvg';
 import {
@@ -131,6 +136,16 @@ import LignesCopie from './LignesCopie';
 import { ContenuTableau, tableauDeDictee } from './ComparaisonDictee';
 import VerdictSon, { estVerdictDEcoute } from './VerdictSon';
 import { motTrouve } from '../lib/imagesMots';
+import { sonAnglaisTrouve } from '../lib/imagesSonsAnglais';
+import { lectureAuTableau, estVerdictDeLecture, estMotEntierLu, LIBELLE_MOT_ENTIER } from '../lib/lectureDImage';
+import {
+  exerciceSonsChoisi, exercicesProposes, phraseDuChoix, sujetDuChoix, QUESTION_CHOIX_EXERCICE_SONS,
+  lireReponseChoixExerciceSons, marquerChoixExerciceSons,
+} from '../lib/storage/choixExerciceSons';
+import {
+  estLectureEntendue, LIBELLE_LU, lectureEnCours, marquerLecture, phrasesATaire,
+} from '../lib/lectureAVoixHaute';
+import { demandeDeChangement } from '../lib/changementDExercice';
 import { jouerSonDuVerdict } from '../lib/storage/sonDuVerdict';
 import { copieDeReference } from '../lib/storage/diffDictee';
 import { estMatiereLangue } from '../lib/matieresLangues';
@@ -152,6 +167,7 @@ import Loader from './Loader';
 import Controle from './Controle';
 import PauseCours from './PauseCours';
 import { useAffichageEleve } from '../lib/besoins';
+import './coursIllustre.css';
 
 /**
  * Affiche un message.
@@ -193,11 +209,16 @@ const heureCourte = (iso) => {
     : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 };
 
-function Contenu({ texte, onRappelerTableau }) {
+function Contenu({ texte, onRappelerTableau, duProf = false }) {
   const segments = useMemo(
     // Une seule liste de marqueurs pour tous les écrans — voir `texteAffiche.js`.
-    () => decouper(retirerMarqueursApplication(texte)),
-    [texte],
+    // CE QUE LE PROFESSEUR DICTE À ÉCRIRE NE S'AFFICHE PAS (11/11/2026) : voir `reponseADictee.js`. La voix le lit.
+    () => {
+      const affiche = retirerMarqueursApplication(texte);
+      // [A_ECOUTER] et le nombre seul au tableau aussi (14/11/2026) : voir `masquerPourLEcran`.
+      return decouper(duProf ? masquerPourLEcran(affiche) : affiche);
+    },
+    [texte, duProf],
   );
 
   if (POINTAGE.test((texte ?? '').trim())) {
@@ -233,6 +254,35 @@ function Contenu({ texte, onRappelerTableau }) {
       {jeu && <CarteJeuProposee classe={jeu.classe} cle={jeu.cle} />}
     </>
   );
+}
+
+/**
+ * UN NOMBRE ÉCRIT AU TABLEAU (12/11/2026) — la lecture des nombres, tant que son image n'est pas là : la fraction en
+ * étage, l'exposant en haut, la racine avec sa barre. C'est ce que l'enfant LIT : rien n'y est dit en toutes lettres.
+ */
+function NombreAuTableau({ cible }) {
+  const f = formeDuNombre(cible);
+  let corps;
+  if (f.genre === 'fraction') {
+    corps = (
+      <>
+        {f.signe && <span className="nombre-tableau__signe">{f.signe}</span>}
+        <span className="nombre-tableau__fraction">
+          <span className="nombre-tableau__num">{f.num}</span>
+          <span className="nombre-tableau__den">{f.den}</span>
+        </span>
+      </>
+    );
+  } else if (f.genre === 'puissance') {
+    corps = <>{f.base}<sup className="nombre-tableau__exposant">{f.exposant}</sup></>;
+  } else if (f.genre === 'scientifique') {
+    corps = <>{f.mantisse} × 10<sup className="nombre-tableau__exposant">{f.exposant}</sup></>;
+  } else if (f.genre === 'racine') {
+    corps = <>{f.signe}{f.coef}<span className="nombre-tableau__racine">√<span className="nombre-tableau__sous-racine">{f.sous}</span></span></>;
+  } else {
+    corps = f.texte;
+  }
+  return <p className="nombre-tableau" aria-hidden="true">{corps}</p>;
 }
 
 /**
@@ -492,6 +542,12 @@ function MessageQuota({ motif, prof }) {
       titre: 'Le forfait attend son règlement',
       detail: 'Le paiement du forfait n’est pas encore passé. Dès que tes parents l’auront réglé, tu pourras reprendre.',
     },
+    // LA CONSEILLÈRE À PARTIR DE SOLO (14/11/2026, essai compris le 15/11/2026) : seules ses séances sont concernées,
+    // les cours restent ouverts.
+    ConseillereNonIncluse: {
+      titre: 'La conseillère d’orientation n’est pas dans ta formule',
+      detail: 'Il faut au minimum l’abonnement Solo pour parler avec la conseillère d’orientation. Demande à tes parents. Tes cours avec tes professeurs restent ouverts.',
+    },
     SansAbonnement: {
       titre: 'Aucun forfait en cours',
       detail: 'Tes parents doivent choisir une formule pour que tu puisses travailler.',
@@ -522,6 +578,9 @@ function MessageQuota({ motif, prof }) {
   );
 }
 
+/** Le filet de l'image retenue : une voix en pause ou bloquée ne la garde pas indéfiniment. */
+const IMAGE_RETENUE_MAX_MS = 15000;
+
 /**
  * L'ardoise : ce que le professeur a écrit, toujours sous les yeux.
  *
@@ -530,7 +589,7 @@ function MessageQuota({ motif, prof }) {
  * bordure et leur fond — d'où son allure de simple carte.
  */
 function Ardoise({
-  contenu, prof, onMontrer, copieReference = null, tableauxPrecedents = [], imageMot = null,
+  contenu, prof, onMontrer, copieReference = null, tableauxPrecedents = [], imageMot = null, lecture = false,
 }) {
   /**
    * L'IMAGE DU MOT TROUVÉ, AU TABLEAU — Camara, le 06/11/2026 : « les images ne doivent pas apparaître dans la
@@ -538,7 +597,11 @@ function Ardoise({
    * `imageAuTableau`), mais SEULEMENT UNE FOIS CHARGÉE : une syllabe encore sans dessin laisse le tableau tel quel.
    */
   const [imageChargee, setImageChargee] = useState(null);
-  const montrerImage = Boolean(imageMot && imageChargee === imageMot.image);
+  // LE MOT À LIRE (07/11/2026) n'a pas d'image : il s'écrit en grand, tout de suite (voir `lib/lectureDImage.js`).
+  const motALire = imageMot?.type === 'a-lire';
+  // UN NOMBRE À LIRE (12/11/2026) : écrit en grand tant que son image n'est pas chargée (pas encore déposée, ou lente).
+  const nombreEcrit = imageMot?.type === 'nombre' && imageChargee !== imageMot.image;
+  const montrerImage = Boolean(imageMot && (motALire || nombreEcrit || imageChargee === imageMot.image));
 
   // Le tableau en grand. Une planche d'anatomie porte une douzaine de
   // légendes dans un panneau large comme un téléphone : lisible pour situer,
@@ -816,7 +879,10 @@ function Ardoise({
         ref={surfaceRef}
         className={[
           'ardoise__surface',
-          contenu && estUnSchema(contenu) ? 'ardoise__surface--figure' : '',
+          contenu && estUnSchema(contenu) && !montrerImage ? 'ardoise__surface--figure' : '',
+          montrerImage ? 'ardoise__surface--image' : '',
+          // LA LECTURE À VOIX HAUTE (06/11/2026) : le texte à lire, en gros, pour un enfant qui apprend à lire.
+          lecture && !montrerImage && contenu && !estUnSchema(contenu) ? 'ardoise__surface--lecture' : '',
           defile ? 'ardoise__surface--defile' : '',
         ].filter(Boolean).join(' ')}
       >
@@ -828,18 +894,23 @@ function Ardoise({
             cadre, l'en-tête et le fond ne bougent pas — pour l'élève c'est le
             même tableau, le professeur y écrit ou y dessine. */}
         {/* L'image se charge en coulisse ; elle ne remplace le tableau qu'une fois prête. */}
-        {imageMot && !montrerImage && (
+        {imageMot && imageMot.image && imageChargee !== imageMot.image && (!montrerImage || nombreEcrit) && (
           <img src={imageMot.image} alt="" hidden onLoad={() => setImageChargee(imageMot.image)} />
         )}
         {montrerImage ? (
           <figure
             className={`image-mot image-mot--tableau image-mot--${imageMot.type}`}
-            aria-label={`Image ${imageMot.type === 'syllabe' ? 'de la syllabe' : 'du mot'} ${imageMot.mot}`}
+            aria-label={motALire ? 'Le mot à lire' : imageMot.type === 'nombre' ? `Le nombre à lire : ${libelleDuNombre(imageMot.mot)}` : `Image ${imageMot.type === 'syllabe' ? 'de la syllabe' : imageMot.type === 'son' ? 'du son de' : 'du mot'} ${imageMot.mot}`}
             key={imageMot.cle}
           >
-            <img className="image-mot__image" src={imageMot.image} alt={imageMot.mot} width="240" height="240" />
-            {/* L'image d'une syllabe porte déjà son mot, la syllabe en couleur (« BElette ») : rien à écrire dessous. */}
-            {imageMot.type !== 'syllabe' && <figcaption className="image-mot__mot">{imageMot.mot}</figcaption>}
+            {motALire
+              ? <p className="image-mot__a-lire" lang="fr">{imageMot.mot}</p>
+              : nombreEcrit
+                ? <NombreAuTableau cible={imageMot.mot} />
+                : <img className="image-mot__image" src={imageMot.image} alt={imageMot.type === 'nombre' ? libelleDuNombre(imageMot.mot) : imageMot.mot} width="240" height="240" />}
+            {/* L'image d'une syllabe porte déjà son mot, la syllabe en couleur (« BElette ») : rien à écrire dessous.
+                Celle d'un son anglais aussi (« cAt / Chat »). */}
+            {imageMot.type === 'mot' && <figcaption className="image-mot__mot">{imageMot.mot}</figcaption>}
           </figure>
         ) : contenu && estUnSchema(contenu) ? (
           <Schema
@@ -1031,9 +1102,17 @@ export default function Chat() {
    * garde son choix ; celui qui n’a jamais rien touché reçoit le défaut.
    * Tester l’égalité à `'1'` confondait les deux, au détriment du second.
    */
-  const [mainsLibres, setMainsLibres] = useState(
-    () => localStorage.getItem('school-ia-mains-libres') !== '0',
-  );
+  /**
+   * AU CP, « APPUIE ET PARLE » PAR DÉFAUT — Camara, le 12/11/2026, après Vanessa et Nour (téléphone sur haut-parleur,
+   * la maman à côté, des phrases qui ne partaient pas). Un enfant de CP ne maîtrise pas l'outil et son parent parle à
+   * côté de lui : on ne devine plus quand il a fini, il le DIT par un appui sur « J'ai fini ». Le parent peut remettre
+   * les mains libres (choix gardé à part, `school-ia-mains-libres-cp`) ; les autres classes ne changent pas.
+   */
+  const estCP = estClasseCP(eleve?.niveauLibelle);
+  const lireMainsLibres = (cp) => mainsLibresAuDepart(cp, (cle) => localStorage.getItem(cle));
+
+  const [mainsLibres, setMainsLibres] = useState(() => lireMainsLibres(estCP));
+  const [envoiParole, setEnvoiParole] = useState(false);
 
   // Incrémenté chaque fois que le professeur se tait. C'est le signal qui
   // rend la parole à l'élève : un simple effet sur `streaming` ouvrirait le
@@ -1323,6 +1402,17 @@ export default function Chat() {
   // DES MOTS OU DES PHRASES (01/11/2026) — voir typeDictee.js. Au lycée, le
   // serveur dit `dicteeAuChoix: false` : la carte ne s'affiche jamais.
   const typeDictee = useMemo(() => typeDicteeChoisi(messages), [messages]);
+  // QUEL EXERCICE DE SONS (07/11/2026) : null = la carte attend son choix.
+  const exerciceSons = useMemo(() => exerciceSonsChoisi(messages), [messages]);
+  // Ce qu'il a demandé (« mots », « syllabes ») : la carte ne propose que ces exercices.
+  const sujetExerciceSons = useMemo(
+    () => sujetDuChoix([...messages].reverse().find((m) => m?.role === 'assistant')?.contenu),
+    [messages],
+  );
+  const exerciceSonsEnAttenteRef = useRef(false);
+  exerciceSonsEnAttenteRef.current = exerciceSons === null;
+  const sujetExerciceSonsRef = useRef(null);
+  sujetExerciceSonsRef.current = sujetExerciceSons;
   const typeDicteeEnAttente = typeDictee === null && conversation?.dicteeAuChoix !== false;
   const typeDicteeEnAttenteRef = useRef(false);
   typeDicteeEnAttenteRef.current = typeDicteeEnAttente;
@@ -1603,6 +1693,14 @@ export default function Chat() {
   // mal le mode continu.
   const vocalDispo = ecouteTempsReel.supporte || ecouteService.supporte;
   const mainsLibresRef = useRef(mainsLibres);
+
+  // LE MODE « APPUIE ET PARLE » DU CP — voir `estCP`. Tenu à jour à CHAQUE rendu, et non dans un effet : les rappels
+  // du micro, créés une fois pour la séance, le lisent pour savoir s'ils ont le droit d'envoyer tout seuls.
+  const appuiPourParler = estCP && !mainsLibres && vocalDispo;
+  const appuiPourParlerRef = useRef(appuiPourParler);
+  appuiPourParlerRef.current = appuiPourParler;
+  const envoiParoleRef = useRef(false);
+  const saisieCouranteRef = useRef('');
 
   // L'élève a coupé l'écoute lui-même. Couper le micro juste après une
   // question, c'est vouloir réfléchir au calme : lui répondre « je n'ai rien
@@ -2726,7 +2824,8 @@ export default function Chat() {
     return messages
       .slice(debut)
       .filter((m) => m.role === 'assistant')
-      .flatMap((m) => extraireArdoises(m.contenu));
+      // Le tableau cache ce que l'élève doit écrire en l'entendant (14/11/2026) : voir `masquerPourLEcran`.
+      .flatMap((m) => extraireArdoises(masquerPourLEcran(m.contenu)));
   }, [messages]);
 
   const tableauAuto = useMemo(() => {
@@ -2742,7 +2841,7 @@ export default function Chat() {
       const archivee = dicteeAuTableau(texte);
       if (archivee) return { valeur: `${REPERE_DICTEE_ARCHIVEE}${archivee}` };
 
-      const trouves = extraireArdoises(texte);
+      const trouves = extraireArdoises(masquerPourLEcran(texte));
       if (trouves.length > 0) {
         // LE TABLEAU DE COMPARAISON D'UNE DICTÉE, C'EST CELUI DE L'APPLICATION.
         // Depuis le 19/09/2026 le serveur l'écrit lui-même, en tête du message,
@@ -2789,11 +2888,66 @@ export default function Chat() {
    * écrit ou efface le tableau l'emporte ; la dernière réponse JUGÉE de l'élève décide — juste et illustrée, son
    * image ; fausse ou sans image, plus d'image (celle du mot d'avant tromperait l'enfant).
    */
+  /**
+   * LA LECTURE À VOIX HAUTE (06/11/2026) : pendant l'exercice, les phrases du texte au tableau que l'élève n'a pas
+   * encore lues ne passent jamais par la voix — voir `lib/lectureAVoixHaute.js`. Lue par les deux effets de parole
+   * à travers une référence, pour ne pas changer ce qui les relance.
+   */
+  const aTaireLecture = useMemo(() => phrasesATaire(messages, reponseEnCours), [messages, reponseEnCours]);
+  const aTaireLectureRef = useRef([]);
+  aTaireLectureRef.current = aTaireLecture;
+  const enLecture = useMemo(
+    () => lectureEnCours([...messages, { role: 'assistant', contenu: reponseEnCours }]),
+    [messages, reponseEnCours],
+  );
+  const enLectureRef = useRef(false);
+  enLectureRef.current = enLecture;
+
+  /**
+   * LA PROCHAINE IMAGE ATTEND QUE LE PROFESSEUR EN PARLE — Camara, le 08/11/2026 : « je dis "ba", il dit bonne réponse
+   * et il affiche la prochaine image, une robe, en me donnant l'explication sur le mot ballon ». Le message arrive d'un
+   * bloc, sa voix non. Retenue dès que l'enfant a répondu, libérée quand la voix commence la consigne (voir
+   * `estConsigneDeLecture`), ou quand elle n'a plus rien à dire : muet, voix coupée, voix en panne.
+   */
+  const [imageRetenue, setImageRetenue] = useState(false);
+  const nombreDeMessagesRef = useRef(null);
+  useEffect(() => {
+    const avant = nombreDeMessagesRef.current;
+    nombreDeMessagesRef.current = messages.length;
+    // UN MESSAGE DE PLUS, PAS UN FIL CHARGÉ : au rechargement, personne ne va relire la question.
+    if (avant !== null && messages.length === avant + 1 && messages[messages.length - 1]?.role === 'user') {
+      setImageRetenue(true);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (!imageRetenue || streaming || messages[messages.length - 1]?.role !== 'assistant') return undefined;
+
+    const debut = Date.now();
+    const verifier = () => {
+      if (!lecteurRef.current?.estOccupe?.() || Date.now() - debut > IMAGE_RETENUE_MAX_MS) setImageRetenue(false);
+    };
+    verifier();
+    const minuteur = setInterval(verifier, 250);
+    return () => clearInterval(minuteur);
+  }, [imageRetenue, streaming, messages]);
+
   const imageAuTableau = useMemo(() => {
     const geste = (texte) => Boolean(
       texte && (dicteeAuTableau(texte) || extraireArdoises(texte).length > 0 || effaceLeTableau(texte)),
     );
     if (geste(reponseEnCours)) return null;
+
+    // LA LECTURE EN IMAGES (07/11/2026) : tant que le professeur montre une syllabe ou un mot à lire, c'est le tableau.
+    const aLireAuTableau = lectureAuTableau(messages, eleve, { retenue: imageRetenue });
+    if (aLireAuTableau) return aLireAuTableau;
+
+    // CHAQUE LANGUE A SES IMAGES — Camara, le 06/11/2026 : « je suis en anglais et elle me sort des syllabes en
+    // français » (la « ri » de « rideau » au tableau de Marine). Le français montre ses mots et ses syllabes
+    // (`imagesMots.js`), l'anglais ses sons (`imagesSonsAnglais.js`), aucun autre cours rien.
+    const matiere = (conversation?.matiereCode ?? '').toUpperCase();
+    const trouver = matiere === 'FRANCAIS' ? motTrouve : matiere === 'ANGLAIS' ? sonAnglaisTrouve : null;
+    if (!trouver) return null;
 
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
@@ -2804,12 +2958,12 @@ export default function Chat() {
         for (let j = i - 1; j >= 0 && !question; j -= 1) {
           if (messages[j].role === 'assistant' && aQuelqueChoseAMontrer(messages[j].contenu)) question = messages[j];
         }
-        const trouve = motTrouve(m, question, eleve);
+        const trouve = trouver(m, question, eleve);
         return trouve ? { ...trouve, cle: m.id } : null;
       }
     }
     return null;
-  }, [messages, reponseEnCours, eleve]);
+  }, [messages, reponseEnCours, eleve, conversation?.matiereCode, imageRetenue]);
 
   /**
    * LE TABLEAU RESTE VIDE TANT QUE LA COPIE N'EST PAS RENDUE.
@@ -2896,6 +3050,32 @@ export default function Chat() {
   useEffect(() => {
     mainsLibresRef.current = mainsLibres;
   }, [mainsLibres]);
+
+  saisieCouranteRef.current = saisie;
+
+  // L'ÉLÈVE CONNU APRÈS L'OUVERTURE : sa classe arrive parfois après le premier rendu. Au CP, on reprend alors le choix
+  // propre au CP (le bouton, sauf si le parent a remis les mains libres) et on referme un micro déjà rouvert seul.
+  useEffect(() => {
+    if (!estCP) return;
+    const choix = lireMainsLibres(true);
+    setMainsLibres(choix);
+    if (!choix && ecoutePourGardienRef.current) {
+      arretVolontaireRef.current = true;
+      ecouteRef.current?.arreter();
+      setEcoute(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estCP]);
+
+  // LE PROFESSEUR RÉPOND : AU CP, LE MICRO SE FERME. L'enfant rappuiera pour parler — c'est tout le principe : rien
+  // n'est capté tant qu'il n'a pas appuyé, ni le haut-parleur, ni la maman qui l'aide.
+  useEffect(() => {
+    if (!streaming || !appuiPourParlerRef.current || !ecoutePourGardienRef.current) return;
+    arretVolontaireRef.current = true;
+    ecouteRef.current?.arreter();
+    setEcoute(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streaming]);
 
   // Chronomètre de séance. Calculé à partir de l'heure de départ plutôt qu'en
   // incrémentant un compteur : un onglet mis en arrière-plan voit ses timers
@@ -3237,6 +3417,9 @@ export default function Chat() {
     // commencé à parler, puis plus rien, sans que l'élève sache pourquoi.
     // Le même canal que les autres soucis de voix — il n'y a pas besoin
     // d'un second type de bandeau pour un problème de plus.
+    // La voix commence la consigne de lecture : c'est le moment de la prochaine image.
+    lecteur.surConsigneLecture = () => setImageRetenue(false);
+
     lecteur.surCoupure = () => {
       setErreurMicro(
         'Le professeur a été coupé par un problème de connexion en plein milieu '
@@ -3283,6 +3466,7 @@ export default function Chat() {
       lecteur.surDelai = null;
       lecteur.surRepli = null;
       lecteur.surCoupure = null;
+      lecteur.surConsigneLecture = null;
       lecteur.surTrou = null;
       lecteur.surEcoute = null;
       lecteur.surPauseDictee = null;
@@ -3316,6 +3500,7 @@ export default function Chat() {
   // ajouterait plusieurs secondes de silence après chaque question.
   useEffect(() => {
     if (muet || !voixService.supporte) return;
+    lecteurRef.current.taire(aTaireLectureRef.current);
 
     // On attend de savoir QUI parle : la voix est celle du professeur, et
     // commencer sans elle ferait changer de timbre au milieu du message. La
@@ -3456,6 +3641,7 @@ export default function Chat() {
   useEffect(() => {
     if (streaming || muet || !voixService.supporte) return;
     if (!eleve || !conversation) return;
+    lecteurRef.current.taire(aTaireLectureRef.current);
 
     const index = indexDernierProf;
     if (index === -1 || index === indexDitRef.current) return;
@@ -3738,6 +3924,11 @@ export default function Chat() {
         ? undefined
         : lireReponseTypeDictee(propre);
 
+      // « Lire ! » dit devant la carte des exercices de sons vaut le clic (07/11/2026) : la carte connaît le sujet.
+      const exerciceDit = documentPret || !exerciceSonsEnAttenteRef.current
+        ? undefined
+        : lireReponseChoixExerciceSons(propre, sujetExerciceSonsRef.current);
+
       if (supportDit && dicteeEnAttenteRef.current) {
         choisirModeDicteeRef.current?.(supportDit === ECRIT_CAHIER ? 'cahier' : 'clavier');
         viderSaisie();
@@ -3789,9 +3980,17 @@ export default function Chat() {
                   ? (documentPret ? marquerPhotoDesSons(propre) : marquerSonAuCahier(propre))
                   : sonAuClavierRef.current
                     ? marquerSonAuClavier(propre, { auMicro: !saisieTapeeRef.current })
+                    : exerciceDit
+                      ? marquerChoixExerciceSons(propre, exerciceDit)
                     : typeDit
                       ? marquerTypeDictee(propre, typeDit)
-                      : propre;
+                      // LU AU MICRO PENDANT LA LECTURE (06/11/2026) : la transcription va au professeur, la
+                      // bulle dit seulement « Lu à voix haute ». Tapé au clavier, il reste affiché.
+                      // SAUF S'IL DEMANDE À CHANGER D'EXERCICE (14/11/2026) : ce n'est pas une lecture, sa bulle l'affiche.
+                      : enLectureRef.current && sonJuste === null && !documentPret && !saisieTapeeRef.current
+                        && !demandeDeChangement(propre)
+                        ? marquerLecture(propre)
+                        : propre;
 
       // Une transcription peut arriver après l'échéance : le micro était encore
       // ouvert quand le temps est tombé. Elle ne part pas.
@@ -3972,6 +4171,13 @@ export default function Chat() {
     (delai) => {
       const encours = assemblageRef.current;
       if (encours.minuteur) clearTimeout(encours.minuteur);
+
+      // AU CP, EN « APPUIE ET PARLE », RIEN NE PART TOUT SEUL (12/11/2026) : la phrase s'assemble dans le champ et
+      // attend l'appui sur « J'ai fini » — voir `terminerParole`. Seul un son jugé (syllabe) part de lui-même.
+      if (appuiPourParlerRef.current) {
+        assemblageRef.current = { ...assemblageRef.current, minuteur: null };
+        return;
+      }
 
       const debutAttente = Date.now();
 
@@ -4372,6 +4578,12 @@ export default function Chat() {
 
   const choisirSupportSon = useCallback(
     (choix) => envoyerTexte(marquerSupportSon('', choix)),
+    [envoyerTexte],
+  );
+
+  // QUEL EXERCICE DE SONS (07/11/2026) : le clic part comme une phrase d'enfant — voir choixExerciceSons.js.
+  const choisirExerciceSons = useCallback(
+    (code) => envoyerTexte(phraseDuChoix(code)),
     [envoyerTexte],
   );
 
@@ -5450,6 +5662,8 @@ export default function Chat() {
     const garde = setInterval(() => {
       // Le micro fermé à la main : ce qui reste dans le champ attend son clic.
       if (!mainsLibresRef.current && !ecoutePourGardienRef.current) return;
+      // Au CP, en « Appuie et parle », c'est l'appui sur « J'ai fini » qui envoie, jamais le gardien.
+      if (appuiPourParlerRef.current) return;
 
       const micro = ecouteRef.current;
       const { texte, minuteur } = assemblageRef.current;
@@ -5541,13 +5755,71 @@ export default function Chat() {
   };
 
   /**
+   * « J'AI FINI » — le second appui du mode CP (12/11/2026). On attend que le dernier morceau dit soit revenu de la
+   * transcription (6 s au plus), puis tout ce qui est assemblé part d'un coup, et le micro se ferme. Rien n'est
+   * coupé avant cet appui : l'enfant peut chercher ses mots aussi longtemps qu'il veut.
+   */
+  const terminerParole = () => {
+    if (envoiParoleRef.current) return;
+    envoiParoleRef.current = true;
+    setEnvoiParole(true);
+
+    const debut = Date.now();
+    const ATTENTE_MAX_MS = 6000;
+
+    const tenter = () => {
+      const micro = ecouteRef.current;
+      const attendre = Date.now() - debut < ATTENTE_MAX_MS
+        && doitAttendreAvantEnvoi({
+          parle: micro?.parleEnCeMoment?.(),
+          transcriptionEnCours: micro?.transcriptionEnCours?.(),
+          attenteMs: Date.now() - debut,
+        });
+      if (attendre) {
+        setTimeout(tenter, 250);
+        return;
+      }
+
+      // Ce qui est assemblé, plus le provisoire pas encore tranché par le fournisseur ; à défaut, ce qu'il a tapé.
+      const partiel = partielConsommeRef.current ? '' : partielRef.current.trim();
+      const texte = texteDeFinDeParole({
+        assemble: assemblageRef.current.texte,
+        partiel,
+        tapee: saisieTapeeRef.current,
+        saisie: saisieCouranteRef.current,
+      });
+
+      if (assemblageRef.current.minuteur) clearTimeout(assemblageRef.current.minuteur);
+      assemblageRef.current = { texte: '', minuteur: null };
+      partielRef.current = '';
+      partielConsommeRef.current = Boolean(partiel);
+
+      arretVolontaireRef.current = true;
+      ecouteRef.current?.arreter();
+      setEcoute(false);
+
+      envoiParoleRef.current = false;
+      setEnvoiParole(false);
+
+      if (texte) envoyerTexte(enMaths(texte));
+      else setSaisie('');
+    };
+
+    tenter();
+  };
+
+  /**
    * Mains libres : l'élève n'a plus à cliquer, le micro reste ouvert — y
    * compris pendant que le professeur parle, pour qu'il puisse le couper.
    */
   const basculerMainsLibres = () => {
     const nouveau = !mainsLibres;
     setMainsLibres(nouveau);
-    localStorage.setItem('school-ia-mains-libres', nouveau ? '1' : '0');
+    // Au CP, le choix est gardé à part : remettre les mains libres pour un enfant de CP ne doit pas les retirer à
+    // son grand frère sur le même appareil, ni l'inverse.
+    try {
+      localStorage.setItem(estCP ? CLE_MAINS_LIBRES_CP : CLE_MAINS_LIBRES, nouveau ? '1' : '0');
+    } catch { /* stockage indisponible : le choix vaut pour cette séance */ }
 
     silencesRef.current = 0;
     setErreurMicro(null);
@@ -5801,7 +6073,9 @@ export default function Chat() {
   );
 
   return (
-    <div className="chat-espace">
+    // LE COURS ILLUSTRÉ — Camara, le 15/11/2026 : la maquette du cours (cadre lumineux, bulles en verre, tableau
+    // noir à cadre doré). Une classe de portée et rien d'autre : tout est dans coursIllustre.css.
+    <div className="chat-espace cours-illu">
     {copie && <Controle copie={copie} onFermer={() => setCopie(null)} />}
 
     {enPause && !quota && <PauseCours onReprendre={reprendreLeCours} onQuitter={quitter} />}
@@ -6123,7 +6397,7 @@ export default function Chat() {
                  comme la fin du message. */}
               <div className={`tour tour--${duProf ? 'prof' : 'eleve'}`}>
                 <div className="tour__corps">
-                  <div className={`bulle bulle--${duProf ? 'agent' : 'eleve'}${typeof message.sonJuste === 'boolean' ? ` bulle--verdict-${message.sonJuste ? 'juste' : 'faux'}` : (message.contenu === SON_FAIT ? ' bulle--verdict-recu' : '')}`}>
+                  <div className={`bulle bulle--${duProf ? 'agent' : 'eleve'}${typeof message.sonJuste === 'boolean' ? ` bulle--verdict-${message.sonJuste ? 'juste' : 'faux'}` : (message.contenu === SON_FAIT || (!duProf && (estLectureEntendue(message.contenu) || estMotEntierLu(message.contenu))) ? ' bulle--verdict-recu' : '')}`}>
                     {(message.piecesJointes ?? (message.pieceJointe ? [message.pieceJointe] : []))
                       .map((piece) => (
                         <PieceJointeBulle
@@ -6136,8 +6410,12 @@ export default function Chat() {
                     {/* UN SON JUGÉ N'ÉCRIT PAS CE QUE L'ENFANT A DIT (04/11/2026) : le
                         professeur lit le son dans le contenu, l'élève voit le verdict. */}
                     {typeof message.sonJuste === 'boolean'
-                      ? <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} />
-                      : <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} />}
+                      ? <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} lecture={estVerdictDeLecture(message.contenu)} />
+                      : !duProf && estMotEntierLu(message.contenu)
+                        ? <span className="verdict-son">{LIBELLE_MOT_ENTIER}</span>
+                      : !duProf && estLectureEntendue(message.contenu)
+                        ? <span className="verdict-son">{LIBELLE_LU}</span>
+                        : <Contenu texte={message.contenu} onRappelerTableau={setTableauRappele} duProf={duProf} />}
                   </div>
 
                   {/* Pas d'heure sur le message en cours d'écriture : il n'en a
@@ -6225,6 +6503,28 @@ export default function Chat() {
                 Au clavier
                 <small>Tu écris ici, puis tu envoies</small>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* QUEL EXERCICE DE SONS — Camara, le 07/11/2026 : écouter ou lire, des syllabes ou des mots. Tout se fait à
+            l'oral ensuite : la carte ne fait que choisir l'exercice. */}
+        {exerciceSons === null && !streaming && !seanceTerminee && (
+          <div className="choix-dictee">
+            <p className="choix-dictee__question">{QUESTION_CHOIX_EXERCICE_SONS}</p>
+
+            <div className="choix-dictee__boutons">
+              {exercicesProposes(conversation?.matiereCode, sujetExerciceSons).map((exercice) => (
+                <button
+                  key={exercice.code}
+                  type="button"
+                  className="btn btn--fantome"
+                  onClick={() => choisirExerciceSons(exercice.code)}
+                >
+                  {exercice.libelle}
+                  <small>{exercice.aide}</small>
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -6317,7 +6617,7 @@ export default function Chat() {
           <div className="bulle bulle--agent">
             {reponseEnCours?.trim() ? (
               <>
-                <Contenu texte={reponseEnCours} onRappelerTableau={setTableauRappele} />
+                <Contenu texte={reponseEnCours} onRappelerTableau={setTableauRappele} duProf />
                 <span className="curseur" />
               </>
             ) : (
@@ -6870,6 +7170,37 @@ export default function Chat() {
         </div>
       )}
 
+      {/* « APPUIE ET PARLE », AU CP (12/11/2026) — voir `estCP`. Un gros bouton à deux temps à la place du petit
+          micro : un appui ouvre le micro (et fait taire le professeur), un second envoie. */}
+      {appuiPourParler && !seanceTerminee && !quota && (
+        <div className={`parole-cp${ecoute ? ' parole-cp--ecoute' : ''}`}>
+          {ecoute ? (
+            <button
+              type="button"
+              className="parole-cp__bouton parole-cp__bouton--fini"
+              onClick={terminerParole}
+              disabled={envoiParole}
+            >
+              <span aria-hidden="true">✅</span> {envoiParole ? 'J’envoie…' : 'J’ai fini'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="parole-cp__bouton"
+              onClick={basculerMicro}
+              disabled={streaming || enPause}
+            >
+              <span aria-hidden="true">🎤</span> {streaming ? 'Le professeur parle…' : 'Appuie et parle'}
+            </button>
+          )}
+          <span className="parole-cp__aide" aria-live="polite">
+            {ecoute
+              ? (envoiParole ? 'J’envoie ta réponse au professeur.' : 'Je t’écoute… Appuie sur « J’ai fini » quand tu as fini.')
+              : 'Appuie sur le bouton, puis parle.'}
+          </span>
+        </div>
+      )}
+
       <form
         className={`chat__saisie ${seanceTerminee ? 'chat__saisie--close' : ''}`}
         onSubmit={soumettre}
@@ -6938,7 +7269,7 @@ export default function Chat() {
           </button>
         )}
 
-        {vocalDispo && (
+        {vocalDispo && !appuiPourParler && (
           <button
             type="button"
             className={`micro ${ecoute ? 'micro--actif' : ''}`}
@@ -7047,6 +7378,7 @@ export default function Chat() {
     </section>
 
       <Ardoise
+        lecture={enLecture}
         contenu={contenuTableau}
         copieReference={copieReference}
         tableauxPrecedents={tableauxPrecedents}

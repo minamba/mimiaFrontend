@@ -10,6 +10,18 @@ export const modifierProfil = (data) => httpClient.put('/profil', data);
 // Le tutoriel ne se relancera plus tout seul pour ce parent (02/11/2026).
 export const marquerTutorielVu = () => httpClient.post('/profil/tutoriel-vu');
 
+// Même chose pour le tutoriel de la fiche d'un enfant (08/11/2026).
+export const marquerTutorielFicheVu = () => httpClient.post('/profil/tutoriel-fiche-vu');
+
+// Et pour celui de « Vos enfants » (17/11/2026).
+export const marquerTutorielEnfantsVu = () => httpClient.post('/profil/tutoriel-enfants-vu');
+
+// Le parent accepte les conditions générales en vigueur (08/11/2026).
+export const accepterConditions = () => httpClient.post('/profil/conditions');
+
+// Son parent a-t-il accepté ? La seule chose du compte parent qu'un enfant peut lire : `/profil` lui est fermé.
+export const getConditionsDuParent = () => httpClient.get('/profil/conditions');
+
 
 // ------------------------------------------------------- serveur d'identité
 /**

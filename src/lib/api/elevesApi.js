@@ -40,6 +40,13 @@ export const noterActivite = (eleveId) =>
   httpClient.post(`/eleves/${eleveId}/activite`);
 
 /**
+ * LE PORTRAIT DE L'ENFANT (16/11/2026) : son avatar (code), son sexe et sa classe, pour la barre du haut.
+ * Lu à chaque ouverture de l'espace : un avatar changé par le parent s'affiche sans reconnexion.
+ */
+export const getPortraitEleve = (eleveId) =>
+  httpClient.get(`/eleves/${eleveId}/portrait`);
+
+/**
  * L'ÉTABLISSEMENT DE L'ENFANT, pour la conseillère d'orientation (11/10/2026).
  * La recherche passe par le serveur, qui interroge l'Annuaire de l'éducation.
  */

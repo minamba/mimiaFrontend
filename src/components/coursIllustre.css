@@ -1,0 +1,384 @@
+/* ======================================================================================================
+   LE COURS ILLUSTRÉ — Camara, le 15/11/2026 : « dans les cours, améliore le design pour que ce soit comme ça,
+   mais fais en sorte que les choses s'adaptent à tout, même à l'agrandissement du tableau ».
+
+   PORTÉE : `.chat-espace.cours-illu` (Chat.js). CHANGEMENTS VISUELS SEULEMENT : couleurs, bords, ombres,
+   arrondis, quelques décors en pseudo-éléments. Aucune taille de colonne, aucune position collante, aucun
+   ordre ne bouge : la mise en page (et celle du téléphone, tableau sous la conversation) reste celle d'App.css.
+
+   CE QUI NE SE FAIT PAS ICI, VOLONTAIREMENT :
+   - ni `isolation`, ni `transform`, ni `filter`, ni `z-index` sur `.chat-espace` ou `.chat` : les fenêtres
+     (pause, copie, visionneuse) y sont dessinées, et un calque les enfermerait sous le pied de page ;
+   - aucune animation en boucle de plus (le halo et les ondes du professeur existent déjà) ;
+   - aucun `backdrop-filter`.
+
+   COULEURS : celles de Blue Sky quand elles existent (`--bs-chat-*`, `--bs-lueur-2`) — les modes saisonniers
+   les changent, le cours suit (gris et or en Black Friday) — avec le bleu nuit de la maquette en repli.
+   LE GROS DE L'HABILLAGE EST POUR LE THÈME SOMBRE (`:root:not([data-theme='light'])`) : en clair, les textes du
+   cours sont foncés et un panneau nuit les rendrait illisibles ; le clair ne prend que les formes, le tableau
+   et ses décors.
+   ====================================================================================================== */
+
+.chat-espace.cours-illu {
+  --ci-lueur: rgb(var(--bs-lueur-2, 120 175 255) / 0.55);
+  --ci-lueur-douce: rgb(var(--bs-lueur-2, 120 175 255) / 0.28);
+  --ci-haut: var(--bs-chat-haut, #13306f);
+  --ci-milieu: var(--bs-chat-milieu, #0f2660);
+  --ci-bas: var(--bs-chat-bas, #0b1c4d);
+  --ci-bulle: var(--bs-chat-bulle, #1a3373);
+  --ci-cyan: #4fd8e8;
+  --ci-or: #f5c451;
+}
+
+/* LE FOND DE LA PAGE DE COURS — Camara, le 16/11/2026 : « pour les cours, mets le fond cours_wall.png » (nuit
+   bleue, cerisiers, maison au bord de l'eau, mont Fuji : assets/walls/cours-fond.webp). Un calque FIXE derrière
+   tout (`::before`, `position: fixed`, `z-index: -1`) : aucun calque n'est créé sur `.chat-espace` lui-même, les
+   fenêtres du cours restent au-dessus du pied de page. En mode saisonnier, il s'efface : la saison garde son fond,
+   comme sur les pages de l'enfant. */
+.chat-espace.cours-illu::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* Assombri d'un voile (Camara, le 16/11/2026 : « assombris un peu le wallpaper ») : réglé d'un seul chiffre. */
+  --voile-cours: rgba(4, 8, 32, 0.4);
+  background:
+    linear-gradient(var(--voile-cours), var(--voile-cours)),
+    #0b1a5e url('../assets/walls/cours-fond.webp') center / cover no-repeat;
+  pointer-events: none;
+}
+
+:root[data-saison] .chat-espace.cours-illu::before { display: none; }
+
+/* ------------------------------------------------------------------ formes (les deux thèmes) */
+:root .chat-espace.cours-illu .chat { border-radius: 24px; }
+
+:root .chat-espace.cours-illu .bulle { border-radius: 18px; }
+:root .chat-espace.cours-illu .bulle--agent { border-bottom-left-radius: 6px; }
+:root .chat-espace.cours-illu .bulle--eleve { border-bottom-right-radius: 6px; }
+
+/* « → Quitter » : la flèche de la maquette, dessinée par la feuille (le bouton garde son nom accessible). */
+:root .chat-espace.cours-illu .btn-quitter::before {
+  content: '→';
+  margin-right: 7px;
+  font-weight: 800;
+}
+
+:root .chat-espace.cours-illu .chat__saisie textarea { border-radius: 16px; }
+
+:root .chat-espace.cours-illu .chat__saisie .btn {
+  border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 82%, #fff), var(--corail-btn));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px color-mix(in srgb, var(--corail-btn) 45%, transparent);
+}
+
+/* ------------------------------------------------------------------ le tableau (les deux thèmes) */
+
+/* « Le tableau » dans son cartouche, entre deux fleurs ; « écrit par Nora » en pastille. */
+:root .chat-espace.cours-illu .ardoise__titre {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 22px;
+  border: 1.5px solid color-mix(in srgb, var(--ci-or) 55%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--ci-haut), var(--ci-bas));
+  box-shadow: 0 0 14px var(--ci-lueur-douce), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+}
+
+:root .chat-espace.cours-illu .ardoise__titre::before,
+:root .chat-espace.cours-illu .ardoise__titre::after {
+  content: '🌸';
+  display: inline;
+  width: auto;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+  background: none;
+  opacity: 1;
+  font-size: 15px;
+  line-height: 1;
+}
+
+:root .chat-espace.cours-illu .ardoise__prof {
+  margin-top: 4px;
+  padding: 2px 14px;
+  border: 1px solid rgba(150, 195, 255, 0.45);
+  border-radius: 999px;
+  background: var(--ci-bas);
+  color: #e6ecff;
+  font-size: 13px;
+}
+
+/* LE TABLEAU NOIR, VERT ET ENCADRÉ DE BOIS DORÉ. Le cadre est fait d'ombres (il suit l'arrondi, ne prend pas de
+   place et ne fait pas déborder la page) ; la baguette du bas reste le `::after` d'App.css, redorée. */
+:root .chat-espace.cours-illu .ardoise__surface {
+  border-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse 60% 30% at 22% 28%, rgba(234, 241, 237, 0.05), transparent 70%),
+    radial-gradient(ellipse 50% 26% at 74% 62%, rgba(234, 241, 237, 0.04), transparent 70%),
+    radial-gradient(ellipse 40% 20% at 48% 88%, rgba(234, 241, 237, 0.035), transparent 70%),
+    linear-gradient(165deg, #21503f 0%, #1a4234 55%, #15372b 100%);
+  box-shadow:
+    0 0 0 6px #b57d3e,
+    0 0 0 8px #e4b46f,
+    0 0 0 10px #8a5a2b,
+    0 0 0 11px rgba(0, 0, 0, 0.4),
+    0 0 26px 6px rgba(255, 190, 110, 0.18),
+    0 16px 36px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -40px 70px rgba(0, 0, 0, 0.22);
+}
+
+/* Le cadre doré déborde de 11 px : la ligne du bouton « Agrandir » et l'en-tête s'écartent d'autant. */
+:root .chat-espace.cours-illu .ardoise__outils { margin-bottom: 12px; }
+:root .chat-espace.cours-illu .ardoise__entete { padding-bottom: 22px; }
+
+:root .chat-espace.cours-illu .ardoise__surface::after {
+  background: linear-gradient(180deg, #e4b46f 0%, #b57d3e 45%, #7d5126 100%);
+}
+
+/* LES CRAIES ET LA BROSSE, posées sur la baguette — au bureau seulement (sur téléphone, le tableau est une feuille
+   collée en bas d'écran, et son `position` lui appartient). Un seul pseudo-élément, trois fonds, aucun fichier. */
+@media (min-width: 1041px) {
+  :root .chat-espace.cours-illu .ardoise { position: relative; }
+
+  :root .chat-espace.cours-illu .ardoise::after {
+    content: '';
+    position: absolute;
+    right: 34px;
+    bottom: 27px;
+    width: 128px;
+    height: 20px;
+    pointer-events: none;
+    background:
+      /* craie 1 */
+      linear-gradient(180deg, #ffffff, #dfe5e1 60%, #b9c2bc) 0 11px / 34px 8px no-repeat,
+      /* craie 2 */
+      linear-gradient(180deg, #ffffff, #dfe5e1 60%, #b9c2bc) 38px 12px / 24px 7px no-repeat,
+      /* la brosse : le bois, puis le feutre */
+      linear-gradient(180deg, #e9a85b, #b06a2a) 72px 0 / 54px 11px no-repeat,
+      linear-gradient(180deg, #2f56b8, #1b3478) 72px 11px / 54px 8px no-repeat;
+    border-radius: 3px;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+  }
+}
+
+/* LE TABLEAU AGRANDI (rendu dans `body`, hors de la portée : on le reconnaît à la page qui l'a ouvert). Le même
+   tableau vert, le même cadre doré, en grand. */
+body:has(.cours-illu) .tableau-plein { background: rgba(6, 14, 30, 0.9); }
+
+body:has(.cours-illu) .tableau-plein__surface {
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse 60% 30% at 22% 28%, rgba(234, 241, 237, 0.05), transparent 70%),
+    radial-gradient(ellipse 50% 26% at 74% 62%, rgba(234, 241, 237, 0.04), transparent 70%),
+    linear-gradient(165deg, #21503f 0%, #1a4234 55%, #15372b 100%);
+  box-shadow:
+    0 0 0 8px #b57d3e,
+    0 0 0 11px #e4b46f,
+    0 0 0 14px #8a5a2b,
+    0 0 40px 10px rgba(255, 190, 110, 0.2),
+    inset 0 -60px 90px rgba(0, 0, 0, 0.25);
+}
+
+body:has(.cours-illu) .tableau-plein__fermer {
+  border: 2px solid #e4b46f;
+  background: rgba(20, 40, 32, 0.92);
+}
+
+/* ------------------------------------------------------------------ le thème sombre : la maquette */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat {
+  border: 1.5px solid var(--ci-lueur);
+  background: linear-gradient(180deg, var(--ci-milieu) 0%, var(--ci-bas) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 24px var(--ci-lueur-douce),
+    0 18px 44px rgba(0, 0, 0, 0.45);
+}
+
+/* Le décor de la matière, plus présent : c'est le bandeau illustré de la maquette (formules, π, livres…). */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__tete::before { opacity: 0.62; }
+
+/* L'heure, dans un anneau cyan lumineux. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .horloge {
+  border: 2.5px solid var(--ci-cyan);
+  background: radial-gradient(circle, rgba(10, 30, 70, 0.92) 60%, rgba(10, 30, 70, 0.75));
+  box-shadow: 0 0 16px rgba(79, 216, 232, 0.55), inset 0 0 12px rgba(79, 216, 232, 0.25);
+  color: #fff;
+}
+
+/* La rangée du professeur : un bandeau de verre sombre sous le décor. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__entete {
+  border-bottom: 1px solid var(--ci-lueur-douce);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ci-haut) 88%, transparent), var(--ci-milieu));
+}
+
+/* Le professeur : plus de pilule autour, un anneau lumineux autour du portrait, le prénom en serif, la matière en
+   italique. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__prof {
+  border-color: transparent;
+  background: transparent;
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__prof .avatar {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--matiere, var(--ci-cyan)) 70%, #fff),
+    0 0 18px color-mix(in srgb, var(--matiere, var(--ci-cyan)) 65%, transparent);
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__titre {
+  font-size: 21px;
+  color: #fff;
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__eleve {
+  font-style: italic;
+  font-size: 14px;
+  color: #cbd6f5;
+}
+
+/* Le décompte, dans sa pilule à liseré cyan (les couleurs « bientôt », « urgence », « fini » gardent la main). */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chrono {
+  border: 1.5px solid color-mix(in srgb, var(--ci-cyan) 75%, transparent);
+  box-shadow: 0 0 12px rgba(79, 216, 232, 0.3);
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chrono--normal {
+  background: var(--ci-bas);
+  color: #fff;
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chrono::before {
+  content: '⏱';
+  margin-right: 6px;
+  font-size: 0.9em;
+}
+
+/* Le son : le bouton bleu de la maquette. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__son {
+  padding: 7px 12px;
+  border: 1px solid rgba(160, 200, 255, 0.55);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #3a7cf0, #1f53c6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 14px rgba(70, 130, 255, 0.45);
+}
+
+/* « Quitter » à liseré corail, « Pause » à liseré jaune, sur fond nuit. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .btn-quitter {
+  border: 1.5px solid var(--corail-btn);
+  background: color-mix(in srgb, var(--corail-btn) 14%, rgba(10, 24, 60, 0.9));
+  color: color-mix(in srgb, var(--corail-btn) 45%, #fff);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--corail-btn) 30%, transparent);
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .btn-pause-cours {
+  border: 1.5px solid var(--ci-or);
+  background: color-mix(in srgb, var(--ci-or) 12%, rgba(10, 24, 60, 0.9));
+  color: #ffe6a3;
+  box-shadow: 0 0 10px rgba(245, 196, 81, 0.25);
+}
+
+/* LES BULLES DU PROFESSEUR, EN VERRE BLEU, avec les vagues seigaiha dans le coin (dégradés, aucun fichier). */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__fil .bulle--agent {
+  border: 1.5px solid color-mix(in srgb, rgb(var(--bs-lueur-2, 150 195 255)) 55%, transparent);
+  background:
+    radial-gradient(circle at 100% 100%,
+      transparent 14px, rgba(170, 205, 255, 0.16) 15px 16.5px,
+      transparent 17.5px 24px, rgba(170, 205, 255, 0.12) 25px 26.5px,
+      transparent 27.5px 34px, rgba(170, 205, 255, 0.08) 35px 36.5px, transparent 37.5px),
+    radial-gradient(circle at calc(100% - 46px) 100%,
+      transparent 14px, rgba(170, 205, 255, 0.1) 15px 16.5px,
+      transparent 17.5px 24px, rgba(170, 205, 255, 0.07) 25px 26.5px, transparent 27.5px),
+    linear-gradient(165deg,
+      color-mix(in srgb, var(--ci-bulle) 72%, rgb(var(--bs-lueur-2, 90 140 240))) 0%,
+      var(--ci-bulle) 100%);
+  box-shadow: 0 0 16px var(--ci-lueur-douce), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #f2f6ff;
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .bulle--eleve {
+  background: linear-gradient(170deg, color-mix(in srgb, var(--corail-btn) 85%, #fff), var(--corail-btn));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--corail-btn) 35%, transparent);
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .tour__heure { color: #a9b6dd; }
+
+/* « Revoir ce qui est au tableau » : une pilule à liseré cyan. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .rappel-tableau {
+  border: 1.5px solid color-mix(in srgb, var(--ci-cyan) 65%, transparent);
+  background: rgba(8, 26, 64, 0.55);
+  color: #e8f2ff;
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .rappel-tableau:hover {
+  border-color: var(--ci-cyan);
+  color: #fff;
+}
+
+/* « Le professeur parle — tu peux le couper en parlant » : le bandeau à liseré orange. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .ecoute-active {
+  border: 1.5px solid color-mix(in srgb, var(--corail-btn) 80%, #ffb36b);
+  border-radius: 14px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--corail-btn) 16%, transparent), rgba(10, 24, 60, 0.6));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--corail-btn) 25%, transparent);
+  color: #fff;
+}
+
+/* La barre du bas : « Détection automatique de la voix », puis la saisie. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__bas {
+  border-top: 1px solid var(--ci-lueur-douce);
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .bascule { color: #fff; font-weight: 600; }
+:root:not([data-theme='light']) .chat-espace.cours-illu .bascule--active .bascule__piste {
+  background: var(--ci-cyan);
+  box-shadow: 0 0 10px rgba(79, 216, 232, 0.5);
+}
+:root:not([data-theme='light']) .chat-espace.cours-illu .barre-vocale__aide { color: #b9c6ec; }
+
+/* Les quatre boutons ronds (trombone, photo, scan, micro) : un anneau lumineux autour de leur icône. */
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__saisie :is(.piece-jointe__bouton, .camera-voix__bouton, .micro) {
+  border: 1.5px solid color-mix(in srgb, rgb(var(--bs-lueur-2, 130 180 255)) 60%, transparent);
+  background: radial-gradient(circle, var(--ci-haut), var(--ci-bas));
+  box-shadow: 0 0 10px var(--ci-lueur-douce);
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__saisie textarea {
+  border: 1.5px solid var(--ci-lueur-douce);
+  background: color-mix(in srgb, var(--ci-bas) 85%, #000);
+  color: #eef2ff;
+}
+
+:root:not([data-theme='light']) .chat-espace.cours-illu .chat__saisie textarea:focus {
+  border-color: var(--ci-lueur);
+  outline: none;
+  box-shadow: 0 0 12px var(--ci-lueur-douce);
+}
+
+/* ------------------------------------------------------------------ téléphone et tablette */
+@media (max-width: 1040px) {
+  /* Un cadre plus fin : le tableau y est une feuille pleine largeur. */
+  :root .chat-espace.cours-illu .ardoise__surface {
+    box-shadow:
+      0 0 0 4px #b57d3e,
+      0 0 0 6px #e4b46f,
+      0 0 0 7px rgba(0, 0, 0, 0.4),
+      0 10px 24px rgba(0, 0, 0, 0.28),
+      inset 0 -40px 70px rgba(0, 0, 0, 0.22);
+  }
+
+  :root .chat-espace.cours-illu .ardoise__titre { font-size: 18px; padding: 4px 16px; }
+  :root:not([data-theme='light']) .chat-espace.cours-illu .chat__titre { font-size: 18px; }
+}
+
+@media (max-width: 560px) {
+  :root:not([data-theme='light']) .chat-espace.cours-illu .chrono::before { content: none; }
+  :root .chat-espace.cours-illu .btn-quitter::before { margin-right: 5px; }
+}
+
+/* ------------------------------------------------------------------ Black Friday : l'or à texte sombre */
+:root[data-da='blue-sky'][data-saison='black-friday'] .chat-espace.cours-illu .chat__saisie .btn { color: #141414; }

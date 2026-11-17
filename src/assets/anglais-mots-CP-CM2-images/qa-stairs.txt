@@ -1,0 +1,1 @@
+stairs : refaire un escalier simple sans personnage et sans balustrade a barreaux, pour eliminer les residus blancs/jaunes entre les barreaux.

@@ -1,0 +1,34 @@
+/* ======================================================================================================
+   LE CADRE DE LA SÉANCE ANIMÉE, EN HAUT DE L'ACCUEIL — maquette de Camara, 16/11/2026 : « juste la partie
+   animation, ne touche rien à l'intérieur ». Seul le CADRE change : il se redresse (plus de rotation),
+   s'arrondit, et prend un liseré bleu électrique lumineux avec son halo. L'en-tête de Nora, les bulles, le
+   tableau, le pied et le déroulé de la scène sont intacts. Le halo est fixe : aucune animation en boucle.
+   ====================================================================================================== */
+
+.landing .heros__visuel .demo {
+  border: 2px solid rgba(96, 165, 255, 0.95);
+  border-radius: 26px;
+  box-shadow:
+    0 0 0 1px rgba(150, 200, 255, 0.35),
+    0 0 18px rgba(70, 145, 255, 0.75),
+    0 0 52px rgba(60, 120, 255, 0.4),
+    0 30px 70px rgba(2, 8, 30, 0.5),
+    inset 0 0 22px rgba(90, 160, 255, 0.18);
+  transform: none;
+}
+
+/* En mode saisonnier, le liseré et le halo prennent la couleur de la saison (Camara, 16/11/2026). */
+:root[data-da='blue-sky'][data-saison] .landing .heros__visuel .demo {
+  border-color: var(--illu-bord-fort);
+  box-shadow:
+    0 0 0 1px var(--illu-bord),
+    0 0 18px var(--illu-lueur),
+    0 0 52px var(--illu-lueur),
+    0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+/* PAS DE DÉMO SUR SMARTPHONE — Camara, le 16/11/2026 : « sur mobile ce n'est pas utile de l'afficher ». Le héros
+   passe directement au bandeau qui le suit. La tablette et le PC la gardent. */
+@media (max-width: 640px) {
+  .landing .heros__visuel.heros__visuel { display: none; }
+}

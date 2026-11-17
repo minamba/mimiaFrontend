@@ -1,6 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
 import NiveauVerrouille from './NiveauVerrouille';
 import { bruitage } from '../../lib/jeux/bruitages';
+import sceneCp from '../../assets/jeux-illustre/classe-cp.webp';
+import sceneCe1 from '../../assets/jeux-illustre/classe-ce1.webp';
+import sceneCe2 from '../../assets/jeux-illustre/classe-ce2.webp';
+import sceneCm1 from '../../assets/jeux-illustre/classe-cm1.webp';
+import sceneCm2 from '../../assets/jeux-illustre/classe-cm2.webp';
+import scene6e from '../../assets/jeux-illustre/classe-6e.webp';
+import scene5e from '../../assets/jeux-illustre/classe-5e.webp';
+import scene4e from '../../assets/jeux-illustre/classe-4e.webp';
+import scene3e from '../../assets/jeux-illustre/classe-3e.webp';
+
+/**
+ * LES BADGES ILLUSTRÉS (vue de l'enfant) — Camara, le 15/11/2026, maquette de « Mes jeux » : douze badges
+ * hexagonaux suspendus, chacun sa petite scène (cerisiers, Fuji, pagode, pont). Les scènes sont découpées dans la
+ * maquette (assets/jeux-illustre) ; le lycée, verrouillé et gris dans la maquette, reprend celles du primaire.
+ */
+const SCENES_CLASSES = {
+  CP: sceneCp,
+  CE1: sceneCe1,
+  CE2: sceneCe2,
+  CM1: sceneCm1,
+  CM2: sceneCm2,
+  SIXIEME: scene6e,
+  CINQUIEME: scene5e,
+  QUATRIEME: scene4e,
+  TROISIEME: scene3e,
+  SECONDE: sceneCe1,
+  PREMIERE: scene6e,
+  TERMINALE: sceneCm1,
+};
 
 /**
  * LA CARTE DES NIVEAUX, en haut de « Mes jeux ».
@@ -50,7 +79,7 @@ function Cadenas({ classe }) {
   );
 }
 
-export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
+export default function FriseDesClasses({ etapes, choisie, onChoisir, illustree = false }) {
   const [refus, setRefus] = useState(null);
   const sienne = useRef(null);
 
@@ -86,7 +115,7 @@ export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
   };
 
   return (
-    <nav className="frise" aria-label="Choisir une classe">
+    <nav className={`frise${illustree ? ' frise--illustree' : ''}`} aria-label="Choisir une classe">
       <ol className="frise__piste">
         {etapes.map((etape, rang) => {
           const active = etape.code === choisie;
@@ -126,6 +155,9 @@ export default function FriseDesClasses({ etapes, choisie, onChoisir }) {
                 )}
 
                 <span className="portail__arche" aria-hidden="true">
+                  {illustree && SCENES_CLASSES[etape.code] && (
+                    <span className="portail__scene" style={{ backgroundImage: `url(${SCENES_CLASSES[etape.code]})` }} />
+                  )}
                   <span className="portail__voute" />
                   <Gemme />
                   {etape.verrouillee && <Cadenas classe="portail__cadenas" />}

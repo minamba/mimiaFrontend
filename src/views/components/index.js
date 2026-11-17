@@ -42,6 +42,7 @@ import {
   VerrouEleve,
   VerrouMaintenance,
   VerrouAffluence,
+  VerrouConditions,
   EntreeEleve,
   ScanMobile,
   BandeauInfo,
@@ -52,6 +53,10 @@ import BoutonMails from '../../components/BoutonMails';
 import MesFiches from '../../components/mesFiches/MesFiches';
 import NouveauCours from '../../components/mesFiches/NouveauCours';
 import CoursFiches from '../../components/mesFiches/CoursFiches';
+import MesPodcasts from '../../components/podcasts/MesPodcasts';
+import NouveauPodcast from '../../components/podcasts/NouveauPodcast';
+import CoursPodcast from '../../components/podcasts/CoursPodcast';
+import SuiviPodcasts from '../../components/podcasts/SuiviPodcasts';
 import EspaceParent from '../../components/espaceParent/EspaceParent';
 import { initAuth } from '../../lib/actions/authActions';
 import { authService } from '../../lib/storage/authService';
@@ -127,6 +132,7 @@ export const BaseApp = () => {
           enfant qui atterrit sur la page des tarifs doit revenir à ses cours,
           pas y rester. */}
       <VerrouEleve>
+      <VerrouConditions>
       <main className="conteneur">
         <Routes>
           <Route path="/" element={<Accueil />} />
@@ -215,6 +221,19 @@ export const BaseApp = () => {
           <Route
             path="/eleves/:eleveId/mes-fiches/cours/:coursId"
             element={<RouteProtegee><CoursFiches /></RouteProtegee>}
+          />
+          {/* MES PODCASTS (15/11/2026) : l'espace, la création, un podcast. */}
+          <Route
+            path="/eleves/:eleveId/mes-podcasts"
+            element={<RouteProtegee><MesPodcasts /></RouteProtegee>}
+          />
+          <Route
+            path="/eleves/:eleveId/mes-podcasts/nouveau"
+            element={<RouteProtegee><NouveauPodcast /></RouteProtegee>}
+          />
+          <Route
+            path="/eleves/:eleveId/mes-podcasts/cours/:coursId"
+            element={<RouteProtegee><CoursPodcast /></RouteProtegee>}
           />
           <Route
             path="/eleves/:eleveId/jeux"
@@ -383,6 +402,19 @@ export const BaseApp = () => {
             path="/espace-parent/fiches/cours/:coursId"
             element={<RouteProtegee parent><EspaceParent><CoursFiches /></EspaceParent></RouteProtegee>}
           />
+          {/* SES PODCASTS (15/11/2026) : les pages des élèves, propriétaire changé, comme ses fiches. */}
+          <Route
+            path="/espace-parent/podcasts"
+            element={<RouteProtegee parent><EspaceParent><MesPodcasts /></EspaceParent></RouteProtegee>}
+          />
+          <Route
+            path="/espace-parent/podcasts/nouveau"
+            element={<RouteProtegee parent><EspaceParent><NouveauPodcast /></EspaceParent></RouteProtegee>}
+          />
+          <Route
+            path="/espace-parent/podcasts/cours/:coursId"
+            element={<RouteProtegee parent><EspaceParent><CoursPodcast /></EspaceParent></RouteProtegee>}
+          />
 
           <Route
             path="/profil"
@@ -412,12 +444,15 @@ export const BaseApp = () => {
           <Route path="*" element={<NonTrouve />} />
         </Routes>
       </main>
+      </VerrouConditions>
       </VerrouEleve>
       {/* SUR TOUTE PAGE, UNE FOIS CONNECTÉ — parent ou enfant, même
           sélecteur que la barre de navigation. Un visiteur non connecté n'a
           personne à qui écrire un signalement : le serveur ne saurait pas
           quel parent prévenir. */}
       {(authentifie || eleve) && <BoutonSignalement />}
+      {/* LES PODCASTS EN FABRICATION (15/11/2026) : une barre fixe qui suit de page en page, puis « prêt ». */}
+      {(authentifie || eleve) && <SuiviPodcasts decale={authentifie && estAdmin} />}
 
       {/* LE CONSENTEMENT, POUR TOUT LE MONDE — y compris un visiteur non
           connecté, qui est justement celui que la mesure d'audience observe.

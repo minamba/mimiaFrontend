@@ -8,6 +8,7 @@ import {
 import {
   ACCEPTE, PIECES_MAX, refusPiece, tailleLisible,
 } from '../lib/signalementPieces';
+import { collerDisponible, lirePressePapier, useCollerFichiers } from '../lib/collerFichiers';
 
 /**
  * LES CAPTURES D'ÉCRAN ET DOCUMENTS D'UN SIGNALEMENT — Camara, le 03/11/2026 : « dans
@@ -84,10 +85,13 @@ export default function PiecesSignalement({ signalementId, modifiable = false, o
     }
   };
 
-  const ajouter = async (evenement) => {
+  const ajouter = (evenement) => {
     const fichiers = Array.from(evenement.target.files ?? []);
     evenement.target.value = '';
+    envoyer(fichiers);
+  };
 
+  const envoyer = async (fichiers) => {
     setEnvoi(true);
     setErreur(null);
 
@@ -116,6 +120,23 @@ export default function PiecesSignalement({ signalementId, modifiable = false, o
     remplacer(liste);
     if (refus.length > 0) setErreur(refus.join(' '));
     setEnvoi(false);
+  };
+
+  // COLLER UNE CAPTURE (11/11/2026) : Ctrl+V dans le formulaire ouvert l'envoie tout de suite — voir collerFichiers.
+  // Seulement là où l'on peut ajouter, et jamais pendant un envoi.
+  useCollerFichiers(modifiable && !envoi, envoyer);
+
+  const collerDepuisLeBouton = async () => {
+    try {
+      const colles = await lirePressePapier();
+      if (colles.length === 0) {
+        setErreur('Le presse-papiers ne contient ni image ni PDF.');
+        return;
+      }
+      envoyer(colles);
+    } catch {
+      setErreur('Le navigateur n’a pas donné accès au presse-papiers : utilise Ctrl+V (ou Cmd+V).');
+    }
   };
 
   const supprimer = async (piece) => {
@@ -223,16 +244,25 @@ export default function PiecesSignalement({ signalementId, modifiable = false, o
       {modifiable && (
         <div className="champ signalement-pieces__ajout">
           <label htmlFor={`signalement-${signalementId}-ajout`}>Ajouter des captures d’écran ou des documents</label>
-          <input
-            id={`signalement-${signalementId}-ajout`}
-            type="file"
-            multiple
-            accept={ACCEPTE}
-            disabled={envoi}
-            onChange={ajouter}
-          />
+          <div className="signalement-pieces-choix__entree">
+            <input
+              id={`signalement-${signalementId}-ajout`}
+              type="file"
+              multiple
+              accept={ACCEPTE}
+              disabled={envoi}
+              onChange={ajouter}
+            />
+            {collerDisponible() && (
+              <button type="button" className="btn-ghost btn-ghost--mini" disabled={envoi} onClick={collerDepuisLeBouton}>
+                Coller
+              </button>
+            )}
+          </div>
           <span className="champ__aide">
-            {envoi ? 'Envoi en cours…' : 'Images, PDF, Word, Excel… 10 fichiers au plus, 10 Mo chacun.'}
+            {envoi
+              ? 'Envoi en cours…'
+              : 'Images, PDF, Word, Excel… 10 fichiers au plus, 10 Mo chacun. Une capture copiée se colle avec Ctrl+V (Cmd+V sur Mac).'}
           </span>
         </div>
       )}

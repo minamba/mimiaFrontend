@@ -372,6 +372,12 @@ const MURS = {
 
   // La piste et le terrain.
   EPPCS: 'sport',
+
+  // LES LANGUES QUI N'AVAIENT PAS DE DÉCOR (Camara, le 16/11/2026) : elles prenaient la table du français.
+  CHINOIS: 'chinois',
+  ARABE: 'arabe',
+  ALLEMAND: 'allemand',
+  ITALIEN: 'italien',
 };
 
 /**

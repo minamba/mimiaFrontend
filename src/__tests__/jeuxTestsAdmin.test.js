@@ -26,6 +26,7 @@ jest.mock('../lib/api/jeuxTestsApi', () => ({
   ajouterLigneDeTest: jest.fn(),
   modifierLigneDeTest: jest.fn(),
   changerStatutLigneDeTest: jest.fn(),
+  deplacerLigneDeTest: jest.fn(),
   supprimerLigneDeTest: jest.fn(),
 }));
 
@@ -435,7 +436,7 @@ describe('les lignes d’un test', () => {
     await userEvent.selectOptions(choix, 'ko');
 
     expect(api.changerStatutLigneDeTest).toHaveBeenCalledWith(1, 10, 'ko');
-    expect(await screen.findByText('En cours')).toHaveClass('jeux-tests__badge--en_cours');
+    expect(await screen.findByText('En cours', { selector: '.jeux-tests__badge' })).toHaveClass('jeux-tests__badge--en_cours');
     expect(screen.getByRole('combobox', { name: 'Statut de Compétence 10' })).toHaveClass('jeux-tests__statut--ko');
   });
 
@@ -449,7 +450,7 @@ describe('les lignes d’un test', () => {
     expect(screen.getByRole('combobox', { name: 'Statut de Compétence 10' })).toHaveValue('a_tester');
   });
 
-  test('l’œil montre le test, avec la date telle qu’elle a été choisie', async () => {
+  test('l’œil montre le test et sa date', async () => {
     await ouvrirLePremierJeu(jeuOuvert([
       ligne(10, 'ko', { dateEffectuee: '2026-11-03T00:00:00', commentaire: 'Le bouton ne répond pas' }),
     ], 'en_cours'));
@@ -469,44 +470,130 @@ describe('les lignes d’un test', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  test('le crayon modifie la ligne : compétence, statut, date au calendrier, commentaire', async () => {
+  test('le crayon modifie la ligne : compétence, statut, commentaire ; la date ne se saisit plus', async () => {
     await ouvrirLePremierJeu(jeuOuvert([ligne(10)]));
     api.modifierLigneDeTest.mockResolvedValue({ data: jeuOuvert([ligne(10, 'ok')]) });
 
     await userEvent.click(screen.getByRole('button', { name: 'Modifier Compétence 10' }));
 
-    const date = screen.getByLabelText('Date du test effectué');
-    expect(date).toHaveAttribute('type', 'date');
+    expect(screen.queryByLabelText('Date du test effectué')).not.toBeInTheDocument();
 
     await userEvent.clear(screen.getByLabelText('Compétence / test à réaliser'));
     await userEvent.type(screen.getByLabelText('Compétence / test à réaliser'), ' Comparer ');
     await userEvent.selectOptions(screen.getByLabelText('Statut'), 'ok');
-    await userEvent.type(date, '2026-11-04');
     await userEvent.type(screen.getByLabelText('Commentaire'), 'RAS');
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => expect(api.modifierLigneDeTest).toHaveBeenCalledWith(1, 10, {
       competence: 'Comparer',
       statut: 'ok',
-      dateEffectuee: '2026-11-04',
       commentaire: 'RAS',
     }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  test('une date et un commentaire vides partent à null', async () => {
+  test('un commentaire vide part à null', async () => {
     await ouvrirLePremierJeu(jeuOuvert([ligne(10, 'ok', { dateEffectuee: '2026-11-04T00:00:00', commentaire: 'x' })]));
     api.modifierLigneDeTest.mockResolvedValue({ data: jeuOuvert([ligne(10)]) });
 
     await userEvent.click(screen.getByRole('button', { name: 'Modifier Compétence 10' }));
-    await userEvent.clear(screen.getByLabelText('Date du test effectué'));
     await userEvent.clear(screen.getByLabelText('Commentaire'));
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
     await waitFor(() => expect(api.modifierLigneDeTest).toHaveBeenCalledWith(1, 10, expect.objectContaining({
-      dateEffectuee: null,
       commentaire: null,
     })));
+  });
+
+  test('déplacer : la ligne prise, puis « Placer ici » entre les autres, et le rang part au serveur', async () => {
+    await ouvrirLePremierJeu(jeuOuvert([ligne(10), ligne(11), ligne(12)]));
+    api.deplacerLigneDeTest.mockResolvedValue({ data: jeuOuvert([ligne(12), ligne(10), ligne(11)]) });
+
+    expect(screen.queryByRole('button', { name: 'Placer ici' })).not.toBeInTheDocument();
+
+    const bouton = screen.getByRole('button', { name: 'Déplacer Compétence 12' });
+    await userEvent.click(bouton);
+    expect(bouton).toHaveAttribute('aria-pressed', 'true');
+
+    // Trois lignes, la dernière prise : au-dessus de la 1re et de la 2e. Pas à côté d'elle-même.
+    const emplacements = screen.getAllByRole('button', { name: 'Placer ici' });
+    expect(emplacements).toHaveLength(2);
+
+    await userEvent.click(emplacements[0]);
+
+    expect(api.deplacerLigneDeTest).toHaveBeenCalledWith(1, 12, 0);
+    expect(screen.queryByRole('button', { name: 'Placer ici' })).not.toBeInTheDocument();
+
+    // L'ordre vient du serveur.
+    await waitFor(() => expect(within(screen.getByRole('table')).getAllByRole('row')[1]).toHaveTextContent('Compétence 12'));
+    const rangees = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rangees[1]).toHaveTextContent('Compétence 10');
+    expect(rangees[0]).toHaveClass('jeux-tests__ligne--ciblee');
+  });
+
+  test('déplacer vers le bas : tout en bas, c’est le dernier rang', async () => {
+    await ouvrirLePremierJeu(jeuOuvert([ligne(10), ligne(11), ligne(12)]));
+    api.deplacerLigneDeTest.mockResolvedValue({ data: jeuOuvert([ligne(11), ligne(12), ligne(10)]) });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Déplacer Compétence 10' }));
+    const emplacements = screen.getAllByRole('button', { name: 'Placer ici' });
+    await userEvent.click(emplacements[emplacements.length - 1]);
+
+    expect(api.deplacerLigneDeTest).toHaveBeenCalledWith(1, 10, 2);
+  });
+
+  test('déplacer : un second clic ou Échap y renonce, sans rien envoyer', async () => {
+    await ouvrirLePremierJeu(jeuOuvert([ligne(10), ligne(11), ligne(12)]));
+
+    const bouton = screen.getByRole('button', { name: 'Déplacer Compétence 10' });
+    await userEvent.click(bouton);
+    expect(screen.getAllByRole('button', { name: 'Placer ici' })).toHaveLength(2);
+    await userEvent.click(bouton);
+    expect(screen.queryByRole('button', { name: 'Placer ici' })).not.toBeInTheDocument();
+
+    await userEvent.click(bouton);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('button', { name: 'Placer ici' })).not.toBeInTheDocument();
+    expect(api.deplacerLigneDeTest).not.toHaveBeenCalled();
+  });
+
+  test('déplacer : une ligne seule n’a nulle part où aller', async () => {
+    await ouvrirLePremierJeu(jeuOuvert([ligne(10)]));
+    expect(screen.queryByRole('button', { name: 'Déplacer Compétence 10' })).not.toBeInTheDocument();
+  });
+
+  test('déplacer : un refus du serveur s’affiche et l’ordre ne bouge pas', async () => {
+    await ouvrirLePremierJeu(jeuOuvert([ligne(10), ligne(11), ligne(12)]));
+    api.deplacerLigneDeTest.mockRejectedValue({ response: { data: { message: 'Cette ligne n’existe plus.' } } });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Déplacer Compétence 12' }));
+    await userEvent.click(screen.getAllByRole('button', { name: 'Placer ici' })[0]);
+
+    expect(await screen.findByText('Cette ligne n’existe plus.')).toBeInTheDocument();
+    expect(within(screen.getByRole('table')).getAllByRole('row')[1]).toHaveTextContent('Compétence 10');
+  });
+
+  describe('un long commentaire (08/11/2026)', () => {
+    const hauteur = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollHeight');
+    afterEach(() => Object.defineProperty(Element.prototype, 'scrollHeight', hauteur));
+
+    test('coupé à l’écran : « Lire tout » ouvre l’aperçu avec le texte entier', async () => {
+      Object.defineProperty(Element.prototype, 'scrollHeight', { configurable: true, get: () => 400 });
+      const long = 'Lors de la lecture de syllabe, le professeur reste bloqué. '.repeat(12).trim();
+      await ouvrirLePremierJeu(jeuOuvert([ligne(10, 'ko', { commentaire: long })]));
+
+      await userEvent.click(screen.getByRole('button', { name: 'Lire tout le commentaire de Compétence 10' }));
+
+      expect(within(screen.getByRole('dialog')).getByText(long)).toBeInTheDocument();
+    });
+
+    test('un commentaire qui tient n’a pas de bouton, et une ligne sans commentaire n’a rien', async () => {
+      await ouvrirLePremierJeu(jeuOuvert([ligne(10, 'ko', { commentaire: 'RAS' }), ligne(11)]));
+
+      expect(screen.getByText('RAS')).toHaveClass('jeux-tests__commentaire');
+      expect(screen.queryByRole('button', { name: /Lire tout/ })).not.toBeInTheDocument();
+      expect(document.querySelectorAll('.jeux-tests__commentaire')).toHaveLength(1);
+    });
   });
 
   test('la corbeille confirme avant de supprimer', async () => {

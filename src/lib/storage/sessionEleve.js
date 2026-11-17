@@ -59,6 +59,11 @@ export function ouvrirSessionEleve({ jeton, eleve }) {
       // ET SON ÂGE, pour le ton de la voix — voir `eleveDeLaSession`.
       age: Number.isFinite(eleve?.age) ? eleve.age : null,
 
+      // SON PORTRAIT (16/11/2026) : l'avatar choisi par le parent (son code) et le sexe, pour l'avatar par
+      // défaut. La barre du haut l'affiche à la place de l'initiale.
+      sexe: eleve?.sexe ?? null,
+      avatar: eleve?.avatar ?? null,
+
       // L'AFFICHAGE ADAPTÉ (11/10/2026) : lecture aérée, calme. Jamais les
       // besoins eux-mêmes — voir `lib/besoins.js`.
       affichage: eleve?.affichage ?? null,
@@ -100,6 +105,33 @@ export function completerSessionEleve(infos) {
   } catch {
     // Navigation privée : la session vivra sans son cycle, et la porte des
     // jeux restera fermée. Rien d'autre n'en dépend.
+  }
+}
+
+/**
+ * LE PORTRAIT RELU DU SERVEUR (16/11/2026) : une session ouverte avant le portrait ne porte ni avatar ni sexe,
+ * et le parent peut changer l'avatar à tout moment. La barre du haut le relit et le range ici. Renvoie vrai si
+ * quelque chose a changé.
+ */
+export function rangerPortraitSession({ avatar, sexe, niveauCode } = {}) {
+  try {
+    const brut = window.localStorage.getItem(CLE);
+    if (!brut) return false;
+
+    const session = JSON.parse(brut);
+    const suivante = {
+      ...session,
+      avatar: avatar ?? null,
+      sexe: sexe ?? session.sexe ?? null,
+      niveauCode: niveauCode || session.niveauCode || '',
+    };
+    if (suivante.avatar === session.avatar && suivante.sexe === session.sexe
+      && suivante.niveauCode === session.niveauCode) return false;
+
+    window.localStorage.setItem(CLE, JSON.stringify(suivante));
+    return true;
+  } catch {
+    return false;
   }
 }
 

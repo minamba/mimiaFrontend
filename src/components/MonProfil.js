@@ -18,6 +18,7 @@ import ChoixEtablissement, { classeAvecConseillere } from './ChoixEtablissement'
 import ChoixAcademie from './ChoixAcademie';
 import ChoixBesoins from './ChoixBesoins';
 import FenetreEditionEnfant, { Section } from './FenetreEditionEnfant';
+import ChoixAvatar from './ChoixAvatar';
 import { useBesoinsParticuliers } from '../lib/storage/modeTest';
 import Loader from './Loader';
 import Quota from './Quota';
@@ -300,6 +301,8 @@ export function LigneEnfant({
     age: eleve.age ?? '',
     niveauScolaireId: eleve.niveauScolaireId ?? '',
     sexe: eleve.sexe ?? 0,
+    // L'avatar choisi (16/11/2026) ; '' = celui par défaut.
+    avatar: eleve.avatar ?? '',
     academieId: eleve.academieId ?? '',
     lv2Espagnol: Boolean(eleve.lv2Espagnol),
     specialites: eleve.specialites ?? [],
@@ -326,6 +329,7 @@ export function LigneEnfant({
     setOuvert(true);
   };
   const fermer = useCallback(() => setOuvert(false), []);
+  const choisirAvatar = useCallback((avatar) => setChamps((c) => ({ ...c, avatar })), []);
   const [erreurEtablissement, setErreurEtablissement] = useState(null);
   const besoinsActifs = useBesoinsParticuliers();
 
@@ -347,6 +351,8 @@ export function LigneEnfant({
       age: Number(champs.age),
       niveauScolaireId: Number(champs.niveauScolaireId),
       sexe: Number(champs.sexe),
+      // Toujours envoyé : '' ramène à l'avatar par défaut (le serveur garde null).
+      avatar: champs.avatar ?? '',
       academieId: champs.academieId ? Number(champs.academieId) : null,
       lv2Espagnol: lv2Possible && champs.lv2Espagnol,
       specialites: specialitesAEnvoyer(champs.specialites, specialitesClasse),
@@ -563,6 +569,15 @@ export function LigneEnfant({
                 </span>
               )}
             </div>
+
+            {/* SON AVATAR, d'après sa classe (16/11/2026) — facultatif, invisible tant qu'il n'y a pas d'avatars. */}
+            <ChoixAvatar
+              classe={niveaux.find((n) => String(n.id) === String(champs.niveauScolaireId))?.code}
+              sexe={champs.sexe}
+              valeur={champs.avatar}
+              onChange={choisirAvatar}
+              prenom={champs.prenom.trim() || eleve.prenom}
+            />
 
             {/* SES LANGUES, SES SPÉCIALITÉS ET SA FILIÈRE, sous la classe qui
                 les décide. Rien ne s'affiche quand la classe n'en a pas. */}
@@ -1020,6 +1035,8 @@ export default function MonProfil() {
           {/* LES FICHES À PART DES HEURES (16/10/2026) : un second encadré,
               jamais mêlé au premier. */}
           <FichesDuForfait />
+          {/* LES PODCASTS (15/11/2026) : un compteur à part, son propre encadré. */}
+          <FichesDuForfait module="podcasts" />
         </>
       )}
 

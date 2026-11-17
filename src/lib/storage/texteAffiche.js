@@ -7,6 +7,9 @@ import { retirerMarqueurSupportEcrit } from './supportEcrit';
 import { retirerMarqueurSupportSon } from './supportSon';
 import { retirerMarqueurSupport } from './supportEvaluation';
 import { retirerMarqueurTypeDictee } from './typeDictee';
+import { retirerMarqueurChoixExerciceSons } from './choixExerciceSons';
+import { MARQUEUR_LECTURE_IMAGE } from '../lectureDImage';
+import { sansBalisesAEcouter } from '../reponseADictee';
 
 /**
  * CE QUE L'APPLICATION GLISSE DANS UN MESSAGE NE SE MONTRE JAMAIS — Camara, le
@@ -21,12 +24,15 @@ import { retirerMarqueurTypeDictee } from './typeDictee';
  * aucun écran ne peut l'oublier.
  */
 export function retirerMarqueursApplication(texte) {
-  return retirerMarqueurSupportSon(retirerMarqueurTypeDictee(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
+  return retirerMarqueurChoixExerciceSons(retirerMarqueurLectureImage(retirerMarqueurSupportSon(retirerMarqueurTypeDictee(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
     retirerMarqueurSupport(retirerMarqueurCopieControle(
       retirerMarqueurCahier(retirerMarqueurEnonce(retirerMarqueurAvecCopie(texte ?? ''))),
     )),
-  ))));
+  ))))));
 }
+
+/** La syllabe ou le mot à lire (07/11/2026) : le tableau le montre, la bulle ne le dit pas. */
+const retirerMarqueurLectureImage = (texte) => (texte ?? '').replace(MARQUEUR_LECTURE_IMAGE, '').trimEnd();
 
 /**
  * Le texte d'un message tel qu'on peut le relire hors du chat : marqueurs de
@@ -34,7 +40,8 @@ export function retirerMarqueursApplication(texte) {
  * qui n'affichent qu'un paragraphe (archives, comptes rendus).
  */
 export function texteLisible(texte) {
-  return decouper(retirerMarqueursApplication(texte))
+  // Une relecture après coup (archives, comptes rendus) montre le nombre dicté : l'exercice est passé.
+  return decouper(retirerMarqueursApplication(sansBalisesAEcouter(texte)))
     .map((s) => s.contenu.trim())
     .filter(Boolean)
     .join('\n\n');

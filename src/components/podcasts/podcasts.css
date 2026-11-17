@@ -1,0 +1,951 @@
+/* ==========================================================================
+   MES PODCASTS — Camara, le 15/11/2026. Préfixe `pod-` (vérifié libre dans
+   App.css et les autres feuilles). Les étapes, la jauge et les fenêtres sont
+   celles des fiches (`mf-`), chargées avec.
+
+   LA COULEUR DE LA MATIÈRE porte l'épisode (`--matiere`, posée par
+   styleMatiere) ; à défaut, le violet des podcasts (`--pod-teinte`). Les
+   couleurs passent par les jetons du thème : elles suivent le clair, le
+   sombre, Blue Sky et ses déclinaisons.
+   ========================================================================== */
+
+.pod-page { --pod-teinte: var(--matiere, #7c5cff); }
+
+/* --------------------------------------------------------------- l'en-tête */
+.pod-entete {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.pod-entete .mf-titre { margin: 0; }
+.pod-entete .page__sous-titre { margin: 4px 0 0; }
+
+.pod-entete__icone {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--pod-teinte) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pod-teinte) 45%, transparent);
+  flex: none;
+}
+
+.pod-entete__icone img { width: 44px; height: 44px; object-fit: contain; }
+.pod-entete__creer { margin-left: auto; }
+
+.pod-vide { text-align: center; }
+.pod-vide__image { width: 84px; height: 84px; object-fit: contain; margin: 4px auto 8px; display: block; }
+
+/* -------------------------------------------------------- la liste, par matière */
+.pod-matiere { margin-top: 26px; }
+
+.pod-matiere__titre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.pod-matiere__pastille {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--matiere, var(--pod-teinte));
+}
+
+.pod-cartes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.pod-carte { position: relative; }
+
+.pod-carte__lien {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--rayon, 16px);
+  border: 1px solid var(--trait);
+  border-left: 5px solid var(--matiere, var(--pod-teinte));
+  background: var(--surface);
+  color: var(--encre);
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pod-carte__lien:hover,
+.pod-carte__lien:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--matiere, var(--pod-teinte)) 60%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--matiere, var(--pod-teinte)) 22%, transparent);
+}
+
+.pod-carte__texte { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.pod-carte__titre { font-size: 15.5px; line-height: 1.3; }
+.pod-carte__meta { font-size: 13px; color: var(--encre-douce); }
+
+.pod-carte__jouer {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--matiere, var(--pod-teinte));
+  color: #fff;
+  flex: none;
+}
+
+.pod-carte.est-a_lire .pod-carte__jouer,
+.pod-carte.est-a_generer .pod-carte__jouer,
+.pod-carte.est-echec .pod-carte__jouer { opacity: 0.35; }
+
+.pod-carte__supprimer {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--encre-douce);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.pod-carte:hover .pod-carte__supprimer,
+.pod-carte__supprimer:focus-visible { opacity: 1; }
+
+@media (hover: none) {
+  .pod-carte__supprimer { opacity: 0.7; }
+}
+
+/* L'ONDE : cinq barres qui dansent doucement — un podcast se reconnaît d'un coup d'œil. */
+.pod-carte__onde,
+.pod-attente__onde {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 28px;
+  flex: none;
+}
+
+.pod-carte__onde span,
+.pod-attente__onde span {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--matiere, var(--pod-teinte));
+  animation: pod-onde 1.2s ease-in-out infinite;
+}
+
+.pod-carte__onde span:nth-child(1), .pod-attente__onde span:nth-child(1) { height: 10px; animation-delay: -0.2s; }
+.pod-carte__onde span:nth-child(2), .pod-attente__onde span:nth-child(2) { height: 22px; animation-delay: -0.6s; }
+.pod-carte__onde span:nth-child(3), .pod-attente__onde span:nth-child(3) { height: 16px; animation-delay: -0.4s; }
+.pod-carte__onde span:nth-child(4), .pod-attente__onde span:nth-child(4) { height: 26px; animation-delay: -0.9s; }
+.pod-carte__onde span:nth-child(5), .pod-attente__onde span:nth-child(5) { height: 12px; animation-delay: -0.1s; }
+
+.pod-carte.est-pret .pod-carte__onde span { animation: none; }
+
+@keyframes pod-onde {
+  0%, 100% { transform: scaleY(0.55); }
+  50% { transform: scaleY(1); }
+}
+
+/* Les icônes de lecture, dessinées en CSS : un triangle, deux barres. */
+.pod-icone-jouer {
+  width: 0;
+  height: 0;
+  margin-left: 3px;
+  border-style: solid;
+  border-width: 8px 0 8px 13px;
+  border-color: transparent transparent transparent currentColor;
+}
+
+.pod-icone-pause {
+  width: 14px;
+  height: 16px;
+  background: linear-gradient(90deg, currentColor 0 35%, transparent 35% 65%, currentColor 65% 100%);
+}
+
+/* --------------------------------------------------------- la page d'un podcast */
+.pod-cours__entete { margin-bottom: 18px; }
+
+.pod-cours__matiere {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--matiere, var(--pod-teinte)) 18%, transparent);
+  color: var(--encre);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.pod-cours__entete .mf-titre { margin: 8px 0 4px; }
+.pod-cours__resume { margin: 0; color: var(--encre-douce); }
+
+.pod-attente {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 18px;
+  border: 1px dashed var(--trait);
+  border-radius: var(--rayon, 16px);
+  text-align: center;
+}
+
+.pod-attente p { margin: 0; }
+.pod-attente__onde { height: 34px; margin-bottom: 6px; }
+
+/* Le choix des épisodes. */
+.pod-notions__titre { margin: 0 0 4px; font-size: 19px; }
+
+.pod-notions__liste {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.pod-notion {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--trait);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.pod-notion.est-coche { border-color: color-mix(in srgb, var(--matiere, var(--pod-teinte)) 60%, transparent); }
+
+.pod-notion input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--matiere, var(--pod-teinte));
+  flex: none;
+}
+
+.pod-notion__rang {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--matiere, var(--pod-teinte)) 20%, transparent);
+  font-weight: 800;
+  font-size: 13px;
+  flex: none;
+}
+
+.pod-notion__texte { display: flex; flex-direction: column; gap: 2px; }
+.pod-notion__texte span { font-size: 13.5px; color: var(--encre-douce); }
+
+/* « Tout écouter », et en dessous « Tout télécharger » (15/11/2026). */
+.pod-tout { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin: 6px 0 12px; }
+.pod-tout .champ__erreur { margin: 0; text-align: right; }
+.pod-episodes { display: grid; gap: 16px; }
+
+/* -------------------------------------------------------------- le lecteur */
+.pod-lecteur {
+  --pod-couleur: var(--matiere, var(--pod-teinte, #7c5cff));
+  padding: 18px;
+  border-radius: var(--rayon, 16px);
+  border: 1px solid var(--trait);
+  background: var(--surface);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pod-lecteur.est-en-lecture {
+  border-color: color-mix(in srgb, var(--pod-couleur) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pod-couleur) 18%, transparent);
+}
+
+.pod-lecteur--attente {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--encre-douce);
+  border-style: dashed;
+}
+
+.pod-lecteur__tete { display: flex; align-items: center; gap: 14px; }
+.pod-lecteur__prof { flex: none; }
+.pod-lecteur__titres { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pod-lecteur__rang { font-size: 12.5px; color: var(--encre-douce); font-weight: 600; }
+.pod-lecteur__titre { font-size: 17px; line-height: 1.3; }
+
+.pod-lecteur__barre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pod-lecteur__temps {
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  color: var(--encre-douce);
+  min-width: 38px;
+  text-align: center;
+}
+
+.pod-lecteur__progression {
+  flex: 1;
+  height: 6px;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--pod-couleur) 0 var(--pod-avance, 0%), color-mix(in srgb, var(--encre) 16%, transparent) var(--pod-avance, 0%) 100%);
+  cursor: pointer;
+}
+
+.pod-lecteur__progression::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--pod-couleur);
+  border: 2px solid #fff;
+}
+
+.pod-lecteur__progression::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--pod-couleur);
+  border: 2px solid #fff;
+}
+
+.pod-lecteur__commandes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.pod-lecteur__jouer {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: var(--pod-couleur);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--pod-couleur) 40%, transparent);
+  transition: transform 0.12s ease;
+}
+
+.pod-lecteur__jouer:hover:not(:disabled) { transform: scale(1.06); }
+.pod-lecteur__jouer:disabled { opacity: 0.6; cursor: default; }
+.pod-lecteur__jouer .pod-icone-jouer { border-width: 10px 0 10px 16px; margin-left: 4px; }
+.pod-lecteur__jouer .pod-icone-pause { width: 16px; height: 20px; }
+
+.pod-lecteur__chargement {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: pod-tourne 0.8s linear infinite;
+}
+
+@keyframes pod-tourne { to { transform: rotate(360deg); } }
+
+.pod-lecteur__saut,
+.pod-lecteur__vitesse {
+  min-width: 52px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--trait);
+  background: transparent;
+  color: var(--encre);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pod-lecteur__saut:disabled { opacity: 0.5; cursor: default; }
+
+.pod-lecteur__texte-zone { margin-top: 12px; }
+
+.pod-lecteur__afficher {
+  border: none;
+  background: transparent;
+  color: var(--corail-texte, var(--encre));
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.pod-lecteur__texte {
+  position: relative;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--encre) 4%, transparent);
+  max-height: min(380px, 55vh);
+  overflow-y: auto;
+  /* Le défilement de la zone ne tire pas la page avec lui. */
+  overscroll-behavior: contain;
+}
+
+/* Sous la barre de navigation quand « Tout écouter » amène le lecteur suivant. */
+.pod-lecteur { scroll-margin-top: 96px; }
+
+.pod-lecteur__texte p {
+  margin: 0 0 10px;
+  line-height: 1.6;
+  color: var(--encre-douce);
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 6px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.pod-lecteur__texte p.est-en-cours {
+  color: var(--encre);
+  background: color-mix(in srgb, var(--pod-couleur) 16%, transparent);
+}
+
+/* LE TEXTE QUI SUIT LA VOIX (15/11/2026) : la suite en gris, ce qui est dit en net, la phrase dite surlignée. */
+.pod-lecteur__texte p:has(.pod-phrase) { cursor: default; }
+.pod-lecteur__texte p.est-en-cours:has(.pod-phrase) {
+  color: var(--encre-douce);
+  background: color-mix(in srgb, var(--pod-couleur) 7%, transparent);
+}
+
+.pod-phrase {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.pod-phrase:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
+.pod-phrase.est-passee { color: var(--encre); }
+
+.pod-phrase.est-dite {
+  color: var(--encre);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--pod-couleur) 38%, transparent);
+}
+
+.pod-choix__prof { font-weight: 500; opacity: 0.8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pod-carte__onde span,
+  .pod-attente__onde span,
+  .pod-lecteur__chargement { animation: none; }
+}
+
+@media (max-width: 520px) {
+  .pod-entete__creer { margin-left: 0; width: 100%; text-align: center; }
+  .pod-lecteur { padding: 14px; }
+  .pod-lecteur__commandes { gap: 10px; }
+}
+
+/* LIRE EN MÊME TEMPS, TÉLÉCHARGER EN MP3 (15/11/2026) : côte à côte sous le lecteur. */
+.pod-lecteur__liens { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+.pod-lecteur__telecharger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--trait);
+  background: transparent;
+  color: var(--encre);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pod-lecteur__telecharger:hover:not(:disabled) { border-color: var(--pod-couleur, var(--pod-teinte)); }
+.pod-lecteur__telecharger:disabled { opacity: 0.6; cursor: progress; }
+
+/* Une flèche vers un trait, dessinée en CSS. */
+.pod-icone-telecharger { position: relative; width: 12px; height: 14px; border-bottom: 2px solid currentColor; }
+.pod-icone-telecharger::before {
+  content: ''; position: absolute; left: 5px; top: 0; width: 2px; height: 9px; background: currentColor;
+}
+.pod-icone-telecharger::after {
+  content: ''; position: absolute; left: 2px; top: 3px; width: 6px; height: 6px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg);
+}
+
+/* ------------------------------------------------ la barre de toutes les pages (15/11/2026)
+   En bas à gauche : le bouton de signalement tient le coin droit. Au-dessus des raccourcis d'un administrateur. */
+.pod-suivi {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 45;
+  display: grid;
+  gap: 10px;
+  width: min(330px, calc(100vw - 48px));
+}
+
+.pod-suivi--decale { bottom: 104px; }
+
+.pod-suivi__carte {
+  --pod-couleur: var(--matiere, #7c5cff);
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--pod-couleur) 45%, var(--trait));
+  background: var(--surface);
+  box-shadow: 0 12px 30px rgba(10, 16, 28, 0.22);
+  animation: pod-suivi-entree 0.3s ease;
+}
+
+@keyframes pod-suivi-entree {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.pod-suivi__haut { display: flex; align-items: center; gap: 10px; }
+.pod-suivi__icone { font-size: 20px; line-height: 1; }
+
+.pod-suivi__titre {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--encre);
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.pod-suivi__titre, .pod-suivi__titre span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pod-suivi__titre span { font-weight: 600; font-size: 12px; color: var(--encre-douce); }
+.pod-suivi__titre:hover { text-decoration: underline; }
+
+.pod-suivi__pourcent { font-size: 14px; color: var(--pod-couleur); font-variant-numeric: tabular-nums; }
+
+.pod-suivi__fermer {
+  border: 0;
+  background: transparent;
+  color: var(--encre-douce);
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+
+.pod-suivi__barre {
+  position: relative;
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--encre) 12%, transparent);
+}
+
+.pod-suivi__barre span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--pod-couleur), color-mix(in srgb, var(--pod-couleur) 60%, #fff));
+  transition: width 0.8s ease;
+}
+
+/* Pas encore de pourcentage (le cours se lit) : un trait qui court. */
+.pod-suivi__barre--attente span {
+  width: 35%;
+  animation: pod-suivi-course 1.4s ease-in-out infinite;
+}
+
+@keyframes pod-suivi-course {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
+
+.pod-suivi__etat { margin: 6px 0 0; font-size: 12.5px; color: var(--encre-douce); }
+
+.pod-suivi__lien {
+  display: inline-block;
+  margin-top: 8px;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--pod-couleur);
+}
+
+.pod-pret { text-align: center; }
+.pod-pret__icone {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  font-size: 30px;
+  background: color-mix(in srgb, var(--matiere, #7c5cff) 18%, transparent);
+}
+.pod-pret .modale__actions { justify-content: center; }
+
+@media (max-width: 640px) {
+  /* Au téléphone, la carte laisse le coin droit au bouton de signalement. */
+  .pod-suivi { left: 12px; bottom: 12px; width: calc(100vw - 96px); }
+  .pod-suivi--decale { bottom: 84px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pod-suivi__carte, .pod-suivi__barre--attente span { animation: none; }
+}
+
+/* ------------------------------------------------ le résumé de livre (15/11/2026) */
+.pod-livre { display: grid; gap: 8px; }
+.pod-livre__etiquette { font-weight: 800; font-size: 14px; color: var(--encre); margin-top: 4px; }
+.pod-livre__etiquette em { font-weight: 600; font-style: normal; color: var(--encre-douce); }
+.pod-livre .mf-libre__texte { min-height: 0; }
+
+
+/* ------------------------------------------------ la voix du parent (15/11/2026) */
+.pod-voix { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+
+.pod-voix__choix {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 2px solid var(--trait);
+  background: var(--surface);
+  color: var(--encre);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.pod-voix__choix strong { font-size: 14px; }
+.pod-voix__choix span { font-size: 11.5px; color: var(--encre-douce); line-height: 1.3; }
+.pod-voix__choix:hover:not(:disabled) { border-color: #7c5cff; }
+.pod-voix__choix.est-choisi { border-color: #7c5cff; box-shadow: 0 0 0 3px color-mix(in srgb, #7c5cff 22%, transparent); }
+.pod-voix__choix:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ======================================================================================================
+   LA FENÊTRE « COMMENT VEUX-TU CRÉER TON PODCAST ? », D'APRÈS LA MAQUETTE DE CAMARA (15/11/2026) :
+   « pour le podcast je veux exactement ce visuel ». Les trois illustrations viennent de la maquette
+   (assets/podcasts-choix/bande-*.webp) ; tout le reste est ici. Couleurs relevées sur la maquette.
+   Pas de flou derrière (voir `.mf-apercu`, mesFichesPages.css) : il ralentissait le PC.
+   ====================================================================================================== */
+.mf-apercu__fenetre.pod-mode__fenetre {
+  width: min(960px, 100%);
+  border: 3px solid transparent;
+  border-radius: 28px;
+  background:
+    linear-gradient(#011642, #011642) padding-box,
+    linear-gradient(180deg, #fdbb94 0%, #f08a6e 22%, #c2458f 55%, #6326cf 100%) border-box;
+  box-shadow:
+    0 0 0 6px rgba(70, 30, 90, 0.35),
+    0 0 34px rgba(240, 120, 110, 0.25),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+/* Le liseré d'une seule couleur des autres fenêtres : ici, c'est le cadre en dégradé qui le fait. */
+.mf-apercu__fenetre.pod-mode__fenetre::before { display: none; }
+
+.pod-mode__tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem 0.6rem 1.2rem;
+}
+
+.pod-mode__titre {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: clamp(1.25rem, 2.6vw, 1.7rem);
+  letter-spacing: 0.005em;
+  color: #fff;
+}
+
+.pod-mode__micro {
+  width: 58px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.pod-mode__fermer {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.7rem;
+  height: 2.7rem;
+  border: 2px solid #3d63c9;
+  border-radius: 50%;
+  background: #031a4d;
+  color: #fff;
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.pod-mode__fermer:hover,
+.pod-mode__fermer:focus-visible {
+  background: #3d63c9;
+  transform: rotate(90deg);
+}
+
+.pod-mode__choix {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  padding: 0.7rem 1.4rem 1.5rem;
+}
+
+/* UNE CARTE : l'illustration, la pastille du titre à cheval, le panneau clair et son texte, la vague en bas à droite. */
+.pod-mode__carte {
+  --pm-bord: #2dacf6;
+  --pm-lueur: rgba(45, 172, 246, 0.45);
+  --pm-fond: linear-gradient(90deg, #13d6fd, #4ce1fd);
+  --pm-panneau: #d6eff9;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid var(--pm-bord);
+  border-radius: 24px;
+  background: var(--pm-fond);
+  box-shadow: 0 0 16px var(--pm-lueur), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  color: #17204a;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.pod-mode__carte--libre {
+  --pm-bord: #ad58fa;
+  --pm-lueur: rgba(173, 88, 250, 0.5);
+  --pm-fond: linear-gradient(90deg, #c66bfe, #d997fd);
+  --pm-panneau: #ecd8fc;
+}
+
+.pod-mode__carte--livre {
+  --pm-bord: #f7a35c;
+  --pm-lueur: rgba(247, 163, 92, 0.5);
+  --pm-fond: linear-gradient(90deg, #fa9c5d, #fec471);
+  --pm-panneau: #fce3d2;
+}
+
+.pod-mode__carte:hover,
+.pod-mode__carte:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 0 26px var(--pm-lueur), 0 14px 30px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+  outline: none;
+}
+
+.pod-mode__visuel {
+  order: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 568 / 247;
+  object-fit: cover;
+}
+
+/* La pastille : sous l'illustration, la moitié basse sur le panneau. Premier dans le DOM (le nom du bouton commence
+   par son titre), placée ici par `order`. */
+.pod-mode__nom {
+  order: 2;
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  width: 84%;
+  margin: 0 0 -1.15rem;
+  padding: 0.45rem 0.8rem;
+  border: 2px solid color-mix(in srgb, var(--pm-bord) 70%, #fff);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f3f6fb);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: clamp(1rem, 1.7vw, 1.3rem);
+  line-height: 1.15;
+  color: #0b1640;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pod-mode__bas {
+  order: 3;
+  position: relative;
+  flex: 1;
+  display: grid;
+  align-content: start;
+  padding: 1.75rem 1rem 1.4rem;
+  border-radius: 20px 20px 0 0;
+  background: var(--pm-panneau);
+  overflow: hidden;
+}
+
+/* La vague claire en bas à droite, à la couleur de la carte. */
+.pod-mode__bas::after {
+  content: '';
+  position: absolute;
+  right: -38px;
+  bottom: -56px;
+  width: 180px;
+  height: 90px;
+  border-radius: 50%;
+  border-top: 7px solid color-mix(in srgb, var(--pm-bord) 75%, #fff);
+  transform: rotate(-24deg);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.pod-mode__texte {
+  position: relative;
+  z-index: 1;
+  font-family: var(--sans);
+  font-size: 0.98rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #1d2552;
+}
+
+@media (max-width: 760px) {
+  .pod-mode__choix { grid-template-columns: 1fr; }
+  .pod-mode__titre { font-size: 1.15rem; }
+  .pod-mode__micro { width: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pod-mode__carte,
+  .pod-mode__fermer { transition: none; }
+}
+
+/* ======================================================================================================
+   LA BANNIÈRE « MES PODCASTS » — Camara, le 15/11/2026 : « améliore le design du titre ». Les couleurs de la
+   fenêtre de création : cadre orange → rose → violet, nuit bleue, casque dans un halo violet, « podcasts » en
+   dégradé, des ondes sonores à droite. RIEN NE BOUGE EN BOUCLE (une fenêtre animée ralentissait déjà le PC).
+   ====================================================================================================== */
+.pod-entete.pod-entete--banniere {
+  position: relative;
+  flex-wrap: nowrap;
+  gap: 20px;
+  padding: 20px 24px;
+  border: 2px solid transparent;
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(124, 92, 255, 0.28), transparent 55%),
+    radial-gradient(90% 120% at 100% 100%, rgba(240, 120, 110, 0.18), transparent 60%),
+    linear-gradient(135deg, #0a1a4d, #071438) padding-box,
+    linear-gradient(120deg, #ffb48a 0%, #f0607a 40%, #c2458f 70%, #7c5cff 100%) border-box;
+  box-shadow: 0 0 26px rgba(194, 69, 143, 0.25), 0 14px 36px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.pod-entete--banniere .pod-entete__icone {
+  width: 76px;
+  height: 76px;
+  border: 2px solid rgba(190, 160, 255, 0.55);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #7c5cff 0%, #4b2fb8 55%, #2a1a75 100%);
+  box-shadow: 0 0 22px rgba(124, 92, 255, 0.6), inset 0 0 12px rgba(255, 255, 255, 0.18);
+}
+
+.pod-entete--banniere .pod-entete__icone img {
+  width: 54px;
+  height: 54px;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+}
+
+.pod-entete__textes {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pod-entete--banniere .pod-entete__titre {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1.05;
+  color: #fff;
+}
+
+.pod-entete__accent {
+  background: linear-gradient(90deg, #ffb48a, #f0607a 45%, #b07bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pod-entete--banniere .pod-entete__sous-titre {
+  margin-top: 8px;
+  max-width: 52ch;
+  font-size: 0.98rem;
+  color: #d9dcf5;
+}
+
+/* Les ondes : des barres fixes, du cyan au rose, comme celles du micro de la fenêtre de création. */
+.pod-entete__ondes {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 56px;
+  flex: none;
+  opacity: 0.85;
+}
+
+.pod-entete__ondes i {
+  display: block;
+  width: 5px;
+  height: var(--h);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #7fe3ff, #b07bff 55%, #ff8fd8);
+  box-shadow: 0 0 8px rgba(176, 123, 255, 0.6);
+}
+
+.pod-entete--banniere .pod-entete__creer {
+  position: relative;
+  z-index: 1;
+  margin-left: 0;
+  flex: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(214, 63, 28, 0.35);
+}
+
+@media (max-width: 720px) {
+  .pod-entete.pod-entete--banniere { flex-wrap: wrap; padding: 16px; gap: 14px; }
+  .pod-entete--banniere .pod-entete__icone { width: 60px; height: 60px; }
+  .pod-entete--banniere .pod-entete__icone img { width: 42px; height: 42px; }
+  .pod-entete__ondes { display: none; }
+  .pod-entete--banniere .pod-entete__textes { flex: 1 1 calc(100% - 74px); }
+  .pod-entete--banniere .pod-entete__creer { width: 100%; text-align: center; }
+}

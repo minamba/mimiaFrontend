@@ -1,0 +1,3 @@
+Construction exacte : nombre ou forme géométrique
+Sujet : le nombre 19
+Source : construction exacte documentée dans produire.py

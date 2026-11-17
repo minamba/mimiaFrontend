@@ -160,3 +160,181 @@
 @media (max-width: 400px) {
   .btn-pause-cours { padding: 6px 10px; font-size: 12px; }
 }
+
+/* ======================================================================================================
+   L'ÉCRAN DE PAUSE ILLUSTRÉ — maquette de Camara, 16/11/2026.
+   Carte de verre bleu nuit au liseré lumineux ; branche de cerisier en haut à gauche (le cerisier de la page
+   des tarifs, retourné), pétales, vagues japonaises en bas à droite, une ligne dorée en bas. Le rond de pause
+   sombre cerclé d'or, entre deux nuages stylisés ; « Cours en pause » en serif italique ivoire, souligné d'or ;
+   « Reprendre le cours » en pilule orange lumineuse ; « Quitter le cours » en lien souligné.
+   Le voile ne floute plus la page (le flou ralentissait le PC de Camara sur les autres fenêtres). En mode
+   saisonnier, la carte prend les couleurs `--illu-*` de la saison. Aucune animation en boucle.
+   ====================================================================================================== */
+.pause-cours {
+  background: rgb(3 8 22 / 0.82);
+  backdrop-filter: none;
+}
+
+.pause-cours .pause-cours__carte {
+  position: relative;
+  gap: 14px;
+  width: min(560px, 100%);
+  padding: 34px 40px 40px;
+  border: 2px solid rgba(110, 175, 255, 0.85);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 100% 100%, transparent 0 14%, rgba(110, 160, 255, 0.22) 14.5% 15.5%, transparent 16% 22%, rgba(110, 160, 255, 0.2) 22.5% 23.5%, transparent 24% 30%, rgba(110, 160, 255, 0.16) 30.5% 31.5%, transparent 32%) right bottom / 50% 40% no-repeat,
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(60, 110, 255, 0.28), transparent 70%),
+    linear-gradient(180deg, #13246a 0%, #0b1850 100%);
+  box-shadow:
+    0 0 0 1px rgba(110, 175, 255, 0.3),
+    0 0 30px rgba(70, 140, 255, 0.5),
+    0 30px 80px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px rgba(90, 150, 255, 0.12);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* La branche de cerisier, en haut à gauche. */
+.pause-cours .pause-cours__carte::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: -10px;
+  width: 170px;
+  height: 80px;
+  background: url('../assets/tarifs/cerisier.webp') center / contain no-repeat;
+  transform: scaleX(-1);
+  pointer-events: none;
+}
+
+/* Deux pétales et la ligne dorée du bas. */
+.pause-cours .pause-cours__carte::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    url('../assets/offre/petales-haut.webp') right 6% top 22% / 22px auto no-repeat,
+    url('../assets/offre/petales-bas.webp') left 6% bottom 14% / 22px auto no-repeat,
+    linear-gradient(90deg, transparent 0%, rgba(245, 193, 77, 0.55) 40%, transparent 85%) left bottom 26px / 100% 1.5px no-repeat;
+  pointer-events: none;
+}
+
+.pause-cours .pause-cours__carte > * { position: relative; z-index: 1; }
+
+/* Le rond de pause : sombre, cerclé d'or, entre deux nuages stylisés. */
+.pause-cours .pause-cours__icone {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 2px;
+  border: 2.5px solid var(--or-pause);
+  background: radial-gradient(circle at 50% 35%, #1d2638, #0b111d);
+  color: #fbf1dc;
+  box-shadow: 0 0 18px rgba(245, 193, 77, 0.45), inset 0 0 10px rgba(245, 193, 77, 0.15);
+}
+
+.pause-cours .pause-cours__icone .btn-pause-cours__barres {
+  width: 26px;
+  height: 30px;
+  background-size: 9px 100%;
+}
+
+.pause-cours .pause-cours__icone::before,
+.pause-cours .pause-cours__icone::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 92px;
+  height: 26px;
+  background:
+    linear-gradient(90deg, transparent, rgba(150, 160, 185, 0.75) 25%, rgba(150, 160, 185, 0.75)) 0 2px / 70% 4px no-repeat,
+    linear-gradient(90deg, rgba(150, 160, 185, 0.75), rgba(150, 160, 185, 0.75)) 100% 11px / 72% 4px no-repeat,
+    linear-gradient(90deg, rgba(150, 160, 185, 0.65), transparent) 45% 20px / 40% 4px no-repeat;
+}
+
+.pause-cours .pause-cours__icone::before { right: calc(100% + 14px); transform: translateY(-50%); }
+.pause-cours .pause-cours__icone::after { left: calc(100% + 14px); transform: translateY(-50%) scaleX(-1); }
+
+.pause-cours .pause-cours__carte h2 {
+  position: relative;
+  padding-bottom: 12px;
+  font-family: var(--display);
+  font-size: clamp(30px, 6vw, 44px);
+  font-style: italic;
+  font-weight: 700;
+  color: #fbf1dc;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+}
+
+.pause-cours .pause-cours__carte h2::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 0;
+  height: 3px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, #f5c14d 30%, #ffe3a0 55%, transparent);
+  box-shadow: 0 0 8px rgba(245, 193, 77, 0.5);
+}
+
+.pause-cours .pause-cours__carte p {
+  max-width: 30em;
+  margin: 4px 0 10px;
+  font-size: clamp(15px, 2.6vw, 19px);
+  color: rgba(220, 230, 255, 0.92);
+}
+
+.pause-cours .pause-cours__reprendre {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 17px 22px;
+  border: 2px solid color-mix(in srgb, var(--corail-btn) 42%, #ffdcae);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 62%, #ffc56e) 0%, var(--corail-btn) 58%, color-mix(in srgb, var(--corail-btn) 82%, #7a1504) 100%);
+  font-size: clamp(17px, 3vw, 22px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--corail-btn) 30%, transparent),
+    0 0 22px color-mix(in srgb, var(--corail-btn) 60%, transparent),
+    0 10px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.pause-cours .pause-cours__reprendre:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 55%, #ffd27f) 0%, color-mix(in srgb, var(--corail-btn) 92%, #ffffff) 58%, var(--corail-btn) 100%);
+}
+
+.pause-cours .pause-cours__quitter {
+  margin-top: 4px;
+  font-size: clamp(15px, 2.6vw, 18px);
+  color: rgba(220, 230, 255, 0.92);
+  text-underline-offset: 5px;
+}
+
+.pause-cours .pause-cours__quitter:hover { color: #fff; }
+
+/* En thème clair aussi la carte reste nuit : le texte reste clair. */
+:root[data-theme='light'] .pause-cours .pause-cours__icone { color: #fbf1dc; }
+
+/* En mode saisonnier : la carte prend les couleurs de la saison. */
+:root[data-da='blue-sky'][data-saison] .pause-cours .pause-cours__carte {
+  border-color: var(--illu-bord-fort);
+  background:
+    radial-gradient(circle at 100% 100%, transparent 0 14%, var(--illu-bord) 14.5% 15.5%, transparent 16% 22%, var(--illu-bord) 22.5% 23.5%, transparent 24%) right bottom / 50% 40% no-repeat,
+    linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 30px var(--illu-lueur), 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+/* Sur l'or du Black Friday, le texte blanc ne se lit pas : noir, comme les autres boutons pleins. */
+:root[data-saison='black-friday'] .pause-cours .pause-cours__reprendre { color: #141414; text-shadow: none; }
+
+@media (max-width: 520px) {
+  .pause-cours .pause-cours__carte { padding: 30px 20px 34px; border-radius: 24px; }
+  .pause-cours .pause-cours__carte::before { width: 120px; height: 58px; }
+  .pause-cours .pause-cours__icone { width: 64px; height: 64px; }
+  .pause-cours .pause-cours__icone::before,
+  .pause-cours .pause-cours__icone::after { width: 60px; }
+}

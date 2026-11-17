@@ -39,6 +39,8 @@ export const SAISONS = [
   { cle: 'soldes-hiver', libelle: 'Soldes d’hiver' },
   { cle: 'french-days', libelle: 'French Days' },
   { cle: 'black-friday', libelle: 'Black Friday' },
+  // Ajoutée le 15/11/2026 (Camara) : néons cyan et magenta, le lundi qui suit le Black Friday.
+  { cle: 'cyber-monday', libelle: 'Cyber Monday' },
   // Ajoutée le 29/09/2026, oubliée de la première liste par Camara.
   { cle: 'back-to-school', libelle: 'Back to School' },
 ];

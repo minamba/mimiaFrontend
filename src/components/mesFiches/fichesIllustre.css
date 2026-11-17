@@ -1,0 +1,421 @@
+/* ======================================================================================================
+   « MES FICHES DE RÉVISION », LA PAGE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026, d'après sa maquette.
+   Portée : `.mf-page.mf-illustre` (MesFiches.js, vue de l'enfant seulement ; l'espace parent garde l'ancien look).
+   Le fond commun vient de `page-decor-enfant` (styles/decorEnfant.css).
+
+   - La bannière : l'illustration de la maquette (la fille au crayon, le cahier « Fiche », le Fuji), titre, sous-titre
+     et bouton effacés (assets/fiches-illustre/banniere.webp) ; les textes et le bouton sont redessinés ici, placés
+     en pourcentages de la bannière et dimensionnés en `cqw` (sa largeur).
+   - Chaque matière et ses cartes prennent la palette et la scène de leur matière (lib/scenesMatieres.js,
+     variables `--carte-haut`, `--carte-bas`, `--carte-bord`, `--bouton-*`, `--scene`), posées sur la section.
+   Rien ne s'anime en boucle.
+   ====================================================================================================== */
+
+/* ------------------------------------------------------------------------------------------ la bannière */
+.mf-page.mf-illustre .mf-entete {
+  container-type: inline-size;
+  display: block;
+  /* La bannière de la deuxième maquette de Camara (15/11/2026), 2584 × 431. */
+  aspect-ratio: 2584 / 431;
+  padding: 0;
+  margin-bottom: 1.4rem;
+  border: 2px solid rgba(160, 190, 255, 0.55);
+  border-radius: 26px;
+  background: #1b2fa8 url('../../assets/fiches-illustre/banniere.webp') center / 100% 100% no-repeat;
+  box-shadow: 0 0 22px rgba(120, 150, 255, 0.35), 0 18px 36px rgba(0, 0, 0, 0.35);
+  backdrop-filter: none;
+}
+
+.mf-page.mf-illustre .mf-entete::before,
+.mf-page.mf-illustre .mf-entete__vignette { display: none; }
+
+.mf-page.mf-illustre .mf-entete__texte {
+  position: absolute;
+  top: 9%;
+  left: 26.6%;
+  width: 36%;
+  display: grid;
+  gap: 0.9cqw;
+}
+
+.mf-page.mf-illustre .mf-entete__surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6cqw;
+  font-size: max(11px, 1.45cqw);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #e6ecff;
+}
+
+.mf-page.mf-illustre .mf-entete__surtitre::before {
+  content: '✦';
+  color: #ffd76a;
+  font-size: 1.15em;
+  text-shadow: 0 0 8px rgba(255, 215, 106, 0.7);
+}
+
+.mf-page.mf-illustre .mf-entete h1 {
+  margin: 0;
+  font-family: 'Rubik', var(--sans);
+  font-style: italic;
+  font-weight: 900;
+  font-size: max(22px, 3cqw);
+  line-height: 1.05;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0 3px 12px rgba(10, 10, 60, 0.45);
+}
+
+.mf-page.mf-illustre .mf-entete__accent {
+  position: relative;
+  background: linear-gradient(180deg, #ffd28a 0%, #ff9d4d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+
+/* Le trait orange sous « fiches de révision ». */
+.mf-page.mf-illustre .mf-entete__accent::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 4%;
+  bottom: -0.32em;
+  height: 0.09em;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #ffb05a 25%, #ffb05a 75%, transparent);
+  box-shadow: 0 0 10px rgba(255, 170, 80, 0.6);
+}
+
+.mf-page.mf-illustre .mf-entete__texte p {
+  margin: 1.4cqw 0 0;
+  max-width: 34cqw;
+  font-size: max(12.5px, 1.55cqw);
+  line-height: 1.45;
+  color: #eef1ff;
+}
+
+/* « Créer une fiche » : LE MÊME BOUTON QUE « CRÉER UN PODCAST » — Camara, le 16/11/2026 (« je veux qu'il soit du
+   même style et placé de la même manière dans la bannière »). Mêmes mesures que `.podi-banniere__creer`
+   (podcastsIllustre.css) : à droite, centré dans la hauteur, la même pilule orange et son liseré, une icône blanche
+   dessinée (un crayon) à la place du micro. Sélecteur doublé : le style commun des boutons (fin d'App.css) pèse sur
+   `.btn`. */
+.mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn {
+  position: absolute;
+  top: 37%;
+  left: 74.5%;
+  width: 22.6%;
+  height: 28%;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+  border: 0.18cqw solid rgba(255, 220, 180, 0.7);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffa24a 0%, #f2701e 60%, #d95510 100%);
+  box-shadow:
+    inset 0 0.2cqw 0 rgba(255, 255, 255, 0.45),
+    0 0 1.6cqw rgba(255, 120, 40, 0.55),
+    0 0.5cqw 1.2cqw rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: max(13px, 1.85cqw);
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+.mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn:hover,
+.mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn:focus-visible {
+  background: linear-gradient(180deg, #ffa24a 0%, #f2701e 60%, #d95510 100%);
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+/* Le crayon du bouton, dessiné (blanc), comme le micro du podcast. */
+.mf-entete__crayon {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  flex: none;
+  background: center / contain no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15.5 4.5l4 4L9 19H5v-4z' fill='white'/%3E%3Cpath d='M13.5 6.5l4 4'/%3E%3Cpath d='M4 22h16'/%3E%3C/svg%3E");
+}
+
+/* Sur un téléphone, la bannière est trop étroite pour tout tenir : l'image remplit (le cahier et le Fuji restent),
+   un voile assombrit à gauche, texte et bouton passent dans le flux. */
+@media (max-width: 720px) {
+  .mf-page.mf-illustre .mf-entete {
+    aspect-ratio: auto;
+    display: grid;
+    gap: 10px;
+    padding: 18px 16px;
+    background:
+      linear-gradient(90deg, rgba(20, 30, 110, 0.92) 0%, rgba(20, 30, 110, 0.6) 60%, rgba(20, 30, 110, 0.15) 100%),
+      #1b2fa8 url('../../assets/fiches-illustre/banniere.webp') 85% center / cover no-repeat;
+  }
+
+  .mf-page.mf-illustre .mf-entete__texte,
+  .mf-page.mf-illustre .mf-entete__bouton {
+    position: static;
+    width: auto;
+    height: auto;
+  }
+
+  .mf-page.mf-illustre .mf-entete__texte p { max-width: none; }
+  .mf-page.mf-illustre .mf-entete h1 { white-space: normal; }
+  .mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 10px 18px;
+    justify-self: start;
+    gap: 8px;
+    border-width: 2px;
+    font-size: 15px;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- la jauge */
+.mf-page.mf-illustre .mf-quota {
+  position: relative;
+  padding: 1.1rem 1.4rem 1.1rem 6.2rem;
+  border: 2px solid rgba(170, 160, 255, 0.55);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(10, 18, 70, 0.92), rgba(16, 20, 80, 0.92));
+  box-shadow: 0 0 20px rgba(140, 120, 255, 0.3), 0 14px 30px rgba(0, 0, 0, 0.3);
+  color: #eef1ff;
+}
+
+/* La pile de livres de la maquette, à gauche. */
+.mf-page.mf-illustre .mf-quota::before {
+  content: '';
+  position: absolute;
+  left: 1.1rem;
+  top: 1rem;
+  width: 4.2rem;
+  height: 4rem;
+  background: url('../../assets/fiches-illustre/livres.webp') center / contain no-repeat;
+  filter: drop-shadow(0 4px 10px rgba(80, 120, 255, 0.4));
+}
+
+.mf-page.mf-illustre .mf-quota__titre {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.mf-page.mf-illustre .mf-quota__compte { color: #c9d0f5; font-weight: 600; }
+.mf-page.mf-illustre .mf-quota__compte strong { font-size: 1.45rem; color: #4ff07a; }
+
+.mf-page.mf-illustre .mf-quota__reserve {
+  margin-left: 0.8rem;
+  color: #ffd25a;
+  font-weight: 800;
+}
+
+.mf-page.mf-illustre .mf-quota__jauge {
+  height: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mf-page.mf-illustre .mf-quota__plein {
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8af5a4 0%, #2fd36a 100%);
+  box-shadow: 0 0 12px rgba(80, 240, 130, 0.65);
+}
+
+.mf-page.mf-illustre .mf-quota__legende,
+.mf-page.mf-illustre .mf-quota__reste { color: #dfe4ff; }
+
+@media (max-width: 560px) {
+  .mf-page.mf-illustre .mf-quota { padding-left: 1.2rem; padding-top: 4.6rem; }
+  .mf-page.mf-illustre .mf-quota::before { width: 3.4rem; height: 3.2rem; top: 0.8rem; }
+}
+
+/* --------------------------------------------------------------------------------------- les matières */
+.mf-page.mf-illustre .mf-matiere__titre {
+  align-items: center;
+  gap: 0.9rem;
+  padding-left: 0.9rem;
+  border-left: 5px solid var(--carte-bord, var(--matiere, #4fd8e0));
+  border-radius: 2px;
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: 1.6rem;
+  color: #fff;
+}
+
+/* Le médaillon rond de la matière : sa scène, dans un cercle lumineux. */
+.mf-page.mf-illustre .mf-matiere__pastille {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border: 3px solid var(--carte-bord, #4fd8e0);
+  border-radius: 50%;
+  background: var(--carte-bas, #0b1240) var(--scene) center 72% / 260% auto no-repeat;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--carte-bord, #4fd8e0) 70%, transparent);
+}
+
+.mf-page.mf-illustre .mf-matiere__compte {
+  padding: 0.25rem 0.9rem;
+  border: 1.5px solid rgba(170, 190, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(10, 18, 70, 0.75);
+  color: #eef1ff;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.mf-page.mf-illustre .mf-cours-liste {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.3rem;
+}
+
+/* ------------------------------------------------------------------------------------------- les cartes */
+.mf-page.mf-illustre .mf-carte-cours {
+  border: 2px solid color-mix(in srgb, var(--carte-bord, #6fb8ff) 80%, transparent);
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--carte-haut, #1b2f8a) 0%, var(--carte-bas, #14206a) 100%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--carte-bord, #6fb8ff) 40%, transparent), 0 14px 30px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.mf-page.mf-illustre .mf-carte-cours::before { display: none; }
+
+.mf-page.mf-illustre .mf-carte-cours:hover,
+.mf-page.mf-illustre .mf-carte-cours:focus-within {
+  box-shadow: 0 0 28px color-mix(in srgb, var(--carte-bord, #6fb8ff) 60%, transparent), 0 18px 36px rgba(0, 0, 0, 0.4);
+}
+
+/* Le haut de la carte : la scène de la matière, à droite, fondue vers la gauche (là où sont le bloc-notes et le
+   titre). */
+.mf-page.mf-illustre .mf-cours {
+  position: relative;
+  isolation: isolate;
+  min-height: 150px;
+  color: #fff;
+}
+
+.mf-page.mf-illustre .mf-cours::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 30%;
+  z-index: -1;
+  background: var(--scene) right 60% / cover no-repeat;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+  pointer-events: none;
+}
+
+.mf-page.mf-illustre .mf-cours__titre {
+  font-family: 'Rubik', var(--sans);
+  font-weight: 900;
+  font-size: 1.22rem;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+.mf-page.mf-illustre .mf-cours__date {
+  color: #e6ebff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.mf-page.mf-illustre .mf-cours__date::before { content: '🗓 '; }
+
+/* Les pastilles du type de fiche : claires, l'encre de leur type. */
+.mf-page.mf-illustre .mf-badge {
+  border: 0;
+  background: color-mix(in srgb, var(--fdr-accent, #6fb8ff) 14%, #ffffff);
+  color: color-mix(in srgb, var(--fdr-accent, #1d4ed8) 75%, #0b1240);
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Le bloc-notes : la pince et le badge à la couleur de la matière. */
+.mf-page.mf-illustre .mf-pile__nombre {
+  border-color: #fff;
+  background: color-mix(in srgb, var(--carte-bord, #3b82f6) 70%, #1d4ed8);
+}
+
+/* Le pied : « Compléter » en pilule, « Supprimer » en rouge. */
+.mf-page.mf-illustre .mf-cours__pied {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 12, 50, 0.55);
+}
+
+.mf-page.mf-illustre .mf-cours__completer,
+.mf-page.mf-illustre .mf-cours__ouvrir {
+  padding: 0.45rem 1.1rem;
+  border: 2px solid color-mix(in srgb, var(--carte-bord, #4fd8e0) 85%, #fff);
+  border-radius: 999px;
+  background: rgba(10, 30, 80, 0.6);
+  color: #fff;
+  font-weight: 800;
+}
+
+.mf-page.mf-illustre .mf-cours__supprimer {
+  color: #ff7a7a;
+  font-weight: 700;
+}
+
+/* « Me tester » : le bandeau rose-violet de la maquette, « Flash cards · Quiz » en pastille. */
+.mf-page.mf-illustre .mf-cours__tester {
+  min-height: 54px;
+  border-top: 0;
+  background: linear-gradient(90deg, #8b5cf6 0%, #c35ad8 55%, #ec5f9a 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.mf-page.mf-illustre .mf-cours__tester-modes {
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* L'encadré vide et les notes d'essai lisibles sur le décor. */
+.mf-page.mf-illustre .mf-vide,
+.mf-page.mf-illustre .mf-essai {
+  border-radius: 18px;
+  background: rgba(10, 18, 70, 0.85);
+  color: #eef1ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-page.mf-illustre .mf-carte-cours { transition: none; }
+}
+
+/* « CRÉER UNE FICHE » SUIT LA SAISON — Camara, le 16/11/2026 : comme « Créer un podcast », la couleur des boutons de
+   la saison. */
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn,
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn:hover,
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn:focus-visible {
+  border-color: color-mix(in srgb, var(--corail-btn) 40%, #ffffff);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 65%, #ffffff) 0%, var(--corail-btn) 60%, color-mix(in srgb, var(--corail-btn) 80%, #000000) 100%);
+  box-shadow:
+    inset 0 0.2cqw 0 rgba(255, 255, 255, 0.45),
+    0 0 1.6cqw color-mix(in srgb, var(--corail-btn) 55%, transparent),
+    0 0.5cqw 1.2cqw rgba(0, 0, 0, 0.3);
+}
+
+/* Black Friday : l'or plus foncé du ruban « Le plus choisi », texte et crayon blancs (la règle du mode passe le
+   texte des boutons pleins en noir : elle pèse 0,7,0, celle-ci 0,8,0). */
+:root[data-da='blue-sky'][data-saison='black-friday'] .mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn,
+:root[data-da='blue-sky'][data-saison='black-friday'] .mf-page.mf-illustre .mf-entete .mf-entete__bouton.btn:hover {
+  background: linear-gradient(180deg, #c99400 0%, #9a6c00 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(60, 35, 0, 0.7);
+}

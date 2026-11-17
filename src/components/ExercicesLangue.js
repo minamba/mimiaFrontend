@@ -2,6 +2,7 @@ import { ContenuTableau } from './ComparaisonDictee';
 import LecteurAudio from './LecteurAudio';
 import { VITESSES, VITESSE_PAR_DEFAUT } from '../lib/storage/vitesseEcoute';
 import extraitAnglais from '../assets/demo_comprehension_oral_anglais.mp3';
+import './exercicesIllustre.css';
 
 /**
  * CE QU'AUCUN CHATBOT NE FAIT : DICTER, ÉCOUTER, CORRIGER.
@@ -97,8 +98,12 @@ export default function ExercicesLangue({ id }) {
                      écrite ici : la démonstration lit `VITESSE_PAR_DEFAUT`,
                      comme la séance, et suivra si ce choix change. */
                   className={`exercices__vitesse${vitesse.cle === VITESSE_PAR_DEFAUT ? ' est-choisie' : ''}`}
+                  /* LA VIGNETTE ILLUSTRÉE — Camara, le 16/11/2026, d'après sa maquette : le même garçon,
+                     de l'escargot à l'éclair, dans sa petite scène de nuit (assets/exercices/vitesse-*.webp,
+                     posée par le CSS selon `data-vitesse`). L'ancien dessin rond n'est plus chargé ici ;
+                     la séance garde le sien (`vitesse.image`). */
+                  data-vitesse={vitesse.cle}
                 >
-                  <img className="exercices__icone" src={vitesse.image} alt="" />
                   <strong>{vitesse.libelle}</strong>
                 </span>
               ))}

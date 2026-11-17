@@ -149,6 +149,7 @@ describe('l’espace', () => {
 describe('la création', () => {
   it('il choisit une de SES catégories (ou aucune), sans scanner au téléphone', async () => {
     render(<EspaceParent><NouveauCours /></EspaceParent>);
+    fireEvent.click(await screen.findByRole('button', { name: /À partir d’un cours/ }));
 
     expect(await screen.findByText('Choisissez une catégorie')).toBeInTheDocument();
     expect(await screen.findByRole('radio', { name: 'Anglais pro' })).toBeInTheDocument();

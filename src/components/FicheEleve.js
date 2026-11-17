@@ -1061,7 +1061,7 @@ export default function FicheEleve({
                 quoi le compte porte peut l'entendre comme un cumul depuis le
                 début — l'étiquette lève l'ambiguïté, seule ou non. */}
             {onNiveau && (fiche.classes?.length ?? 0) > 0 && (
-              <div className="classes" role="tablist" aria-label="Année scolaire">
+              <div className="classes" role="tablist" aria-label="Année scolaire" data-tuto="fiche-annee">
                 {fiche.classes.map((c) => {
                   // `niveau` vaut null tant qu'on n'a rien choisi : c'est
                   // l'année en cours, que le serveur sert par défaut.
@@ -1130,7 +1130,7 @@ export default function FicheEleve({
             {/* « VOIR LE BILAN HEBDOMADAIRE » — Camara, le 17/10/2026 : au-dessus
                 de « Dernier cours », avec un effet lumineux pour qu'on le voie. */}
             {chargerBilan && (
-              <div className="bilan-hebdo__appel">
+              <div className="bilan-hebdo__appel" data-tuto="fiche-bilan">
                 <button type="button" className="bilan-hebdo__bouton" onClick={() => setBilanOuvert(true)}>
                   <span aria-hidden="true">✦</span> Voir le bilan hebdomadaire
                 </button>
@@ -1272,7 +1272,7 @@ export default function FicheEleve({
               </div>
             )}
 
-            <div className="fiche__colonnes">
+            <div className="fiche__colonnes" data-tuto="fiche-competences">
               <ListeCompetences
                 titre={intitule('Points fragiles', fiche.totalFragiles, fiche.lacunes)}
                 competences={filtrer(fiche.lacunes)}
@@ -1332,9 +1332,11 @@ export default function FicheEleve({
                 <RaccourcisFiche id="fiche-progression" sections={sections} courante="fiche-progression" />
                 <h3>Sa progression</h3>
 
-                {pageProgression.visibles.map((m) => (
-                  <ProgressionMatiere key={m.matiereId} matiere={m} />
-                ))}
+                <div data-tuto="fiche-progression">
+                  {pageProgression.visibles.map((m) => (
+                    <ProgressionMatiere key={m.matiereId} matiere={m} />
+                  ))}
+                </div>
                 <Pagination
                   page={pageProgression.page}
                   pages={pageProgression.pages}
@@ -1359,14 +1361,14 @@ export default function FicheEleve({
             />
 
             {evaluations.elements.length === 0 ? (
-              <p className="vide vide--compact">
+              <p className="vide vide--compact" data-tuto="fiche-evaluations">
                 {evaluations.tri.matiereId
                   ? `Aucune évaluation en ${libelleMatiere(fiche, evaluations.tri.matiereId)}.`
                   : `Aucune évaluation passée. Le professeur en propose une quand il juge
                      une notion acquise.`}
               </p>
             ) : (
-              <div className="tableau">
+              <div className="tableau" data-tuto="fiche-evaluations">
                 {enCartes ? (
                   <ul className="cartes-histo">
                     {evaluations.visibles.map((e) => (
@@ -1451,14 +1453,14 @@ export default function FicheEleve({
             />
 
             {seances.elements.length === 0 ? (
-              <p className="vide vide--compact">
+              <p className="vide vide--compact" data-tuto="fiche-seances">
                 {seances.tri.matiereId
                   ? `Aucune séance en ${libelleMatiere(fiche, seances.tri.matiereId)}.`
                   : `Aucun compte rendu. Le professeur en rédige un à la fin de chaque
                      séance.`}
               </p>
             ) : (
-              <div className="tableau">
+              <div className="tableau" data-tuto="fiche-seances">
                 {enCartes ? (
                   <ul className="cartes-histo">
                     {seances.visibles.map((r) => (

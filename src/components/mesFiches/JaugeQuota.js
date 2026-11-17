@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { sessionEleve } from '../../lib/storage/sessionEleve';
+import AchatCredits from './AchatCredits';
 
 /**
  * LA JAUGE DU MOIS — Camara, le 15/10/2026 : « que le quota s'affiche sous la
@@ -13,9 +13,10 @@ import { sessionEleve } from '../../lib/storage/sessionEleve';
  * les enfants, sans date limite. Un cours de plus de dix pages compte pour 2
  * (et prend 2 crédits).
  *
- * ON N'ACHÈTE PAS ICI (Camara, le 16/10/2026) : l'achat se fait dans « Mon
- * forfait », à part des heures. L'enfant qui n'a plus rien est invité à le
- * demander à ses parents ; le parent est envoyé vers son forfait.
+ * L'ACHAT (Camara, le 16/10 puis le 16/11/2026) : d'abord seulement dans « Mon
+ * forfait » ; depuis le 16/11, un bouton « Acheter des crédits » ouvre ici le
+ * même encadré, pour le parent seulement. L'enfant qui n'a plus rien est
+ * invité à le demander à ses parents.
  *
  * Verte, orange quand le mois tire à sa fin ou qu'on puise dans la réserve,
  * rouge quand il ne reste plus rien.
@@ -34,6 +35,36 @@ const credits = (n) => `${n} crédit${n > 1 ? 's' : ''}`;
 
 /** Plus aucun cours, ni du mois ni en crédits : rien ne se crée. */
 export const quotaEpuise = (quota) => Boolean(quota?.maximum) && (quota.disponibles ?? 0) <= 0;
+
+/**
+ * LES PODCASTS (15/11/2026) : la même jauge, un compteur à part — « podcasts » là où les fiches disent « cours ».
+ */
+function textePodcastsEnfant({ maximum, restantes, credits: reserve, disponibles, remiseLe }) {
+  if (disponibles <= 0) {
+    return `Tu as utilisé tes ${maximum} podcasts de ce mois-ci. Demande à tes parents d’acheter des crédits `
+      + `pour en créer d’autres. Sinon, tes podcasts reviennent le ${jour(remiseLe)}.`;
+  }
+  if (restantes <= 0) {
+    return `Tes ${maximum} podcasts du mois sont utilisés. Ta famille a encore ${credits(reserve)} : `
+      + `chaque cours transformé en podcast en prend un (deux s’il dépasse 10 pages). Ils reviennent le ${jour(remiseLe)}.`;
+  }
+  return `Tu peux encore créer ${restantes} podcast${restantes > 1 ? 's' : ''} ce mois-ci. Un cours compte pour un, même s’il `
+    + `donne plusieurs épisodes (pour deux s’il dépasse 10 pages). Ils reviennent le ${jour(remiseLe)}.`
+    + (reserve > 0 ? ` Ta famille a aussi ${credits(reserve)}.` : '');
+}
+
+function textePodcastsParent({ maximum, restantes, credits: reserve, disponibles, remiseLe }) {
+  if (disponibles <= 0) {
+    return `Ses ${maximum} podcasts du mois sont utilisés et la famille n’a plus de crédit de podcasts. `
+      + `Ils reviennent le ${jour(remiseLe)}.`;
+  }
+  if (restantes <= 0) {
+    return `Ses ${maximum} podcasts du mois sont utilisés : les suivants prennent sur les crédits de podcasts de la famille `
+      + `(${credits(reserve)}). Ils reviennent le ${jour(remiseLe)}.`;
+  }
+  return `Il lui reste ${restantes} podcast${restantes > 1 ? 's' : ''} à créer ce mois-ci, jusqu’au ${jour(remiseLe)}.`
+    + (reserve > 0 ? ` Crédits de podcasts de la famille : ${reserve}.` : '');
+}
 
 function texteEnfant({ maximum, restantes, credits: reserve, disponibles, remiseLe }) {
   if (disponibles <= 0) {
@@ -62,7 +93,7 @@ function texteParent({ maximum, restantes, credits: reserve, disponibles, remise
     + (reserve > 0 ? ` Crédits de la famille : ${reserve}.` : '');
 }
 
-export default function JaugeQuota({ quota }) {
+export default function JaugeQuota({ quota, module = 'fiches', achat = true }) {
   if (!quota?.maximum) return null;
 
   const enfant = Boolean(sessionEleve());
@@ -73,11 +104,13 @@ export default function JaugeQuota({ quota }) {
   const partCredits = (pris / total) * 100;
   const part = Math.min(100, Math.round((utilisees / maximum) * 100));
   const niveau = disponibles <= 0 ? 'epuise' : restantes <= 0 || part >= 80 ? 'bas' : 'ok';
+  const podcasts = module === 'podcasts';
+  const quoi = podcasts ? 'podcasts' : 'cours';
 
   return (
     <div className={`mf-quota est-${niveau}`}>
       <div className="mf-quota__ligne">
-        <span className="mf-quota__titre">{enfant ? 'Tes cours ce mois-ci' : 'Ses cours ce mois-ci'}</span>
+        <span className="mf-quota__titre">{enfant ? `Tes ${quoi} ce mois-ci` : `Ses ${quoi} ce mois-ci`}</span>
         <span className="mf-quota__compte">
           <strong>{utilisees}</strong> / {maximum}
           {reserve > 0 && <span className="mf-quota__reserve"> + {credits(reserve)}</span>}
@@ -87,7 +120,7 @@ export default function JaugeQuota({ quota }) {
       <div
         className="mf-quota__jauge"
         role="progressbar"
-        aria-label="Cours importés ce mois-ci"
+        aria-label={podcasts ? 'Podcasts créés ce mois-ci' : 'Cours importés ce mois-ci'}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={utilisees + pris}
@@ -99,17 +132,23 @@ export default function JaugeQuota({ quota }) {
 
       {pris + reserve > 0 && (
         <p className="mf-quota__legende" aria-hidden="true">
-          <span className="mf-quota__pastille mf-quota__pastille--mois" /> Cours du mois
+          <span className="mf-quota__pastille mf-quota__pastille--mois" /> {podcasts ? 'Podcasts du mois' : 'Cours du mois'}
           <span className="mf-quota__pastille mf-quota__pastille--credits" /> Crédits de la famille
         </p>
       )}
 
-      <p className="mf-quota__reste">{enfant ? texteEnfant(quota) : texteParent(quota)}</p>
+      <p className="mf-quota__reste">
+        {podcasts
+          ? (enfant ? textePodcastsEnfant(quota) : textePodcastsParent(quota))
+          : (enfant ? texteEnfant(quota) : texteParent(quota))}
+      </p>
 
-      {/* Le parent achète dans son forfait, jamais ici. */}
-      {!enfant && (disponibles <= 0 || restantes <= 0) && (
+      {/* « ACHETER DES CRÉDITS », TOUJOURS LÀ POUR LE PARENT — Camara, le 16/11/2026 (avant : seulement le mois
+          épuisé, et un lien vers Mon forfait). La fenêtre reprend l'encadré de Mon forfait. Jamais pour un enfant
+          entré par son code ; jamais dans la visite de démonstration (`achat={false}`). */}
+      {!enfant && achat && (
         <p className="mf-quota__lien">
-          <Link to="/profil?onglet=forfait">Acheter des crédits dans Mon compte › Mon forfait</Link>
+          <AchatCredits module={module} />
         </p>
       )}
     </div>

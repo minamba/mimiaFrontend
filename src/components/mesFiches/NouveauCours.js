@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getMatieresEleve } from '../../lib/api/elevesApi';
 import {
-  ajouterPage, creerCours, creerScanCours, envoyerCours, etatScanCours, getCours, getQuota, modifierCours, supprimerCours, supprimerPage,
+  ajouterPage, creerCours, creerScanCours, ecrireTexteCours, envoyerCours, etatScanCours, getCours, getQuota, modifierCours, supprimerCours, supprimerPage,
 } from '../../lib/api/mesFichesApi';
 import { typesPourLeRang } from '../../lib/mesFiches/typesFiches';
 import { styleMatiere } from '../../lib/couleurMatiere';
@@ -19,6 +19,8 @@ import JaugeQuota, { quotaEpuise as plusRien } from './JaugeQuota';
 import ForfaitRequis from './ForfaitRequis';
 import useAccesForfait from '../../lib/hooks/useAccesForfait';
 import { exemplePour } from '../../lib/mesFiches/exemples';
+import ChoixModeFiche, { MODE_COURS, MODE_LIBRE } from './ChoixModeFiche';
+import SaisieLibre from './SaisieLibre';
 import './mesFiches.css';
 import './mesFichesPages.css';
 
@@ -32,6 +34,10 @@ export const PIECES_MAX = 20;
  * L'enfant le lit AVANT d'envoyer : c'est le serveur qui décompte et refuse.
  */
 export const PAGES_COURS_SIMPLE = 10;
+
+/** Le texte d'une fiche libre : au moins / au plus (les mêmes que `FichesRevisionEleve`). */
+export const TEXTE_MIN = 3;
+export const TEXTE_MAX = 15000;
 
 /**
  * UNE ÉTAPE DU PARCOURS — Camara, le 14/10/2026 : « comment je suis censé
@@ -115,6 +121,13 @@ export default function NouveauCours() {
   const [scanOuvert, setScanOuvert] = useState(false);
   const [apercu, setApercu] = useState(null);
   const [quota, setQuota] = useState(null);
+  // À PARTIR D'UN COURS OU LIBRE (06/11/2026) : demandé à l'arrivée, dans une
+  // fenêtre. Compléter un cours, c'est toujours importer des pages.
+  const [mode, setMode] = useState(complementDe ? MODE_COURS : null);
+  const [choixOuvert, setChoixOuvert] = useState(!complementDe);
+  const [texte, setTexte] = useState('');
+  const libre = mode === MODE_LIBRE;
+  const texteSuffit = texte.trim().length >= TEXTE_MIN;
 
   useEffect(() => {
     let vivant = true;
@@ -148,6 +161,12 @@ export default function NouveauCours() {
     ? `Compléter « ${complete?.titre ?? 'mon cours'} »`
     : 'Créer une fiche de révision';
   const fermerApercu = useCallback(() => setApercu(null), []);
+  // Fermée sans choisir : à l'arrivée, on repart ; après « Changer », on garde le mode d'avant.
+  const fermerChoix = useCallback(() => {
+    if (mode) setChoixOuvert(false);
+    else naviguer(retour);
+  }, [mode, naviguer, retour]);
+  const choisirMode = useCallback((m) => { setMode(m); setChoixOuvert(false); }, []);
 
   // APRÈS CHAQUE CHOIX, L'ÉTAPE SUIVANTE VIENT SOUS LES YEUX : sur un téléphone,
   // elle est souvent sous le pli, et l'enfant croirait que rien ne se passe.
@@ -260,6 +279,8 @@ export default function NouveauCours() {
   const annuler = async () => {
     // eslint-disable-next-line no-alert
     if (pages.length > 0 && !window.confirm('Abandonner ce cours ? Les pages que tu as importées seront effacées.')) return;
+    // eslint-disable-next-line no-alert
+    if (libre && texte.trim() && !window.confirm('Abandonner cette fiche ? Ce que tu as écrit sera effacé.')) return;
     if (coursId) {
       try { await supprimerCours(eleveId, coursId); } catch { /* le brouillon partira de lui-même sous 24 h */ }
     }
@@ -286,8 +307,11 @@ export default function NouveauCours() {
     setErreur(null);
     setEnvoi(true);
     try {
-      await envoyerCours(eleveId, coursId);
-      naviguer(`${chemin}/cours/${coursId}`);
+      // UNE FICHE LIBRE : le brouillon naît ici, avec le texte pour unique page.
+      const id = libre ? await brouillon() : coursId;
+      if (libre) await ecrireTexteCours(eleveId, id, texte);
+      await envoyerCours(eleveId, id);
+      naviguer(`${chemin}/cours/${id}`);
     } catch (e) {
       setErreur(e?.response?.data?.message ?? 'Ton cours n’a pas pu être envoyé. Tu peux réessayer ?');
       setEnvoi(false);
@@ -334,6 +358,25 @@ export default function NouveauCours() {
       <Link to={retour} className="lien-retour">{libelleRetour}</Link>
       <h1 className="mf-titre">{titrePage}</h1>
       {!estParent && <JaugeQuota quota={quota} />}
+
+      {/* Le mode choisi, et de quoi en changer tant que rien n'est importé. */}
+      {mode && !complementDe && (
+        <p className="mf-mode__rappel">
+          <span>
+            {libre ? 'Fiche libre : ' : 'Fiche à partir d’un cours : '}
+            <strong>
+              {estParent
+                ? (libre ? 'vous écrivez ou dictez' : 'vous importez un document')
+                : (libre ? 'tu écris ou tu dictes' : 'tu importes ton cours')}
+            </strong>
+          </span>
+          {pages.length === 0 && (
+            <button type="button" className="mf-mode__changer" disabled={envoi} onClick={() => setChoixOuvert(true)}>
+              Changer
+            </button>
+          )}
+        </p>
+      )}
 
       <Etape
         id="mf-etape-matiere"
@@ -437,6 +480,29 @@ export default function NouveauCours() {
         </div>
       </Etape>
 
+      {libre ? (
+        <Etape
+          id="mf-etape-libre"
+          numero={3}
+          titre={estParent ? 'Écrivez ou dictez ce que vous voulez réviser' : 'Écris ou dicte ce que tu veux réviser'}
+          etat={!choixFaits ? 'verrouillee' : texteSuffit ? 'faite' : 'active'}
+          aide={estParent
+            ? 'Un sujet, des notes ou une leçon : au clavier ou au micro.'
+            : 'Ta leçon, tes notes, ou juste le sujet (« les fractions », « le passé composé ») : au clavier ou au micro.'}
+          verrou={matiereId ? 'Choisis d’abord ton type de fiche.' : 'Choisis d’abord ta matière et ton type de fiche.'}
+          refEl={refCours}
+        >
+          <SaisieLibre
+            eleveId={eleveId}
+            estParent={estParent}
+            texte={texte}
+            onTexte={setTexte}
+            max={TEXTE_MAX}
+            disabled={!choixFaits || envoi || quotaEpuise}
+          />
+          {erreur && <p className="champ__erreur" role="alert">{erreur}</p>}
+        </Etape>
+      ) : (
       <Etape
         id="mf-etape-cours"
         numero={3}
@@ -522,15 +588,26 @@ export default function NouveauCours() {
 
         {plein && <p className="champ__aide">C’est le maximum pour un cours : retire une page pour en ajouter une autre.</p>}
       </Etape>
+      )}
 
       <div className="mf-actions">
         <button type="button" className="btn btn--fantome" disabled={envoi} onClick={annuler}>
           Annuler
         </button>
-        <button type="button" className="btn mf-actions__principal" disabled={envoi || pages.length === 0 || quotaEpuise} onClick={creer}>
-          {envoi && pages.length > 0 ? 'Un instant…' : 'Créer ma fiche'}
+        <button
+          type="button"
+          className="btn mf-actions__principal"
+          disabled={envoi || quotaEpuise || (libre ? !(choixFaits && texteSuffit) : pages.length === 0)}
+          onClick={creer}
+        >
+          {envoi && (libre || pages.length > 0) ? 'Un instant…' : 'Créer ma fiche'}
         </button>
       </div>
+
+      {/* La fenêtre du choix, à l'arrivée ; la fermer sans choisir ramène à ses fiches. */}
+      {choixOuvert && (
+        <ChoixModeFiche estParent={estParent} onChoisir={choisirMode} onFermer={fermerChoix} />
+      )}
 
       {apercu && exemplePour(apercu, matiereCode) && (
         <ApercuType

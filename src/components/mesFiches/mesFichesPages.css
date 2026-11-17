@@ -1335,10 +1335,20 @@
  * sombre, comme une feuille sur un bureau ; le pied rappelle que la vraie
  * fiche reprendra le cours de l'élève.
  */
+/* PAS DE FLOU DERRIÈRE LA FENÊTRE — Camara, le 15/11/2026 : « la popup des fiches comme celle des podcasts ralentit
+   mon PC quand elle est ouverte ». Le `backdrop-filter: blur` refaisait le flou de TOUT l'écran à chaque image où
+   quelque chose bougeait derrière — et derrière, le numéro de l'étape en cours pulse en boucle (`mf-pulse`, une ombre
+   qui se repeint), sans compter les autres animations de la page : soixante flous plein écran par seconde, tant que
+   la fenêtre restait ouverte. Un voile un peu plus sombre fait le même travail pour rien. */
 .mf-apercu {
-  background: rgba(3, 10, 30, 0.78);
-  backdrop-filter: blur(4px);
+  background: rgba(3, 10, 30, 0.84);
   animation: mf-apercu-fond 0.18s ease-out;
+}
+
+/* Et ce qui s'anime derrière s'arrête pendant ce temps : caché par le voile, il ne ferait que repeindre. La fenêtre
+   elle-même (son arrivée) n'est pas touchée. */
+.mf-page:has(.mf-apercu) *:not(.mf-apercu, .mf-apercu *) {
+  animation-play-state: paused;
 }
 
 .mf-apercu__fenetre {
@@ -3239,4 +3249,341 @@ html.fdr-impression .mf-notions-coin {
 .mf-essai.est-utilise {
   border-color: rgba(251, 146, 60, 0.5);
   background: rgba(251, 146, 60, 0.1);
+}
+
+/*
+ * À PARTIR D'UN COURS OU LIBRE — Camara, le 06/11/2026. La fenêtre de choix à
+ * l'arrivée (elle reprend celle des exemples), le rappel du mode sous le titre,
+ * et le bloc où l'enfant écrit ou dicte à la place d'importer son cours.
+ */
+.mf-mode__fenetre {
+  --fdr-accent: var(--corail-btn, #e8562f);
+  width: min(680px, 100%);
+}
+
+.mf-mode__tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem 0.4rem;
+}
+
+.mf-mode__titre {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--encre);
+}
+
+.mf-mode__choix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  padding: 0.8rem 1.2rem 1.3rem;
+}
+
+.mf-mode__carte {
+  font: inherit;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.45rem;
+  padding: 1.3rem 1rem 1.2rem;
+  border-radius: 16px;
+  border: 2px solid var(--trait);
+  background: var(--surface);
+  color: var(--encre);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-mode__carte--cours { --mf-mode: #3b82f6; }
+.mf-mode__carte--libre { --mf-mode: var(--corail-btn, #e8562f); }
+.mf-mode__carte--livre { --mf-mode: #7c5cff; }
+/* Le rond du livre : le même voile teinté que les deux autres cartes (le noir est retiré, Camara, le 15/11/2026). */
+
+/* Trois choix pour les podcasts (15/11/2026) : la fenêtre s'élargit. */
+.mf-mode__fenetre:has(.mf-mode__choix--trois) { width: min(900px, 100%); }
+.mf-mode__choix--trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.mf-mode__carte:hover,
+.mf-mode__carte:focus-visible {
+  border-color: var(--mf-mode);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mf-mode) 18%, transparent);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.mf-mode__icone {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mf-mode) 16%, transparent);
+  color: var(--mf-mode);
+}
+
+.mf-mode__icone svg { width: 30px; height: 30px; }
+.mf-mode__icone img { width: 46px; height: 46px; object-fit: contain; }
+
+.mf-mode__nom {
+  font-family: var(--display);
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.mf-mode__texte {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--encre-douce);
+}
+
+.mf-mode__rappel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1.1rem;
+  font-size: 0.92rem;
+  color: var(--encre-douce);
+}
+
+.mf-mode__rappel strong { color: var(--encre); }
+
+.mf-mode__changer {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--trait);
+  background: transparent;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.mf-mode__changer:hover { border-color: var(--corail-btn, #e8562f); }
+
+@media (max-width: 760px) {
+  .mf-mode__choix--trois { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .mf-mode__choix { grid-template-columns: 1fr; }
+}
+
+.mf-libre {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.mf-libre__texte {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 11rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 2px solid var(--trait);
+  background: var(--surface);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.mf-libre__texte:focus {
+  outline: none;
+  border-color: var(--corail-btn, #e8562f);
+}
+
+.mf-libre.est-a-l-ecoute .mf-libre__texte { border-color: var(--corail, #e8562f); }
+
+.mf-libre__pied {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.mf-libre__micro:disabled { opacity: 0.45; cursor: not-allowed; animation: none; }
+
+.mf-libre__etat {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+  color: var(--encre-douce);
+}
+
+.mf-libre__etat strong { color: var(--encre); }
+
+.mf-libre__entendu {
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.mf-libre__compteur {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--encre-douce);
+}
+
+/* ======================================================================================================
+   LA FENÊTRE « COMMENT VEUX-TU CRÉER TA FICHE ? », D'APRÈS LA MAQUETTE DE CAMARA (15/11/2026) : « je veux ça
+   pour le choix des fiches de révision ». Chaque carte EST l'illustration de la maquette (assets/fiches-choix),
+   ruban et texte effacés ; ils sont redessinés ici, placés en pourcentages de la carte et dimensionnés en
+   `cqw` (largeur de la carte) : ils grandissent et rapetissent avec l'image, au même endroit.
+   ====================================================================================================== */
+.mf-apercu__fenetre.fch-mode__fenetre {
+  width: min(820px, 100%);
+  border: 2px solid transparent;
+  border-radius: 26px;
+  background:
+    linear-gradient(#071438, #071438) padding-box,
+    linear-gradient(135deg, #ffb48a 0%, #f0607a 45%, #c2458f 75%, #7d3bd6 100%) border-box;
+  box-shadow:
+    0 0 0 5px rgba(240, 96, 122, 0.12),
+    0 0 30px rgba(240, 110, 120, 0.3),
+    0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+.mf-apercu__fenetre.fch-mode__fenetre::before { display: none; }
+
+.fch-mode__tete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.4rem 0.7rem 1.6rem;
+}
+
+.fch-mode__titre {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.3rem, 2.6vw, 1.75rem);
+  color: #fff;
+}
+
+.fch-mode__fermer {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 1.5px solid rgba(160, 180, 255, 0.45);
+  border-radius: 50%;
+  background: #0f1d4a;
+  color: #fff;
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.fch-mode__fermer:hover,
+.fch-mode__fermer:focus-visible {
+  background: #3d4fc9;
+  transform: rotate(90deg);
+}
+
+.fch-mode__choix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+  padding: 0.6rem 1.4rem 1.5rem;
+}
+
+/* UNE CARTE : l'image entière, à ses proportions (540 × 439). */
+.fch-mode__carte {
+  container-type: inline-size;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 540 / 439;
+  padding: 0;
+  border: 0;
+  border-radius: 4.5cqw;
+  background: center / 100% 100% no-repeat;
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  filter: drop-shadow(0 0 10px rgba(140, 150, 255, 0.35));
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.fch-mode__carte:hover,
+.fch-mode__carte:focus-visible {
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 18px rgba(170, 160, 255, 0.6)) brightness(1.04);
+  outline: none;
+}
+
+/* LE RUBAN : là où était celui de la maquette — sombre, liseré bleu à gauche, rose à droite, lueur autour. */
+.fch-mode__ruban {
+  position: absolute;
+  top: 51.5%;
+  left: 14%;
+  width: 72%;
+  height: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5cqw;
+  padding: 0 4cqw;
+  border-radius: 3.2cqw;
+  background:
+    linear-gradient(180deg, rgba(30, 32, 90, 0.96), rgba(22, 20, 70, 0.96)) padding-box,
+    linear-gradient(90deg, #58c8ff, #a9a6ff 50%, #ff8fd8) border-box;
+  border: 0.55cqw solid transparent;
+  box-shadow: 0 0 2.4cqw rgba(160, 140, 255, 0.55);
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 6.7cqw;
+  line-height: 1;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0 0 1.4cqw rgba(200, 190, 255, 0.55);
+}
+
+.fch-mode__carte--libre .fch-mode__ruban {
+  left: 23.5%;
+  width: 53.5%;
+}
+
+.fch-mode__etoile {
+  font-style: normal;
+  font-size: 5.4cqw;
+  color: #ffe08a;
+  text-shadow: 0 0 1.4cqw rgba(255, 220, 120, 0.8);
+}
+
+.fch-mode__texte {
+  position: absolute;
+  top: 69%;
+  left: 8%;
+  right: 8%;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 4.6cqw;
+  line-height: 1.3;
+  color: #eef0ff;
+  text-shadow: 0 1px 6px rgba(10, 10, 60, 0.6);
+}
+
+@media (max-width: 640px) {
+  .fch-mode__choix { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fch-mode__carte,
+  .fch-mode__fermer { transition: none; }
 }

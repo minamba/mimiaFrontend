@@ -1,0 +1,420 @@
+/* ======================================================================================================
+   LE DÉCOR DES PAGES DE L'ENFANT — Camara, le 15/11/2026 : ses maquettes de Mon calendrier, Mes podcasts, Mes fiches,
+   Ma carte et Mes jeux partagent le même fond (nuit bleue, cerisiers, torii, mont Fuji, pagode, nuages). Il en a
+   fourni DEUX versions, réencodées en WebP qualité 95 dans assets/decor-enfant/ :
+   - fond-nuit-large.webp (son calendar_large.png, 1672 × 941, 16:9) pour un écran plus large que haut ;
+   - fond-nuit.webp (son background_calendar.png, 1238 × 1271) pour un écran plus haut que large (téléphone).
+   Chacune couvre l'écran à peu près à ses proportions : pas de zoom ni de coupe (« il est trop zoomé, le mien est
+   beaucoup plus propre », Camara, avant la version large).
+
+   Une page de l'enfant pose la classe `page-decor-enfant` sur sa racine. Le fond est un calque FIXE (`::before`,
+   `position: fixed`) : il ne se repeint pas au défilement, et rien ne s'y anime.
+   ====================================================================================================== */
+/* PAS DE CALQUE ISOLÉ SUR LA PAGE — Camara, le 15/11/2026 : « je veux ajouter un contrôle mais la fenêtre passe sous
+   le pied de page ». La page portait `isolation: isolate` (et `position: relative`) pour tenir son fond : elle devenait
+   un calque à part, et TOUTE fenêtre dessinée dedans (ajout d'un contrôle, détails du calendrier…) y restait
+   enfermée, sous le pied de page et sous la barre du haut, quel que soit son `z-index`. Le fond n'en a pas besoin :
+   `html` n'a pas de fond, celui de `body` passe au canevas, et un calque fixe à `z-index: -1` se pose juste au-dessus,
+   derrière tout le reste. */
+
+.page-decor-enfant::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  /* UN VOILE SOMBRE PAR-DESSUS — Camara, le 15/11/2026 : « assombris-le un peu, il est trop lumineux ». Un dégradé
+     uni à 38 % de nuit, posé sur l'image : on la garde telle quelle, et on règle la lumière ici, d'un seul chiffre. */
+  --voile-decor: rgba(4, 8, 32, 0.38);
+  background-color: #0b1a5e;
+  background-image:
+    linear-gradient(var(--voile-decor), var(--voile-decor)),
+    url('../assets/decor-enfant/fond-nuit-large.webp');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+@media (max-aspect-ratio: 1 / 1) {
+  .page-decor-enfant::before {
+    background-image:
+      linear-gradient(var(--voile-decor), var(--voile-decor)),
+      url('../assets/decor-enfant/fond-nuit.webp');
+  }
+}
+
+/* LES MODES SAISONNIERS GARDENT LEUR FOND — Camara, le 15/11/2026 : « j'ai mis en mode Black Friday mais le fond ne
+   s'adapte pas, et c'est pareil pour tous les autres modes ». Une saison (Black Friday, Cyber Monday, French Days,
+   soldes, rentrée…) pose `data-saison` sur la racine et son propre fond sur `body` (App.css) : la nuit des pages de
+   l'enfant s'efface alors, et c'est le fond de la saison qu'on voit. En mode classique, l'attribut est retiré. */
+:root[data-saison] .page-decor-enfant::before {
+  display: none;
+}
+
+/* ======================================================================================================
+   LES PAGES ILLUSTRÉES SUIVENT LE THÈME DE LA SAISON — Camara, le 16/11/2026 : « en mode Black Friday les cartes
+   restent en bleu et ne s'adaptent pas à la couleur du thème » (accueil, fiches, Ma carte, calendrier…), et
+   « le bouton retour, mets-le en noir ».
+
+   LES VARIABLES COMMUNES (`--illu-*`) : sur `:root`, les bleus nuit du mode classique ; sous `[data-saison]`, elles
+   sont tirées des variables que CHAQUE saison redéfinit déjà dans App.css (`--bs-fond-carte`, `--bs-lueur-2`,
+   `--bs-halo`, `--corail`, `--encre-douce`). Une saison nouvelle recolore donc ces pages d'elle-même.
+
+   LE MODE CLASSIQUE NE BOUGE PAS : les règles des pages ne sont pas réécrites ; tout ce qui suit ne s'applique que
+   sous `:root[data-da='blue-sky'][data-saison]` (une saison n'existe pas sans Blue Sky). La spécificité de ce
+   préfixe (une pseudo-classe et deux attributs) passe devant celle des feuilles des pages (`:root .page.x …`).
+   Les couleurs propres aux MATIÈRES restent (liserés, pastilles), leur fond est mêlé à celui de la saison.
+   Les ILLUSTRATIONS (bannières, scènes, panoramas, décors) sont des images : elles ne se recolorent pas.
+   ====================================================================================================== */
+:root {
+  --illu-panneau: rgba(14, 32, 86, 0.93);
+  --illu-panneau-2: rgba(10, 22, 62, 0.93);
+  --illu-panneau-3: rgba(40, 66, 160, 0.62);
+  --illu-bord: rgba(150, 175, 255, 0.55);
+  --illu-bord-fort: rgba(170, 190, 255, 0.8);
+  --illu-lueur: rgba(80, 150, 255, 0.38);
+  --illu-accent: #4fd8ff;
+  --illu-texte: #f3f6ff;
+  --illu-texte-doux: #c3cdec;
+}
+
+:root[data-da='blue-sky'][data-saison] {
+  --illu-panneau: color-mix(in srgb, var(--bs-fond-carte) 94%, transparent);
+  --illu-panneau-2: color-mix(in srgb, var(--bs-fond-carte) 72%, #000);
+  --illu-panneau-3: color-mix(in srgb, var(--bs-fond-carte) 86%, #fff);
+  --illu-bord: rgb(var(--bs-lueur-2) / 0.5);
+  --illu-bord-fort: rgb(var(--bs-lueur-2) / 0.82);
+  --illu-lueur: rgb(var(--bs-halo) / 0.38);
+  --illu-accent: var(--corail);
+  --illu-texte: #ffffff;
+  --illu-texte-doux: var(--encre-douce);
+}
+
+/* ------------------------------------------------------------------ le bouton retour, NOIR en saison */
+:root[data-da='blue-sky'][data-saison] :is(.page-decor-enfant, .grille--enfant) :is(
+  .lien-retour, .calendrier-eleve__retour, .parcours__retour, .podx-banniere__retour
+) {
+  border: 1.5px solid color-mix(in srgb, var(--corail) 65%, transparent);
+  background: #0a0a0d;
+  color: #fff;
+  box-shadow: 0 0 12px rgb(var(--bs-halo) / 0.3);
+}
+
+:root[data-da='blue-sky'][data-saison] :is(.page-decor-enfant, .grille--enfant) :is(
+  .lien-retour, .calendrier-eleve__retour, .parcours__retour, .podx-banniere__retour
+):hover {
+  border-color: var(--corail);
+  background: #17171c;
+  color: #fff;
+}
+
+/* --------------------------------------------------------------------------------- Mon calendrier */
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__decompte {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--illu-accent) 30%, var(--illu-panneau)), var(--illu-panneau-2));
+  box-shadow: 0 0 18px var(--illu-lueur), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__decompte-icone {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--illu-accent) 60%, #fff), var(--illu-accent));
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__carte {
+  background:
+    linear-gradient(180deg, var(--illu-panneau), var(--illu-panneau-2)) padding-box,
+    linear-gradient(135deg, var(--illu-bord-fort), rgb(var(--bs-halo) / 0.9) 50%, var(--illu-bord-fort)) border-box;
+  box-shadow: 0 0 26px var(--illu-lueur), 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__reliure {
+  background: linear-gradient(90deg, transparent, var(--illu-bord-fort) 6%, var(--illu-bord-fort) 94%, transparent) center / 100% 2px no-repeat;
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__reliure span {
+  border-color: var(--illu-texte);
+  background: radial-gradient(circle, var(--illu-accent) 0%, var(--illu-panneau-2) 75%);
+  box-shadow: 0 0 10px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__entete h2 {
+  background:
+    linear-gradient(180deg, var(--illu-panneau), var(--illu-panneau-2)) padding-box,
+    linear-gradient(90deg, rgb(var(--bs-halo)), var(--illu-accent), rgb(var(--bs-halo))) border-box;
+  box-shadow: 0 0 16px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__nav {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(180deg, var(--illu-panneau), var(--illu-panneau-2));
+  box-shadow: 0 0 12px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__nav:hover { background: var(--illu-panneau-3); }
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-eleve__sans-zone { background: var(--illu-panneau-2); }
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-grille::before {
+  border-color: var(--illu-bord);
+  background: linear-gradient(180deg, var(--illu-panneau-3), var(--illu-panneau));
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-jour {
+  border-color: var(--illu-bord);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--illu-panneau-3) 85%, transparent), var(--illu-panneau));
+}
+
+/* Les jours aux couleurs qui ont un sens (vacances, contrôle, aujourd'hui) gardent les leurs. */
+:root[data-da='blue-sky'][data-saison] .page.cal-illu .calendrier-jour--vacances {
+  background: linear-gradient(160deg, #b896ff, #8c68f0);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cal-illu :is(.calendrier-jour--controle, .calendrier-jour--controle-passe) {
+  background-image: none;
+  background-color: rgba(214, 110, 40, 0.45);
+}
+
+/* ------------------------------------------------------------------------------------- Ma carte */
+:root[data-da='blue-sky'][data-saison] .carte-illustree :is(.carte-illustree__banniere, .parcours__score) {
+  box-shadow: 0 0 22px var(--illu-lueur), 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-da='blue-sky'][data-saison] .carte-illustree :is(.parcours__jauge, .parcours__mini) {
+  border-color: var(--illu-bord);
+  background: var(--illu-panneau-2);
+}
+
+:root[data-da='blue-sky'][data-saison] .carte-illustree .parcours__jauge > span {
+  background: linear-gradient(90deg, var(--illu-accent), color-mix(in srgb, var(--illu-accent) 55%, #fff));
+  box-shadow: 0 0 10px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .carte-illustree :is(.parcours__matiere, .parcours__note) {
+  border-color: var(--illu-bord);
+  background: linear-gradient(90deg, var(--illu-panneau), var(--illu-panneau-2));
+  box-shadow: 0 0 14px var(--illu-lueur);
+}
+
+/* Le voile des panoramas : aux couleurs de la saison (le nom et la jauge restent lisibles), l'image dessous. */
+:root[data-da='blue-sky'][data-saison] .carte-illustree .parcours__matiere--panorama > summary::before {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--illu-panneau-2) 94%, transparent) 0%,
+      color-mix(in srgb, var(--illu-panneau-2) 80%, transparent) 26%,
+      color-mix(in srgb, var(--illu-panneau-2) 35%, transparent) 40%,
+      color-mix(in srgb, var(--illu-panneau-2) 12%, transparent) 50%,
+      color-mix(in srgb, var(--illu-panneau-2) 45%, transparent) 60%,
+      color-mix(in srgb, var(--illu-panneau-2) 90%, transparent) 74%,
+      color-mix(in srgb, var(--illu-panneau-2) 94%, transparent) 100%),
+    var(--decor, none) center / cover no-repeat;
+}
+
+:root[data-da='blue-sky'][data-saison] .carte-illustree .parcours__domaine {
+  background: color-mix(in srgb, var(--illu-panneau-2) 75%, transparent);
+}
+
+/* ------------------------------------------------------------------------------ Mes fiches de révision */
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-quota {
+  border-color: var(--illu-bord);
+  background: linear-gradient(180deg, var(--illu-panneau), var(--illu-panneau-2));
+  box-shadow: 0 0 20px var(--illu-lueur), 0 14px 30px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-matiere__compte {
+  border-color: var(--illu-bord);
+  background: var(--illu-panneau-2);
+}
+
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-carte-cours {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--carte-haut, #1b2f8a) 38%, var(--illu-panneau)) 0%,
+    color-mix(in srgb, var(--carte-bas, #14206a) 38%, var(--illu-panneau-2)) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre .mf-cours__pied {
+  background: color-mix(in srgb, var(--illu-panneau-2) 85%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre :is(.mf-cours__completer, .mf-cours__ouvrir) {
+  background: color-mix(in srgb, var(--illu-panneau-2) 75%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .mf-page.mf-illustre :is(.mf-vide, .mf-essai) {
+  background: var(--illu-panneau-2);
+}
+
+/* --------------------------------------------------------------------------------------- Mes podcasts */
+:root[data-da='blue-sky'][data-saison] .podi .podi-banniere {
+  box-shadow: 0 0 26px var(--illu-lueur), 0 16px 36px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-da='blue-sky'][data-saison] .podi .podi-jauge {
+  border-color: var(--illu-bord);
+  background: linear-gradient(180deg, var(--illu-panneau), var(--illu-panneau-2));
+  box-shadow: 0 0 22px var(--illu-lueur), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+:root[data-da='blue-sky'][data-saison] .podi .podi-carte__lien {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--carte-haut) 40%, var(--illu-panneau)) 0%,
+    color-mix(in srgb, var(--carte-bas) 40%, var(--illu-panneau-2)) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .podi .mf-vide {
+  border-color: var(--illu-bord);
+  background: var(--illu-panneau-2);
+}
+
+/* La page d'un podcast. */
+:root[data-da='blue-sky'][data-saison] .podx .podx-banniere {
+  background: linear-gradient(110deg,
+    color-mix(in srgb, var(--carte-haut, #1a2470) 40%, var(--illu-panneau)) 0%,
+    color-mix(in srgb, var(--carte-bas, #2a2370) 40%, var(--illu-panneau-2)) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .podx .pod-lecteur.podx-lecteur {
+  background: linear-gradient(160deg, var(--illu-panneau), var(--illu-panneau-2));
+}
+
+:root[data-da='blue-sky'][data-saison] .podx :is(.pod-attente, .pod-notions, .mf-vide, .mf-poids, .pod-lecteur--attente),
+:root[data-da='blue-sky'][data-saison] .podx .podx-lecteur .pod-lecteur__texte {
+  background: var(--illu-panneau-2);
+}
+
+:root[data-da='blue-sky'][data-saison] .podx :is(
+  .pod-notion, .podx-banniere__matiere, .pod-lecteur__saut, .pod-lecteur__vitesse, .pod-lecteur__texte-zone,
+  .pod-lecteur__liens .pod-lecteur__telecharger, .podx-banniere .pod-tout .pod-lecteur__telecharger
+) {
+  background: color-mix(in srgb, var(--illu-panneau-2) 70%, transparent);
+}
+
+/* ------------------------------------------------------------------------------------------ Mes jeux */
+:root[data-da='blue-sky'][data-saison] .jeux-illustre .jeux-banniere__sous-titre {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--illu-accent) 22%, var(--illu-panneau)), var(--illu-panneau-2));
+  box-shadow: 0 0 18px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .jeux-illustre .frise--illustree .portail::before {
+  background: var(--illu-panneau-3);
+}
+
+:root[data-da='blue-sky'][data-saison] .jeux-illustre .frise--illustree .portail:not(.est-choisi, .est-verrouille) .portail__arche::before {
+  background: linear-gradient(180deg, var(--illu-panneau-3) 0%, var(--illu-panneau) 55%, var(--illu-panneau-2) 100%);
+}
+
+/* ------------------------------------------------------- l'accueil : Mes contrôles et Préparation à l'examen */
+:root[data-da='blue-sky'][data-saison] .ctr-illu.controles-section {
+  --surface: var(--illu-panneau-2);
+  --trait: var(--illu-bord);
+  --ctr-bord: var(--illu-bord-fort);
+  --ctr-lueur: var(--illu-lueur);
+  background: linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 24px var(--ctr-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] .ctr-illu .fiches-vide {
+  border-color: var(--illu-bord);
+  background-color: color-mix(in srgb, var(--illu-panneau-3) 45%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .ctr-illu .controle-carte:not(.cci) {
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 55%),
+    var(--illu-panneau-2);
+}
+
+:root[data-da='blue-sky'][data-saison] .ctr-illu .examen-section__global {
+  border-color: var(--illu-bord);
+  background: color-mix(in srgb, var(--illu-panneau-3) 45%, transparent);
+}
+
+/* Les cartes d'un contrôle à venir (accueil et page des contrôles). */
+:root[data-da='blue-sky'][data-saison] .controles-liste > .controle-carte.cci {
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--cci-haut, #1b2f8a) 45%, transparent), transparent 60%),
+    linear-gradient(165deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .controles-liste > .controle-carte.cci .cci__preparation {
+  background: color-mix(in srgb, var(--illu-panneau-2) 80%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .controles-liste > .controle-carte.cci .controle-carte__delai:not(.est-proche, .est-imminent) {
+  border-color: var(--illu-bord-fort);
+  background: color-mix(in srgb, var(--illu-panneau-2) 85%, transparent);
+  box-shadow: 0 0 12px var(--illu-lueur);
+}
+
+/* ------------------------------------------------------------------------------ la page des contrôles */
+:root[data-da='blue-sky'][data-saison] .cpi .onglets { border-bottom-color: var(--illu-bord); }
+
+:root[data-da='blue-sky'][data-saison] .cpi :is(.onglet.onglet--actif, .onglets__declencheur) {
+  background: var(--illu-panneau-2);
+}
+
+:root[data-da='blue-sky'][data-saison] .cpi .controles-groupe__compte {
+  background: color-mix(in srgb, var(--cpi-teinte) 25%, var(--illu-panneau-2));
+}
+
+:root[data-da='blue-sky'][data-saison] .cpi .controle-carte:not(.cci) {
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--cpi-teinte) 16%, var(--illu-panneau)) 0%,
+    var(--illu-panneau-2) 55%,
+    var(--illu-panneau-2) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .cpi .fiches-vide {
+  border-color: var(--illu-bord);
+  background: var(--illu-panneau-2);
+  box-shadow: 0 0 20px var(--illu-lueur);
+}
+
+/* ---------------------------------------------------------------------------------- la fiche d'un contrôle */
+:root[data-da='blue-sky'][data-saison] .page.cfi {
+  --cfi-panneau: color-mix(in srgb, var(--illu-panneau-2) 85%, transparent);
+  --cfi-haut: color-mix(in srgb, var(--carte-haut, var(--matiere, #7c5cff)) 40%, var(--illu-panneau));
+  --cfi-bas: color-mix(in srgb, var(--carte-bas, var(--matiere, #7c5cff)) 40%, var(--illu-panneau-2));
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cfi .controle-fiche {
+  background-color: var(--illu-panneau-2);
+  background-image: linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cfi :is(.controle-notion, .controle-fiche__actions) {
+  background: color-mix(in srgb, var(--illu-panneau-2) 70%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.cfi .controle-notion { border-color: var(--illu-bord); }
+
+:root[data-da='blue-sky'][data-saison] .page.cfi .cours-controle__document {
+  background: color-mix(in srgb, var(--illu-panneau-3) 55%, transparent);
+}
+
+/* --------------------------------------------------------------------------------- la fiche d'une épreuve */
+:root[data-da='blue-sky'][data-saison] .page.epv-illu {
+  --epv-bord: var(--illu-bord);
+  --epv-lueur: var(--illu-lueur);
+  --epv-panneau: linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.epv-illu .epv-banniere {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgb(var(--bs-halo) / 0.18), transparent 55%),
+    var(--epv-panneau);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.epv-illu .epv-domaine {
+  background: color-mix(in srgb, var(--illu-panneau-3) 50%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .page.epv-illu .epv-domaine[open] {
+  background: color-mix(in srgb, var(--illu-panneau-3) 70%, transparent);
+}
+
+/* --------------------------------------------------------------- l'accueil : les cartes de professeurs */
+:root[data-da='blue-sky'][data-saison] .grille--enfant .matiere-case.matiere-case--illustree {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--carte-haut) 55%, var(--illu-panneau)) 0%,
+    color-mix(in srgb, var(--carte-haut) 55%, var(--illu-panneau)) 50%,
+    color-mix(in srgb, var(--carte-bas) 55%, var(--illu-panneau-2)) 100%);
+}

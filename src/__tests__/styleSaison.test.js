@@ -21,8 +21,14 @@ beforeEach(() => {
   racine().removeAttribute('data-saison');
 });
 
-test('les cinq déclinaisons, dans l’ordre de l’administration', () => {
-  expect(SAISONS.map((s) => s.cle)).toEqual(['soldes-ete', 'soldes-hiver', 'french-days', 'black-friday', 'back-to-school']);
+test('les six déclinaisons, dans l’ordre de l’administration', () => {
+  expect(SAISONS.map((s) => s.cle)).toEqual(['soldes-ete', 'soldes-hiver', 'french-days', 'black-friday', 'cyber-monday', 'back-to-school']);
+});
+
+test('Cyber Monday se pose comme les autres', () => {
+  appliquerBlueSky(true, 'cyber-monday');
+  expect(racine().getAttribute('data-saison')).toBe('cyber-monday');
+  expect(saisonEnregistree()).toBe('cyber-monday');
 });
 
 test('Blue Sky avec une déclinaison : les deux attributs sont posés, et retenus', () => {

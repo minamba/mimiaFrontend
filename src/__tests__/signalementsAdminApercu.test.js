@@ -69,13 +69,17 @@ describe('l’état, changé depuis la liste', () => {
 });
 
 describe('la ligne du signalement', () => {
-  test('le bouton ne dit qu’« Aperçu » ; le reste est écrit sous la description', async () => {
+  test('l’aperçu est un œil sans texte (06/11/2026) ; le reste est écrit sous la description', async () => {
     api.getSignalements.mockResolvedValue({
       data: [{ ...SIGNALEMENT, nombrePieces: 2, nombreCommentaires: 1 }],
     });
     render(<SignalementsAdmin />);
 
-    expect(await screen.findByRole('button', { name: 'Aperçu' })).toHaveTextContent(/^Aperçu$/);
+    const oeil = await screen.findByRole('button', { name: 'Aperçu' });
+    expect(oeil).toHaveTextContent(/^$/);
+    expect(oeil.querySelector('svg')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Modifier' }).querySelector('svg')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Supprimer' }).querySelector('svg')).not.toBeNull();
     expect(screen.getByText('2 fichiers · 1 commentaire')).toBeInTheDocument();
   });
 

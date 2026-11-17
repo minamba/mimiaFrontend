@@ -191,6 +191,43 @@
   cursor: wait;
 }
 
+/* DÉPLACER UNE LIGNE — Camara, le 08/11/2026 : la ligne prise est teintée, des bandes « Placer ici » s'ouvrent entre
+   les autres. */
+.jeux-tests__action-deplacer { --teinte-action: var(--action-ajouter); }
+
+.jeux-tests__action-deplacer[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--teinte-action) 24%, transparent);
+  border-color: var(--teinte-action);
+}
+
+.jeux-tests__lignes tr.jeux-tests__ligne--deplacee td {
+  background: color-mix(in srgb, var(--action-ajouter) 14%, transparent);
+}
+
+.jeux-tests__lignes .jeux-tests__emplacement td { padding: 6px 12px; }
+
+.jeux-tests__placer {
+  display: block;
+  width: 100%;
+  padding: 5px 12px;
+  border: 1px dashed color-mix(in srgb, var(--action-ajouter) 60%, transparent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--action-ajouter);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jeux-tests__placer:hover:not(:disabled),
+.jeux-tests__placer:focus-visible {
+  background: color-mix(in srgb, var(--action-ajouter) 16%, transparent);
+  border-style: solid;
+}
+
+.jeux-tests__placer:disabled { opacity: 0.5; cursor: wait; }
+
 .jeux-tests__retour { margin-bottom: 16px; }
 
 .jeux-tests__ajouter { margin-bottom: 20px; }
@@ -247,11 +284,35 @@
 .jeux-tests__cellule-commentaire,
 .jeux-tests__cellule-titres { overflow-wrap: anywhere; }
 
+/* LA COLONNE DU COMMENTAIRE A SA LARGEUR, et le texte s'arrête à cinq lignes — Camara, le 08/11/2026. Sans ça, la
+   colonne s'écrasait et une ligne pouvait prendre tout l'écran. Le reste se lit dans l'aperçu. */
+.jeux-tests__lignes .jeux-tests__cellule-commentaire { width: 30%; }
+
 .jeux-tests__cellule-commentaire {
-  max-width: 260px;
   color: var(--encre-douce);
   font-size: 13px;
+}
+
+.jeux-tests__commentaire {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  overflow: hidden;
   white-space: pre-wrap;
+}
+
+.jeux-tests__lire-tout {
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--action-code);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
 }
 
 .jeux-tests__cellule-date { white-space: nowrap; }
@@ -339,6 +400,10 @@
 .jeux-tests__banniere[data-mur='sante'] { --mur: url('../assets/walls/w_sante.webp'); }
 .jeux-tests__banniere[data-mur='arts'] { --mur: url('../assets/walls/w_artd.webp'); }
 .jeux-tests__banniere[data-mur='sport'] { --mur: url('../assets/walls/w_sport.webp'); }
+.jeux-tests__banniere[data-mur='chinois'] { --mur: url('../assets/walls/w_chinois.webp'); }
+.jeux-tests__banniere[data-mur='arabe'] { --mur: url('../assets/walls/w_arabe.webp'); }
+.jeux-tests__banniere[data-mur='allemand'] { --mur: url('../assets/walls/w_allemand.webp'); }
+.jeux-tests__banniere[data-mur='italien'] { --mur: url('../assets/walls/w_italien.webp'); }
 
 /* Sur le décor, les boutons gardent un fond à eux. */
 .jeux-tests__banniere .idee-action { background: color-mix(in srgb, var(--surface) 82%, transparent); }
@@ -428,6 +493,29 @@
   font-size: 13.5px;
   font-weight: 600;
 }
+
+/* LE COMPTE PAR STATUT (07/11/2026) : les couleurs des statuts, sur un fond assombri pour se lire sur l'image de la
+   bannière. Un zéro s'efface sans disparaître. */
+.jeux-tests__compte-statuts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.jeux-tests__compte-statut {
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--statut) 65%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--statut) 22%, rgba(8, 14, 30, 0.55));
+  color: var(--statut);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.jeux-tests__compte-statut strong { font-weight: 800; }
+
+.jeux-tests__compte-statut--zero { opacity: 0.55; }
 
 /* ------------------------------------------------------ le formulaire d'un test */
 .jeux-tests__formulaire {
@@ -617,7 +705,7 @@
   .jeux-tests__cellule-titres,
   .jeux-tests__cellule-competence { order: -1; font-size: 15px; }
 
-  .jeux-tests__cellule-commentaire { max-width: none; }
+  .jeux-tests__lignes .jeux-tests__cellule-commentaire { width: auto; }
 
   .jeux-tests__cellule-commentaire:empty { display: none; }
 
@@ -654,4 +742,32 @@
   /* La date d'exécution sous celle de création, à gauche comme elle. */
   .jeux-tests__liste .jeux-tests__cellule-date,
   .jeux-tests__lignes .jeux-tests__cellule-date { grid-column: 1 / -1; }
+
+  .jeux-tests__lignes .jeux-tests__emplacement td { grid-column: 1 / -1; padding: 0; }
+
+  /* Sur mobile, la rangée est une grille : teintées une à une, ses cellules faisaient des bandes. */
+  .jeux-tests__lignes tr.jeux-tests__ligne--deplacee {
+    background: color-mix(in srgb, var(--action-ajouter) 14%, transparent);
+  }
+
+  .jeux-tests__lignes tr.jeux-tests__ligne--deplacee td { background: transparent; }
+}
+
+/* LES TESTS REGROUPÉS PAR MATIÈRE — Camara, le 07/11/2026. Un titre par matière, à sa couleur. */
+.jeux-tests__groupe + .jeux-tests__groupe { margin-top: 34px; }
+
+.jeux-tests__groupe-titre {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding-left: 12px;
+  border-left: 4px solid var(--teinte-matiere);
+  font-size: 19px;
+}
+
+.jeux-tests__groupe-compte {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0.7;
 }

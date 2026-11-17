@@ -39,7 +39,8 @@ const initialState = {
   recherche: '',
 
   // La fenêtre du bandeau de coût, partagée avec le tableau des parents.
-  periodeCout: 'mois',
+  // « JOUR » À L'ARRIVÉE — Camara, le 12/11/2026 : « j'ai envie d'arriver directement sur l'onglet Jour ».
+  periodeCout: 'jour',
   decalageCout: 0,
 
   rechercheEleve: '',

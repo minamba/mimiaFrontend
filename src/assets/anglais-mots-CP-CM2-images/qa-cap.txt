@@ -1,0 +1,1 @@
+cap : remplacer la scene avec enfant par une casquette seule, comme le chapeau et les autres vetements.

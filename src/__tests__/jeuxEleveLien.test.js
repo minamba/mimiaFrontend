@@ -91,6 +91,34 @@ describe('en essai (18/10/2026)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  // 15/11/2026 : un parent en essai, sur téléphone, ouvrait tous les jeux de la classe de son enfant — un clic avant
+  // que le forfait soit lu passait. Il attend la réponse, puis explique.
+  it('un clic avant de connaître le forfait n’ouvre pas un jeu fermé', () => {
+    mockAcces = { ouvert: null, motif: null };
+    mockRecherche = '';
+    const { rerender } = render(<JeuxEleve />);
+
+    fireEvent.click(document.querySelector('[data-jeu="course-des-tables"]'));
+    expect(screen.queryByRole('button', { name: /Revenir aux jeux/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Choisis ton mode|Tranquille/)).not.toBeInTheDocument();
+
+    mockAcces = { ouvert: false, motif: 'essai' };
+    rerender(<JeuxEleve />);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Il faut être abonné pour jouer');
+  });
+
+  it('un clic avant de connaître le forfait ouvre le jeu dès qu’on sait qu’il est permis', () => {
+    mockAcces = { ouvert: null, motif: null };
+    mockRecherche = '';
+    const { rerender } = render(<JeuxEleve />);
+
+    fireEvent.click(document.querySelector('[data-jeu="marchande"]'));
+    mockAcces = { ouvert: false, motif: 'essai' };
+    rerender(<JeuxEleve />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.querySelector('.jeux-matieres')).not.toBeInTheDocument();
+  });
+
   it('la carte du professeur ouvre un jeu de l’essai', () => {
     mockAcces = { ouvert: false, motif: 'essai' };
     mockRecherche = 'classe=CE2&jeu=marchande';

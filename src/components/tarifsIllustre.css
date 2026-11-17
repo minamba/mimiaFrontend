@@ -1,0 +1,259 @@
+/* ======================================================================================================
+   PAGE DES TARIFS, SOUS LES FORMULES — maquette de Camara, 16/11/2026 :
+   - « ESSAYEZ D'ABORD » devient un bandeau bleu lumineux : le calendrier coché à gauche (découpé dans la
+     maquette), un filet, le titre souligné d'un trait orange, la phrase, et le bouton orange « Commencer
+     l'essai → » ; le cerisier en haut à droite, un nuage en bas, des éclats jaunes ;
+   - « BESOIN DE PLUS UN MOIS DONNÉ ? » prend une barre orange devant son titre ;
+   - LES RECHARGES deviennent des pastilles de verre nuit : chrono, heures en grand, filet, prix ;
+   - la mention des prix prend une icône d'information.
+
+   Le bandeau et les pastilles restent bleu nuit dans tous les thèmes (textes en clair) ; le titre et la
+   phrase des recharges suivent l'encre de la page. Sélecteurs forts : la base (App.css, chargée APRÈS ce
+   fichier) pèse jusqu'à 0,2,0 (`.tarif-essai:hover`), la règle Blue Sky des cartes 0,4,0 et 0,5,0 au survol.
+   ====================================================================================================== */
+
+/* ------------------------------------------------------------------ l'essai */
+section .tarif-essai.tarif-essai,
+section .tarif-essai.tarif-essai:hover,
+section .tarif-essai.tarif-essai:focus-within {
+  position: relative;
+  flex-wrap: nowrap;
+  gap: 26px;
+  margin-top: 28px;
+  padding: 22px 34px 22px 26px;
+  border: 1.5px solid rgba(110, 175, 255, 0.85);
+  border-radius: 26px;
+  background:
+    url('../assets/tarifs/cerisier.webp') right 6px top -6px / 128px auto no-repeat,
+    url('../assets/tarifs/nuage-essai.webp') right 15% bottom 0 / auto 58% no-repeat,
+    url('../assets/boutons/nuages-gauche.webp') left 4% bottom -4px / auto 30% no-repeat,
+    radial-gradient(ellipse 60% 120% at 30% 0%, rgba(90, 150, 255, 0.28), transparent 70%),
+    linear-gradient(180deg, #1d4fb8 0%, #123a92 100%);
+  box-shadow:
+    0 0 0 1px rgba(120, 180, 255, 0.3),
+    0 0 26px rgba(70, 145, 255, 0.55),
+    0 18px 44px rgba(2, 8, 30, 0.35),
+    inset 0 0 30px rgba(140, 190, 255, 0.16);
+  color: #fff;
+}
+
+.tarif-essai__icone {
+  flex: none;
+  width: 104px;
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(0, 10, 40, 0.35));
+}
+
+/* Le filet clair entre le calendrier et le texte. */
+.tarif-essai__texte {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-left: 26px;
+  border-left: 1px solid rgba(190, 215, 255, 0.4);
+}
+
+section .tarif-essai.tarif-essai strong {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
+  font-size: clamp(22px, 2.3vw, 30px);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff;
+}
+
+/* Le trait orange sous le titre. */
+section .tarif-essai.tarif-essai strong::after {
+  content: '';
+  position: absolute;
+  left: 34%;
+  right: -2%;
+  bottom: 0;
+  height: 4px;
+  border-radius: 999px 999px 999px 999px / 999px 999px 40% 40%;
+  background: linear-gradient(90deg, #ff9a3c, #ff6a2b);
+  transform: rotate(-1deg);
+}
+
+section .tarif-essai.tarif-essai p {
+  max-width: 640px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.55;
+  color: rgba(235, 242, 255, 0.95);
+}
+
+section .tarif-essai.tarif-essai p b { font-weight: 800; color: #fff; }
+
+section .tarif-essai.tarif-essai .tarif-essai__bouton {
+  position: relative;
+  flex: none;
+  overflow: visible;
+  padding: 15px 30px;
+  font-size: 17px;
+}
+
+/* Les éclats jaunes, au-dessus du coin droit du bouton. */
+section .tarif-essai.tarif-essai .tarif-essai__bouton:not(:disabled)::after {
+  content: '';
+  position: absolute;
+  top: -18px;
+  right: -16px;
+  width: 26px;
+  height: 23px;
+  background: url('../assets/boutons/eclats.webp') center / contain no-repeat;
+  pointer-events: none;
+}
+
+.tarif-essai__fleche { margin-left: 10px; font-size: 1.1em; }
+
+/* ------------------------------------------------------------------ les recharges */
+.separateur.separateur--recharges h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--sans);
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 800;
+}
+
+/* La barre orange devant le titre. */
+.separateur.separateur--recharges h2::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 1.05em;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffa24a, #ff6a2b);
+  transform: skewX(-16deg);
+}
+
+.separateur.separateur--recharges p { margin-top: 6px; font-size: 16px; }
+
+section .recharges { gap: 18px; }
+
+:root section .recharges .recharge-carte.recharge-carte,
+:root section .recharges .recharge-carte.recharge-carte:hover {
+  align-items: center;
+  gap: 16px;
+  min-width: 250px;
+  padding: 14px 26px 14px 22px;
+  border: 1.5px solid rgba(110, 170, 255, 0.75);
+  border-radius: 16px;
+  background-color: #0f2a78;
+  background-image: linear-gradient(180deg, #17378f 0%, #0d225f 100%);
+  box-shadow:
+    0 0 0 1px rgba(110, 170, 255, 0.2),
+    0 0 16px rgba(70, 140, 255, 0.35),
+    inset 0 0 18px rgba(110, 170, 255, 0.12);
+  color: #fff;
+}
+
+:root section .recharges .recharge-carte.recharge-carte:hover {
+  border-color: rgba(160, 205, 255, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(110, 170, 255, 0.35),
+    0 0 22px rgba(70, 140, 255, 0.5),
+    inset 0 0 18px rgba(110, 170, 255, 0.14);
+}
+
+.recharge-carte__chrono {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  color: #5cb6ff;
+  filter: drop-shadow(0 0 6px rgba(92, 182, 255, 0.5));
+}
+
+:root section .recharges .recharge-carte.recharge-carte strong {
+  font-family: var(--sans);
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Le prix, après un filet. */
+:root section .recharges .recharge-carte.recharge-carte span {
+  margin-left: auto;
+  padding-left: 18px;
+  border-left: 1px solid rgba(190, 215, 255, 0.35);
+  font-size: 18px;
+  color: rgba(235, 242, 255, 0.95);
+}
+
+/* ------------------------------------------------------------------ la mention */
+section .tarifs__mention {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.tarifs__info {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -1px;
+  color: #5cb6ff;
+}
+
+/* ------------------------------------------------------------------ téléphone */
+@media (max-width: 760px) {
+  section .tarif-essai.tarif-essai,
+  section .tarif-essai.tarif-essai:hover,
+  section .tarif-essai.tarif-essai:focus-within {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px 18px;
+    background-size: 92px auto, auto 34%, auto 22%, auto, auto;
+  }
+
+  .tarif-essai__icone { width: 72px; }
+  .tarif-essai__texte { flex-basis: calc(100% - 100px); padding-left: 16px; }
+  section .tarif-essai.tarif-essai p { font-size: 14.5px; }
+  section .tarif-essai.tarif-essai strong { font-size: 21px; white-space: nowrap; }
+  section .tarif-essai.tarif-essai .tarif-essai__bouton { width: 100%; justify-content: center; }
+
+  :root section .recharges .recharge-carte.recharge-carte { flex: 1 1 100%; min-width: 0; }
+}
+
+/* ------------------------------------------------------------------ en mode saisonnier
+   Camara, le 16/11/2026 : le bandeau de l'essai et les recharges suivent la saison (`--illu-*`). Le calendrier et
+   le cerisier sont des illustrations ; le nuage est blanc translucide, il va sur toutes les saisons. */
+:root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai,
+:root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai:hover,
+:root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai:focus-within {
+  border-color: var(--illu-bord-fort);
+  background:
+    url('../assets/tarifs/cerisier.webp') right 6px top -6px / 128px auto no-repeat,
+    url('../assets/tarifs/nuage-essai.webp') right 15% bottom 0 / auto 58% no-repeat,
+    url('../assets/boutons/nuages-gauche.webp') left 4% bottom -4px / auto 30% no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--illu-accent) 22%, var(--illu-panneau)) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 26px var(--illu-lueur), 0 18px 44px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-da='blue-sky'][data-saison] .tarif-essai__texte { border-left-color: var(--illu-bord); }
+:root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai p { color: var(--illu-texte-doux); }
+
+:root[data-da='blue-sky'][data-saison] section .recharges .recharge-carte.recharge-carte,
+:root[data-da='blue-sky'][data-saison] section .recharges .recharge-carte.recharge-carte:hover {
+  border-color: var(--illu-bord-fort);
+  background-color: transparent;
+  background-image: linear-gradient(180deg, var(--illu-panneau-3) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 16px var(--illu-lueur);
+}
+
+:root[data-da='blue-sky'][data-saison] section .recharges .recharge-carte.recharge-carte span { border-left-color: var(--illu-bord); }
+:root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai strong::after,
+:root[data-da='blue-sky'][data-saison] .separateur.separateur--recharges h2::before {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--illu-accent) 70%, #fff), var(--illu-accent));
+}
+:root[data-da='blue-sky'][data-saison] :is(.recharge-carte__chrono, .tarifs__info) { color: var(--illu-accent); filter: drop-shadow(0 0 6px var(--illu-lueur)); }
+
+@media (max-width: 760px) {
+  :root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai,
+  :root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai:hover,
+  :root[data-da='blue-sky'][data-saison] section .tarif-essai.tarif-essai:focus-within {
+    background-size: 92px auto, auto 34%, auto 22%, auto;
+  }
+}

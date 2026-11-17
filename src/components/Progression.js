@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import iconeCarte from '../assets/carte.png';
 import { getProgression } from '../lib/api/elevesApi';
+import { useVueIllustree } from '../lib/vueIllustree';
+import {
+  banniereCarte, decorDAnnee, decorDeMatiere, fondScore, livreSeparateur, pastilleAnnee,
+} from '../lib/carteIllustree';
+import './carteIllustre.css';
 
 /**
  * LA CARTE DES COMPÉTENCES, POUR L'ENFANT.
@@ -58,6 +63,10 @@ const LIBELLE_ETAT = {
 export default function Progression() {
   const { eleveId } = useParams();
   const navigate = useNavigate();
+  // « MA CARTE » ILLUSTRÉE (Camara, le 15/11/2026) : la maquette — voir carteIllustre.css. Pour l'enfant, et pour le
+  // parent dans l'espace de son enfant (16/11/2026, lib/vueIllustree.js). Les textes sont les mêmes pour les deux.
+  const enfant = useVueIllustree();
+  const racine = `page parcours${enfant ? ' page-decor-enfant carte-illustree' : ''}`;
 
   const [progression, setProgression] = useState(null);
   const [chargement, setChargement] = useState(true);
@@ -117,7 +126,12 @@ export default function Progression() {
   // sur « Mon calendrier » (`.bandeau-page`) : le vert, l'illustration et la
   // phrase de la carte « Ma carte » qui mène ici. Déclarée une fois, posée
   // dans les deux affichages — carte vide comme carte remplie.
-  const bandeau = (
+  const bandeau = enfant ? (
+    <header className="carte-illustree__banniere" style={{ backgroundImage: `url(${banniereCarte})` }}>
+      <h1 className="carte-illustree__titre">Ma carte</h1>
+      <p className="carte-illustree__ruban">Vois ce que tu as déjà réussi !</p>
+    </header>
+  ) : (
     <header className="bandeau-page">
       <img className="bandeau-page__illustration" src={iconeCarte} alt="" />
       <div>
@@ -127,6 +141,9 @@ export default function Progression() {
     </header>
   );
 
+  // L'encadré du score, sur son illustration (nuages et lauriers) côté enfant.
+  const fondDuScore = enfant ? { backgroundImage: `url(${fondScore})` } : undefined;
+
   // UNE CARTE VIDE N'EST PAS UNE PANNE.
   //
   // Six niveaux du référentiel n'ont aucune compétence — 3e prépa-métiers,
@@ -135,7 +152,7 @@ export default function Progression() {
   // qu'il n'y a rien À VOIR, pas que quelque chose est cassé.
   if (total === 0) {
     return (
-      <section className="page parcours">
+      <section className={racine}>
         <button
           type="button"
           className="btn-ghost parcours__retour"
@@ -146,7 +163,7 @@ export default function Progression() {
 
         {bandeau}
 
-        <div className="parcours__score">
+        <div className="parcours__score" style={fondDuScore}>
           <strong>🗺️</strong>
           <span>Ta carte se remplira bientôt</span>
           <small>
@@ -160,7 +177,7 @@ export default function Progression() {
   }
 
   return (
-    <section className="page parcours">
+    <section className={racine}>
       <button
         type="button"
         className="btn-ghost parcours__retour"
@@ -173,7 +190,7 @@ export default function Progression() {
 
       {/* LE CHIFFRE D'ABORD, ET EN GRAND. C'est ce que l'enfant vient
           chercher : combien j'en ai. Le détail par matière vient après. */}
-      <div className="parcours__score">
+      <div className="parcours__score" style={fondDuScore}>
         <strong>{acquises}</strong>
 
         <span>
@@ -252,15 +269,25 @@ export default function Progression() {
         // notions des années précédentes ne disparaissent pas pour autant —
         // elles ont leur propre section, avec leur propre compte.
         const deSonAnnee = m.competences.filter((c) => !c.autreNiveau);
+        const decor = enfant ? decorDeMatiere(m.libelle) : null;
 
         return (
-          <details key={m.matiereId} className="parcours__matiere" open={m.acquises > 0}>
+          <details
+            key={m.matiereId}
+            className={`parcours__matiere${decor?.plein ? ' parcours__matiere--panorama' : ''}`}
+            open={m.acquises > 0}
+            style={decor ? { '--decor': `url(${decor.decor})` } : undefined}
+          >
             <summary>
-              <span
-                className="parcours__pastille"
-                aria-hidden="true"
-                style={m.couleur ? { background: m.couleur } : undefined}
-              />
+              {decor ? (
+                <img className="parcours__icone" src={decor.pastille} alt="" />
+              ) : (
+                <span
+                  className="parcours__pastille"
+                  aria-hidden="true"
+                  style={m.couleur ? { background: m.couleur } : undefined}
+                />
+              )}
 
               <strong>{m.libelle}</strong>
 
@@ -309,20 +336,35 @@ export default function Progression() {
       {rattrapage.length > 0 && (
         <section className="parcours__avant">
           <h2 className="parcours__avant-titre">
+            {enfant && <img className="parcours__avant-livre" src={livreSeparateur} alt="" />}
             Tu as aussi consolidé {acquisesAutresAnnees} notion
             {acquisesAutresAnnees > 1 ? 's' : ''} des années précédentes
           </h2>
 
           {/* De la plus récente à la plus ancienne : ce qu'il vient de
               rattraper l'intéresse plus que son CE2. */}
-          {niveauxRattrapes.map((niveau) => (
-            <details key={niveau.ordre} className="parcours__matiere">
+          {niveauxRattrapes.map((niveau, rang) => {
+            const acquisesDuNiveau = niveau.notions.filter((c) => c.etat === 'acquise').length;
+            return (
+            <details
+              key={niveau.ordre}
+              className={`parcours__matiere parcours__matiere--annee${enfant ? ' parcours__matiere--panorama' : ''}`}
+              style={enfant ? { '--decor': `url(${decorDAnnee(niveau.libelle, rang)})` } : undefined}
+            >
               <summary>
-                <span className="parcours__pastille" aria-hidden="true" />
+                {enfant
+                  ? <img className="parcours__icone" src={pastilleAnnee} alt="" />
+                  : <span className="parcours__pastille" aria-hidden="true" />}
                 <strong>{niveau.libelle}</strong>
                 <span className="parcours__compte">
-                  {niveau.notions.filter((c) => c.etat === 'acquise').length} / {niveau.notions.length}
+                  {acquisesDuNiveau} / {niveau.notions.length}
                 </span>
+                {/* La jauge de l'année, côté enfant (la maquette en a une par rangée). */}
+                {enfant && (
+                  <span className="parcours__mini" aria-hidden="true">
+                    <span style={{ width: `${niveau.notions.length ? Math.round((acquisesDuNiveau / niveau.notions.length) * 100) : 0}%` }} />
+                  </span>
+                )}
               </summary>
 
               <div className="parcours__domaine">
@@ -345,7 +387,8 @@ export default function Progression() {
                 </ul>
               </div>
             </details>
-          ))}
+            );
+          })}
         </section>
       )}
 

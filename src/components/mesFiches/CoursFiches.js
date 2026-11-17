@@ -377,6 +377,10 @@ export default function CoursFiches() {
 
   const complementEnEchec = cours.complement?.etat === 'echec';
 
+  // UNE FICHE LIBRE (06/11/2026, Camara : « le message doit s'adapter selon qu'on est en libre ou pas ») :
+  // l'élève a écrit ou dicté son sujet, il n'a importé aucun cours.
+  const libre = Boolean(cours.libre);
+
   return (
     <div className="mf-page" style={styleDuCours(cours)}>
       {versComplete
@@ -386,10 +390,10 @@ export default function CoursFiches() {
       <header className="mf-cours-entete">
         <p className="mf-cours-entete__matiere">{cours.matiereLibelle}</p>
         <h1 className="mf-titre">
-          {versComplete ? `Compléter « ${cours.complementDeTitre ?? 'ton cours'} »` : (cours.titre ?? 'Ton cours')}
+          {versComplete ? `Compléter « ${cours.complementDeTitre ?? 'ton cours'} »` : (cours.titre ?? (libre ? 'Ta fiche libre' : 'Ton cours'))}
         </h1>
         <p className="mf-cours-entete__date">
-          Importé le {dateCourte(cours.dateCreation)}
+          {libre ? 'Créée le' : 'Importé le'} {dateCourte(cours.dateCreation)}
           {fiches.length > 0 && (
             <span className="mf-cours-entete__nombre"> · {fiches.length} fiche{fiches.length > 1 ? 's' : ''}</span>
           )}
@@ -410,15 +414,24 @@ export default function CoursFiches() {
       {cours.etat === 'a_lire' && (
         <div className="mf-etat mf-etat--attente" role="status">
           <span className="mf-etat__roue" aria-hidden="true" />
-          <p><strong>Je lis ton cours…</strong></p>
-          <p>Je repère les notions qu’il contient. Ça prend quelques secondes.</p>
+          {libre ? (
+            <>
+              <p><strong>Je lis ce que tu as écrit…</strong></p>
+              <p>Je repère les notions de ton sujet. Ça prend quelques secondes.</p>
+            </>
+          ) : (
+            <>
+              <p><strong>Je lis ton cours…</strong></p>
+              <p>Je repère les notions qu’il contient. Ça prend quelques secondes.</p>
+            </>
+          )}
         </div>
       )}
 
       {cours.etat === 'notions' && (
         <section className="mf-etat" aria-labelledby="mf-notions-titre">
           <h2 id="mf-notions-titre" className="mf-etape__titre">
-            Ton cours contient {nombreNotions} notions
+            {libre ? 'Ton sujet' : 'Ton cours'} contient {nombreNotions} notions
           </h2>
           <p className="champ__aide">
             Une {typeDemande?.libelle.toLowerCase() ?? 'fiche'} par notion. Décoche celles que tu ne veux pas réviser.
@@ -691,7 +704,9 @@ export default function CoursFiches() {
         <section className="mf-autre" aria-labelledby="mf-autre-titre">
           <h2 id="mf-autre-titre" className="mf-etape__titre">On réessaie ?</h2>
           <p className="champ__aide">
-            Ton cours n’est pas gardé : ses pages ont été effacées. Importe-le à nouveau pour créer tes fiches.
+            {libre
+              ? 'Ton texte n’est pas gardé : il a été effacé. Écris-le ou dicte-le à nouveau pour créer tes fiches.'
+              : 'Ton cours n’est pas gardé : ses pages ont été effacées. Importe-le à nouveau pour créer tes fiches.'}
           </p>
           {/* Plus rien à créer : pas de bouton, la jauge dit pourquoi (16/10/2026). */}
           {quotaEpuise(quota) ? (

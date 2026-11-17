@@ -1,4 +1,5 @@
 import httpClient, { API_BASE_URL, enTeteAuth } from './httpClient';
+import { avecBillet } from '../affluence/salleDAttente';
 
 export const getConversations = (eleveId) =>
   httpClient.get('/conversations', { params: { eleveId } });
@@ -80,7 +81,9 @@ export const terminerForfait = (conversationId) =>
  * @param signal   AbortSignal pour interrompre la génération
  */
 export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
-  const { secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste = null, ...flux } = options;
+  const {
+    secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste = null, figureIncomprise = null, ...flux
+  } = options;
 
   // Le chronomètre est tenu ici, dans le navigateur : le serveur ne sait pas
   // quelle durée l'élève a choisie ni quand il a commencé. Sans cette valeur,
@@ -91,9 +94,14 @@ export const envoyerMessageStream = (conversationId, contenu, options = {}) => {
   // « plus lent », ni qu'il n'y en a plus en dessous.
   // LE VERDICT DE LA VOIX part avec le son jugé (04/11/2026) : le serveur le
   // garde sur le message, pour que la bulle le réaffiche au rechargement.
+  // LES LIGNES DE FIGURE NON DESSINÉES (11/11/2026) : l'écran les a lues dans le message précédent du professeur, le
+  // serveur les lui renvoie pour qu'il récrive sa figure — voir figureGeo.lignesIncomprises.
   return consommerFlux(
     `/conversations/${conversationId}/messages`,
-    { contenu, secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste },
+    {
+      contenu, secondesRestantes, pieceJointeIds, vitesseEcoute, sonJuste,
+      ...(figureIncomprise?.length ? { figureIncomprise } : {}),
+    },
     flux,
   );
 };
@@ -216,10 +224,10 @@ const consommerFlux = async (chemin, corps, { onDelta, onErreur, onQuota, onEche
 
   const reponse = await fetch(`${API_BASE_URL}${chemin}`, {
     method: 'POST',
-    headers: {
+    headers: avecBillet({
       'Content-Type': 'application/json',
       ...(entete ? { Authorization: entete } : {}),
-    },
+    }),
     body: corps ? JSON.stringify(corps) : undefined,
     signal,
   });

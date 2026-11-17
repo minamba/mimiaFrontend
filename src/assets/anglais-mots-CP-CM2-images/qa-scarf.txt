@@ -1,0 +1,1 @@
+scarf : remplacer le portrait avec enfant par une echarpe seule pour conserver la presentation des vetements isoles.

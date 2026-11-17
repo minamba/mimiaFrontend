@@ -5,8 +5,10 @@ import { login, logout } from '../lib/actions/authActions';
 import logoFondClair from '../assets/logo-fond-clair.png';
 import logoFondSombre from '../assets/logo-fond-sombre.png';
 import { useModeTest } from '../lib/storage/modeTest';
-import { fermerSessionEleve, sessionEleve } from '../lib/storage/sessionEleve';
+import { fermerSessionEleve, rangerPortraitSession, sessionEleve } from '../lib/storage/sessionEleve';
 import { fermerSession } from '../lib/api/sessionEleveApi';
+import { getPortraitEleve } from '../lib/api/elevesApi';
+import { avatarEnfant } from '../lib/avatarEnfant';
 import BoutonTheme from './BoutonTheme';
 import useEspaceParent from '../lib/hooks/useEspaceParent';
 import './espaceParent/espaceParent.css';
@@ -26,6 +28,25 @@ export default function Navbar() {
   // Relu à chaque navigation : ouvrir ou fermer une session change
   // l'adresse, donc la barre se remet à jour au bon moment sans état partagé.
   const eleve = sessionEleve();
+
+  // SON PORTRAIT AU LIEU DE SON INITIALE — Camara, le 16/11/2026. L'avatar choisi par le parent, sinon celui par
+  // défaut de sa classe et de son sexe ; l'initiale seulement si rien ne convient (sexe non précisé). Relu du
+  // serveur une fois par session de navigation : une session plus ancienne, ou un avatar changé depuis.
+  const [, setPortraitRelu] = useState(0);
+  const eleveId = eleve?.eleveId;
+  useEffect(() => {
+    if (!eleveId) return undefined;
+    let actif = true;
+    Promise.resolve(getPortraitEleve(eleveId))
+      .then(({ data }) => {
+        if (actif && rangerPortraitSession(data ?? {})) setPortraitRelu((n) => n + 1);
+      })
+      .catch(() => {});
+    return () => { actif = false; };
+  }, [eleveId]);
+  const portraitEleve = eleve
+    ? avatarEnfant({ avatar: eleve.avatar, sexe: eleve.sexe, niveauCode: eleve.niveauCode || eleve.niveau })
+    : null;
 
   const [menuOuvert, setMenuOuvert] = useState(false);
   const menuRef = useRef(null);
@@ -91,6 +112,7 @@ export default function Navbar() {
               to="/tarifs"
               className="btn-ghost navbar__lien-direct navbar__lien-direct--tarifs"
             >
+              <svg className="navbar__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12.6V4.5A1.5 1.5 0 0 1 4.5 3h8.1a1.5 1.5 0 0 1 1.06.44l7 7a1.5 1.5 0 0 1 0 2.12l-8.1 8.1a1.5 1.5 0 0 1-2.12 0l-7-7A1.5 1.5 0 0 1 3 12.6Z" /><circle cx="8" cy="8" r="1.6" /></svg>
               Tarifs
             </Link>
           )}
@@ -98,13 +120,17 @@ export default function Navbar() {
               Un enfant qui arrive sur mimia.fr ne doit pas avoir à comprendre
               que « Connexion » n'est pas pour lui. */}
           <Link to="/code" className="btn-ghost navbar__lien-direct">
+            <svg className="navbar__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16" /></svg>
             J’ai un code
           </Link>
           <button
             type="button"
-            className="btn-ghost navbar__connexion"
+            /* UN BOUTON PLEIN depuis le 16/11/2026 — maquette de Camara : « Connexion » en orange lumineux,
+               avec ses éclats, à côté des deux pilules bleues. */
+            className="btn navbar__connexion"
             onClick={() => dispatch(login())}
           >
+            <svg className="navbar__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4.5 20.5c.8-3.6 3.9-6 7.5-6s6.7 2.4 7.5 6Z" /></svg>
             Connexion
           </button>
           {/* PAS DE « Commencer gratuitement » ICI.
@@ -138,9 +164,13 @@ export default function Navbar() {
       {eleve && (
         <div className="navbar__right">
           <span className="navbar__eleve">
-            <span className="navbar__eleve-pastille" aria-hidden="true">
-              {(eleve.prenom || '?').charAt(0).toUpperCase()}
-            </span>
+            {portraitEleve ? (
+              <img className="navbar__eleve-portrait" src={portraitEleve} alt="" />
+            ) : (
+              <span className="navbar__eleve-pastille" aria-hidden="true">
+                {(eleve.prenom || '?').charAt(0).toUpperCase()}
+              </span>
+            )}
             {eleve.prenom}
           </span>
 

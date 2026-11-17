@@ -39,6 +39,9 @@ const FREQUENCE = 24000;
 /** Le premier délai de rappel, tel qu'il est réglé dans le module. */
 const PREMIER_RAPPEL_MS = 300;
 
+/** Le délai du chien de garde, tel qu'il est réglé dans le module. */
+const SANS_RETOUR_MS = 8000;
+
 const sockets = [];
 let capture;
 
@@ -254,6 +257,31 @@ test('un tour qui a eu son verdict n’est PAS renvoyé', async () => {
 
   // Renvoyer un tour transcrit le ferait arriver deux fois au professeur.
   expect(derniere().envois).toHaveLength(0);
+});
+
+test('un verdict arrivé AVANT notre fin de tour n’est pas renvoyé non plus (réponse fantôme du 07/11/2026)', async () => {
+  const onFinal = jest.fn();
+  await ouvrir({ onFinal });
+  const premiere = derniere();
+
+  // Une syllabe : le fournisseur clôt la phrase lui-même et répond avant les
+  // 850 ms de silence qui déclenchent notre ordre de fin de tour.
+  parler(5);
+  premiere.repondre({ type: 'final', texte: 'ne' });
+  expect(onFinal).toHaveBeenCalledWith('ne');
+  expect(premiere.ordres).toEqual([]);
+
+  // Notre ordre part ensuite, sur un tampon vide, et reste sans réponse.
+  setaire(4000);
+  expect(premiere.ordres).toEqual(['fin_tour']);
+
+  jest.advanceTimersByTime(SANS_RETOUR_MS);
+  await rappeler();
+  derniere().ouvrir();
+
+  // Le son de « ne » a été transcrit : le renvoyer en faisait une seconde
+  // réponse, jugée contre l'image suivante. Rien de ce son ne repart.
+  expect(derniere().trames).toBe(0);
 });
 
 test('sourd reste sourd pendant une coupure : la voix du professeur n’entre pas en mémoire', async () => {

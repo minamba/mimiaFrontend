@@ -12,8 +12,29 @@ import { MESSAGE_ESSAI_FICHES, messageForfait } from '../../lib/hooks/useAccesFo
  * `essaiUtilise` (18/10/2026) : la famille en essai a déjà sa fiche — la
  * phrase de Camara, « il faut être abonné pour continuer ».
  */
-export default function ForfaitRequis({ essaiUtilise = false }) {
+export default function ForfaitRequis({ essaiUtilise = false, module = 'fiches' }) {
   const enfant = Boolean(sessionEleve());
+  // LES PODCASTS (15/11/2026) : les mêmes portes, leurs mots à eux.
+  if (module === 'podcasts') {
+    return (
+      <div className="mf-vide" role="note">
+        <p>
+          <strong>
+            <span aria-hidden="true">🔒 </span>
+            {essaiUtilise ? 'Il faut être abonné pour continuer à créer des podcasts.' : 'Les podcasts sont réservés aux familles abonnées.'}
+          </strong>
+        </p>
+        <p>
+          {essaiUtilise
+            ? (enfant
+              ? 'Pendant l’essai, tu as droit à un podcast. Demande à tes parents de choisir un forfait pour en créer d’autres.'
+              : 'Pendant l’essai, un podcast est offert. Choisissez une formule pour en créer d’autres.')
+            : messageForfait(enfant, 'cette fonctionnalité')}
+        </p>
+        {!enfant && <Link to="/tarifs" className="btn">Voir les formules</Link>}
+      </div>
+    );
+  }
 
   return (
     <div className="mf-vide" role="note">
