@@ -44730,3 +44730,26 @@ html:has(
   height: 17px;
   margin-right: 7px;
 }
+
+/* LA BARRE DU HAUT SUR TÉLÉPHONE — Camara, le 17/11/2026 : « sur mobile le logo Mimia est tout petit, il faut réduire
+   la taille des boutons ». Les trois boutons perdent leur pictogramme et se resserrent ; le logo reprend la place
+   qu'ils lui laissent (un plancher de 96 px de large). Les éclats de « Connexion » restent. */
+@media (max-width: 560px) {
+  .navbar__right .navbar__icone { display: none; }
+
+  .navbar__right > .btn-ghost,
+  .navbar__right > .btn,
+  .navbar__right .navbar__lien-direct,
+  .navbar__right .menu-compte__bouton {
+    height: 32px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 12.5px;
+    background-size: auto 34%, auto 30%, auto;
+  }
+
+  .navbar__right { gap: 6px; }
+  .navbar__brand { flex: 1 0 96px; }
+  .navbar__logo { height: 30px; }
+  .navbar__right .navbar__connexion::after { top: -12px; right: -9px; width: 18px; height: 16px; }
+}
