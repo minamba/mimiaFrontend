@@ -47,9 +47,11 @@ export default function FichesDuForfait({ module = 'fiches', fenetre = false }) 
 
   // RETOUR DE STRIPE (`?achat=fiches`) : le webhook crédite la famille
   // quelques secondes après le paiement. On le dit, et on relit deux fois.
-  const [retourAchat] = useState(
-    () => new URLSearchParams(window.location.search).get('achat') === (podcasts ? 'podcasts' : 'fiches'),
-  );
+  // Le merci seulement après un paiement réussi : un abandon ramène aussi ici (17/11/2026), avec `paiement=abandon`.
+  const [retourAchat] = useState(() => {
+    const parametres = new URLSearchParams(window.location.search);
+    return parametres.get('achat') === (podcasts ? 'podcasts' : 'fiches') && parametres.get('paiement') !== 'abandon';
+  });
 
   const charger = useCallback(async () => {
     try {
@@ -83,7 +85,12 @@ export default function FichesDuForfait({ module = 'fiches', fenetre = false }) 
     setErreur(null);
     setEnvoi(true);
     try {
-      const { data } = await (podcasts ? acheterPodcasts(aAcheter.code) : acheterFiches(aAcheter.code));
+      // LE RETOUR SUR CETTE PAGE (17/11/2026) : Stripe ramène le parent là où il a cliqué (podcasts, fiches, Mon forfait),
+      // sans les marques d'un retour précédent.
+      const ici = new URL(window.location.href);
+      ['paiement', 'achat'].forEach((cle) => ici.searchParams.delete(cle));
+      const retour = `${ici.pathname}${ici.search}`;
+      const { data } = await (podcasts ? acheterPodcasts(aAcheter.code, retour) : acheterFiches(aAcheter.code, retour));
       if (data?.urlPaiement) {
         window.location.assign(data.urlPaiement);
         return;

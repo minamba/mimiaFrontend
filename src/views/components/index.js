@@ -57,6 +57,7 @@ import MesPodcasts from '../../components/podcasts/MesPodcasts';
 import NouveauPodcast from '../../components/podcasts/NouveauPodcast';
 import CoursPodcast from '../../components/podcasts/CoursPodcast';
 import SuiviPodcasts from '../../components/podcasts/SuiviPodcasts';
+import RetourEnHaut from '../../components/RetourEnHaut';
 import EspaceParent from '../../components/espaceParent/EspaceParent';
 import { initAuth } from '../../lib/actions/authActions';
 import { authService } from '../../lib/storage/authService';
@@ -91,6 +92,8 @@ export const BaseApp = () => {
 
   return (
     <BrowserRouter>
+      {/* En haut de chaque nouvelle page, sur téléphone (17/11/2026). */}
+      <RetourEnHaut />
       {/* LE RIDEAU ENVELOPPE TOUT, BARRE ET PIED DE PAGE COMPRIS.
 
           Le placer plus bas laisserait la navigation autour de la page

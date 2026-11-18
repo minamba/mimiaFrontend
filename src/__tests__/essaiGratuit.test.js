@@ -20,14 +20,14 @@ const matiere = { id: 1, profPrenom: 'Nora' };
 const bouton = (minutes) => screen.getByRole('button', { name: new RegExp(`\\b${minutes}\\s*min`) });
 
 describe('le choix de la durée', () => {
-  it('en essai, 35 et 45 minutes sont grisées, et la page dit pourquoi', () => {
+  it('en essai, 35 minutes est ouvert (17/11/2026), 45 grisé, et la page dit pourquoi', () => {
     render(<ChoixDuree matiere={matiere} essai onValider={jest.fn()} onAnnuler={jest.fn()} />);
 
     expect(bouton(15)).toBeEnabled();
     expect(bouton(25)).toBeEnabled();
-    expect(bouton(35)).toBeDisabled();
+    expect(bouton(35)).toBeEnabled();
     expect(bouton(45)).toBeDisabled();
-    expect(screen.getByText(/Pendant l’essai gratuit : 25 minutes au plus, et 30 minutes en tout/)).toBeInTheDocument();
+    expect(screen.getByText(/Pendant l’essai gratuit : 35 minutes au plus\. Le cours s’arrête dès que les 30 minutes d’essai sont utilisées/)).toBeInTheDocument();
   });
 
   it('avec un forfait, les quatre durées restent ouvertes', () => {

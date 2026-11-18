@@ -96,4 +96,6 @@ const VERSION_WAV = 2;
 export const getPodcastsDuForfait = () => httpClient.get('/abonnements/podcasts');
 
 /** Achète un pack de crédits de podcasts : rend `{ urlPaiement }`, ou `{ credits }` pour un compte exempté. */
-export const acheterPodcasts = (pack) => httpClient.post(`/abonnements/podcasts?pack=${encodeURIComponent(pack)}`);
+export const acheterPodcasts = (pack, retour = null) => httpClient.post(
+  `/abonnements/podcasts?pack=${encodeURIComponent(pack)}${retour ? `&retour=${encodeURIComponent(retour)}` : ''}`,
+);

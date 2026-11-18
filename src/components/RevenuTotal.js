@@ -191,6 +191,29 @@ export default function RevenuTotal({
                   </li>
                 </ul>
               </section>
+
+              {/* LES PACKS DE PODCASTS — Camara, le 17/11/2026 : leur propre bloc, comme les fiches. Les achats du
+                  super-administrateur et du compte de démonstration n'y sont pas (gratuits pour eux). */}
+              <section className="cout-bulle">
+                <header className="cout-bulle__entete">
+                  <div className="cout-bulle__nom">
+                    Packs de podcasts
+                    <small>crédits de podcasts, achetés sur la période, remboursés exclus</small>
+                  </div>
+                  <strong className="cout-bulle__somme revenu-bulle__somme">
+                    {enEuros(revenu.packsPodcastsEuros ?? 0)}
+                  </strong>
+                </header>
+
+                <ul className="cout-bulle__lignes">
+                  <li>
+                    <span>
+                      {revenu.packsPodcasts ?? 0} pack{(revenu.packsPodcasts ?? 0) > 1 ? 's' : ''} vendu{(revenu.packsPodcasts ?? 0) > 1 ? 's' : ''}
+                    </span>
+                    <strong>{enEuros(revenu.packsPodcastsEuros ?? 0)}</strong>
+                  </li>
+                </ul>
+              </section>
             </div>
           </div>
 

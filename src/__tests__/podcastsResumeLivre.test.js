@@ -37,7 +37,7 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNaviguer,
 }));
 jest.mock('../lib/api/elevesApi', () => ({ getMatieresEleve: jest.fn() }));
-jest.mock('../lib/hooks/useAccesForfait', () => ({
+jest.mock('../lib/hooks/useAccesForfait', () => ({ compteInactif: ({ ouvert, motif } = {}) => ouvert === false && motif !== 'essai',
   __esModule: true,
   default: () => ({ ouvert: true, motif: null }),
 }));

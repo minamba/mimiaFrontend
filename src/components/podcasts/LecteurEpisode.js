@@ -238,8 +238,8 @@ export default function LecteurEpisode({
     >
       <div className="pod-lecteur__tete">
         <span className="pod-lecteur__prof">
-          {/* LA VRAIE TÊTE DU PROFESSEUR qui lit l'épisode (Camara, le 15/11/2026), plus grande sur la page illustrée. */}
-          <Avatar nom={episode.voix ?? undefined} taille={illustre ? 92 : 64} parle={joue} />
+          {/* LA VRAIE TÊTE DU PROFESSEUR qui lit l'épisode (Camara, le 15/11/2026), plus grande sur la page illustrée ; ramenée à 64 px le 18/11/2026 (« c'est trop gros »). */}
+          <Avatar nom={episode.voix ?? undefined} taille={64} parle={joue} />
         </span>
         <div className="pod-lecteur__titres">
           <span className="pod-lecteur__rang">

@@ -15,7 +15,11 @@ import './achatCredits.css';
  * paiement Stripe, les mêmes refus (essai, pause, Starter pour les podcasts). Rien de vendu ici qui ne le soit là-bas.
  */
 export default function AchatCredits({ module = 'fiches', className = '' }) {
-  const [ouvert, setOuvert] = useState(false);
+  // DE RETOUR DE STRIPE SUR CETTE PAGE (17/11/2026) : la fenêtre se rouvre d'elle-même — le merci et le solde relu
+  // après un paiement, l'encadré tel qu'on l'a laissé après un abandon.
+  const [ouvert, setOuvert] = useState(
+    () => !sessionEleve() && new URLSearchParams(window.location.search).get('achat') === module,
+  );
 
   useEffect(() => {
     if (!ouvert) return undefined;

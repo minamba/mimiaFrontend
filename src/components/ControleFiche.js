@@ -8,6 +8,8 @@ import BarrePreparation, { palierPreparation } from './BarrePreparation';
 import ControleForm from './ControleForm';
 import CoursDuControle from './CoursDuControle';
 import OuvertureSeance from './OuvertureSeance';
+import FenetreSansForfait from './FenetreSansForfait';
+import useAccesForfait, { compteInactif } from '../lib/hooks/useAccesForfait';
 import JustificationProfesseur from './JustificationProfesseur';
 import Loader from './Loader';
 import PastillePret from './PastillePret';
@@ -116,6 +118,10 @@ export default function ControleFiche() {
   // des deux questions d'avant cours : la durée, puis le casque. Camara, le
   // 26/09/2026 : « faire le point » ouvrait le cours sans demander le casque.
   const [ouverture, setOuverture] = useState(null);
+  // COMPTE INACTIF (Camara, le 17/11/2026) : « Préparer » ou « Faire le point » ouvre la fenêtre « Aucun abonnement ».
+  const accesForfait = useAccesForfait(eleveId);
+  const [sansForfait, setSansForfait] = useState(false);
+  const lancer = (mode) => (compteInactif(accesForfait) ? setSansForfait(true) : setOuverture(mode));
   const [edition, setEdition] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -398,12 +404,14 @@ export default function ControleFiche() {
         />
       )}
 
+      {sansForfait && <FenetreSansForfait onFermer={() => setSansForfait(false)} />}
+
       <div className="controle-fiche__actions">
         {!passe && (
           <button
             type="button"
             className="btn"
-            onClick={() => setOuverture('controle')}
+            onClick={() => lancer('controle')}
           >
             {illustre && <span className="cfi-bouton-icone" aria-hidden="true">🚀</span>}
             Préparer ce contrôle
@@ -416,7 +424,7 @@ export default function ControleFiche() {
           <button
             type="button"
             className="btn"
-            onClick={() => setOuverture('bilan')}
+            onClick={() => lancer('bilan')}
           >
             {illustre && <span className="cfi-bouton-icone" aria-hidden="true">💬</span>}
             Faire le point sur ce contrôle

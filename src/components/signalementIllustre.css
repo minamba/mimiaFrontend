@@ -1,0 +1,692 @@
+/* ======================================================================================================
+   « SIGNALER UN PROBLÈME » ILLUSTRÉ — maquette de Camara, 17/11/2026 (BoutonSignalement.js).
+
+   Du verre bleu nuit au liseré lumineux ; le cerisier et la pagode sous la lune en haut à droite, un rameau de
+   cerisier et des vagues en bas à gauche ; l'en-tête avec son drapeau dans un carré corail ; des filets ornés d'une
+   fleur de cerisier ; les intitulés précédés d'un trait corail ; les quatre catégories en cartes de verre, l'image
+   à gauche (les illustrations du projet), le libellé à droite, des vagues au coin — la choisie au liseré corail
+   lumineux, une coche ronde et son libellé en corail italique ; le champ de description et la zone des pièces en
+   verre ; « Annuler » en pilule bleue, « Envoyer » en pilule corail.
+
+   Nuit dans tous les thèmes ; en mode saisonnier, `--illu-*` et `--corail-btn` (la pagode, fondue sur le bleu de la
+   maquette, s'efface alors). Sélecteurs forts : les règles de base (App.css) et Blue Sky des fenêtres pèsent jusqu'à
+   0,3,0. Aucune animation.
+   ====================================================================================================== */
+
+:root .modale .modale__boite--signalement.modale__boite--signalement {
+  --sg-lueur: #8fb0ff;
+  --sg-haut: #13306a;
+  --sg-bas: #0e2150;
+  --sg-corail: #ff7a5c;
+
+  position: relative;
+  width: min(620px, calc(100vw - 24px));
+  max-width: 620px;
+  padding: 26px 28px 22px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--sg-lueur) 80%, #ffffff);
+  border-radius: 30px;
+  background:
+    url('../assets/sans-forfait/cerisier.webp') right -10px top -8px / 190px auto no-repeat,
+    url('../assets/sans-forfait/pagode.webp') right 10px top 6px / 150px auto no-repeat,
+    url('../assets/sans-forfait/cerisier.webp') left -30px bottom 30px / 150px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cb8ff' stroke-opacity='.3' stroke-width='1.4'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom -2px / 200px auto no-repeat,
+    linear-gradient(180deg, var(--sg-haut) 0%, var(--sg-bas) 100%);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--sg-lueur) 30%, transparent),
+    0 0 30px color-mix(in srgb, var(--sg-lueur) 45%, transparent),
+    0 30px 70px rgba(0, 6, 30, 0.6),
+    inset 0 0 40px color-mix(in srgb, var(--sg-lueur) 14%, transparent);
+}
+
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+  --sg-lueur: color-mix(in srgb, var(--illu-accent) 80%, #ffffff);
+  --sg-haut: var(--illu-panneau);
+  --sg-bas: var(--illu-panneau-2);
+  --sg-corail: var(--corail-btn);
+
+  background:
+    url('../assets/sans-forfait/cerisier.webp') right -10px top -8px / 190px auto no-repeat,
+    url('../assets/sans-forfait/cerisier.webp') left -30px bottom 30px / 150px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.16' stroke-width='1.4'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom -2px / 200px auto no-repeat,
+    linear-gradient(180deg, var(--sg-haut) 0%, var(--sg-bas) 100%);
+}
+
+/* Le contenu passe devant les décors. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire { position: relative; z-index: 1; }
+
+/* ------------------------------------------------------------------ les filets à fleur */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete,
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions {
+  border: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='%23ffb3c4' stroke='%23ff7fa0' stroke-width='.6'%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(72 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(144 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(216 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(288 10 10)'/%3E%3C/g%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ff6f91'/%3E%3C/svg%3E") center var(--sg-filet) / 18px 18px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--sg-lueur) 60%, transparent)) left calc(var(--sg-filet) + 8px) / calc(50% - 16px) 1.5px no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--sg-lueur) 60%, transparent), transparent) right calc(var(--sg-filet) + 8px) / calc(50% - 16px) 1.5px no-repeat;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete {
+  --sg-filet: 100%;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 0 150px 22px 0;
+  background-position: center bottom, left bottom 8px, right bottom 8px;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions {
+  --sg-filet: 0px; /* « 0 » sans unité rendrait calc(0 + 8px) invalide, et tout le fond avec. */
+  gap: 14px;
+  margin-top: 10px;
+  padding: 26px 0 4px;
+  background-position: center top, left top 8px, right top 8px;
+}
+
+/* ------------------------------------------------------------------ l'en-tête */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__badge {
+  width: 56px;
+  height: 56px;
+  border: 2px solid rgba(255, 200, 180, 0.7);
+  border-radius: 16px;
+  background: linear-gradient(160deg, #ff8a6a 0%, #e5482e 100%);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255, 110, 80, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__badge svg { width: 28px; height: 28px; }
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__titre {
+  font-family: var(--display);
+  font-size: clamp(22px, 3.6vw, 30px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 8, 30, 0.5);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__intro { color: #dbe5ff; font-size: 15px; }
+
+/* ------------------------------------------------------------------ les intitulés au trait corail */
+:root .modale__boite--signalement.modale__boite--signalement :is(.champ__intitule, .champ > label) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement :is(.champ__intitule, .champ > label)::before {
+  content: '';
+  flex: none;
+  width: 4px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--sg-corail);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--sg-corail) 60%, transparent);
+}
+
+/* ------------------------------------------------------------------ les catégories */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__categories {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie {
+  position: relative;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 108px;
+  padding: 6px 14px 6px 6px;
+  overflow: hidden;
+  border: 1.5px solid color-mix(in srgb, var(--sg-lueur) 55%, transparent);
+  border-radius: 18px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cb8ff' stroke-opacity='.3' stroke-width='1.4'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right -6px bottom -2px / 90px auto no-repeat,
+    linear-gradient(160deg, color-mix(in srgb, var(--sg-lueur) 20%, var(--sg-haut)) 0%, var(--sg-bas) 100%);
+  color: #fff;
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sg-lueur) 20%, transparent);
+  transform: none;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie:hover {
+  border-color: color-mix(in srgb, var(--sg-lueur) 85%, #ffffff);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--sg-lueur) 40%, transparent);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie__icone {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  transform: none;
+  filter: drop-shadow(0 4px 8px rgba(0, 8, 30, 0.45));
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie__libelle { flex: 1; color: #fff; }
+
+/* La catégorie choisie : liseré corail lumineux, coche ronde, libellé corail en italique. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie--active {
+  border: 2px solid var(--sg-corail);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sg-corail) 35%, transparent), 0 0 20px color-mix(in srgb, var(--sg-corail) 55%, transparent);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie--active .signalement-categorie__libelle {
+  color: color-mix(in srgb, var(--sg-corail) 75%, #ffffff);
+  font-style: italic;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-categorie--active::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center / 15px 15px no-repeat,
+    var(--sg-corail);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sg-corail) 60%, transparent);
+}
+
+/* ------------------------------------------------------------------ la description et les pièces */
+:root .modale__boite--signalement.modale__boite--signalement textarea,
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix__entree {
+  border: 1.5px solid color-mix(in srgb, var(--sg-lueur) 60%, transparent);
+  border-radius: 16px;
+  background-color: color-mix(in srgb, var(--sg-lueur) 12%, rgba(8, 24, 70, 0.7));
+  color: #fff;
+  box-shadow: inset 0 0 16px rgba(0, 10, 40, 0.4);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement textarea { padding: 14px 16px; font-size: 15px; }
+:root .modale__boite--signalement.modale__boite--signalement textarea::placeholder { color: #a9b9e6; }
+:root .modale__boite--signalement.modale__boite--signalement textarea:focus {
+  border-color: var(--sg-corail);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sg-corail) 22%, transparent);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__compteur { color: #c3cdec; }
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix__entree {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix__entree input[type='file'] {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #dbe5ff;
+  font-size: 14px;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix__entree input[type='file']::file-selector-button {
+  margin-right: 12px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* « Coller » : une pilule bleue avec son presse-papiers, séparée par un filet. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix__entree > .btn-ghost {
+  flex: none;
+  gap: 7px;
+  padding-left: 16px;
+  margin-left: 4px;
+  box-shadow: -14px 0 0 -12.5px color-mix(in srgb, var(--sg-lueur) 50%, transparent), 0 0 12px color-mix(in srgb, var(--btn-teinte) 50%, transparent);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix__entree > .btn-ghost::before {
+  content: '';
+  width: 15px;
+  height: 15px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='5' y='4' width='14' height='17' rx='2'/%3E%3Cpath d='M9 4V2.8h6V4' /%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linejoin='round'%3E%3Crect x='5' y='4' width='14' height='17' rx='2'/%3E%3Cpath d='M9 4V2.8h6V4' /%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-pieces-choix .champ__aide { color: #c3cdec; font-size: 13.5px; }
+
+/* ------------------------------------------------------------------ les boutons */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions :is(.btn, .btn-ghost) {
+  min-width: 140px;
+  padding: 12px 28px;
+  font-size: 16px;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions .btn {
+  --btn-plein: var(--sg-corail);
+}
+
+/* ------------------------------------------------------------------ téléphone */
+@media (max-width: 560px) {
+  :root .modale .modale__boite--signalement.modale__boite--signalement {
+    padding: 20px 16px 16px;
+    border-radius: 24px;
+    background-size: 130px auto, 100px auto, 110px auto, 150px auto, auto;
+  }
+
+  :root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+    background-size: 130px auto, 110px auto, 150px auto, auto;
+  }
+
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete { padding-right: 70px; gap: 12px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__badge { width: 44px; height: 44px; border-radius: 13px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__intro { font-size: 13.5px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__categories { gap: 8px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-categorie { min-height: 84px; gap: 6px; padding: 4px 8px 4px 4px; font-size: 13.5px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-categorie__icone { width: 66px; height: 66px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-categorie--active .signalement-categorie__libelle { padding-right: 24px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-categorie--active::after { top: 4px; right: 4px; width: 22px; height: 22px; background-size: 13px 13px, auto; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions :is(.btn, .btn-ghost) { min-width: 0; padding: 10px 20px; font-size: 15px; }
+}
+
+/* L'EN-TÊTE ILLUSTRÉ — Camara, le 17/11/2026 : « pour le header de la card de signalement, mets l'image head_sign.png »
+   (assets/signalement-entete.webp, 1300 px). La nuit à la lune, la pagode et le cerisier remplissent tout le haut de
+   la fenêtre, d'un bord à l'autre, et se fondent vers le bas dans la carte ; le cerisier et la pagode découpés de
+   l'ancien décor ne servent plus en haut. Le texte reste lisible : la moitié gauche de l'image est un ciel calme. */
+:root .modale .modale__boite--signalement.modale__boite--signalement::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 190px;
+  z-index: 0;
+  background: url('../assets/signalement-entete.webp') right center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  pointer-events: none;
+}
+
+:root .modale .modale__boite--signalement.modale__boite--signalement {
+  background:
+    url('../assets/sans-forfait/cerisier.webp') left -30px bottom 30px / 150px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cb8ff' stroke-opacity='.3' stroke-width='1.4'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom -2px / 200px auto no-repeat,
+    linear-gradient(180deg, var(--sg-haut) 0%, var(--sg-bas) 100%);
+}
+
+/* En mode saisonnier, l'image (un paysage) reste ; le reste de la carte prend la saison. */
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+  background:
+    url('../assets/sans-forfait/cerisier.webp') left -30px bottom 30px / 150px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.16' stroke-width='1.4'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom -2px / 200px auto no-repeat,
+    linear-gradient(180deg, var(--sg-haut) 0%, var(--sg-bas) 100%);
+}
+
+/* Le texte de l'en-tête lisible sur le ciel. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete { padding-right: 24%; }
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__intro { text-shadow: 0 1px 6px rgba(0, 10, 40, 0.7); }
+
+@media (max-width: 560px) {
+  :root .modale .modale__boite--signalement.modale__boite--signalement::before { height: 160px; }
+  :root .modale .modale__boite--signalement.modale__boite--signalement,
+  :root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+    background-size: 110px auto, 150px auto, auto;
+  }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete { padding-right: 18%; }
+}
+
+/* LE PIED ILLUSTRÉ — Camara, le 17/11/2026 : « et pour le footer, mets footer_sign.png » (assets/signalement-pied.webp).
+   Le filet à fleur, le rameau de cerisier et les vagues sont dans l'image : elle remplace ceux que dessinait la feuille.
+   Elle tient tout le bas de la fenêtre, d'un bord à l'autre, se fond vers le haut, et son filet passe juste au-dessus
+   des boutons (posés sur sa partie calme, à droite). */
+:root .modale .modale__boite--signalement.modale__boite--signalement::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 180px;
+  z-index: 0;
+  background: url('../assets/signalement-pied.webp') center bottom / cover no-repeat;
+  -webkit-mask-image: linear-gradient(0deg, #000 60%, transparent 100%);
+  mask-image: linear-gradient(0deg, #000 60%, transparent 100%);
+  pointer-events: none;
+}
+
+:root .modale .modale__boite--signalement.modale__boite--signalement,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+  background: linear-gradient(180deg, var(--sg-haut) 0%, var(--sg-bas) 100%);
+}
+
+/* Le filet de l'image remplace celui des boutons. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions {
+  margin-top: 30px;
+  padding: 30px 0 10px;
+  background: none;
+}
+
+@media (max-width: 560px) {
+  :root .modale .modale__boite--signalement.modale__boite--signalement::after { height: 150px; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions { padding-top: 26px; }
+}
+
+/* LE PIED EN ENTIER — Camara, le 17/11/2026 : « le bas du footer est coupé, descends-le pour que le design descende bien
+   en bas ». L'image est posée à sa vraie proportion (3:1), sur toute la largeur, calée en bas : rien n'est rogné, les
+   vagues et le ciel calme dessous vont jusqu'au bord. Les boutons se posent juste sous son filet, quelle que soit la
+   largeur de la fenêtre (marge du bas en % de la largeur). */
+:root .modale .modale__boite--signalement.modale__boite--signalement::after {
+  height: auto;
+  aspect-ratio: 1300 / 414;
+  background-size: 100% auto;
+  background-position: center bottom;
+  -webkit-mask-image: linear-gradient(0deg, #000 72%, transparent 100%);
+  mask-image: linear-gradient(0deg, #000 72%, transparent 100%);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions {
+  margin-top: calc(8% + 16px);
+  padding: 0 0 max(0px, calc(23% - 98px));
+}
+
+@media (max-width: 560px) {
+  :root .modale .modale__boite--signalement.modale__boite--signalement::after { height: auto; }
+  :root .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions {
+    margin-top: calc(8% + 22px);
+    padding: 0 0 max(0px, calc(23% - 84px));
+  }
+}
+
+/* LE TITRE ET LE SOUS-TITRE RESSORTENT — Camara, le 17/11/2026 : « mets une petite ombre sur le titre et le sous-titre ».
+   Une ombre nuit serrée (le contour) et une plus large (le halo) : lisibles sur la lune comme sur le ciel. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__titre {
+  text-shadow:
+    0 1px 2px rgba(0, 6, 30, 0.85),
+    0 2px 10px rgba(0, 6, 30, 0.75),
+    0 0 22px rgba(0, 6, 30, 0.55);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-modale__intro {
+  color: #eef3ff;
+  text-shadow:
+    0 1px 2px rgba(0, 6, 30, 0.9),
+    0 1px 8px rgba(0, 6, 30, 0.8),
+    0 0 16px rgba(0, 6, 30, 0.55);
+}
+
+/* ======================================================================================================
+   LE SIGNALEMENT ADMIN, MÊME STYLE — Camara, le 17/11/2026 (BoutonSignalementAdmin.js). La fenêtre reprend déjà les
+   classes du signalement (en-tête, catégories, description, pièces, pied illustrés) ; s'y ajoutent ses parties à elle :
+   l'encadré « Rattacher à un jeu de test » en verre au liseré lumineux, ses listes déroulantes, le rappel d'un champ
+   manquant en corail, le message d'envoi, et la petite fenêtre « Nouveau jeu de test ».
+   ====================================================================================================== */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__jeu {
+  position: relative;
+  margin: 18px 0 0;
+  padding: 16px 16px 6px;
+  border: 1.5px solid color-mix(in srgb, var(--sg-lueur) 55%, transparent);
+  border-radius: 18px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sg-lueur) 14%, var(--sg-haut)) 0%, color-mix(in srgb, var(--sg-bas) 80%, transparent) 100%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--sg-lueur) 20%, transparent);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__jeu legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__jeu legend::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--sg-corail);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--sg-corail) 60%, transparent);
+}
+
+/* Dans l'encadré, les intitulés des champs sont plus discrets que ceux des sections. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__jeu .champ > label {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #dbe5ff;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__jeu .champ > label::before { display: none; }
+
+:root .modale__boite--signalement.modale__boite--signalement select {
+  width: 100%;
+  padding: 11px 38px 11px 14px;
+  border: 1.5px solid color-mix(in srgb, var(--sg-lueur) 60%, transparent);
+  border-radius: 14px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 14px center / 16px 16px no-repeat,
+    color-mix(in srgb, var(--sg-lueur) 12%, rgba(8, 24, 70, 0.7));
+  color: #fff;
+  font-size: 15px;
+  box-shadow: inset 0 0 16px rgba(0, 10, 40, 0.4);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement select option { background: #10275e; color: #fff; }
+
+:root .modale__boite--signalement.modale__boite--signalement select:focus {
+  outline: none;
+  border-color: var(--sg-corail);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sg-corail) 22%, transparent);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__jeu .champ__aide { color: #c3cdec; }
+
+/* « Créer un nouveau jeu de test » : une pilule bleue, comme « Coller ». */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__nouveau-jeu {
+  margin-top: 10px;
+  padding: 7px 16px;
+  border: 1.5px solid color-mix(in srgb, var(--sg-lueur) 70%, #ffffff);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, #2f63c6 76%, #8fb8ff) 0%, #2f63c6 60%, color-mix(in srgb, #2f63c6 80%, #0a1a50) 100%);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(47, 99, 198, 0.5);
+}
+
+:root[data-da='blue-sky'][data-saison] .modale__boite--signalement.modale__boite--signalement .signalement-admin__nouveau-jeu {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--corail-btn) 30%, #2a2a36) 0%, color-mix(in srgb, var(--corail-btn) 22%, #16161e) 100%);
+  border-color: color-mix(in srgb, var(--corail-btn) 75%, #ffffff);
+}
+
+/* Le rappel d'un champ manquant : une bulle corail, au-dessus du pied. */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-admin__rappel {
+  position: relative;
+  z-index: 1;
+  margin: 12px 0 0;
+  padding: 9px 14px;
+  border: 1.5px solid color-mix(in srgb, var(--sg-corail) 70%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sg-corail) 16%, rgba(8, 24, 70, 0.75));
+  color: color-mix(in srgb, var(--sg-corail) 45%, #ffffff);
+  font-weight: 600;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement #signalement-admin-competence[aria-invalid='true'] {
+  border-color: var(--sg-corail);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sg-corail) 28%, transparent);
+}
+
+/* ------------------------------------------------------------------ le message d'envoi (les deux fenêtres) */
+:root .modale__boite--signalement.modale__boite--signalement .signalement-envoye {
+  position: relative;
+  z-index: 1;
+  padding: 18px 4px 12%;
+  text-align: center;
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-envoye__icone {
+  display: inline-grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid rgba(190, 255, 220, 0.75);
+  border-radius: 50%;
+  background: linear-gradient(160deg, #3ddc84 0%, #1b9e5a 100%);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(61, 220, 132, 0.55);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-envoye__icone svg { width: 34px; height: 34px; }
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-envoye h2 {
+  margin: 14px 0 6px;
+  font-family: var(--display);
+  font-size: 26px;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 6, 30, 0.7);
+}
+
+:root .modale__boite--signalement.modale__boite--signalement .signalement-envoye .modale__texte { color: #dbe5ff; }
+:root .modale__boite--signalement.modale__boite--signalement .signalement-envoye .modale__actions { justify-content: center; margin-top: 18px; }
+
+/* ------------------------------------------------------------------ « Nouveau jeu de test » (fenêtre sans en-tête) */
+:root .signalement-admin-jeu .modale__boite--signalement.modale__boite--signalement::before { height: 110px; }
+:root .signalement-admin-jeu .modale__boite--signalement.modale__boite--signalement .modale__corps { position: relative; z-index: 1; padding-top: 40px; padding-bottom: 14%; }
+:root .signalement-admin-jeu .modale__boite--signalement.modale__boite--signalement :is(input[type='text'], input:not([type])) {
+  border: 1.5px solid color-mix(in srgb, var(--sg-lueur) 60%, transparent);
+  border-radius: 14px;
+  background-color: color-mix(in srgb, var(--sg-lueur) 12%, rgba(8, 24, 70, 0.7));
+  color: #fff;
+}
+
+/* ======================================================================================================
+   EN MODE SAISONNIER — Camara, le 17/11/2026 : « les modifications visuelles doivent s'adapter au thème choisi ». Le
+   haut (head_sign) et le bas (footer_sign) sont des paysages tout bleus : en saison, ils cèdent la place au décor
+   détouré (cerisier en haut à droite et en bas à gauche, vagues blanches translucides) et aux filets à fleur dessinés,
+   sur le fond de la saison.
+   ====================================================================================================== */
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement::before,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement::after { display: none; }
+
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+  background:
+    url('../assets/sans-forfait/cerisier.webp') right -10px top -8px / 190px auto no-repeat,
+    url('../assets/sans-forfait/cerisier.webp') left -30px bottom 30px / 150px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.16' stroke-width='1.4'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -10px bottom -2px / 200px auto no-repeat,
+    linear-gradient(180deg, var(--sg-haut) 0%, var(--sg-bas) 100%);
+}
+
+/* Les filets à fleur reviennent (le haut et le bas illustrés les portaient). */
+:root[data-da='blue-sky'][data-saison] .modale__boite--signalement.modale__boite--signalement .signalement-modale__formulaire > .modale__actions {
+  --sg-filet: 0px;
+  margin-top: 10px;
+  padding: 26px 0 4px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cg fill='%23ffb3c4' stroke='%23ff7fa0' stroke-width='.6'%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(72 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(144 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(216 10 10)'/%3E%3Cellipse cx='10' cy='5' rx='3' ry='4.4' transform='rotate(288 10 10)'/%3E%3C/g%3E%3Ccircle cx='10' cy='10' r='2' fill='%23ff6f91'/%3E%3C/svg%3E") center top / 18px 18px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--sg-lueur) 60%, transparent)) left top 8px / calc(50% - 16px) 1.5px no-repeat,
+    linear-gradient(90deg, color-mix(in srgb, var(--sg-lueur) 60%, transparent), transparent) right top 8px / calc(50% - 16px) 1.5px no-repeat;
+}
+
+:root[data-da='blue-sky'][data-saison] .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete { padding-right: 150px; }
+
+@media (max-width: 560px) {
+  :root[data-da='blue-sky'][data-saison] .modale .modale__boite--signalement.modale__boite--signalement {
+    background-size: 130px auto, 110px auto, 150px auto, auto;
+  }
+  :root[data-da='blue-sky'][data-saison] .modale__boite--signalement.modale__boite--signalement .signalement-modale__entete { padding-right: 70px; }
+}
+
+/* ======================================================================================================
+   LE BOUTON « SIGNALER » — maquette de Camara, 17/11/2026. Une pilule brillante (dégradé de la couleur des boutons,
+   rouge-orangé hors saison), un liseré clair et son halo ; le drapeau blanc plein avec ses éclats jaunes, un filet
+   vertical, « Signaler » en gras italique, et un nuage en volutes en bas à droite. La couleur suit la saison
+   (`--corail-btn`) ; en Black Friday, l'or foncé avec le texte blanc (comme « Le plus choisi »). Rien ne s'anime.
+   Sélecteurs forts : la règle du Black Friday qui passe ce bouton en texte noir pèse 0,7,0.
+   ====================================================================================================== */
+body .bouton-signalement.bouton-signalement.bouton-signalement {
+  --sig-teinte: color-mix(in srgb, var(--corail-btn) 70%, #e8361c);
+
+  overflow: hidden;
+  gap: 13px;
+  padding: 12px 30px 12px 20px;
+  border: 2.5px solid color-mix(in srgb, var(--sig-teinte) 35%, #ffd9c9);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 44'%3E%3Cg fill='none' stroke='%23ffd6c2' stroke-opacity='.6' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M8 40c10-12 26-12 30-2 3-12 20-14 26-4 5-9 19-10 24 0 6-8 18-6 22 4'/%3E%3Cpath d='M30 30c4-6 12-6 13 0M66 26c4-5 11-4 12 1'/%3E%3Cpath d='M44 20c3-5 10-5 11 0'/%3E%3C/g%3E%3C/svg%3E") right 4px bottom -6px / 66px auto no-repeat,
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, 0.35), transparent 55%),
+    linear-gradient(180deg, color-mix(in srgb, var(--sig-teinte) 70%, #ffb08a) 0%, var(--sig-teinte) 55%, color-mix(in srgb, var(--sig-teinte) 80%, #7a1004) 100%);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 3px rgba(90, 10, 0, 0.45);
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--sig-teinte) 55%, transparent),
+    0 0 18px color-mix(in srgb, var(--sig-teinte) 65%, transparent),
+    0 8px 20px rgba(0, 0, 0, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -3px 8px rgba(90, 10, 0, 0.25);
+}
+
+body .bouton-signalement.bouton-signalement.bouton-signalement:hover {
+  filter: brightness(1.07);
+  transform: translateY(-2px);
+}
+
+/* Le drapeau blanc plein, ses éclats jaunes au-dessus. */
+body .bouton-signalement.bouton-signalement.bouton-signalement .bouton-signalement__icone {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5.5 21.5V3.5' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3Cpath d='M6 4.2c3.5-1.6 6.5 1.8 10.5.4 1-.3 1.8.4 1.4 1.3l-1.6 3.2 1.9 3.3c.5.9-.3 1.7-1.3 1.4-4-1.2-7.4 1.9-10.9.6Z' fill='white'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 1px 2px rgba(90, 10, 0, 0.4));
+}
+
+body .bouton-signalement.bouton-signalement.bouton-signalement .bouton-signalement__icone svg { display: none; }
+
+body .bouton-signalement.bouton-signalement.bouton-signalement .bouton-signalement__icone::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: -8px;
+  width: 14px;
+  height: 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 12'%3E%3Cg stroke='%23ffd84a' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M2 6.5 5 8.5M5.5 2.2 7.2 6M11 1.5l-1 4'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Le filet vertical entre le drapeau et le texte. */
+body .bouton-signalement.bouton-signalement.bouton-signalement .bouton-signalement__texte {
+  padding-left: 12px;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.55);
+  line-height: 1.2;
+}
+
+/* Black Friday : l'or foncé et le texte blanc (la règle du mode passerait le texte en noir). */
+:root[data-da='blue-sky'][data-saison='black-friday'] body .bouton-signalement.bouton-signalement.bouton-signalement.bouton-signalement.bouton-signalement {
+  --sig-teinte: #b88600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(60, 35, 0, 0.7);
+}
+
+@media (max-width: 560px) {
+  body .bouton-signalement.bouton-signalement.bouton-signalement {
+    gap: 9px;
+    padding: 8px 18px 8px 14px;
+    font-size: 15px;
+    background-size: 72px auto, auto, auto;
+  }
+  body .bouton-signalement.bouton-signalement.bouton-signalement .bouton-signalement__icone { width: 20px; height: 20px; }
+  body .bouton-signalement.bouton-signalement.bouton-signalement .bouton-signalement__texte { padding-left: 9px; }
+}

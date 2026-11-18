@@ -15,7 +15,7 @@ jest.mock('../lib/api/elevesApi', () => ({
   noterActivite: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('../lib/hooks/useAccesForfait', () => ({
+jest.mock('../lib/hooks/useAccesForfait', () => ({ compteInactif: ({ ouvert, motif } = {}) => ouvert === false && motif !== 'essai',
   __esModule: true,
   ...jest.requireActual('../lib/hooks/useAccesForfait'),
   default: () => ({ ouvert: true, motif: null }),

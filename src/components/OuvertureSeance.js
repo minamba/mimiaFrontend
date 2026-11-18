@@ -236,10 +236,13 @@ const DUREE_CONSEILLEE_CALME = 15;
 
 /**
  * L'ESSAI GRATUIT NE DONNE QUE TRENTE MINUTES — Camara, le 16/10/2026 : en
- * essai, 35 et 45 minutes sont grisées. La séance reste de toute façon coupée
- * net quand les trente minutes tombent, même au milieu d'une séance de 25.
+ * essai, les longues durées sont grisées. La séance reste de toute façon coupée
+ * net quand les trente minutes tombent, quelle que soit la durée choisie.
+ *
+ * 35 MINUTES OUVERTES EN ESSAI — Camara, le 17/11/2026 : « active le 35
+ * minutes, ça coupera quand il sera à zéro ». Seul 45 reste grisé.
  */
-const DUREE_MAX_ESSAI = 25;
+const DUREE_MAX_ESSAI = 35;
 
 export function ChoixDuree({
   matiere, onValider, onAnnuler, estAdmin, calme = false, essai = false,
@@ -287,7 +290,7 @@ export function ChoixDuree({
 
         {essai && (
           <p className="modale__note duree__essai">
-            Pendant l’essai gratuit : {DUREE_MAX_ESSAI} minutes au plus, et 30 minutes en tout.
+            Pendant l’essai gratuit : {DUREE_MAX_ESSAI} minutes au plus. Le cours s’arrête dès que les 30 minutes d’essai sont utilisées.
           </p>
         )}
 

@@ -43942,7 +43942,6 @@ html:has(
 .cartes-mienne--illustrees {
   gap: 18px;
 }
-
 .cartes-mienne--illustrees .carte-mienne {
   --tx: 1.34;
   --tw: 2.35;
@@ -44000,12 +43999,14 @@ html:has(
 .cartes-mienne--illustrees .carte-mienne--carte {
   background-image: url('./assets/accueil-cartes/carte.webp');
   --tx: 1.342;
+  --lueur: rgba(59, 130, 246, 0.4); /* bleu, comme les fiches (17/11/2026) ; vert d'eau d'origine dans sources-images */
 }
 
 .cartes-mienne--illustrees .carte-mienne--calendrier {
   background-image: url('./assets/accueil-cartes/calendrier.webp');
   --tx: 1.335;
   --tw: 2.2;
+  --lueur: rgba(59, 130, 246, 0.4); /* bleu, comme les fiches (17/11/2026) */
   aspect-ratio: 765 / 161;
 }
 
@@ -44023,7 +44024,7 @@ html:has(
   background-image: url('./assets/accueil-cartes/podcasts.webp');
   --tx: 1.344;
   --tw: 2.32;
-  --lueur: rgba(139, 92, 246, 0.45);
+  --lueur: rgba(59, 130, 246, 0.4); /* bleu, comme les fiches (17/11/2026) ; image recolorée, violet d'origine dans sources-images */
   aspect-ratio: 765 / 160;
   grid-column: auto;
   background-color: transparent;
@@ -44041,7 +44042,7 @@ html:has(
   background-image: url('./assets/accueil-cartes/jeux.webp');
   --tx: 1.895;
   --tw: 3.4;
-  --lueur: rgba(139, 92, 246, 0.45);
+  --lueur: rgba(59, 130, 246, 0.4); /* bleu, comme les fiches (17/11/2026) ; violet d'origine dans sources-images */
   aspect-ratio: 1544 / 153;
   grid-column: 1 / -1;
   border-radius: 1.7% / 17%;
@@ -44144,6 +44145,186 @@ html:has(
 @media (prefers-reduced-motion: reduce) {
   .cartes-mienne--illustrees .carte-mienne { transition: none; }
 }
+
+/* LES CARTES DE L'ACCUEIL, SOBRES — maquette de Camara, le 17/11/2026 (« un peu plus sobre ») ; remplace le découpage
+   en trois de l'image et les voiles du même jour. Plus d'image de fond : un verre bleu au liseré fin, la bulle de
+   l'icône (découpée dans l'ancienne image : assets/accueil-cartes/bulles/), un filet, le titre et le sous-titre en
+   texte simple (sans contour), la flèche dans un cercle. « Mes jeux », sur toute la largeur, garde un décor à droite :
+   le Fuji et une branche de cerisier. La carte grandit avec son texte. En mode saisonnier, le verre prend les
+   couleurs de la saison (`--illu-*`). */
+.cartes-mienne--illustrees {
+  --cm-haut: #11408f;
+  --cm-bas: #0b2f70;
+  --cm-bord: rgba(120, 180, 255, 0.55);
+  --cm-bord-fort: rgba(160, 205, 255, 0.85);
+}
+
+:root[data-da='blue-sky'][data-saison] .cartes-mienne--illustrees {
+  --cm-haut: var(--illu-panneau);
+  --cm-bas: var(--illu-panneau-2);
+  --cm-bord: var(--illu-bord);
+  --cm-bord-fort: var(--illu-bord-fort);
+}
+
+.cartes-mienne.cartes-mienne--illustrees { gap: 16px; }
+
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne {
+  container-type: normal;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  aspect-ratio: auto;
+  width: auto;
+  height: auto;
+  max-height: none;
+  min-height: 88px;
+  padding: 12px 74px 12px 122px;
+  border: 1.5px solid var(--cm-bord);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--cm-haut) 0%, var(--cm-bas) 100%);
+  box-shadow: 0 8px 20px rgba(0, 8, 32, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne:hover,
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--cm-bord-fort);
+  box-shadow: 0 10px 24px rgba(0, 8, 32, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Fiches ou podcasts seuls : la demi-carte au milieu, comme avant. */
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne--fiches:not(.carte-mienne--paire),
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne--podcasts:not(.carte-mienne--paire) { width: calc(50% - 8px); }
+
+/* La bulle de l'icône. */
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  right: auto;
+  bottom: auto;
+  z-index: 0;
+  width: 66px;
+  height: 66px;
+  margin-top: -33px;
+  border: 0;
+  border-image: none;
+  border-radius: 50%;
+  background: none center / cover no-repeat;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(0, 8, 32, 0.35);
+}
+
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne.carte-mienne--carte::before { background-image: url('./assets/accueil-cartes/bulles/carte.webp'); }
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne.carte-mienne--calendrier::before { background-image: url('./assets/accueil-cartes/bulles/calendrier.webp'); }
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne.carte-mienne--fiches::before { background-image: url('./assets/accueil-cartes/bulles/fiches.webp'); }
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne.carte-mienne--podcasts::before { background-image: url('./assets/accueil-cartes/bulles/podcasts.webp'); }
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne.carte-mienne--jeux::before { background-image: url('./assets/accueil-cartes/bulles/jeux.webp'); }
+
+/* Le filet, entre la bulle et le texte. */
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne::after {
+  content: '';
+  position: absolute;
+  inset: 26% auto 26% 106px;
+  z-index: 0;
+  width: 1.5px;
+  border: 0;
+  border-radius: 0;
+  background: rgba(200, 225, 255, 0.4);
+  box-shadow: none;
+}
+
+/* « Mes jeux » : le Fuji et la branche de cerisier, à droite. */
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne--jeux {
+  background:
+    url('./assets/tarifs/cerisier.webp') right 62px top -10px / 112px auto no-repeat,
+    url('./assets/tarifs/fuji-sommet.webp') right 112px bottom -2px / 210px auto no-repeat,
+    linear-gradient(180deg, var(--cm-haut) 0%, var(--cm-bas) 100%);
+}
+
+/* Le texte, simple : titre blanc, sous-titre bleu très clair. */
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__texte.carte-mienne__texte {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  width: auto;
+  min-width: 0;
+  gap: 3px;
+  padding: 0;
+}
+
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__texte.carte-mienne__texte strong {
+  font-family: var(--sans);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: normal;
+  color: #fff;
+  text-shadow: none;
+}
+
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__texte.carte-mienne__texte > span {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #dbe7ff;
+  text-shadow: none;
+}
+
+/* La flèche (ou le cadenas), dans un cercle. */
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__fleche {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0;
+  border: 1.5px solid rgba(200, 225, 255, 0.55);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  opacity: 1;
+  transform: none;
+}
+
+.cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne:hover .carte-mienne__fleche {
+  border-color: rgba(220, 235, 255, 0.85);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@media (max-width: 720px) {
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne {
+    min-height: 80px;
+    padding: 12px 58px 12px 100px;
+  }
+
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne--fiches:not(.carte-mienne--paire),
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne--podcasts:not(.carte-mienne--paire) { width: 100%; }
+
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne::before { left: 18px; width: 56px; height: 56px; margin-top: -28px; }
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne::after { left: 86px; }
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__texte.carte-mienne__texte strong { font-size: 17px; }
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__texte.carte-mienne__texte > span { font-size: 13px; }
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne .carte-mienne__fleche { right: 14px; width: 30px; height: 30px; margin-top: -15px; font-size: 15px; }
+
+  /* Le décor des jeux, plus petit, pour ne pas passer sous le texte. */
+  .cartes-mienne.cartes-mienne--illustrees .carte-mienne.carte-mienne--jeux {
+    background:
+      url('./assets/tarifs/cerisier.webp') right 40px top -6px / 96px auto no-repeat,
+      linear-gradient(180deg, var(--cm-haut) 0%, var(--cm-bas) 100%);
+  }
+}
+
 
 /* L'EN-TÊTE DE L'ENFANT : le prénom en grand et sans trait, la classe en pastille jaune, les deux boutons brillants. */
 .grille--enfant .salutation h1 {
@@ -44752,4 +44933,95 @@ html:has(
   .navbar__brand { flex: 1 0 96px; }
   .navbar__logo { height: 30px; }
   .navbar__right .navbar__connexion::after { top: -12px; right: -9px; width: 18px; height: 16px; }
+}
+
+/* « VOIR LE TUTO » DE LA PAGE D'UN ENFANT À LA MÊME PLACE QUE SUR « VOS ENFANTS » — Camara, le 17/11/2026. Sur
+   ordinateur, fixé en haut à droite de l'écran, sous la barre du haut ; le même liseré clair, le même halo doré et le
+   même reflet toutes les quatre secondes (ruban-reflet-or). Sur téléphone, il reste à côté de « Mon avis », avec
+   l'effet. Vue illustrée seulement (`.grille--enfant`). */
+:root .grille--enfant .grille-matieres__actions .bouton-tuto {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #fff3c4;
+  box-shadow:
+    0 0 0 3px rgba(255, 200, 80, 0.35),
+    0 0 22px rgba(255, 190, 60, 0.75),
+    0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+:root .grille--enfant .grille-matieres__actions .bouton-tuto::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: auto;
+  left: -60%;
+  width: 45%;
+  height: auto;
+  aspect-ratio: auto;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+  filter: none;
+  opacity: 1;
+  transform: skewX(-20deg);
+  animation: ruban-reflet-or 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (min-width: 901px) {
+  :root .grille--enfant .grille-matieres__actions .bouton-tuto {
+    position: fixed;
+    top: 84px;
+    right: 24px;
+    z-index: 15; /* SOUS la barre du haut (20) : son menu passe devant (17/11/2026). */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .grille--enfant .grille-matieres__actions .bouton-tuto::after { animation: none; display: none; }
+}
+
+/* « AJOUTER UN CONTRÔLE » GRISÉ POUR UN COMPTE INACTIF — Camara, le 17/11/2026. Visible, mais éteint : gris, sans halo,
+   sans survol ; la bulle (title) dit qu'il faut un forfait. Vaut pour l'accueil, la page des contrôles et le calendrier. */
+:root .btn-controle.btn-controle:disabled,
+:root .btn-controle.btn-controle:disabled:hover,
+:root .jour-detail .modale__actions .btn:disabled,
+:root .modale__actions .btn.btn--compact:disabled,
+:root .jour-detail__section li .jour-detail__preparer.btn:disabled {
+  filter: grayscale(1) brightness(0.7);
+  opacity: 0.6;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* LE COURS SUR UN ÉCRAN PEU HAUT — signalement du 17/11/2026 (« la fenêtre de discussion est devenue trop
+   petite ») : un ordinateur portable, une fenêtre de 590 px de haut environ. L'horloge (108 px), puis
+   « Quitter », « Pause » et « Mon contrôle » empilés à côté du professeur (138 px) prenaient presque toute la
+   colonne : il restait moins de 90 px au fil, une bulle à peine.
+
+   AU BUREAU SEULEMENT (≥ 1041 px), quand la hauteur manque (≤ 820 px). Rien ne disparaît, tout se resserre :
+   l'horloge plus petite, « Pause » à côté de « Quitter » au lieu d'en dessous, le portrait du professeur à
+   48 px. Le fil regagne une centaine de pixels. Le téléphone garde ses propres réglages (≤ 1040 px). */
+@media (min-width: 1041px) and (max-height: 820px) {
+  .chat-espace .chrono-bandeau { padding: 6px 0 4px; }
+  .chat-espace .horloge { font-size: 17px; }
+
+  .chat-espace .chat__entete { gap: 6px 12px; padding-bottom: 8px; }
+  .chat-espace .chat__gestes { gap: 6px; }
+  .chat-espace .chat__depart { flex-direction: row; gap: 6px; }
+
+  .chat-espace .btn-quitter,
+  .chat-espace .btn-pause-cours,
+  .chat-espace .btn-copie { padding: 5px 12px; font-size: 13px; }
+
+  .chat-espace .chat__prof .avatar,
+  .chat-espace .chat__prof .avatar__cadre {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  .chat-espace .chat__prof .avatar { --avatar-taille: 48px !important; }
+
+  .chat-espace .chat__fil { padding-top: 12px; }
+  .chat-espace .chat__bas { padding-bottom: 10px; }
 }

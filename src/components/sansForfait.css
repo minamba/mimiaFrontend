@@ -1,0 +1,278 @@
+/* ======================================================================================================
+   « AUCUN ABONNEMENT EN COURS » — maquette de Camara, 17/11/2026. La fenêtre qui s'ouvre au clic sur un professeur
+   pour un compte sans forfait (GrilleMatieres.js).
+
+   Du verre bleu nuit au liseré lumineux ; la branche de cerisier en haut à droite et la pagode sous la lune en bas à
+   gauche (découpées dans la maquette, assets/sans-forfait) ; des traînées de nuages ; le titre en serif souligné d'un
+   coup de pinceau corail ; un filet avant les boutons (« Fermer » en pilule bleue, « Voir les formules » en pilule
+   orange : les pilules du site). En mode saisonnier, les couleurs de la saison. Aucune animation.
+   ====================================================================================================== */
+
+:root .modale .modale__boite.sans-forfait.sans-forfait {
+  --sf-lueur: #8fb0ff;
+  --sf-haut: #13306a;
+  --sf-bas: #0e2150;
+
+  position: relative;
+  width: min(600px, calc(100vw - 32px));
+  max-width: 600px;
+  padding: 34px 34px 28px;
+  overflow: hidden;
+  border: 2px solid color-mix(in srgb, var(--sf-lueur) 80%, #ffffff);
+  border-radius: 28px;
+  background:
+    url('../assets/sans-forfait/cerisier.webp') right -6px top -4px / 180px auto no-repeat,
+    url('../assets/sans-forfait/pagode.webp') left 0 bottom 0 / 200px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%237f9cff' stroke-opacity='.45' stroke-width='6' stroke-linecap='round' fill='none'%3E%3Cpath d='M34 8h62M8 24h56M70 24h22'/%3E%3C/g%3E%3C/svg%3E") left 22px top 10px / 90px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%237f9cff' stroke-opacity='.45' stroke-width='6' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 10h70M10 26h60'/%3E%3C/g%3E%3C/svg%3E") right 12px top 44% / 90px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%239cb8ff' stroke-opacity='.18' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right -6px bottom 0 / 130px auto no-repeat,
+    linear-gradient(180deg, var(--sf-haut) 0%, var(--sf-bas) 100%);
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--sf-lueur) 30%, transparent),
+    0 0 30px color-mix(in srgb, var(--sf-lueur) 45%, transparent),
+    0 30px 70px rgba(0, 6, 30, 0.6),
+    inset 0 0 40px color-mix(in srgb, var(--sf-lueur) 14%, transparent);
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait h2 {
+  position: relative;
+  max-width: calc(100% - 90px);
+  margin: 6px 0 22px;
+  font-family: var(--display);
+  font-size: clamp(23px, 3.6vw, 30px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 8, 30, 0.5);
+}
+
+/* Le coup de pinceau corail sous le titre. */
+:root .modale .modale__boite.sans-forfait.sans-forfait h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -12px;
+  width: 190px;
+  height: 7px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 8'%3E%3Cpath d='M2 6C50 2 120 1 188 3' fill='none' stroke='%23ff8a72' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E") left center / 100% 100% no-repeat;
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte {
+  position: relative;
+  max-width: 40ch;
+  margin: 0 0 24px;
+  color: #dbe5ff;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions {
+  position: relative;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 0;
+  padding: 24px 0 70px;
+  border-top: 1.5px solid color-mix(in srgb, var(--sf-lueur) 45%, transparent);
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions :is(.btn, .btn-ghost) { padding: 12px 26px; font-size: 16px; }
+
+/* ------------------------------------------------------------------ en mode saisonnier */
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+  --sf-lueur: color-mix(in srgb, var(--illu-accent) 80%, #ffffff);
+  --sf-haut: var(--illu-panneau);
+  --sf-bas: var(--illu-panneau-2);
+}
+
+/* La pagode est fondue sur le bleu de la maquette : en saison, elle laisserait un rectangle bleu. Elle cède la place ;
+   le cerisier (détouré) reste, les traînées et les vagues passent en blanc translucide. */
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+  background:
+    url('../assets/sans-forfait/cerisier.webp') right -6px top -4px / 180px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%23ffffff' stroke-opacity='.22' stroke-width='6' stroke-linecap='round' fill='none'%3E%3Cpath d='M34 8h62M8 24h56M70 24h22'/%3E%3C/g%3E%3C/svg%3E") left 22px top 10px / 90px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%23ffffff' stroke-opacity='.22' stroke-width='6' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 10h70M10 26h60'/%3E%3C/g%3E%3C/svg%3E") right 12px top 44% / 90px auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.16' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") left -6px bottom 0 / 160px auto no-repeat,
+    linear-gradient(180deg, var(--sf-haut) 0%, var(--sf-bas) 100%);
+}
+
+/* ------------------------------------------------------------------ téléphone */
+@media (max-width: 560px) {
+  :root .modale .modale__boite.sans-forfait.sans-forfait {
+    padding: 26px 20px 20px;
+    background-size: 120px auto, 140px auto, 80px auto, 60px auto, 130px auto, auto;
+  }
+
+  :root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+    background-size: 120px auto, 80px auto, 60px auto, 120px auto, auto;
+  }
+
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2 { max-width: calc(100% - 80px); font-size: 23px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte { font-size: 15.5px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions { padding-bottom: 56px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions :is(.btn, .btn-ghost) { padding: 10px 18px; font-size: 15px; }
+}
+
+/* Sans la pagode, moins de place sous les boutons. */
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait .modale__actions { padding-bottom: 40px; }
+
+/* ======================================================================================================
+   LE FOND DE CAMARA — le 17/11/2026 : « mets le background card_non_abo.png » (assets/sans-forfait/fond.webp, la carte
+   découpée à son cadre). L'image EST la fenêtre : son liseré lumineux, le filet du milieu, le cerisier, la pagode sous
+   la lune, les traînées et les vagues. Elle remplace tout le décor dessiné plus haut. La fenêtre prend sa proportion
+   (1200 × 691) ; le titre et le texte se posent au-dessus du filet (53,6 % de la hauteur), les boutons dessous.
+   Elle reste la même en mode saisonnier : c'est une illustration, recolorée elle perdrait ses couleurs.
+   ====================================================================================================== */
+:root .modale .modale__boite.sans-forfait.sans-forfait,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+  aspect-ratio: 1200 / 691;
+  padding: 5.5% 26% 0 6.5%;
+  border: 0;
+  border-radius: 4.6% / 8%;
+  background: url('../assets/sans-forfait/fond.webp') center / 100% 100% no-repeat;
+  box-shadow: none;
+  filter: drop-shadow(0 0 18px rgba(80, 140, 255, 0.45)) drop-shadow(0 24px 40px rgba(0, 6, 30, 0.55));
+  overflow: visible;
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait h2 { max-width: none; margin: 0 0 20px; }
+
+/* Les boutons sous le filet de l'image, à droite (le filet de la feuille ne sert plus). */
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait .modale__actions {
+  position: absolute;
+  top: calc(53.6% + 6%);
+  right: 6.5%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+@media (max-width: 560px) {
+  :root .modale .modale__boite.sans-forfait.sans-forfait,
+  :root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+    aspect-ratio: 1200 / 820;
+    padding: 6% 7% 0;
+    background-size: 100% 100%;
+  }
+
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2 { max-width: 70%; margin-bottom: 14px; font-size: 20px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte { max-width: 100%; font-size: 14px; line-height: 1.45; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions { top: auto; bottom: 12%; right: 7%; }
+}
+
+/* Plus large, pour que le titre tienne sur une ligne à gauche du cerisier et le texte au-dessus du filet. */
+:root .modale .modale__boite.sans-forfait.sans-forfait,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+  width: min(700px, calc(100vw - 24px));
+  max-width: 700px;
+  padding: 5.4% 7% 0 6.5%;
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait h2 { max-width: 70%; margin-bottom: 18px; font-size: clamp(20px, 3.4vw, 27px); white-space: nowrap; }
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte { max-width: 80%; margin: 0; font-size: 16px; line-height: 1.5; }
+
+@media (max-width: 560px) {
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2 { max-width: 72%; white-space: normal; font-size: 20px; }
+}
+
+/* TÉLÉPHONE : une fenêtre un peu plus haute (le fond s'étire légèrement), des textes et des boutons plus petits, pour
+   que le texte reste au-dessus du filet et les boutons dessous. */
+@media (max-width: 560px) {
+  :root .modale .modale__boite.sans-forfait.sans-forfait,
+  :root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+    aspect-ratio: 1200 / 940;
+    padding: 6.5% 6.5% 0;
+  }
+
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2 { max-width: 80%; margin-bottom: 12px; font-size: 17px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2::after { width: 120px; bottom: -8px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte { max-width: 76%; font-size: 13px; line-height: 1.4; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions { bottom: 10%; right: 6.5%; gap: 8px; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions :is(.btn, .btn-ghost) { padding: 8px 14px; font-size: 13.5px; }
+}
+
+/* ======================================================================================================
+   PLACEMENT CALÉ SUR L'IMAGE — Camara, le 17/11/2026 : « positionne mieux les textes et les boutons, et mets un petit
+   effet d'ombre sur les textes ». Le titre, le texte et les boutons sont posés en POURCENTAGES de la fenêtre (donc de
+   l'image), et leurs tailles en `cqw` (la largeur de la fenêtre) : quelle que soit la largeur de l'écran, le texte
+   reste au-dessus du filet, à gauche du cerisier, et les boutons dessous, sans rien chevaucher.
+   ====================================================================================================== */
+:root .modale .modale__boite.sans-forfait.sans-forfait,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+  container-type: inline-size;
+  padding: 0;
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait h2 {
+  position: absolute;
+  top: 15%;
+  left: 7%;
+  max-width: 62%;
+  margin: 0;
+  font-size: clamp(16px, 3.9cqw, 28px);
+  white-space: nowrap;
+  text-shadow:
+    0 1px 2px rgba(0, 6, 30, 0.85),
+    0 2px 10px rgba(0, 6, 30, 0.75),
+    0 0 22px rgba(0, 6, 30, 0.5);
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait h2::after { bottom: -1.6cqw; width: 26cqw; height: max(4px, 0.9cqw); }
+
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte {
+  position: absolute;
+  top: 31%;
+  left: 7%;
+  width: 62%;
+  max-width: none;
+  margin: 0;
+  color: #eef3ff;
+  font-size: clamp(12px, 2.3cqw, 16px);
+  line-height: 1.5;
+  text-shadow:
+    0 1px 2px rgba(0, 6, 30, 0.9),
+    0 1px 8px rgba(0, 6, 30, 0.8),
+    0 0 16px rgba(0, 6, 30, 0.5);
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions,
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait .modale__actions {
+  top: 62%;
+  bottom: auto;
+  right: 7%;
+  gap: 2cqw;
+}
+
+:root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions :is(.btn, .btn-ghost) {
+  padding: clamp(7px, 1.7cqw, 12px) clamp(12px, 3.6cqw, 26px);
+  font-size: clamp(12.5px, 2.3cqw, 16px);
+}
+
+/* Téléphone : la fenêtre un peu plus haute (même réglage qu'avant), le texte peut prendre trois lignes. */
+@media (max-width: 560px) {
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2 { top: 13.5%; max-width: 80%; font-size: clamp(15px, 4.6cqw, 20px); white-space: nowrap; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait h2::after { bottom: -6px; width: 34cqw; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__texte { top: 27.5%; width: 68%; font-size: clamp(12px, 3.5cqw, 14px); line-height: 1.4; }
+  :root .modale .modale__boite.sans-forfait.sans-forfait .modale__actions { top: auto; bottom: 11%; right: 6.5%; }
+}
+
+/* ======================================================================================================
+   EN MODE SAISONNIER — Camara, le 17/11/2026 : « les modifications visuelles doivent s'adapter au thème choisi ».
+   L'image de la carte est toute bleue : en saison, elle cède la place à un fond aux couleurs de la saison (`--illu-*`),
+   avec le cerisier détouré, des traînées et des vagues en blanc translucide, et le filet du milieu redessiné (à la
+   même hauteur que dans l'image : 53,6 %), pour que le texte et les boutons gardent leur place.
+   ====================================================================================================== */
+:root[data-da='blue-sky'][data-saison] .modale .modale__boite.sans-forfait.sans-forfait {
+  border: 2px solid var(--illu-bord-fort);
+  border-radius: 28px;
+  background:
+    url('../assets/sans-forfait/cerisier.webp') right -6px top -4px / 26% auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%23ffffff' stroke-opacity='.22' stroke-width='6' stroke-linecap='round' fill='none'%3E%3Cpath d='M34 8h62M8 24h56M70 24h22'/%3E%3C/g%3E%3C/svg%3E") left 3% top 4% / 13% auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40'%3E%3Cg stroke='%23ffffff' stroke-opacity='.22' stroke-width='6' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 10h70M10 26h60'/%3E%3C/g%3E%3C/svg%3E") right 3% top 41% / 13% auto no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 50'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.18' stroke-width='1.3'%3E%3Cpath d='M0 50a20 20 0 0 1 40 0M7 50a13 13 0 0 1 26 0M14 50a6 6 0 0 1 12 0M40 50a20 20 0 0 1 40 0M47 50a13 13 0 0 1 26 0M54 50a6 6 0 0 1 12 0M80 50a20 20 0 0 1 40 0M87 50a13 13 0 0 1 26 0M94 50a6 6 0 0 1 12 0M20 30a20 20 0 0 1 40 0M27 30a13 13 0 0 1 26 0M60 30a20 20 0 0 1 40 0M67 30a13 13 0 0 1 26 0'/%3E%3C/g%3E%3C/svg%3E") right -1% bottom 0 / 28% auto no-repeat,
+    linear-gradient(90deg, transparent 4%, rgb(255 255 255 / 0.35) 20%, rgb(255 255 255 / 0.35) 80%, transparent 96%) left 0 top 53.6% / 100% 1.5px no-repeat,
+    linear-gradient(180deg, var(--illu-panneau) 0%, var(--illu-panneau-2) 100%);
+  box-shadow: 0 0 0 1px var(--illu-bord), 0 0 30px var(--illu-lueur), 0 30px 70px rgba(0, 0, 0, 0.55);
+  filter: none;
+}

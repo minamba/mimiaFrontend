@@ -14,7 +14,7 @@
   --podx-doux: #c9cfee;
   --pod-teinte: var(--bouton-fonce, #d65fb4);
   --matiere: var(--bouton-fonce, #d65fb4);
-  max-width: 1000px;
+  max-width: 880px; /* 1000 avant le 18/11/2026 : « réduis la taille des éléments, c'est trop gros » */
   color: var(--podx-encre);
 }
 
@@ -25,9 +25,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 22px;
-  padding: 22px 28px 26px;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 16px 22px 18px;
   border: 2px solid color-mix(in srgb, var(--podx-accent) 60%, transparent);
   border-radius: 26px;
   background: linear-gradient(110deg, var(--carte-haut, #1a2470) 0%, var(--carte-bas, #2a2370) 100%);
@@ -42,7 +42,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(56%, 520px);
+  width: min(52%, 440px);
   background: var(--podx-scene, none) center 45% / cover no-repeat;
   -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.55) 30%, #000 60%);
   mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.55) 30%, #000 60%);
@@ -52,8 +52,8 @@
 :root .podx .podx-banniere > :not(.podx-banniere__scene) { position: relative; }
 
 :root .podx .podx-banniere__retour {
-  margin: 0 0 4px;
-  padding: 8px 18px;
+  margin: 0 0 2px;
+  padding: 6px 14px;
   border: 1.5px solid color-mix(in srgb, var(--podx-accent) 70%, #fff);
   border-radius: 999px;
   background: rgba(8, 12, 50, 0.55);
@@ -66,21 +66,21 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 14px;
+  padding: 4px 12px;
   border: 1.5px solid color-mix(in srgb, var(--podx-accent) 70%, transparent);
   border-radius: 999px;
   background: rgba(8, 12, 50, 0.6);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 :root .podx .podx-banniere__titre {
   max-width: min(62%, 560px);
   margin: 2px 0 0;
-  padding-bottom: 10px;
+  padding-bottom: 8px;
   font-family: var(--display);
-  font-size: clamp(26px, 3.6vw, 38px);
+  font-size: clamp(22px, 2.8vw, 30px);
   font-weight: 700;
   line-height: 1.1;
   color: #fff;
@@ -95,39 +95,39 @@
   gap: 8px;
   margin: 0;
   color: #fff;
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 600;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
 
-:root .podx .podx-banniere__casque { font-size: 19px; }
+:root .podx .podx-banniere__casque { font-size: 16px; }
 
 /* Les trois boutons « Tout… » sur une ligne, dans la bannière. */
 :root .podx .podx-banniere .pod-tout {
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin: 8px 0 0;
+  gap: 10px;
+  margin: 4px 0 0;
 }
 
 :root .podx .podx-banniere .pod-tout .btn {
-  padding: 11px 24px;
+  padding: 8px 18px;
   border: 0;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--corail-btn, #f07a3c), color-mix(in srgb, var(--corail-btn, #f07a3c) 55%, #e8478f));
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 0 16px color-mix(in srgb, var(--corail-btn, #f07a3c) 50%, transparent);
   color: #fff;
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 800;
 }
 
 :root .podx .podx-banniere .pod-tout .pod-lecteur__telecharger {
-  padding: 10px 18px;
+  padding: 7px 14px;
   border: 1.5px solid color-mix(in srgb, var(--podx-accent) 75%, #fff);
   background: rgba(8, 12, 50, 0.6);
   color: #fff;
-  font-size: 15px;
+  font-size: 13.5px;
 }
 
 :root .podx .podx-banniere .pod-tout .champ__erreur { flex-basis: 100%; text-align: left; }
@@ -154,9 +154,9 @@
 :root .podx .pod-lecteur.podx-lecteur {
   --pod-couleur: color-mix(in srgb, var(--bouton-fonce, #d65fb4) 70%, #e85fd0);
   position: relative;
-  padding: 22px 26px;
+  padding: 16px 20px;
   border: 2px solid color-mix(in srgb, var(--podx-accent) 55%, transparent);
-  border-radius: 24px;
+  border-radius: 20px;
   background: linear-gradient(160deg, rgba(26, 32, 110, 0.92), rgba(16, 20, 74, 0.94));
   box-shadow:
     0 0 20px color-mix(in srgb, var(--podx-accent) 30%, transparent),
@@ -169,7 +169,7 @@
   box-shadow: 0 0 30px color-mix(in srgb, var(--podx-accent) 50%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-:root .podx .podx-lecteur .pod-lecteur__tete { gap: 20px; }
+:root .podx .podx-lecteur .pod-lecteur__tete { gap: 14px; }
 
 /* La vraie tête du professeur, dans un anneau à la couleur de la matière. */
 :root .podx .podx-lecteur .pod-lecteur__prof {
@@ -180,11 +180,11 @@
 }
 
 :root .podx .podx-lecteur .pod-lecteur__titres { flex: 1 1 auto; }
-:root .podx .podx-lecteur .pod-lecteur__rang { color: var(--podx-doux); font-size: 14px; }
+:root .podx .podx-lecteur .pod-lecteur__rang { color: var(--podx-doux); font-size: 13px; }
 
 :root .podx .podx-lecteur .pod-lecteur__titre {
   font-family: var(--display);
-  font-size: clamp(20px, 2.4vw, 26px);
+  font-size: clamp(17px, 1.9vw, 21px);
   font-weight: 700;
   line-height: 1.2;
   color: #fff;
@@ -196,20 +196,20 @@
   align-items: center;
   gap: 4px;
   flex: none;
-  height: 44px;
+  height: 32px;
   opacity: 0.75;
 }
 
 :root .podx .podx-onde i {
   display: block;
-  width: 4px;
-  height: var(--h);
+  width: 3px;
+  height: calc(var(--h) * 0.72);
   border-radius: 3px;
   background: linear-gradient(180deg, #9fe8ff, color-mix(in srgb, var(--podx-accent) 80%, #fff));
 }
 
-:root .podx .podx-lecteur .pod-lecteur__barre { margin-top: 18px; gap: 14px; }
-:root .podx .podx-lecteur .pod-lecteur__temps { color: #fff; font-size: 15px; font-weight: 600; min-width: 44px; }
+:root .podx .podx-lecteur .pod-lecteur__barre { margin-top: 12px; gap: 12px; }
+:root .podx .podx-lecteur .pod-lecteur__temps { color: #fff; font-size: 13.5px; font-weight: 600; min-width: 40px; }
 
 :root .podx .podx-lecteur .pod-lecteur__progression {
   height: 7px;
@@ -220,8 +220,8 @@
 }
 
 :root .podx .podx-lecteur .pod-lecteur__progression::-webkit-slider-thumb {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   background: color-mix(in srgb, var(--pod-couleur) 55%, #fff);
   border: 3px solid #fff;
   box-shadow: 0 0 10px var(--pod-couleur);
@@ -235,43 +235,43 @@
   box-shadow: 0 0 10px var(--pod-couleur);
 }
 
-:root .podx .podx-lecteur .pod-lecteur__commandes { gap: 22px; margin-top: 16px; }
+:root .podx .podx-lecteur .pod-lecteur__commandes { gap: 14px; margin-top: 10px; }
 
 :root .podx .podx-lecteur .pod-lecteur__jouer {
-  width: 72px;
-  height: 72px;
+  width: 54px;
+  height: 54px;
   border: 3px solid color-mix(in srgb, var(--pod-couleur) 45%, #fff);
   background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--pod-couleur) 55%, #fff), var(--pod-couleur) 70%);
   box-shadow: 0 0 24px color-mix(in srgb, var(--pod-couleur) 65%, transparent);
 }
 
-:root .podx .podx-lecteur .pod-lecteur__jouer .pod-icone-jouer { border-width: 12px 0 12px 19px; }
+:root .podx .podx-lecteur .pod-lecteur__jouer .pod-icone-jouer { border-width: 9px 0 9px 14px; }
 
 :root .podx .podx-lecteur .pod-lecteur__saut,
 :root .podx .podx-lecteur .pod-lecteur__vitesse {
-  min-width: 64px;
-  padding: 9px 16px;
+  min-width: 52px;
+  padding: 6px 12px;
   border: 1.5px solid color-mix(in srgb, var(--podx-accent) 70%, #fff);
   background: rgba(8, 12, 50, 0.55);
   color: #fff;
-  font-size: 15px;
+  font-size: 13.5px;
 }
 
 /* ---------------------------------------------------------------------------- le texte */
 :root .podx .podx-lecteur .pod-lecteur__texte-zone {
-  margin-top: 18px;
-  padding: 14px 16px 16px;
+  margin-top: 12px;
+  padding: 10px 14px 12px;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(8, 12, 50, 0.45);
 }
 
 :root .podx .podx-lecteur .pod-lecteur__afficher {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   color: #ffd25a;
-  font-size: 16px;
+  font-size: 14.5px;
 }
 
 /* Une feuille, dessinée en CSS. */
@@ -298,11 +298,11 @@
 :root .podx .podx-chevron.est-ouvert { transform: translateY(2px) rotate(-135deg); }
 
 :root .podx .podx-lecteur .pod-lecteur__liens .pod-lecteur__telecharger {
-  padding: 9px 18px;
+  padding: 6px 14px;
   border: 1.5px solid color-mix(in srgb, var(--podx-accent) 70%, #fff);
   background: rgba(8, 12, 50, 0.55);
   color: #fff;
-  font-size: 15px;
+  font-size: 13.5px;
 }
 
 :root .podx .podx-lecteur .pod-lecteur__texte {
@@ -315,8 +315,8 @@
 }
 
 :root .podx .podx-lecteur .pod-lecteur__texte p {
-  margin-bottom: 14px;
-  font-size: 17px;
+  margin-bottom: 12px;
+  font-size: 16px;
   line-height: 1.65;
   color: var(--podx-doux);
 }
@@ -353,14 +353,14 @@
     -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%);
     mask-image: linear-gradient(180deg, #000, transparent 85%);
   }
-  :root .podx .podx-banniere__titre { max-width: none; font-size: 26px; }
+  :root .podx .podx-banniere__titre { max-width: none; font-size: 22px; }
   :root .podx .podx-banniere .pod-tout { width: 100%; }
   :root .podx .podx-banniere .pod-tout > button { flex: 1 1 100%; justify-content: center; }
   :root .podx .pod-lecteur.podx-lecteur { padding: 16px 14px; border-radius: 20px; }
   :root .podx .podx-lecteur .pod-lecteur__tete { gap: 12px; }
   :root .podx .podx-onde { display: none; }
   :root .podx .podx-lecteur .pod-lecteur__commandes { gap: 10px; }
-  :root .podx .podx-lecteur .pod-lecteur__jouer { width: 60px; height: 60px; }
+  :root .podx .podx-lecteur .pod-lecteur__jouer { width: 48px; height: 48px; }
   :root .podx .podx-lecteur .pod-lecteur__saut,
   :root .podx .podx-lecteur .pod-lecteur__vitesse { min-width: 0; padding: 8px 11px; font-size: 14px; }
   :root .podx .podx-lecteur .pod-lecteur__texte { padding: 12px 12px; }

@@ -78,7 +78,7 @@ it('achète un pack après une confirmation qui dit qu’un crédit vaut un cour
   expect(screen.getByRole('dialog')).toHaveTextContent('1 crédit = 1 cours importé');
 
   fireEvent.click(screen.getByRole('button', { name: /Confirmer/ }));
-  await waitFor(() => expect(acheterFiches).toHaveBeenCalledWith('FICHES10'));
+  await waitFor(() => expect(acheterFiches).toHaveBeenCalledWith('FICHES10', '/'));
   await waitFor(() => expect(getFichesFamille).toHaveBeenCalledTimes(2));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
@@ -142,7 +142,7 @@ describe('les podcasts (15/11/2026)', () => {
     fireEvent.click(screen.getByRole('button', { name: /\+5 crédits/ }));
     expect(screen.getByText(/Ajouter 5 crédits de podcasts/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Confirmer/ }));
-    await waitFor(() => expect(acheterPodcasts).toHaveBeenCalledWith('PODCASTS5'));
+    await waitFor(() => expect(acheterPodcasts).toHaveBeenCalledWith('PODCASTS5', '/'));
   });
 
   it('module des podcasts éteint : rien', () => {

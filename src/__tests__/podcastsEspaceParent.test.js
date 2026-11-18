@@ -24,7 +24,7 @@ jest.mock('react-router-dom', () => ({
   useParams: () => ({}),
   useNavigate: () => mockNaviguer,
 }));
-jest.mock('../lib/hooks/useAccesForfait', () => ({ __esModule: true, default: () => ({ ouvert: null, motif: null }) }));
+jest.mock('../lib/hooks/useAccesForfait', () => ({ compteInactif: ({ ouvert, motif } = {}) => ouvert === false && motif !== 'essai', __esModule: true, default: () => ({ ouvert: null, motif: null }) }));
 jest.mock('../lib/storage/sessionEleve', () => ({ sessionEleve: () => null }));
 jest.mock('../components/PieceJointe', () => ({ TYPES_ACCEPTES: 'image/png', reduire: (f) => Promise.resolve(f) }));
 jest.mock('../components/ScanMobileModale', () => () => null);

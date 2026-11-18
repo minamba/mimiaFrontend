@@ -5,6 +5,8 @@ import { getMatieresEleve } from '../lib/api/elevesApi';
 import ControleForm from './ControleForm';
 import OuvertureSeance from './OuvertureSeance';
 import { useAffichageEleve } from '../lib/besoins';
+import useAccesForfait, { compteInactif, messageForfait } from '../lib/hooks/useAccesForfait';
+import { sessionEleve } from '../lib/storage/sessionEleve';
 
 /**
  * Le contenu du calendrier d'un enfant — la reliure, le mois, sa légende, sa
@@ -58,6 +60,10 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
   const navigate = useNavigate();
   const { calme } = useAffichageEleve(eleveId);
   const [ouverture, setOuverture] = useState(null);
+
+  // COMPTE INACTIF (17/11/2026) : « Ajouter un contrôle » grisé sans forfait en cours.
+  const accesForfait = useAccesForfait(eleveId);
+  const ajoutFerme = compteInactif(accesForfait);
 
   useEffect(() => {
     let vivant = true;
@@ -302,6 +308,9 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
                         <button
                           type="button"
                           className="btn btn--compact jour-detail__preparer"
+                          // COMPTE INACTIF (17/11/2026) : grisé, comme « Ajouter un contrôle ».
+                          disabled={ajoutFerme}
+                          title={ajoutFerme ? messageForfait(Boolean(sessionEleve()), 'les cours avec les professeurs') : undefined}
                           onClick={() => {
                             const passe = new Date(c.dateControle) < AUJOURDHUI_MINUIT;
                             setOuverture({ controle: c, mode: passe ? 'bilan' : 'controle' });
@@ -328,7 +337,13 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
               <button type="button" className="btn-ghost" onClick={fermerDetail}>
                 Fermer
               </button>
-              <button type="button" className="btn btn--compact" onClick={() => setModeFormulaire(true)}>
+              <button
+                type="button"
+                className="btn btn--compact"
+                onClick={() => setModeFormulaire(true)}
+                disabled={ajoutFerme}
+                title={ajoutFerme ? messageForfait(Boolean(sessionEleve()), 'l’ajout de contrôles') : undefined}
+              >
                 Ajouter un contrôle
               </button>
             </div>

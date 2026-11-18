@@ -456,7 +456,7 @@
   position: fixed;
   top: 84px;
   right: 24px;
-  z-index: 40;
+  z-index: 15; /* SOUS la barre du haut (20) : son menu passe devant (17/11/2026). */
 }
 
 /* SUR TÉLÉPHONE (Camara, le 17/11/2026 : « sur mobile c'est mal représenté au niveau des boutons ») : la rangée
@@ -515,4 +515,228 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root .page--enfants-illu .page__tuto-enfants::after { animation: none; display: none; }
+}
+
+/* ======================================================================================================
+   LA CARTE D'UN ENFANT, PLUS SIMPLE — maquette de Camara, le 17/11/2026 (remplace les retouches du même jour :
+   compacte, sans halo, bleu de l'accueil). Un verre bleu au liseré clair ; en haut, le portrait, le prénom et ses
+   pastilles devant un décor du Japon (cerisier, Fuji, torii, nuages) ; « Reprendre le cours » en grande pilule bleue
+   lumineuse (carré « lecture », filet, vagues seigaiha) ; trois boutons de verre identiques, icône au trait, filet,
+   flèche. En mode saisonnier, le verre et la pilule prennent les couleurs de la saison (`--illu-*`).
+   ====================================================================================================== */
+.page--enfants-illu {
+  --ec-haut: #1556b0;
+  --ec-bas: #0b3779;
+  --ec-bord: #63aef5;
+  --ec-pilule-1: #2b8af2;
+  --ec-pilule-2: #1257c6;
+  --ec-pilule-bord: #9ad6ff;
+}
+
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu {
+  --ec-haut: var(--illu-panneau);
+  --ec-bas: var(--illu-panneau-2);
+  --ec-bord: var(--illu-bord-fort);
+  /* Assombrie (17/11/2026) : sur l'or clair du Black Friday, le texte blanc ne se lisait plus. */
+  --ec-pilule-1: color-mix(in srgb, var(--illu-accent) 80%, #000000);
+  --ec-pilule-2: color-mix(in srgb, var(--illu-accent) 58%, #000000);
+  --ec-pilule-bord: color-mix(in srgb, var(--illu-accent) 70%, #ffffff);
+}
+
+/* Black Friday : l'or foncé des autres boutons pleins du site, texte blanc. */
+:root[data-da='blue-sky'][data-saison='black-friday'] .page--enfants-illu {
+  --ec-pilule-1: #c99400;
+  --ec-pilule-2: #9a6c00;
+  --ec-pilule-bord: #ffd970;
+}
+
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case .eleve-carte .eleve-carte__action.eleve-carte__action {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* EN MODE SAISONNIER, les trois boutons de verre prennent le panneau, le liseré et l'accent de la saison (ils restaient
+   bleu nuit sur le noir du Black Friday, 17/11/2026). */
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau {
+  border-color: var(--illu-bord);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--illu-panneau-3) 75%, transparent) 0%, color-mix(in srgb, var(--illu-panneau-2) 80%, transparent) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau:hover,
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau:focus-visible {
+  border-color: var(--illu-bord-fort);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--illu-accent) 14%, var(--illu-panneau-3)) 0%, var(--illu-panneau-2) 100%);
+}
+
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case .eleve-bandeau__emoji.eleve-bandeau__emoji::before {
+  background: color-mix(in srgb, var(--illu-accent) 75%, #ffffff);
+}
+
+:root[data-da='blue-sky'][data-saison] .page--enfants-illu .eleve-case .eleve-bandeau__emoji.eleve-bandeau__emoji::after {
+  background: color-mix(in srgb, var(--illu-bord-fort) 60%, transparent);
+}
+
+/* La carte. */
+.page--enfants-illu .eleve-case.eleve-case {
+  padding-bottom: 16px;
+  border: 0; /* sans contour, dans tous les modes (Camara, 17/11/2026 : « ça fait trop ») */
+  border-radius: 26px;
+  background: linear-gradient(180deg, var(--ec-haut) 0%, var(--ec-bas) 100%);
+  box-shadow: 0 16px 36px rgba(0, 6, 30, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.page--enfants-illu .eleve-case.eleve-case:hover {
+  box-shadow: 0 20px 40px rgba(0, 6, 30, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+:root .page--enfants-illu .eleve-case .eleve-carte.eleve-carte,
+:root .page--enfants-illu .eleve-case .eleve-carte.eleve-carte:hover {
+  gap: 10px;
+  padding: 0 16px;
+}
+
+/* Le haut : décor du Japon à droite, filet clair dessous. */
+.page--enfants-illu .eleve-carte__haut.eleve-carte__haut {
+  min-height: 116px;
+  gap: 14px;
+  margin: 0 -16px;
+  padding: 0 16px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ec-bord) 50%, transparent);
+  background:
+    url('../assets/tarifs/cerisier.webp') right -10px top -6px / 116px auto no-repeat,
+    url('../assets/boutons/nuages-droite.webp') right -8px bottom -6px / auto 34% no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 36'%3E%3Cg fill='%23082a66' fill-opacity='0.6'%3E%3Cpath d='M1 3q19 5 38 0l-1 4.5q-18 3.5-36 0Z'/%3E%3Crect x='5' y='12' width='30' height='3'/%3E%3Crect x='9' y='7' width='4' height='29'/%3E%3Crect x='27' y='7' width='4' height='29'/%3E%3Crect x='18.5' y='7' width='3' height='5'/%3E%3C/g%3E%3C/svg%3E") right 34px bottom 0 / 34px auto no-repeat,
+    url('../assets/tarifs/fuji-sommet.webp') right 46px bottom 10px / 128px auto no-repeat,
+    url('../assets/boutons/nuages-gauche.webp') left 30% bottom -6px / auto 26% no-repeat,
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, transparent 100%);
+}
+
+/* Le portrait, cerclé de clair. */
+.page--enfants-illu .eleve-carte__portrait.eleve-carte__portrait {
+  width: 86px;
+  height: 86px;
+  border: 3px solid rgba(225, 238, 255, 0.92);
+  background: radial-gradient(circle at 50% 35%, #8cc4ff, #2a6fd0 75%);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08), 0 6px 16px rgba(0, 8, 30, 0.4);
+}
+
+.page--enfants-illu .eleve-carte__initiale.eleve-carte__initiale { width: 70px; height: 70px; font-size: 28px; box-shadow: 0 6px 16px rgba(0, 8, 30, 0.4); }
+.page--enfants-illu .eleve-carte__identite.eleve-carte__identite { gap: 8px; padding: 10px 0; }
+:root .page--enfants-illu .eleve-carte__badges .badge.badge { padding: 3px 12px; font-size: 13px; box-shadow: none; }
+:root .page--enfants-illu .eleve-carte__badges .badge.badge.badge--discret { border: 1.5px solid rgba(220, 235, 255, 0.8); background: rgba(4, 18, 58, 0.35); }
+
+.page--enfants-illu .eleve-carte__activite.eleve-carte__activite { margin-top: 2px; font-size: 14px; color: #eef4ff; }
+
+/* « Reprendre le cours » : la grande pilule bleue, lumineuse, vagues à droite. */
+:root .page--enfants-illu .eleve-case .eleve-carte .eleve-carte__action.eleve-carte__action {
+  gap: 0;
+  margin: 2px 0;
+  padding: 8px 18px 8px 9px;
+  border: 2px solid var(--ec-pilule-bord);
+  border-radius: 999px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 30'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.16' stroke-width='1.6'%3E%3Cpath d='M0 30a15 15 0 0 1 30 0M6 30a9 9 0 0 1 18 0M12 30a3 3 0 0 1 6 0M30 30a15 15 0 0 1 30 0M36 30a9 9 0 0 1 18 0M42 30a3 3 0 0 1 6 0M60 30a15 15 0 0 1 30 0M66 30a9 9 0 0 1 18 0M72 30a3 3 0 0 1 6 0M15 15a15 15 0 0 1 30 0M45 15a15 15 0 0 1 30 0'/%3E%3C/g%3E%3C/svg%3E") right 40px bottom -2px / 84px auto no-repeat,
+    linear-gradient(180deg, var(--ec-pilule-1) 0%, var(--ec-pilule-2) 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ec-pilule-bord) 45%, transparent),
+    0 0 18px color-mix(in srgb, var(--ec-pilule-1) 65%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Le carré « lecture », puis un filet. */
+.page--enfants-illu .eleve-case .eleve-carte__lecture.eleve-carte__lecture {
+  position: relative;
+  width: 34px;
+  height: 30px;
+  margin-right: 24px;
+  border: 0;
+  border-radius: 9px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 14'%3E%3Cpath d='M1 1.2v11.6a.8.8 0 0 0 1.2.7l9.3-5.8a.8.8 0 0 0 0-1.4L2.2.5A.8.8 0 0 0 1 1.2Z' fill='%23ffffff'/%3E%3C/svg%3E") 55% center / 12px auto no-repeat,
+    linear-gradient(180deg, color-mix(in srgb, var(--ec-pilule-1) 70%, #ffffff) 0%, var(--ec-pilule-1) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 10, 40, 0.3);
+  filter: none;
+}
+
+.page--enfants-illu .eleve-case .eleve-carte__lecture.eleve-carte__lecture::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  right: -13px;
+  width: 1.5px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.page--enfants-illu .eleve-case .eleve-carte__action > span:last-child { font-size: 20px; }
+
+/* Les trois boutons de verre, tous pareils. */
+:root .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau {
+  margin: 10px 16px 0;
+  padding: 9px 18px 9px 14px;
+  border: 1.5px solid rgba(170, 205, 255, 0.32);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(10, 40, 104, 0.42) 0%, rgba(6, 30, 86, 0.5) 100%); /* plus foncé, puis un rien plus clair (17/11) */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #f2f6ff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+:root .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau:hover,
+:root .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau:focus-visible {
+  border-color: rgba(190, 220, 255, 0.55);
+  background: linear-gradient(180deg, rgba(20, 56, 130, 0.52) 0%, rgba(12, 40, 104, 0.6) 100%);
+}
+
+/* L'icône au trait à la place de l'émoji (l'émoji reste dans la page, masqué), puis un filet. */
+.page--enfants-illu .eleve-case .eleve-bandeau__emoji.eleve-bandeau__emoji {
+  position: relative;
+  flex: none;
+  width: 24px;
+  height: 22px;
+  margin-right: 26px;
+  font-size: 0;
+}
+
+.page--enfants-illu .eleve-case .eleve-bandeau__emoji.eleve-bandeau__emoji::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #a9d0ff;
+  -webkit-mask: var(--icone-pilule) center / contain no-repeat;
+  mask: var(--icone-pilule) center / contain no-repeat;
+}
+
+.page--enfants-illu .eleve-case .eleve-bandeau__emoji.eleve-bandeau__emoji::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -14px;
+  width: 1.5px;
+  background: rgba(200, 225, 255, 0.35);
+}
+
+.page--enfants-illu .eleve-bandeau--calendrier {
+  --icone-pilule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M7 1.5h2v2.5h6V1.5h2V4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2ZM5 9.5V20h14V9.5ZM7 11.5h2.4v2.2H7Zm3.8 0h2.4v2.2h-2.4Zm3.8 0H17v2.2h-2.4ZM7 15.5h2.4v2.2H7Zm3.8 0h2.4v2.2h-2.4Zm3.8 0H17v2.2h-2.4Z'/%3E%3C/svg%3E");
+}
+
+.page--enfants-illu .eleve-bandeau--fiche {
+  --icone-pilule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M5 1.5h9.5L20 7v15.5H5ZM13.5 3v5h5ZM8 11h9v1.8H8Zm0 3.6h9v1.8H8Zm0 3.6h6v1.8H8Z'/%3E%3C/svg%3E");
+}
+
+.page--enfants-illu .eleve-bandeau--code {
+  --icone-pilule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M15 1.5a7.5 7.5 0 1 1-3.2 14.3L9.6 18H7.5v2.2H5.3v2.3H1.5v-3.8l8.7-8.7A7.5 7.5 0 0 1 15 1.5Zm2 3.5a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6Z'/%3E%3C/svg%3E");
+}
+
+.page--enfants-illu .eleve-case .eleve-bandeau__fleche.eleve-bandeau__fleche { margin-left: auto; color: #d6e6ff; font-size: 18px; }
+
+@media (max-width: 720px) {
+  .page--enfants-illu .eleve-carte__haut.eleve-carte__haut { min-height: 104px; }
+  .page--enfants-illu .eleve-carte__portrait.eleve-carte__portrait { width: 76px; height: 76px; }
+  :root .page--enfants-illu .eleve-case .eleve-carte .eleve-carte__action.eleve-carte__action { font-size: 15px; }
+  :root .page--enfants-illu .eleve-case.eleve-case.eleve-case > .eleve-bandeau.eleve-bandeau.eleve-bandeau.eleve-bandeau { font-size: 14px; }
 }

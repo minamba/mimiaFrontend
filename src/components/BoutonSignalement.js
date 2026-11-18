@@ -5,6 +5,8 @@ import iconeTechnique from '../assets/prob_technique.png';
 import iconeSuggestion from '../assets/suggestion.png';
 import { creerSignalement, joindrePieceSignalement } from '../lib/api/signalementsApi';
 import ChoixPiecesSignalement from './ChoixPiecesSignalement';
+// LA FENÊTRE ILLUSTRÉE — maquette de Camara, 17/11/2026.
+import './signalementIllustre.css';
 
 /** Le drapeau du bouton flottant — un trait, pas un emoji, pour rester net à toute taille d'écran. */
 export function IconeDrapeau() {
@@ -113,7 +115,8 @@ export default function BoutonSignalement() {
         onClick={() => setOuvert(true)}
       >
         <span className="bouton-signalement__icone"><IconeDrapeau /></span>
-        Signaler
+        {/* Le texte dans son propre bloc (17/11/2026) : le filet vertical de la maquette se pose devant lui. */}
+        <span className="bouton-signalement__texte">Signaler</span>
       </button>
 
       {ouvert && (

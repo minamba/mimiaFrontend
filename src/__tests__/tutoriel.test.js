@@ -58,7 +58,7 @@ jest.mock('../lib/api/profilApi', () => ({
   marquerTutorielVu: jest.fn(),
 }));
 
-jest.mock('../lib/hooks/useAccesForfait', () => ({
+jest.mock('../lib/hooks/useAccesForfait', () => ({ compteInactif: ({ ouvert, motif } = {}) => ouvert === false && motif !== 'essai',
   __esModule: true,
   default: () => ({ ouvert: true, motif: null }),
   fichesConsultables: () => true,

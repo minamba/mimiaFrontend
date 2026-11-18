@@ -34,11 +34,12 @@ import CoursDemonstration from './tutoriel/CoursDemonstration';
 import VisiteDemonstration from './tutoriel/VisiteDemonstration';
 import { getProfil, marquerTutorielVu } from '../lib/api/profilApi';
 import useAncreSection from '../lib/hooks/useAncreSection';
-import useAccesForfait, { fichesConsultables, messageForfait } from '../lib/hooks/useAccesForfait';
+import useAccesForfait, { compteInactif, fichesConsultables, messageForfait } from '../lib/hooks/useAccesForfait';
 import PodcastsNonInclus from './podcasts/PodcastsNonInclus';
 import { useAffichageEleve } from '../lib/besoins';
 import { paletteDeMatiere, sceneDeMatiere } from '../lib/scenesMatieres';
 import { avatarEnfant } from '../lib/avatarEnfant';
+import FenetreSansForfait from './FenetreSansForfait';
 
 /**
  * Ce qu'on promet à l'élève pour chaque matière, en une phrase.
@@ -453,6 +454,15 @@ export default function GrilleMatieres() {
   // est visible mais l'utilisateur est bloqué avec un message » : la carte reste, le clic ouvre la fenêtre.
   // null, 'podcasts' ou 'conseillere'.
   const [reserveSolo, setReserveSolo] = useState(null);
+  // COMPTE INACTIF (Camara, le 17/11/2026) : sans forfait en cours, le clic sur un professeur (ou sur « Commencer à
+  // réviser » un contrôle, ou sur une épreuve) ouvre une fenêtre au lieu de la séance. Jamais pendant le tutoriel : sa
+  // démonstration ne lance aucun vrai cours.
+  const [sansForfait, setSansForfait] = useState(false);
+  const bloqueSansForfait = () => {
+    if (!compteInactif({ ouvert: forfaitOuvert, motif: motifForfait }) || tutoriel) return false;
+    setSansForfait(true);
+    return true;
+  };
   const clicPodcasts = (e) => {
     if (podcastsInclus !== false) return;
     e.preventDefault();
@@ -677,6 +687,8 @@ export default function GrilleMatieres() {
         <PodcastsNonInclus enfant={Boolean(enfant)} quoi={reserveSolo} onFermer={() => setReserveSolo(null)} />
       )}
 
+      {sansForfait && <FenetreSansForfait onFermer={() => setSansForfait(false)} />}
+
       {/* DEUX ÉTAPES, ET LA DURÉE D’ABORD. La question du casque tient à
           l’équipement, pas au cours : la poser en premier ferait commencer
           par de l’intendance quelqu’un qui vient travailler. */}
@@ -825,10 +837,22 @@ export default function GrilleMatieres() {
               chose que son enfant, en pastilles : trois portes, trois
               pastilles. En laisser une de côté aurait fait croire que les jeux
               lui sont cachés. */}
-          <Link to={`/eleves/${identite.id}/jeux`} className="lien-carte lien-carte--badge" data-tuto="jeux">
-            <img className="lien-carte__badge" src={iconeJeux} alt="" />
-            Mes jeux
-          </Link>
+          {fichesFermees ? (
+            <span
+              className="lien-carte lien-carte--badge est-verrouille"
+              data-tuto="jeux"
+              aria-disabled="true"
+              title={messageForfait(false, 'cette fonctionnalité')}
+            >
+              <img className="lien-carte__badge" src={iconeJeux} alt="" />
+              Mes jeux · avec un forfait
+            </span>
+          ) : (
+            <Link to={`/eleves/${identite.id}/jeux`} className="lien-carte lien-carte--badge" data-tuto="jeux">
+              <img className="lien-carte__badge" src={iconeJeux} alt="" />
+              Mes jeux
+            </Link>
+          )}
           </>
           )}
 
@@ -885,9 +909,7 @@ export default function GrilleMatieres() {
             ) : (
               <span>Choisis une matière</span>
             )}
-            <span className="salutation__main" aria-hidden="true">
-              👋
-            </span>
+            {/* La main 👋 après le prénom est retirée (Camara, le 17/11/2026). */}
           </h1>
 
           <p className="salutation__ligne">
@@ -1044,29 +1066,48 @@ export default function GrilleMatieres() {
 
               LA SEULE CARTE QUI N'EST PAS DU TRAVAIL : sa couleur le dit —
               violet, quand les deux autres portent la sarcelle. */}
-          <Link
-            to={`/eleves/${identite.id}/jeux`}
-            className="carte-mienne carte-mienne--jeux"
-            data-tuto="jeux"
-          >
-            {/* UN MOTIF DE CHAQUE CÔTÉ : le contenu étant centré, un seul
-                aurait tiré toute la carte vers la droite. Deux dessins
-                DIFFÉRENTS — une console à gauche, une manette à droite : le
-                même répété en miroir se lisait comme une erreur de copie. */}
-            <MotifMatiere code="CONSOLE" cote="gauche" />
-            <MotifMatiere code="JEUX" />
-            <span className="carte-mienne__icone-zone">
-              <span className="carte-mienne__halo" aria-hidden="true" />
-              <span className="carte-mienne__icone carte-mienne__icone--jeux" aria-hidden="true">
-                <img src={iconeJeux} alt="" />
+          {/* GRISÉE SANS FORFAIT, COMME LES FICHES ET LES PODCASTS — Camara, le 17/11/2026 : la carte reste à sa place,
+              grisée, et dit ce qu'il manque au lieu de mener aux jeux. */}
+          {fichesFermees ? (
+            <div className="carte-mienne carte-mienne--jeux est-verrouillee" aria-disabled="true" data-tuto="jeux">
+              <MotifMatiere code="CONSOLE" cote="gauche" />
+              <MotifMatiere code="JEUX" />
+              <span className="carte-mienne__icone-zone">
+                <span className="carte-mienne__icone carte-mienne__icone--jeux" aria-hidden="true">
+                  <img src={iconeJeux} alt="" />
+                </span>
               </span>
-            </span>
-            <span className="carte-mienne__texte">
-              <strong>Mes jeux</strong>
-              <span>Réviser en jouant, quelques minutes suffisent</span>
-            </span>
-            <span className="carte-mienne__fleche" aria-hidden="true">→</span>
-          </Link>
+              <span className="carte-mienne__texte">
+                <strong>Mes jeux</strong>
+                <span>{messageForfait(Boolean(enfant), 'cette fonctionnalité')}</span>
+              </span>
+              <span className="carte-mienne__fleche" aria-hidden="true">🔒</span>
+            </div>
+          ) : (
+            <Link
+              to={`/eleves/${identite.id}/jeux`}
+              className="carte-mienne carte-mienne--jeux"
+              data-tuto="jeux"
+            >
+              {/* UN MOTIF DE CHAQUE CÔTÉ : le contenu étant centré, un seul
+                  aurait tiré toute la carte vers la droite. Deux dessins
+                  DIFFÉRENTS — une console à gauche, une manette à droite : le
+                  même répété en miroir se lisait comme une erreur de copie. */}
+              <MotifMatiere code="CONSOLE" cote="gauche" />
+              <MotifMatiere code="JEUX" />
+              <span className="carte-mienne__icone-zone">
+                <span className="carte-mienne__halo" aria-hidden="true" />
+                <span className="carte-mienne__icone carte-mienne__icone--jeux" aria-hidden="true">
+                  <img src={iconeJeux} alt="" />
+                </span>
+              </span>
+              <span className="carte-mienne__texte">
+                <strong>Mes jeux</strong>
+                <span>Réviser en jouant, quelques minutes suffisent</span>
+              </span>
+              <span className="carte-mienne__fleche" aria-hidden="true">→</span>
+            </Link>
+          )}
           </>
           )}
         </div>
@@ -1084,6 +1125,7 @@ export default function GrilleMatieres() {
               onOuvrir={() => {
                 // LA CONSEILLÈRE, À PARTIR DE SOLO (Camara, le 15/11/2026) : sa carte reste visible et normale ;
                 // en essai ou avec Starter, le clic ouvre la fenêtre au lieu de la séance.
+                if (bloqueSansForfait()) return;
                 if (estConseillere(matiere) && conseillereIncluse === false) {
                   setReserveSolo('conseillere');
                   return;
@@ -1124,6 +1166,7 @@ export default function GrilleMatieres() {
         onPreparer={(controle) => {
           const matiere = ouvertes.find((m) => m.id === controle.matiereId);
           if (!matiere) return;
+          if (bloqueSansForfait()) return;
 
           setDureeChoisie(null);
           setEpreuveEnAttente(null);
@@ -1131,6 +1174,9 @@ export default function GrilleMatieres() {
           setEnAttente(matiere);
         }}
         onAjouter={() => setAjoutControle(true)}
+        // COMPTE INACTIF (17/11/2026) : pas d'ajout de contrôle sans forfait en cours.
+        ajoutFerme={compteInactif({ ouvert: forfaitOuvert, motif: motifForfait })}
+        raisonFerme={messageForfait(Boolean(enfant), 'l’ajout de contrôles')}
       />
 
       {/* LA PRÉPARATION À L'EXAMEN, SOUS LES CONTRÔLES — voulue par Camara le
@@ -1143,6 +1189,7 @@ export default function GrilleMatieres() {
         onPreparer={(epreuve, matiereEpreuve) => {
           const matiere = ouvertes.find((m) => m.id === matiereEpreuve.matiereId);
           if (!matiere) return;
+          if (bloqueSansForfait()) return;
 
           setDureeChoisie(null);
           setControleEnAttente(null);

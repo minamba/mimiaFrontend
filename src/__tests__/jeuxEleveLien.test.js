@@ -33,7 +33,7 @@ jest.mock('../lib/storage/sessionEleve', () => ({
 
 // LE FORFAIT DE LA FAMILLE (16/10/2026) : ouvert par défaut ; un test le ferme.
 let mockAcces = { ouvert: true, motif: null };
-jest.mock('../lib/hooks/useAccesForfait', () => ({
+jest.mock('../lib/hooks/useAccesForfait', () => ({ compteInactif: ({ ouvert, motif } = {}) => ouvert === false && motif !== 'essai',
   __esModule: true,
   ...jest.requireActual('../lib/hooks/useAccesForfait'),
   default: () => mockAcces,

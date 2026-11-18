@@ -117,5 +117,7 @@ export const getFichesFamille = () => httpClient.get('/abonnements/fiches');
  * pour un compte exempté, crédité sans paiement. Stripe ramène le parent sur
  * `/profil?paiement=ok&achat=fiches`.
  */
-export const acheterFiches = (codePack) =>
-  httpClient.post(`/abonnements/fiches?pack=${encodeURIComponent(codePack)}`);
+// `retour` (17/11/2026) : la page d'où part l'achat — Stripe y ramène le parent, payé ou non.
+export const acheterFiches = (codePack, retour = null) =>
+  httpClient.post(`/abonnements/fiches?pack=${encodeURIComponent(codePack)}`
+    + (retour ? `&retour=${encodeURIComponent(retour)}` : ''));

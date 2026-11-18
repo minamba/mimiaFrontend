@@ -77,6 +77,16 @@ export function fichesConsultables({ ouvert, motif }) {
   return ouvert !== false || motif === 'essai';
 }
 
+/**
+ * COMPTE INACTIF = PAS DE COURS POSSIBLE (17/11/2026) : sans abonnement, en pause, ou impayé. PAS L'ESSAI : un compte en
+ * essai garde ses cours jusqu'à la dernière seconde de ses 30 minutes (Camara : « ils doivent pouvoir utiliser leur
+ * abonnement ou essai jusqu'à la dernière seconde ») ; c'est la séance elle-même qui s'arrête net à zéro.
+ * `ouvert` vaut false en essai (les fiches et les jeux y sont fermés) : ce test-ci ne s'y fie donc pas seul.
+ */
+export function compteInactif({ ouvert, motif }) {
+  return ouvert === false && motif !== 'essai';
+}
+
 /** La phrase à montrer quand une fonctionnalité est fermée, selon qui la lit. */
 export function messageForfait(enfant, fonctionnalite = 'cette fonctionnalité') {
   return enfant

@@ -268,7 +268,7 @@ export function ControleCarte({
   );
 }
 
-export default function MesControles({ eleveId, controles, onPreparer, onAjouter }) {
+export default function MesControles({ eleveId, controles, onPreparer, onAjouter, ajoutFerme = false, raisonFerme = null }) {
   // `null` = pas encore chargé : on n'affiche ni la liste ni l'état vide,
   // pour ne pas faire clignoter « Pas encore de contrôle » à chaque ouverture.
   if (controles === null || controles === undefined) return null;
@@ -319,7 +319,7 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
         {controles.length > 0 && (
           <div className="controles-section__actions">
             <BoutonControlesPasses eleveId={eleveId} />
-            <BoutonAjoutControle onClick={onAjouter} />
+            <BoutonAjoutControle onClick={onAjouter} desactive={ajoutFerme} raison={raisonFerme} />
           </div>
         )}
       </div>
@@ -342,7 +342,7 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
             et t’aider à le préparer, un peu à chaque cours.
           </p>
           <div className="fiches-vide__actions">
-            <BoutonAjoutControle onClick={onAjouter} />
+            <BoutonAjoutControle onClick={onAjouter} desactive={ajoutFerme} raison={raisonFerme} />
             <BoutonControlesPasses eleveId={eleveId} />
           </div>
         </div>

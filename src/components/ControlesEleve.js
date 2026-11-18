@@ -4,11 +4,14 @@ import { getControles, getMatieresEleve } from '../lib/api/elevesApi';
 import { styleMatiere } from '../lib/couleurMatiere';
 import BoutonAjoutControle from './BoutonAjoutControle';
 import ControleForm from './ControleForm';
+import FenetreSansForfait from './FenetreSansForfait';
 import Loader from './Loader';
 import Onglets from './Onglets';
 import OuvertureSeance from './OuvertureSeance';
 import { ControleCarte } from './MesControles';
 import { useAffichageEleve } from '../lib/besoins';
+import useAccesForfait, { compteInactif, messageForfait } from '../lib/hooks/useAccesForfait';
+import { sessionEleve } from '../lib/storage/sessionEleve';
 import { vueIllustree } from '../lib/vueIllustree';
 import './controlesPageIllustre.css';
 
@@ -80,6 +83,9 @@ export default function ControlesEleve() {
   const { eleveId } = useParams();
   // L'affichage adapté aux besoins particuliers de l'élève (11/10/2026) — voir `lib/besoins.js`.
   const { calme } = useAffichageEleve(eleveId);
+  // COMPTE INACTIF (17/11/2026) : « Ajouter un contrôle » grisé sans forfait en cours.
+  const accesForfait = useAccesForfait(eleveId);
+  const inactif = compteInactif(accesForfait);
   const navigate = useNavigate();
 
   // L'ONGLET PEUT ÊTRE DEMANDÉ PAR L'ADRESSE — depuis le 20/09/2026, pour que
@@ -128,9 +134,15 @@ export default function ControlesEleve() {
   // « faire le point » ouvrait le cours sans demander le casque. Une séance de
   // contrôle est une vraie séance, avec son minuteur et son micro : la durée,
   // puis le casque, comme depuis l'accueil.
-  const preparer = (controle) => setOuverture({ controle, mode: 'controle' });
+  // COMPTE INACTIF (Camara, le 17/11/2026) : la fenêtre « Aucun abonnement en cours » au lieu de la séance.
+  const [sansForfait, setSansForfait] = useState(false);
+  const ouvrir = (controle, mode) => {
+    if (inactif) { setSansForfait(true); return; }
+    setOuverture({ controle, mode });
+  };
+  const preparer = (controle) => ouvrir(controle, 'controle');
 
-  const faireLePoint = (controle) => setOuverture({ controle, mode: 'bilan' });
+  const faireLePoint = (controle) => ouvrir(controle, 'bilan');
 
   const groupes = controles !== null ? grouperParMatiere(controles) : [];
 
@@ -143,6 +155,8 @@ export default function ControlesEleve() {
   return (
     <section className={`page page--large${illustre ? ' page-decor-enfant cpi' : ''}`}>
       <Link to={`/eleves/${eleveId}/matieres#mes-controles`} className="lien-retour">← Retour</Link>
+
+      {sansForfait && <FenetreSansForfait onFermer={() => setSansForfait(false)} />}
 
       {ouverture && (
         <OuvertureSeance
@@ -169,7 +183,11 @@ export default function ControlesEleve() {
         ) : (
           <h1>Mes contrôles</h1>
         )}
-        <BoutonAjoutControle onClick={() => setFormulaire(true)} />
+        <BoutonAjoutControle
+          onClick={() => setFormulaire(true)}
+          desactive={inactif}
+          raison={messageForfait(Boolean(sessionEleve()), 'l’ajout de contrôles')}
+        />
       </header>
 
       <Onglets items={ONGLETS} actif={onglet} onChoisir={setOnglet} etiquette="Mes contrôles" />
