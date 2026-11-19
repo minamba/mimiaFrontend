@@ -19,7 +19,8 @@ export default function Confidentialite() {
       <header className="legal__entete">
         <p className="legal__surtitre">RGPD</p>
         <h1 className="legal__titre">Confidentialité</h1>
-        <p className="legal__maj">Dernière mise à jour&nbsp;: 16 octobre 2026</p>
+        {/* 19/11/2026 : les offres par email (finalité, base légale, durée, retrait). Texte À VALIDER PAR MIN'S. */}
+        <p className="legal__maj">Dernière mise à jour&nbsp;: 20 novembre 2026</p>
       </header>
 
       <section className="legal__section">
@@ -54,6 +55,11 @@ export default function Confidentialite() {
           <li>Prénom, nom, adresse e-mail</li>
           <li>Formule souscrite, historique de paiement</li>
           <li>Date de création du compte</li>
+          <li>
+            La version des conditions générales que vous avez acceptée et sa
+            date&nbsp;; votre choix de recevoir ou non nos offres par e-mail,
+            avec la date de votre accord et, le cas échéant, celle de son retrait
+          </li>
         </ul>
 
         <h3>De l'enfant</h3>
@@ -311,6 +317,19 @@ export default function Confidentialite() {
             <strong>Assurer la sécurité et prévenir les abus</strong> — intérêt
             légitime.
           </li>
+          <li>
+            <strong>Vous envoyer nos offres et nouveautés par e-mail</strong> —
+            votre consentement (article&nbsp;6, paragraphe&nbsp;1, point&nbsp;a du
+            RGPD et article L34-5 du Code des postes et des communications
+            électroniques). Il est facultatif, demandé par une case à part, jamais
+            cochée d'avance, et sans lien avec l'acceptation des conditions
+            générales&nbsp;: refuser ne change rien à votre accès au service.
+            Seuls votre prénom et votre adresse e-mail servent à ces envois. Vous
+            pouvez retirer votre accord à tout moment, depuis votre espace parent
+            ou par le lien de désinscription présent dans chaque e-mail&nbsp;; le
+            retrait prend effet immédiatement. Aucune donnée de votre enfant n'est
+            utilisée pour ces envois.
+          </li>
         </ul>
         <p>
           L'enfant n'ouvre pas de compte lui-même. C'est le parent, titulaire de
@@ -433,6 +452,14 @@ export default function Confidentialite() {
               <tr>
                 <td>Besoins particuliers et date de votre accord</td>
                 <td>Tant qu'ils sont cochés&nbsp;; effacés dès que vous décochez</td>
+              </tr>
+              <tr>
+                <td>Votre accord pour recevoir nos offres par e-mail</td>
+                <td>
+                  Envois arrêtés dès votre retrait. La date de votre accord et
+                  celle de votre retrait sont gardées comme preuve tant que le
+                  compte existe
+                </td>
               </tr>
               <tr>
                 <td>Rapports d'orientation</td>

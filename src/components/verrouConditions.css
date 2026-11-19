@@ -13,7 +13,39 @@
 
 .conditions-fenetre__texte { margin: 0 0 16px; line-height: 1.5; }
 
-.conditions-fenetre__consulter { width: 100%; margin-bottom: 16px; }
+.conditions-fenetre__liens {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.conditions-fenetre__consulter { width: 100%; }
+
+/* La case des offres, à part (19/11/2026) : un cadre la sépare de l’accord aux conditions. */
+.conditions-fenetre__offres {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--trait);
+  border-radius: 10px;
+}
+
+.conditions-fenetre__case {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 6px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.conditions-fenetre__case input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  cursor: pointer;
+}
 
 .conditions-fenetre__note {
   margin: 0 0 4px;

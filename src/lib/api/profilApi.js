@@ -16,8 +16,10 @@ export const marquerTutorielFicheVu = () => httpClient.post('/profil/tutoriel-fi
 // Et pour celui de « Vos enfants » (17/11/2026).
 export const marquerTutorielEnfantsVu = () => httpClient.post('/profil/tutoriel-enfants-vu');
 
-// Le parent accepte les conditions générales en vigueur (08/11/2026).
-export const accepterConditions = () => httpClient.post('/profil/conditions');
+// Le parent accepte les conditions générales en vigueur (08/11/2026). `offresEmail` : la case des offres, à part et
+// facultative (19/11/2026) ; vraie seulement si le parent l'a cochée lui-même.
+export const accepterConditions = ({ offresEmail = false } = {}) =>
+  httpClient.post('/profil/conditions', { offresEmail: offresEmail === true });
 
 // Son parent a-t-il accepté ? La seule chose du compte parent qu'un enfant peut lire : `/profil` lui est fermé.
 export const getConditionsDuParent = () => httpClient.get('/profil/conditions');
