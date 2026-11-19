@@ -3,6 +3,7 @@ import {
   apercuDiffusion,
   apercuModeleMail,
   diffuserModeleMail,
+  getDestinatairesDiffusion,
   getEtatDiffusion,
 } from '../lib/api/adminApi';
 import { useModeleMail } from '../lib/hooks/useModeleMail';
@@ -85,6 +86,27 @@ export default function Diffusion({ nombreParents }) {
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
 
   const [confirme, setConfirme] = useState(false);
+
+  // À COMBIEN ÇA PART VRAIMENT — Min's, le 19/11/2026 : une diffusion ne va plus qu'aux parents qui ont consenti aux
+  // offres par email. Le nombre de comptes (`nombreParents`) ne dit donc plus à combien on écrit : celui-ci est relu
+  // au moment de confirmer, par la même requête que l'envoi. null : en cours de lecture ; 'erreur' : illisible.
+  const [destinataires, setDestinataires] = useState(null);
+
+  useEffect(() => {
+    if (!confirme) return undefined;
+
+    let vivant = true;
+    setDestinataires(null);
+    getDestinatairesDiffusion()
+      .then(({ data }) => { if (vivant) setDestinataires(Number.isFinite(data?.nombre) ? data.nombre : 'erreur'); })
+      .catch(() => { if (vivant) setDestinataires('erreur'); });
+
+    return () => { vivant = false; };
+  }, [confirme]);
+
+  const nombreDestinataires = typeof destinataires === 'number' ? destinataires : null;
+  const libelleDestinataires = nombreDestinataires === null ? '…' : nombreDestinataires;
+
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [etat, setEtat] = useState(null);
@@ -411,8 +433,18 @@ export default function Diffusion({ nombreParents }) {
 
           {confirme && !cadreAutomatique && (
             <p className="diffusion__avertissement">
-              Ce message partira à <strong>{nombreParents} parent(s)</strong>, chacun
-              dans son propre courriel. <strong>Un envoi ne s’annule pas.</strong>{' '}
+              {destinataires === 'erreur' ? (
+                <>Le nombre de destinataires n’a pas pu être lu.</>
+              ) : (
+                <>
+                  Ce message partira à <strong>{libelleDestinataires} parent(s)</strong>
+                  {Number.isFinite(nombreParents) && <> sur {nombreParents} compte(s)</>}, chacun
+                  dans son propre courriel.
+                </>
+              )}{' '}
+              Seuls les parents qui ont accepté de recevoir les offres et nouveautés par email
+              le reçoivent, avec un lien pour se désinscrire.{' '}
+              <strong>Un envoi ne s’annule pas.</strong>{' '}
               Avez-vous relu l’aperçu ?
             </p>
           )}
@@ -461,10 +493,10 @@ export default function Diffusion({ nombreParents }) {
                 <button
                   type="button"
                   className="btn btn--compact btn--danger"
-                  disabled={envoi || enCours}
+                  disabled={envoi || enCours || nombreDestinataires === null || nombreDestinataires === 0}
                   onClick={envoyer}
                 >
-                  {envoi ? 'Lancement…' : `Confirmer l’envoi à ${nombreParents} parent(s)`}
+                  {envoi ? 'Lancement…' : `Confirmer l’envoi à ${libelleDestinataires} parent(s)`}
                 </button>
 
                 <button
@@ -482,7 +514,7 @@ export default function Diffusion({ nombreParents }) {
                 disabled={!pret || enCours}
                 onClick={() => setConfirme(true)}
               >
-                Envoyer à tous les parents
+                Envoyer aux parents inscrits aux offres
               </button>
             ))}
           </div>

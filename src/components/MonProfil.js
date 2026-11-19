@@ -684,7 +684,12 @@ export function LigneEnfant({
  * n'y sont pas : ils font partie du service.
  */
 const COURRIELS = {
-  diffusion: { titre: 'Les annonces de Mimia', description: 'Les nouveautés et les informations importantes du service.' },
+  // LES OFFRES (Min's, le 19/11/2026) : cet interrupteur EST le consentement à la prospection (RGPD, art. L34-5 CPCE).
+  // L'allumer consent, l'éteindre le retire tout de suite ; les deux sont datés côté serveur.
+  diffusion: {
+    titre: 'Recevoir les offres et nouveautés par email',
+    description: 'Nos offres, promotions et nouveautés. Facultatif : activez ou désactivez quand vous voulez.',
+  },
   avis: { titre: 'Les demandes d’avis', description: 'De temps en temps, on vous demande ce que vous pensez de Mimia.' },
   relance: { titre: 'Les relances', description: 'Un petit mot quand votre enfant n’a pas travaillé depuis un moment.' },
   rappels: { titre: 'Les rappels', description: 'Les rappels utiles : séances, contrôles, échéances.' },

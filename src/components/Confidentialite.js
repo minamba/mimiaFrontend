@@ -326,7 +326,8 @@ export default function Confidentialite() {
             générales&nbsp;: refuser ne change rien à votre accès au service.
             Seuls votre prénom et votre adresse e-mail servent à ces envois. Vous
             pouvez retirer votre accord à tout moment, depuis votre espace parent
-            ou par le lien de désinscription présent dans chaque e-mail&nbsp;; le
+            (Mon compte&nbsp;› Paramètres) ou par le lien de désinscription présent
+            dans chaque e-mail&nbsp;; le
             retrait prend effet immédiatement. Aucune donnée de votre enfant n'est
             utilisée pour ces envois.
           </li>

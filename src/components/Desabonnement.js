@@ -92,6 +92,9 @@ export default function Desabonnement() {
           <>
             <h1>C’est noté.</h1>
             <p className="desabonnement__texte">Vous ne recevrez plus {libelle}.</p>
+            <p className="desabonnement__texte">
+              Vous pouvez changer d’avis à tout moment depuis votre espace parent, dans Mon compte › Paramètres.
+            </p>
             <div className="desabonnement__actions">
               <button
                 type="button"

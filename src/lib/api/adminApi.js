@@ -684,6 +684,12 @@ export const lancerDiffusion = (composition) =>
 export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
 
 /**
+ * Combien de parents recevraient une diffusion maintenant (19/11/2026) : seuls ceux qui ont consenti aux offres par
+ * email, calculés par la même requête que l'envoi. Rend `{ nombre }`.
+ */
+export const getDestinatairesDiffusion = () => httpClient.get('/admin/diffusion/destinataires');
+
+/**
  * Envoie un message personnalisé à UN parent, dans la même mise en page que
  * la diffusion. Contrairement à `lancerDiffusion`, l'envoi tient dans le
  * temps d'une requête : pas de suivi d'avancement à interroger après coup.

@@ -35,7 +35,7 @@ describe('Mes courriels', () => {
   it('montre chaque catégorie et son état', async () => {
     render(<MesCourriels />);
     expect(await screen.findByRole('switch', { name: 'Les demandes d’avis' })).toHaveAttribute('aria-checked', 'false');
-    expect(screen.getByRole('switch', { name: 'Les annonces de Mimia' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('switch', { name: 'Recevoir les offres et nouveautés par email' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText(/arrivent toujours/)).toBeInTheDocument();
   });
 
@@ -45,5 +45,19 @@ describe('Mes courriels', () => {
 
     await waitFor(() => expect(choisirCourriel).toHaveBeenCalledWith('avis', true));
     await waitFor(() => expect(screen.getByRole('switch', { name: 'Les demandes d’avis' })).toHaveAttribute('aria-checked', 'true'));
+  });
+
+  // LE CONSENTEMENT AUX OFFRES (19/11/2026) : l'interrupteur se coupe et se rallume depuis l'espace parent.
+  it('retire puis redonne son accord aux offres par email', async () => {
+    render(<MesCourriels />);
+    const offres = await screen.findByRole('switch', { name: 'Recevoir les offres et nouveautés par email' });
+
+    fireEvent.click(offres);
+    await waitFor(() => expect(choisirCourriel).toHaveBeenCalledWith('diffusion', false));
+    await waitFor(() => expect(offres).toHaveAttribute('aria-checked', 'false'));
+
+    fireEvent.click(offres);
+    await waitFor(() => expect(choisirCourriel).toHaveBeenLastCalledWith('diffusion', true));
+    await waitFor(() => expect(offres).toHaveAttribute('aria-checked', 'true'));
   });
 });
