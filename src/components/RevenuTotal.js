@@ -230,7 +230,7 @@ export default function RevenuTotal({
               </strong>
               <span className="revenu-total__resultat-note">
                 {enEuros(total)} rapportés − {enEuros(coutEuros)} coûtés.
-                Prix TTC du catalogue, avant frais Stripe et TVA.
+                Prix nets du catalogue (TVA non applicable, art.&nbsp;293&nbsp;B du CGI), avant frais Stripe.
               </span>
             </div>
           )}

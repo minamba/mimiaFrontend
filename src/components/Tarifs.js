@@ -829,7 +829,8 @@ export default function Tarifs() {
         <svg className="tarifs__info" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6M12 7.5v.01" />
         </svg>
-        Prix TTC. Les heures non utilisées ne se reportent pas d'un mois sur
+        Prix nets en euros. TVA non applicable, art.&nbsp;293&nbsp;B du CGI.
+        Les heures non utilisées ne se reportent pas d'un mois sur
         l'autre — en revanche vous pouvez mettre votre abonnement en pause un
         mois par an, sans rien perdre.
       </p>

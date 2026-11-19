@@ -118,8 +118,8 @@ export default function ConditionsVente() {
         <h2>4. Les formules et le prix</h2>
         <p>
           Les formules, leur contenu et leur prix sont présentés sur la page{' '}
-          <Link to="/tarifs">Tarifs</Link>. Les prix sont indiqués en euros,
-          toutes taxes comprises&nbsp;— la TVA n'étant pas applicable.
+          <Link to="/tarifs">Tarifs</Link>. Prix nets en euros. TVA non
+          applicable, art.&nbsp;293&nbsp;B du CGI.
         </p>
         <ul>
           <li>
