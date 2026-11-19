@@ -10771,6 +10771,15 @@ html.defilement-bloque body {
   color: var(--encre-douce);
 }
 
+/* La mention TVA juste sous les cartes des formules (19/11/2026). */
+.tarifs__mention-prix {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
 /* ------------------------------------------------------------- le forfait */
 .quota {
   padding: 22px 24px;

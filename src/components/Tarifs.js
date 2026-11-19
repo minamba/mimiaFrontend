@@ -757,6 +757,12 @@ export default function Tarifs() {
         ))}
       </div>
 
+      {/* LA MENTION TVA SOUS LES PRIX DES FORMULES (retour d'Omar, 19/11/2026), pas seulement en bas de page sous les
+          recharges : on la lit là où on lit le prix. */}
+      {payantes.length > 0 && (
+        <p className="tarifs__mention-prix">Prix nets en euros. TVA non applicable, art.&nbsp;293&nbsp;B du CGI.</p>
+      )}
+
       {/* Le bloc disparaît quand l'administrateur ferme les essais : afficher
           « 30 minutes offertes » avec un bouton que le serveur refusera serait
           promettre pour rien. Un essai DÉJÀ en cours n'est pas coupé pour

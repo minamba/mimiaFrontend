@@ -65,3 +65,18 @@
   margin: 0;
   padding: 0;
 }
+
+/* « JE REFUSE » EN CONTOUR (retour d'Omar, 19/11/2026) : il ferme la session, il ne doit pas peser autant que
+   « Continuer ». Le bouton secondaire du thème (pilule bleue à nuages) est remplacé ici par un simple contour. */
+.conditions-fenetre .modale__actions .conditions-fenetre__refuser {
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--encre) 45%, transparent);
+  color: var(--encre);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.conditions-fenetre .modale__actions .conditions-fenetre__refuser:hover:not(:disabled) {
+  border-color: var(--encre);
+  background: color-mix(in srgb, var(--encre) 8%, transparent);
+}

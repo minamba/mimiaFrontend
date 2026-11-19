@@ -442,7 +442,7 @@ export default function Diffusion({ nombreParents }) {
                   dans son propre courriel.
                 </>
               )}{' '}
-              Seuls les parents qui ont accepté de recevoir les offres et nouveautés par email
+              Seuls les parents qui ont accepté de recevoir les offres et nouveautés par e-mail
               le reçoivent, avec un lien pour se désinscrire.{' '}
               <strong>Un envoi ne s’annule pas.</strong>{' '}
               Avez-vous relu l’aperçu ?

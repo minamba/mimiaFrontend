@@ -189,6 +189,11 @@ section .tarifs__mention {
   font-size: 14px;
 }
 
+/* La mention TVA sous les cartes (19/11/2026) : lisible sur le fond illustré, comme la mention du bas. */
+section .tarifs__mention-prix { font-size: 14px; }
+
+:root:not([data-theme='light']) section .tarifs__mention-prix { color: rgba(235, 242, 255, 0.85); }
+
 .tarifs__info {
   flex: none;
   width: 22px;

@@ -53,10 +53,17 @@ const LECTURES = {
   },
 };
 
+/**
+ * LE LIBELLÉ DE LA CASE DES OFFRES, LE MÊME PARTOUT (retour d'Omar, 19/11/2026) : mot pour mot celui du formulaire
+ * d'inscription (`Register.cshtml`, serveur d'identité). Le changer ici, c'est le changer là-bas aussi.
+ */
+export const LIBELLE_OFFRES =
+  'J’accepte de recevoir par e-mail les offres et nouveautés de Mimia (désinscription possible à tout moment).';
+
 // Ce que dit la fenêtre, selon le cas. Textes À VALIDER PAR MIN'S.
 const TEXTES = {
   miseAJour: {
-    titre: 'Notre politique de confidentialité a été mise à jour',
+    titre: 'Notre politique de confidentialité a été mise à\u00a0jour',
     texte:
       'Elle précise désormais comment nous pouvons vous envoyer nos offres et nouveautés par e-mail (seulement si vous ' +
       'l’acceptez), combien de temps nous gardons votre choix, et comment vous désinscrire. Nos conditions générales de ' +
@@ -141,11 +148,9 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
                   disabled={occupe}
                   onChange={(e) => setOffres(e.target.checked)}
                 />
-                <span>J’accepte de recevoir les offres et nouveautés de Mimia par email.</span>
+                <span>{LIBELLE_OFFRES}</span>
               </label>
-              <p className="conditions-fenetre__note">
-                Facultatif : vous pouvez continuer sans cocher. Désinscription possible à tout moment.
-              </p>
+              <p className="conditions-fenetre__note">Facultatif : vous pouvez continuer sans cocher cette case.</p>
             </div>
           )}
 
@@ -157,7 +162,15 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
           {erreur && <div className="alert">{erreur}</div>}
         </div>
         <div className="modale__actions">
-          <button type="button" className="btn-ghost" disabled={occupe} onClick={onRefuser}>Je refuse</button>
+          {/* EN CONTOUR (retour d'Omar, 19/11/2026) : un vrai bouton, secondaire — il ferme la session. */}
+          <button
+            type="button"
+            className="btn btn--compact btn--fantome conditions-fenetre__refuser"
+            disabled={occupe}
+            onClick={onRefuser}
+          >
+            Je refuse
+          </button>
           <button
             type="button"
             className="btn btn--compact"
@@ -285,7 +298,7 @@ export default function VerrouConditions({ children }) {
       await accepterConditions({ offresEmail });
       setEtat({ pour: qui, aAccepter: false, premiereFois: false });
     } catch {
-      setErreur('Votre accord n’a pas pu être enregistré. Vous pouvez réessayer ?');
+      setErreur('Votre accord n’a pas pu être enregistré. Merci de réessayer.');
     } finally {
       setOccupe(false);
     }

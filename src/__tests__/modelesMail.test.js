@@ -273,7 +273,7 @@ test('la confirmation compte seulement les parents qui ont accepté les offres (
 
   expect(await screen.findByRole('button', { name: /Confirmer l’envoi à 2 parent/ })).toBeEnabled();
   expect(screen.getByText(/sur 5 compte/)).toBeInTheDocument();
-  expect(screen.getByText(/accepté de recevoir les offres et nouveautés par email/)).toBeInTheDocument();
+  expect(screen.getByText(/accepté de recevoir les offres et nouveautés par e-mail/)).toBeInTheDocument();
 });
 
 test('personne n’a accepté les offres : la confirmation reste grisée', async () => {

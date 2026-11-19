@@ -113,7 +113,7 @@ function Informations({ parent, compte, saving, onEnregistrer }) {
       </div>
 
       <div className="champ">
-        <label htmlFor="p-mail">Adresse email</label>
+        <label htmlFor="p-mail">Adresse e-mail</label>
         <input id="p-mail" value={parent?.mail ?? ''} readOnly disabled />
         <span className="champ__aide">
           C'est votre identifiant de connexion. Pour en changer, écrivez-nous —
@@ -687,8 +687,8 @@ const COURRIELS = {
   // LES OFFRES (Min's, le 19/11/2026) : cet interrupteur EST le consentement à la prospection (RGPD, art. L34-5 CPCE).
   // L'allumer consent, l'éteindre le retire tout de suite ; les deux sont datés côté serveur.
   diffusion: {
-    titre: 'Recevoir les offres et nouveautés par email',
-    description: 'Nos offres, promotions et nouveautés. Facultatif : activez ou désactivez quand vous voulez.',
+    titre: 'Les offres et nouveautés',
+    description: 'Nos offres, promotions et nouveautés par e-mail. Facultatif : activez ou désactivez quand vous voulez.',
   },
   avis: { titre: 'Les demandes d’avis', description: 'De temps en temps, on vous demande ce que vous pensez de Mimia.' },
   relance: { titre: 'Les relances', description: 'Un petit mot quand votre enfant n’a pas travaillé depuis un moment.' },
@@ -870,6 +870,9 @@ export default function MonProfil() {
     // « Ajouter des fiches », depuis la jauge des fiches de révision d'un
     // enfant : l'achat se fait dans le forfait (16/10/2026).
     if (parametres.get('onglet') === 'forfait') return 'forfait';
+
+    // « Activez-les depuis votre espace parent », depuis la page de désinscription des offres (19/11/2026).
+    if (parametres.get('onglet') === 'parametres') return 'parametres';
 
     return parametres.get('paiement') === 'ok' || parametres.has('formule')
       ? 'forfait'

@@ -329,7 +329,7 @@ export default function Confidentialite() {
         <p>
           <strong>Vous désinscrire.</strong> À tout moment, sans frais ni
           justification&nbsp;: par le lien «&nbsp;Me désinscrire de ces
-          emails&nbsp;» présent dans chaque e-mail d'offre (sans avoir à vous
+          e-mails&nbsp;» présent dans chaque e-mail d'offre (sans avoir à vous
           connecter), ou depuis Mon compte&nbsp;› Paramètres&nbsp;› Mes
           courriels. Le retrait prend effet immédiatement. Il ne remet pas en
           cause les envois faits avant, et vous pouvez redonner votre accord plus
@@ -644,7 +644,7 @@ export default function Confidentialite() {
             montant réglé, rien sur vos enfants.
           </li>
           <li>
-            <strong>Une empreinte de votre adresse email</strong>, si vous avez
+            <strong>Une empreinte de votre adresse e-mail</strong>, si vous avez
             utilisé l'essai gratuit. Ce n'est pas votre adresse&nbsp;: c'est une
             suite de caractères calculée à partir d'elle, dont on ne peut pas
             revenir en arrière. Elle ne permet ni de vous contacter, ni de savoir

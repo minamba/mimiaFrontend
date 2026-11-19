@@ -16,4 +16,9 @@ export const lireDesabonnement = (jeton) => client.get('/desabonnement', { param
 
 export const confirmerDesabonnement = (jeton) => client.post('/desabonnement', { jeton });
 
-export const reabonner = (jeton) => client.post('/desabonnement/reabonnement', { jeton });
+/**
+ * Pour les offres, `jetonAnnulation` est obligatoire : celui que la désinscription vient de rendre (valable 30 minutes).
+ * Sans lui, le serveur répond 403 — le lien d'un vieux courriel ne suffit pas à redonner un consentement.
+ */
+export const reabonner = (jeton, jetonAnnulation = undefined) =>
+  client.post('/desabonnement/reabonnement', { jeton, jetonAnnulation });

@@ -51,7 +51,13 @@ export default function ConditionsVente() {
       <header className="legal__entete">
         <p className="legal__surtitre">Conditions générales</p>
         <h1 className="legal__titre">Conditions de vente et d'utilisation</h1>
-        <p className="legal__maj">Version 1.0 — en vigueur depuis le 6 août 2026</p>
+        {/* DATÉE (retour d'Omar, 19/11/2026) : l'article 4 a été reformulé (mention TVA officielle) sans rien changer au prix ni
+            au sens, donc la version reste 1.0. Le texte d'origine est archivé dans
+            docs/archives-legales/ConditionsVente-1.0-2026-08-06.js. DATE À CALER sur le jour réel de la mise en ligne. */}
+        <p className="legal__maj">
+          Version 1.0 — en vigueur depuis le 6&nbsp;août&nbsp;2026 (article&nbsp;4 reformulé le 20&nbsp;novembre&nbsp;2026,
+          sans changement de prix ni de sens)
+        </p>
       </header>
 
       <section className="legal__section">

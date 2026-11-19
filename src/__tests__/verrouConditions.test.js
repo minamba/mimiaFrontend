@@ -2,7 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import VerrouConditions from '../components/VerrouConditions';
+import VerrouConditions, { LIBELLE_OFFRES } from '../components/VerrouConditions';
 import { accepterConditions, getConditionsDuParent, getProfil } from '../lib/api/profilApi';
 import { fermerSession } from '../lib/api/sessionEleveApi';
 import { fermerSessionEleve, sessionEleve } from '../lib/storage/sessionEleve';
@@ -138,7 +138,7 @@ describe('la mise à jour de la politique de confidentialité (Min’s, 19/11/20
     monter();
 
     expect(
-      await screen.findByRole('heading', { name: 'Notre politique de confidentialité a été mise à jour' }),
+      await screen.findByRole('heading', { name: 'Notre politique de confidentialité a été mise à\u00a0jour' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Nos conditions générales de vente ne changent pas/)).toBeInTheDocument();
     expect(caseAccord()).toHaveAccessibleName('J’ai lu et j’accepte la politique de confidentialité.');
@@ -169,7 +169,13 @@ describe('la mise à jour de la politique de confidentialité (Min’s, 19/11/20
     await screen.findByRole('dialog');
     expect(caseOffres()).toBeInTheDocument();
     expect(caseOffres()).not.toBeChecked();
-    expect(caseOffres()).toHaveAccessibleName('J’accepte de recevoir les offres et nouveautés de Mimia par email.');
+    // Le même libellé que le formulaire d'inscription (retour d'Omar, 19/11/2026).
+    expect(caseOffres()).toHaveAccessibleName(LIBELLE_OFFRES);
+    expect(LIBELLE_OFFRES).toBe(
+      'J’accepte de recevoir par e-mail les offres et nouveautés de Mimia (désinscription possible à tout moment).',
+    );
+    // « Je refuse » : un vrai bouton secondaire, en contour.
+    expect(screen.getByRole('button', { name: 'Je refuse' })).toHaveClass('btn', 'conditions-fenetre__refuser');
     // En dessous de l'accord obligatoire.
     expect(caseAccord().compareDocumentPosition(caseOffres()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
@@ -376,7 +382,7 @@ describe('l’enfant dont le parent n’a pas accepté', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
     rerender(<VerrouConditions><p>La page du site</p></VerrouConditions>);
 
-    expect(await screen.findByRole('heading', { name: 'Notre politique de confidentialité a été mise à jour' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Notre politique de confidentialité a été mise à\u00a0jour' })).toBeInTheDocument();
     expect(getProfil).toHaveBeenCalledTimes(1);
     fermerSessionEleve.mockReset();
   });

@@ -35,7 +35,7 @@ describe('Mes courriels', () => {
   it('montre chaque catégorie et son état', async () => {
     render(<MesCourriels />);
     expect(await screen.findByRole('switch', { name: 'Les demandes d’avis' })).toHaveAttribute('aria-checked', 'false');
-    expect(screen.getByRole('switch', { name: 'Recevoir les offres et nouveautés par email' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('switch', { name: 'Les offres et nouveautés' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText(/arrivent toujours/)).toBeInTheDocument();
   });
 
@@ -50,7 +50,7 @@ describe('Mes courriels', () => {
   // LE CONSENTEMENT AUX OFFRES (19/11/2026) : l'interrupteur se coupe et se rallume depuis l'espace parent.
   it('retire puis redonne son accord aux offres par email', async () => {
     render(<MesCourriels />);
-    const offres = await screen.findByRole('switch', { name: 'Recevoir les offres et nouveautés par email' });
+    const offres = await screen.findByRole('switch', { name: 'Les offres et nouveautés' });
 
     fireEvent.click(offres);
     await waitFor(() => expect(choisirCourriel).toHaveBeenCalledWith('diffusion', false));

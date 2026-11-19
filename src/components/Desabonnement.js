@@ -15,6 +15,10 @@ import {
  *
  * ET ON PEUT REVENIR SUR SON CLIC : « Je me suis trompé » réabonne tout de
  * suite, sans avoir à écrire au support.
+ *
+ * SAUF POUR LES OFFRES, OÙ SE RÉABONNER C'EST CONSENTIR (retour d'Omar, 19/11/2026) : le lien du courriel n'expire pas
+ * et peut avoir été transféré. Le bouton n'est proposé qu'à la page qui VIENT de désinscrire (jeton d'annulation rendu
+ * par le serveur, valable 30 minutes) ; sinon, on renvoie vers l'espace parent connecté.
  */
 export default function Desabonnement() {
   const jeton = new URLSearchParams(window.location.search).get('jeton') ?? '';
@@ -22,6 +26,9 @@ export default function Desabonnement() {
   // chargement | pret | fait | invalide | erreur
   const [etat, setEtat] = useState(jeton ? 'chargement' : 'invalide');
   const [libelle, setLibelle] = useState('ces messages');
+  const [commerciale, setCommerciale] = useState(false);
+  const [jetonAnnulation, setJetonAnnulation] = useState(null);
+  const [annulationExpiree, setAnnulationExpiree] = useState(false);
   const [reabonne, setReabonne] = useState(false);
   const [occupe, setOccupe] = useState(false);
 
@@ -34,6 +41,7 @@ export default function Desabonnement() {
       .then(({ data }) => {
         if (!vivant) return;
         setLibelle(data?.libelle ?? 'ces messages');
+        setCommerciale(data?.commerciale === true);
         setEtat(data?.desabonne ? 'fait' : 'pret');
       })
       .catch((e) => {
@@ -43,19 +51,45 @@ export default function Desabonnement() {
     return () => { vivant = false; };
   }, [jeton]);
 
-  const agir = async (appel, suivant, estReabonne) => {
+  const desabonner = async () => {
     setOccupe(true);
 
     try {
-      await appel(jeton);
-      setReabonne(estReabonne);
-      setEtat(suivant);
+      const { data } = await confirmerDesabonnement(jeton);
+      setJetonAnnulation(data?.jetonAnnulation ?? null);
+      setAnnulationExpiree(false);
+      setReabonne(false);
+      setEtat('fait');
     } catch {
       setEtat('erreur');
     } finally {
       setOccupe(false);
     }
   };
+
+  const seReabonner = async () => {
+    setOccupe(true);
+
+    try {
+      await reabonner(jeton, jetonAnnulation ?? undefined);
+      setJetonAnnulation(null);
+      setReabonne(true);
+      setEtat('pret');
+    } catch (e) {
+      // Offres, délai dépassé : on le dit, et on montre où le faire.
+      if (e?.response?.status === 403) {
+        setJetonAnnulation(null);
+        setAnnulationExpiree(true);
+      } else {
+        setEtat('erreur');
+      }
+    } finally {
+      setOccupe(false);
+    }
+  };
+
+  // Le bouton « me réabonner » : toujours hors offres ; pour les offres, seulement juste après la désinscription.
+  const peutAnnuler = !commerciale || Boolean(jetonAnnulation);
 
   return (
     <section className="page desabonnement">
@@ -79,7 +113,7 @@ export default function Desabonnement() {
                 type="button"
                 className="btn"
                 disabled={occupe}
-                onClick={() => agir(confirmerDesabonnement, 'fait', false)}
+                onClick={desabonner}
               >
                 {occupe ? 'Un instant…' : 'Ne plus recevoir ces messages'}
               </button>
@@ -93,17 +127,27 @@ export default function Desabonnement() {
             <h1>C’est noté.</h1>
             <p className="desabonnement__texte">Vous ne recevrez plus {libelle}.</p>
             <p className="desabonnement__texte">
-              Vous pouvez changer d’avis à tout moment depuis votre espace parent, dans Mon compte › Paramètres.
+              Vous pouvez changer d’avis à tout moment depuis votre espace parent, dans Mon compte&nbsp;› Paramètres.
             </p>
+            {annulationExpiree && (
+              <p className="desabonnement__texte" role="status">
+                Le délai pour annuler depuis cette page est passé : pour recevoir de nouveau nos offres, activez-les
+                depuis votre espace parent.
+              </p>
+            )}
             <div className="desabonnement__actions">
-              <button
-                type="button"
-                className="btn btn--fantome"
-                disabled={occupe}
-                onClick={() => agir(reabonner, 'pret', true)}
-              >
-                Je me suis trompé, me réabonner
-              </button>
+              {peutAnnuler ? (
+                <button
+                  type="button"
+                  className="btn btn--fantome"
+                  disabled={occupe}
+                  onClick={seReabonner}
+                >
+                  Je me suis trompé, me réabonner
+                </button>
+              ) : (
+                <Link to="/profil?onglet=parametres" className="btn btn--fantome">Ouvrir mon espace parent</Link>
+              )}
               <Link to="/" className="btn">Retour au site</Link>
             </div>
           </>
