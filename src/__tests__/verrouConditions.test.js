@@ -37,7 +37,16 @@ beforeEach(() => {
 
 afterEach(() => jest.useRealTimers());
 
-describe('la fenêtre bloquante des conditions générales', () => {
+// La case obligatoire (« J'ai lu et j'accepte… ») et le bouton qui attend qu'elle soit cochée.
+const caseAccord = () => screen.getByRole('checkbox', { name: /J’ai lu et j’accepte/ });
+const continuer = () => screen.getByRole('button', { name: 'Continuer' });
+const accepter = async () => {
+  await screen.findByRole('dialog');
+  await userEvent.click(caseAccord());
+  await userEvent.click(continuer());
+};
+
+describe('la fenêtre bloquante des conditions', () => {
   test('un parent à jour entre sans fenêtre', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: false } });
     monter();
@@ -52,7 +61,6 @@ describe('la fenêtre bloquante des conditions générales', () => {
     monter();
 
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Nos conditions générales ont été mises à jour' })).toBeInTheDocument();
     expect(screen.queryByText('La page du site')).not.toBeInTheDocument();
   });
 
@@ -72,7 +80,7 @@ describe('la fenêtre bloquante des conditions générales', () => {
     accepterConditions.mockResolvedValue({});
     monter();
 
-    await userEvent.click(await screen.findByRole('button', { name: 'J’accepte les conditions' }));
+    await accepter();
 
     expect(accepterConditions).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('La page du site')).toBeInTheDocument();
@@ -84,11 +92,11 @@ describe('la fenêtre bloquante des conditions générales', () => {
     accepterConditions.mockRejectedValue(new Error('panne'));
     monter();
 
-    await userEvent.click(await screen.findByRole('button', { name: 'J’accepte les conditions' }));
+    await accepter();
 
     expect(await screen.findByText(/n’a pas pu être enregistré/)).toBeInTheDocument();
     expect(screen.queryByText('La page du site')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'J’accepte les conditions' })).toBeEnabled();
+    expect(continuer()).toBeEnabled();
   });
 
   test('refuser : la déconnexion, sans rien noter', async () => {
@@ -102,68 +110,94 @@ describe('la fenêtre bloquante des conditions générales', () => {
     expect(screen.queryByText('La page du site')).not.toBeInTheDocument();
   });
 
-  test('consulter : le texte dans la fenêtre, le retour, et on peut accepter depuis la lecture', async () => {
-    getProfil.mockResolvedValue({ data: { conditionsAAccepter: true } });
+  test('un parent neuf, arrivé par Google : on ne lui parle pas de mise à jour, il accepte CGV et politique', async () => {
+    getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, conditionsPremiereFois: true } });
     accepterConditions.mockResolvedValue({});
     monter();
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Consulter les conditions' }));
-    expect(screen.getByText('Le texte des conditions')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Je refuse' })).not.toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Retour' }));
-    expect(screen.getByRole('button', { name: 'Je refuse' })).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Consulter les conditions' }));
-    await userEvent.click(screen.getByRole('button', { name: 'J’accepte les conditions' }));
-    expect(await screen.findByText('La page du site')).toBeInTheDocument();
-  });
-
-  test('un parent neuf, arrivé par Google : on ne lui parle pas de mise à jour', async () => {
-    getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, conditionsPremiereFois: true } });
-    monter();
-
     expect(await screen.findByRole('heading', { name: 'Avant de commencer' })).toBeInTheDocument();
-    expect(screen.queryByText(/mis à jour/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/mise à jour/)).not.toBeInTheDocument();
+    expect(caseAccord()).toHaveAccessibleName(
+      'J’ai lu et j’accepte les conditions générales de vente et d’utilisation et la politique de confidentialité.',
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Consulter les conditions générales' }));
+    expect(screen.getByText('Le texte des conditions')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Retour' }));
+
+    await accepter();
+    expect(accepterConditions).toHaveBeenCalledTimes(1);
   });
 });
 
-describe('les nouvelles conditions et la case des offres par email (19/11/2026)', () => {
+describe('la mise à jour de la politique de confidentialité (Min’s, 19/11/2026)', () => {
   const caseOffres = () => screen.queryByRole('checkbox', { name: /offres et nouveautés/ });
 
-  test('la case est là, à part, et jamais cochée d’avance', async () => {
+  test('elle parle de la politique, pas des CGV', async () => {
+    getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, conditionsPremiereFois: false } });
+    monter();
+
+    expect(
+      await screen.findByRole('heading', { name: 'Notre politique de confidentialité a été mise à jour' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Nos conditions générales de vente ne changent pas/)).toBeInTheDocument();
+    expect(caseAccord()).toHaveAccessibleName('J’ai lu et j’accepte la politique de confidentialité.');
+    expect(screen.getByRole('button', { name: 'Consulter la politique de confidentialité' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Consulter les conditions générales' })).not.toBeInTheDocument();
+  });
+
+  test('« J’ai lu et j’accepte » est obligatoire : « Continuer » reste grisé sans elle', async () => {
+    getProfil.mockResolvedValue({ data: { conditionsAAccepter: true } });
+    monter();
+
+    await screen.findByRole('dialog');
+    expect(caseAccord()).not.toBeChecked();
+    expect(continuer()).toBeDisabled();
+
+    await userEvent.click(caseAccord());
+    expect(continuer()).toBeEnabled();
+
+    await userEvent.click(caseAccord());
+    expect(continuer()).toBeDisabled();
+    expect(accepterConditions).not.toHaveBeenCalled();
+  });
+
+  test('la case des offres est là, en dessous, à part, et jamais cochée d’avance', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, offresEmail: false } });
     monter();
 
     await screen.findByRole('dialog');
     expect(caseOffres()).toBeInTheDocument();
     expect(caseOffres()).not.toBeChecked();
+    expect(caseOffres()).toHaveAccessibleName('J’accepte de recevoir les offres et nouveautés de Mimia par email.');
+    // En dessous de l'accord obligatoire.
+    expect(caseAccord().compareDocumentPosition(caseOffres()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  test('accepter sans cocher : on entre, et aucun consentement ne part', async () => {
+  test('accepter sans cocher les offres : on entre, et aucun consentement ne part', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, offresEmail: false } });
     accepterConditions.mockResolvedValue({});
     monter();
 
-    await userEvent.click(await screen.findByRole('button', { name: 'J’accepte les conditions' }));
+    await accepter();
 
     expect(accepterConditions).toHaveBeenCalledWith({ offresEmail: false });
     expect(await screen.findByText('La page du site')).toBeInTheDocument();
   });
 
-  test('cocher puis accepter : le consentement part avec l’acceptation', async () => {
+  test('cocher les offres puis accepter : le consentement part avec l’acceptation', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, offresEmail: false } });
     accepterConditions.mockResolvedValue({});
     monter();
 
     await screen.findByRole('dialog');
     await userEvent.click(caseOffres());
-    await userEvent.click(screen.getByRole('button', { name: 'J’accepte les conditions' }));
+    await accepter();
 
     expect(accepterConditions).toHaveBeenCalledWith({ offresEmail: true });
   });
 
-  test('cocher puis décocher : rien ne part', async () => {
+  test('cocher puis décocher les offres : rien ne part', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true } });
     accepterConditions.mockResolvedValue({});
     monter();
@@ -171,42 +205,45 @@ describe('les nouvelles conditions et la case des offres par email (19/11/2026)'
     await screen.findByRole('dialog');
     await userEvent.click(caseOffres());
     await userEvent.click(caseOffres());
-    await userEvent.click(screen.getByRole('button', { name: 'J’accepte les conditions' }));
+    await accepter();
 
     expect(accepterConditions).toHaveBeenCalledWith({ offresEmail: false });
   });
 
-  test('cocher ne suffit pas pour entrer : seul le bouton des conditions ouvre le site', async () => {
+  test('cocher les offres ne suffit pas pour entrer', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true } });
     monter();
 
     await screen.findByRole('dialog');
     await userEvent.click(caseOffres());
 
+    expect(continuer()).toBeDisabled();
     expect(accepterConditions).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByText('La page du site')).not.toBeInTheDocument();
   });
 
-  test('la case reste cochée pendant la lecture des textes, et compte si on accepte depuis la lecture', async () => {
+  test('les deux cases gardent leur état pendant la lecture de la politique', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true } });
     accepterConditions.mockResolvedValue({});
     monter();
 
     await screen.findByRole('dialog');
+    await userEvent.click(caseAccord());
     await userEvent.click(caseOffres());
     await userEvent.click(screen.getByRole('button', { name: 'Consulter la politique de confidentialité' }));
     expect(screen.getByText('Le texte de la politique')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Je refuse' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuer' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Retour' }));
+    expect(caseAccord()).toBeChecked();
     expect(caseOffres()).toBeChecked();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Consulter les conditions' }));
-    await userEvent.click(screen.getByRole('button', { name: 'J’accepte les conditions' }));
+    await userEvent.click(continuer());
     expect(accepterConditions).toHaveBeenCalledWith({ offresEmail: true });
   });
 
-  test('un parent qui a déjà consenti : la case n’est pas reproposée, et rien n’est retiré', async () => {
+  test('un parent qui a déjà consenti : la case des offres n’est pas reproposée, et rien n’est retiré', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true, offresEmail: true } });
     accepterConditions.mockResolvedValue({});
     monter();
@@ -214,15 +251,16 @@ describe('les nouvelles conditions et la case des offres par email (19/11/2026)'
     await screen.findByRole('dialog');
     expect(caseOffres()).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'J’accepte les conditions' }));
+    await accepter();
     expect(accepterConditions).toHaveBeenCalledWith({ offresEmail: false });
   });
 
-  test('refuser après avoir coché : la déconnexion, et rien n’est noté', async () => {
+  test('refuser après avoir tout coché : la déconnexion, et rien n’est noté', async () => {
     getProfil.mockResolvedValue({ data: { conditionsAAccepter: true } });
     monter();
 
     await screen.findByRole('dialog');
+    await userEvent.click(caseAccord());
     await userEvent.click(caseOffres());
     await userEvent.click(screen.getByRole('button', { name: 'Je refuse' }));
 
@@ -241,7 +279,7 @@ describe('l’enfant dont le parent n’a pas accepté', () => {
     getConditionsDuParent.mockResolvedValue({ data: { conditionsAAccepter: true } });
     monter({ authentifie: false, chemin: '/eleves/3/matieres' });
 
-    expect(await screen.findByRole('heading', { name: 'Ton parent doit valider nos nouvelles conditions' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Ton parent doit valider une mise à jour' })).toBeInTheDocument();
     expect(screen.getByText(/tu ne pourras pas utiliser le site/)).toBeInTheDocument();
     expect(screen.queryByText('La page du site')).not.toBeInTheDocument();
   });
@@ -251,7 +289,8 @@ describe('l’enfant dont le parent n’a pas accepté', () => {
     monter({ authentifie: false });
     await screen.findByRole('dialog');
 
-    expect(screen.queryByRole('button', { name: 'J’accepte les conditions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuer' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Je refuse' })).not.toBeInTheDocument();
     expect(getProfil).not.toHaveBeenCalled();
   });
@@ -260,7 +299,7 @@ describe('l’enfant dont le parent n’a pas accepté', () => {
     getConditionsDuParent.mockResolvedValue({ data: { conditionsAAccepter: true } });
     monter({ authentifie: true });
 
-    expect(await screen.findByRole('heading', { name: 'Ton parent doit valider nos nouvelles conditions' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Ton parent doit valider une mise à jour' })).toBeInTheDocument();
     expect(getProfil).not.toHaveBeenCalled();
   });
 
@@ -279,7 +318,7 @@ describe('l’enfant dont le parent n’a pas accepté', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Réessayer' }));
 
-    expect(await screen.findByText('Ton parent n’a pas encore validé les conditions.')).toBeInTheDocument();
+    expect(await screen.findByText('Ton parent n’a pas encore validé la mise à jour.')).toBeInTheDocument();
     expect(screen.queryByText('La page du site')).not.toBeInTheDocument();
   });
 
@@ -337,7 +376,7 @@ describe('l’enfant dont le parent n’a pas accepté', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
     rerender(<VerrouConditions><p>La page du site</p></VerrouConditions>);
 
-    expect(await screen.findByRole('button', { name: 'J’accepte les conditions' })).toBeEnabled();
+    expect(await screen.findByRole('heading', { name: 'Notre politique de confidentialité a été mise à jour' })).toBeInTheDocument();
     expect(getProfil).toHaveBeenCalledTimes(1);
     fermerSessionEleve.mockReset();
   });

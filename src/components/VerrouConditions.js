@@ -24,11 +24,16 @@ import './verrouConditions.css';
  * lit le message, réessaie quand c'est fait, ou quitte pour laisser son parent se connecter sur le même appareil. La
  * vérification se fait à l'ouverture du site : un cours déjà commencé n'est pas coupé par une nouvelle version.
  *
- * LES NOUVELLES CONDITIONS ET LES OFFRES PAR EMAIL — Min's, le 19/11/2026 : « les parents déjà inscrits vont devoir valider
- * les nouvelles CGV ». La fenêtre porte alors DEUX ACCORDS SÉPARÉS, comme le veut le RGPD : les conditions (et la politique
- * de confidentialité), obligatoires pour entrer, par le bouton « J'accepte les conditions » ; et une case à part, jamais
- * cochée d'avance et facultative, pour recevoir les offres par email. On entre sans la cocher. Elle n'est pas reproposée à
- * qui a déjà consenti (`offresEmail` de `GET /profil`), et rien n'est coché d'office.
+ * LA MISE À JOUR DE NOVEMBRE 2026 PORTE SUR LA POLITIQUE DE CONFIDENTIALITÉ — Min's, le 19/11/2026 : les parents déjà
+ * inscrits valident la nouvelle politique (offres et nouveautés par email : finalité, consentement, durée, désinscription).
+ * Les CGV ne changent pas. La fenêtre de mise à jour parle donc de la politique, et porte DEUX ACCORDS SÉPARÉS, comme le
+ * veut le RGPD :
+ * - « J'ai lu et j'accepte la politique de confidentialité », une case OBLIGATOIRE : « Continuer » reste grisé tant
+ *   qu'elle n'est pas cochée ;
+ * - en dessous, dans un cadre à part, la case des offres par email : FACULTATIVE, JAMAIS COCHÉE D'AVANCE, sans effet sur
+ *   l'entrée. Elle n'est pas reproposée à qui a déjà consenti (`offresEmail` de `GET /profil`).
+ * La première fois (parent arrivé par Google, qui n'a rien accepté), la case obligatoire couvre les CGV ET la politique.
+ * Les deux cases gardent leur état pendant la lecture d'un texte.
  *
  * CE QUI NE BLOQUE PAS :
  * - UNE PANNE. Si le serveur ne répond pas, ou ne répond pas à temps, on laisse passer : personne ne doit être enfermé
@@ -40,25 +45,42 @@ const sansVerrou = (chemin) => SANS_VERROU.includes(chemin) || chemin.startsWith
 const ATTENTE_MAX_MS = 6000;
 
 const LECTURES = {
-  conditions: { titre: 'Conditions générales', Texte: ConditionsVente },
-  confidentialite: { titre: 'Politique de confidentialité', Texte: Confidentialite },
+  conditions: { titre: 'Conditions générales', Texte: ConditionsVente, bouton: 'Consulter les conditions générales' },
+  confidentialite: {
+    titre: 'Politique de confidentialité',
+    Texte: Confidentialite,
+    bouton: 'Consulter la politique de confidentialité',
+  },
+};
+
+// Ce que dit la fenêtre, selon le cas. Textes À VALIDER PAR MIN'S.
+const TEXTES = {
+  miseAJour: {
+    titre: 'Notre politique de confidentialité a été mise à jour',
+    texte:
+      'Elle précise désormais comment nous pouvons vous envoyer nos offres et nouveautés par e-mail (seulement si vous ' +
+      'l’acceptez), combien de temps nous gardons votre choix, et comment vous désinscrire. Nos conditions générales de ' +
+      'vente ne changent pas. Pour continuer à utiliser Mimia, merci de la lire et de l’accepter.',
+    accord: 'J’ai lu et j’accepte la politique de confidentialité.',
+    lectures: ['confidentialite'],
+  },
+  premiereFois: {
+    titre: 'Avant de commencer',
+    texte:
+      'Pour utiliser Mimia, merci de lire et d’accepter nos conditions générales de vente et d’utilisation, ainsi que ' +
+      'notre politique de confidentialité.',
+    accord:
+      'J’ai lu et j’accepte les conditions générales de vente et d’utilisation et la politique de confidentialité.',
+    lectures: ['conditions', 'confidentialite'],
+  },
 };
 
 function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser, occupe, erreur }) {
-  // `lecture` : le texte ouvert dans la fenêtre, ou rien. La case garde son état pendant la lecture.
+  // `lecture` : le texte ouvert dans la fenêtre, ou rien. Les deux cases gardent leur état pendant la lecture.
   const [lecture, setLecture] = useState(null);
+  const [lu, setLu] = useState(false);
   const [offres, setOffres] = useState(false);
-
-  const accepter = (
-    <button
-      type="button"
-      className="btn btn--compact"
-      disabled={occupe}
-      onClick={() => onAccepter(proposerOffres && offres)}
-    >
-      J’accepte les conditions
-    </button>
-  );
+  const textes = premiereFois ? TEXTES.premiereFois : TEXTES.miseAJour;
 
   if (lecture) {
     const { titre, Texte } = LECTURES[lecture];
@@ -67,10 +89,8 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
         <div className="modale__boite conditions-fenetre conditions-fenetre--lecture">
           <h2 id="conditions-titre" className="conditions-fenetre__titre">{titre}</h2>
           <div className="modale__corps"><Texte /></div>
-          {erreur && <div className="alert">{erreur}</div>}
           <div className="modale__actions">
-            <button type="button" className="btn-ghost" onClick={() => setLecture(null)}>Retour</button>
-            {accepter}
+            <button type="button" className="btn btn--compact" onClick={() => setLecture(null)}>Retour</button>
           </div>
         </div>
       </div>
@@ -80,26 +100,35 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
   return (
     <div className="modale" role="dialog" aria-modal="true" aria-labelledby="conditions-titre">
       <div className="modale__boite conditions-fenetre">
-        <h2 id="conditions-titre" className="conditions-fenetre__titre">
-          {premiereFois ? 'Avant de commencer' : 'Nos conditions générales ont été mises à jour'}
-        </h2>
+        <h2 id="conditions-titre" className="conditions-fenetre__titre">{textes.titre}</h2>
         <div className="modale__corps">
-          <p className="conditions-fenetre__texte">
-            {premiereFois
-              ? 'Pour utiliser Mimia, merci de lire et d’accepter nos conditions générales de vente et d’utilisation, ainsi que notre politique de confidentialité.'
-              : 'Nous avons mis à jour nos conditions générales de vente et d’utilisation et notre politique de confidentialité. Pour continuer à utiliser Mimia, merci de les lire et de les accepter.'}
-          </p>
+          <p className="conditions-fenetre__texte">{textes.texte}</p>
           <div className="conditions-fenetre__liens">
-            <button type="button" className="btn-ghost conditions-fenetre__consulter" onClick={() => setLecture('conditions')}>
-              Consulter les conditions
-            </button>
-            <button
-              type="button"
-              className="btn-ghost conditions-fenetre__consulter"
-              onClick={() => setLecture('confidentialite')}
-            >
-              Consulter la politique de confidentialité
-            </button>
+            {textes.lectures.map((cle) => (
+              <button
+                key={cle}
+                type="button"
+                className="btn-ghost conditions-fenetre__consulter"
+                onClick={() => setLecture(cle)}
+              >
+                {LECTURES[cle].bouton}
+              </button>
+            ))}
+          </div>
+
+          {/* L'ACCORD OBLIGATOIRE : sans lui, « Continuer » reste grisé. */}
+          <div className="conditions-fenetre__accord">
+            <label className="conditions-fenetre__case">
+              <input
+                type="checkbox"
+                checked={lu}
+                disabled={occupe}
+                aria-describedby="conditions-obligatoire"
+                onChange={(e) => setLu(e.target.checked)}
+              />
+              <span>{textes.accord}</span>
+            </label>
+            <p id="conditions-obligatoire" className="conditions-fenetre__note">Obligatoire pour continuer.</p>
           </div>
 
           {/* L'AUTRE ACCORD, À PART : facultatif, jamais coché d'avance, sans effet sur l'entrée. */}
@@ -112,7 +141,7 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
                   disabled={occupe}
                   onChange={(e) => setOffres(e.target.checked)}
                 />
-                <span>J’accepte de recevoir par email les offres et nouveautés de Mimia.</span>
+                <span>J’accepte de recevoir les offres et nouveautés de Mimia par email.</span>
               </label>
               <p className="conditions-fenetre__note">
                 Facultatif : vous pouvez continuer sans cocher. Désinscription possible à tout moment.
@@ -121,15 +150,22 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
           )}
 
           <p className="conditions-fenetre__note">
-            Si vous refusez les conditions, votre session sera fermée et vous n’aurez pas accès au site. Cette fenêtre
-            réapparaîtra à votre prochaine connexion. Pour résilier un abonnement, écrivez à{' '}
+            Si vous refusez, votre session sera fermée et vous n’aurez pas accès au site. Cette fenêtre réapparaîtra à
+            votre prochaine connexion. Pour résilier un abonnement, écrivez à{' '}
             <a href="mailto:support@mimia.fr">support@mimia.fr</a>.
           </p>
           {erreur && <div className="alert">{erreur}</div>}
         </div>
         <div className="modale__actions">
           <button type="button" className="btn-ghost" disabled={occupe} onClick={onRefuser}>Je refuse</button>
-          {accepter}
+          <button
+            type="button"
+            className="btn btn--compact"
+            disabled={occupe || !lu}
+            onClick={() => onAccepter(proposerOffres && offres)}
+          >
+            Continuer
+          </button>
         </div>
       </div>
     </div>
@@ -141,12 +177,12 @@ function MessageEnfant({ onReessayer, onQuitter, occupe, erreur }) {
     <div className="modale" role="dialog" aria-modal="true" aria-labelledby="conditions-titre">
       <div className="modale__boite conditions-fenetre">
         <h2 id="conditions-titre" className="conditions-fenetre__titre">
-          Ton parent doit valider nos nouvelles conditions
+          Ton parent doit valider une mise à jour
         </h2>
         <div className="modale__corps">
           <p className="conditions-fenetre__texte">
-            Nous avons mis à jour les conditions générales de Mimia. Ton parent doit les accepter en se connectant à
-            son compte. Sinon, tu ne pourras pas utiliser le site.
+            Nous avons mis à jour les règles de Mimia sur les données personnelles. Ton parent doit les accepter en se
+            connectant à son compte. Sinon, tu ne pourras pas utiliser le site.
           </p>
           <p className="conditions-fenetre__note">Quand c’est fait, appuie sur « Réessayer ».</p>
           {erreur && <div className="alert" role="alert">{erreur}</div>}
@@ -219,7 +255,7 @@ export default function VerrouConditions({ children }) {
 
       try {
         const { data } = await getConditionsDuParent();
-        if (data?.conditionsAAccepter === true) setErreur('Ton parent n’a pas encore validé les conditions.');
+        if (data?.conditionsAAccepter === true) setErreur('Ton parent n’a pas encore validé la mise à jour.');
         else setEtat({ pour: qui, aAccepter: false, premiereFois: false });
       } catch {
         setErreur('La vérification n’a pas marché. Réessaie dans un instant.');

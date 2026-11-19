@@ -51,10 +51,7 @@ export default function ConditionsVente() {
       <header className="legal__entete">
         <p className="legal__surtitre">Conditions générales</p>
         <h1 className="legal__titre">Conditions de vente et d'utilisation</h1>
-        {/* VERSION 2.0 (19/11/2026) : les offres par email, avec le consentement du parent (articles 8 et 12). Elle va avec
-            `ConditionsEnVigueur.Version` et `Depuis` côté API : la date affichée ici doit être la même, celle de la mise en
-            ligne. Texte À VALIDER PAR MIN'S. */}
-        <p className="legal__maj">Version 2.0 — en vigueur depuis le 20 novembre 2026</p>
+        <p className="legal__maj">Version 1.0 — en vigueur depuis le 6 août 2026</p>
       </header>
 
       <section className="legal__section">
@@ -233,16 +230,6 @@ export default function ConditionsVente() {
           <Link to="/confidentialite">politique de confidentialité</Link>, qui
           fait partie intégrante des présentes conditions.
         </p>
-        <p>
-          Les e-mails liés à votre compte (création du compte, factures, bilan
-          hebdomadaire, fin de quota) font partie du service. Les e-mails
-          présentant nos offres et nouveautés, eux, ne vous sont envoyés que si
-          vous l'avez accepté en cochant la case prévue à cet effet. Cette case
-          est distincte de l'acceptation des présentes conditions&nbsp;: vous
-          pouvez utiliser Mimia sans la cocher. Vous pouvez retirer cet accord à
-          tout moment, depuis votre espace parent ou par le lien de
-          désinscription présent dans chacun de ces e-mails.
-        </p>
       </section>
 
       <section className="legal__section">
@@ -293,12 +280,6 @@ export default function ConditionsVente() {
           abonnement est celle en vigueur au jour de sa souscription ou de sa
           dernière reconduction. Toute modification substantielle vous est
           notifiée&nbsp;; si elle ne vous convient pas, vous pouvez résilier.
-        </p>
-        <p>
-          Lorsque nous publions une nouvelle version, elle vous est présentée à
-          votre prochaine connexion&nbsp;: vous devez l'accepter pour continuer à
-          utiliser le service. Nous conservons la version que vous avez acceptée
-          et la date de votre acceptation.
         </p>
       </section>
 

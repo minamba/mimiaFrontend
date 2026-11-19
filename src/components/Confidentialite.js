@@ -19,7 +19,11 @@ export default function Confidentialite() {
       <header className="legal__entete">
         <p className="legal__surtitre">RGPD</p>
         <h1 className="legal__titre">Confidentialité</h1>
-        {/* 19/11/2026 : les offres par email (finalité, base légale, durée, retrait). Texte À VALIDER PAR MIN'S. */}
+        {/* MISE À JOUR DU 20/11/2026 — Min's, le 19/11/2026 : les offres et nouveautés par email (finalité, base
+            légale = consentement, durée de conservation, retrait et désinscription) et le service d'envoi (Brevo).
+            C'est CE TEXTE que les parents déjà inscrits acceptent à leur prochaine connexion (`VerrouConditions`) ; les
+            CGV ne changent pas. La date doit être celle de la mise en ligne, comme `ConditionsEnVigueur.Depuis` côté
+            API. Texte À VALIDER PAR MIN'S. */}
         <p className="legal__maj">Dernière mise à jour&nbsp;: 20 novembre 2026</p>
       </header>
 
@@ -56,9 +60,10 @@ export default function Confidentialite() {
           <li>Formule souscrite, historique de paiement</li>
           <li>Date de création du compte</li>
           <li>
-            La version des conditions générales que vous avez acceptée et sa
-            date&nbsp;; votre choix de recevoir ou non nos offres par e-mail,
-            avec la date de votre accord et, le cas échéant, celle de son retrait
+            La version des conditions générales et de la présente politique que
+            vous avez acceptée, et sa date&nbsp;; votre choix de recevoir ou non
+            nos offres par e-mail, avec la date de votre accord et, le cas
+            échéant, celle de son retrait
           </li>
         </ul>
 
@@ -289,6 +294,55 @@ export default function Confidentialite() {
         </p>
       </section>
 
+      {/* LES OFFRES ET NOUVEAUTÉS PAR E-MAIL — 19/11/2026. Relevé dans le code :
+          colonnes `Parent.offres_email`, `offres_email_consenti_le`,
+          `offres_email_retire_le` ; case d'inscription et case de la fenêtre de
+          mise à jour (jamais cochées d'avance) ; filtre d'envoi de la diffusion
+          (`EnvoiAutomatiqueRepository.Joignables`, catégorie « diffusion ») ;
+          lien de désinscription signé, en-tête List-Unsubscribe et interrupteur
+          de Mon compte › Paramètres › Mes courriels ; suppression du compte =
+          suppression de la ligne Parent. */}
+      <section className="legal__section">
+        <h2>Nos offres et nouveautés par e-mail</h2>
+        <p>
+          <strong>Seulement si vous l'acceptez.</strong> Nous vous envoyons nos
+          offres, promotions et nouveautés par e-mail uniquement si vous avez
+          coché la case prévue à cet effet, à l'inscription ou plus tard. Cette
+          case n'est jamais cochée d'avance, elle est facultative et distincte de
+          l'acceptation de nos conditions et de cette politique&nbsp;: vous pouvez
+          utiliser Mimia sans la cocher.
+        </p>
+        <p>
+          <strong>Ce que nous utilisons.</strong> Votre prénom et votre adresse
+          e-mail, rien d'autre. Aucune donnée de votre enfant n'entre dans ces
+          envois, et nous ne les personnalisons pas à partir de ses séances.
+        </p>
+        <p>
+          <strong>Ce qui n'en dépend pas.</strong> Les e-mails liés à votre compte
+          (confirmation de votre adresse, factures, bilan hebdomadaire, fin de
+          l'essai ou du quota, réponses du support) font partie du service et
+          vous parviennent dans tous les cas. Les demandes d'avis, les relances
+          et les rappels se désactivent chacun dans Mon compte&nbsp;›
+          Paramètres&nbsp;› Mes courriels, ou par le lien présent dans chacun
+          d'eux.
+        </p>
+        <p>
+          <strong>Vous désinscrire.</strong> À tout moment, sans frais ni
+          justification&nbsp;: par le lien «&nbsp;Me désinscrire de ces
+          emails&nbsp;» présent dans chaque e-mail d'offre (sans avoir à vous
+          connecter), ou depuis Mon compte&nbsp;› Paramètres&nbsp;› Mes
+          courriels. Le retrait prend effet immédiatement. Il ne remet pas en
+          cause les envois faits avant, et vous pouvez redonner votre accord plus
+          tard depuis le même réglage.
+        </p>
+        <p>
+          <strong>Combien de temps.</strong> Les envois s'arrêtent dès votre
+          retrait. Nous gardons la date de votre accord et, le cas échéant, celle
+          de votre retrait, comme preuve, tant que votre compte existe&nbsp;; elles
+          sont effacées avec lui.
+        </p>
+      </section>
+
       <section className="legal__section">
         <h2>Pourquoi, et sur quelle base</h2>
         <ul>
@@ -323,13 +377,11 @@ export default function Confidentialite() {
             RGPD et article L34-5 du Code des postes et des communications
             électroniques). Il est facultatif, demandé par une case à part, jamais
             cochée d'avance, et sans lien avec l'acceptation des conditions
-            générales&nbsp;: refuser ne change rien à votre accès au service.
-            Seuls votre prénom et votre adresse e-mail servent à ces envois. Vous
-            pouvez retirer votre accord à tout moment, depuis votre espace parent
-            (Mon compte&nbsp;› Paramètres) ou par le lien de désinscription présent
-            dans chaque e-mail&nbsp;; le
-            retrait prend effet immédiatement. Aucune donnée de votre enfant n'est
-            utilisée pour ces envois.
+            générales ou de la présente politique&nbsp;: refuser ne change rien à
+            votre accès au service. Seuls votre prénom et votre adresse e-mail
+            servent à ces envois. Vous pouvez retirer votre accord à tout moment,
+            sans frais ni justification (voir «&nbsp;Vos droits&nbsp;»). Aucune
+            donnée de votre enfant n'est utilisée pour ces envois.
           </li>
         </ul>
         <p>
@@ -390,9 +442,22 @@ export default function Confidentialite() {
                 </td>
                 <td>Hors&nbsp;UE</td>
               </tr>
+              {/* BREVO EST ENTRÉ DANS LA LISTE LE 19/11/2026 : c'est lui qui
+                  expédie les e-mails (`SmtpHost` = smtp-relay.brevo.com) ; LWS
+                  ne fait plus que recevoir les messages du support. À VÉRIFIER
+                  sur la configuration de production avant la mise en ligne. */}
+              <tr>
+                <td>Brevo</td>
+                <td>
+                  Adresse e-mail et prénom du parent, contenu des e-mails que nous
+                  vous envoyons (compte, bilans, factures et, si vous l'avez
+                  accepté, offres et nouveautés)
+                </td>
+                <td>UE</td>
+              </tr>
               <tr>
                 <td>LWS</td>
-                <td>Adresse e-mail du parent, contenu des messages envoyés</td>
+                <td>Les messages que vous écrivez au support, et nos réponses</td>
                 <td>France</td>
               </tr>
               <tr>
@@ -459,7 +524,7 @@ export default function Confidentialite() {
                 <td>
                   Envois arrêtés dès votre retrait. La date de votre accord et
                   celle de votre retrait sont gardées comme preuve tant que le
-                  compte existe
+                  compte existe, puis effacées avec lui
                 </td>
               </tr>
               <tr>
@@ -624,6 +689,13 @@ export default function Confidentialite() {
           Vous disposez, pour vous comme pour vos enfants, d'un droit d'accès,
           de rectification, d'effacement, de limitation, d'opposition et de
           portabilité.
+        </p>
+        <p>
+          Vous pouvez aussi <strong>retirer à tout moment votre accord</strong>{' '}
+          aux offres par e-mail (lien de désinscription dans chaque e-mail, ou
+          Mon compte&nbsp;› Paramètres&nbsp;› Mes courriels) et aux besoins
+          particuliers (en décochant les cases). Le retrait vaut pour
+          l'avenir&nbsp;; il ne change rien au reste du service.
         </p>
         <p>
           Écrivez à <a href="mailto:support@mimia.fr">support@mimia.fr</a>.

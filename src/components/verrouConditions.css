@@ -22,6 +22,9 @@
 
 .conditions-fenetre__consulter { width: 100%; }
 
+/* L’accord obligatoire à la politique (et aux CGV la première fois) : « Continuer » attend cette case (19/11/2026). */
+.conditions-fenetre__accord { margin: 0 0 14px; }
+
 /* La case des offres, à part (19/11/2026) : un cadre la sépare de l’accord aux conditions. */
 .conditions-fenetre__offres {
   margin: 0 0 16px;
