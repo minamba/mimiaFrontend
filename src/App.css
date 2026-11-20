@@ -10991,7 +10991,8 @@ html.defilement-bloque body {
   color: var(--encre-douce);
 }
 
-.prix-phare__tva { margin-top: 14px; text-align: center; }
+/* Toute la largeur de la carte (grille à deux colonnes), comme le duel des prix. */
+.prix-phare__tva { grid-column: 1 / -1; margin-top: 0; text-align: center; }
 .comparatif__tva { margin: 10px auto 0; max-width: 620px; text-align: center; }
 .modale__boite .mention-tva { margin-top: 10px; }
 
