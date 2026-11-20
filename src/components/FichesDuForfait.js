@@ -4,6 +4,7 @@ import { acheterFiches, getFichesFamille } from '../lib/api/abonnementApi';
 import { acheterPodcasts, getPodcastsDuForfait } from '../lib/api/mesPodcastsApi';
 import { useFichesRevision, usePodcasts } from '../lib/storage/modeTest';
 import { Confirmation, Jauge, dateCourte, euros } from './Quota';
+import MentionTva from './MentionTva';
 import { messageSolo } from './podcasts/PodcastsNonInclus';
 
 const credits = (n) => `${n} crédit${n > 1 ? 's' : ''}`;
@@ -141,6 +142,7 @@ export default function FichesDuForfait({ module = 'fiches', fenetre = false }) 
             `Les crédits servent à tous vos enfants, une fois leurs ${maximum} ${quoi} du mois utilisés.`,
             'Ils sont ajoutés dès l’encaissement, en quelques secondes, et n’expirent jamais.',
           ]}
+          note={<MentionTva />}
           libelle={`Confirmer — ${euros(aAcheter.prixCentimes)}`}
           enCours={envoi}
           onAnnuler={() => setAAcheter(null)}
@@ -208,6 +210,7 @@ export default function FichesDuForfait({ module = 'fiches', fenetre = false }) 
               </button>
             ))}
           </div>
+          <MentionTva />
         </section>
       )}
     </div>

@@ -83,6 +83,18 @@ it('achète un pack après une confirmation qui dit qu’un crédit vaut un cour
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
+it('dit la mention TVA sous les packs et dans la confirmation (décision de Min’s, 19/11/2026)', async () => {
+  getFichesFamille.mockResolvedValue({ data: famille(0) });
+  render(<FichesDuForfait />);
+
+  // Le normaliseur de testing-library ramène l'espace insécable à une espace : on compare avec \s.
+  const mention = /^Prix nets en euros\. TVA non applicable, art\.\s293\sB du CGI\.$/;
+  expect(await screen.findByText(mention)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /\+10 crédits/ }));
+  expect(screen.getByRole('dialog')).toHaveTextContent(/TVA non applicable, art\.\s293\sB du CGI/);
+});
+
 it('dit pourquoi le paiement ne s’ouvre pas', async () => {
   getFichesFamille.mockResolvedValue({ data: famille(0) });
   acheterFiches.mockRejectedValue({ response: { data: { message: 'Le paiement est momentanément indisponible.' } } });

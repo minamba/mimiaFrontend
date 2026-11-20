@@ -1989,12 +1989,16 @@ export default function Admin() {
               // parents, non commerciale (prix, incident, règles, politique).
               // Un onglet à part, juste à côté : on ne la déclenche pas en
               // croyant envoyer une offre, ni l'inverse.
-              { cle: 'service', libelle: 'Information de service' },
+              //
+              // LE CANAL DANS LE NOM (20/11/2026, revue d'Omar) : à côté de
+              // « Message d'information », les deux se confondaient. L'un est
+              // un e-mail à chaque parent, l'autre un bandeau en haut du site.
+              { cle: 'service', libelle: 'Information de service (e-mail à tous)' },
 
               // TROISIÈME PARCE QUE C'EST LE PLUS RARE, mais au même
               // endroit que les deux autres : c'est une prise de parole,
               // pas un réglage. On la cherche là où on écrit aux gens.
-              { cle: 'information', libelle: 'Message d’information' },
+              { cle: 'information', libelle: 'Bandeau d’information (site)' },
 
               // LES SIGNATURES (17/10/2026) : super-administrateur seul.
               ...(estSuperAdmin ? [{ cle: 'signatures', libelle: 'Signatures' }] : []),

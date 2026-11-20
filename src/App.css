@@ -10982,6 +10982,19 @@ html.defilement-bloque body {
 .pack__prix { font-size: 15px; font-weight: 600; }
 .pack__mention { font-size: 11px; color: var(--encre-douce); }
 
+/* LA MENTION TVA SOUS LES PRIX (19/11/2026, « partout ») : une note discrète,
+   de la couleur des mentions, jamais un bandeau. Composant MentionTva.js. */
+.mention-tva {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--encre-douce);
+}
+
+.prix-phare__tva { margin-top: 14px; text-align: center; }
+.comparatif__tva { margin: 10px auto 0; max-width: 620px; text-align: center; }
+.modale__boite .mention-tva { margin-top: 10px; }
+
 .achat-details {
   margin: 14px 0 0;
   padding: 0 0 0 18px;
@@ -16532,6 +16545,15 @@ html.defilement-bloque body {
 }
 
 .diffusion__avertissement--service p { margin: 0 0 8px; }
+
+/* `{{lien_desinscription}}` dans une information de service (20/11/2026) : l'envoi est bloqué, on dit pourquoi. */
+.diffusion__service-lien {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+  font-weight: 600;
+}
 
 .diffusion__confirmation {
   display: flex;

@@ -16,6 +16,8 @@
  * même professeur, mémoire, oral, toutes les matières) sont dans l'historique
  * git, et montrées ailleurs sur la page.
  */
+import MentionTva from './MentionTva';
+
 const LIGNES = [
   { quoi: 'Refuse de donner la réponse toute faite', prof: true, chat: false, mimia: true },
   { quoi: 'Remonte aux lacunes des années passées', prof: true, chat: false, mimia: true },
@@ -86,6 +88,9 @@ export default function Comparatif() {
           </tbody>
         </table>
       </div>
+
+      {/* La mention TVA, sous la ligne des prix (décision de Min's, 19/11/2026). */}
+      <MentionTva className="comparatif__tva" />
     </section>
   );
 }

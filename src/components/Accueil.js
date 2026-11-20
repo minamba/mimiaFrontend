@@ -17,6 +17,7 @@ import FicheProfesseur from './FicheProfesseur';
 import Faq from './Faq';
 import ApercuParent from './ApercuParent';
 import Comparatif from './Comparatif';
+import MentionTva from './MentionTva';
 import ExercicesLangue from './ExercicesLangue';
 import './preuveIllustree.css';
 import './parentsIllustre.css';
@@ -992,6 +993,8 @@ export default function Accueil() {
                 prix, le parent voit d'un coup ce que paient ses 39,90 €.
                 L'orientation n'y figure que si la conseillère est visible. */}
             <ToutCompris orientation={equipe.some((p) => p.avatar === 'maelle')} />
+            {/* La mention TVA, sous les prix de la carte (décision de Min's, 19/11/2026). */}
+            <MentionTva className="prix-phare__tva" />
           </div>
 
           {/* Les autres formules restent à un clic : cacher qu'elles existent

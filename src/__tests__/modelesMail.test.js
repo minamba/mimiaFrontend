@@ -337,6 +337,23 @@ test('information de service : décompte de TOUS les parents, envoi seulement ap
     .toHaveBeenCalledWith(9, { mode: 'service', confirmationNonCommerciale: true }));
 });
 
+test('information de service : {{lien_desinscription}} bloque l’envoi, avec le message (revue d’Omar, 20/11/2026)', async () => {
+  render(<Diffusion mode="service" nombreParents={5} />);
+
+  ecrire('Objet du courriel', 'Évolution de nos prix');
+  ecrire('Message', 'Bonjour {{prenom}}, -50 % ce week-end : {{ lienDesinscription }}');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
+
+  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à/ });
+  expect(screen.getByRole('alert')).toHaveTextContent('marque d’une offre commerciale');
+
+  // Même la case « aucune offre » cochée : grisé, rien ne part.
+  fireEvent.click(screen.getByRole('checkbox', { name: /aucune offre, promotion ou incitation commerciale/ }));
+  expect(confirmer).toBeDisabled();
+  fireEvent.click(confirmer);
+  expect(api.diffuserModeleMail).not.toHaveBeenCalled();
+});
+
 test('information de service : la case se décoche quand on annule puis revient', async () => {
   render(<Diffusion mode="service" nombreParents={5} />);
 

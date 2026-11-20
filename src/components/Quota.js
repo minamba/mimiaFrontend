@@ -13,6 +13,7 @@ import {
   recharger,
 } from '../lib/api/abonnementApi';
 import Loader from './Loader';
+import MentionTva from './MentionTva';
 
 /**
  * L'état du forfait de la famille.
@@ -80,7 +81,7 @@ export function Jauge({ part }) {
  * conséquences, et laisser une porte de sortie. Deux fenêtres séparées auraient
  * fini par diverger.
  */
-export function Confirmation({ titre, resume, consequences, libelle, enCours, onConfirmer, onAnnuler }) {
+export function Confirmation({ titre, resume, consequences, note, libelle, enCours, onConfirmer, onAnnuler }) {
   return (
     <div className="modale" role="dialog" aria-modal="true" aria-labelledby="titre-confirmation">
       <div className="modale__boite">
@@ -93,6 +94,9 @@ export function Confirmation({ titre, resume, consequences, libelle, enCours, on
             <li key={ligne}>{ligne}</li>
           ))}
         </ul>
+
+        {/* Une note sous la liste — la mention TVA d'un achat, par exemple. */}
+        {note}
 
         <div className="modale__actions">
           <button type="button" className="btn-ghost" onClick={onAnnuler} disabled={enCours}>
@@ -261,6 +265,7 @@ export default function Quota({ compact = false }) {
             `Elles sont valables jusqu’au ${dateCourte(etat.periodeFin)}.`,
             'Les heures non utilisées ne se reportent pas au mois suivant.',
           ]}
+          note={<MentionTva />}
           libelle={`Confirmer — ${euros(aAcheter.prixCentimes)}`}
           enCours={action === aAcheter.code}
           onAnnuler={() => setAAcheter(null)}
@@ -520,6 +525,7 @@ export default function Quota({ compact = false }) {
               </button>
             ))}
           </div>
+          <MentionTva />
         </section>
       )}
 

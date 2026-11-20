@@ -74,6 +74,13 @@ function ouvrirApercu(html) {
  * écrit en toutes lettres en haut et au moment d'envoyer, et l'envoi exige une
  * case cochée (vérifiée aussi par le serveur). Pas de courriels automatiques ici.
  */
+/**
+ * `{{lien_desinscription}}` (ou `{{lienDesinscription}}`), avec ou sans espaces, sans tenir compte de la casse : le
+ * même motif que le serveur (`DiffusionService.ContientLienDesinscription`). Dans une information de service, c'est
+ * la marque d'un modèle d'offre réutilisé (revue d'Omar, 20/11/2026) : l'envoi est bloqué ici, et refusé par l'API.
+ */
+const MOTIF_LIEN_DESINSCRIPTION = /\{\{\s*(lien_desinscription|liendesinscription)\s*\}\}/i;
+
 export default function Diffusion({ nombreParents, mode = 'offres' }) {
   const service = mode === 'service';
 
@@ -190,6 +197,9 @@ export default function Diffusion({ nombreParents, mode = 'offres' }) {
       setEnregistrementEnCours(false);
     }
   };
+
+  // Une information de service qui porte le lien de désinscription : un modèle d'offre réutilisé, l'envoi est bloqué.
+  const lienDansService = service && [sujet, titre, texte].some((t) => MOTIF_LIEN_DESINSCRIPTION.test(t ?? ''));
 
   const envoyer = async () => {
     setEnvoi(true);
@@ -483,6 +493,13 @@ export default function Diffusion({ nombreParents, mode = 'offres' }) {
                 Aucune offre, promotion ou incitation commerciale&nbsp;: sinon utilisez
                 «&nbsp;Message de diffusion&nbsp;».
               </p>
+              {lienDansService && (
+                <p className="diffusion__service-lien" role="alert">
+                  Ce message contient <code>{'{{lien_desinscription}}'}</code>&nbsp;: c’est la marque
+                  d’une offre commerciale. Retirez cette variable, ou envoyez ce message comme
+                  «&nbsp;Message de diffusion&nbsp;».
+                </p>
+              )}
               <p>
                 {destinataires === 'erreur' ? (
                   <>Le nombre de destinataires n’a pas pu être lu.</>
@@ -573,7 +590,7 @@ export default function Diffusion({ nombreParents, mode = 'offres' }) {
                   type="button"
                   className="btn btn--compact btn--danger"
                   disabled={envoi || enCours || nombreDestinataires === null || nombreDestinataires === 0
-                    || (service && !sansOffre)}
+                    || (service && !sansOffre) || lienDansService}
                   onClick={envoyer}
                 >
                   {envoi ? 'Lancement…' : `Confirmer l’envoi à ${libelleDestinataires} parent(s)`}
