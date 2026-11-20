@@ -22,6 +22,13 @@ export const MESSAGE_DELTA = 'MESSAGE_DELTA';
 /** Fin du flux : la réponse en cours devient un message définitif. */
 export const MESSAGE_DONE = 'MESSAGE_DONE';
 
+/**
+ * LE VERDICT POSÉ PAR LE SERVEUR SUR LE MESSAGE DE L'ÉLÈVE — signalement #49 (20/11/2026) : une lecture d'image TAPÉE
+ * au clavier est jugée au serveur, qui renvoie `{ sonJuste, contenu }` avant la réponse. La bulle de l'élève dit alors
+ * « Bonne lecture » ou « On réessaie », comme au micro.
+ */
+export const VERDICT_ELEVE = 'VERDICT_ELEVE';
+
 /** Le forfait de la famille est épuisé : l'agent n'a pas pris la parole. */
 export const QUOTA_EPUISE = 'QUOTA_EPUISE';
 

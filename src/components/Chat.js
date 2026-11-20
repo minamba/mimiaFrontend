@@ -2670,6 +2670,27 @@ export default function Chat() {
   const ecouteRef = useRef(null);
 
   /**
+   * LE SON DU VERDICT D'UNE LECTURE TAPÉE — signalement #49 (20/11/2026) : jugée au serveur, elle reçoit son verdict
+   * avec la réponse (`verdictServeur`, voir VERDICT_ELEVE) ; le son des bonnes et des mauvaises réponses part alors une
+   * fois, comme au micro. Un verdict du micro a déjà joué le sien : il n'est pas marqué.
+   */
+  const verdictsJouesRef = useRef(new Set());
+  useEffect(() => {
+    const dernier = messages?.[messages.length - 1];
+    if (!dernier?.verdictServeur || typeof dernier.sonJuste !== 'boolean') return;
+    if (verdictsJouesRef.current.has(dernier.id)) return;
+    verdictsJouesRef.current.add(dernier.id);
+    jouerSonDuVerdict({
+      juste: dernier.sonJuste,
+      muet: localStorage.getItem('school-ia-muet') === '1',
+      sansCasque,
+      ecoute: ecouteRef.current,
+      professeurParle: () => profParleRef.current,
+      eleveTape: () => saisieTapeeRef.current,
+    });
+  }, [messages, sansCasque]);
+
+  /**
    * L'INDICE DE DÉFILEMENT DU FIL — Camara, le 23/09/2026 : « une flèche à
    * deux têtes animée à droite de la discussion pour dire à l'enfant qu'il
    * peut défiler en haut et en bas ».

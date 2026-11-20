@@ -210,7 +210,9 @@ export const accueilStream = (
 export const annonceStream = (conversationId, type, options) =>
   consommerFlux(`/conversations/${conversationId}/annonce?type=${type}`, null, options);
 
-const consommerFlux = async (chemin, corps, { onDelta, onErreur, onQuota, onEcheance, signal } = {}) => {
+const consommerFlux = async (chemin, corps, {
+  onDelta, onErreur, onQuota, onEcheance, onVerdict, signal,
+} = {}) => {
   // `enTeteAuth` ET PAS `getAccessToken` : une session enfant n'a pas de jeton
   // OIDC. L'enfant entre par un code, ce qui lui ouvre une session « Eleve » —
   // un schéma d'autorisation différent, que seule `enTeteAuth` sait produire.
@@ -285,6 +287,8 @@ const consommerFlux = async (chemin, corps, { onDelta, onErreur, onQuota, onEche
       else if (charge.type === 'quota') onQuota?.(charge.motif);
       // L'échéance du forfait, en tête de chaque tour (16/10/2026).
       else if (charge.type === 'echeance') onEcheance?.(charge.secondesRestantes, charge.motif);
+      // Le verdict d'une lecture tapée au clavier, posé par le serveur avant la réponse (signalement #49).
+      else if (charge.type === 'verdict') onVerdict?.(charge.sonJuste, charge.contenu);
       else if (charge.type === 'erreur') onErreur?.(charge.message);
     }
   }

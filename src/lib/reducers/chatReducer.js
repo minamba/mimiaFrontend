@@ -7,6 +7,7 @@ import {
   MESSAGE_SEND_FAILURE,
   MESSAGE_DELTA,
   MESSAGE_DONE,
+  VERDICT_ELEVE,
   ACCUEIL_REQUEST,
   ANNONCE_REQUEST,
   QUOTA_EPUISE,
@@ -94,6 +95,28 @@ export default function chatReducer(state = initialState, action) {
 
     case MESSAGE_DELTA:
       return { ...state, reponseEnCours: state.reponseEnCours + action.payload };
+
+    // Le serveur a jugé le dernier message de l'élève (une lecture tapée, #49) : sa bulle prend le verdict et le texte
+    // gardé (« J'ai lu la syllabe son. »), comme si le micro l'avait jugé. Seulement la bulle qu'on vient d'envoyer.
+    case VERDICT_ELEVE: {
+      const i = state.messages.length - 1;
+      const dernier = state.messages[i];
+      if (!dernier || dernier.role !== 'user' || !(dernier.id < 0)) return state;
+      const { sonJuste, contenu } = action.payload ?? {};
+      return {
+        ...state,
+        messages: [
+          ...state.messages.slice(0, i),
+          {
+            ...dernier,
+            contenu: typeof contenu === 'string' && contenu ? contenu : dernier.contenu,
+            sonJuste: typeof sonJuste === 'boolean' ? sonJuste : null,
+            // Le son du verdict reste à jouer (Chat.js) : le micro joue le sien, pas le clavier.
+            verdictServeur: true,
+          },
+        ],
+      };
+    }
 
     case MESSAGE_DONE:
       // La réponse accumulée devient un message définitif.

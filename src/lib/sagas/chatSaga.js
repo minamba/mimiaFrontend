@@ -20,6 +20,7 @@ import {
   MESSAGE_SEND_FAILURE,
   MESSAGE_DELTA,
   MESSAGE_DONE,
+  VERDICT_ELEVE,
   ACCUEIL_REQUEST,
   CHAT_RESET,
   ANNONCE_REQUEST,
@@ -120,6 +121,8 @@ function creerCanalStream(
         payload: { le: Date.now() + Math.max(0, secondes) * 1000, motif },
       }),
       onErreur: (message) => emettre({ type: MESSAGE_SEND_FAILURE, payload: message }),
+      // Une lecture tapée, jugée au serveur (#49) : la bulle de l'élève prend le verdict.
+      onVerdict: (juste, texte) => emettre({ type: VERDICT_ELEVE, payload: { sonJuste: juste, contenu: texte } }),
     };
 
     // Trois façons pour l'agent de prendre la parole : sur un message de
