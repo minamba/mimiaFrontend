@@ -9807,6 +9807,13 @@ html.defilement-bloque body {
   justify-content: center;
   padding: 12px 12px 10px;
   box-sizing: border-box;
+
+  /* CE QU'IL FAUT LIRE NE SE CACHE JAMAIS — signalement #50 (20/11/2026) : tableau « entièrement vide » pendant la
+     lecture des nombres. La carte était bien là, mais l'entrée de `.image-mot` part d'une opacité 0, avec un délai et
+     `both` : dès que l'animation ne tourne pas (onglet en arrière-plan, appareil à la peine, capture de test), le nombre
+     reste invisible tout en prenant sa place. Au tableau, l'entrée n'est plus qu'un léger zoom : figée ou relancée,
+     l'image se lit toujours. */
+  animation: image-mot-tableau-arrive 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .image-mot--tableau .image-mot__image {
   flex: 1 1 0;
@@ -9898,6 +9905,12 @@ html.defilement-bloque body {
 @media (max-width: 520px) {
   .image-mot__image { width: 150px; height: 150px; }
   .image-mot__mot { font-size: 19px; }
+}
+
+/* L'entrée au tableau : le zoom seul, jamais l'opacité (voir `.image-mot--tableau`). */
+@keyframes image-mot-tableau-arrive {
+  0% { transform: scale(0.94); }
+  100% { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
