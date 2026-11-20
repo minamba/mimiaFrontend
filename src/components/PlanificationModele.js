@@ -24,6 +24,7 @@ const regleDe = (modele) => ({
   jourSemaine: modele.jourSemaine ?? 1,
   jourMois: modele.jourMois ?? 1,
   cible: modele.cible ?? '',
+  promotion: Boolean(modele.promotion),
 });
 
 /**
@@ -41,10 +42,15 @@ const regleDe = (modele) => ({
  * À QUI IL PART — Camara, le 17/10/2026 : Relance, Rappels et les courriels
  * créés depuis l'écran se programment en choisissant leurs destinataires
  * (`modele.parCible`) ; ils partent à chaque envoi à toute la cible.
+ *
+ * LA CASE « PROMOTION » — Min's, le 20/11/2026 : pour un courriel créé depuis
+ * l'écran (sans code), décochée par défaut. Cochée, il ne part qu'aux parents
+ * de la cible qui ont accepté les offres, avec un lien pour se désinscrire.
  */
 export default function PlanificationModele({ modele, onPlanifie }) {
   const bilans = modele.code === 'BILANS';
   const parCible = Boolean(modele.parCible);
+  const avecCasePromotion = parCible && !modele.code;
   const cibles = modele.cibles ?? [];
   const libelleCible = (code) => cibles.find((c) => c.code === code)?.libelle;
 
@@ -95,6 +101,7 @@ export default function PlanificationModele({ modele, onPlanifie }) {
         jourSemaine: Number(aEnregistrer.jourSemaine),
         jourMois: Number(aEnregistrer.jourMois),
         ...(parCible ? { cible: aEnregistrer.cible } : {}),
+        ...(avecCasePromotion ? { promotion: Boolean(aEnregistrer.promotion) } : {}),
       });
 
       setRegle(regleDe(data));
@@ -116,7 +123,7 @@ export default function PlanificationModele({ modele, onPlanifie }) {
         occupe={occupe}
         onBasculer={() => enregistrer({ ...regle, actif: !modele.actif })}
         description={modele.actif
-          ? `${resumerPlanification(modele)} (heure de Paris)${parCible && libelleCible(modele.cible) ? ` — ${libelleCible(modele.cible).toLowerCase()}` : ''}.`
+          ? `${resumerPlanification(modele)} (heure de Paris)${parCible && libelleCible(modele.cible) ? ` — ${libelleCible(modele.cible).toLowerCase()}` : ''}${avecCasePromotion && modele.promotion ? ', promotion : seulement ceux qui ont accepté les offres' : ''}.`
           : 'Ce courriel ne part pas tant qu’il n’est pas programmé.'}
         note={bilans
           ? 'Les bilans sont écrits pour une semaine : ils se programment chaque semaine, le jour et l’heure de votre choix.'
@@ -136,6 +143,23 @@ export default function PlanificationModele({ modele, onPlanifie }) {
             <option value="" disabled>Choisir à qui il part…</option>
             {cibles.map((c) => <option key={c.code} value={c.code}>{c.libelle}</option>)}
           </select>
+        </div>
+      )}
+
+      {avecCasePromotion && (
+        <div className="diffusion__promotion planification__promotion">
+          <label className="diffusion__promotion-case">
+            <input
+              type="checkbox"
+              checked={regle.promotion}
+              onChange={(e) => modifier('promotion', e.target.checked)}
+            />
+            <span>Promotion</span>
+          </label>
+          <span className="champ__aide">
+            Cochez pour une offre ou une promotion&nbsp;: seuls les parents qui ont accepté les
+            offres la recevront. Enregistrez la programmation pour l’appliquer.
+          </span>
         </div>
       )}
 

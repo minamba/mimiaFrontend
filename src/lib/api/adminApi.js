@@ -670,11 +670,12 @@ const estFichier = (f) => typeof File !== 'undefined' && f instanceof File;
 
 /** Le message rendu en HTML, sans destinataire. */
 /** `signature` (17/10/2026) : l'aperçu d'« Écrire à un parent » porte la signature de l'expéditeur. */
-/** `mode` (20/11/2026) : 'offres' montre le lien de désinscription et le pied d'une offre ; sans mode, un message de diffusion (information, sans lien). */
+/** `mode` (20/11/2026) : 'offres' (case « Promotion » cochée) montre le lien de désinscription et le pied d'une offre ; sans mode, un message de diffusion (information, sans lien). */
 export const apercuDiffusion = (composition, { signature = false, boite = undefined, mode = undefined } = {}) =>
   httpClient.post('/admin/diffusion/apercu', corpsDiffusion(composition), {
     responseType: 'text',
-    params: signature ? { signature: true, ...parBoite(boite) } : (mode ? { mode } : undefined),
+    // Avec la signature, `mode: 'offres'` : l'aperçu d'un message à un parent case « Promotion » cochée (20/11/2026).
+    params: signature ? { signature: true, ...(mode ? { mode } : {}), ...parBoite(boite) } : (mode ? { mode } : undefined),
   });
 
 /** Lance l'envoi à TOUS les parents. Rend tout de suite : l'envoi se poursuit. */
@@ -748,30 +749,37 @@ export const retirerPieceModele = (id, pieceId) =>
 export const supprimerModeleMail = (id) => httpClient.delete(`/admin/modeles-mail/${id}`);
 
 /** Le template rendu en HTML, tel qu'il est enregistré. */
-export const apercuModeleMail = (id, { signature = false, boite = undefined, mode = undefined } = {}) =>
+export const apercuModeleMail = (id, { signature = false, boite = undefined, mode = undefined, promotion = false } = {}) =>
   httpClient.post(`/admin/modeles-mail/${id}/apercu`, null, {
     responseType: 'text',
-    params: signature ? { signature: true, ...parBoite(boite) } : (mode ? { mode } : undefined),
+    // `promotion` (20/11/2026) : l'aperçu d'un template envoyé à un parent avec la case « Promotion » cochée.
+    params: signature
+      ? { signature: true, ...(promotion ? { promotion: true } : {}), ...parBoite(boite) }
+      : (mode ? { mode } : undefined),
   });
 
 /**
  * Lance la diffusion d'un template.
  *
  * Sans mode (20/11/2026) : le « Message de diffusion », une information à TOUS les parents joignables. `mode: 'offres'`
- * (« Offres et promotions ») : seulement aux parents qui ont accepté les offres, avec un lien pour se désinscrire.
+ * (case « Promotion » cochée) : seulement aux parents qui ont accepté les offres, avec un lien pour se désinscrire.
  */
 export const diffuserModeleMail = (id, { mode = undefined } = {}) =>
   httpClient.post(`/admin/modeles-mail/${id}/diffusion`, null, {
     params: mode ? { mode } : undefined,
   });
 
-/** Envoie un template à UN parent. */
-export const envoyerModeleParent = (id, destinataire, boite = undefined, { cc = [], cci = [] } = {}) =>
-  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire, cc, cci }, { params: parBoite(boite) });
+/**
+ * Envoie un template à UN parent. `promotion` (20/11/2026) : la case « Promotion » — seulement à un parent qui a
+ * accepté les offres, sans copie, avec le lien pour se désinscrire. Sans elle, une correspondance.
+ */
+export const envoyerModeleParent = (id, destinataire, boite = undefined, { cc = [], cci = [], promotion = false } = {}) =>
+  httpClient.post(`/admin/modeles-mail/${id}/envoi-parent`, { destinataire, cc, cci, promotion }, { params: parBoite(boite) });
 
 /**
  * Programme un courriel automatique :
- * `{ actif, frequence: 'Jour'|'Semaine'|'Mois', heure: 'HH:mm', jourSemaine, jourMois }`.
+ * `{ actif, frequence: 'Jour'|'Semaine'|'Mois', heure: 'HH:mm', jourSemaine, jourMois, cible, promotion }`.
+ * `promotion` (20/11/2026) : la case « Promotion » d'un courriel créé depuis l'écran.
  * Rend le template à jour, prochain envoi compris.
  */
 export const planifierModeleMail = (id, regle) =>

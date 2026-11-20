@@ -95,3 +95,33 @@ test('un courriel relié à une règle codée n’a pas de liste de destinataire
   render(<PlanificationModele modele={FIN_ESSAI} />);
   expect(screen.queryByLabelText('Destinataires')).not.toBeInTheDocument();
 });
+
+// ---------------------------------- la case « Promotion » (Min's, 20/11/2026)
+
+test('un courriel créé depuis l’écran a la case « Promotion », décochée par défaut, envoyée avec la programmation', async () => {
+  const cree = { ...FIN_ESSAI, id: 12, code: null, reglesADefinir: false, parCible: true, cibles: CIBLES, cible: 'tous' };
+  api.planifierModeleMail.mockResolvedValue({ data: { ...cree, promotion: true } });
+  render(<PlanificationModele modele={cree} />);
+
+  const promotion = screen.getByRole('checkbox', { name: 'Promotion' });
+  expect(promotion).not.toBeChecked();
+  expect(screen.getByText(/seuls les parents qui ont accepté les offres la recevront/)).toBeInTheDocument();
+
+  fireEvent.click(promotion);
+  fireEvent.click(screen.getByRole('button', { name: 'Enregistrer la programmation' }));
+
+  await waitFor(() => expect(api.planifierModeleMail).toHaveBeenCalledWith(
+    12, expect.objectContaining({ cible: 'tous', promotion: true }),
+  ));
+  expect(screen.getByRole('checkbox', { name: 'Promotion' })).toBeChecked();
+});
+
+test('relances, rappels et courriels codés n’ont pas la case « Promotion »', () => {
+  const relance = { ...FIN_ESSAI, id: 2, code: 'RELANCE', parCible: true, cibles: CIBLES, cible: 'tous' };
+  const { unmount } = render(<PlanificationModele modele={relance} />);
+  expect(screen.queryByRole('checkbox', { name: 'Promotion' })).not.toBeInTheDocument();
+  unmount();
+
+  render(<PlanificationModele modele={FIN_ESSAI} />);
+  expect(screen.queryByRole('checkbox', { name: 'Promotion' })).not.toBeInTheDocument();
+});

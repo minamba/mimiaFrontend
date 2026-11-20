@@ -92,6 +92,11 @@ export default function MessageParent({
   } = useModeleMail();
 
   const [confirme, setConfirme] = useState(false);
+
+  // LA CASE « PROMOTION » (décision de Min's, 20/11/2026) : décochée par défaut, le message est une correspondance, au
+  // parent choisi. Cochée, une offre : seulement à un parent qui a accepté les offres, sans copie, avec le lien pour se
+  // désinscrire — contrôlé par le serveur, qui ne le fait que pour un template (sans template, il en crée un).
+  const [promotion, setPromotion] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -281,7 +286,11 @@ export default function MessageParent({
   const composition = { sujet, titre: titre || sujet, texte, images, documents };
   const adresseValide = REGEX_MAIL.test(destinataire.trim());
   const contenuPret = sujet.trim().length > 0 && texte.trim().length > 0;
-  const pret = adresseValide && contenuPret && adressesValides(copies) && adressesValides(cachees);
+  // `{{lien_desinscription}}` sans la case « Promotion » : un modèle d'offre envoyé comme une correspondance (le marqueur
+  // partirait brut, ou le serveur le refuse pour un template). Même motif que le serveur et que la diffusion.
+  const lienSansPromotion = !promotion
+    && [sujet, titre, texte].some((t) => /\{\{\s*(lien_desinscription|liendesinscription)\s*\}\}/i.test(t ?? ''));
+  const pret = adresseValide && contenuPret && adressesValides(copies) && adressesValides(cachees) && !lienSansPromotion;
   const nombreCopies = copies.length + cachees.length;
   const suggestions = useMemo(
     () => [...equipe, ...(parents ?? []).map((p) => ({ nom: nomAffiche(p), mail: p.mail }))],
@@ -296,9 +305,9 @@ export default function MessageParent({
 
       if (modele) {
         await enregistrer();
-        ({ data: html } = await apercuModeleMail(modele.id, { signature: true, boite }));
+        ({ data: html } = await apercuModeleMail(modele.id, { signature: true, boite, promotion }));
       } else {
-        ({ data: html } = await apercuDiffusion(composition, { signature: true, boite }));
+        ({ data: html } = await apercuDiffusion(composition, { signature: true, boite, mode: promotion ? 'offres' : undefined }));
       }
 
       // MÊME GESTE QUE LA DIFFUSION : un onglet plutôt qu'une modale, pour
@@ -340,7 +349,12 @@ export default function MessageParent({
       let reponse;
       if (modele) {
         await enregistrer();
-        reponse = await envoyerModeleParent(modele.id, adresse, boite, { cc: copies, cci: cachees });
+        reponse = await envoyerModeleParent(modele.id, adresse, boite, { cc: copies, cci: cachees, promotion });
+      } else if (promotion) {
+        // UNE PROMOTION PASSE TOUJOURS PAR UN TEMPLATE : c'est là que le serveur contrôle le consentement du parent.
+        const id = await creer();
+        reponse = await envoyerModeleParent(id, adresse, boite, { cc: copies, cci: cachees, promotion });
+        await deselectionner();
       } else {
         reponse = await envoyerMailParent({ ...composition, destinataire: adresse, cc: copies, cci: cachees }, boite);
 
@@ -361,6 +375,7 @@ export default function MessageParent({
       // En développement, le serveur dit vers quelle adresse il a détourné l'envoi.
       setEnvoye({ adresse, redirection: reponse?.data?.redirection ?? null });
       setConfirme(false);
+      setPromotion(false);
       setDestinataire('');
       setRecherche('');
       setCopies([]);
@@ -377,6 +392,7 @@ export default function MessageParent({
   const choisir = async (id) => {
     setErreur(null);
     setConfirme(false);
+    setPromotion(false);
     await nouveauBrouillon();
     selectionner(id).catch(() => setErreur("Le template n'a pas pu être ouvert."));
   };
@@ -583,6 +599,29 @@ export default function MessageParent({
           </p>
         </SectionMail>
 
+        {/* LA CASE « PROMOTION », juste au-dessus du bouton d'envoi. */}
+        <div className="diffusion__promotion">
+          <label className="diffusion__promotion-case">
+            <input
+              type="checkbox"
+              checked={promotion}
+              disabled={envoi}
+              onChange={(e) => { setPromotion(e.target.checked); setConfirme(false); }}
+            />
+            <span>Promotion</span>
+          </label>
+          <span className="champ__aide">
+            Cochez pour une offre ou une promotion&nbsp;: elle ne part que si ce parent a accepté
+            les offres, sans copie, avec un lien pour se désinscrire.
+          </span>
+          {lienSansPromotion && (
+            <p className="diffusion__lien-offre" role="alert">
+              Ce message contient <code>{'{{lien_desinscription}}'}</code>&nbsp;: c’est une offre.
+              Cochez «&nbsp;Promotion&nbsp;», ou retirez cette variable.
+            </p>
+          )}
+        </div>
+
         <div className="diffusion__actions diffusion__actions--barre">
           {!modele && etatBrouillon && (
             <span
@@ -661,7 +700,7 @@ export default function MessageParent({
               disabled={!pret}
               onClick={() => setConfirme(true)}
             >
-              Envoyer à ce parent
+              {promotion ? 'Envoyer la promotion à ce parent' : 'Envoyer à ce parent'}
             </button>
           )}
         </div>

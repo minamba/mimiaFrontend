@@ -297,10 +297,11 @@ export default function Confidentialite() {
       {/* LES OFFRES ET NOUVEAUTÉS PAR E-MAIL — 19/11/2026. Relevé dans le code :
           colonnes `Parent.offres_email`, `offres_email_consenti_le`,
           `offres_email_retire_le` ; case d'inscription et case de la fenêtre de
-          mise à jour (jamais cochées d'avance) ; filtre d'envoi de l'onglet
-          « Offres et promotions » (`EnvoiAutomatiqueRepository.Joignables`,
-          catégorie « diffusion ») ; le « Message de diffusion » (informations
-          sur Mimia, décision de Min's du 20/11/2026) part, lui, à tous ;
+          mise à jour (jamais cochées d'avance) ; filtre d'envoi de la case
+          « Promotion » de l'admin — message de diffusion, courriel programmé,
+          envoi à un parent (`EnvoiAutomatiqueRepository.Joignables`, catégorie
+          « diffusion ») ; case décochée, le « Message de diffusion »
+          (informations sur Mimia, décision de Min's du 20/11/2026) part à tous ;
           lien de désinscription signé, en-tête List-Unsubscribe et interrupteur
           de Mon compte › Paramètres › Mes courriels ; suppression du compte =
           suppression de la ligne Parent. */}

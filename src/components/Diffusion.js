@@ -64,27 +64,27 @@ function ouvrirApercu(html) {
  * TROIS CARTES, UNE BARRE D'ACTIONS — le template, le courriel, la
  * programmation ; les boutons restent à portée pendant qu'on écrit.
  *
- * DEUX ONGLETS, DEUX USAGES — décision de Min's, le 20/11/2026
- * ------------------------------------------------------------
- * « Message de diffusion » (par défaut) : les informations de Mimia que Min's
- * envoie à TOUS les parents qui ont une adresse valide, qu'ils aient accepté
- * les offres ou non. Ni case à cocher, ni avertissement, ni lien de
- * désinscription. C'est aussi ici que se règlent les courriels automatiques.
- *
- * `mode="offres"` (onglet « Offres et promotions ») : le même écran, mais
- * envoyé SEULEMENT aux parents qui ont accepté les offres par e-mail, avec un
- * lien pour se désinscrire (obligation légale, art. L34-5 CPCE). C'est par là
- * que part une promotion (Black Friday…). Pas de courriels automatiques ici.
+ * LA CASE « PROMOTION » — décision finale de Min's, le 20/11/2026
+ * ---------------------------------------------------------------
+ * « Garder la même structure que maintenant » : un seul onglet. Par défaut, le
+ * message part à TOUS les parents qui ont une adresse valide, qu'ils aient
+ * accepté les offres ou non, sans lien de désinscription ni avertissement.
+ * La case « Promotion » (décochée à chaque nouveau message) le réserve aux
+ * SEULS parents qui ont accepté les offres par e-mail, avec un lien pour se
+ * désinscrire (obligation légale, art. L34-5 CPCE) : c'est ainsi que part une
+ * promotion (Black Friday…). Le nombre de destinataires est écrit sur le
+ * bouton d'envoi et rappelé dans la confirmation.
  */
 /**
  * `{{lien_desinscription}}` (ou `{{lienDesinscription}}`), avec ou sans espaces, sans tenir compte de la casse : le
- * même motif que le serveur (`DiffusionService.ContientLienDesinscription`). Dans un message de diffusion, c'est la
- * marque d'un modèle d'offre (revue d'Omar, 20/11/2026) : on indique de l'envoyer par « Offres et promotions ».
+ * même motif que le serveur (`DiffusionService.ContientLienDesinscription`). C'est la marque d'un modèle d'offre (revue
+ * d'Omar, 20/11/2026) : sans la case « Promotion », l'envoi est bloqué ici et refusé par l'API.
  */
 const MOTIF_LIEN_DESINSCRIPTION = /\{\{\s*(lien_desinscription|liendesinscription)\s*\}\}/i;
 
-export default function Diffusion({ nombreParents, mode = 'information' }) {
-  const offres = mode === 'offres';
+export default function Diffusion({ nombreParents }) {
+  // LA CASE « PROMOTION » : décochée par défaut, et à chaque message choisi ou nouveau.
+  const [promotion, setPromotion] = useState(false);
 
   const {
     nom, setNom,
@@ -108,25 +108,37 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
 
   const [confirme, setConfirme] = useState(false);
 
-  // À COMBIEN ÇA PART VRAIMENT : le nombre est relu au moment de confirmer, par la même requête que l'envoi — tous
-  // les parents joignables pour un message de diffusion, les seuls consentants pour une offre. Dans « Offres et
-  // promotions », il est lu dès l'ouverture : le cadre du haut l'affiche. null : en cours de lecture ; 'erreur' : illisible.
+  // À COMBIEN ÇA PART VRAIMENT — Min's, le 20/11/2026 : le nombre est écrit SUR le bouton d'envoi, et rappelé dans la
+  // confirmation. Il est lu par la même requête que l'envoi — tous les parents joignables, ou les seuls consentants
+  // case cochée —, relu à chaque changement de la case et au moment de confirmer. null : en cours ; 'erreur' : illisible.
   const [destinataires, setDestinataires] = useState(null);
 
   useEffect(() => {
-    if (!confirme && !offres) return undefined;
-
     let vivant = true;
     setDestinataires(null);
-    (offres ? getDestinatairesDiffusion('offres') : getDestinatairesDiffusion())
+    (promotion ? getDestinatairesDiffusion('offres') : getDestinatairesDiffusion())
       .then(({ data }) => { if (vivant) setDestinataires(Number.isFinite(data?.nombre) ? data.nombre : 'erreur'); })
       .catch(() => { if (vivant) setDestinataires('erreur'); });
 
     return () => { vivant = false; };
-  }, [confirme, offres]);
+  }, [confirme, promotion]);
 
   const nombreDestinataires = typeof destinataires === 'number' ? destinataires : null;
   const libelleDestinataires = nombreDestinataires === null ? '…' : nombreDestinataires;
+
+  // LE NOMBRE SUR LE BOUTON (confirmé par Min's, 20/11/2026, 05 h 06).
+  let libelleEnvoi;
+  if (promotion) {
+    libelleEnvoi = destinataires === 'erreur'
+      ? 'Envoyer aux parents qui ont accepté les offres'
+      : (nombreDestinataires === 1
+        ? 'Envoyer à 1 parent qui a accepté les offres'
+        : `Envoyer aux ${libelleDestinataires} parents qui ont accepté les offres`);
+  } else {
+    libelleEnvoi = destinataires === 'erreur'
+      ? 'Envoyer à tous les parents'
+      : `Envoyer à tous les parents (${libelleDestinataires})`;
+  }
 
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -169,10 +181,10 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
       if (modele) {
         // Ce qui est tapé d'abord : l'aperçu montre ce qui est enregistré.
         await enregistrer();
-        const { data } = await (offres ? apercuModeleMail(modele.id, { mode: 'offres' }) : apercuModeleMail(modele.id));
+        const { data } = await (promotion ? apercuModeleMail(modele.id, { mode: 'offres' }) : apercuModeleMail(modele.id));
         ouvrirApercu(data);
       } else {
-        const { data } = await (offres ? apercuDiffusion(composition, { mode: 'offres' }) : apercuDiffusion(composition));
+        const { data } = await (promotion ? apercuDiffusion(composition, { mode: 'offres' }) : apercuDiffusion(composition));
         ouvrirApercu(data);
       }
     } catch {
@@ -194,9 +206,9 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
     }
   };
 
-  // Un message de diffusion qui porte le lien de désinscription : c'est un modèle d'offre, il part par « Offres et
-  // promotions » (le serveur le refuse aussi).
-  const lienDansInformation = !offres && [sujet, titre, texte].some((t) => MOTIF_LIEN_DESINSCRIPTION.test(t ?? ''));
+  // Un message qui porte le lien de désinscription sans la case « Promotion » : c'est un modèle d'offre, il ne part pas à
+  // tous (le serveur le refuse aussi).
+  const lienSansPromotion = !promotion && [sujet, titre, texte].some((t) => MOTIF_LIEN_DESINSCRIPTION.test(t ?? ''));
 
   const envoyer = async () => {
     setEnvoi(true);
@@ -211,9 +223,10 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
       if (id) await enregistrer();
       else id = await creer();
 
-      if (offres) await diffuserModeleMail(id, { mode: 'offres' });
+      if (promotion) await diffuserModeleMail(id, { mode: 'offres' });
       else await diffuserModeleMail(id);
       setConfirme(false);
+      setPromotion(false);
 
       const { data } = await getEtatDiffusion();
       setEtat(data);
@@ -231,6 +244,7 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
   const choisir = (id) => {
     setErreur(null);
     setConfirme(false);
+    setPromotion(false);
     setCreationAuto(false);
     selectionner(id).catch(() => setErreur("Le template n'a pas pu être ouvert."));
   };
@@ -239,6 +253,7 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
   // nouveau courriel automatique quand c'est la liste « Automatique ».
   const nouveau = () => {
     setConfirme(false);
+    setPromotion(false);
     setErreur(null);
     deselectionner();
     setCreationAuto(nature === 'Automatique');
@@ -278,26 +293,12 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
               <strong>
                 {enCours
                   ? `Envoi en cours — ${etat.traites} / ${etat.total}`
-                  : `${etat.mode === 'offres' ? 'Dernière offre' : 'Dernière diffusion'} : ${etat.envoyes} envoyé(s), ${etat.echecs} échec(s)`}
+                  : `${etat.mode === 'offres' ? 'Dernière promotion' : 'Dernière diffusion'} : ${etat.envoyes} envoyé(s), ${etat.echecs} échec(s)`}
               </strong>
 
               {etat.sujet && <span className="diffusion__etat-sujet">« {etat.sujet} »</span>}
 
               {etat.erreur && <span className="diffusion__etat-erreur">{etat.erreur}</span>}
-            </div>
-          )}
-
-          {/* « OFFRES ET PROMOTIONS » : à qui part une offre, et combien, avant même d'écrire. */}
-          {offres && (
-            <div className="diffusion__offres" role="note">
-              <strong className="diffusion__offres-titre">
-                Réservé aux offres&nbsp;: envoyé seulement aux parents qui ont accepté les offres
-                ({destinataires === 'erreur' ? 'nombre illisible' : `${libelleDestinataires} parent${nombreDestinataires === 1 ? '' : 's'}`})
-              </strong>
-              <p>
-                Chaque e-mail porte un lien pour se désinscrire. Pour une information à tous les
-                parents, utilisez «&nbsp;Message de diffusion&nbsp;».
-              </p>
             </div>
           )}
 
@@ -366,7 +367,7 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
                 maxLength={150}
                 value={sujet}
                 onChange={(e) => setSujet(e.target.value)}
-                placeholder={offres ? 'Une offre pour les fêtes' : 'Une nouveauté sur Mimia'}
+                placeholder={promotion ? 'Une offre pour les fêtes' : 'Une nouveauté sur Mimia'}
               />
               <span className="champ__aide">
                 C’est la seule ligne que le parent lit avant de décider d’ouvrir.
@@ -406,13 +407,8 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
               </span>
             </div>
 
-            {/* Le lien de désinscription n'existe que dans une offre : ailleurs, la variable n'est pas proposée. */}
-            <LegendeVariables
-              variables={offres || cadreAutomatique
-                ? modele?.variables
-                : modele?.variables?.filter((v) => v.cle !== 'lien_desinscription')}
-              onInserer={insererTexte}
-            />
+            {/* `{{lien_desinscription}}` est proposé avec sa règle : « seulement si Promotion est cochée ». */}
+            <LegendeVariables variables={modele?.variables} onInserer={insererTexte} />
 
             {!bilans && (
               <>
@@ -477,15 +473,33 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
             </SectionMail>
           )}
 
-          {confirme && !cadreAutomatique && (
-            <div className="diffusion__avertissement">
-              {lienDansInformation && (
+          {/* LA CASE « PROMOTION », juste au-dessus du bouton qu'elle change. */}
+          {!cadreAutomatique && (
+            <div className="diffusion__promotion">
+              <label className="diffusion__promotion-case">
+                <input
+                  type="checkbox"
+                  checked={promotion}
+                  disabled={envoi}
+                  onChange={(e) => { setPromotion(e.target.checked); setConfirme(false); }}
+                />
+                <span>Promotion</span>
+              </label>
+              <span className="champ__aide">
+                Cochez pour une offre ou une promotion&nbsp;: seuls les parents qui ont accepté les
+                offres la recevront.
+              </span>
+              {lienSansPromotion && (
                 <p className="diffusion__lien-offre" role="alert">
-                  Ce message contient <code>{'{{lien_desinscription}}'}</code>&nbsp;: c’est un modèle
-                  d’offre. Envoyez-le depuis l’onglet «&nbsp;Offres et promotions&nbsp;», ou retirez
-                  cette variable pour l’envoyer à tous.
+                  Ce message contient <code>{'{{lien_desinscription}}'}</code>&nbsp;: c’est une offre.
+                  Cochez «&nbsp;Promotion&nbsp;», ou retirez cette variable pour l’envoyer à tous.
                 </p>
               )}
+            </div>
+          )}
+
+          {confirme && !cadreAutomatique && (
+            <div className="diffusion__avertissement">
               <p>
                 {destinataires === 'erreur' ? (
                   <>Le nombre de destinataires n’a pas pu être lu.</>
@@ -496,10 +510,10 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
                     dans son propre courriel.
                   </>
                 )}{' '}
-                {offres && (
+                {promotion && (
                   <>
-                    Seuls les parents qui ont accepté de recevoir les offres et nouveautés par e-mail
-                    le reçoivent, avec un lien pour se désinscrire.{' '}
+                    Promotion&nbsp;: seuls les parents qui ont accepté de recevoir les offres et
+                    nouveautés par e-mail la reçoivent, avec un lien pour se désinscrire.{' '}
                   </>
                 )}
                 <strong>Un envoi ne s’annule pas.</strong>{' '}
@@ -553,7 +567,7 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
                   type="button"
                   className="btn btn--compact btn--danger"
                   disabled={envoi || enCours || nombreDestinataires === null || nombreDestinataires === 0
-                    || lienDansInformation}
+                    || lienSansPromotion}
                   onClick={envoyer}
                 >
                   {envoi ? 'Lancement…' : `Confirmer l’envoi à ${libelleDestinataires} parent(s)`}
@@ -571,10 +585,10 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
               <button
                 type="button"
                 className="btn btn--compact diffusion__envoi"
-                disabled={!pret || enCours}
+                disabled={!pret || enCours || lienSansPromotion}
                 onClick={() => setConfirme(true)}
               >
-                {offres ? 'Envoyer aux parents inscrits aux offres' : 'Envoyer à tous les parents'}
+                {libelleEnvoi}
               </button>
             ))}
           </div>
@@ -583,7 +597,6 @@ export default function Diffusion({ nombreParents, mode = 'information' }) {
 
       <ColonneModeles
         nature={nature}
-        natureFixe={offres}
         onNature={changerNature}
         selectionId={modele?.id}
         onSelectionner={choisir}
