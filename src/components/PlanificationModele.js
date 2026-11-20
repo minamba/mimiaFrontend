@@ -6,6 +6,7 @@ import {
   resumerPlanification,
 } from '../lib/storage/planificationMail';
 import { Interrupteur } from './Modes';
+import { AIDE_CASE_PROMOTION } from '../lib/casePromotion';
 
 const FREQUENCES = [
   { valeur: 'Jour', libelle: 'Tous les jours' },
@@ -14,6 +15,22 @@ const FREQUENCES = [
 ];
 
 const JOURS_MOIS = Array.from({ length: 31 }, (_, i) => i + 1);
+
+/**
+ * À QUI IL PART, SELON LA CASE (revue d'Omar du lot v4, 20/11/2026). Un courriel créé depuis l'écran : case décochée,
+ * toute la cible sauf les adresses bannies (une information) ; cochée, les seuls parents de la cible qui ont accepté
+ * les offres. Relances et rappels (avec un code, sans case) : les désabonnés de leur catégorie ne les reçoivent pas.
+ * Suit la case telle qu'elle est cochée à l'écran, pour voir l'effet avant d'enregistrer.
+ */
+export function noteCible(parCible, avecCasePromotion, promotion) {
+  if (!parCible) return undefined;
+  if (!avecCasePromotion) {
+    return 'Il part à chaque envoi à tous les parents choisis ci-dessous. Les adresses bannies et les parents désabonnés n’en reçoivent jamais.';
+  }
+  return promotion
+    ? 'Promotion : il part à chaque envoi aux seuls parents de la cible qui ont accepté les offres, avec un lien pour se désinscrire. Les adresses bannies n’en reçoivent jamais.'
+    : 'Il part à chaque envoi à toute la cible choisie ci-dessous, sauf les adresses bannies : c’est une information sur le service, sans offre.';
+}
 
 const regleDe = (modele) => ({
   actif: Boolean(modele.actif),
@@ -127,9 +144,7 @@ export default function PlanificationModele({ modele, onPlanifie }) {
           : 'Ce courriel ne part pas tant qu’il n’est pas programmé.'}
         note={bilans
           ? 'Les bilans sont écrits pour une semaine : ils se programment chaque semaine, le jour et l’heure de votre choix.'
-          : parCible
-            ? 'Il part à chaque envoi à tous les parents choisis ci-dessous. Les adresses bannies et les parents désabonnés n’en reçoivent jamais.'
-            : undefined}
+          : noteCible(parCible, avecCasePromotion, regle.promotion)}
       />
 
       {parCible && (
@@ -157,8 +172,7 @@ export default function PlanificationModele({ modele, onPlanifie }) {
             <span>Promotion</span>
           </label>
           <span className="champ__aide">
-            Cochez pour une offre ou une promotion&nbsp;: seuls les parents qui ont accepté les
-            offres la recevront. Enregistrez la programmation pour l’appliquer.
+            {AIDE_CASE_PROMOTION} Enregistrez la programmation pour l’appliquer.
           </span>
         </div>
       )}

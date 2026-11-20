@@ -302,6 +302,8 @@ export default function Confidentialite() {
           envoi à un parent (`EnvoiAutomatiqueRepository.Joignables`, catégorie
           « diffusion ») ; case décochée, le « Message de diffusion »
           (informations sur Mimia, décision de Min's du 20/11/2026) part à tous ;
+          une « nouveauté » à faire découvrir = case « Promotion » (revue d'Omar
+          du lot v4 : le consentement porte sur les « offres et nouveautés ») ;
           lien de désinscription signé, en-tête List-Unsubscribe et interrupteur
           de Mon compte › Paramètres › Mes courriels ; suppression du compte =
           suppression de la ligne Parent. */}
@@ -325,11 +327,12 @@ export default function Confidentialite() {
           (confirmation de votre adresse, factures, bilan hebdomadaire, fin de
           l'essai ou du quota, réponses du support) font partie du service et
           vous parviennent dans tous les cas. Il en va de même des informations
-          sur Mimia et son service, envoyées à tous les parents&nbsp;: une
-          évolution du service ou de nos prix (annoncée avant de s'appliquer), un
-          incident, un changement de nos conditions ou de cette politique. Ces
-          informations ne contiennent jamais d'offre ni de promotion&nbsp;:
-          celles-ci ne partent qu'aux parents qui les ont acceptées. Les demandes d'avis, les relances
+          sur Mimia et son service, envoyées à tous les parents&nbsp;: un
+          changement de nos prix ou du fonctionnement du service (annoncé avant
+          de s'appliquer), un incident, un changement de nos conditions ou de
+          cette politique. Ces informations ne contiennent jamais d'offre, de
+          promotion ni de nouveauté à vous faire découvrir&nbsp;: celles-ci ne
+          partent qu'aux parents qui les ont acceptées. Les demandes d'avis, les relances
           et les rappels se désactivent chacun dans Mon compte&nbsp;›
           Paramètres&nbsp;› Mes courriels, ou par le lien présent dans chacun
           d'eux.
@@ -367,8 +370,8 @@ export default function Confidentialite() {
             du contrat et obligations comptables.
           </li>
           <li>
-            <strong>Vous informer d'une évolution du service</strong> (prix,
-            incident, conditions ou politique) — exécution du contrat et
+            <strong>Vous informer d'un changement du service</strong> (prix,
+            fonctionnement, incident, conditions ou politique) — exécution du contrat et
             obligation de vous informer avant tout changement de prix.
           </li>
           <li>

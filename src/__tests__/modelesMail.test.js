@@ -277,8 +277,11 @@ test('message de diffusion : à TOUS les parents par défaut, le nombre sur le b
   expect(screen.queryByText(/Réservé aux offres/)).not.toBeInTheDocument();
   expect(screen.queryByText(/Aucune offre, promotion ou incitation commerciale/)).not.toBeInTheDocument();
   expect(casePromotion()).not.toBeChecked();
-  expect(screen.getByText(/Cochez pour une offre ou une promotion\s*: seuls les parents qui ont accepté les offres la recevront\./))
+  // Revue d'Omar du lot v4 : une nouveauté à faire découvrir = Promotion ; sans la case, une information sur le service.
+  expect(screen.getByText(/Offre, promotion ou nouveauté à faire découvrir : cochez Promotion\. Sans la case : uniquement une information sur le service \(prix, fonctionnement, incident, conditions\)\./))
     .toBeInTheDocument();
+  expect(screen.getByLabelText('Objet du courriel')).toHaveAttribute('placeholder', 'Évolution de nos prix au 1er janvier');
+  expect(screen.queryByPlaceholderText('Une nouveauté sur Mimia')).not.toBeInTheDocument();
 
   ecrire('Objet du courriel', 'Du nouveau sur Mimia');
   ecrire('Message', 'Bonjour {{prenom}}, les fiches de révision arrivent.');

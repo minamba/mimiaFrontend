@@ -678,9 +678,8 @@ export const apercuDiffusion = (composition, { signature = false, boite = undefi
     params: signature ? { signature: true, ...(mode ? { mode } : {}), ...parBoite(boite) } : (mode ? { mode } : undefined),
   });
 
-/** Lance l'envoi à TOUS les parents. Rend tout de suite : l'envoi se poursuit. */
-export const lancerDiffusion = (composition) =>
-  httpClient.post('/admin/diffusion', corpsDiffusion(composition));
+// `lancerDiffusion` (POST /admin/diffusion, envoi libre à tous) est supprimé avec sa route (revue d'Omar du lot v4,
+// 20/11/2026) : la diffusion part par `diffuserModeleMail`, qui porte la case « Promotion ».
 
 /** L'avancement de la diffusion en cours, ou de la dernière. */
 export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
@@ -695,7 +694,7 @@ export const getDestinatairesDiffusion = (mode = undefined) =>
 
 /**
  * Envoie un message personnalisé à UN parent, dans la même mise en page que
- * la diffusion. Contrairement à `lancerDiffusion`, l'envoi tient dans le
+ * la diffusion. Contrairement à `diffuserModeleMail`, l'envoi tient dans le
  * temps d'une requête : pas de suivi d'avancement à interroger après coup.
  */
 /** `boite` (17/10/2026) : 'support' pour envoyer sous support@mimia.fr, signé « L'équipe Mimia ». */

@@ -611,8 +611,9 @@ export default function MessageParent({
             <span>Promotion</span>
           </label>
           <span className="champ__aide">
-            Cochez pour une offre ou une promotion&nbsp;: elle ne part que si ce parent a accepté
-            les offres, sans copie, avec un lien pour se désinscrire.
+            Offre, promotion ou nouveauté à faire découvrir&nbsp;: cochez Promotion (elle ne part que
+            si ce parent a accepté les offres, sans copie, avec un lien pour se désinscrire). Sans la
+            case&nbsp;: une réponse personnelle ou une information sur le service.
           </span>
           {lienSansPromotion && (
             <p className="diffusion__lien-offre" role="alert">

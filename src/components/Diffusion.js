@@ -13,6 +13,7 @@ import BlocPieces from './BlocPieces';
 import ColonneModeles from './ColonneModeles';
 import LegendeVariables from './LegendeVariables';
 import PlanificationModele from './PlanificationModele';
+import { AIDE_CASE_PROMOTION } from '../lib/casePromotion';
 import CarteExpediteur from './CarteExpediteur';
 import SectionMail from './SectionMail';
 
@@ -367,7 +368,7 @@ export default function Diffusion({ nombreParents }) {
                 maxLength={150}
                 value={sujet}
                 onChange={(e) => setSujet(e.target.value)}
-                placeholder={promotion ? 'Une offre pour les fêtes' : 'Une nouveauté sur Mimia'}
+                placeholder={promotion ? 'Une offre pour les fêtes' : 'Évolution de nos prix au 1er janvier'}
               />
               <span className="champ__aide">
                 C’est la seule ligne que le parent lit avant de décider d’ouvrir.
@@ -485,9 +486,10 @@ export default function Diffusion({ nombreParents }) {
                 />
                 <span>Promotion</span>
               </label>
+              {/* « NOUVEAUTÉS » = PROMOTION (revue d'Omar du lot v4, 20/11/2026) : le consentement porte sur les
+                  « offres et nouveautés ». Sans la case, seulement une information sur le service. */}
               <span className="champ__aide">
-                Cochez pour une offre ou une promotion&nbsp;: seuls les parents qui ont accepté les
-                offres la recevront.
+                {AIDE_CASE_PROMOTION}
               </span>
               {lienSansPromotion && (
                 <p className="diffusion__lien-offre" role="alert">

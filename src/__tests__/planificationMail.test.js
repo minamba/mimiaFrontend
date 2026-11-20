@@ -105,7 +105,8 @@ test('un courriel créé depuis l’écran a la case « Promotion », décochée
 
   const promotion = screen.getByRole('checkbox', { name: 'Promotion' });
   expect(promotion).not.toBeChecked();
-  expect(screen.getByText(/seuls les parents qui ont accepté les offres la recevront/)).toBeInTheDocument();
+  expect(screen.getByText(/Offre, promotion ou nouveauté à faire découvrir : cochez Promotion\. Sans la case : uniquement une information sur le service \(prix, fonctionnement, incident, conditions\)\./))
+    .toBeInTheDocument();
 
   fireEvent.click(promotion);
   fireEvent.click(screen.getByRole('button', { name: 'Enregistrer la programmation' }));
@@ -114,6 +115,27 @@ test('un courriel créé depuis l’écran a la case « Promotion », décochée
     12, expect.objectContaining({ cible: 'tous', promotion: true }),
   ));
   expect(screen.getByRole('checkbox', { name: 'Promotion' })).toBeChecked();
+});
+
+// Revue d'Omar du lot v4 (20/11/2026) : la phrase « à qui il part » suit la case, telle qu'elle est cochée à l'écran.
+test('la note « à qui il part » suit la case : toute la cible sauf bannies, ou les seuls consentants', () => {
+  const cree = { ...FIN_ESSAI, id: 13, code: null, parCible: true, cibles: CIBLES, cible: 'tous' };
+  render(<PlanificationModele modele={cree} />);
+
+  expect(screen.getByText(/à toute la cible choisie ci-dessous, sauf les adresses bannies : c’est une information sur le service, sans offre\./))
+    .toBeInTheDocument();
+  expect(screen.queryByText(/parents désabonnés/)).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Promotion' }));
+  expect(screen.getByText(/aux seuls parents de la cible qui ont accepté les offres, avec un lien pour se désinscrire/))
+    .toBeInTheDocument();
+  expect(screen.queryByText(/à toute la cible choisie/)).not.toBeInTheDocument();
+});
+
+test('relance et rappels (sans case) : la note d’origine, les désabonnés n’en reçoivent pas', () => {
+  const relance = { ...FIN_ESSAI, id: 2, code: 'RELANCE', parCible: true, cibles: CIBLES, cible: 'tous' };
+  render(<PlanificationModele modele={relance} />);
+  expect(screen.getByText(/Les adresses bannies et les parents désabonnés n’en reçoivent jamais\./)).toBeInTheDocument();
 });
 
 test('relances, rappels et courriels codés n’ont pas la case « Promotion »', () => {
