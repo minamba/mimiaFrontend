@@ -321,7 +321,11 @@ export default function Confidentialite() {
           <strong>Ce qui n'en dépend pas.</strong> Les e-mails liés à votre compte
           (confirmation de votre adresse, factures, bilan hebdomadaire, fin de
           l'essai ou du quota, réponses du support) font partie du service et
-          vous parviennent dans tous les cas. Les demandes d'avis, les relances
+          vous parviennent dans tous les cas. Il en va de même des informations
+          sur le service lui-même, envoyées à tous les parents&nbsp;: une
+          évolution de nos prix (annoncée avant de s'appliquer), un incident, un
+          changement de nos conditions ou de cette politique. Ces informations ne
+          contiennent jamais d'offre ni de promotion. Les demandes d'avis, les relances
           et les rappels se désactivent chacun dans Mon compte&nbsp;›
           Paramètres&nbsp;› Mes courriels, ou par le lien présent dans chacun
           d'eux.
@@ -357,6 +361,11 @@ export default function Confidentialite() {
           <li>
             <strong>Facturer et prévenir de la fin du quota</strong> — exécution
             du contrat et obligations comptables.
+          </li>
+          <li>
+            <strong>Vous informer d'une évolution du service</strong> (prix,
+            incident, conditions ou politique) — exécution du contrat et
+            obligation de vous informer avant tout changement de prix.
           </li>
           <li>
             <strong>Adapter les séances aux besoins particuliers</strong> —

@@ -1985,6 +1985,12 @@ export default function Admin() {
 
               { cle: 'diffusion', libelle: 'Message de diffusion' },
 
+              // L'INFORMATION DE SERVICE (Min's, le 19/11/2026) : à TOUS les
+              // parents, non commerciale (prix, incident, règles, politique).
+              // Un onglet à part, juste à côté : on ne la déclenche pas en
+              // croyant envoyer une offre, ni l'inverse.
+              { cle: 'service', libelle: 'Information de service' },
+
               // TROISIÈME PARCE QUE C'EST LE PLUS RARE, mais au même
               // endroit que les deux autres : c'est une prise de parole,
               // pas un réglage. On la cherche là où on écrit aux gens.
@@ -2024,7 +2030,8 @@ export default function Admin() {
               <Messagerie key={boiteMessagerie} boite={boiteMessagerie} parents={parents} />
             </>
           )}
-          {sousOnglet === 'diffusion' && <Diffusion nombreParents={parents.length} />}
+          {sousOnglet === 'diffusion' && <Diffusion key="offres" nombreParents={parents.length} />}
+          {sousOnglet === 'service' && <Diffusion key="service" mode="service" nombreParents={parents.length} />}
           {sousOnglet === 'information' && <MessageInformation />}
           {sousOnglet === 'signatures' && estSuperAdmin && <SignaturesMail />}
         </>

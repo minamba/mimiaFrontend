@@ -670,10 +670,11 @@ const estFichier = (f) => typeof File !== 'undefined' && f instanceof File;
 
 /** Le message rendu en HTML, sans destinataire. */
 /** `signature` (17/10/2026) : l'aperçu d'« Écrire à un parent » porte la signature de l'expéditeur. */
-export const apercuDiffusion = (composition, { signature = false, boite = undefined } = {}) =>
+/** `mode` (19/11/2026) : 'service' montre le pied d'une information de service, sans lien de désinscription. */
+export const apercuDiffusion = (composition, { signature = false, boite = undefined, mode = undefined } = {}) =>
   httpClient.post('/admin/diffusion/apercu', corpsDiffusion(composition), {
     responseType: 'text',
-    params: signature ? { signature: true, ...parBoite(boite) } : undefined,
+    params: signature ? { signature: true, ...parBoite(boite) } : (mode ? { mode } : undefined),
   });
 
 /** Lance l'envoi à TOUS les parents. Rend tout de suite : l'envoi se poursuit. */
@@ -687,7 +688,8 @@ export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
  * Combien de parents recevraient une diffusion maintenant (19/11/2026) : seuls ceux qui ont consenti aux offres par
  * email, calculés par la même requête que l'envoi. Rend `{ nombre }`.
  */
-export const getDestinatairesDiffusion = () => httpClient.get('/admin/diffusion/destinataires');
+export const getDestinatairesDiffusion = (mode = undefined) =>
+  httpClient.get('/admin/diffusion/destinataires', { params: mode ? { mode } : undefined });
 
 /**
  * Envoie un message personnalisé à UN parent, dans la même mise en page que
@@ -745,14 +747,23 @@ export const retirerPieceModele = (id, pieceId) =>
 export const supprimerModeleMail = (id) => httpClient.delete(`/admin/modeles-mail/${id}`);
 
 /** Le template rendu en HTML, tel qu'il est enregistré. */
-export const apercuModeleMail = (id, { signature = false, boite = undefined } = {}) =>
+export const apercuModeleMail = (id, { signature = false, boite = undefined, mode = undefined } = {}) =>
   httpClient.post(`/admin/modeles-mail/${id}/apercu`, null, {
     responseType: 'text',
-    params: signature ? { signature: true, ...parBoite(boite) } : undefined,
+    params: signature ? { signature: true, ...parBoite(boite) } : (mode ? { mode } : undefined),
   });
 
-/** Lance la diffusion d'un template à TOUS les parents. */
-export const diffuserModeleMail = (id) => httpClient.post(`/admin/modeles-mail/${id}/diffusion`);
+/**
+ * Lance la diffusion d'un template à TOUS les parents.
+ *
+ * `mode` (19/11/2026) : 'offres' par défaut (aux seuls parents qui ont accepté les offres) ou 'service' — une
+ * information de service non commerciale, à tous les parents joignables, que le serveur refuse sans
+ * `confirmationNonCommerciale` (la case cochée par l'administrateur).
+ */
+export const diffuserModeleMail = (id, { mode = undefined, confirmationNonCommerciale = false } = {}) =>
+  httpClient.post(`/admin/modeles-mail/${id}/diffusion`, null, {
+    params: mode ? { mode, confirmationNonCommerciale } : undefined,
+  });
 
 /** Envoie un template à UN parent. */
 export const envoyerModeleParent = (id, destinataire, boite = undefined, { cc = [], cci = [] } = {}) =>

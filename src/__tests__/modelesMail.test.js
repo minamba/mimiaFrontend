@@ -298,3 +298,67 @@ test('nombre de destinataires illisible : on ne peut pas confirmer', async () =>
   expect(await screen.findByText(/n’a pas pu être lu/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Confirmer l’envoi/ })).toBeDisabled();
 });
+
+// ------------------------------------------- information de service (19/11/2026)
+
+test('information de service : l’interdit des offres est affiché dès l’ouverture, sans courriels automatiques', async () => {
+  render(<Diffusion mode="service" nombreParents={5} />);
+
+  await screen.findByRole('button', { name: /^Rentrée/ });
+  expect(screen.getAllByText(/Aucune offre, promotion ou incitation commerciale/).length).toBeGreaterThan(0);
+  expect(screen.getByText(/Message de diffusion/)).toBeInTheDocument();
+  expect(screen.queryByRole('tab', { name: 'Automatique' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Envoyer aux parents inscrits aux offres' })).not.toBeInTheDocument();
+});
+
+test('information de service : décompte de TOUS les parents, envoi seulement après la case « aucune offre »', async () => {
+  api.getDestinatairesDiffusion.mockImplementation((mode) =>
+    Promise.resolve({ data: { nombre: mode === 'service' ? 5 : 2 } }));
+  render(<Diffusion mode="service" nombreParents={5} />);
+
+  ecrire('Objet du courriel', 'Évolution de nos prix');
+  ecrire('Message', 'Bonjour {{prenom}}, nos prix changent le 1er janvier.');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
+
+  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à 5 parent/ });
+  expect(api.getDestinatairesDiffusion).toHaveBeenCalledWith('service');
+  expect(screen.getByText(/Cette information partira à/)).toHaveTextContent('qu’ils aient accepté les offres ou non');
+
+  // Sans la case : grisé, rien ne part.
+  expect(confirmer).toBeDisabled();
+  fireEvent.click(confirmer);
+  expect(api.diffuserModeleMail).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('checkbox', { name: /aucune offre, promotion ou incitation commerciale/ }));
+  expect(confirmer).toBeEnabled();
+  fireEvent.click(confirmer);
+
+  await waitFor(() => expect(api.diffuserModeleMail)
+    .toHaveBeenCalledWith(9, { mode: 'service', confirmationNonCommerciale: true }));
+});
+
+test('information de service : la case se décoche quand on annule puis revient', async () => {
+  render(<Diffusion mode="service" nombreParents={5} />);
+
+  ecrire('Objet du courriel', 'Incident');
+  ecrire('Message', 'Bonjour');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
+  fireEvent.click(await screen.findByRole('checkbox', { name: /aucune offre/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
+
+  expect(await screen.findByRole('checkbox', { name: /aucune offre/ })).not.toBeChecked();
+  expect(await screen.findByRole('button', { name: /Confirmer l’envoi/ })).toBeDisabled();
+});
+
+test('les offres ne demandent pas la case et gardent leur décompte', async () => {
+  render(<Diffusion nombreParents={5} />);
+
+  ecrire('Objet du courriel', 'Black Friday');
+  ecrire('Message', 'Bonjour');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
+
+  expect(await screen.findByRole('button', { name: /Confirmer l’envoi à 3 parent/ })).toBeEnabled();
+  expect(screen.queryByRole('checkbox', { name: /aucune offre/ })).not.toBeInTheDocument();
+  expect(api.getDestinatairesDiffusion).toHaveBeenCalledWith();
+});

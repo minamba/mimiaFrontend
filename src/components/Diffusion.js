@@ -63,8 +63,20 @@ function ouvrirApercu(html) {
  *
  * TROIS CARTES, UNE BARRE D'ACTIONS — le template, le courriel, la
  * programmation ; les boutons restent à portée pendant qu'on écrit.
+ *
+ * L'INFORMATION DE SERVICE — décision de Min's, le 19/11/2026
+ * -----------------------------------------------------------
+ * `mode="service"` (onglet « Information de service ») : le même écran, mais un
+ * message NON COMMERCIAL envoyé à TOUS les parents joignables, qu'ils aient
+ * accepté les offres ou non, sans lien de désinscription — un changement de
+ * prix (l'annonce promise par l'article 4 des CGV), un incident, un changement
+ * de règles ou de politique. Interdit pour les offres : l'avertissement est
+ * écrit en toutes lettres en haut et au moment d'envoyer, et l'envoi exige une
+ * case cochée (vérifiée aussi par le serveur). Pas de courriels automatiques ici.
  */
-export default function Diffusion({ nombreParents }) {
+export default function Diffusion({ nombreParents, mode = 'offres' }) {
+  const service = mode === 'service';
+
   const {
     nom, setNom,
     description, setDescription,
@@ -87,6 +99,11 @@ export default function Diffusion({ nombreParents }) {
 
   const [confirme, setConfirme] = useState(false);
 
+  // « AUCUNE OFFRE » — la case de l'information de service, décochée à chaque nouvelle confirmation : on la coche
+  // pour CE message, pas une fois pour toutes.
+  const [sansOffre, setSansOffre] = useState(false);
+  useEffect(() => { if (!confirme) setSansOffre(false); }, [confirme]);
+
   // À COMBIEN ÇA PART VRAIMENT — Min's, le 19/11/2026 : une diffusion ne va plus qu'aux parents qui ont consenti aux
   // offres par email. Le nombre de comptes (`nombreParents`) ne dit donc plus à combien on écrit : celui-ci est relu
   // au moment de confirmer, par la même requête que l'envoi. null : en cours de lecture ; 'erreur' : illisible.
@@ -97,12 +114,13 @@ export default function Diffusion({ nombreParents }) {
 
     let vivant = true;
     setDestinataires(null);
-    getDestinatairesDiffusion()
+    // L'information de service compte TOUS les parents joignables : la même requête que son envoi.
+    (service ? getDestinatairesDiffusion('service') : getDestinatairesDiffusion())
       .then(({ data }) => { if (vivant) setDestinataires(Number.isFinite(data?.nombre) ? data.nombre : 'erreur'); })
       .catch(() => { if (vivant) setDestinataires('erreur'); });
 
     return () => { vivant = false; };
-  }, [confirme]);
+  }, [confirme, service]);
 
   const nombreDestinataires = typeof destinataires === 'number' ? destinataires : null;
   const libelleDestinataires = nombreDestinataires === null ? '…' : nombreDestinataires;
@@ -148,10 +166,10 @@ export default function Diffusion({ nombreParents }) {
       if (modele) {
         // Ce qui est tapé d'abord : l'aperçu montre ce qui est enregistré.
         await enregistrer();
-        const { data } = await apercuModeleMail(modele.id);
+        const { data } = await (service ? apercuModeleMail(modele.id, { mode: 'service' }) : apercuModeleMail(modele.id));
         ouvrirApercu(data);
       } else {
-        const { data } = await apercuDiffusion(composition);
+        const { data } = await (service ? apercuDiffusion(composition, { mode: 'service' }) : apercuDiffusion(composition));
         ouvrirApercu(data);
       }
     } catch {
@@ -186,7 +204,8 @@ export default function Diffusion({ nombreParents }) {
       if (id) await enregistrer();
       else id = await creer();
 
-      await diffuserModeleMail(id);
+      if (service) await diffuserModeleMail(id, { mode: 'service', confirmationNonCommerciale: sansOffre });
+      else await diffuserModeleMail(id);
       setConfirme(false);
 
       const { data } = await getEtatDiffusion();
@@ -252,12 +271,33 @@ export default function Diffusion({ nombreParents }) {
               <strong>
                 {enCours
                   ? `Envoi en cours — ${etat.traites} / ${etat.total}`
-                  : `Dernière diffusion : ${etat.envoyes} envoyé(s), ${etat.echecs} échec(s)`}
+                  : `${etat.mode === 'service' ? 'Dernière information de service' : 'Dernière diffusion'} : ${etat.envoyes} envoyé(s), ${etat.echecs} échec(s)`}
               </strong>
 
               {etat.sujet && <span className="diffusion__etat-sujet">« {etat.sujet} »</span>}
 
               {etat.erreur && <span className="diffusion__etat-erreur">{etat.erreur}</span>}
+            </div>
+          )}
+
+          {/* L'AVERTISSEMENT EN HAUT, AVANT MÊME D'ÉCRIRE : on choisit cet onglet
+              pour une information, pas pour une offre. */}
+          {service && (
+            <div className="diffusion__service" role="note">
+              <strong className="diffusion__service-titre">
+                Information de service (non commerciale) — envoyée à tous les parents
+              </strong>
+              <p>
+                Pour ce que chaque client doit savoir&nbsp;: un changement de prix (annoncé
+                avant de s’appliquer), un incident, un changement de nos règles, de nos
+                conditions ou de la politique de confidentialité. Le message part à tous les
+                parents qui ont une adresse valide, qu’ils aient accepté les offres ou non, sans
+                lien de désinscription.
+              </p>
+              <p className="diffusion__service-interdit">
+                Aucune offre, promotion ou incitation commerciale&nbsp;: sinon utilisez
+                «&nbsp;Message de diffusion&nbsp;».
+              </p>
             </div>
           )}
 
@@ -326,7 +366,7 @@ export default function Diffusion({ nombreParents }) {
                 maxLength={150}
                 value={sujet}
                 onChange={(e) => setSujet(e.target.value)}
-                placeholder="Une nouveauté sur Mimia"
+                placeholder={service ? 'Évolution de nos prix au 1er janvier' : 'Une nouveauté sur Mimia'}
               />
               <span className="champ__aide">
                 C’est la seule ligne que le parent lit avant de décider d’ouvrir.
@@ -366,7 +406,13 @@ export default function Diffusion({ nombreParents }) {
               </span>
             </div>
 
-            <LegendeVariables variables={modele?.variables} onInserer={insererTexte} />
+            {/* Pas de lien de désinscription dans une information de service : la variable n'y est pas proposée. */}
+            <LegendeVariables
+              variables={service
+                ? modele?.variables?.filter((v) => v.cle !== 'lien_desinscription')
+                : modele?.variables}
+              onInserer={insererTexte}
+            />
 
             {!bilans && (
               <>
@@ -431,7 +477,40 @@ export default function Diffusion({ nombreParents }) {
             </SectionMail>
           )}
 
-          {confirme && !cadreAutomatique && (
+          {confirme && !cadreAutomatique && service && (
+            <div className="diffusion__avertissement diffusion__avertissement--service">
+              <p className="diffusion__service-interdit">
+                Aucune offre, promotion ou incitation commerciale&nbsp;: sinon utilisez
+                «&nbsp;Message de diffusion&nbsp;».
+              </p>
+              <p>
+                {destinataires === 'erreur' ? (
+                  <>Le nombre de destinataires n’a pas pu être lu.</>
+                ) : (
+                  <>
+                    Cette information partira à <strong>{libelleDestinataires} parent(s)</strong>
+                    {Number.isFinite(nombreParents) && <> sur {nombreParents} compte(s)</>}, chacun
+                    dans son propre courriel&nbsp;: tous les parents qui ont une adresse valide,
+                    qu’ils aient accepté les offres ou non, sans lien de désinscription.
+                  </>
+                )}{' '}
+                <strong>Un envoi ne s’annule pas.</strong> Avez-vous relu l’aperçu&nbsp;?
+              </p>
+              <label className="diffusion__confirmation">
+                <input
+                  type="checkbox"
+                  checked={sansOffre}
+                  onChange={(e) => setSansOffre(e.target.checked)}
+                />
+                <span>
+                  Je confirme que ce message est une information de service (prix, incident, règles
+                  ou politique) et qu’il ne contient aucune offre, promotion ou incitation commerciale.
+                </span>
+              </label>
+            </div>
+          )}
+
+          {confirme && !cadreAutomatique && !service && (
             <p className="diffusion__avertissement">
               {destinataires === 'erreur' ? (
                 <>Le nombre de destinataires n’a pas pu être lu.</>
@@ -493,7 +572,8 @@ export default function Diffusion({ nombreParents }) {
                 <button
                   type="button"
                   className="btn btn--compact btn--danger"
-                  disabled={envoi || enCours || nombreDestinataires === null || nombreDestinataires === 0}
+                  disabled={envoi || enCours || nombreDestinataires === null || nombreDestinataires === 0
+                    || (service && !sansOffre)}
                   onClick={envoyer}
                 >
                   {envoi ? 'Lancement…' : `Confirmer l’envoi à ${libelleDestinataires} parent(s)`}
@@ -514,7 +594,7 @@ export default function Diffusion({ nombreParents }) {
                 disabled={!pret || enCours}
                 onClick={() => setConfirme(true)}
               >
-                Envoyer aux parents inscrits aux offres
+                {service ? 'Envoyer l’information à tous les parents' : 'Envoyer aux parents inscrits aux offres'}
               </button>
             ))}
           </div>
@@ -523,6 +603,7 @@ export default function Diffusion({ nombreParents }) {
 
       <ColonneModeles
         nature={nature}
+        natureFixe={service}
         onNature={changerNature}
         selectionId={modele?.id}
         onSelectionner={choisir}
