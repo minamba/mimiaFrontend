@@ -184,7 +184,7 @@ test('envoyer sans template enregistre le message comme template avant de le dif
 
   ecrire('Objet du courriel', 'Nouveauté');
   ecrire('Message', 'Bonjour');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer à tous les parents' }));
   fireEvent.click(await screen.findByRole('button', { name: /Confirmer l’envoi à 3 parent/ }));
 
   await waitFor(() => expect(api.diffuserModeleMail).toHaveBeenCalledWith(9));
@@ -197,7 +197,7 @@ test('une modification en attente est enregistrée avant l’envoi', async () =>
   await choisirRentree();
 
   ecrire('Message', 'Corrigé à la dernière seconde');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer à tous les parents' }));
   fireEvent.click(await screen.findByRole('button', { name: /Confirmer l’envoi à 3 parent/ }));
 
   await waitFor(() => expect(api.diffuserModeleMail).toHaveBeenCalledWith(7));
@@ -231,7 +231,7 @@ test('« Nouveau message » dans la liste Automatique crée un courriel automati
 
   const creer = await screen.findByRole('button', { name: 'Créer le courriel automatique' });
   expect(creer).toBeDisabled();
-  expect(screen.queryByRole('button', { name: 'Envoyer aux parents inscrits aux offres' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Envoyer à tous les parents' })).not.toBeInTheDocument();
 
   ecrire('Nom du courriel automatique', 'Relance J+7');
   ecrire('Description', 'Une semaine sans cours');
@@ -263,22 +263,103 @@ test('la diffusion propose les deux listes, « Écrire à un parent » seulement
   expect(screen.queryByRole('tab', { name: 'Automatique' })).not.toBeInTheDocument();
 });
 
-test('la confirmation compte seulement les parents qui ont accepté les offres (19/11/2026)', async () => {
-  api.getDestinatairesDiffusion.mockResolvedValue({ data: { nombre: 2 } });
+// --------------------- message de diffusion = information à tous (Min's, 20/11/2026)
+
+test('message de diffusion : à TOUS les parents, sans case à cocher ni avertissement « offres »', async () => {
+  api.getDestinatairesDiffusion.mockImplementation((mode) =>
+    Promise.resolve({ data: { nombre: mode === 'offres' ? 2 : 5 } }));
+  render(<Diffusion nombreParents={5} />);
+
+  // Rien en haut de l'écran : ni cadre « offres », ni interdit.
+  await screen.findByRole('button', { name: /^Rentrée/ });
+  expect(screen.queryByText(/Réservé aux offres/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Aucune offre, promotion ou incitation commerciale/)).not.toBeInTheDocument();
+  expect(api.getDestinatairesDiffusion).not.toHaveBeenCalled();
+
+  ecrire('Objet du courriel', 'Du nouveau sur Mimia');
+  ecrire('Message', 'Bonjour {{prenom}}, les fiches de révision arrivent.');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer à tous les parents' }));
+
+  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à 5 parent/ });
+  expect(api.getDestinatairesDiffusion).toHaveBeenCalledWith();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  expect(screen.queryByText(/accepté de recevoir les offres/)).not.toBeInTheDocument();
+  expect(confirmer).toBeEnabled();
+
+  fireEvent.click(confirmer);
+  await waitFor(() => expect(api.diffuserModeleMail).toHaveBeenCalledWith(9));
+});
+
+test('message de diffusion : les courriels automatiques restent ici', async () => {
+  render(<Diffusion nombreParents={3} />);
+  expect(await screen.findByRole('tab', { name: 'Automatique' })).toBeInTheDocument();
+});
+
+test('message de diffusion : un modèle d’offre ({{lien_desinscription}}) est renvoyé vers « Offres et promotions »', async () => {
   render(<Diffusion nombreParents={5} />);
 
   ecrire('Objet du courriel', 'Black Friday');
-  ecrire('Message', 'Bonjour');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
+  ecrire('Message', 'Bonjour {{prenom}}, -50 % ce week-end : {{ lienDesinscription }}');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer à tous les parents' }));
 
-  expect(await screen.findByRole('button', { name: /Confirmer l’envoi à 2 parent/ })).toBeEnabled();
-  expect(screen.getByText(/sur 5 compte/)).toBeInTheDocument();
-  expect(screen.getByText(/accepté de recevoir les offres et nouveautés par e-mail/)).toBeInTheDocument();
+  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à/ });
+  expect(screen.getByRole('alert')).toHaveTextContent('Offres et promotions');
+  expect(confirmer).toBeDisabled();
+  fireEvent.click(confirmer);
+  expect(api.diffuserModeleMail).not.toHaveBeenCalled();
 });
 
-test('personne n’a accepté les offres : la confirmation reste grisée', async () => {
-  api.getDestinatairesDiffusion.mockResolvedValue({ data: { nombre: 0 } });
+test('nombre de destinataires illisible : on ne peut pas confirmer', async () => {
+  api.getDestinatairesDiffusion.mockRejectedValue(new Error('réseau'));
   render(<Diffusion nombreParents={5} />);
+
+  ecrire('Objet du courriel', 'Du nouveau');
+  ecrire('Message', 'Bonjour');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer à tous les parents' }));
+
+  expect(await screen.findByText(/n’a pas pu être lu/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Confirmer l’envoi/ })).toBeDisabled();
+});
+
+// ----------------------------------------- offres et promotions (consentants seulement)
+
+test('offres et promotions : le cadre dit « réservé aux offres » et le nombre de consentants dès l’ouverture', async () => {
+  api.getDestinatairesDiffusion.mockImplementation((mode) =>
+    Promise.resolve({ data: { nombre: mode === 'offres' ? 2 : 5 } }));
+  render(<Diffusion mode="offres" nombreParents={5} />);
+
+  const cadre = await screen.findByRole('note');
+  await waitFor(() => expect(cadre).toHaveTextContent(
+    /Réservé aux offres\s*: envoyé seulement aux parents qui ont accepté les offres \(2 parents\)/,
+  ));
+  expect(api.getDestinatairesDiffusion).toHaveBeenCalledWith('offres');
+
+  // Pas de courriels automatiques ici : ils sont des informations, réglés dans « Message de diffusion ».
+  await screen.findByRole('button', { name: /^Rentrée/ });
+  expect(screen.queryByRole('tab', { name: 'Automatique' })).not.toBeInTheDocument();
+});
+
+test('offres et promotions : la confirmation compte les consentants et l’envoi part en mode « offres »', async () => {
+  api.getDestinatairesDiffusion.mockResolvedValue({ data: { nombre: 2 } });
+  render(<Diffusion mode="offres" nombreParents={5} />);
+
+  ecrire('Objet du courriel', 'Black Friday');
+  ecrire('Message', 'Bonjour {{prenom}} ! {{lien_desinscription}}');
+  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
+
+  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à 2 parent/ });
+  expect(screen.getByText(/sur 5 compte/)).toBeInTheDocument();
+  expect(screen.getByText(/accepté de recevoir les offres et nouveautés par e-mail/)).toBeInTheDocument();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+
+  fireEvent.click(confirmer);
+  await waitFor(() => expect(api.diffuserModeleMail).toHaveBeenCalledWith(9, { mode: 'offres' }));
+});
+
+test('offres et promotions : personne n’a accepté les offres, la confirmation reste grisée', async () => {
+  api.getDestinatairesDiffusion.mockResolvedValue({ data: { nombre: 0 } });
+  render(<Diffusion mode="offres" nombreParents={5} />);
 
   ecrire('Objet du courriel', 'Black Friday');
   ecrire('Message', 'Bonjour');
@@ -287,95 +368,3 @@ test('personne n’a accepté les offres : la confirmation reste grisée', async
   expect(await screen.findByRole('button', { name: /Confirmer l’envoi à 0 parent/ })).toBeDisabled();
 });
 
-test('nombre de destinataires illisible : on ne peut pas confirmer', async () => {
-  api.getDestinatairesDiffusion.mockRejectedValue(new Error('réseau'));
-  render(<Diffusion nombreParents={5} />);
-
-  ecrire('Objet du courriel', 'Black Friday');
-  ecrire('Message', 'Bonjour');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
-
-  expect(await screen.findByText(/n’a pas pu être lu/)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /Confirmer l’envoi/ })).toBeDisabled();
-});
-
-// ------------------------------------------- information de service (19/11/2026)
-
-test('information de service : l’interdit des offres est affiché dès l’ouverture, sans courriels automatiques', async () => {
-  render(<Diffusion mode="service" nombreParents={5} />);
-
-  await screen.findByRole('button', { name: /^Rentrée/ });
-  expect(screen.getAllByText(/Aucune offre, promotion ou incitation commerciale/).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Message de diffusion/)).toBeInTheDocument();
-  expect(screen.queryByRole('tab', { name: 'Automatique' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Envoyer aux parents inscrits aux offres' })).not.toBeInTheDocument();
-});
-
-test('information de service : décompte de TOUS les parents, envoi seulement après la case « aucune offre »', async () => {
-  api.getDestinatairesDiffusion.mockImplementation((mode) =>
-    Promise.resolve({ data: { nombre: mode === 'service' ? 5 : 2 } }));
-  render(<Diffusion mode="service" nombreParents={5} />);
-
-  ecrire('Objet du courriel', 'Évolution de nos prix');
-  ecrire('Message', 'Bonjour {{prenom}}, nos prix changent le 1er janvier.');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
-
-  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à 5 parent/ });
-  expect(api.getDestinatairesDiffusion).toHaveBeenCalledWith('service');
-  expect(screen.getByText(/Cette information partira à/)).toHaveTextContent('qu’ils aient accepté les offres ou non');
-
-  // Sans la case : grisé, rien ne part.
-  expect(confirmer).toBeDisabled();
-  fireEvent.click(confirmer);
-  expect(api.diffuserModeleMail).not.toHaveBeenCalled();
-
-  fireEvent.click(screen.getByRole('checkbox', { name: /aucune offre, promotion ou incitation commerciale/ }));
-  expect(confirmer).toBeEnabled();
-  fireEvent.click(confirmer);
-
-  await waitFor(() => expect(api.diffuserModeleMail)
-    .toHaveBeenCalledWith(9, { mode: 'service', confirmationNonCommerciale: true }));
-});
-
-test('information de service : {{lien_desinscription}} bloque l’envoi, avec le message (revue d’Omar, 20/11/2026)', async () => {
-  render(<Diffusion mode="service" nombreParents={5} />);
-
-  ecrire('Objet du courriel', 'Évolution de nos prix');
-  ecrire('Message', 'Bonjour {{prenom}}, -50 % ce week-end : {{ lienDesinscription }}');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
-
-  const confirmer = await screen.findByRole('button', { name: /Confirmer l’envoi à/ });
-  expect(screen.getByRole('alert')).toHaveTextContent('marque d’une offre commerciale');
-
-  // Même la case « aucune offre » cochée : grisé, rien ne part.
-  fireEvent.click(screen.getByRole('checkbox', { name: /aucune offre, promotion ou incitation commerciale/ }));
-  expect(confirmer).toBeDisabled();
-  fireEvent.click(confirmer);
-  expect(api.diffuserModeleMail).not.toHaveBeenCalled();
-});
-
-test('information de service : la case se décoche quand on annule puis revient', async () => {
-  render(<Diffusion mode="service" nombreParents={5} />);
-
-  ecrire('Objet du courriel', 'Incident');
-  ecrire('Message', 'Bonjour');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
-  fireEvent.click(await screen.findByRole('checkbox', { name: /aucune offre/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer l’information à tous les parents' }));
-
-  expect(await screen.findByRole('checkbox', { name: /aucune offre/ })).not.toBeChecked();
-  expect(await screen.findByRole('button', { name: /Confirmer l’envoi/ })).toBeDisabled();
-});
-
-test('les offres ne demandent pas la case et gardent leur décompte', async () => {
-  render(<Diffusion nombreParents={5} />);
-
-  ecrire('Objet du courriel', 'Black Friday');
-  ecrire('Message', 'Bonjour');
-  fireEvent.click(screen.getByRole('button', { name: 'Envoyer aux parents inscrits aux offres' }));
-
-  expect(await screen.findByRole('button', { name: /Confirmer l’envoi à 3 parent/ })).toBeEnabled();
-  expect(screen.queryByRole('checkbox', { name: /aucune offre/ })).not.toBeInTheDocument();
-  expect(api.getDestinatairesDiffusion).toHaveBeenCalledWith();
-});

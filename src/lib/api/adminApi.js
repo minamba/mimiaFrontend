@@ -670,7 +670,7 @@ const estFichier = (f) => typeof File !== 'undefined' && f instanceof File;
 
 /** Le message rendu en HTML, sans destinataire. */
 /** `signature` (17/10/2026) : l'aperçu d'« Écrire à un parent » porte la signature de l'expéditeur. */
-/** `mode` (19/11/2026) : 'service' montre le pied d'une information de service, sans lien de désinscription. */
+/** `mode` (20/11/2026) : 'offres' montre le lien de désinscription et le pied d'une offre ; sans mode, un message de diffusion (information, sans lien). */
 export const apercuDiffusion = (composition, { signature = false, boite = undefined, mode = undefined } = {}) =>
   httpClient.post('/admin/diffusion/apercu', corpsDiffusion(composition), {
     responseType: 'text',
@@ -685,8 +685,9 @@ export const lancerDiffusion = (composition) =>
 export const getEtatDiffusion = () => httpClient.get('/admin/diffusion/etat');
 
 /**
- * Combien de parents recevraient une diffusion maintenant (19/11/2026) : seuls ceux qui ont consenti aux offres par
- * email, calculés par la même requête que l'envoi. Rend `{ nombre }`.
+ * Combien de parents recevraient une diffusion maintenant, calculés par la même requête que l'envoi. Rend `{ nombre }`.
+ * Sans mode : le « Message de diffusion », à tous les parents joignables ; 'offres' : seuls ceux qui ont accepté les
+ * offres par e-mail (20/11/2026).
  */
 export const getDestinatairesDiffusion = (mode = undefined) =>
   httpClient.get('/admin/diffusion/destinataires', { params: mode ? { mode } : undefined });
@@ -754,15 +755,14 @@ export const apercuModeleMail = (id, { signature = false, boite = undefined, mod
   });
 
 /**
- * Lance la diffusion d'un template à TOUS les parents.
+ * Lance la diffusion d'un template.
  *
- * `mode` (19/11/2026) : 'offres' par défaut (aux seuls parents qui ont accepté les offres) ou 'service' — une
- * information de service non commerciale, à tous les parents joignables, que le serveur refuse sans
- * `confirmationNonCommerciale` (la case cochée par l'administrateur).
+ * Sans mode (20/11/2026) : le « Message de diffusion », une information à TOUS les parents joignables. `mode: 'offres'`
+ * (« Offres et promotions ») : seulement aux parents qui ont accepté les offres, avec un lien pour se désinscrire.
  */
-export const diffuserModeleMail = (id, { mode = undefined, confirmationNonCommerciale = false } = {}) =>
+export const diffuserModeleMail = (id, { mode = undefined } = {}) =>
   httpClient.post(`/admin/modeles-mail/${id}/diffusion`, null, {
-    params: mode ? { mode, confirmationNonCommerciale } : undefined,
+    params: mode ? { mode } : undefined,
   });
 
 /** Envoie un template à UN parent. */

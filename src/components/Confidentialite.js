@@ -297,8 +297,10 @@ export default function Confidentialite() {
       {/* LES OFFRES ET NOUVEAUTÉS PAR E-MAIL — 19/11/2026. Relevé dans le code :
           colonnes `Parent.offres_email`, `offres_email_consenti_le`,
           `offres_email_retire_le` ; case d'inscription et case de la fenêtre de
-          mise à jour (jamais cochées d'avance) ; filtre d'envoi de la diffusion
-          (`EnvoiAutomatiqueRepository.Joignables`, catégorie « diffusion ») ;
+          mise à jour (jamais cochées d'avance) ; filtre d'envoi de l'onglet
+          « Offres et promotions » (`EnvoiAutomatiqueRepository.Joignables`,
+          catégorie « diffusion ») ; le « Message de diffusion » (informations
+          sur Mimia, décision de Min's du 20/11/2026) part, lui, à tous ;
           lien de désinscription signé, en-tête List-Unsubscribe et interrupteur
           de Mon compte › Paramètres › Mes courriels ; suppression du compte =
           suppression de la ligne Parent. */}
@@ -322,10 +324,11 @@ export default function Confidentialite() {
           (confirmation de votre adresse, factures, bilan hebdomadaire, fin de
           l'essai ou du quota, réponses du support) font partie du service et
           vous parviennent dans tous les cas. Il en va de même des informations
-          sur le service lui-même, envoyées à tous les parents&nbsp;: une
-          évolution de nos prix (annoncée avant de s'appliquer), un incident, un
-          changement de nos conditions ou de cette politique. Ces informations ne
-          contiennent jamais d'offre ni de promotion. Les demandes d'avis, les relances
+          sur Mimia et son service, envoyées à tous les parents&nbsp;: une
+          évolution du service ou de nos prix (annoncée avant de s'appliquer), un
+          incident, un changement de nos conditions ou de cette politique. Ces
+          informations ne contiennent jamais d'offre ni de promotion&nbsp;:
+          celles-ci ne partent qu'aux parents qui les ont acceptées. Les demandes d'avis, les relances
           et les rappels se désactivent chacun dans Mon compte&nbsp;›
           Paramètres&nbsp;› Mes courriels, ou par le lien présent dans chacun
           d'eux.

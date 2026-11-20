@@ -16520,52 +16520,34 @@ html.defilement-bloque body {
   line-height: 1.55;
 }
 
-/* L'INFORMATION DE SERVICE (19/11/2026) : un cadre qui ne se confond pas avec
-   un message de diffusion, et l'interdit des offres impossible à manquer. */
-.diffusion__service {
+/* « OFFRES ET PROMOTIONS » (20/11/2026) : un cadre en haut de l'onglet, qui dit
+   à qui part une offre — les seuls parents qui l'ont acceptée — et combien. */
+.diffusion__offres {
   margin: 0 0 18px;
   padding: 14px 16px;
-  border: 2px solid var(--danger);
+  border: 2px solid var(--sarcelle);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--danger) 7%, var(--surface));
+  background: color-mix(in srgb, var(--sarcelle) 8%, var(--surface));
   font-size: 14px;
   line-height: 1.55;
 }
 
-.diffusion__service p { margin: 8px 0 0; }
+.diffusion__offres p { margin: 8px 0 0; }
 
-.diffusion__service-titre { display: block; font-size: 15px; }
+.diffusion__avertissement p { margin: 0; }
 
-.diffusion__service-interdit {
-  font-weight: 700;
-  color: var(--danger);
-}
+.diffusion__offres-titre { display: block; font-size: 15px; }
 
-.diffusion__avertissement--service {
-  border: 2px solid var(--danger);
-}
-
-.diffusion__avertissement--service p { margin: 0 0 8px; }
-
-/* `{{lien_desinscription}}` dans une information de service (20/11/2026) : l'envoi est bloqué, on dit pourquoi. */
-.diffusion__service-lien {
+/* `{{lien_desinscription}}` dans un message de diffusion (20/11/2026) : c'est un
+   modèle d'offre, on dit où l'envoyer. */
+.diffusion__avertissement .diffusion__lien-offre {
+  margin: 0 0 8px;
   padding: 8px 10px;
   border-radius: 8px;
   background: color-mix(in srgb, var(--danger) 10%, transparent);
   color: var(--danger);
   font-weight: 600;
 }
-
-.diffusion__confirmation {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 4px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.diffusion__confirmation input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
 
 /* ------------------------------------- barre d'outils du texte (gras/émoji)
    Partagée par la diffusion et le message à un parent : deux raccourcis

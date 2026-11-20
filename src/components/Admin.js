@@ -1983,21 +1983,20 @@ export default function Admin() {
               // 17/10/2026) : il s'ouvre en fenêtre depuis la messagerie,
               // avec « Écrire un nouveau message ».
 
+              // LE MESSAGE DE DIFFUSION — Min's, le 20/11/2026 : « ce sont des
+              // messages d'information sur Mimia que j'envoie à tous les
+              // parents ». À TOUS, sans case à cocher ni lien de désinscription.
               { cle: 'diffusion', libelle: 'Message de diffusion' },
 
-              // L'INFORMATION DE SERVICE (Min's, le 19/11/2026) : à TOUS les
-              // parents, non commerciale (prix, incident, règles, politique).
-              // Un onglet à part, juste à côté : on ne la déclenche pas en
-              // croyant envoyer une offre, ni l'inverse.
-              //
-              // LE CANAL DANS LE NOM (20/11/2026, revue d'Omar) : à côté de
-              // « Message d'information », les deux se confondaient. L'un est
-              // un e-mail à chaque parent, l'autre un bandeau en haut du site.
-              { cle: 'service', libelle: 'Information de service (e-mail à tous)' },
+              // LES PROMOTIONS (obligation légale, art. L34-5 CPCE) : un onglet
+              // à part, qui n'écrit qu'aux parents qui ont accepté les offres,
+              // avec un lien pour se désinscrire. Le Black Friday part d'ici.
+              { cle: 'offres', libelle: 'Offres et promotions' },
 
-              // TROISIÈME PARCE QUE C'EST LE PLUS RARE, mais au même
-              // endroit que les deux autres : c'est une prise de parole,
-              // pas un réglage. On la cherche là où on écrit aux gens.
+              // EN DERNIER PARCE QUE C'EST LE PLUS RARE, mais au même
+              // endroit que les autres : c'est une prise de parole, pas un
+              // réglage. LE CANAL DANS LE NOM (20/11/2026, revue d'Omar) : un
+              // bandeau en haut du site, pas un e-mail aux parents.
               { cle: 'information', libelle: 'Bandeau d’information (site)' },
 
               // LES SIGNATURES (17/10/2026) : super-administrateur seul.
@@ -2034,8 +2033,8 @@ export default function Admin() {
               <Messagerie key={boiteMessagerie} boite={boiteMessagerie} parents={parents} />
             </>
           )}
-          {sousOnglet === 'diffusion' && <Diffusion key="offres" nombreParents={parents.length} />}
-          {sousOnglet === 'service' && <Diffusion key="service" mode="service" nombreParents={parents.length} />}
+          {sousOnglet === 'diffusion' && <Diffusion key="information" nombreParents={parents.length} />}
+          {sousOnglet === 'offres' && <Diffusion key="offres" mode="offres" nombreParents={parents.length} />}
           {sousOnglet === 'information' && <MessageInformation />}
           {sousOnglet === 'signatures' && estSuperAdmin && <SignaturesMail />}
         </>
