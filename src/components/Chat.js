@@ -91,7 +91,7 @@ import {
   CLE_MAINS_LIBRES, CLE_MAINS_LIBRES_CP, estClasseCP, mainsLibresAuDepart, texteDeFinDeParole,
 } from '../lib/storage/appuiPourParler';
 import { formeDuNombre, libelleDuNombre } from '../lib/nombresALire';
-import { delaiAssemblage, doitAttendreAvantEnvoi, amorceSeule, gardienDoitEnvoyer, demandeSonTenu, SON_TENU_MIN_S } from '../lib/storage/tourEleve';
+import { delaiAssemblage, doitAttendreAvantEnvoi, amorceSeule, gardienDoitEnvoyer, demandeSonTenu, SON_TENU_MIN_S, demandeUnMotDit, MOT_COURT_MIN_S, PAS_BIEN_ENTENDU } from '../lib/storage/tourEleve';
 import { estUnSchema } from '../lib/storage/schemaSvg';
 import {
   decouper,
@@ -3840,6 +3840,9 @@ export default function Chat() {
   // La demande de son tenu à laquelle on a déjà répondu : voir `onSonSansTexte`.
   const sonFaitPourRef = useRef(null);
 
+  // La demande de mot à laquelle on a déjà dit « je n'ai pas bien entendu » : voir `onSonSansTexte`.
+  const pasEntenduPourRef = useRef(null);
+
   // La dernière nouvelle du micro : voir le gardien de l'envoi.
   const derniereParoleRef = useRef(0);
 
@@ -5231,6 +5234,25 @@ export default function Chat() {
         // demande. Son sens est expliqué au professeur (`MarqueurSonsIsoles`).
         onSonSansTexte: (secondes) => {
           const demande = demandeProfRef.current;
+
+          // UN MOT TROP COURT POUR LE MICRO — retest d'Adam, #57 (21/11/2026) : « un » dit seul,
+          // transcription vide, et personne ne répondait. Le professeur attendait un mot : il dit
+          // qu'il n'a pas bien entendu. Une fois par demande, rien n'est envoyé au serveur.
+          if (
+            secondes >= MOT_COURT_MIN_S
+            && !saisieTapeeRef.current
+            && !demandeSonTenu(demande)
+            && demandeUnMotDit(demande)
+            && pasEntenduPourRef.current !== demande
+            && !assemblageRef.current.texte.trim()
+          ) {
+            pasEntenduPourRef.current = demande;
+            signaler(
+              PAS_BIEN_ENTENDU,
+              'Le mot était sans doute trop court pour le micro : redis-le un peu plus fort, ou écris-le.',
+            );
+            return;
+          }
 
           if (secondes < SON_TENU_MIN_S || saisieTapeeRef.current) return;
           if (!demandeSonTenu(demande) || sonFaitPourRef.current === demande) return;
