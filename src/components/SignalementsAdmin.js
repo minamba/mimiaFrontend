@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import alerte from '../assets/alerte.webp';
 import { useSelector } from 'react-redux';
@@ -284,6 +284,7 @@ function Formulaire({
   const rattachable = Boolean(edition && signalement?.estAdmin && !signalement?.test);
   const [jeuId, setJeuId] = useState('');
   const [testId, setTestId] = useState('');
+  const rattacheRef = useRef(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -310,13 +311,18 @@ function Formulaire({
 
     try {
       if (edition) {
-        await modifierSignalement(signalement.id, donnees);
-        // Le rattachement APRÈS l'enregistrement : la ligne reprend la description tout juste corrigée.
-        if (rattachable && jeuId) {
+        // LE RATTACHEMENT AVANT LA MODIFICATION (retour d'Omar, 22/11/2026) : « Traité » + rattachement dans le
+        // même « Enregistrer » doit poser la ligne PUIS passer à « Traité », sinon le serveur ne trouve pas de ligne
+        // à remettre « à tester » et la personne qui teste n'est jamais prévenue. La modification qui suit redescend
+        // compétence et description corrigées dans la ligne posée.
+        if (rattachable && jeuId && !rattacheRef.current) {
           await rattacherSignalementAuJeu(signalement.id, {
             jeuId: Number(jeuId), testId: Number(testId), competence: competence.trim(),
           });
+          // Si la modification échoue ensuite, un nouvel essai ne doit pas rattacher une 2e fois (refus « déjà relié »).
+          rattacheRef.current = true;
         }
+        await modifierSignalement(signalement.id, donnees);
       } else {
         const { data } = await creerSignalement(donnees);
 

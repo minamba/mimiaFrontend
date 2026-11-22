@@ -9,6 +9,8 @@
  *   3. Les blocs se regroupent par catégorie ; l'en-tête dit « Tests Généraux » une seule fois.
  *   4. Le signalement admin : « Créer un nouveau jeu de test » en Tests Généraux demande une catégorie.
  *   5. Un signalement admin sans ligne de test (ex. #62) se rattache après coup à un bloc, depuis « Modifier ».
+ *   6. (Retours d'Omar, 22/11) « Ajout d’enfant » et « Ajout d'enfant » = une seule catégorie ; « Traité » + rattachement
+ *      dans le même « Enregistrer » : rattachement D'ABORD, pour que le passage à « Traité » trouve la ligne (mail).
  */
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -19,7 +21,7 @@ import * as api from '../lib/api/jeuxTestsApi';
 import * as admin from '../lib/api/adminApi';
 import { getMatieres, getNiveaux } from '../lib/api/referentielApi';
 import {
-  CATEGORIES_DE_DEPART, categoriesProposees, regrouperParMatiere, sectionEtClasse,
+  CATEGORIES_DE_DEPART, apostropheDroite, categoriesProposees, regrouperParMatiere, sectionEtClasse,
 } from '../lib/jeuxTests';
 
 jest.mock('../lib/api/jeuxTestsApi', () => ({
@@ -120,6 +122,29 @@ describe('les petites règles', () => {
     ]);
     expect(groupes.map((g) => g.matiere)).toEqual(['Admin', 'UX']);
     expect(groupes[1].tests.map((t) => t.id)).toEqual([1, 3]);
+  });
+
+  test('apostrophe typographique ou droite : une seule catégorie « Ajout d\'enfant » (retour d’Omar, 22/11)', () => {
+    // La catégorie de départ est écrite comme le serveur l'enregistre : apostrophe droite.
+    expect(CATEGORIES_DE_DEPART).toContain("Ajout d'enfant");
+    expect(CATEGORIES_DE_DEPART.join()).not.toMatch(/[’‘ʼ]/);
+    expect(apostropheDroite('Ajout d’enfant')).toBe("Ajout d'enfant");
+
+    // Employée par le serveur avec l'apostrophe droite (saisie clavier), ou typographique (ancienne saisie) : un seul choix.
+    [["Ajout d'enfant"], ['Ajout d’enfant'], ['ajout d‘enfant', "Ajout d'enfant"]].forEach((employees) => {
+      const liste = categoriesProposees(employees);
+      const ajouts = liste.filter((c) => apostropheDroite(c).toLowerCase() === "ajout d'enfant");
+      expect(ajouts).toHaveLength(1);
+      expect(ajouts[0]).not.toMatch(/[’‘ʼ]/);
+    });
+
+    // Les blocs « d’enfant » et « d'enfant » tombent dans le même groupe.
+    const groupes = regrouperParMatiere([
+      { id: 1, matiereCode: 'categorie', matiere: 'Ajout d’enfant' },
+      { id: 2, matiereCode: 'categorie', matiere: "Ajout d'enfant" },
+    ]);
+    expect(groupes).toHaveLength(1);
+    expect(groupes[0].tests.map((t) => t.id)).toEqual([1, 2]);
   });
 
   test('« Tests Généraux » ne se répète pas', () => {
@@ -317,6 +342,51 @@ describe('le signalement admin', () => {
     expect(admin.modifierSignalement).toHaveBeenCalledWith(62, expect.objectContaining({
       competence: 'La formule pleine ne mène plus aux tarifs', etat: 'en_cours',
     }));
+  });
+
+  test('« Traité » + rattachement dans le même « Enregistrer » : la ligne est posée AVANT le passage à « Traité » (retour d’Omar, 22/11)', async () => {
+    admin.getSignalementsAdmin.mockResolvedValue({
+      data: [{
+        id: 62, estAdmin: true, parentMail: 'ceo@mimia.fr', categorie: 'AUTRE', description: 'La formule la plus large mène aux tarifs',
+        etat: 'en_cours', dateCreation: '2026-11-22T07:00:00', nombrePieces: 0, nombreCommentaires: 0, ligneDeTestId: null, competence: null, test: null,
+      }],
+    });
+    // 1er essai : la modification échoue APRÈS le rattachement ; le 2e essai ne doit pas rattacher une 2e fois.
+    admin.modifierSignalement
+      .mockRejectedValueOnce({ response: { data: { message: 'Une erreur est survenue, veuillez réessayer.' } } })
+      .mockResolvedValue({ data: {} });
+    admin.rattacherSignalementAuJeu.mockResolvedValue({ data: {} });
+
+    render(<SignalementsAdmin admin />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Modifier' }));
+
+    await userEvent.selectOptions(screen.getByLabelText('État'), 'traite');
+    const groupe = screen.getByRole('group', { name: 'Rattacher à un jeu de test' });
+    const jeu = within(groupe).getByLabelText('Jeu de test');
+    await waitFor(() => expect(within(jeu).getByRole('option', { name: 'Compte et abonnements — Tests Généraux' })).toBeInTheDocument());
+    await userEvent.selectOptions(jeu, '40');
+    const bloc = await within(groupe).findByLabelText('Bloc');
+    await waitFor(() => expect(within(bloc).getByRole('option', { name: 'Formule pleine · Abonnements' })).toBeInTheDocument());
+    await userEvent.selectOptions(bloc, '52');
+    await userEvent.type(within(groupe).getByLabelText('Compétence / test à réaliser'), 'La formule pleine ne mène plus aux tarifs');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    expect(await screen.findByText('Une erreur est survenue, veuillez réessayer.')).toBeInTheDocument();
+
+    // Le rattachement part AVANT la modification qui passe à « Traité » : le serveur trouve la ligne à remettre
+    // « à tester » et envoie le mail « prêt à être testé ».
+    expect(admin.rattacherSignalementAuJeu).toHaveBeenCalledTimes(1);
+    expect(admin.rattacherSignalementAuJeu).toHaveBeenCalledWith(62, {
+      jeuId: 40, testId: 52, competence: 'La formule pleine ne mène plus aux tarifs',
+    });
+    expect(admin.modifierSignalement).toHaveBeenCalledWith(62, expect.objectContaining({ etat: 'traite' }));
+    expect(admin.rattacherSignalementAuJeu.mock.invocationCallOrder[0])
+      .toBeLessThan(admin.modifierSignalement.mock.invocationCallOrder[0]);
+
+    // 2e essai : seule la modification repart.
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() => expect(admin.modifierSignalement).toHaveBeenCalledTimes(2));
+    expect(admin.rattacherSignalementAuJeu).toHaveBeenCalledTimes(1);
   });
 
   test('un signalement déjà relié à une ligne existante ne propose pas de rattachement', async () => {

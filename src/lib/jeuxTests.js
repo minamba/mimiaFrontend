@@ -26,16 +26,26 @@ export const estGeneraux = (jeuOuSection) => (typeof jeuOuSection === 'string' ?
  * LES CATÉGORIES PROPOSÉES D'OFFICE (exemples de Min's, 22/11/2026) : la liste les montre même avant le premier bloc.
  * Adam en écrit d'autres librement ; celles déjà employées (serveur) s'y ajoutent, sans doublon à la casse près.
  */
-export const CATEGORIES_DE_DEPART = ['Admin', 'Abonnements', 'Ajout d’enfant', 'Compte parent', 'Technique', 'UX'];
+// Écrites comme le serveur les enregistre : apostrophe DROITE (celle du clavier), jamais « ’ ».
+export const CATEGORIES_DE_DEPART = ['Admin', 'Abonnements', "Ajout d'enfant", 'Compte parent', 'Technique', 'UX'];
+
+/**
+ * « Ajout d’enfant » (apostrophe typographique) et « Ajout d'enfant » (clavier) sont la même catégorie (retour d'Omar,
+ * 22/11/2026) : comme le serveur (`StatutsDeTest.ApostropheDroite`), on ramène ’ ‘ ʼ à l'apostrophe droite.
+ */
+export const apostropheDroite = (texte) => (texte ?? '').replace(/[’‘ʼ]/g, "'");
+
+const cleCategorie = (texte) => apostropheDroite((texte ?? '').trim()).toLocaleLowerCase('fr');
 
 const comparerFr = (a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' });
 
 export const categoriesProposees = (employees = [], courante = null) => {
   const vues = new Map();
   // La catégorie du bloc d'abord : elle doit rester choisie telle qu'elle est écrite, même si une autre casse existe.
-  [...(courante ? [courante] : []), ...(employees ?? []), ...CATEGORIES_DE_DEPART].forEach((c) => {
-    const propre = (c ?? '').trim();
-    if (propre && !vues.has(propre.toLocaleLowerCase('fr'))) vues.set(propre.toLocaleLowerCase('fr'), propre);
+  if (courante && courante.trim()) vues.set(cleCategorie(courante), courante.trim());
+  [...(employees ?? []), ...CATEGORIES_DE_DEPART].forEach((c) => {
+    const propre = apostropheDroite((c ?? '').trim());
+    if (propre && !vues.has(cleCategorie(propre))) vues.set(cleCategorie(propre), propre);
   });
   return [...vues.values()].sort(comparerFr);
 };
@@ -112,7 +122,7 @@ export const regrouperParMatiere = (tests) => {
   (tests ?? []).forEach((test) => {
     // Une CATÉGORIE (tests généraux) se regroupe sur son libellé : toutes partagent le même code.
     const cle = test?.matiereCode === CODE_CATEGORIE
-      ? `${CODE_CATEGORIE}:${(test?.matiere ?? '').toLocaleLowerCase('fr')}`
+      ? `${CODE_CATEGORIE}:${cleCategorie(test?.matiere)}`
       : test?.matiereCode ?? test?.matiere ?? '';
     if (!groupes.has(cle)) groupes.set(cle, { cle, matiere: test?.matiere ?? 'Sans matière', matiereCode: test?.matiereCode, tests: [] });
     groupes.get(cle).tests.push(test);
