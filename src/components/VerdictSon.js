@@ -21,16 +21,26 @@ export const MAUVAISE_ECOUTE = 'Mauvaise écoute';
 export const estVerdictDEcoute = (contenu) => /^\s*j.ai entendu (?:le mot|la syllabe)\b/i.test(contenu ?? '');
 
 /**
+ * LE REFUS QUI VIENT D'UNE TRADUCTION — décision de Min's (22/11/2026, 00 h 04) : « deux » pour two n'est pas une mauvaise
+ * écoute (l'enfant a compris le mot), la bulle dit « On réessaie ». « Mauvaise écoute » reste pour un autre mot. Le serveur
+ * le signale dans le texte gardé : « J'ai entendu le mot deux (en français). » (même marque côté serveur :
+ * RegleVerificationSon.MarqueDeTraduction — ne pas la changer d'un seul côté).
+ */
+export const MARQUE_DE_TRADUCTION = ' (en français)';
+export const estTraductionEntendue = (contenu) =>
+  estVerdictDEcoute(contenu) && (contenu ?? '').trimEnd().replace(/\.+$/, '').endsWith(MARQUE_DE_TRADUCTION);
+
+/**
  * LA LECTURE EN IMAGES — Camara, le 07/11/2026 : l'écoute à l'envers. Jugée comme l'écoute, par ce que le micro a écrit :
  * il peut se tromper, d'où « On réessaie » plutôt qu'un « mauvaise » qui accuserait l'enfant.
  */
 export const BONNE_LECTURE = 'Bonne lecture';
 
-export default function VerdictSon({ juste, ecoute = false, lecture = false }) {
+export default function VerdictSon({ juste, ecoute = false, lecture = false, traduction = false }) {
   const texte = lecture
     ? (juste ? BONNE_LECTURE : ON_REESSAIE)
     : ecoute
-      ? (juste ? BONNE_ECOUTE : MAUVAISE_ECOUTE)
+      ? (juste ? BONNE_ECOUTE : traduction ? ON_REESSAIE : MAUVAISE_ECOUTE)
       : (juste ? BONNE_PRONONCIATION : ON_REESSAIE);
 
   return (

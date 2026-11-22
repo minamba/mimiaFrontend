@@ -134,7 +134,7 @@ import iconeClavier from '../assets/clavier.webp';
 import iconeAgrandir from '../assets/agrandir.webp';
 import LignesCopie from './LignesCopie';
 import { ContenuTableau, tableauDeDictee } from './ComparaisonDictee';
-import VerdictSon, { estVerdictDEcoute } from './VerdictSon';
+import VerdictSon, { estVerdictDEcoute, estTraductionEntendue } from './VerdictSon';
 import { motTrouve } from '../lib/imagesMots';
 import { sonAnglaisTrouve } from '../lib/imagesSonsAnglais';
 import { lectureAuTableau, estVerdictDeLecture, estMotEntierLu, LIBELLE_MOT_ENTIER } from '../lib/lectureDImage';
@@ -6431,7 +6431,7 @@ export default function Chat() {
                     {/* UN SON JUGÉ N'ÉCRIT PAS CE QUE L'ENFANT A DIT (04/11/2026) : le
                         professeur lit le son dans le contenu, l'élève voit le verdict. */}
                     {typeof message.sonJuste === 'boolean'
-                      ? <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} lecture={estVerdictDeLecture(message.contenu)} />
+                      ? <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} lecture={estVerdictDeLecture(message.contenu)} traduction={estTraductionEntendue(message.contenu)} />
                       : !duProf && estMotEntierLu(message.contenu)
                         ? <span className="verdict-son">{LIBELLE_MOT_ENTIER}</span>
                       : !duProf && estLectureEntendue(message.contenu)

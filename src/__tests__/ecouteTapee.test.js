@@ -5,13 +5,15 @@
  * « Deux! » tapé pour « [EN]Two[/EN]. Qu'as-tu entendu ? » n'avait aucun verdict à l'écran : la bulle restait « Deux! »
  * et l'essai n'était pas compté. Le serveur juge désormais la saisie comme le micro, et renvoie son verdict dans le flux
  * AVANT la réponse, avec le mécanisme du #49 :
- *   - écoute des mots : `{"type":"verdict","sonJuste":false,"contenu":"J'ai entendu le mot deux."}` → « Mauvaise écoute » ;
+ *   - écoute des mots, un autre mot : `{"type":"verdict","sonJuste":false,"contenu":"J'ai entendu le mot chien."}` → « Mauvaise écoute » ;
+ *   - écoute des mots, la TRADUCTION : `{"type":"verdict","sonJuste":false,"contenu":"J'ai entendu le mot deux (en français)."}`
+ *     → « On réessaie » (décision de Min's du 22/11/2026, 00 h 04 : une traduction n'est pas une mauvaise écoute) ;
  *   - répétition en langue : `{"type":"verdict","sonJuste":false,"contenu":"J'ai répété : Bleu!"}` → « On réessaie ».
  *
  * CE QUE CES TESTS PROTÈGENT (aucun code d'écran ne change : c'est le contrat entre le serveur et l'écran)
  *   1. Le flux passe ces verdicts à `onVerdict`, et la bulle envoyée les prend.
- *   2. La bulle écrit « Mauvaise écoute » / « Bonne écoute » pour l'écoute, « On réessaie » pour la répétition — jamais
- *      « Bonne prononciation » ni le texte brut.
+ *   2. La bulle écrit « Mauvaise écoute » / « Bonne écoute » pour l'écoute, « On réessaie » pour une traduction (écoute ou
+ *      répétition) — jamais « Bonne prononciation » ni le texte brut.
  *   3. Après rechargement (message relu du serveur avec `sonJuste`), même affichage.
  */
 
@@ -20,7 +22,9 @@ import { TextEncoder, TextDecoder } from 'util';
 import chatReducer from '../lib/reducers/chatReducer';
 import { envoyerMessage, VERDICT_ELEVE } from '../lib/actions/chatActions';
 import { envoyerMessageStream } from '../lib/api/chatApi';
-import VerdictSon, { estVerdictDEcoute, MAUVAISE_ECOUTE, BONNE_ECOUTE, ON_REESSAIE } from '../components/VerdictSon';
+import VerdictSon, {
+  estVerdictDEcoute, estTraductionEntendue, MAUVAISE_ECOUTE, BONNE_ECOUTE, ON_REESSAIE,
+} from '../components/VerdictSon';
 import { estVerdictDeLecture } from '../lib/lectureDImage';
 
 jest.mock('../lib/api/httpClient', () => ({
@@ -53,7 +57,7 @@ const fluxDe = (texte) => {
 
 // Ce que la bulle de l'élève affiche (même choix que Chat.js : VerdictSon dès que sonJuste est un booléen).
 const bulle = (message) => render(
-  <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} lecture={estVerdictDeLecture(message.contenu)} />,
+  <VerdictSon juste={message.sonJuste} ecoute={estVerdictDEcoute(message.contenu)} lecture={estVerdictDeLecture(message.contenu)} traduction={estTraductionEntendue(message.contenu)} />,
 );
 
 const apresEnvoi = (tape, verdict) => chatReducer(
@@ -66,25 +70,47 @@ const apresEnvoi = (tape, verdict) => chatReducer(
 
 test('le flux passe le verdict d\'une écoute tapée à onVerdict', async () => {
   const fetchMock = jest.spyOn(global, 'fetch').mockResolvedValue(fluxDe(
-    'data: {"type":"verdict","sonJuste":false,"contenu":"J\'ai entendu le mot deux."}\n\n'
+    'data: {"type":"verdict","sonJuste":false,"contenu":"J\'ai entendu le mot deux (en français)."}\n\n'
     + 'data: {"type":"delta","texte":"Ça, c\'est le sens en français !"}\n\n'
     + 'data: {"type":"fin"}\n\n',
   ));
   const onVerdict = jest.fn();
   const onDelta = jest.fn();
   await envoyerMessageStream(7, 'Deux!', { onVerdict, onDelta });
-  expect(onVerdict).toHaveBeenCalledWith(false, "J'ai entendu le mot deux.");
+  expect(onVerdict).toHaveBeenCalledWith(false, "J'ai entendu le mot deux (en français).");
   expect(onDelta).toHaveBeenCalledWith("Ça, c'est le sens en français !");
   fetchMock.mockRestore();
 });
 
-test('écoute des mots tapée, traduction : la bulle dit « Mauvaise écoute »', () => {
-  const etat = apresEnvoi('Deux!', { sonJuste: false, contenu: "J'ai entendu le mot deux." });
+test('écoute des mots tapée, traduction : la bulle dit « On réessaie » (décision de Min\'s du 22/11)', () => {
+  const etat = apresEnvoi('Deux!', { sonJuste: false, contenu: "J'ai entendu le mot deux (en français)." });
   const message = etat.messages[etat.messages.length - 1];
-  expect(message).toMatchObject({ role: 'user', sonJuste: false, contenu: "J'ai entendu le mot deux.", verdictServeur: true });
+  expect(message).toMatchObject({ role: 'user', sonJuste: false, contenu: "J'ai entendu le mot deux (en français).", verdictServeur: true });
   bulle(message);
+  expect(screen.getByRole('status')).toHaveTextContent(ON_REESSAIE);
+  expect(screen.queryByText(/Mauvaise écoute|Bonne prononciation|Deux!|en français/)).toBeNull();
+});
+
+test('écoute des mots tapée, un AUTRE mot : « Mauvaise écoute » reste', () => {
+  const etat = apresEnvoi('chien', { sonJuste: false, contenu: "J'ai entendu le mot chien." });
+  bulle(etat.messages[etat.messages.length - 1]);
   expect(screen.getByRole('status')).toHaveTextContent(MAUVAISE_ECOUTE);
-  expect(screen.queryByText(/Deux!/)).toBeNull();
+});
+
+test('la marque de traduction : seulement à la fin d\'un verdict d\'écoute', () => {
+  expect(estTraductionEntendue("J'ai entendu le mot deux (en français).")).toBe(true);
+  expect(estTraductionEntendue("J'ai entendu le mot deux (en français)")).toBe(true);
+  expect(estTraductionEntendue("J'ai entendu la syllabe deux (en français).")).toBe(true);
+  expect(estTraductionEntendue("J'ai entendu le mot deux.")).toBe(false);
+  expect(estTraductionEntendue("J'ai entendu le mot chien.")).toBe(false);
+  expect(estTraductionEntendue('Je le dis (en français).')).toBe(false);
+  expect(estTraductionEntendue("J'ai répété : Bleu!")).toBe(false);
+  expect(estTraductionEntendue(null)).toBe(false);
+});
+
+test('une bulle JUSTE reste « Bonne écoute », même avec la marque (cas impossible côté serveur)', () => {
+  bulle({ id: 40, role: 'user', contenu: "J'ai entendu le mot deux (en français).", sonJuste: true });
+  expect(screen.getByRole('status')).toHaveTextContent(BONNE_ECOUTE);
 });
 
 test('écoute des mots tapée, bonne réponse : « Bonne écoute »', () => {
@@ -103,7 +129,17 @@ test('répétition en langue tapée, traduction : « On réessaie », sans le te
 });
 
 test('après rechargement (message relu du serveur), le même verdict', () => {
-  bulle({ id: 41, role: 'user', contenu: "J'ai entendu le mot deux.", sonJuste: false });
+  bulle({ id: 41, role: 'user', contenu: "J'ai entendu le mot chien.", sonJuste: false });
+  expect(screen.getByRole('status')).toHaveTextContent(MAUVAISE_ECOUTE);
+});
+
+test('après rechargement, la traduction marquée reste « On réessaie »', () => {
+  bulle({ id: 43, role: 'user', contenu: "J'ai entendu le mot deux (en français).", sonJuste: false });
+  expect(screen.getByRole('status')).toHaveTextContent(ON_REESSAIE);
+});
+
+test('un ancien message sans marque (gardé avant ce changement) reste « Mauvaise écoute »', () => {
+  bulle({ id: 44, role: 'user', contenu: "J'ai entendu le mot deux.", sonJuste: false });
   expect(screen.getByRole('status')).toHaveTextContent(MAUVAISE_ECOUTE);
 });
 
