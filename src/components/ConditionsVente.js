@@ -55,7 +55,7 @@ export default function ConditionsVente() {
             au sens, donc la version reste 1.0. Le texte d'origine est archivé dans
             docs/archives-legales/ConditionsVente-1.0-2026-08-06.js. DATE À CALER sur le jour réel de la mise en ligne. */}
         <p className="legal__maj">
-          Version 1.0 — en vigueur depuis le 6&nbsp;août&nbsp;2026 (article&nbsp;4 reformulé le 20&nbsp;novembre&nbsp;2026,
+          Version 1.0 — en vigueur depuis le 6&nbsp;août&nbsp;2026 (article&nbsp;4 reformulé le 22&nbsp;novembre&nbsp;2026,
           sans changement de prix ni de sens)
         </p>
       </header>

@@ -24,7 +24,7 @@ export default function Confidentialite() {
             C'est CE TEXTE que les parents déjà inscrits acceptent à leur prochaine connexion (`VerrouConditions`) ; les
             CGV ne changent pas. La date doit être celle de la mise en ligne, comme `ConditionsEnVigueur.Depuis` côté
             API. Texte À VALIDER PAR MIN'S. */}
-        <p className="legal__maj">Dernière mise à jour&nbsp;: 20 novembre 2026</p>
+        <p className="legal__maj">Dernière mise à jour&nbsp;: 22 novembre 2026</p>
       </header>
 
       <section className="legal__section">
