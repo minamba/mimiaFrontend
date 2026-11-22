@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import logo from '../assets/logo-fond-clair.png';
 import { nomDocument } from '../lib/impression';
 import {
-  dateLisible, jourLisible, libelleSection, libelleStatut, lignesDuTest, STATUTS_JEU,
+  CLASSE_GENERAUX, dateLisible, estGeneraux, jourLisible, libelleSection, libelleStatut, lignesDuTest, sectionEtClasse,
+  STATUTS_JEU,
 } from '../lib/jeuxTests';
 
 /**
@@ -133,10 +134,10 @@ export function DocumentJeuTest({ jeu, maintenant }) {
             Jeu de test
           </div>
           <div style={{ marginTop: 2, fontFamily: "Georgia, 'Times New Roman', serif", fontSize: 24, fontWeight: 700 }}>
-            {jeu.titre?.trim() || `${libelleSection(jeu.section)} · ${jeu.classe}`}
+            {jeu.titre?.trim() || sectionEtClasse(jeu)}
           </div>
           {jeu.titre?.trim() && (
-            <div style={{ marginTop: 2, color: DOUX, fontSize: 13 }}>{libelleSection(jeu.section)} · {jeu.classe}</div>
+            <div style={{ marginTop: 2, color: DOUX, fontSize: 13 }}>{sectionEtClasse(jeu)}</div>
           )}
         </div>
         <img src={logo} alt="Mimia" style={{ display: 'block', height: 38, width: 'auto' }} />
@@ -168,7 +169,7 @@ export function DocumentJeuTest({ jeu, maintenant }) {
 
 /** `Mimia--Elementaire-CP_2026-11-04_Jeu-de-test.pdf` : mêmes règles que les autres documents. */
 export const nomDuPdfJeuTest = (jeu, maintenant = new Date()) => `${nomDocument({
-  matiere: `${libelleSection(jeu.section)} ${jeu.classe}`,
+  matiere: estGeneraux(jeu) ? CLASSE_GENERAUX : `${libelleSection(jeu.section)} ${jeu.classe}`,
   date: maintenant,
   suffixe: 'Jeu de test',
 })}.pdf`;

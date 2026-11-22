@@ -7,6 +7,7 @@ import {
   changerStatutLigneDeTest,
   creerJeuTest,
   deplacerLigneDeTest,
+  getCategoriesTests,
   getJeuTest,
   getJeuxTests,
   modifierJeuTest,
@@ -21,6 +22,7 @@ import { murMatiere, styleMatiere } from '../lib/couleurMatiere';
 import {
   dateLisible, jourLisible, libelleSection, libelleStatut, lignesDuTest, positionApresDeplacement,
   SECTIONS, STATUTS_JEU, STATUTS_LIGNE, compteParStatut, regrouperParMatiere,
+  CATEGORIE_MAX, CLASSE_GENERAUX, SECTION_GENERAUX, categoriesProposees, estGeneraux, sectionEtClasse,
 } from '../lib/jeuxTests';
 import { grouperClasses } from '../lib/niveauxScolaires';
 import { exporterJeuTestEnPdf } from './JeuTestPdf';
@@ -249,22 +251,27 @@ export function FormulaireJeu({
 
   const [titre, setTitre] = useState(jeu?.titre ?? '');
   const [section, setSection] = useState(jeu?.section ?? '');
-  const [niveauId, setNiveauId] = useState(courant ? String(courant.id) : '');
+  // TESTS GÉNÉRAUX (22/11/2026) : leur seule « classe » porte le code de la section.
+  const [niveauId, setNiveauId] = useState(estGeneraux(jeu) ? SECTION_GENERAUX : (courant ? String(courant.id) : ''));
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
+  const generaux = estGeneraux(section);
   const cycle = SECTIONS.find((s) => s.code === section)?.cycle;
-  const groupes = grouperClasses(niveaux.filter((n) => n.cycle === cycle));
+  const groupes = generaux ? [] : grouperClasses(niveaux.filter((n) => n.cycle === cycle));
 
   const soumettre = async (evenement) => {
     evenement.preventDefault();
     setEnvoi(true);
     setErreur(null);
 
+    // Les tests généraux n'ont pas de classe du référentiel : le serveur pose « Tests Généraux » lui-même.
+    const arguments_ = generaux ? [0, titre.trim(), SECTION_GENERAUX] : [Number(niveauId), titre.trim()];
+
     try {
       const { data } = edition
-        ? await modifierJeuTest(jeu.id, Number(niveauId), titre.trim())
-        : await creerJeuTest(Number(niveauId), titre.trim());
+        ? await modifierJeuTest(jeu.id, ...arguments_)
+        : await creerJeuTest(...arguments_);
 
       onEnregistre(data);
     } catch (e) {
@@ -298,7 +305,7 @@ export function FormulaireJeu({
           id="jeu-section"
           value={section}
           required
-          onChange={(e) => { setSection(e.target.value); setNiveauId(''); }}
+          onChange={(e) => { setSection(e.target.value); setNiveauId(estGeneraux(e.target.value) ? SECTION_GENERAUX : ''); }}
         >
           <option value="">Choisir une section…</option>
           {SECTIONS.map((s) => <option key={s.code} value={s.code}>{s.libelle}</option>)}
@@ -314,7 +321,9 @@ export function FormulaireJeu({
           disabled={!section}
           onChange={(e) => setNiveauId(e.target.value)}
         >
-          <option value="">{section ? 'Choisir une classe…' : 'Choisis d’abord une section'}</option>
+          {generaux
+            ? <option value={SECTION_GENERAUX}>{CLASSE_GENERAUX}</option>
+            : <option value="">{section ? 'Choisir une classe…' : 'Choisis d’abord une section'}</option>}
           {groupes.length === 1
             ? groupes[0][1].map((n) => <option key={n.id} value={n.id}>{n.libelle}</option>)
             : groupes.map(([groupe, classes]) => (
@@ -346,15 +355,80 @@ export const matieresDeLaClasse = (matieres, niveau, codeCourant = null) => mati
     || (niveau.ordre >= m.niveauOrdreMin && niveau.ordre <= m.niveauOrdreMax))
   .sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
 
-/** Le titre, la matière, et en création le nombre de lignes avec leurs compétences. */
+const NOUVELLE_CATEGORIE = '__nouvelle__';
+
+/**
+ * LA CATÉGORIE D'UN BLOC DES TESTS GÉNÉRAUX — Min's, le 22/11/2026 : « pas de matière (il n'y en a pas) mais des
+ * catégories propres aux problèmes globaux (UX, Admin, Technique…) », avec un CHAMP DE SAISIE LIBRE pour en créer, et
+ * les catégories créées reproposées ensuite. Une liste (exemples + catégories déjà employées) ; son dernier choix,
+ * « Nouvelle catégorie… », ouvre la saisie libre.
+ */
+export function ChampCategorie({
+  id, valeur, onChange, categories = [], courante = null,
+}) {
+  const proposees = categoriesProposees(categories, courante);
+  const [libre, setLibre] = useState(false);
+
+  return (
+    <div className="champ jeux-tests__champ-categorie">
+      <label htmlFor={id}>Catégorie</label>
+      {libre ? (
+        <>
+          <input
+            id={id}
+            type="text"
+            value={valeur}
+            maxLength={CATEGORIE_MAX}
+            required
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+            placeholder="Nouvelle catégorie, par exemple : Paiement"
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <button
+            type="button"
+            className="jeux-tests__bouton jeux-tests__bouton--liste-categories"
+            onClick={() => { setLibre(false); onChange(''); }}
+          >
+            Choisir dans la liste
+          </button>
+        </>
+      ) : (
+        <select
+          id={id}
+          value={valeur}
+          required
+          onChange={(e) => {
+            if (e.target.value === NOUVELLE_CATEGORIE) {
+              setLibre(true);
+              onChange('');
+            } else {
+              onChange(e.target.value);
+            }
+          }}
+        >
+          <option value="">Choisir une catégorie…</option>
+          {proposees.map((c) => <option key={c} value={c}>{c}</option>)}
+          <option value={NOUVELLE_CATEGORIE}>+ Nouvelle catégorie…</option>
+        </select>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Le titre, la matière, et en création le nombre de lignes avec leurs compétences. Dans un jeu de TESTS GÉNÉRAUX
+ * (`generale`), la matière laisse sa place à la catégorie.
+ */
 function FormulaireTest({
-  test, matieres, niveau, onEnvoyer, onAnnule,
+  test, matieres, niveau, onEnvoyer, onAnnule, generale = false, categories = [],
 }) {
   const edition = Boolean(test);
   const courante = edition ? matieres.find((m) => m.code === test.matiereCode) : null;
 
   const [titre, setTitre] = useState(test?.titre ?? '');
   const [matiereId, setMatiereId] = useState(courante ? String(courante.id) : '');
+  const [categorie, setCategorie] = useState(generale && edition ? test.matiere ?? '' : '');
   const [nombreSaisi, setNombreSaisi] = useState('1');
   const [competences, setCompetences] = useState(['']);
   const [envoi, setEnvoi] = useState(false);
@@ -385,16 +459,22 @@ function FormulaireTest({
       setErreur(`Le nombre de tests va de 1 à ${NOMBRE_MAX}.`);
       return;
     }
+    if (generale && !categorie.trim()) {
+      setErreur('Choisis une catégorie, ou écris-en une nouvelle.');
+      return;
+    }
 
     setEnvoi(true);
     setErreur(null);
 
+    const classement = generale ? { categorie: categorie.trim() } : { matiereId: Number(matiereId) };
+
     try {
       await onEnvoyer(edition
-        ? { titre: titre.trim(), matiereId: Number(matiereId) }
+        ? { titre: titre.trim(), ...classement }
         : {
           titre: titre.trim(),
-          matiereId: Number(matiereId),
+          ...classement,
           nombre,
           competences: competences.slice(0, nombre).map((c) => c.trim()),
         });
@@ -423,13 +503,23 @@ function FormulaireTest({
           />
         </div>
 
-        <div className="champ">
-          <label htmlFor="test-matiere">Matière</label>
-          <select id="test-matiere" value={matiereId} required onChange={(e) => setMatiereId(e.target.value)}>
-            <option value="">Choisir une matière…</option>
-            {proposees.map((m) => <option key={m.id} value={m.id}>{m.libelle}</option>)}
-          </select>
-        </div>
+        {generale ? (
+          <ChampCategorie
+            id="test-categorie"
+            valeur={categorie}
+            onChange={setCategorie}
+            categories={categories}
+            courante={edition ? test.matiere : null}
+          />
+        ) : (
+          <div className="champ">
+            <label htmlFor="test-matiere">Matière</label>
+            <select id="test-matiere" value={matiereId} required onChange={(e) => setMatiereId(e.target.value)}>
+              <option value="">Choisir une matière…</option>
+              {proposees.map((m) => <option key={m.id} value={m.id}>{m.libelle}</option>)}
+            </select>
+          </div>
+        )}
 
         {!edition && (
           <div className="champ jeux-tests__champ-nombre">
@@ -576,7 +666,7 @@ function FenetreApercu({
       sousTitre={(
         <p className="jeux-tests__test-details" style={styleMatiere(matiereDuTest(test))}>
           <span className="jeux-tests__test-matiere">{test.matiere}</span>
-          <span className="jeux-tests__test-compte">{libelleSection(jeu.section)} · {jeu.classe}</span>
+          <span className="jeux-tests__test-compte">{sectionEtClasse(jeu)}</span>
         </p>
       )}
       enfants={(
@@ -663,6 +753,15 @@ function FicheJeu({
 
     return () => { vivant = false; };
   }, [jeuId]);
+
+  // LES CATÉGORIES DÉJÀ EMPLOYÉES (tests généraux, 22/11/2026), relues après chaque bloc ajouté ou modifié. Une panne
+  // ne bloque rien : la liste garde ses exemples et la saisie libre.
+  const [categories, setCategories] = useState([]);
+  const generale = estGeneraux(jeu);
+  const relireCategories = useCallback(() => getCategoriesTests()
+    .then(({ data }) => setCategories(Array.isArray(data) ? data : []))
+    .catch(() => {}), []);
+  useEffect(() => { if (generale) relireCategories(); }, [generale, relireCategories]);
 
   // LA LIGNE D'UN SIGNALEMENT (06/11/2026) : son bloc se déplie, l'écran descend jusqu'à elle, et elle reste
   // en évidence le temps de la repérer. Une seule fois, au premier chargement du jeu.
@@ -759,9 +858,9 @@ function FicheJeu({
 
       <div className="jeux-tests__entete">
         <div>
-          <h2 className="signalements__titre">{jeu.titre?.trim() || `${libelleSection(jeu.section)} · ${jeu.classe}`}</h2>
+          <h2 className="signalements__titre">{jeu.titre?.trim() || sectionEtClasse(jeu)}</h2>
           <p className="signalements__sous-titre">
-            {jeu.titre?.trim() ? `${libelleSection(jeu.section)} · ${jeu.classe} · ` : ''}{jeu.auteur} · créé le {dateLisible(jeu.dateCreation)} · {jeu.nombreOk} sur {lignesDuTest(jeu.nombreLignes)} OK
+            {jeu.titre?.trim() ? `${sectionEtClasse(jeu)} · ` : ''}{jeu.auteur} · créé le {dateLisible(jeu.dateCreation)} · {jeu.nombreOk} sur {lignesDuTest(jeu.nombreLignes)} OK
           </p>
         </div>
         <div className="jeux-tests__entete-droite">
@@ -784,6 +883,8 @@ function FicheJeu({
         <FormulaireTest
           matieres={matieres}
           niveau={niveau}
+          generale={generale}
+          categories={categories}
           onAnnule={() => setAjout(false)}
           onEnvoyer={async (donnees) => {
             const avant = new Set(jeu.tests.map((t) => t.id));
@@ -791,6 +892,7 @@ function FicheJeu({
             (data?.tests ?? []).filter((t) => !avant.has(t.id)).forEach((t) => deplier(t.id));
             setJeu(data);
             setAjout(false);
+            if (generale) relireCategories();
           }}
         />
       ) : (
@@ -815,11 +917,14 @@ function FicheJeu({
               test={test}
               matieres={matieres}
               niveau={niveau}
+              generale={generale}
+              categories={categories}
               onAnnule={() => setTestEdite(null)}
               onEnvoyer={async (donnees) => {
                 const { data } = await modifierTestDuJeu(jeu.id, test.id, donnees);
                 setJeu(data);
                 setTestEdite(null);
+                if (generale) relireCategories();
               }}
             />
           ) : (
@@ -1147,7 +1252,7 @@ export default function JeuxTestsAdmin({ cible = null, onCibleVue = null }) {
             </thead>
             <tbody>
               {jeux.map((jeu) => {
-                const nom = `${libelleSection(jeu.section)} ${jeu.classe}`;
+                const nom = estGeneraux(jeu) ? CLASSE_GENERAUX : `${libelleSection(jeu.section)} ${jeu.classe}`;
 
                 return (
                   <tr key={jeu.id}>

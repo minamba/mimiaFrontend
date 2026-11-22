@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ajouterPieceSignalement, creerSignalementAdmin } from '../lib/api/adminApi';
-import { ajouterTestAuJeu, getJeuTest, getJeuxTests } from '../lib/api/jeuxTestsApi';
+import {
+  ajouterTestAuJeu, getCategoriesTests, getJeuTest, getJeuxTests,
+} from '../lib/api/jeuxTestsApi';
 import { getMatieres, getNiveaux } from '../lib/api/referentielApi';
 import { CATEGORIES, IconeDrapeau } from './BoutonSignalement';
 import ChoixPiecesSignalement from './ChoixPiecesSignalement';
 // signaladmin.png de Camara (06/11/2026), réduite à 160 px comme les deux autres icônes de la bulle.
 import iconeSignalAdmin from '../assets/icone-signaladmin-160.png';
-import { FormulaireJeu, matieresDeLaClasse, nomDuJeu } from './JeuxTestsAdmin';
+import {
+  ChampCategorie, FormulaireJeu, matieresDeLaClasse, nomDuJeu,
+} from './JeuxTestsAdmin';
+import { CLASSE_GENERAUX, estGeneraux } from '../lib/jeuxTests';
 
 const LONGUEUR_MAX = 2000;
 const SECTIONS = { elementaire: 'Élémentaire', college: 'Collège', lycee: 'Lycée' };
 
-/** « Grille de tests CP — Élémentaire CP » : de quoi reconnaître un jeu dans la liste. */
-const libelleJeu = (jeu) => [nomDuJeu(jeu) || 'Sans titre', [SECTIONS[jeu.section] ?? jeu.section, jeu.classe].filter(Boolean).join(' ')]
-  .join(' — ');
+/**
+ * « Grille de tests CP — Élémentaire CP » : de quoi reconnaître un jeu dans la liste. Les tests généraux
+ * (22/11/2026) : « Compte et abonnements — Tests Généraux ».
+ */
+export const libelleJeu = (jeu) => [
+  nomDuJeu(jeu) || 'Sans titre',
+  estGeneraux(jeu) ? CLASSE_GENERAUX : [SECTIONS[jeu.section] ?? jeu.section, jeu.classe].filter(Boolean).join(' '),
+].join(' — ');
 
 /**
  * UN NOUVEAU JEU DE TEST, SANS QUITTER LE SIGNALEMENT — Camara, le 05/11/2026 : le formulaire de création du jeu,
@@ -26,6 +36,8 @@ export function FenetreNouveauJeu({ onTermine, onAnnule }) {
   const [jeu, setJeu] = useState(null);
   const [titre, setTitre] = useState('');
   const [matiereId, setMatiereId] = useState('');
+  const [categorie, setCategorie] = useState('');
+  const [categories, setCategories] = useState([]);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -34,6 +46,13 @@ export function FenetreNouveauJeu({ onTermine, onAnnule }) {
     getMatieres().then(({ data }) => setMatieres(Array.isArray(data) ? data : [])).catch(() => {});
   }, []);
 
+  // TESTS GÉNÉRAUX (22/11/2026) : le bloc a une catégorie, pas de matière ; les catégories déjà employées se
+  // chargent seulement pour eux.
+  const generale = estGeneraux(jeu);
+  useEffect(() => {
+    if (!generale) return;
+    getCategoriesTests().then(({ data }) => setCategories(Array.isArray(data) ? data : [])).catch(() => {});
+  }, [generale]);
   const niveau = jeu ? niveaux.find((n) => n.code === jeu.niveauCode) : null;
   const proposees = jeu ? matieresDeLaClasse(matieres, niveau) : [];
 
@@ -43,7 +62,10 @@ export function FenetreNouveauJeu({ onTermine, onAnnule }) {
     setErreur(null);
     try {
       const avant = new Set((jeu.tests ?? []).map((t) => t.id));
-      const { data } = await ajouterTestAuJeu(jeu.id, { titre: titre.trim(), matiereId: Number(matiereId), nombre: 1, competences: [''] });
+      const classement = generale ? { categorie: categorie.trim() } : { matiereId: Number(matiereId) };
+      const { data } = await ajouterTestAuJeu(jeu.id, {
+        titre: titre.trim(), ...classement, nombre: 1, competences: [''],
+      });
       const test = (data?.tests ?? []).find((t) => !avant.has(t.id));
       onTermine(data, test ?? null);
     } catch (er) {
@@ -68,7 +90,9 @@ export function FenetreNouveauJeu({ onTermine, onAnnule }) {
           ) : (
             <form className="periodes-vacances__formulaire" onSubmit={creerTest}>
               <h3>Ajouter un test</h3>
-              <p className="champ__aide">Jeu « {nomDuJeu(jeu) || jeu.classe} » créé. Il lui faut un bloc : son titre et sa matière.</p>
+              <p className="champ__aide">
+                Jeu « {nomDuJeu(jeu) || jeu.classe} » créé. Il lui faut un bloc : son titre et sa {generale ? 'catégorie' : 'matière'}.
+              </p>
 
               <div className="champ">
                 <label htmlFor="nouveau-test-titre">Titre</label>
@@ -76,16 +100,26 @@ export function FenetreNouveauJeu({ onTermine, onAnnule }) {
                   placeholder="Par exemple : Test Français" onChange={(e) => setTitre(e.target.value)} />
               </div>
 
-              <div className="champ">
-                <label htmlFor="nouveau-test-matiere">Matière</label>
-                <select id="nouveau-test-matiere" value={matiereId} required onChange={(e) => setMatiereId(e.target.value)}>
-                  <option value="">Choisir une matière…</option>
-                  {proposees.map((m) => <option key={m.id} value={m.id}>{m.libelle}</option>)}
-                </select>
-              </div>
+              {generale ? (
+                <ChampCategorie id="nouveau-test-categorie" valeur={categorie} onChange={setCategorie} categories={categories} />
+              ) : (
+                <div className="champ">
+                  <label htmlFor="nouveau-test-matiere">Matière</label>
+                  <select id="nouveau-test-matiere" value={matiereId} required onChange={(e) => setMatiereId(e.target.value)}>
+                    <option value="">Choisir une matière…</option>
+                    {proposees.map((m) => <option key={m.id} value={m.id}>{m.libelle}</option>)}
+                  </select>
+                </div>
+              )}
 
               <div className="jeux-tests__boutons">
-                <button type="submit" className="btn btn--compact" disabled={envoi || !titre.trim() || !matiereId}>Créer le test</button>
+                <button
+                  type="submit"
+                  className="btn btn--compact"
+                  disabled={envoi || !titre.trim() || (generale ? !categorie.trim() : !matiereId)}
+                >
+                  Créer le test
+                </button>
                 <button type="button" className="jeux-tests__bouton jeux-tests__bouton--annuler" onClick={() => onTermine(jeu, null)}>Plus tard</button>
               </div>
             </form>

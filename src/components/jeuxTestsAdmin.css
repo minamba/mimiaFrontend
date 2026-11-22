@@ -118,6 +118,14 @@
 /* REPLIER / DÉPLIER UN BLOC (05/11/2026) : bleu clair, distinct de l'ajout. Le chevron se
    retourne quand le bloc est replié. */
 .jeux-tests__bouton--replier { --teinte-bouton: #7aa7ff; }
+
+/* LA CATÉGORIE LIBRE DES TESTS GÉNÉRAUX (22/11/2026) : sous la saisie, de quoi revenir à la liste. Discret. */
+.jeux-tests__bouton--liste-categories {
+  --teinte-bouton: #7aa7ff;
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
 .jeux-tests__chevron { transition: transform 0.2s ease; }
 .jeux-tests__bouton--replie .jeux-tests__chevron { transform: rotate(180deg); }
 

@@ -6,7 +6,44 @@ export const SECTIONS = [
   { code: 'elementaire', libelle: 'Élémentaire', cycle: 'Primaire' },
   { code: 'college', libelle: 'Collège', cycle: 'College' },
   { code: 'lycee', libelle: 'Lycée', cycle: 'Lycee' },
+  // TESTS GÉNÉRAUX — Min's, le 22/11/2026 : tout ce qui n'est ni un cours ni un professeur (compte parent, ajout
+  // d'enfant, abonnements, administration…). Une seule « classe », du même nom ; leurs blocs ont une CATÉGORIE libre.
+  { code: 'generaux', libelle: 'Tests Généraux', generale: true },
 ];
+
+export const SECTION_GENERAUX = 'generaux';
+export const CLASSE_GENERAUX = 'Tests Généraux';
+
+/** Le code de « matière » d'un bloc des tests généraux : son libellé est la catégorie. Voir `StatutsDeTest.CodeCategorie`. */
+export const CODE_CATEGORIE = 'categorie';
+
+/** Le même plafond que le serveur (`StatutsDeTest.CategorieMax`). */
+export const CATEGORIE_MAX = 100;
+
+export const estGeneraux = (jeuOuSection) => (typeof jeuOuSection === 'string' ? jeuOuSection : jeuOuSection?.section) === SECTION_GENERAUX;
+
+/**
+ * LES CATÉGORIES PROPOSÉES D'OFFICE (exemples de Min's, 22/11/2026) : la liste les montre même avant le premier bloc.
+ * Adam en écrit d'autres librement ; celles déjà employées (serveur) s'y ajoutent, sans doublon à la casse près.
+ */
+export const CATEGORIES_DE_DEPART = ['Admin', 'Abonnements', 'Ajout d’enfant', 'Compte parent', 'Technique', 'UX'];
+
+const comparerFr = (a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' });
+
+export const categoriesProposees = (employees = [], courante = null) => {
+  const vues = new Map();
+  // La catégorie du bloc d'abord : elle doit rester choisie telle qu'elle est écrite, même si une autre casse existe.
+  [...(courante ? [courante] : []), ...(employees ?? []), ...CATEGORIES_DE_DEPART].forEach((c) => {
+    const propre = (c ?? '').trim();
+    if (propre && !vues.has(propre.toLocaleLowerCase('fr'))) vues.set(propre.toLocaleLowerCase('fr'), propre);
+  });
+  return [...vues.values()].sort(comparerFr);
+};
+
+/** « Élémentaire · CP » ; pour les tests généraux, « Tests Généraux » une seule fois. */
+export const sectionEtClasse = (jeu) => (estGeneraux(jeu)
+  ? CLASSE_GENERAUX
+  : `${libelleSection(jeu?.section)} · ${jeu?.classe ?? ''}`);
 
 export const STATUTS_LIGNE = [
   { code: 'a_tester', libelle: 'À tester' },
@@ -67,13 +104,16 @@ export const compteParStatut = (lignes) => ORDRE_DU_COMPTE.map(({ code, libelle 
 }));
 
 /**
- * LES TESTS D'UN JEU, REGROUPÉS PAR MATIÈRE — Camara, le 07/11/2026 : « j'aimerais qu'on regroupe les blocs en fonction
+ * LES TESTS D'UN JEU, REGROUPÉS PAR MATIÈRE (OU PAR CATÉGORIE POUR LES TESTS GÉNÉRAUX) — Camara, le 07/11/2026 : « j'aimerais qu'on regroupe les blocs en fonction
  * de la matière ». Les matières par ordre alphabétique ; dans une matière, les tests gardent l'ordre du jeu.
  */
 export const regrouperParMatiere = (tests) => {
   const groupes = new Map();
   (tests ?? []).forEach((test) => {
-    const cle = test?.matiereCode ?? test?.matiere ?? '';
+    // Une CATÉGORIE (tests généraux) se regroupe sur son libellé : toutes partagent le même code.
+    const cle = test?.matiereCode === CODE_CATEGORIE
+      ? `${CODE_CATEGORIE}:${(test?.matiere ?? '').toLocaleLowerCase('fr')}`
+      : test?.matiereCode ?? test?.matiere ?? '';
     if (!groupes.has(cle)) groupes.set(cle, { cle, matiere: test?.matiere ?? 'Sans matière', matiereCode: test?.matiereCode, tests: [] });
     groupes.get(cle).tests.push(test);
   });

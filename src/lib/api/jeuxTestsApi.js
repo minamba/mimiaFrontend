@@ -12,20 +12,25 @@ export const getJeuxTests = () => httpClient.get(BASE);
 
 export const getJeuTest = (id) => httpClient.get(`${BASE}/${id}`);
 
-export const creerJeuTest = (niveauId, titre) => httpClient.post(BASE, { niveauId, titre });
+/** `section` : « generaux » pour un jeu de TESTS GÉNÉRAUX (sans classe) ; sinon la classe décide. */
+export const creerJeuTest = (niveauId, titre, section = null) => httpClient.post(BASE, { niveauId, titre, section });
 
-export const modifierJeuTest = (id, niveauId, titre) => httpClient.put(`${BASE}/${id}`, { niveauId, titre });
+export const modifierJeuTest = (id, niveauId, titre, section = null) => httpClient.put(`${BASE}/${id}`, { niveauId, titre, section });
+
+/** Les catégories déjà employées dans les blocs des tests généraux (22/11/2026). */
+export const getCategoriesTests = () => httpClient.get(`${BASE}/categories`);
 
 export const supprimerJeuTest = (id) => httpClient.delete(`${BASE}/${id}`);
 
-/** `nombre` lignes créées, `competences` ce qui en est déjà écrit. */
-export const ajouterTestAuJeu = (id, { titre, matiereId, nombre, competences }) =>
-  httpClient.post(`${BASE}/${id}/tests`, {
-    titre, matiereId, nombre, competences,
-  });
+/** `nombre` lignes créées, `competences` ce qui en est déjà écrit. `categorie` au lieu de `matiereId` pour les tests généraux. */
+export const ajouterTestAuJeu = (id, {
+  titre, matiereId, categorie, nombre, competences,
+}) => httpClient.post(`${BASE}/${id}/tests`, {
+  titre, matiereId, categorie, nombre, competences,
+});
 
-export const modifierTestDuJeu = (id, testId, { titre, matiereId }) =>
-  httpClient.put(`${BASE}/${id}/tests/${testId}`, { titre, matiereId });
+export const modifierTestDuJeu = (id, testId, { titre, matiereId, categorie }) =>
+  httpClient.put(`${BASE}/${id}/tests/${testId}`, { titre, matiereId, categorie });
 
 export const supprimerTestDuJeu = (id, testId) => httpClient.delete(`${BASE}/${id}/tests/${testId}`);
 
