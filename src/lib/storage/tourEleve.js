@@ -377,6 +377,26 @@ export function demandeSonTenu(texte) {
  */
 export const SON_TENU_MIN_S = 0.9;
 
+/**
+ * LE PROFESSEUR ATTEND-IL UN MOT DIT À VOIX HAUTE ? — retest d'Adam, #57 (21/11/2026) : « un » dit seul
+ * au micro, transcription vide, et Marine ne répondait rien. Un mot très court (un, two, cat) peut ne
+ * rien donner au transcripteur : quand la dernière phrase du professeur attend justement un mot (écoute
+ * des mots, « Tu répètes ? »), un son sans texte mérite « je n'ai pas bien entendu », pas le silence.
+ */
+export function demandeUnMotDit(texte) {
+  const fin = (texte ?? '').trim().slice(-160);
+  return /(?:qu['’]as-tu\s+entendu|qu['’]est-ce\s+que\s+tu\s+(?:as\s+)?entend\w*|tu\s+(?:me\s+)?(?:l[ea]\s+)?r[ée]p[èe]tes|r[ée]p[èe]te(?:-l[ea])?\s+(?:après|comme)\s+moi|redis-l[ea](?:-moi)?|tu\s+(?:me\s+)?l[ea]\s+redis|tu\s+peux\s+(?:me\s+)?(?:l[ea]\s+)?(?:re)?(?:dire|r[ée]p[ée]ter))[^.!?]*[?!.]?\s*$/i.test(fin);
+}
+
+/**
+ * Le son transmis qu'il faut pour croire à un mot dit : chaque son part avec six dixièmes de traîne
+ * (TRAINE_MS) ; « un » dit seul en ajoute un ou deux. Une fois par demande seulement, et jamais si un
+ * texte a été entendu : un bruit pris pour un mot ne coûte qu'une invitation à le redire.
+ */
+export const MOT_COURT_MIN_S = 0.7;
+
+export const PAS_BIEN_ENTENDU = 'Je n’ai pas bien entendu. Tu peux le redire ?';
+
 export function doitAttendreAvantEnvoi({ parle, transcriptionEnCours, attenteMs = 0 } = {}) {
   if (attenteMs >= ATTENTE_TRANSCRIPTION_MAX_MS) return false;
 
