@@ -32,6 +32,28 @@ export default function QuotaEnfants({ capacite, enPage = false }) {
     );
   }
 
+  // LA PLUS GRANDE FORMULE N'A PAS DE « PLUS LARGE » — signalement #62
+  // (22/11/2026) : une famille pleine en Famille était envoyée aux tarifs,
+  // où rien ne couvre plus d'enfants. Une impasse. Le serveur dit si une
+  // formule plus large existe (`formuleLaPlusLarge`, lu dans le catalogue
+  // actif) ; sans ce drapeau, l'ancien message reste.
+  if (capacite.formuleLaPlusLarge === true && offreLibelle) {
+    return (
+      <div className={`quota__avertissement ${enPage ? 'quota__avertissement--page' : ''}`}>
+        <p>
+          {`Votre formule ${offreLibelle} couvre ${maximum} enfant${
+            maximum > 1 ? 's' : ''
+          } au maximum par compte, et vous en avez ${actuels}.`}{' '}
+          Pour une famille plus nombreuse, écrivez-nous : nous trouverons une solution ensemble.
+        </p>
+
+        <Link to="/contact" className="btn btn--compact">
+          Nous écrire
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className={`quota__avertissement ${enPage ? 'quota__avertissement--page' : ''}`}>
       <p>

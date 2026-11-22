@@ -42,6 +42,32 @@ describe('QuotaEnfants', () => {
     expect(screen.getByText(/n’est pas autorisé sur ce compte/)).toBeInTheDocument();
   });
 
+  /**
+   * #62 (22/11/2026) : la plus grande formule n'a pas de « plus large ».
+   * Envoyer aux tarifs une famille pleine en Famille, c'est une impasse.
+   */
+  test('formule la plus large pleine : pas de lien Tarifs, un lien Contact', () => {
+    afficher({ offreLibelle: 'Famille', maximum: 4, actuels: 4, droitRetire: false, formuleLaPlusLarge: true });
+
+    expect(screen.getByText(/formule Famille couvre 4 enfants au maximum par compte/)).toBeInTheDocument();
+    expect(screen.queryByText(/formule plus large/)).toBeNull();
+    expect(screen.queryByRole('link', { name: /voir les formules/i })).toBeNull();
+    expect(screen.getByRole('link', { name: /nous écrire/i })).toHaveAttribute('href', '/contact');
+  });
+
+  test('formule pleine avec une plus large au catalogue : lien Tarifs inchangé', () => {
+    afficher({ offreLibelle: 'Duo', maximum: 2, actuels: 2, droitRetire: false, formuleLaPlusLarge: false });
+
+    expect(screen.getByText(/formule plus large/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /voir les formules/i })).toHaveAttribute('href', '/tarifs');
+  });
+
+  test('ancien serveur sans le drapeau : message d’avant', () => {
+    afficher({ offreLibelle: 'Famille', maximum: 4, actuels: 4, droitRetire: false });
+
+    expect(screen.getByRole('link', { name: /voir les formules/i })).toBeInTheDocument();
+  });
+
   test('sans capacité, rien ne s’affiche', () => {
     const { container } = afficher(null);
     expect(container).toBeEmptyDOMElement();
