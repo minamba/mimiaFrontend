@@ -405,6 +405,8 @@ export default function Diffusion({ nombreParents }) {
                 Une ligne vide crée un paragraphe. <strong>**Ainsi**</strong> devient du gras.
                 Une adresse comme <strong>https://mimia.fr</strong> devient un lien ; pour un lien avec
                 un texte, écrivez <strong>[voir les formules](https://mimia.fr/tarifs)</strong>.
+                Pour un bouton, seul dans son paragraphe (ligne vide avant et après)&nbsp;:{' '}
+                <strong>[[Voir les formules]](https://mimia.fr/tarifs)</strong>.
               </span>
             </div>
 
