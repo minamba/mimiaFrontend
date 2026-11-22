@@ -339,6 +339,13 @@ export const creerSignalementAdmin = ({ categorie, description, competence, jeuI
     categorie, description, competence: competence || null, jeuId: jeuId || null, testId: testId || null,
   });
 
+/**
+ * RATTACHER APRÈS COUP (Min's, 22/11/2026) : un signalement admin créé sans jeu de test se relie à un bloc, comme à la
+ * création. `competence` vide = celle déjà écrite dans le signalement. Voir `SignalementsAdminController.Rattacher`.
+ */
+export const rattacherSignalementAuJeu = (id, { jeuId, testId, competence }) =>
+  httpClient.put(`/admin/signalements-admin/${id}/jeu`, { jeuId, testId, competence: competence || null });
+
 export const creerSignalement = (data) => httpClient.post('/admin/signalements', data);
 
 export const modifierSignalement = (id, data) =>

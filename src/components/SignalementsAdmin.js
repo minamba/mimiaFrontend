@@ -8,10 +8,12 @@ import {
   getSignalementsAdmin,
   creerSignalement,
   modifierSignalement,
+  rattacherSignalementAuJeu,
   supprimerSignalement,
 } from '../lib/api/adminApi';
+import { getJeuTest, getJeuxTests } from '../lib/api/jeuxTestsApi';
 import { useEvenementsAdmin } from '../lib/hooks/useEvenementsAdmin';
-import BoutonSignalementAdmin from './BoutonSignalementAdmin';
+import BoutonSignalementAdmin, { libelleJeu } from './BoutonSignalementAdmin';
 import ChoixPiecesSignalement from './ChoixPiecesSignalement';
 import CommentairesSignalement from './CommentairesSignalement';
 import PiecesSignalement from './PiecesSignalement';
@@ -205,6 +207,55 @@ function Apercu({
   );
 }
 
+/**
+ * RATTACHER APRÈS COUP — Min's, le 22/11/2026 : « TOUT signalement admin doit faire l'objet d'un test ». Un
+ * signalement admin sans ligne de jeu de test (créé sans jeu, comme le #62, ou dont la ligne a été supprimée) choisit
+ * ici son jeu et son bloc ; à l'enregistrement, la ligne est posée comme à la création (voir
+ * `SignalementsAdminController.Rattacher`).
+ */
+function ChoixJeuDeTest({
+  jeuId, testId, onJeu, onTest,
+}) {
+  const [jeux, setJeux] = useState([]);
+  const [jeu, setJeu] = useState(null);
+
+  useEffect(() => {
+    getJeuxTests().then(({ data }) => setJeux(Array.isArray(data) ? data : [])).catch(() => setJeux([]));
+  }, []);
+
+  useEffect(() => {
+    if (!jeuId) { setJeu(null); return undefined; }
+    let actif = true;
+    getJeuTest(Number(jeuId)).then(({ data }) => { if (actif) setJeu(data); }).catch(() => { if (actif) setJeu(null); });
+    return () => { actif = false; };
+  }, [jeuId]);
+
+  return (
+    <>
+      <div className="champ">
+        <label htmlFor="sig-jeu">Jeu de test</label>
+        <select id="sig-jeu" value={jeuId} onChange={(e) => { onJeu(e.target.value); onTest(''); }}>
+          <option value="">Aucun : ne pas l’ajouter à un jeu de test</option>
+          {jeux.map((j) => <option key={j.id} value={j.id}>{libelleJeu(j)}</option>)}
+        </select>
+      </div>
+
+      {jeuId && (
+        <div className="champ">
+          <label htmlFor="sig-bloc">Bloc</label>
+          <select id="sig-bloc" value={testId} required onChange={(e) => onTest(e.target.value)}>
+            <option value="">{jeu ? 'Choisir un bloc…' : 'Chargement…'}</option>
+            {(jeu?.tests ?? []).map((t) => <option key={t.id} value={t.id}>{t.titre} · {t.matiere}</option>)}
+          </select>
+          {jeu && (jeu.tests ?? []).length === 0 && (
+            <span className="champ__aide">Ce jeu n’a encore aucun bloc : ajoute-lui un test depuis l’onglet « Jeux de tests ».</span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 function Formulaire({
   signalement, onEnregistre, onAnnule, onCommentaires, onPieces,
 }) {
@@ -228,6 +279,11 @@ function Formulaire({
   // reprend compétence et description à l'enregistrement.
   const relie = Boolean(signalement?.estAdmin && signalement?.ligneDeTestId);
   const [competence, setCompetence] = useState(signalement?.competence ?? signalement?.test?.competence ?? '');
+
+  // SANS LIGNE DE TEST (jamais reliée, ou ligne supprimée du jeu) : on peut le rattacher ici (22/11/2026).
+  const rattachable = Boolean(edition && signalement?.estAdmin && !signalement?.test);
+  const [jeuId, setJeuId] = useState('');
+  const [testId, setTestId] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
 
@@ -242,11 +298,25 @@ function Formulaire({
 
     const donnees = { categorie, description: description.trim(), etat };
     if (!edition) donnees.parentMail = parentMail.trim();
-    if (relie) donnees.competence = competence.trim();
+    if (relie || rattachable) donnees.competence = competence.trim();
+
+    if (rattachable && jeuId && (!testId || !competence.trim())) {
+      setErreur(!testId
+        ? 'Choisis le bloc du jeu de test.'
+        : 'Remplis « Compétence / test à réaliser » : c’est le texte de la ligne posée dans le jeu de test.');
+      setEnvoi(false);
+      return;
+    }
 
     try {
       if (edition) {
         await modifierSignalement(signalement.id, donnees);
+        // Le rattachement APRÈS l'enregistrement : la ligne reprend la description tout juste corrigée.
+        if (rattachable && jeuId) {
+          await rattacherSignalementAuJeu(signalement.id, {
+            jeuId: Number(jeuId), testId: Number(testId), competence: competence.trim(),
+          });
+        }
       } else {
         const { data } = await creerSignalement(donnees);
 
@@ -310,7 +380,7 @@ function Formulaire({
         </div>
       </div>
 
-      {relie && (
+      {relie && !rattachable && (
         <div className="champ">
           <label htmlFor="sig-competence">Compétence / test à réaliser</label>
           <input
@@ -324,6 +394,27 @@ function Formulaire({
             <span className="champ__aide">Ligne du jeu de test : {lienTest(signalement)}. Elle reprend la compétence et la description.</span>
           )}
         </div>
+      )}
+
+      {rattachable && (
+        <fieldset className="signalement-admin__jeu">
+          <legend>Rattacher à un jeu de test</legend>
+          <p className="champ__aide">
+            {signalement.ligneDeTestId ? 'Sa ligne de test a été supprimée du jeu. ' : 'Ce signalement n’est relié à aucun jeu de test. '}
+            Choisis un jeu et un bloc : une ligne y sera posée en KO{etat === 'traite' ? ' (« à tester », puisqu’il est traité)' : ''}.
+          </p>
+          <div className="champ">
+            <label htmlFor="sig-competence-jeu">Compétence / test à réaliser</label>
+            <input
+              id="sig-competence-jeu"
+              value={competence}
+              maxLength={1000}
+              onChange={(e) => setCompetence(e.target.value)}
+              required={Boolean(jeuId)}
+            />
+          </div>
+          <ChoixJeuDeTest jeuId={jeuId} testId={testId} onJeu={setJeuId} onTest={setTestId} />
+        </fieldset>
       )}
 
       <div className="champ">
