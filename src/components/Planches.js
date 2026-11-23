@@ -240,6 +240,20 @@ function Import({ figure, matiere, variante = 'legende', onFait, onAnnuler }) {
   );
 }
 
+/**
+ * Le bilan affiché après la requalification des planches. Jamais « Les 1 planches examinées » ni « Les 0 planches »
+ * (même famille que le signalement #69).
+ */
+export function bilanRequalification({ liberees, examinees }) {
+  if (liberees > 0) {
+    return `${liberees} planche${liberees > 1 ? 's' : ''} sur ${examinees} `
+      + `rendue${liberees > 1 ? 's' : ''} au professeur.`;
+  }
+  if (examinees === 0) return 'Aucune planche à examiner : aucune n\'a été rendue.';
+  if (examinees === 1) return 'La planche examinée est bien dans une autre langue : elle n\'a pas été rendue.';
+  return `Les ${examinees} planches examinées sont bien dans une autre langue : aucune n'a été rendue.`;
+}
+
 export default function Planches() {
   const [importees, setImportees] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -403,13 +417,7 @@ export default function Planches() {
     try {
       const { data } = await requalifierPlanches();
 
-      setBilanRequalif(
-        data.liberees > 0
-          ? `${data.liberees} planche${data.liberees > 1 ? 's' : ''} sur ${data.examinees} `
-            + `rendue${data.liberees > 1 ? 's' : ''} au professeur.`
-          : `Les ${data.examinees} planches examinées sont bien dans une autre langue : `
-            + 'aucune n\'a été rendue.',
-      );
+      setBilanRequalif(bilanRequalification(data));
 
       await charger();
     } catch {

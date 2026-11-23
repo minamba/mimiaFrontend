@@ -6,7 +6,8 @@
  * (« Voir les 1 autre »). La recherche des motifs « tes/vos/les/ses {n} » dans tout `src/` en a trouvé trois de plus :
  * le bouton des compétences de la fiche de l'enfant (« Voir les 1 autre »), le message du scan par téléphone
  * (« les 1 premiers ont été gardés ») et la confirmation de suppression d'un parent dans l'administration
- * (« ses 1 profil(s) »).
+ * (« ses 1 profil(s) »). La recherche dans le BUNDLE compilé (formes « Les ".concat( », avec majuscule) en a ajouté deux,
+ * toujours dans l’administration : la suppression d’un rôle (« Ses 1 compte(s) ») et le bilan des planches (« Les 1 planches »).
  *
  * Chaque phrase est montée sur le VRAI composant avec n = 1, n = 2 et n = 0 (quand 0 peut s'afficher).
  */
@@ -277,5 +278,54 @@ describe('administration : confirmation de suppression d’un parent', () => {
   test('aucun profil : rien d’annoncé', () => {
     expect(libelleSuppressionParent({ mail: 'parent@exemple.invalid', nombreEleves: 0, formule: null }))
       .toBe('le compte parent@exemple.invalid');
+  });
+});
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * 7. Trouvées dans le BUNDLE compilé (formes « Les ".concat( » / « Ses ".concat( », avec majuscule) : la question
+ *    avant de supprimer un rôle (RolesAdmin.js) et le bilan de requalification des planches (Planches.js).
+ * ---------------------------------------------------------------------------------------------------------------- */
+describe('administration : suppression d’un rôle', () => {
+  // eslint-disable-next-line global-require
+  const { confirmationSuppressionRole } = require('../components/RolesAdmin');
+
+  test('un compte : « Son compte redeviendra », jamais « Ses 1 compte(s) »', () => {
+    expect(confirmationSuppressionRole({ nom: 'Testeur', nombreComptes: 1 }))
+      .toBe('Supprimer le rôle « Testeur » ? Son compte redeviendra « Utilisateur ».');
+  });
+
+  test('deux comptes : « Ses 2 comptes redeviendront »', () => {
+    expect(confirmationSuppressionRole({ nom: 'Testeur', nombreComptes: 2 }))
+      .toBe('Supprimer le rôle « Testeur » ? Ses 2 comptes redeviendront « Utilisateur ».');
+  });
+
+  test('aucun compte : la question seule', () => {
+    expect(confirmationSuppressionRole({ nom: 'Testeur', nombreComptes: 0 }))
+      .toBe('Supprimer le rôle « Testeur » ?');
+  });
+});
+
+describe('administration : bilan de requalification des planches', () => {
+  // eslint-disable-next-line global-require
+  const { bilanRequalification } = require('../components/Planches');
+
+  test('une planche examinée, aucune rendue : jamais « Les 1 planches »', () => {
+    expect(bilanRequalification({ liberees: 0, examinees: 1 }))
+      .toBe('La planche examinée est bien dans une autre langue : elle n\'a pas été rendue.');
+  });
+
+  test('deux planches examinées, aucune rendue : « Les 2 planches examinées »', () => {
+    expect(bilanRequalification({ liberees: 0, examinees: 2 }))
+      .toBe('Les 2 planches examinées sont bien dans une autre langue : aucune n\'a été rendue.');
+  });
+
+  test('aucune planche examinée : jamais « Les 0 planches »', () => {
+    expect(bilanRequalification({ liberees: 0, examinees: 0 }))
+      .toBe('Aucune planche à examiner : aucune n\'a été rendue.');
+  });
+
+  test('planches rendues : phrase inchangée (« 1 planche sur 3 rendue »)', () => {
+    expect(bilanRequalification({ liberees: 1, examinees: 3 })).toBe('1 planche sur 3 rendue au professeur.');
+    expect(bilanRequalification({ liberees: 2, examinees: 3 })).toBe('2 planches sur 3 rendues au professeur.');
   });
 });

@@ -22,6 +22,14 @@ import { LIBELLES, BLOCS } from './DroitsAdmin';
  */
 const VIDE = { id: null, nom: '', onglets: [], courriels: [], code: null };
 
+/** La question posée avant de supprimer un rôle. Jamais « Ses 1 compte(s) » (même famille que le signalement #69). */
+export function confirmationSuppressionRole(role) {
+  const comptes = role.nombreComptes > 1
+    ? ` Ses ${role.nombreComptes} comptes redeviendront « Utilisateur ».`
+    : role.nombreComptes === 1 ? ' Son compte redeviendra « Utilisateur ».' : '';
+  return `Supprimer le rôle « ${role.nom} » ?${comptes}`;
+}
+
 export default function RolesAdmin({ onChange = null }) {
   const [donnees, setDonnees] = useState({ roles: null, onglets: [], courriels: [], adresseMinamba: '', copieMinamba: false });
   const [erreur, setErreur] = useState(null);
@@ -90,7 +98,7 @@ export default function RolesAdmin({ onChange = null }) {
 
   const supprimer = async (role) => {
     // eslint-disable-next-line no-alert
-    if (!window.confirm(`Supprimer le rôle « ${role.nom} » ? ${role.nombreComptes > 0 ? `Ses ${role.nombreComptes} compte(s) redeviendront « Utilisateur ».` : ''}`)) return;
+    if (!window.confirm(confirmationSuppressionRole(role))) return;
     setErreur(null);
     try {
       await supprimerRole(role.id);
