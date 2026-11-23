@@ -292,6 +292,11 @@
 .jeux-tests__cellule-commentaire,
 .jeux-tests__cellule-titres { overflow-wrap: anywhere; }
 
+/* LA COMPÉTENCE GARDE SES LIGNES — Min's, le 23/11/2026 : Adam écrit un point par ligne, avec des lignes vides et des
+   émoticônes pour séparer. Sans ce réglage, la cellule recollait tout en un seul paragraphe (le commentaire, lui, les
+   gardait déjà). Deux classes : passe aussi devant le `white-space: normal` des cartes sur téléphone. */
+.jeux-tests__lignes .jeux-tests__cellule-competence { white-space: pre-wrap; }
+
 /* LA COLONNE DU COMMENTAIRE A SA LARGEUR, et le texte s'arrête à cinq lignes — Camara, le 08/11/2026. Sans ça, la
    colonne s'écrasait et une ligne pouvait prendre tout l'écran. Le reste se lit dans l'aperçu. */
 .jeux-tests__lignes .jeux-tests__cellule-commentaire { width: 30%; }
