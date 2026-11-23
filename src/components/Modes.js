@@ -20,6 +20,7 @@ import { oublierReglages } from '../lib/storage/modeTest';
 import { SAISONS } from '../lib/storage/styleSite';
 import Loader from './Loader';
 import ModeConseillere from './ModeConseillere';
+import { nombreEt } from '../lib/accord';
 
 /**
  * Les interrupteurs du produit.
@@ -1394,7 +1395,7 @@ export default function Modes() {
           connu={lus}
           occupe={envoi === 'AFFLUENCE_ACTIVE'}
           onBasculer={() => basculer('AFFLUENCE_ACTIVE', 'affluence')}
-          description={`Le site n'admet plus que ${reglages.affluencePlaces} visiteurs à la fois. Les suivants voient une page qui leur donne leur rang dans la file, et entrent automatiquement à mesure que des places se libèrent.`}
+          description={`Le site n'admet plus que ${nombreEt(reglages.affluencePlaces, 'visiteur')} à la fois. Les suivants voient une page qui leur donne leur rang dans la file, et entrent automatiquement à mesure que des places se libèrent.`}
           effets={[
             'Ceux qui sont déjà entrés ne sont pas dérangés : ils gardent leur place tant qu’ils naviguent.',
             'Une place se libère quand son visiteur ferme l’onglet, ou au bout d’une minute et demie sans activité.',

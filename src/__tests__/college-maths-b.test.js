@@ -447,7 +447,7 @@ describe('la recette : chaque réponse recalculée', () => {
       } else if (/soldé/.test(m.question)) {
         const [prix, p] = n;
         seuleJuste(m, (prix * (100 - p)) / 100);
-      } else if (/élèves sur/.test(m.question)) {
+      } else if (/élèves? sur/.test(m.question)) {
         const [part, total] = n;
         seuleJuste(m, (part * 100) / total);
       } else {

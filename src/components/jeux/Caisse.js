@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import decor from '../../assets/marchande.webp';
+import { nombreEt } from '../../lib/accord';
 import {
   bilan, ESSAIS_AVANT_AIDE, MANCHES, MONNAIE, PHRASES_CE1, serieCE1, somme, verdict,
 } from '../../lib/jeux/marchande';
@@ -171,7 +172,7 @@ export default function Caisse({ onQuitter, matiereCode }) {
       </div>
 
       {/* LE COMPTOIR : la monnaie que l'enfant rend. */}
-      <div className="comptoir" role="group" aria-label={`Tu rends ${rendu} euros`}>
+      <div className="comptoir" role="group" aria-label={`Tu rends ${nombreEt(rendu, 'euro')}`}>
         {posees.length === 0 ? (
           <p className="comptoir__vide">Pose la monnaie à rendre ici</p>
         ) : (

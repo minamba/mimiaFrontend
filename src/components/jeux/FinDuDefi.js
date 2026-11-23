@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { plurielDesMots } from '../../lib/accord';
 import imageCoeurNoir from '../../assets/coeur_noir.webp';
 import Etincelle from './Etincelle';
 
@@ -36,7 +37,7 @@ export default function FinDuDefi({
   // LE SCORE EST DÉJÀ DIT EN GRAND : la phrase dit autre chose — combien de
   // temps il a tenu, et comment tenir plus longtemps la prochaine fois.
   // UN JEU BONUS (09/10/2026) compte ce qu'il a trouvé (`unite`) : pas d'alarme ni de cadenas.
-  const pluriel = (n, u) => (n > 1 ? u.split(' ').map((m) => `${m}s`).join(' ') : u);
+  const pluriel = (n, u) => (n > 1 ? plurielDesMots(u) : u);
   const mot = temps && unite
     ? 'La montre a gagné cette fois. Astuce : en mode tranquille, prends ton temps, puis bats ton record.'
     : temps

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { accord, nombreEt } from '../../lib/accord';
 import TexteFiche from './TexteFiche';
 import useAmbiance, { adresseAmbiance } from '../../lib/jeux/ambiance';
 import { bruitage as bruitageDesJeux, prechargerBruitages } from '../../lib/jeux/bruitages';
@@ -66,7 +67,7 @@ function useChrono(duree, actif, cle, onFin) {
 function Chrono({ reste, duree }) {
   const part = Math.max(0, Math.min(1, reste / duree));
   return (
-    <div className={`mt-chrono${part < 0.3 ? ' est-presse' : ''}`} role="timer" aria-label={`${Math.ceil(reste)} secondes`}>
+    <div className={`mt-chrono${part < 0.3 ? ' est-presse' : ''}`} role="timer" aria-label={nombreEt(Math.ceil(reste), 'seconde')}>
       <span className="mt-chrono__barre" style={{ transform: `scaleX(${part})` }} />
       <span className="mt-chrono__secondes">{Math.ceil(reste)} s</span>
     </div>
@@ -373,7 +374,7 @@ function Fin({ resultats, points, challenge, jeu, onRevoir, onRejouer, onChanger
       <p className="mt-fin__detail">
         {jeu === 'cartes' ? `Tu savais ${justes} carte${justes > 1 ? 's' : ''} sur ${total}.` : `${justes} bonne${justes > 1 ? 's' : ''} réponse${justes > 1 ? 's' : ''} sur ${total}.`}
       </p>
-      {challenge && <p className="mt-fin__points">{affiche} points</p>}
+      {challenge && <p className="mt-fin__points">{affiche} {accord(affiche, 'point')}</p>}
 
       <div className="mt-fin__actions">
         {ratees.length > 0 && (

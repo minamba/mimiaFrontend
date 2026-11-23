@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { nombreEt } from '../../lib/accord';
 import {
   bilan, ESSAIS_AVANT_AIDE, MANCHES, methode, PHRASES, serie,
 } from '../../lib/jeux/courseDesTables';
@@ -122,7 +123,7 @@ function CourseDesTablesAvantCM1({ onQuitter, matiereCode, niveau = 'CE1' }) {
       </p>
 
       {/* LA PISTE : dix cases et une arrivée. */}
-      <div className="course__piste" role="img" aria-label={`Ta voiture a avancé de ${avance} cases sur ${MANCHES}`}>
+      <div className="course__piste" role="img" aria-label={`Ta voiture a avancé de ${nombreEt(avance, 'case')} sur ${MANCHES}`}>
         {Array.from({ length: MANCHES }, (_, i) => (
           // eslint-disable-next-line react/no-array-index-key
           <span key={i} className={`course__case${i < avance ? ' est-parcourue' : ''}`} />

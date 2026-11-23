@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getImportOrientation, lancerImportOrientation } from '../lib/api/adminApi';
+import { nombreEt } from '../lib/accord';
 
 /**
  * LA CONSEILLÈRE D'ORIENTATION, DANS ADMIN › MODES — Camara, le 11/10/2026 :
@@ -101,7 +102,7 @@ export default function ModeConseillere({ conseillere, lus, envoi, onBasculer })
             {etat == null && !erreur && 'Lecture…'}
             {etat?.enCours && 'Import en cours…'}
             {etat && !etat.enCours && (etat.lycees > 0
-              ? `${etat.lycees.toLocaleString('fr-FR')} lycées en base.`
+              ? `${etat.lycees.toLocaleString('fr-FR')} ${etat.lycees >= 2 ? 'lycées' : 'lycée'} en base.`
               : 'Aucun lycée en base : l’import n’a pas encore tourné.')}
             {dernier && !etat?.enCours && ` Dernier passage le ${formatDate(dernier.date)} : ${dernier.message ?? ''}`}
           </span>

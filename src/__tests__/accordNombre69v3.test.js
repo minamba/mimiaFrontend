@@ -152,13 +152,17 @@ describe('forfait : la résiliation demandée', () => {
 
   test('un enfant : « votre enfant garde ses cours », jamais « leurs »', async () => {
     const texte = await ouvrirForfait(1);
-    expect(texte).toContain("D'ici là, rien ne change : votre enfant garde ses cours et vos heures restantes.");
+    // Espace insécable avant « : », comme en ligne (&nbsp;) : \u00a0 écrit en clair (#69 v4).
+    expect(texte).toContain("D'ici là, rien ne change\u00a0: votre enfant garde ses cours et vos heures restantes.");
+    expect(texte).not.toContain('rien ne change :');
     expect(texte).not.toMatch(/\bleurs?\b/);
   });
 
   test('deux enfants : « vos enfants gardent leurs cours »', async () => {
     const texte = await ouvrirForfait(2);
-    expect(texte).toContain("D'ici là, rien ne change : vos enfants gardent leurs cours et vos heures restantes.");
+    // Espace insécable avant « : », comme en ligne (&nbsp;) : \u00a0 écrit en clair (#69 v4).
+    expect(texte).toContain("D'ici là, rien ne change\u00a0: vos enfants gardent leurs cours et vos heures restantes.");
+    expect(texte).not.toContain('rien ne change :');
   });
 });
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { nombreEt } from '../../lib/accord';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { demanderFiches, entrainementFiche, getCours, getQuota, supprimerCours, supprimerFiche } from '../../lib/api/mesFichesApi';
 import { typeFiche } from '../../lib/mesFiches/typesFiches';
@@ -431,7 +432,7 @@ export default function CoursFiches() {
       {cours.etat === 'notions' && (
         <section className="mf-etat" aria-labelledby="mf-notions-titre">
           <h2 id="mf-notions-titre" className="mf-etape__titre">
-            {libre ? 'Ton sujet' : 'Ton cours'} contient {nombreNotions} notions
+            {libre ? 'Ton sujet' : 'Ton cours'} contient {nombreEt(nombreNotions, 'notion')}
           </h2>
           <p className="champ__aide">
             Une {typeDemande?.libelle.toLowerCase() ?? 'fiche'} par notion. Décoche celles que tu ne veux pas réviser.

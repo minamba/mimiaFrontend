@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { importerPlanche } from '../lib/api/adminApi';
 import { analyserDossier, dejaAJour, licencesCitees, typeImage } from '../lib/planches/importDossier';
+import { nombreEt } from '../lib/accord';
 
 /**
  * IMPORTER UN DOSSIER DE SCHÉMAS — Camara, le 20/10/2026.
@@ -153,7 +154,7 @@ export default function ImportDossierPlanches({ figures, matiereDeLaCle, importe
               <li className="est-alerte">
                 <strong>{analyse.inconnus.length}</strong> sans emplacement au catalogue, non importés :{' '}
                 {analyse.inconnus.slice(0, 12).map((i) => i.cle).join(', ')}
-                {analyse.inconnus.length > 12 && ` … et ${analyse.inconnus.length - 12} autres`}
+                {analyse.inconnus.length > 12 && ` … et ${nombreEt(analyse.inconnus.length - 12, 'autre')}`}
               </li>
             )}
           </ul>

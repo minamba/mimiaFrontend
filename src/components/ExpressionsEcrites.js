@@ -62,7 +62,7 @@ const heureDe = (iso) => {
  * LES RÉUSSITES NE SONT PAS COMPTÉES ICI — le serveur les a déjà écartées.
  * « 6 points » dont trois compliments se lirait comme six fautes.
  */
-function resume(texte) {
+export function resume(texte) {
   const bouts = [];
 
   // PAS ENCORE RECOPIÉ : on le dit, plutôt que d'afficher « 0 mots » — ce
@@ -77,7 +77,8 @@ function resume(texte) {
     return texte.aPhoto ? 'À recopier par ton professeur' : '';
   }
 
-  if (texte.nombreMots > 0) bouts.push(`${texte.nombreMots} mots`);
+  // Un seul mot (#69 v4) : « 1 mot », jamais « 1 mots ».
+  if (texte.nombreMots > 0) bouts.push(`${texte.nombreMots} mot${texte.nombreMots > 1 ? 's' : ''}`);
 
   if (texte.nombreReprises > 0) {
     bouts.push(`${texte.nombreReprises} point${texte.nombreReprises > 1 ? 's' : ''} à revoir`);

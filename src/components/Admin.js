@@ -85,6 +85,7 @@ import Bannis from './Bannis';
 import Planches from './Planches';
 import RevenuTotal from './RevenuTotal';
 import { ranger, suivant, annoncerTri } from '../lib/triTableau';
+import { accord } from '../lib/accord';
 
 const GRANULARITES = [
   { cle: 'jour', libelle: 'Jour' },
@@ -726,7 +727,7 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
                   <li>
                     <span>
                       Dialogue
-                      <small>mesuré sur {(cout?.tours ?? 0).toLocaleString('fr-FR')} tours de parole</small>
+                      <small>mesuré sur {(cout?.tours ?? 0).toLocaleString('fr-FR')} {accord(cout?.tours ?? 0, 'tour')} de parole</small>
                     </span>
                     <strong>{(cout?.dialogueDollars ?? 0).toFixed(2)} $</strong>
                   </li>
@@ -742,9 +743,9 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
                           Synthèse vocale — {nomVoix(v)}
                           <small>
                             {v.mesure
-                              ? `mesurée sur ${Number(v.appels).toLocaleString('fr-FR')} appels`
-                                + ` · ${Number(v.jetonsSortie).toLocaleString('fr-FR')} jetons audio facturés`
-                              : `estimée sur ${v.tours.toLocaleString('fr-FR')} tours`
+                              ? `mesurée sur ${Number(v.appels).toLocaleString('fr-FR')} ${accord(v.appels, 'appel')}`
+                                + ` · ${Number(v.jetonsSortie).toLocaleString('fr-FR')} ${accord(v.jetonsSortie, 'jeton audio facturé', 'jetons audio facturés')}`
+                              : `estimée sur ${v.tours.toLocaleString('fr-FR')} ${accord(v.tours, 'tour')}`
                                 + ` · ${Number(v.prixMinute).toLocaleString('fr-FR', { maximumFractionDigits: 5 })} $ la minute`}
                           </small>
                         </span>
@@ -1875,7 +1876,7 @@ export default function Admin() {
             <Tuile
               libelle="Tokens en entrée"
               valeur={resume?.tokensEntree}
-              precision={`dont ${(resume?.tokensCacheLecture ?? 0).toLocaleString('fr-FR')} lus en cache`}
+              precision={`dont ${(resume?.tokensCacheLecture ?? 0).toLocaleString('fr-FR')} ${accord(resume?.tokensCacheLecture ?? 0, 'lu')} en cache`}
             />
             <Tuile libelle="Tokens en sortie" valeur={resume?.tokensSortie} />
 

@@ -169,6 +169,7 @@ import Loader from './Loader';
 import Controle from './Controle';
 import PauseCours from './PauseCours';
 import { useAffichageEleve } from '../lib/besoins';
+import { nombreEt } from '../lib/accord';
 import './coursIllustre.css';
 
 /**
@@ -400,6 +401,12 @@ export const libelleTempsRestant = (secondes) => {
   const minutes = Math.ceil(secondes / 60);
   return minutes === 1 ? 'Il reste 1 minute de séance' : `Il reste ${minutes} minutes de séance`;
 };
+
+/**
+ * La durée d'une séance, au titre de la jauge et à la fin de la séance (#69 v4) : la durée de 1 minute existe
+ * (`DUREES_VALIDES`), elle se dit « 1 minute », jamais « 1 minutes ».
+ */
+export const libelleDureeSeance = (minutes) => nombreEt(minutes, 'minute');
 
 /**
  * Nombre d'écoutes sans un mot avant de rompre le mode mains libres.
@@ -6108,7 +6115,7 @@ export default function Chat() {
           ? "Le forfait ne permet pas de suivre de cours"
           : depassement
             ? 'Le temps est écoulé, mais le contrôle se termine'
-            : `Séance de ${dureeSeance} minutes`
+            : `Séance de ${libelleDureeSeance(dureeSeance)}`
       }
       aria-label={
         quota
@@ -7222,7 +7229,7 @@ export default function Chat() {
             {adieuFait ? 'Vous vous êtes dit au revoir.' : 'La séance est terminée.'}
           </strong>
           <span>
-            Tu peux repartir pour {dureeSeance} minutes, ou revenir plus tard —
+            Tu peux repartir pour {libelleDureeSeance(dureeSeance)}, ou revenir plus tard —
             {conversation?.profPrenom ?? 'ton professeur'} se souviendra d'où
             vous en êtes.
           </span>

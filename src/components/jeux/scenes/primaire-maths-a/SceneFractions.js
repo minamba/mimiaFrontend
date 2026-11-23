@@ -1,3 +1,4 @@
+import { nombreEt } from '../../../../lib/accord';
 import { rangee, useDeroule } from './communs';
 import './primaire-maths-a.css';
 
@@ -366,7 +367,7 @@ function ApresSomme({
   const pas = useDeroule(3, 1100, 400);
   const garnis = dix * 10 + cent;
   return (
-    <Explication m={m} verre={verre} legende={pas >= 3 ? `${dix} dixièmes et ${cent} centièmes : ${m.bonne}` : 'Les dixièmes au premier rang après la virgule, les centièmes au deuxième.'}>
+    <Explication m={m} verre={verre} legende={pas >= 3 ? `${nombreEt(dix, 'dixième')} et ${nombreEt(cent, 'centième')} : ${m.bonne}` : 'Les dixièmes au premier rang après la virgule, les centièmes au deuxième.'}>
       <div className="sc-fractions-cm1__decimal">
         <Plaque cent garnis={garnis} mis={pas >= 2 ? garnis : pas >= 1 ? dix * 10 : 0} verre={verre} />
         <TableauDecimal ecriture={`0,${dix}${cent}`} montre={pas >= 3} />

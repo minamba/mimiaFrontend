@@ -110,21 +110,22 @@ function propre({ entre }, max = 9) {
 /* ---------------------------------------------------------------- 6e */
 
 const OBJETS = [
-  ['Une pizza', 'parts'],
-  ['Une tablette de chocolat', 'carrés'],
-  ['Un gâteau', 'parts'],
-  ['Une tarte', 'parts'],
+  ['Une pizza', 'parts', 'égales'],
+  // « carrés égaux », jamais « carrés égales » (#69 v4).
+  ['Une tablette de chocolat', 'carrés', 'égaux'],
+  ['Un gâteau', 'parts', 'égales'],
+  ['Une tarte', 'parts', 'égales'],
 ];
 
 function sens6(t) {
-  const [objet, morceaux] = t.au(OBJETS);
+  const [objet, morceaux, egaux] = t.au(OBJETS);
   const total = t.entre(5, 12);
   let pris = t.entre(1, total - 1);
   if (pris * 2 === total) pris += 1;
   const reste = total - pris;
   return manche(t.melanger, {
     consigne: 'sens',
-    question: `${objet} en ${total} ${morceaux} égales ; on en prend ${pris}. Quelle fraction reste ?`,
+    question: `${objet} en ${total} ${morceaux} ${egaux} ; on en prend ${pris}. Quelle fraction reste ?`,
     bonne: brute(reste, total),
     pieges: [[brute(pris, total), 'ce-qui-reste'], [brute(reste, pris), 'denominateur-total']],
     voisin: (k) => brute(reste, total + k),

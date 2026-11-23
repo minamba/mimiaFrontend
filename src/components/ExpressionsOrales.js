@@ -219,7 +219,8 @@ export default function ExpressionsOrales() {
 
                   <span className="expr-ligne__detail">
                     {heureDe(c.dateCreation)}
-                    {c.nombreTours > 0 && ` · ${c.nombreTours} messages`}
+                    {/* Un seul message (#69 v4) : « 1 message », jamais « 1 messages ». */}
+                    {c.nombreTours > 0 && ` · ${c.nombreTours} message${c.nombreTours > 1 ? 's' : ''}`}
                   </span>
 
                   <span className="expr-ligne__fleche" aria-hidden="true">

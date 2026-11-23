@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import decor from '../../assets/marchande.webp';
+import { nombreEt } from '../../lib/accord';
 import {
   bilan, MANCHES, MONNAIE, PHRASES, serie, somme, verdict,
 } from '../../lib/jeux/marchande';
@@ -187,7 +188,7 @@ function MarchandeCP({ onQuitter, matiereCode }) {
 
       {/* LE COMPTOIR : ce que l'enfant a posé. Un clic sur une pièce la
           reprend — se reprendre fait partie du calcul. */}
-      <div className="comptoir" role="group" aria-label={`Tu as posé ${paye} euros`}>
+      <div className="comptoir" role="group" aria-label={`Tu as posé ${nombreEt(paye, 'euro')}`}>
         {posees.length === 0 ? (
           <p className="comptoir__vide">Pose ton argent ici</p>
         ) : (

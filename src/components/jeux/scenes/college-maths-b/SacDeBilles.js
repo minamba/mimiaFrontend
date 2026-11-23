@@ -1,4 +1,5 @@
 import { Enonce, nombre, proprietesChoix, useEtapes } from './commun';
+import { nombreEt } from '../../../../lib/accord';
 
 /**
  * LA COUR AUX BILLES — « Le sac de billes » (5e → 3e), le 09/10/2026.
@@ -243,7 +244,7 @@ function Effectif({ m, termine }) {
           </span>
         ))}
       </div>
-      <Ardoise lignes={[`${n} billes en ${q} paquets de ${parPaquet}`, `${p} paquets sur ${q} : ${p} × ${parPaquet} = ${m.bonne}`]} />
+      <Ardoise lignes={[`${n} billes en ${q} paquets de ${parPaquet}`, `${nombreEt(p, 'paquet')} sur ${q} : ${p} × ${parPaquet} = ${m.bonne}`]} />
     </div>
   );
 }

@@ -59,6 +59,15 @@ export function heures(minutes) {
   return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`;
 }
 
+/**
+ * Le participe qui suit une durée de `heures()` (#69 v4) : « 1 h utilisée », « 1 h 30 utilisée », « 1 min utilisée »,
+ * mais « 45 min utilisées », « 2 h utilisées ». 0 garde le pluriel d'avant (« 0 h utilisées », toléré).
+ */
+export function accordDuree(minutes, singulier) {
+  const quantite = minutes < 60 ? minutes : minutes / 60;
+  return quantite >= 1 && quantite < 2 ? singulier : `${singulier}s`;
+}
+
 /** Jauge de consommation. Le seuil colore, il n'alarme pas trop tôt. */
 export function Jauge({ part }) {
   const niveau = part >= 1 ? 'plein' : part >= 0.8 ? 'haut' : 'normal';
@@ -380,9 +389,9 @@ export default function Quota({ compact = false }) {
       <Jauge part={etat.partConsommee} />
 
       <p className="quota__resume">
-        {heures(etat.minutesConsommees)} utilisées sur {heures(etat.minutesAllouees)}
+        {heures(etat.minutesConsommees)} {accordDuree(etat.minutesConsommees, 'utilisée')} sur {heures(etat.minutesAllouees)}
         {etat.minutesRecharge > 0 && (
-          <span className="quota__bonus"> · dont {heures(etat.minutesRecharge)} rechargées</span>
+          <span className="quota__bonus"> · dont {heures(etat.minutesRecharge)} {accordDuree(etat.minutesRecharge, 'rechargée')}</span>
         )}
       </p>
 
@@ -537,10 +546,11 @@ export default function Quota({ compact = false }) {
         <div className="quota__resiliation">
           <p>
             <strong>Votre abonnement prend fin le {dateCourte(etat.finPrevue)}.</strong>{' '}
-            {/* Un seul enfant (#69 v3) : « votre enfant garde ses cours », pas « vos enfants gardent leurs cours ». */}
+            {/* Un seul enfant (#69 v3) : « votre enfant garde ses cours », pas « vos enfants gardent leurs cours ».
+                Espace insécable avant « : » écrite \u00a0 dans LES DEUX phrases (#69 v4), comme le &nbsp; d'avant. */}
             {etat.enfants?.length === 1
-              ? "D'ici là, rien ne change : votre enfant garde ses cours et vos heures restantes."
-              : "D'ici là, rien ne change : vos enfants gardent leurs cours et vos heures restantes."}
+              ? "D'ici là, rien ne change\u00a0: votre enfant garde ses cours et vos heures restantes."
+              : "D'ici là, rien ne change\u00a0: vos enfants gardent leurs cours et vos heures restantes."}
             {' '}Aucune nouvelle période ne sera engagée.
           </p>
           <button

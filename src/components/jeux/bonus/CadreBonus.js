@@ -1,6 +1,7 @@
 import {
   createContext, useContext, useEffect, useLayoutEffect, useRef, useState,
 } from 'react';
+import { plurielDesMots } from '../../../lib/accord';
 import { DEFI } from '../../../lib/jeux/coeurs';
 import { useJeuOuvert } from '../../../lib/jeux/contexteJeu';
 import { sessionEleve } from '../../../lib/storage/sessionEleve';
@@ -215,7 +216,7 @@ export function FinBonus({
   const entete = useRef(null);
   useEffect(() => { entete.current?.focus?.({ preventScroll: true }); }, []);
   const titre = complet ? 'Bravo !' : 'Bien joué !';
-  const pluriel = (n, u) => (n > 1 ? u.split(' ').map((m) => `${m}s`).join(' ') : u);
+  const pluriel = (n, u) => (n > 1 ? plurielDesMots(u) : u);
 
   return (
     <div className="jeu jeu--choix jeu--fini partie-fin bonus-fin">

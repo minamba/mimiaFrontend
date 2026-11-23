@@ -1,6 +1,7 @@
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
+import { secondesRestantes } from '../../../lib/accord';
 import { DEFI } from '../../../lib/jeux/coeurs';
 import { useJeuOuvert } from '../../../lib/jeux/contexteJeu';
 import { phrasesDe } from '../../../lib/jeux/voix/repliques';
@@ -114,7 +115,7 @@ export default function MotDePasse({ onQuitter, niveau = 'CP' }) {
       </p>
 
       <div className="mdp__table">
-        <span className={`mdp__minuteur${part < 0.3 ? ' est-presse' : ''}`} role="timer" aria-label={`${Math.ceil(reste / 1000)} secondes`}>
+        <span className={`mdp__minuteur${part < 0.3 ? ' est-presse' : ''}`} role="timer" aria-label={secondesRestantes(reste)}>
           {Math.ceil(reste / 1000)}
           s
         </span>

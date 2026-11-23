@@ -1,6 +1,7 @@
 import {
   Enonce, ecrire, nombre, proprietesChoix, useEtapes,
 } from './commun';
+import { nombreEt } from '../../../../lib/accord';
 
 /**
  * L'ASCENSEUR DU GRAND HÔTEL — « L'ascenseur » (5e, 4e), le 09/10/2026.
@@ -180,8 +181,8 @@ function Mercure({ froid, chaud }) {
     <div className={`${P}__hall`}>
       <Thermometre froid={froid} chaud={chaud} niveau={froid + k} compte={k} />
       <ol className={`${P}__registre`} aria-label="Le calcul">
-        <li className={k >= -froid ? 'est-pose' : ''}>{`De ${ecrire(froid)} °C à 0 °C : ${-froid} degrés`}</li>
-        <li className={k >= d ? 'est-pose' : ''}>{`De 0 °C à ${chaud} °C : ${chaud} degrés`}</li>
+        <li className={k >= -froid ? 'est-pose' : ''}>{`De ${ecrire(froid)} °C à 0 °C : ${nombreEt(-froid, 'degré')}`}</li>
+        <li className={k >= d ? 'est-pose' : ''}>{`De 0 °C à ${chaud} °C : ${nombreEt(chaud, 'degré')}`}</li>
         <li className={k >= d ? 'est-pose' : ''}>{`${-froid} + ${chaud} = ${d} degrés`}</li>
       </ol>
     </div>

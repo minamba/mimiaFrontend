@@ -80,7 +80,7 @@ describe('la course à l’écran', () => {
     expect(screen.getByRole('status')).toHaveTextContent(methode(m.a, m.b));
 
     await userEvent.click(screen.getByRole('button', { name: String(m.a * m.b) }));
-    expect(screen.getByRole('img', { name: /avancé de 0 cases/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /avancé de 0 case sur/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continuer' })).toBeInTheDocument();
   });
 
@@ -88,7 +88,7 @@ describe('la course à l’écran', () => {
     render(<CourseDesTables onQuitter={jest.fn()} />);
     const m = serie(2024)[0];
     await userEvent.click(screen.getByRole('button', { name: String(m.a * m.b) }));
-    expect(screen.getByRole('img', { name: /avancé de 1 cases/ })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /avancé de 1 case sur/ })).toBeInTheDocument();
     expect(PHRASES.jumelle).toMatch(/ne change pas/);
   });
 });

@@ -1,6 +1,7 @@
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
+import { secondesRestantes } from '../../../lib/accord';
 import { DEFI } from '../../../lib/jeux/coeurs';
 import { useJeuOuvert } from '../../../lib/jeux/contexteJeu';
 import { phrasesDe } from '../../../lib/jeux/voix/repliques';
@@ -134,7 +135,7 @@ export default function MotSecret({ onQuitter, niveau = 'CP' }) {
           {/* LE CENTRE NE PORTE QUE LE CHRONO ET LA LETTRE (09/10/2026) : la
               définition et le champ, dedans, débordaient sur les lettres. */}
           <div className="secret__centre">
-            <span className={`secret__minuteur${part < 0.3 ? ' est-presse' : ''}`} role="timer" aria-label={`${Math.ceil(reste / 1000)} secondes`}>
+            <span className={`secret__minuteur${part < 0.3 ? ' est-presse' : ''}`} role="timer" aria-label={secondesRestantes(reste)}>
               {Math.ceil(reste / 1000)}
               s
             </span>

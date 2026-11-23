@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { nombreEt } from '../lib/accord';
 import iconeCarte from '../assets/carte.png';
 import { getProgression } from '../lib/api/elevesApi';
 import { useVueIllustree } from '../lib/vueIllustree';
@@ -241,7 +242,7 @@ export default function Progression() {
 
             {/* Au-delà de cinq, on compte plutôt que d'énumérer : une liste de
                 vingt lignes cesse d'être une récompense. */}
-            {nouvelles.length > 5 && <p>… et {nouvelles.length - 5} autres.</p>}
+            {nouvelles.length > 5 && <p>… et {nombreEt(nouvelles.length - 5, 'autre')}.</p>}
           </div>
 
           <button

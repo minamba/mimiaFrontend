@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getRevenu } from '../lib/api/adminApi';
+import { accord } from '../lib/accord';
 
 /** Des euros à la française : « 1 234,50 € ». */
 export function enEuros(montant) {
@@ -229,7 +230,7 @@ export default function RevenuTotal({
                 {resultat >= 0 ? '+' : '−'}{enEuros(Math.abs(resultat))}
               </strong>
               <span className="revenu-total__resultat-note">
-                {enEuros(total)} rapportés − {enEuros(coutEuros)} coûtés.
+                {enEuros(total)} {accord(total, 'rapporté')} − {enEuros(coutEuros)} {accord(coutEuros, 'coûté')}.
                 Prix nets du catalogue (TVA non applicable, art.&nbsp;293&nbsp;B du CGI), avant frais Stripe.
               </span>
             </div>

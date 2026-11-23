@@ -1,4 +1,5 @@
 import { classeQuestion } from '../base';
+import { nombreEt } from '../../../../lib/accord';
 import {
   Etapes, Explication, divise, ecrireFraction, fois, lireFraction, moins, plus, ppcm, pgcd,
 } from './outils';
@@ -86,7 +87,7 @@ function lire(m) {
     if (!n || k === undefined || k > n) return null;
     return {
       iles: <Ile n={n} d={n} taille={120} cueillis={k} retard={0.4} />,
-      lignes: [`${n} parts, on en prend ${k} : il en reste ${n} − ${k} = ${n - k}`, `${n - k} parts sur ${n}`],
+      lignes: [`${n} parts, on en prend ${k} : il en reste ${n} − ${k} = ${n - k}`, `${nombreEt(n - k, 'part')} sur ${n}`],
     };
   }
   const f = fractionsDe(q).map(lireFraction);

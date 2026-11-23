@@ -1,4 +1,5 @@
 import { classeQuestion } from '../base';
+import { nombreEt } from '../../../../lib/accord';
 import { Etapes, Explication, ecrireNombre } from './outils';
 
 /**
@@ -102,7 +103,7 @@ function contenu(m) {
           depart={1.6}
           lignes={[
             `${l.traits} trait${l.traits > 1 ? 's' : ''} partagent l’unité en ${l.d} parts : une part vaut 1/${l.d}.`,
-            `M est à ${l.n} parts de 0 : M = ${l.n}/${l.d}.`,
+            `M est à ${nombreEt(l.n, 'part')} de 0 : M = ${l.n}/${l.d}.`,
           ]}
         />
       </>

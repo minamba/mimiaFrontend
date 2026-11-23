@@ -1,4 +1,15 @@
 import { useState } from 'react';
+
+/**
+ * Ce que devient le contenu d'une catégorie supprimée (#69 v4) : un seul cours se dit « Son cours et ses fiches
+ * restent », jamais « Ses 1 cours et leurs fiches » ; rien quand elle est vide.
+ */
+export const suiteSuppressionCategorie = (n) => {
+  if (!(n > 0)) return '';
+  return n === 1
+    ? '\n\nSon cours et ses fiches restent, « sans catégorie ».'
+    : `\n\nSes ${n} cours et leurs fiches restent, « sans catégorie ».`;
+};
 import {
   COULEURS_CATEGORIES, creerCategorie, modifierCategorie, supprimerCategorie,
 } from '../../lib/api/espaceParentApi';
@@ -96,8 +107,7 @@ function LigneCategorie({ categorie, onModifiee, onSupprimee }) {
   };
 
   const supprimer = async () => {
-    const n = categorie.nombreCours ?? 0;
-    const suite = n > 0 ? `\n\nSes ${n} cours et leurs fiches restent, « sans catégorie ».` : '';
+    const suite = suiteSuppressionCategorie(categorie.nombreCours ?? 0);
     // eslint-disable-next-line no-alert
     if (!window.confirm(`Supprimer la catégorie « ${categorie.libelle} » ?${suite}`)) return;
     try {

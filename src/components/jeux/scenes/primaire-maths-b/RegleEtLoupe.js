@@ -1,4 +1,5 @@
 import { rangee, rang, useEtapes } from './communs';
+import { nombreEt } from '../../../../lib/accord';
 import './primaire-maths-b.css';
 
 /**
@@ -71,7 +72,7 @@ function RegleQuiCompte({
   const k = useEtapes(position);
   const arrivee = k >= position;
   return (
-    <svg className="sc-regle-des-dixiemes__compte" viewBox="0 0 340 150" role="img" aria-label={`${position} ${unite} après ${gauche} : ${bonne}`}>
+    <svg className="sc-regle-des-dixiemes__compte" viewBox="0 0 340 150" role="img" aria-label={`${nombreEt(position, unite.replace(/s$/, ''), unite)} après ${gauche} : ${bonne}`}>
       <rect x="4" y="78" width="332" height="44" rx="6" className="sc-regle-des-dixiemes__bois" />
       <line x1={x(0)} y1={100} x2={x(10)} y2={100} className="sc-regle-des-dixiemes__trait" />
       {rangee(11).map((j) => (
@@ -121,7 +122,7 @@ function RegleCM1({ m, termine }) {
             nom={`${m.debut},`}
             bonne={m.bonne}
           />
-          <p className="sc-regle-des-dixiemes__verdict">{`${m.dixiemes} dixièmes après ${m.debut} : ${m.bonne}`}</p>
+          <p className="sc-regle-des-dixiemes__verdict">{`${nombreEt(m.dixiemes, 'dixième')} après ${m.debut} : ${m.bonne}`}</p>
         </>
       ) : (
         <div className="sc-regle-des-dixiemes__planche-regle">
@@ -169,7 +170,7 @@ function LoupeCM2({ m, termine }) {
         ) : <Regle gauche={m.gauche} droite={m.droite} position={m.pas} unite="centièmes" />}
         <span className="sc-regle-des-dixiemes__manche" aria-hidden="true" />
       </div>
-      {termine && <p className="sc-regle-des-dixiemes__verdict">{`${m.pas} centièmes après ${m.gauche} : ${m.bonne}`}</p>}
+      {termine && <p className="sc-regle-des-dixiemes__verdict">{`${nombreEt(m.pas, 'centième')} après ${m.gauche} : ${m.bonne}`}</p>}
     </div>
   );
 }

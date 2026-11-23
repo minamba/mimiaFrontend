@@ -226,7 +226,8 @@ function quelPourcentage5({ entre, au, melanger }) {
   const p = (part * 100) / total;
   return manche(melanger, {
     consigne: 'pourcentage',
-    question: `${part} élèves sur ${total} font du sport. Quel pourcentage ?`,
+    // Un seul élève (#69 v4) : « 1 élève sur 20 fait du sport », jamais « 1 élèves … font ».
+    question: `${part} élève${part > 1 ? 's' : ''} sur ${total} ${part > 1 ? 'font' : 'fait'} du sport. Quel pourcentage ?`,
     bonne: `${p}${NB}%`,
     pieges: [[`${part}${NB}%`, 'pourcentage-sur-cent']],
     voisin: (j) => `${p + j}${NB}%`,

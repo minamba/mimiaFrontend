@@ -1,4 +1,5 @@
 import { rangee, useDeroule } from './communs';
+import { nombreEt } from '../../../../lib/accord';
 import './primaire-maths-a.css';
 
 /**
@@ -320,7 +321,7 @@ function ApresMultiplication({ m, a, b }) {
   return (
     <Ardoise
       m={m}
-      legende={pas >= 3 ? `${a} × ${b} = ${total}` : pas === 2 ? `${a} × ${d} dizaines : on décale d’un rang, avec un zéro au bout.` : `${a} × ${u} unités.`}
+      legende={pas >= 3 ? `${a} × ${b} = ${total}` : pas === 2 ? `${a} × ${nombreEt(d, 'dizaine')} : on décale d’un rang, avec un zéro au bout.` : `${a} × ${nombreEt(u, 'unité')}.`}
     >
       <div className="sc-calcul-mental__multi">
         <span>{ligne(String(a))}</span>

@@ -56,7 +56,8 @@ const euros = (centimes) =>
  * « 960 minutes » pour un forfait Famille.
  */
 const heures = (h) => {
-  if (h > 0 && h < 1) return `${Math.round(h * 60)} minutes`;
+  // Une seule minute (#69 v4) : « 1 minute », jamais « 1 minutes ».
+  if (h > 0 && h < 1) return `${Math.round(h * 60)} minute${Math.round(h * 60) > 1 ? 's' : ''}`;
 
   return h === Math.round(h) ? `${h} h` : `${h}`.replace('.', ',') + ' h';
 };
@@ -91,7 +92,9 @@ const heures = (h) => {
  * colonnes (enfants, heures, plafond) : aucune formule n'est nommée ici, et une ligne identique n'est pas répétée.
  */
 /** L'offre de lancement, en court : « 12 h le 1er mois (3 h offertes) » (Camara, le 15/11/2026). */
-const premierMois = (pot, lancement) => `${heures(pot + lancement)} le 1er mois (${heures(lancement)} offertes)`;
+// Une seule heure offerte (#69 v4) : « (1 h offerte) », « (1,5 h offerte) » ; « (3 h offertes) ».
+export const premierMois = (pot, lancement) => `${heures(pot + lancement)} le 1er mois (${heures(lancement)} offerte${
+  (lancement < 1 ? Math.round(lancement * 60) : lancement) >= 2 ? 's' : ''})`;
 
 // `avecConseillere` vient du serveur (OffreTarif) ; absent = incluse, comme avant le 14/11/2026.
 const aLaConseillere = (offre) => offre?.avecConseillere !== false;

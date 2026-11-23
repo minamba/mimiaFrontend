@@ -1,6 +1,7 @@
 import {
   useEffect, useMemo, useRef, useState,
 } from 'react';
+import { secondesRestantes } from '../../../../lib/accord';
 import { DEFI } from '../../../../lib/jeux/coeurs';
 import { useJeuOuvert } from '../../../../lib/jeux/contexteJeu';
 import { phrasesDe } from '../../../../lib/jeux/voix/repliques';
@@ -133,7 +134,7 @@ export default function MytheOuHistoire({ onQuitter, niveau = 'CP' }) {
               className={`hg-mythe__minuteur${part < 0.3 ? ' est-presse' : ''}`}
               style={{ '--part': part }}
               role="timer"
-              aria-label={`${Math.ceil(reste / 1000)} secondes`}
+              aria-label={secondesRestantes(reste)}
             >
               {Math.ceil(reste / 1000)}
             </span>

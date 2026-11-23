@@ -234,7 +234,8 @@ function frequence5(t) {
   const [comment, nom] = t.au(MOYENS);
   return manche(t.melanger, {
     consigne: 'frequence',
-    question: `Sur ${total} élèves, ${part} viennent ${comment}. Fréquence de « ${nom} », en écriture décimale ?`,
+    // Un seul élève (#69 v4) : « 1 vient », jamais « 1 viennent ».
+    question: `Sur ${total} élèves, ${part} ${part > 1 ? 'viennent' : 'vient'} ${comment}. Fréquence de « ${nom} », en écriture décimale ?`,
     bonne: nombre(part / total),
     pieges: [[part, 'effectif-pas-frequence'], [siCourt(total / part), 'frequence-inverse']],
     voisin: (k) => nombre((part + k) / total),
