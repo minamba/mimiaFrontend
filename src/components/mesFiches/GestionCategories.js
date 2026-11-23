@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import {
+  COULEURS_CATEGORIES, creerCategorie, modifierCategorie, supprimerCategorie,
+} from '../../lib/api/espaceParentApi';
 
 /**
  * Ce que devient le contenu d'une catégorie supprimée (#69 v4) : un seul cours se dit « Son cours et ses fiches
@@ -10,9 +13,6 @@ export const suiteSuppressionCategorie = (n) => {
     ? '\n\nSon cours et ses fiches restent, « sans catégorie ».'
     : `\n\nSes ${n} cours et leurs fiches restent, « sans catégorie ».`;
 };
-import {
-  COULEURS_CATEGORIES, creerCategorie, modifierCategorie, supprimerCategorie,
-} from '../../lib/api/espaceParentApi';
 
 /**
  * LES CATÉGORIES DU PARENT — Camara, le 16/10/2026 : « le parent crée ses

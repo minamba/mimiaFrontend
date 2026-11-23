@@ -303,6 +303,7 @@ test('examen blanc sans matière : aucune phrase « La moyenne de ta matière. �
 
   render(<ExamenBlancFiche />);
 
+  // eslint-disable-next-line testing-library/prefer-find-by
   await waitFor(() => expect(screen.getByText(/Bac blanc du/)).toBeInTheDocument());
   expect(screen.queryByText(/La moyenne de/)).not.toBeInTheDocument();
 });

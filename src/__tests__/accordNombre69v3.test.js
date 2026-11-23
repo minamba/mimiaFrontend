@@ -182,6 +182,7 @@ describe('administration : schémas sans leur paire', () => {
   const bilan = (fichiers) => {
     render(<ImportDossierPlanches figures={FIGURES} matiereDeLaCle={() => ({ code: 'SVT' })} importees={[]} onTermine={jest.fn()} />);
     fireEvent.change(screen.getByTestId('dossier-planches'), { target: { files: fichiers } });
+    // eslint-disable-next-line testing-library/no-node-access
     return screen.getByText(/sans (leur|sa) paire/).closest('li').textContent;
   };
 

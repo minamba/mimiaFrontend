@@ -11,6 +11,7 @@
  * (Le point 4, espace insécable du forfait, est dans accordNombre69v3.test.js.)
  */
 
+/* eslint-disable testing-library/no-node-access, testing-library/no-container */
 import { fireEvent, render, screen } from '@testing-library/react';
 import { accord, nombreEt, plurielDesMots, secondesRestantes } from '../lib/accord';
 import ExpressionsEcrites, { resume } from '../components/ExpressionsEcrites';

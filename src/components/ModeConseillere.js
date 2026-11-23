@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getImportOrientation, lancerImportOrientation } from '../lib/api/adminApi';
-import { nombreEt } from '../lib/accord';
 
 /**
  * LA CONSEILLÈRE D'ORIENTATION, DANS ADMIN › MODES — Camara, le 11/10/2026 :
