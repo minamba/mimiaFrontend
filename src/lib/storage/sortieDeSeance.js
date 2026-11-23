@@ -39,6 +39,22 @@ export function noterSortieDeSeance(maintenant = Date.now()) {
   }
 }
 
+/**
+ * LA SEULE FAÇON, POUR LE CHAT, DE DIRE AU SERVEUR QUE LA SÉANCE EST FINIE (#65 v2).
+ *
+ * Chacun de ces appels dépose la séance dans la file de conclusion du serveur :
+ * « Quitter » et l'au revoir (`quitterCours`), l'échéance du forfait
+ * (`terminerForfait` → `MarquerSortieAsync`), l'onglet fermé
+ * (`signalerFermeture` → `MarquerFermetureAsync`), « Encore une séance »
+ * (`quitterCours`). Tous passent donc par ici : l'heure de sortie est notée
+ * AVANT l'appel — même s'il échoue, la conclusion peut être partie — et aucun
+ * chemin ne peut l'oublier (un test lit Chat.js pour le vérifier).
+ */
+export function sortirDeSeance(prevenirLeServeur, conversationId) {
+  noterSortieDeSeance();
+  return prevenirLeServeur(conversationId);
+}
+
 const lire = () => {
   try {
     const brut = window.sessionStorage.getItem(CLE);

@@ -24,6 +24,8 @@ import './examensBlancs.css';
 const jourLong = (iso) =>
   new Date(`${iso.slice(0, 10)}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
+const ERREUR_CHARGEMENT = 'Cet examen blanc n’a pas pu être chargé.';
+
 /**
  * UNE MATIÈRE DE L'EXAMEN BLANC : son professeur, son pourcentage, ses documents. Le pourcentage et le bouton
  * « Commencer à réviser » arrivent avec le programme (étape 3) : tant qu'il n'est pas validé en séance, la carte le
@@ -170,14 +172,21 @@ export default function ExamenBlancFiche() {
   const [ouverture, setOuverture] = useState(null);
   const { calme } = useAffichageEleve(eleveId);
 
-  const charger = useCallback(async () => {
+  // `silencieuse` (relectures : après une séance, pendant le rangement) : un échec ne touche pas à l'écran — la page
+  // affichée reste, aucun message ne la remplace (#65 v2). `vivant()` faux à l'arrivée = page quittée : on ignore.
+  // Seul un 404 (examen supprimé) renvoie aux contrôles, même en silence.
+  const charger = useCallback(async ({ silencieuse = false, vivant = () => true } = {}) => {
     try {
       const { data } = await getExamenBlanc(eleveId, examenId);
+      if (!vivant()) return null;
       setExamen(data);
+      // Une lecture réussie efface l'erreur de CHARGEMENT (pas celle d'une suppression ratée, que l'enfant doit lire).
+      setErreur((avant) => (avant === ERREUR_CHARGEMENT ? null : avant));
       return data;
     } catch (e) {
+      if (!vivant()) return null;
       if (e?.response?.status === 404) navigate(`/eleves/${eleveId}/matieres#mes-controles`, { replace: true });
-      else setErreur('Cet examen blanc n’a pas pu être chargé.');
+      else if (!silencieuse) setErreur(ERREUR_CHARGEMENT);
       return null;
     }
   }, [eleveId, examenId, navigate]);
@@ -185,7 +194,7 @@ export default function ExamenBlancFiche() {
   useEffect(() => { charger(); }, [charger]);
 
   // Ouverte juste après « Quitter », la page se relit le temps que le professeur conclue la séance (signalement #65).
-  useRelectureApresSeance(charger, `${eleveId}-${examenId}`);
+  useRelectureApresSeance((vivant) => charger({ silencieuse: true, vivant }), `${eleveId}-${examenId}`);
 
   useEffect(() => {
     let vivant = true;
@@ -202,10 +211,15 @@ export default function ExamenBlancFiche() {
   // TANT QUE LE PROFESSEUR LIT OU RANGE, la page se relit toutes les 5 secondes : l'enfant voit ses dossiers
   // apparaître sans recharger. Rien ne tourne une fois tout rangé.
   const enCours = Boolean(examen?.matieres?.some((m) => (m.documents?.length ?? 0) > 0 && !m.dossiersAJour));
+  // Relecture elle aussi : un appel raté ne remplace pas la page par un message (#65 v2).
   useEffect(() => {
     if (!enCours) return undefined;
-    const minuteur = setInterval(charger, 5000);
-    return () => clearInterval(minuteur);
+    let vivant = true;
+    const minuteur = setInterval(() => charger({ silencieuse: true, vivant: () => vivant }), 5000);
+    return () => {
+      vivant = false;
+      clearInterval(minuteur);
+    };
   }, [enCours, charger]);
 
   if (erreur) return <div className="alert">{erreur}</div>;

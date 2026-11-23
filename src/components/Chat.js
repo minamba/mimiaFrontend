@@ -19,7 +19,7 @@ import {
   departDeLaSeance, ecouleDepuisLeDepart, oublierLeDepart,
   pauseEnregistree, poserPause, leverPause,
 } from '../lib/storage/departSeance';
-import { noterSortieDeSeance } from '../lib/storage/sortieDeSeance';
+import { sortirDeSeance } from '../lib/storage/sortieDeSeance';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { retirerMarqueursApplication } from '../lib/storage/texteAffiche';
 import { masquerPourLEcran } from '../lib/reponseADictee';
@@ -3195,7 +3195,8 @@ export default function Chat() {
 
       oublierLeDepart();
       sortieSignalee.current = true;
-      terminerForfait(conversation.id).catch(() => {
+      // L'échéance aussi dépose la séance dans la file de conclusion (`MarquerSortieAsync`) : notée (#65 v2).
+      sortirDeSeance(terminerForfait, conversation.id).catch(() => {
         // Le serveur refusera le tour suivant de toute façon (forfait épuisé).
       });
     };
@@ -3222,8 +3223,7 @@ export default function Chat() {
 
     sortieSignalee.current = true;
     // La conclusion part en arrière-plan : les cartes de l'accueil se reliront le temps qu'elle arrive (#65).
-    noterSortieDeSeance();
-    quitterCours(conversation.id).catch(() => {
+    sortirDeSeance(quitterCours, conversation.id).catch(() => {
       // Sans importance : le balayage périodique rattrapera la séance.
     });
   }, [adieuFait, streaming, conversation]);
@@ -3250,7 +3250,9 @@ export default function Chat() {
       if (sortieSignalee.current) return;
 
       sortieSignalee.current = true;
-      signalerFermeture(conversation.id);
+      // La fermeture demande aussi la conclusion (`MarquerFermetureAsync`) ; un retour arrière dans le même onglet
+      // retrouve alors un accueil qui se relit (#65 v2).
+      sortirDeSeance(signalerFermeture, conversation.id);
     };
 
     window.addEventListener('pagehide', auDepart);
@@ -3769,9 +3771,8 @@ export default function Chat() {
       // LE VERDICT DE LA SÉANCE ARRIVE APRÈS NOUS (signalement #65) : le serveur conclut en arrière-plan, quelques
       // secondes après ce retour. Noté ici, l'accueil se relit le temps qu'il arrive — sinon sa carte gardait
       // « Pas encore prêt » quand la page de l'examen blanc disait déjà « Bientôt prêt ».
-      noterSortieDeSeance();
       try {
-        await quitterCours(conversation.id);
+        await sortirDeSeance(quitterCours, conversation.id);
       } catch {
         // Sans importance : la navigation prime sur le marqueur.
       }
@@ -3816,8 +3817,9 @@ export default function Chat() {
     // Clôture la séance écoulée côté serveur : c'est ce marqueur qui déclenche
     // l'évaluation des compétences. Sans lui, deux séances enchaînées n'en
     // feraient qu'une seule aux yeux de l'observateur.
+    // La séance écoulée est conclue en arrière-plan, elle aussi (#65 v2) : noté comme une sortie.
     try {
-      await quitterCours(conversation.id);
+      await sortirDeSeance(quitterCours, conversation.id);
     } catch {
       // Tant pis pour le marqueur : la nouvelle séance démarre quand même.
     }

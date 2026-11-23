@@ -40,6 +40,8 @@ export const LIBELLE_ETAT = {
 /** L'ordre dans lequel on veut LIRE ses notions : ce qui reste à faire d'abord. */
 const ORDRE = ['a-decouvrir', 'fragile', 'en-cours', 'a-confirmer', 'acquise'];
 
+const ERREUR_CHARGEMENT = "Ce contrôle n'a pas pu être chargé.";
+
 const dateCourte = (iso) =>
   new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
 
@@ -127,16 +129,22 @@ export default function ControleFiche() {
   const [confirmation, setConfirmation] = useState(false);
   const [erreur, setErreur] = useState(null);
 
-  const charger = useCallback(() =>
+  // `silencieuse` (relecture après une séance) : un échec ne fait apparaître aucun bandeau, la fiche reste (#65 v2).
+  // `vivant()` faux à l'arrivée de la réponse = fiche quittée : on ignore. Un succès efface l'erreur de chargement.
+  const charger = useCallback(({ silencieuse = false, vivant = () => true } = {}) =>
     getControle(eleveId, controleId)
-      .then(({ data }) => setControle(data))
-      .catch(() => setErreur("Ce contrôle n'a pas pu être chargé.")),
+      .then(({ data }) => {
+        if (!vivant()) return;
+        setControle(data);
+        setErreur((avant) => (avant === ERREUR_CHARGEMENT ? null : avant));
+      })
+      .catch(() => { if (vivant() && !silencieuse) setErreur(ERREUR_CHARGEMENT); }),
   [eleveId, controleId]);
 
   useEffect(() => { charger(); }, [charger]);
 
   // Ouverte juste après « Quitter », la fiche se relit le temps que le professeur conclue la séance (signalement #65).
-  useRelectureApresSeance(charger, `${eleveId}-${controleId}`);
+  useRelectureApresSeance((vivant) => charger({ silencieuse: true, vivant }), `${eleveId}-${controleId}`);
 
   useEffect(() => {
     let vivant = true;

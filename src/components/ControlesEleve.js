@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { getControles, getMatieresEleve } from '../lib/api/elevesApi';
 import { styleMatiere } from '../lib/couleurMatiere';
@@ -141,11 +141,25 @@ export default function ControlesEleve() {
 
   useEffect(() => { charger(); }, [charger]);
 
+  // L'onglet affiché À L'ARRIVÉE d'une réponse : une relecture partie sur « À venir » ne doit pas remplir « Passés ».
+  const ongletAffiche = useRef(onglet);
+  ongletAffiche.current = onglet;
+
   // Ouverte juste après « Quitter », la page se relit le temps que le professeur conclue la séance (signalement #65).
-  // EN SILENCE : `charger` vide la liste (chargeur) ; ici, seules les pastilles et les barres doivent bouger.
-  useRelectureApresSeance(() => {
-    getControles(eleveId, onglet, 50).then(({ data }) => setControles(data ?? [])).catch(() => {});
-    chargerExamensBlancs();
+  // EN SILENCE : `charger` vide la liste (chargeur) ; ici, seules les pastilles et les barres doivent bouger. Un échec
+  // ne touche à rien ; une réponse arrivée après le démontage, ou pour un onglet qu'on a quitté, est ignorée (v2).
+  useRelectureApresSeance((vivant) => {
+    const demande = onglet;
+    getControles(eleveId, demande, 50)
+      .then(({ data }) => {
+        if (!vivant() || ongletAffiche.current !== demande) return;
+        setControles(data ?? []);
+        setErreur(null);
+      })
+      .catch(() => {});
+    getExamensBlancs(eleveId)
+      .then(({ data }) => { if (vivant()) setExamensBlancs(data ?? []); })
+      .catch(() => {});
   }, eleveId);
 
   useEffect(() => {

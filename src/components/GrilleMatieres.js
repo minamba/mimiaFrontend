@@ -390,7 +390,7 @@ export default function GrilleMatieres() {
   const chargerExamensBlancs = useCallback((vivant = true) =>
     getExamensBlancs(eleveId)
       .then(({ data }) => {
-        if (vivant) setExamensBlancs((data ?? []).filter((e) => joursAvant(e.dateExamen) >= 0));
+        if (typeof vivant === 'function' ? vivant() : vivant) setExamensBlancs((data ?? []).filter((e) => joursAvant(e.dateExamen) >= 0));
       })
       .catch(() => {}),
   [eleveId]);
@@ -406,12 +406,15 @@ export default function GrilleMatieres() {
   // `useCallback` parce qu'elle est appelée depuis l'effet de chargement ET
   // après un ajout : sans identité stable, l'effet se relancerait à chaque
   // rendu, donc en boucle.
-  const chargerControles = useCallback((vivant = true) =>
+  // `vivant` : un booléen, ou une fonction relue à l'ARRIVÉE de la réponse (relecture après séance, #65).
+  // `silencieuse` : une relecture ratée garde la liste affichée — la vider ferait disparaître les cartes (#65 v2).
+  const chargerControles = useCallback((vivant = true, { silencieuse = false } = {}) => {
+    const encoreLa = () => (typeof vivant === 'function' ? vivant() : vivant);
     // 12 ET NON PLUS 3 (23/11/2026) : au-delà de trois, « Mes contrôles » les fait défiler en carrousel.
-    getControles(eleveId, 'avenir', 12)
-      .then(({ data }) => { if (vivant) setControles(data ?? []); })
-      .catch(() => { if (vivant) setControles([]); }),
-  [eleveId]);
+    return getControles(eleveId, 'avenir', 12)
+      .then(({ data }) => { if (encoreLa()) setControles(data ?? []); })
+      .catch(() => { if (encoreLa() && !silencieuse) setControles([]); });
+  }, [eleveId]);
 
   const eleve = liste.find((e) => String(e.id) === String(eleveId));
 
@@ -588,11 +591,12 @@ export default function GrilleMatieres() {
   // la relecture ci-dessus ne repassait pas, et la carte du brevet blanc gardait « Pas encore prêt » jusqu'au F5.
   // Les cartes de « Mes contrôles » (contrôles, examens blancs) et la barre de l'examen se relisent donc en silence
   // pendant la minute et demie qui suit une sortie de séance ; une visite ordinaire ne relit rien de plus.
-  useRelectureApresSeance(() => {
-    chargerControles();
-    chargerExamensBlancs();
+  // Un échec ne touche à rien (les cartes restent) ; une réponse arrivée après le démontage est ignorée (v2).
+  useRelectureApresSeance((vivant) => {
+    chargerControles(vivant, { silencieuse: true });
+    chargerExamensBlancs(vivant);
     getExamen(eleveId)
-      .then(({ data }) => setExamen(data?.examen ?? null))
+      .then(({ data }) => { if (vivant()) setExamen(data?.examen ?? null); })
       .catch(() => {});
   }, eleveId);
 
