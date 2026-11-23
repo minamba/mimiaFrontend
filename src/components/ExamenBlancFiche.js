@@ -273,7 +273,8 @@ export default function ExamenBlancFiche() {
       <div className="examen-section__global">
         <BarrePreparation pourcent={examen.pourcent ?? 0} perimetreConnu={examen.matieres.some((m) => m.programmeValide)} />
         <p className="examen-section__explication">
-          La moyenne de tes {nombre} matière{nombre > 1 ? 's' : ''}.
+          {/* UNE SEULE MATIÈRE SE DIT AU SINGULIER (signalement #69) : « tes 1 matière » sonnait faux. */}
+          {nombre > 1 ? `La moyenne de tes ${nombre} matières.` : 'La moyenne de ta matière.'}
         </p>
       </div>
 

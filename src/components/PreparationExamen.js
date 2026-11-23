@@ -196,7 +196,8 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
         <div className="examen-section__global">
           <BarrePreparation pourcent={examen.pourcent} />
           <p className="examen-section__explication">
-            La moyenne de tes {nombre} épreuve{nombre > 1 ? 's' : ''}.
+            {/* Même accord qu'à la page de l'examen blanc (signalement #69) : jamais « tes 1 épreuve ». */}
+            {nombre > 1 ? `La moyenne de tes ${nombre} épreuves.` : 'La moyenne de ton épreuve.'}
           </p>
         </div>
       )}
