@@ -35,6 +35,7 @@ import VisiteDemonstration from './tutoriel/VisiteDemonstration';
 import { getProfil, marquerTutorielVu } from '../lib/api/profilApi';
 import useAncreSection from '../lib/hooks/useAncreSection';
 import useAccesForfait, { compteInactif, fichesConsultables, messageForfait } from '../lib/hooks/useAccesForfait';
+import useRelectureApresSeance from '../lib/hooks/useRelectureApresSeance';
 import PodcastsNonInclus from './podcasts/PodcastsNonInclus';
 import { useAffichageEleve } from '../lib/besoins';
 import { paletteDeMatiere, sceneDeMatiere } from '../lib/scenesMatieres';
@@ -581,6 +582,19 @@ export default function GrilleMatieres() {
       window.removeEventListener('focus', charger);
     };
   }, [eleveId, chargerControles, chargerExamensBlancs]);
+
+  // JUSTE APRÈS « QUITTER », LE VERDICT N'EST PAS ENCORE ÉCRIT (signalement #65) : le professeur conclut la séance en
+  // arrière-plan, quelques secondes après ce retour. Ni l'onglet ni le focus ne changent dans une navigation interne :
+  // la relecture ci-dessus ne repassait pas, et la carte du brevet blanc gardait « Pas encore prêt » jusqu'au F5.
+  // Les cartes de « Mes contrôles » (contrôles, examens blancs) et la barre de l'examen se relisent donc en silence
+  // pendant la minute et demie qui suit une sortie de séance ; une visite ordinaire ne relit rien de plus.
+  useRelectureApresSeance(() => {
+    chargerControles();
+    chargerExamensBlancs();
+    getExamen(eleveId)
+      .then(({ data }) => setExamen(data?.examen ?? null))
+      .catch(() => {});
+  }, eleveId);
 
   /**
    * Les matières de CET élève, demandées au serveur.

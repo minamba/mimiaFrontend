@@ -14,6 +14,7 @@ import ExamenBlancForm from './ExamenBlancForm';
 import { getExamensBlancs, getTypeExamenBlanc } from '../lib/api/examensBlancsApi';
 import { useAffichageEleve } from '../lib/besoins';
 import useAccesForfait, { compteInactif, messageForfait } from '../lib/hooks/useAccesForfait';
+import useRelectureApresSeance from '../lib/hooks/useRelectureApresSeance';
 import { sessionEleve } from '../lib/storage/sessionEleve';
 import { vueIllustree } from '../lib/vueIllustree';
 import './controlesPageIllustre.css';
@@ -139,6 +140,13 @@ export default function ControlesEleve() {
   }, [eleveId, onglet]);
 
   useEffect(() => { charger(); }, [charger]);
+
+  // Ouverte juste après « Quitter », la page se relit le temps que le professeur conclue la séance (signalement #65).
+  // EN SILENCE : `charger` vide la liste (chargeur) ; ici, seules les pastilles et les barres doivent bouger.
+  useRelectureApresSeance(() => {
+    getControles(eleveId, onglet, 50).then(({ data }) => setControles(data ?? [])).catch(() => {});
+    chargerExamensBlancs();
+  }, eleveId);
 
   useEffect(() => {
     let vivant = true;

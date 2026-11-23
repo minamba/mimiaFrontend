@@ -5,6 +5,7 @@ import { getExamenBlanc, retirerMatiereExamenBlanc, supprimerExamenBlanc } from 
 import { styleMatiere } from '../lib/couleurMatiere';
 import { useVueIllustree } from '../lib/vueIllustree';
 import useAccesForfait from '../lib/hooks/useAccesForfait';
+import useRelectureApresSeance from '../lib/hooks/useRelectureApresSeance';
 import BarrePreparation, { palierPreparation } from './BarrePreparation';
 import DocumentsExamenBlanc from './DocumentsExamenBlanc';
 import DossiersExamenBlanc from './DossiersExamenBlanc';
@@ -182,6 +183,9 @@ export default function ExamenBlancFiche() {
   }, [eleveId, examenId, navigate]);
 
   useEffect(() => { charger(); }, [charger]);
+
+  // Ouverte juste après « Quitter », la page se relit le temps que le professeur conclue la séance (signalement #65).
+  useRelectureApresSeance(charger, `${eleveId}-${examenId}`);
 
   useEffect(() => {
     let vivant = true;

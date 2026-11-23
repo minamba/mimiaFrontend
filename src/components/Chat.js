@@ -19,6 +19,7 @@ import {
   departDeLaSeance, ecouleDepuisLeDepart, oublierLeDepart,
   pauseEnregistree, poserPause, leverPause,
 } from '../lib/storage/departSeance';
+import { noterSortieDeSeance } from '../lib/storage/sortieDeSeance';
 import { chargerEleves } from '../lib/actions/elevesActions';
 import { retirerMarqueursApplication } from '../lib/storage/texteAffiche';
 import { masquerPourLEcran } from '../lib/reponseADictee';
@@ -3220,6 +3221,8 @@ export default function Chat() {
     if (!adieuFait || streaming || !conversation || sortieSignalee.current) return;
 
     sortieSignalee.current = true;
+    // La conclusion part en arrière-plan : les cartes de l'accueil se reliront le temps qu'elle arrive (#65).
+    noterSortieDeSeance();
     quitterCours(conversation.id).catch(() => {
       // Sans importance : le balayage périodique rattrapera la séance.
     });
@@ -3763,6 +3766,10 @@ export default function Chat() {
     oublierLeDepart();
 
     if (conversation) {
+      // LE VERDICT DE LA SÉANCE ARRIVE APRÈS NOUS (signalement #65) : le serveur conclut en arrière-plan, quelques
+      // secondes après ce retour. Noté ici, l'accueil se relit le temps qu'il arrive — sinon sa carte gardait
+      // « Pas encore prêt » quand la page de l'examen blanc disait déjà « Bientôt prêt ».
+      noterSortieDeSeance();
       try {
         await quitterCours(conversation.id);
       } catch {

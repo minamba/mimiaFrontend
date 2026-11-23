@@ -10,6 +10,7 @@ import CoursDuControle from './CoursDuControle';
 import OuvertureSeance from './OuvertureSeance';
 import FenetreSansForfait from './FenetreSansForfait';
 import useAccesForfait, { compteInactif } from '../lib/hooks/useAccesForfait';
+import useRelectureApresSeance from '../lib/hooks/useRelectureApresSeance';
 import JustificationProfesseur from './JustificationProfesseur';
 import Loader from './Loader';
 import PastillePret from './PastillePret';
@@ -133,6 +134,9 @@ export default function ControleFiche() {
   [eleveId, controleId]);
 
   useEffect(() => { charger(); }, [charger]);
+
+  // Ouverte juste après « Quitter », la fiche se relit le temps que le professeur conclue la séance (signalement #65).
+  useRelectureApresSeance(charger, `${eleveId}-${controleId}`);
 
   useEffect(() => {
     let vivant = true;
