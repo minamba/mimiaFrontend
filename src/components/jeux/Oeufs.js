@@ -14,6 +14,7 @@
  * NET À TOUTES LES TAILLES, et quelques kilo-octets : le décor pèse déjà
  * 128 Ko, ce n'est pas la peine d'y ajouter dix images d'œufs.
  */
+import { nombreEt } from '../../lib/accord';
 
 /** Un œuf : une ellipse un peu plus étroite en haut, et son reflet. */
 function Oeuf({ x, y, r = 1 }) {
@@ -46,7 +47,7 @@ export function BoiteAOeufs({ cases }) {
       className="oeufs-boite"
       viewBox={`0 0 ${largeur} ${hauteur}`}
       role="img"
-      aria-label={`Boîte de dix, ${cases.filter((c) => c !== 'vide' && c !== 'masque').length} œufs`}
+      aria-label={`Boîte de dix, ${nombreEt(cases.filter((c) => c !== 'vide' && c !== 'masque').length, 'œuf')}`}
     >
       <rect
         className="oeufs-boite__carton"

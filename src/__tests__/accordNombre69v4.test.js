@@ -21,6 +21,8 @@ import { accordDuree, heures } from '../components/Quota';
 import { premierMois } from '../components/Tarifs';
 import { libelleDureeSeance } from '../components/Chat';
 import { suiteSuppressionCategorie } from '../components/mesFiches/GestionCategories';
+import { BoiteAOeufs } from '../components/jeux/Oeufs';
+import { alveoles } from '../lib/jeux/boiteDeDix';
 import * as api from '../lib/api/elevesApi';
 
 jest.mock('../lib/api/elevesApi');
@@ -159,6 +161,18 @@ describe('jumeaux de la recherche élargie', () => {
     expect(premierMois(8, 1.5)).toBe('9,5 h le 1er mois (1,5 h offerte)');
     expect(premierMois(8, 3)).toBe('11 h le 1er mois (3 h offertes)');
     expect(premierMois(8, 0.5)).toBe('8,5 h le 1er mois (30 minutes offertes)');
+  });
+
+  test('jeu « La boîte de 10 » (trouvé par la recherche dans le bundle) : « Boîte de dix, 1 œuf »', () => {
+    const boite = (depart) => {
+      const { unmount } = render(<BoiteAOeufs cases={alveoles(depart, 0)} />);
+      const nom = screen.getByRole('img').getAttribute('aria-label');
+      unmount();
+      return nom;
+    };
+    expect(boite(1)).toBe('Boîte de dix, 1 œuf');
+    expect(boite(2)).toBe('Boîte de dix, 2 œufs');
+    expect(boite(0)).toBe('Boîte de dix, 0 œuf');
   });
 
   describe('administration, import de schémas : « … et 1 autre »', () => {
