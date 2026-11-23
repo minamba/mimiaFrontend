@@ -9,6 +9,9 @@ import Loader from './Loader';
 import Onglets from './Onglets';
 import OuvertureSeance from './OuvertureSeance';
 import { ControleCarte } from './MesControles';
+import ExamenBlancCarte, { joursAvant } from './ExamenBlancCarte';
+import ExamenBlancForm from './ExamenBlancForm';
+import { getExamensBlancs, getTypeExamenBlanc } from '../lib/api/examensBlancsApi';
 import { useAffichageEleve } from '../lib/besoins';
 import useAccesForfait, { compteInactif, messageForfait } from '../lib/hooks/useAccesForfait';
 import { sessionEleve } from '../lib/storage/sessionEleve';
@@ -107,6 +110,26 @@ export default function ControlesEleve() {
   const [formulaire, setFormulaire] = useState(false);
   const [erreur, setErreur] = useState(null);
 
+  // LES EXAMENS BLANCS SUR CETTE PAGE AUSSI (Camara, le 23/11/2026) : leur groupe en tête de chaque onglet (à venir,
+  // passés), et le bouton « Brevet blanc » à côté de « Ajouter un contrôle ».
+  const [examensBlancs, setExamensBlancs] = useState([]);
+  const [libelleExamenBlanc, setLibelleExamenBlanc] = useState(null);
+  const [formulaireExamenBlanc, setFormulaireExamenBlanc] = useState(false);
+
+  const chargerExamensBlancs = useCallback(() => getExamensBlancs(eleveId)
+    .then(({ data }) => setExamensBlancs(data ?? []))
+    .catch(() => {}), [eleveId]);
+
+  useEffect(() => { chargerExamensBlancs(); }, [chargerExamensBlancs]);
+
+  useEffect(() => {
+    let vivant = true;
+    getTypeExamenBlanc(eleveId)
+      .then(({ data }) => { if (vivant) setLibelleExamenBlanc(data?.libelle ?? null); })
+      .catch(() => {});
+    return () => { vivant = false; };
+  }, [eleveId]);
+
   const charger = useCallback(() => {
     setControles(null);
 
@@ -145,6 +168,9 @@ export default function ControlesEleve() {
   const faireLePoint = (controle) => ouvrir(controle, 'bilan');
 
   const groupes = controles !== null ? grouperParMatiere(controles) : [];
+  const examensDeLOnglet = examensBlancs.filter((e) => (onglet === 'passes'
+    ? joursAvant(e.dateExamen) < 0
+    : joursAvant(e.dateExamen) >= 0));
 
   // LA VUE ILLUSTRÉE DE L'ENFANT — Camara, le 15/11/2026 (maquette « Mes contrôles », onglets À venir / Passés) :
   // le décor commun des pages de l'enfant et cette page restylée (controlesPageIllustre.css, préfixe `cpi`).
@@ -183,11 +209,23 @@ export default function ControlesEleve() {
         ) : (
           <h1>Mes contrôles</h1>
         )}
-        <BoutonAjoutControle
-          onClick={() => setFormulaire(true)}
-          desactive={inactif}
-          raison={messageForfait(Boolean(sessionEleve()), 'l’ajout de contrôles')}
-        />
+        <span className="controles-page__actions">
+          <BoutonAjoutControle
+            onClick={() => setFormulaire(true)}
+            desactive={inactif}
+            raison={messageForfait(Boolean(sessionEleve()), 'l’ajout de contrôles')}
+          />
+          {libelleExamenBlanc && (
+            <BoutonAjoutControle
+              onClick={() => setFormulaireExamenBlanc(true)}
+              libelle={libelleExamenBlanc}
+              variante="examen-blanc"
+              // RÉSERVÉ AUX ABONNÉS (Camara, le 23/11/2026).
+              desactive={accesForfait.ouvert === false}
+              raison="Les examens blancs sont réservés aux abonnés."
+            />
+          )}
+        </span>
       </header>
 
       <Onglets items={ONGLETS} actif={onglet} onChoisir={setOnglet} etiquette="Mes contrôles" />
@@ -196,7 +234,30 @@ export default function ControlesEleve() {
 
       {controles === null && !erreur && <Loader texte="Chargement…" />}
 
-      {controles !== null && controles.length === 0 && (
+      {/* LES EXAMENS BLANCS EN TÊTE : une carte par date, comme sur l'accueil. Passés : « Faire le point ». */}
+      {examensDeLOnglet.length > 0 && (
+        <section className="controles-groupe" style={{ '--matiere': '#d9a21b', '--matiere-claire': '#f5c451' }}>
+          <h2 className="controles-groupe__titre">
+            <span className="controles-groupe__point" aria-hidden="true" />
+            {examensDeLOnglet[0].libelle}
+            <span className="controles-groupe__compte">{examensDeLOnglet.length}</span>
+          </h2>
+          <ul className="controles-liste">
+            {examensDeLOnglet.map((examen) => (
+              <ExamenBlancCarte
+                key={examen.id}
+                examen={examen}
+                eleveId={eleveId}
+                illustre={illustre}
+                passe={onglet === 'passes'}
+                onPreparer={onglet === 'passes' ? faireLePoint : preparer}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {controles !== null && controles.length === 0 && examensDeLOnglet.length === 0 && (
         <div className="fiches-vide">
           <p className="fiches-vide__titre">
             {onglet === 'avenir' ? 'Pas encore de contrôle prévu.' : 'Aucun contrôle passé.'}
@@ -235,6 +296,20 @@ export default function ControlesEleve() {
           </ul>
         </section>
       ))}
+
+      {formulaireExamenBlanc && (
+        <div className="modale" role="dialog" aria-modal="true" aria-label={libelleExamenBlanc ?? 'Examen blanc'}>
+          <div className="modale__boite">
+            <ExamenBlancForm
+              eleveId={eleveId}
+              matieres={matieres}
+              libelle={libelleExamenBlanc ?? 'Examen blanc'}
+              onEnregistre={() => { setFormulaireExamenBlanc(false); chargerExamensBlancs(); }}
+              onAnnule={() => setFormulaireExamenBlanc(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {formulaire && (
         <div className="modale" role="dialog" aria-modal="true" aria-label="Ajouter un contrôle">

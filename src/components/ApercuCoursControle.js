@@ -31,7 +31,16 @@ const LIBELLES = {
  * Une semaine après le contrôle, le fichier est effacé du serveur : la route
  * répond 410, et l'aperçu le dit au lieu d'un cadre vide.
  */
-export default function ApercuCoursControle({ eleveId, controleId, document: doc, onFermer }) {
+/**
+ * RÉUTILISÉ PAR LES EXAMENS BLANCS (23/11/2026) : `lireFichier(id)` et `lireTexte(id)` remplacent les routes du
+ * contrôle, `messagePurge` dit quand le fichier s'efface. Sans eux, rien ne change pour le contrôle.
+ */
+export default function ApercuCoursControle({
+  eleveId, controleId, document: doc, onFermer, lireFichier = null, lireTexte = null, messagePurge = MESSAGE_PURGE,
+}) {
+  const fichierDe = (id) => (lireFichier ? lireFichier(id) : getFichierCoursControle(eleveId, controleId, id));
+  const texteDe = (id) => (lireTexte ? lireTexte(id) : getTexteCoursControle(eleveId, controleId, id));
+
   const [adresse, setAdresse] = useState(null);
   const [texte, setTexte] = useState(null);
   const [etat, setEtat] = useState('chargement');
@@ -51,11 +60,11 @@ export default function ApercuCoursControle({ eleveId, controleId, document: doc
     const charger = async () => {
       try {
         if (visuel) {
-          const { data } = await getFichierCoursControle(eleveId, controleId, doc.id);
+          const { data } = await fichierDe(doc.id);
           creee = URL.createObjectURL(data);
           if (vivant) { setAdresse(creee); setEtat('pret'); }
         } else {
-          const { data } = await getTexteCoursControle(eleveId, controleId, doc.id);
+          const { data } = await texteDe(doc.id);
           if (vivant) { setTexte(data?.texte ?? ''); setEtat(data?.lu ? 'pret' : 'en-lecture'); }
         }
       } catch (e) {
@@ -69,11 +78,12 @@ export default function ApercuCoursControle({ eleveId, controleId, document: doc
       vivant = false;
       if (creee) URL.revokeObjectURL(creee);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- les lecteurs sont recréés à chaque rendu.
   }, [eleveId, controleId, doc.id, visuel]);
 
   const telecharger = async () => {
     try {
-      const { data } = await getFichierCoursControle(eleveId, controleId, doc.id);
+      const { data } = await fichierDe(doc.id);
       const lien = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = lien;
@@ -91,7 +101,7 @@ export default function ApercuCoursControle({ eleveId, controleId, document: doc
   if (etat === 'chargement') {
     corps = <p className="cours-apercu__etat">Chargement…</p>;
   } else if (etat === 'purge') {
-    corps = <p className="cours-apercu__etat" role="status">{MESSAGE_PURGE}</p>;
+    corps = <p className="cours-apercu__etat" role="status">{messagePurge}</p>;
   } else if (etat === 'erreur') {
     corps = <p className="champ__erreur" role="alert">Ce document n’a pas pu être ouvert. Tu peux réessayer ?</p>;
   } else if (doc.genre === 'image') {

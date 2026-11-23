@@ -1,0 +1,442 @@
+/* ======================================================================================================
+   LES EXAMENS BLANCS — Camara, le 23/11/2026. Préfixe `eb-` (vérifié libre ce jour-là).
+   La carte parmi les contrôles reprend `.controle-carte` (et son habillage illustré `.ctr-illu .controle-carte`) :
+   seule sa couleur change, l'or des examens (celui de la préparation au brevet), pour qu'on la distingue d'un coup
+   d'œil d'un simple contrôle. La page reprend la mise en page de la préparation au brevet (`.examen-section`).
+   ====================================================================================================== */
+
+.eb-carte {
+  --matiere: #d9a21b;
+  --matiere-claire: #f5c451;
+}
+
+.eb-carte__tete {
+  display: grid;
+  /* DEUX COLONNES ET NON TROIS (Camara, le 23/11/2026 : « pourquoi le titre est sur plusieurs lignes ») : la pastille
+     du délai, à droite du titre, lui laissait 60 px dans une carte étroite, et « Mathématiques » se coupait en plein
+     mot. Elle passe dessous, sur toute la largeur, comme sur la carte d'un contrôle. */
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 12px;
+}
+
+.eb-carte__tete > .controle-carte__delai {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+/* Le titre (les matières) se coupe entre les mots, jamais au milieu d'un mot. */
+.eb-carte .controle-carte__titre.eb-carte__titre,
+:root .ctr-illu .eb-carte .controle-carte__titre.eb-carte__titre {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.eb-carte__icone {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid color-mix(in srgb, var(--matiere-claire) 70%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--matiere-claire) 14%, transparent);
+  font-size: 22px;
+}
+
+.eb-carte__ident {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.eb-carte__etiquette {
+  align-self: flex-start;
+  white-space: nowrap;
+  padding: 3px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--matiere-claire) 80%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--matiere-claire) 16%, transparent);
+  color: color-mix(in srgb, var(--matiere-claire) 70%, var(--encre));
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+:root:not([data-theme='light']) .eb-carte__etiquette { color: var(--matiere-claire); }
+
+.eb-carte__note {
+  margin: 0;
+  color: var(--encre-douce);
+  font-size: 13.5px;
+  font-style: italic;
+}
+
+.eb-carte__action { text-align: center; text-decoration: none; }
+
+/* ------------------------------------------------------------------------------------------ la page */
+.eb-page { max-width: 1000px; }
+
+.eb-page__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eb-page__sous-titre { margin: 4px 0 0; color: var(--encre-douce); }
+
+.eb-matieres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 20px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eb-matiere {
+  --matiere-claire: var(--matiere, #8ec5ff);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 20px;
+  border: 1.5px solid color-mix(in srgb, var(--matiere-claire) 55%, var(--trait));
+  border-radius: 20px;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--matiere-claire) 12%, var(--surface)) 0%, var(--surface) 60%);
+}
+
+.eb-matiere__tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.eb-matiere__icone { font-size: 26px; }
+
+.eb-matiere__titre {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.eb-matiere__prof { color: color-mix(in srgb, var(--matiere-claire) 70%, var(--encre)); font-style: italic; }
+
+.eb-matiere__programme {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--matiere-claire) 50%, var(--trait));
+  border-radius: 12px;
+  color: var(--encre-douce);
+  font-size: 14px;
+}
+
+.eb-matiere__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.eb-matiere__retirer {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--encre-douce);
+  font: inherit;
+  font-size: 13.5px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.eb-ajouter {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.eb-supprimer {
+  margin-top: 28px;
+  text-align: center;
+}
+
+
+
+/* --------------------------------------------------------------- le bouton « Brevet blanc » / « Bac blanc »
+   La forme de « Ajouter un contrôle » (`.btn-controle`), l'or des examens. Texte foncé : du blanc sur l'or se lit
+   mal (leçon du Black Friday). */
+.btn-controle.btn-controle--examen-blanc {
+  background: linear-gradient(135deg, #f5c451 0%, #d99a14 100%);
+  color: #2a1a00;
+  box-shadow: 0 4px 14px rgba(217, 154, 20, 0.35);
+}
+
+.btn-controle.btn-controle--examen-blanc:hover { box-shadow: 0 7px 20px rgba(217, 154, 20, 0.45); }
+.btn-controle.btn-controle--examen-blanc .btn-controle__icone { background: rgba(255, 255, 255, 0.4); }
+.btn-controle.btn-controle--examen-blanc:focus-visible { outline-color: #d99a14; }
+
+:root .ctr-illu .btn-controle.btn-controle--examen-blanc {
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 0 18px rgba(245, 196, 81, 0.45);
+}
+
+/* ----------------------------------------------------------------- les dossiers par notion (étape 2) */
+.eb-dossiers { display: flex; flex-direction: column; gap: 8px; }
+
+.eb-dossiers__titre { margin: 0; font-weight: 700; font-size: 14.5px; }
+
+.eb-dossiers__attente {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--matiere-claire, #8ec5ff) 12%, transparent);
+  color: var(--encre-douce);
+  font-size: 14px;
+}
+
+.eb-dossiers__onde {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--matiere-claire, #8ec5ff);
+  animation: eb-pulsation 1.4s ease-in-out infinite;
+}
+
+@keyframes eb-pulsation {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-dossiers__onde { animation: none; }
+}
+
+.eb-dossiers__liste { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.eb-dossier {
+  border: 1px solid color-mix(in srgb, var(--matiere-claire, #8ec5ff) 35%, var(--trait));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--matiere-claire, #8ec5ff) 6%, var(--surface));
+}
+
+.eb-dossier.est-ouvert { border-color: color-mix(in srgb, var(--matiere-claire, #8ec5ff) 70%, var(--trait)); }
+
+.eb-dossier__entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.eb-dossier__icone { font-size: 18px; }
+.eb-dossier__libelle { flex: 1; min-width: 0; font-weight: 700; }
+.eb-dossier__nombre { color: var(--encre-douce); font-size: 13px; white-space: nowrap; }
+
+.eb-dossier__documents {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0 12px 12px 40px;
+  list-style: none;
+}
+
+.eb-dossier__documents li { display: flex; align-items: center; gap: 10px; }
+.eb-dossier__nom { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+
+/* ----------------------------------------------------------------- le programme validé (étape 3) */
+.eb-matiere__mot { margin: 0; font-size: 14px; color: var(--encre-douce); }
+.eb-matiere__mot strong { display: block; color: var(--encre); font-size: 13px; }
+
+.eb-programme { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+.eb-programme__notion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--matiere-claire, #8ec5ff) 8%, transparent);
+  font-size: 14px;
+}
+
+.eb-programme__libelle { min-width: 0; overflow-wrap: anywhere; }
+.eb-programme__etat { color: var(--encre-douce); font-size: 13px; }
+.eb-programme__pourcent { font-weight: 700; }
+
+.eb-matiere__reviser { align-self: center; width: min(100%, 420px); }
+
+/* LE BOUTON DE LA CARTE, PROPRE (Camara, le 23/11/2026 : « tu trouves que c'est propre là ? ») : sur un <button>, la
+   flèche ajoutée par `.ctr-illu .controle-carte__action::before` devenait un élément à part, collé au bord gauche, et
+   « Continuer la préparation » passait sur deux lignes. Flèche et texte groupés au centre, sur une ligne. */
+.controle-carte__action.eb-carte__action,
+:root .ctr-illu .controle-carte__action.eb-carte__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  padding-inline: 16px;
+  font-size: clamp(14px, 1.3vw, 16px);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Le badge d'état et le bouton, plaqués en bas de la carte comme sur celles des contrôles : la carte s'étire à la
+   hauteur de ses voisines (grille ou carrousel), et ce bloc prend la place qui reste. */
+.eb-carte { display: flex; flex-direction: column; }
+
+.eb-carte__bas {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.eb-carte__bas .eb-carte__action { align-self: stretch; }
+
+/* ------------------------------------------------------------ la préparation, comme sur la carte d'un contrôle
+   (Camara, le 23/11/2026 : « pourquoi le pourcentage n'a pas le même design que pour les contrôles ») : le même
+   encadré, la même barre lumineuse que `controleCarteIllustre.css` (cartes `.cci`), recopiés pour la carte de
+   l'examen blanc, qui n'est pas une carte `.cci` (pas de scène de matière). */
+:root .controles-liste > .controle-carte.eb-carte .eb-carte__preparation {
+  padding: 12px 18px 14px;
+  border: 1.5px solid color-mix(in srgb, var(--matiere-claire, #f5c451) 35%, rgba(160, 190, 255, 0.4));
+  border-radius: 18px;
+  background: rgba(8, 18, 66, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+:root .controles-liste > .controle-carte.eb-carte .preparation { margin: 0; gap: 8px; }
+:root .controles-liste > .controle-carte.eb-carte .preparation__ligne { color: #e8ecff; }
+
+:root .controles-liste > .controle-carte.eb-carte .preparation__libelle {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+:root .controles-liste > .controle-carte.eb-carte .preparation__libelle::before { content: '📖\00a0\00a0'; }
+
+:root .controles-liste > .controle-carte.eb-carte .preparation__valeur {
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+:root .controles-liste > .controle-carte.eb-carte .preparation__jauge {
+  height: 12px;
+  border: 1px solid rgba(160, 190, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+:root .controles-liste > .controle-carte.eb-carte .preparation__jauge span.est-acquis,
+:root .controles-liste > .controle-carte.eb-carte .preparation__jauge span.est-encours {
+  background: linear-gradient(90deg, #2fe0a6 0%, #4fd8e0 100%);
+  box-shadow: 0 0 10px rgba(79, 216, 224, 0.65);
+}
+
+:root .controles-liste > .controle-carte.eb-carte .preparation__jauge span.est-fragile {
+  box-shadow: 0 0 8px rgba(255, 170, 80, 0.55);
+}
+
+/* ------------------------------------------------------------ le halo de l'examen blanc (Camara, le 23/11/2026 :
+   « juste pour l'examen blanc, un petit halo avec un effet léger ») : l'or des examens, qui respire lentement. */
+@keyframes eb-halo {
+  /* Plus marqué le 23/11/2026 (Camara : « l'effet est trop discret ») : un halo plus large et plus lumineux, et la
+     bordure qui s'allume avec lui. */
+  0%, 100% {
+    border-color: rgba(245, 196, 81, 0.75);
+    box-shadow:
+      0 0 16px 2px rgba(245, 196, 81, 0.38),
+      0 0 0 1px rgba(245, 196, 81, 0.3),
+      inset 0 0 14px rgba(245, 196, 81, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    border-color: rgba(255, 215, 120, 1);
+    box-shadow:
+      0 0 38px 8px rgba(245, 196, 81, 0.7),
+      0 0 0 2px rgba(255, 215, 120, 0.6),
+      inset 0 0 22px rgba(245, 196, 81, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+}
+
+:root .controles-liste > .controle-carte.eb-carte {
+  border-color: color-mix(in srgb, #f5c451 80%, transparent);
+  animation: eb-halo 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .controles-liste > .controle-carte.eb-carte {
+    animation: none;
+    box-shadow: 0 0 26px 4px rgba(245, 196, 81, 0.55), 0 0 0 2px rgba(255, 215, 120, 0.45);
+  }
+}
+
+/* La page « Mes contrôles » : les deux boutons côte à côte, et le doré gardé face à la pilule orange de la page
+   (`:root .cpi .btn-controle`, plus spécifique que la règle du bouton plus haut). */
+.controles-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+:root .cpi .btn-controle.btn-controle--examen-blanc {
+  background: linear-gradient(180deg, #f8d06a 0%, #d99a14 100%);
+  color: #2a1a00;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    0 0 18px rgba(245, 196, 81, 0.5),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+/* La barre de chaque notion du programme (Camara, le 23/11/2026) : sous le libellé, sur toute la largeur de la ligne,
+   aux couleurs des barres de préparation (lumineuse dès que ça avance, orange quand c'est fragile). */
+.eb-programme__notion { row-gap: 7px; }
+
+.eb-programme__jauge {
+  grid-column: 1 / -1;
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.eb-programme__jauge > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #8aa0c8;
+  transition: width 0.4s ease;
+}
+
+.eb-programme__jauge > span.est-acquis,
+.eb-programme__jauge > span.est-encours {
+  background: linear-gradient(90deg, #2fe0a6 0%, #4fd8e0 100%);
+  box-shadow: 0 0 8px rgba(79, 216, 224, 0.55);
+}
+
+.eb-programme__jauge > span.est-fragile { background: #f0a24a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .eb-programme__jauge > span { transition: none; }
+}

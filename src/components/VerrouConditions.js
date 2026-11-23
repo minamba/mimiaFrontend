@@ -150,7 +150,7 @@ function FenetreConditions({ premiereFois, proposerOffres, onAccepter, onRefuser
                 />
                 <span>{LIBELLE_OFFRES}</span>
               </label>
-              <p className="conditions-fenetre__note">Facultatif : vous pouvez continuer sans cocher cette case.</p>
+              <p className="conditions-fenetre__note">Facultatif.</p>
             </div>
           )}
 

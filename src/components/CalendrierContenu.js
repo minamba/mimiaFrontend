@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { styleMatiere } from '../lib/couleurMatiere';
 import { getMatieresEleve } from '../lib/api/elevesApi';
 import ControleForm from './ControleForm';
+import ExamenBlancForm from './ExamenBlancForm';
+import { getExamensBlancs, getTypeExamenBlanc } from '../lib/api/examensBlancsApi';
 import OuvertureSeance from './OuvertureSeance';
 import { useAffichageEleve } from '../lib/besoins';
 import useAccesForfait, { compteInactif, messageForfait } from '../lib/hooks/useAccesForfait';
@@ -49,6 +51,12 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
   // évite un conflit d'Échap et de z-index entre les deux.
   const [modeFormulaire, setModeFormulaire] = useState(false);
 
+  // LES EXAMENS BLANCS (23/11/2026) : leur jour dans la grille, leur bouton dans la fenêtre d'un jour (« Brevet
+  // blanc », « Bac blanc »… selon la classe, rien sinon), réservé aux abonnés.
+  const [modeExamenBlanc, setModeExamenBlanc] = useState(false);
+  const [examensBlancs, setExamensBlancs] = useState([]);
+  const [libelleExamenBlanc, setLibelleExamenBlanc] = useState(null);
+
   // Les matières de l'élève, pour la combobox du formulaire — chargées une
   // seule fois, pas à chaque mois affiché.
   const [matieres, setMatieres] = useState([]);
@@ -72,8 +80,19 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
       .then(({ data }) => { if (vivant) setMatieres((data ?? []).filter((m) => m.active)); })
       .catch(() => { /* La combobox reste vide ; le formulaire le dit lui-même. */ });
 
+    getTypeExamenBlanc(eleveId)
+      .then(({ data }) => { if (vivant) setLibelleExamenBlanc(data?.libelle ?? null); })
+      .catch(() => {});
+
+    getExamensBlancs(eleveId)
+      .then(({ data }) => { if (vivant) setExamensBlancs(data ?? []); })
+      .catch(() => {});
+
     return () => { vivant = false; };
   }, [eleveId]);
+
+  const examensBlancsDuJour = (jour) =>
+    examensBlancs.filter((e) => memeJourISO(e.dateExamen, jour));
 
   const charger = () =>
     chargerCalendrier(eleveId, curseur.getFullYear(), curseur.getMonth() + 1)
@@ -105,7 +124,12 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
     return () => document.removeEventListener('keydown', auClavier);
   }, [jourDetail]);
 
-  const fermerDetail = () => { setJourDetail(null); setModeFormulaire(false); };
+  const fermerDetail = () => { setJourDetail(null); setModeFormulaire(false); setModeExamenBlanc(false); };
+
+  const apresAjoutExamenBlanc = () => {
+    setModeExamenBlanc(false);
+    getExamensBlancs(eleveId).then(({ data }) => setExamensBlancs(data ?? [])).catch(() => {});
+  };
 
   const apresAjoutControle = () => {
     setModeFormulaire(false);
@@ -212,7 +236,22 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
         </div>
       )}
 
-      {jourDetail && !modeFormulaire && (
+      {jourDetail && modeExamenBlanc && (
+        <div className="modale" role="dialog" aria-modal="true" aria-label={libelleExamenBlanc ?? 'Examen blanc'}>
+          <div className="modale__boite jour-detail">
+            <ExamenBlancForm
+              eleveId={eleveId}
+              matieres={matieres}
+              libelle={libelleExamenBlanc ?? 'Examen blanc'}
+              jour={jourDetail}
+              onEnregistre={apresAjoutExamenBlanc}
+              onAnnule={() => setModeExamenBlanc(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {jourDetail && !modeFormulaire && !modeExamenBlanc && (
         <div className="modale" role="dialog" aria-modal="true" aria-label="Détail de la journée">
           <div className="modale__boite jour-detail">
             <h2 className="jour-detail__titre">{dateLongue(jourDetail)}</h2>
@@ -326,7 +365,47 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
               </>
             )}
 
-            {toutesLesSeancesDuJour(jourDetail).length === 0
+            {examensBlancsDuJour(jourDetail).length > 0 && (
+              <section className="jour-detail__section">
+                <h3>{examensBlancsDuJour(jourDetail)[0].libelle}</h3>
+                <ul>
+                  {/* UNE LIGNE PAR MATIÈRE, AVEC SON BOUTON, COMME UN CONTRÔLE — Camara, le 23/11/2026 : « comme les
+                      contrôles, le bouton Préparer avec le prof ». La séance s'ouvre sur le contrôle caché de la
+                      matière (sa préparation) ; le lendemain de l'examen blanc, « Faire le point ». */}
+                  {examensBlancsDuJour(jourDetail).flatMap((e) => e.matieres.map((m) => (
+                    <li key={`${e.id}-${m.id}`} style={styleMatiere({ matiereLibelle: m.matiereLibelle })}>
+                      <span className="jour-detail__pastille jour-detail__pastille--controle" aria-hidden="true" />
+                      <Link to={`/eleves/${eleveId}/examens-blancs/${e.id}`} className="jour-detail__matiere">
+                        {m.matiereLibelle}
+                      </Link>
+                      {e.heureExamen && <span className="jour-detail__heure">{e.heureExamen.slice(0, 5)}</span>}
+
+                      {m.controleId && (
+                        <button
+                          type="button"
+                          className="btn btn--compact jour-detail__preparer"
+                          disabled={ajoutFerme}
+                          title={ajoutFerme ? messageForfait(Boolean(sessionEleve()), 'les cours avec les professeurs') : undefined}
+                          onClick={() => {
+                            const passe = jourDetail < AUJOURDHUI_MINUIT;
+                            setOuverture({
+                              controle: { id: m.controleId, matiereId: m.matiereId },
+                              mode: passe ? 'bilan' : 'controle',
+                            });
+                            fermerDetail();
+                          }}
+                        >
+                          {jourDetail < AUJOURDHUI_MINUIT ? 'Faire le point' : 'Préparer avec le prof'}
+                        </button>
+                      )}
+                    </li>
+                  )))}
+                </ul>
+              </section>
+            )}
+
+            {examensBlancsDuJour(jourDetail).length === 0
+              && toutesLesSeancesDuJour(jourDetail).length === 0
               && evaluationsDuJour(jourDetail).length === 0
               && vacancesDuJour(jourDetail).length === 0
               && controlesDuJour(jourDetail).length === 0 && (
@@ -346,6 +425,18 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
               >
                 Ajouter un contrôle
               </button>
+              {libelleExamenBlanc && jourDetail >= AUJOURDHUI_MINUIT && (
+                <button
+                  type="button"
+                  className="btn btn--compact"
+                  onClick={() => setModeExamenBlanc(true)}
+                  // RÉSERVÉ AUX ABONNÉS (Camara, le 23/11/2026).
+                  disabled={accesForfait.ouvert === false}
+                  title={accesForfait.ouvert === false ? 'Les examens blancs sont réservés aux abonnés.' : undefined}
+                >
+                  {libelleExamenBlanc}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -476,6 +567,12 @@ export function CalendrierContenu({ eleveId, chargerCalendrier }) {
                     rien à qui ne connaît pas la légende — et rien du tout à
                     un lecteur d'écran. Le libellé se réduit à « Ctrl » sur
                     les petits écrans, mais il est toujours dans le DOM. */}
+                {duMois && examensBlancsDuJour(date).length > 0 && (
+                  <span className="calendrier-jour__marque-controle" title={examensBlancsDuJour(date)[0].libelle}>
+                    {examensBlancsDuJour(date)[0].libelle}
+                  </span>
+                )}
+
                 {controleJour && (
                   <span
                     className="calendrier-jour__marque-controle"
@@ -537,6 +634,12 @@ const memeJour = (a, b) =>
   a.getFullYear() === b.getFullYear()
   && a.getMonth() === b.getMonth()
   && a.getDate() === b.getDate();
+
+/** Le jour d'un examen blanc (« AAAA-MM-JJ… », sans fuseau) est-il cette case ? En dates locales. */
+const memeJourISO = (iso, jour) => {
+  const [a, m, j] = String(iso).slice(0, 10).split('-').map(Number);
+  return a === jour.getFullYear() && m === jour.getMonth() + 1 && j === jour.getDate();
+};
 
 const heure = (iso) =>
   new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });

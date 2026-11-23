@@ -18,6 +18,7 @@ import {
   ControlesEleve,
   ControleFiche,
   EpreuveFiche,
+  ExamenBlancFiche,
   Chat,
   Fiches,
   Fiche,
@@ -267,6 +268,15 @@ export const BaseApp = () => {
             element={
               <RouteProtegee>
                 <EpreuveFiche />
+              </RouteProtegee>
+            }
+          />
+          {/* LES EXAMENS BLANCS (23/11/2026) : la page d'un brevet blanc ou d'un bac blanc. */}
+          <Route
+            path="/eleves/:eleveId/examens-blancs/:examenId"
+            element={
+              <RouteProtegee>
+                <ExamenBlancFiche />
               </RouteProtegee>
             }
           />

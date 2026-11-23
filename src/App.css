@@ -1248,6 +1248,35 @@ h1, h2, h3 {
 
 .cours-controle__apercu:hover { background: var(--trait); }
 
+/* « APERÇU » PLUS VISIBLE — Camara, le 23/11/2026 : une pilule pleine, bleue, avec un œil, au lieu d'un mot cerclé de
+   gris qu'on ne voyait pas à côté du nom du fichier. Même règle pour les contrôles et les examens blancs. */
+.cours-controle__apercu {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border: 1.5px solid #6fb4ff;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.cours-controle__apercu::before {
+  content: '';
+  width: 15px;
+  height: 15px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.cours-controle__apercu:hover {
+  background: linear-gradient(180deg, #4f8ff8, #3b82f6);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.5);
+}
+
 /* L'APERÇU D'UN DOCUMENT DU COURS : large, le corps défile, l'image et le PDF
    prennent la place. */
 .modale__boite.cours-apercu {
@@ -21419,12 +21448,22 @@ html.defilement-bloque body {
 .controle-carte__jour { text-transform: capitalize; }
 
 .controles-section__tous {
-  display: inline-block;
-  margin-top: 18px;
-  font-size: 13.5px;
-  font-weight: 500;
+  /* Plus visible (Camara, le 23/11/2026 : « trop discret ») : une pilule bordée, centrée sous les cartes. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: 20px auto 0;
+  padding: 9px 20px;
+  border: 1.5px solid color-mix(in srgb, var(--corail-texte) 60%, transparent);
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--corail-texte);
+  text-decoration: none;
 }
+
+.controles-section__tous:hover { background: color-mix(in srgb, var(--corail-texte) 10%, transparent); }
 
 /* Sur un téléphone, le bouton passe sous le titre et prend la largeur : à
    côté, il écraserait le titre à trois mots par ligne. */

@@ -359,6 +359,12 @@
 :root .page.cfi .cours-controle__apercu::before {
   content: '👁';
   margin-right: 6px;
+  /* L'œil dessiné d'App.css (23/11/2026) cède ici la place au caractère : la fiche illustrée garde son habillage. */
+  width: auto;
+  height: auto;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
 }
 
 :root .page.cfi .cours-controle__apercu:hover { background: rgba(200, 215, 255, 0.14); }

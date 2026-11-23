@@ -25,13 +25,9 @@
 /* L’accord obligatoire à la politique (et aux CGV la première fois) : « Continuer » attend cette case (19/11/2026). */
 .conditions-fenetre__accord { margin: 0 0 14px; }
 
-/* La case des offres, à part (19/11/2026) : un cadre la sépare de l’accord aux conditions. */
-.conditions-fenetre__offres {
-  margin: 0 0 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--trait);
-  border-radius: 10px;
-}
+/* La case des offres, à part (19/11/2026) — SANS CADRE depuis le 23/11/2026 (Camara : « comme la case
+   obligatoire ») : le cadre lui donnait plus de poids qu’à l’accord qui compte. Même forme, même espace. */
+.conditions-fenetre__offres { margin: 0 0 16px; }
 
 .conditions-fenetre__case {
   display: flex;

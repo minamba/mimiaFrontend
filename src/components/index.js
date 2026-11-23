@@ -49,6 +49,7 @@ export { default as JeuxEleve } from './JeuxEleve';
 export { default as ControlesEleve } from './ControlesEleve';
 export { default as ControleFiche } from './ControleFiche';
 export { default as EpreuveFiche } from './EpreuveFiche';
+export { default as ExamenBlancFiche } from './ExamenBlancFiche';
 export { default as BoutonSignalement } from './BoutonSignalement';
 export { default as BandeauCookies } from './BandeauCookies';
 export { default as MetaDeLaPage } from './MetaDeLaPage';

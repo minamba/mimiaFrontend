@@ -13,6 +13,8 @@ import { SCENES } from '../lib/scenesMatieres';
 import { universDeMatiere } from '../lib/carteIllustree';
 import { iconeEpreuve } from './PreparationExamen';
 import './controleCarteIllustre.css';
+import ExamenBlancCarte from './ExamenBlancCarte';
+import CarrouselControles from './CarrouselControles';
 
 /**
  * « Mes contrôles » — la section posée sous les cartes de matières.
@@ -268,7 +270,57 @@ export function ControleCarte({
   );
 }
 
-export default function MesControles({ eleveId, controles, onPreparer, onAjouter, ajoutFerme = false, raisonFerme = null }) {
+/**
+ * LES CARTES DE L'ACCUEIL : les trois prochaines échéances, contrôles et examens blancs rangés à leur date — à date
+ * égale, l'examen blanc d'abord. LE PROCHAIN EXAMEN BLANC A TOUJOURS SA PLACE (Camara, le 23/11/2026 : « j'ai ajouté
+ * un brevet blanc, pourquoi je ne le vois pas ? ») : trois contrôles plus proches le poussaient hors de l'accueil ;
+ * il prend alors la place du troisième.
+ */
+const dateDe = (element) => String(element.date ?? '').slice(0, 10);
+
+const parDate = (a, b) => dateDe(a).localeCompare(dateDe(b)) || (a.examen ? -1 : 0) - (b.examen ? -1 : 0);
+
+function toutesLesCartes(controles, examensBlancs) {
+  return [
+    ...controles.map((c) => ({ cle: `c${c.id}`, date: c.dateControle, controle: c })),
+    ...examensBlancs.map((e) => ({ cle: `e${e.id}`, date: e.dateExamen, examen: e })),
+  ].sort(parDate);
+}
+
+function cartesAAfficher(controles, examensBlancs) {
+  const tous = [
+    ...controles.map((c) => ({ cle: `c${c.id}`, date: c.dateControle, controle: c })),
+    ...examensBlancs.map((e) => ({ cle: `e${e.id}`, date: e.dateExamen, examen: e })),
+  ].sort(parDate);
+
+  const premiers = tous.slice(0, MAX_CARTES);
+  const prochainExamen = tous.find((element) => element.examen);
+  if (!prochainExamen || premiers.includes(prochainExamen)) return premiers;
+
+  return [...tous.filter((element) => !element.examen).slice(0, MAX_CARTES - 1), prochainExamen].sort(parDate);
+}
+
+/**
+ * LE BOUTON « BREVET BLANC » OU « BAC BLANC » — Camara, le 23/11/2026, à côté de « Ajouter un contrôle ». Absent
+ * des classes sans examen blanc (`examenBlanc` null). Fermé hors abonnement (`desactive`, avec sa raison).
+ */
+function BoutonExamenBlanc({ examenBlanc }) {
+  if (!examenBlanc) return null;
+  return (
+    <BoutonAjoutControle
+      onClick={examenBlanc.onAjouter}
+      libelle={examenBlanc.libelle}
+      desactive={examenBlanc.desactive}
+      raison={examenBlanc.raison}
+      variante="examen-blanc"
+    />
+  );
+}
+
+export default function MesControles({
+  eleveId, controles, onPreparer, onAjouter, ajoutFerme = false, raisonFerme = null,
+  examensBlancs = [], examenBlanc = null,
+}) {
   // `null` = pas encore chargé : on n'affiche ni la liste ni l'état vide,
   // pour ne pas faire clignoter « Pas encore de contrôle » à chaque ouverture.
   if (controles === null || controles === undefined) return null;
@@ -316,15 +368,16 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
             la page dédiée le lui dit en une phrase, alors qu'un bouton qui
             apparaît et disparaît selon l'historique ne se laisse jamais
             trouver. */}
-        {controles.length > 0 && (
+        {(controles.length > 0 || examensBlancs.length > 0) && (
           <div className="controles-section__actions">
             <BoutonControlesPasses eleveId={eleveId} />
             <BoutonAjoutControle onClick={onAjouter} desactive={ajoutFerme} raison={raisonFerme} />
+            <BoutonExamenBlanc examenBlanc={examenBlanc} />
           </div>
         )}
       </div>
 
-      {controles.length === 0 ? (
+      {controles.length === 0 && examensBlancs.length === 0 ? (
         <div className="fiches-vide">
           {illustre && (
             <span className="ctr-illu__calendrier">
@@ -343,22 +396,43 @@ export default function MesControles({ eleveId, controles, onPreparer, onAjouter
           </p>
           <div className="fiches-vide__actions">
             <BoutonAjoutControle onClick={onAjouter} desactive={ajoutFerme} raison={raisonFerme} />
+            <BoutonExamenBlanc examenBlanc={examenBlanc} />
             <BoutonControlesPasses eleveId={eleveId} />
           </div>
         </div>
       ) : (
         <>
-          <ul className="controles-liste">
-            {controles.slice(0, MAX_CARTES).map((controle) => (
-              <ControleCarte
-                retour="matieres"
-                key={controle.id}
-                controle={{ ...controle, eleveId }}
-                onPreparer={onPreparer}
-                illustre={illustre}
-              />
-            ))}
-          </ul>
+          {/* AU-DELÀ DE TROIS, UN CARROUSEL (Camara, le 23/11/2026) : toutes les échéances à venir, trois à la fois,
+              avec flèches, points et une invite à faire glisser. Jusqu'à trois, la grille habituelle. */}
+          {toutesLesCartes(controles, examensBlancs).length > MAX_CARTES ? (
+            <CarrouselControles nombre={toutesLesCartes(controles, examensBlancs).length}>
+              {toutesLesCartes(controles, examensBlancs).map((element) => (element.examen ? (
+                <ExamenBlancCarte key={element.cle} examen={element.examen} eleveId={eleveId} illustre={illustre} onPreparer={onPreparer} />
+              ) : (
+                <ControleCarte
+                  retour="matieres"
+                  key={element.cle}
+                  controle={{ ...element.controle, eleveId }}
+                  onPreparer={onPreparer}
+                  illustre={illustre}
+                />
+              )))}
+            </CarrouselControles>
+          ) : (
+            <ul className="controles-liste">
+              {cartesAAfficher(controles, examensBlancs).map((element) => (element.examen ? (
+                <ExamenBlancCarte key={element.cle} examen={element.examen} eleveId={eleveId} illustre={illustre} onPreparer={onPreparer} />
+              ) : (
+                <ControleCarte
+                  retour="matieres"
+                  key={element.cle}
+                  controle={{ ...element.controle, eleveId }}
+                  onPreparer={onPreparer}
+                  illustre={illustre}
+                />
+              )))}
+            </ul>
+          )}
 
           <Link to={`/eleves/${eleveId}/controles`} className="controles-section__tous">
             Voir tous mes contrôles →

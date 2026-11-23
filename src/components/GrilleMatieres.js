@@ -40,6 +40,9 @@ import { useAffichageEleve } from '../lib/besoins';
 import { paletteDeMatiere, sceneDeMatiere } from '../lib/scenesMatieres';
 import { avatarEnfant } from '../lib/avatarEnfant';
 import FenetreSansForfait from './FenetreSansForfait';
+import ExamenBlancForm from './ExamenBlancForm';
+import { joursAvant } from './ExamenBlancCarte';
+import { getExamensBlancs, getTypeExamenBlanc } from '../lib/api/examensBlancsApi';
 
 /**
  * Ce qu'on promet à l'élève pour chaque matière, en une phrase.
@@ -377,11 +380,34 @@ export default function GrilleMatieres() {
   // vers la page dédiée pour qu'il y reclique était un détour pour rien.
   const [ajoutControle, setAjoutControle] = useState(false);
 
+  // LES EXAMENS BLANCS (23/11/2026) : le libellé du bouton selon la classe (« Brevet blanc », « Bac blanc »… ou
+  // null : pas de bouton), ceux à venir (cartes parmi les contrôles), et leur fenêtre d'ajout.
+  const [libelleExamenBlanc, setLibelleExamenBlanc] = useState(null);
+  const [examensBlancs, setExamensBlancs] = useState([]);
+  const [ajoutExamenBlanc, setAjoutExamenBlanc] = useState(false);
+
+  const chargerExamensBlancs = useCallback((vivant = true) =>
+    getExamensBlancs(eleveId)
+      .then(({ data }) => {
+        if (vivant) setExamensBlancs((data ?? []).filter((e) => joursAvant(e.dateExamen) >= 0));
+      })
+      .catch(() => {}),
+  [eleveId]);
+
+  useEffect(() => {
+    let vivant = true;
+    getTypeExamenBlanc(eleveId)
+      .then(({ data }) => { if (vivant) setLibelleExamenBlanc(data?.libelle ?? null); })
+      .catch(() => {});
+    return () => { vivant = false; };
+  }, [eleveId]);
+
   // `useCallback` parce qu'elle est appelée depuis l'effet de chargement ET
   // après un ajout : sans identité stable, l'effet se relancerait à chaque
   // rendu, donc en boucle.
   const chargerControles = useCallback((vivant = true) =>
-    getControles(eleveId, 'avenir', 3)
+    // 12 ET NON PLUS 3 (23/11/2026) : au-delà de trois, « Mes contrôles » les fait défiler en carrousel.
+    getControles(eleveId, 'avenir', 12)
       .then(({ data }) => { if (vivant) setControles(data ?? []); })
       .catch(() => { if (vivant) setControles([]); }),
   [eleveId]);
@@ -532,6 +558,7 @@ export default function GrilleMatieres() {
       // de révision qui vient de se terminer a fait bouger le pourcentage —
       // il doit se voir sans avoir à recharger la page.
       chargerControles(vivant);
+      chargerExamensBlancs(vivant);
 
       // Même raison : une séance de révision fait bouger la barre de l'examen.
       getExamen(eleveId)
@@ -553,7 +580,7 @@ export default function GrilleMatieres() {
       document.removeEventListener('visibilitychange', auRetour);
       window.removeEventListener('focus', charger);
     };
-  }, [eleveId, chargerControles]);
+  }, [eleveId, chargerControles, chargerExamensBlancs]);
 
   /**
    * Les matières de CET élève, demandées au serveur.
@@ -1177,6 +1204,14 @@ export default function GrilleMatieres() {
         // COMPTE INACTIF (17/11/2026) : pas d'ajout de contrôle sans forfait en cours.
         ajoutFerme={compteInactif({ ouvert: forfaitOuvert, motif: motifForfait })}
         raisonFerme={messageForfait(Boolean(enfant), 'l’ajout de contrôles')}
+        examensBlancs={examensBlancs}
+        // RÉSERVÉ AUX ABONNÉS (Camara, le 23/11/2026) : visible en essai, mais fermé avec sa raison.
+        examenBlanc={libelleExamenBlanc ? {
+          libelle: libelleExamenBlanc,
+          onAjouter: () => setAjoutExamenBlanc(true),
+          desactive: forfaitOuvert === false,
+          raison: 'Les examens blancs sont réservés aux abonnés.',
+        } : null}
       />
 
       {/* LA PRÉPARATION À L'EXAMEN, SOUS LES CONTRÔLES — voulue par Camara le
@@ -1197,6 +1232,20 @@ export default function GrilleMatieres() {
           setEnAttente(matiere);
         }}
       />
+
+      {ajoutExamenBlanc && (
+        <div className="modale" role="dialog" aria-modal="true" aria-label={libelleExamenBlanc ?? 'Examen blanc'}>
+          <div className="modale__boite">
+            <ExamenBlancForm
+              eleveId={eleveId}
+              matieres={ouvertes}
+              libelle={libelleExamenBlanc ?? 'Examen blanc'}
+              onEnregistre={() => { setAjoutExamenBlanc(false); chargerExamensBlancs(); }}
+              onAnnule={() => setAjoutExamenBlanc(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {ajoutControle && (
         <div className="modale" role="dialog" aria-modal="true" aria-label="Ajouter un contrôle">

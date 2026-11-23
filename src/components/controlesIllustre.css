@@ -78,11 +78,38 @@
   border-bottom: 0;
 }
 
+/* « VOIR TOUS MES CONTRÔLES », UN VRAI BOUTON — Camara, le 23/11/2026 : « trop discret ». Une pilule de verre au
+   liseré lumineux, centrée sous les cartes, au lieu d'un petit lien souligné dans le coin. */
 :root .ctr-illu .controles-section__tous {
-  display: inline-block;
-  margin-top: 18px;
-  color: #9ec9ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: fit-content;
+  margin: 22px auto 0;
+  padding: 11px 24px;
+  border: 1.5px solid rgba(120, 190, 255, 0.75);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(40, 90, 190, 0.55), rgba(16, 44, 120, 0.7));
+  box-shadow: 0 0 16px rgba(90, 160, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 15.5px;
   font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+:root .ctr-illu .controles-section__tous:hover,
+:root .ctr-illu .controles-section__tous:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(170, 215, 255, 1);
+  box-shadow: 0 0 24px rgba(90, 160, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .ctr-illu .controles-section__tous { transition: none; }
+  :root .ctr-illu .controles-section__tous:hover { transform: none; }
 }
 
 :root .ctr-illu.controles-section h2 {

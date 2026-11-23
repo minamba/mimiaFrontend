@@ -65,7 +65,7 @@ test('l’enfant voit la bannière de la matière, et la vraie tête du professe
   expect(banniere).toHaveTextContent('Tout télécharger');
   expect(banniere).toHaveTextContent('Un seul fichier MP3');
 
-  expect(screen.getAllByTestId('portrait')[0]).toHaveTextContent('salim-92');
+  expect(screen.getAllByTestId('portrait')[0]).toHaveTextContent('salim-64'); // 64 px depuis le 18/11/2026 (« c'est trop gros »)
   expect(container.querySelectorAll('.podx-lecteur .podx-onde')).toHaveLength(2);
 });
 

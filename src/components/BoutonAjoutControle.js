@@ -36,11 +36,14 @@ function IconeAjout() {
  * GRISÉ POUR UN COMPTE INACTIF — Camara, le 17/11/2026 : sans forfait en cours (essai fini, pause, aucun abonnement),
  * « Ajouter un contrôle » reste visible mais ne s'ouvre pas ; la bulle dit pourquoi (`raison`).
  */
-export default function BoutonAjoutControle({ onClick, libelle = 'Ajouter un contrôle', desactive = false, raison = null }) {
+export default function BoutonAjoutControle({
+  onClick, libelle = 'Ajouter un contrôle', desactive = false, raison = null, variante = null,
+}) {
   return (
     <button
       type="button"
-      className="btn-controle"
+      // « examen-blanc » (23/11/2026) : la même forme, l'or des examens.
+      className={`btn-controle${variante ? ` btn-controle--${variante}` : ''}`}
       onClick={onClick}
       disabled={desactive}
       title={desactive ? raison ?? undefined : undefined}
