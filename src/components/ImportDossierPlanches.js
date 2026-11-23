@@ -143,7 +143,9 @@ export default function ImportDossierPlanches({ figures, matiereDeLaCle, importe
             <li><strong>{analyse.aEnvoyer.length}</strong> à envoyer{analyse.aJour > 0 && <> · {analyse.aJour} déjà à jour, sautés</>}</li>
             {analyse.incompletes.length > 0 && (
               <li className="est-alerte">
-                <strong>{analyse.incompletes.length}</strong> sans leur paire :{' '}
+                {/* « 1 sans leur paire » (#69 v3) : un seul schéma incomplet se dit au singulier. */}
+                <strong>{analyse.incompletes.length}</strong>
+                {analyse.incompletes.length > 1 ? ' sans leur paire' : ' sans sa paire'} :{' '}
                 {analyse.incompletes.map((i) => `${i.cle} (${i.manque === 'muette' ? 'muette manquante' : 'légendée manquante'})`).join(', ')}
               </li>
             )}

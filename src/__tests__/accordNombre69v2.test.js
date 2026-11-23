@@ -99,6 +99,56 @@ describe('suppression du compte : le profil des enfants', () => {
     expect(screen.getByText('Les profils de vos enfants')).toBeInTheDocument();
     expect(screen.queryByText(/vos 0 /)).not.toBeInTheDocument();
   });
+
+  /* #69 v3 (Omar, contrôle de 3ee7251) : les trois lignes suivantes restaient au pluriel avec un seul enfant. */
+  const LIGNES_SINGULIER = [
+    'Tous ses cours et tout ce qui y a été écrit',
+    'Ses évaluations, ses copies et les comptes rendus de séance',
+    'Sa progression et les compétences acquises',
+  ];
+  const LIGNES_PLURIEL = [
+    "Tous leurs cours et tout ce qu'ils y ont écrit",
+    'Leurs évaluations, leurs copies et les comptes rendus de séance',
+    'Leur progression et les compétences acquises',
+  ];
+
+  test('un enfant : « ses cours », « ses évaluations », « sa progression », jamais « leurs »', async () => {
+    await ouvrir(1);
+    LIGNES_SINGULIER.forEach((ligne) => expect(screen.getByText(ligne)).toBeInTheDocument());
+    LIGNES_PLURIEL.forEach((ligne) => expect(screen.queryByText(ligne)).not.toBeInTheDocument());
+    expect(screen.queryByText(/\bleurs?\b/i)).not.toBeInTheDocument();
+  });
+
+  test('deux enfants : « leurs cours », « leurs évaluations », « leur progression »', async () => {
+    await ouvrir(2);
+    LIGNES_PLURIEL.forEach((ligne) => expect(screen.getByText(ligne)).toBeInTheDocument());
+    LIGNES_SINGULIER.forEach((ligne) => expect(screen.queryByText(ligne)).not.toBeInTheDocument());
+  });
+
+  test('aucun enfant connu : les lignes restent au pluriel, comme le titre', async () => {
+    await ouvrir(0);
+    LIGNES_PLURIEL.forEach((ligne) => expect(screen.getByText(ligne)).toBeInTheDocument());
+  });
+
+  /* Trouvé par le test ci-dessus (« jamais leurs ») : le texte de la page, AVANT d'ouvrir la fenêtre, avait le même défaut. */
+  const texteDeLaPage = (nombreEnfants) => {
+    render(<SuppressionCompte nombreEnfants={nombreEnfants} onSupprime={jest.fn()} />);
+    return screen.getByText(/Vous partez avec vos données/).textContent;
+  };
+
+  test('texte de la page, un enfant : « le profil de votre enfant, ses cours, ses notes et sa progression »', () => {
+    expect(texteDeLaPage(1)).toBe(
+      'Vous partez avec vos données : le profil de votre enfant, ses cours, ses notes et sa progression sont effacés '
+      + "de nos serveurs. Rien n'est conservé, et rien n'est récupérable ensuite.",
+    );
+  });
+
+  test('texte de la page, deux enfants : « les profils de vos enfants, leurs cours, leurs notes et leur progression »', () => {
+    expect(texteDeLaPage(2)).toBe(
+      'Vous partez avec vos données : les profils de vos enfants, leurs cours, leurs notes et leur progression sont '
+      + "effacés de nos serveurs. Rien n'est conservé, et rien n'est récupérable ensuite.",
+    );
+  });
 });
 
 /* ------------------------------------------------------------------------------------------------------------------

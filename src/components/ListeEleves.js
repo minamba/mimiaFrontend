@@ -20,7 +20,7 @@ import './listeElevesIllustre.css';
  * Ancienneté en clair. « 2026-07-26T20:18 » ne dit rien à un parent ;
  * « il y a 2 jours » lui dit s'il doit relancer son enfant.
  */
-function derniereFois(valeur) {
+export function derniereFois(valeur) {
   if (!valeur) return { texte: 'Pas encore commencé', etat: 'neuf' };
 
   const jours = Math.floor((Date.now() - new Date(valeur).getTime()) / 86400000);
@@ -28,6 +28,8 @@ function derniereFois(valeur) {
   if (jours <= 0) return { texte: "Travaillé aujourd'hui", etat: 'actif' };
   if (jours === 1) return { texte: 'Travaillé hier', etat: 'actif' };
   if (jours < 7) return { texte: `Il y a ${jours} jours`, etat: 'actif' };
+  // De 7 à 13 jours, une seule semaine (#69 v3) : jamais « Il y a 1 semaines ».
+  if (jours < 14) return { texte: 'Il y a 1 semaine', etat: 'tiede' };
   if (jours < 30) return { texte: `Il y a ${Math.floor(jours / 7)} semaines`, etat: 'tiede' };
 
   return {

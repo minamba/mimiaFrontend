@@ -784,9 +784,13 @@ export default function Tarifs() {
                 trois garanties. Les jours ne sont cités que si l'offre en fixe encore. */}
             <p>
               <b>{heures(essai.heuresPot)} de cours offertes,</b> une seule fois,{' '}
-              {essai.joursValidite > 0
-                ? `à utiliser dans les ${essai.joursValidite} jours, sans carte bancaire.`
-                : 'à utiliser quand vous voulez, sans date limite et sans carte bancaire.'}
+              {/* UN SEUL JOUR (#69 v3, retour d'Omar) : « dans les 1 jours » ne se dit pas. Le serveur fixe la fin
+                  à début + 1 jour (`AddDays`), soit 24 heures pile. */}
+              {essai.joursValidite === 1
+                ? 'à utiliser sous 24 heures, sans carte bancaire.'
+                : essai.joursValidite > 1
+                  ? `à utiliser dans les ${essai.joursValidite} jours, sans carte bancaire.`
+                  : 'à utiliser quand vous voulez, sans date limite et sans carte bancaire.'}
             </p>
           </div>
 

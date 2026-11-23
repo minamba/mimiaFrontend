@@ -537,8 +537,11 @@ export default function Quota({ compact = false }) {
         <div className="quota__resiliation">
           <p>
             <strong>Votre abonnement prend fin le {dateCourte(etat.finPrevue)}.</strong>{' '}
-            D'ici là, rien ne change&nbsp;: vos enfants gardent leurs cours et vos
-            heures restantes. Aucune nouvelle période ne sera engagée.
+            {/* Un seul enfant (#69 v3) : « votre enfant garde ses cours », pas « vos enfants gardent leurs cours ». */}
+            {etat.enfants?.length === 1
+              ? "D'ici là, rien ne change : votre enfant garde ses cours et vos heures restantes."
+              : "D'ici là, rien ne change : vos enfants gardent leurs cours et vos heures restantes."}
+            {' '}Aucune nouvelle période ne sera engagée.
           </p>
           <button
             type="button"

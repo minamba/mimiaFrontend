@@ -393,6 +393,15 @@ function formaterDuree(secondes) {
 }
 
 /**
+ * Ce que le lecteur d'écran annonce sur la jauge de la séance (#69 v3) : la dernière minute se dit au singulier,
+ * jamais « Il reste 1 minutes de séance ». Arrondi au-dessus, comme avant : 61 s restantes = 2 minutes.
+ */
+export const libelleTempsRestant = (secondes) => {
+  const minutes = Math.ceil(secondes / 60);
+  return minutes === 1 ? 'Il reste 1 minute de séance' : `Il reste ${minutes} minutes de séance`;
+};
+
+/**
  * Nombre d'écoutes sans un mot avant de rompre le mode mains libres.
  *
  * Vingt fenêtres de douze secondes, soit environ quatre minutes de silence
@@ -6108,7 +6117,7 @@ export default function Chat() {
             ? 'Temps dépassé, le contrôle se termine'
             : restant === 0
               ? 'Séance terminée'
-              : `Il reste ${Math.ceil(restant / 60)} minutes de séance`
+              : libelleTempsRestant(restant)
       }
     >
       {/* Pas de jauge quand la séance est suspendue : une barre à moitié

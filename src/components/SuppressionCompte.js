@@ -52,9 +52,22 @@ function Avertissement({ nombreEnfants, enCours, erreur, onConfirmer, onFermer }
                 ? `Les profils de vos ${nombreEnfants} enfants`
                 : 'Les profils de vos enfants'}
           </li>
-          <li>Tous leurs cours et tout ce qu'ils y ont écrit</li>
-          <li>Leurs évaluations, leurs copies et les comptes rendus de séance</li>
-          <li>Leur progression et les compétences acquises</li>
+          {/* UN SEUL ENFANT (#69 v3, retour d'Omar) : « leurs cours » ne va qu'avec plusieurs enfants. Au
+              singulier, une formulation neutre (« ses », « ce qui y a été écrit ») plutôt que « il » ou « elle »,
+              qu'on ne connaît pas. */}
+          {nombreEnfants === 1 ? (
+            <>
+              <li>Tous ses cours et tout ce qui y a été écrit</li>
+              <li>Ses évaluations, ses copies et les comptes rendus de séance</li>
+              <li>Sa progression et les compétences acquises</li>
+            </>
+          ) : (
+            <>
+              <li>Tous leurs cours et tout ce qu'ils y ont écrit</li>
+              <li>Leurs évaluations, leurs copies et les comptes rendus de séance</li>
+              <li>Leur progression et les compétences acquises</li>
+            </>
+          )}
           <li>Votre abonnement, qui cesse d'être prélevé</li>
           <li>Vos identifiants de connexion</li>
         </ul>
@@ -132,10 +145,14 @@ export default function SuppressionCompte({ nombreEnfants = 0, onSupprime }) {
       <section className="bloc-profil bloc-profil--danger">
         <h2>Supprimer mon compte</h2>
 
+        {/* Même accord que la fenêtre (#69 v3) : un seul enfant = « son profil, ses cours… ». */}
         <p className="page__sous-titre">
-          Vous partez avec vos données : les profils de vos enfants, leurs cours,
-          leurs notes et leur progression sont effacés de nos serveurs. Rien
-          n'est conservé, et rien n'est récupérable ensuite.
+          {nombreEnfants === 1
+            ? 'Vous partez avec vos données : le profil de votre enfant, ses cours, '
+              + 'ses notes et sa progression sont effacés de nos serveurs.'
+            : 'Vous partez avec vos données : les profils de vos enfants, leurs cours, '
+              + 'leurs notes et leur progression sont effacés de nos serveurs.'}
+          {' '}Rien n'est conservé, et rien n'est récupérable ensuite.
         </p>
 
         <button
