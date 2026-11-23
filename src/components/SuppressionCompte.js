@@ -46,9 +46,11 @@ function Avertissement({ nombreEnfants, enCours, erreur, onConfirmer, onFermer }
 
         <ul className="liste-consequences">
           <li>
-            {nombreEnfants > 0
-              ? `Le${nombreEnfants > 1 ? 's' : ''} profil${nombreEnfants > 1 ? 's' : ''} de vos ${nombreEnfants} enfant${nombreEnfants > 1 ? 's' : ''}`
-              : 'Les profils de vos enfants'}
+            {nombreEnfants === 1
+              ? 'Le profil de votre enfant'
+              : nombreEnfants > 1
+                ? `Les profils de vos ${nombreEnfants} enfants`
+                : 'Les profils de vos enfants'}
           </li>
           <li>Tous leurs cours et tout ce qu'ils y ont écrit</li>
           <li>Leurs évaluations, leurs copies et les comptes rendus de séance</li>

@@ -602,7 +602,9 @@ function ListeCompetences({ titre, competences, vide }) {
         >
           {tout
             ? 'Réduire'
-            : `Voir les ${restantes} autre${restantes > 1 ? 's' : ''}`}
+            : restantes === 1
+              ? "Voir l'autre"
+              : `Voir les ${restantes} autres`}
         </button>
       )}
     </div>

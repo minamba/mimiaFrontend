@@ -95,7 +95,11 @@ export default function ScanMobile() {
       }
 
       if (choisis.length > place) {
-        setErreur(`Au plus ${PIECES_MAX} documents d’un coup : les ${place} premiers ont été gardés.`);
+        setErreur(
+          place === 1
+            ? `Au plus ${PIECES_MAX} documents d’un coup : seul le premier a été gardé.`
+            : `Au plus ${PIECES_MAX} documents d’un coup : les ${place} premiers ont été gardés.`,
+        );
       }
 
       return [

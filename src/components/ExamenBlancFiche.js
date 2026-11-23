@@ -272,10 +272,13 @@ export default function ExamenBlancFiche() {
           programme n'est validé. */}
       <div className="examen-section__global">
         <BarrePreparation pourcent={examen.pourcent ?? 0} perimetreConnu={examen.matieres.some((m) => m.programmeValide)} />
-        <p className="examen-section__explication">
-          {/* UNE SEULE MATIÈRE SE DIT AU SINGULIER (signalement #69) : « tes 1 matière » sonnait faux. */}
-          {nombre > 1 ? `La moyenne de tes ${nombre} matières.` : 'La moyenne de ta matière.'}
-        </p>
+        {/* UNE SEULE MATIÈRE SE DIT AU SINGULIER (signalement #69) : « tes 1 matière » sonnait faux. Sans matière
+            (le serveur supprime l'examen blanc avec sa dernière matière), on ne dit rien plutôt que « ta matière ». */}
+        {nombre > 0 && (
+          <p className="examen-section__explication">
+            {nombre > 1 ? `La moyenne de tes ${nombre} matières.` : 'La moyenne de ta matière.'}
+          </p>
+        )}
       </div>
 
       <ul className="eb-matieres">

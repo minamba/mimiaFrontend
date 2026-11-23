@@ -294,7 +294,7 @@ export default function Fiches() {
               className="fiches-groupe__plus"
               onClick={() => setDeplies((etat) => ({ ...etat, [groupe.domaine]: true }))}
             >
-              Voir les {caches} autre{caches > 1 ? 's' : ''} <span aria-hidden="true">↓</span>
+              {caches === 1 ? "Voir l'autre" : `Voir les ${caches} autres`} <span aria-hidden="true">↓</span>
             </button>
           )}
         </div>

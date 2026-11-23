@@ -1034,6 +1034,18 @@ function EtatCompte({ etat }) {
 }
 
 /**
+ * Ce que la confirmation de suppression d'un parent annonce. « ses 1 profil(s) » sonnait faux (même famille que le
+ * signalement #69) : le déterminant suit le nombre, et un compte sans enfant n'annonce aucun profil.
+ */
+export function libelleSuppressionParent(p) {
+  const profils = p.nombreEleves > 1
+    ? ` et ses ${p.nombreEleves} profils`
+    : p.nombreEleves === 1 ? ' et son profil' : '';
+  const abonnement = p.formule ? `, en résiliant son abonnement ${p.formule} chez Stripe` : '';
+  return `le compte ${p.mail}${profils}${abonnement}`;
+}
+
+/**
  * F5 GARDE LA SECTION OUVERTE (Camara, le 24/11/2026 : « quand je fais un F5 dans l'admin, ça me ramène
  * toujours à la page des statistiques »). L'onglet et le sous-onglet des mails vivent dans `sessionStorage` :
  * propre à l'onglet du NAVIGATEUR, il survit au rechargement, et un nouvel onglet repart des statistiques.
@@ -2497,11 +2509,7 @@ export default function Admin() {
                           confirmerSuppression(
                             'supprimerParent',
                             p.id,
-                            `le compte ${p.mail} et ses ${p.nombreEleves} profil(s)${
-                              p.formule
-                                ? `, en résiliant son abonnement ${p.formule} chez Stripe`
-                                : ''
-                            }`,
+                            libelleSuppressionParent(p),
                             p.identityUserId,
                           )
                         }
