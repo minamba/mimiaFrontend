@@ -91,9 +91,10 @@ test('la cellule de la compétence garde ses retours à la ligne, sur ordinateur
 test('les émoticônes et les lignes vides arrivent dans la cellule à l\'identique', async () => {
   const tableau = await ouvrirLeJeu();
 
-  const cellule = tableau.querySelector('.jeux-tests__cellule-competence');
-  expect(cellule.textContent).toBe(COMPETENCE);
-  expect(cellule.querySelector('br')).toBeNull();
+  // Une seule cellule, dont le texte est EXACTEMENT celui de l'API (le comparateur par défaut recollerait les espaces).
+  const cellule = within(tableau).getByText(COMPETENCE, { normalizer: (texte) => texte });
+  expect(cellule).toHaveClass('jeux-tests__cellule-competence');
+  expect(cellule).toContainHTML(COMPETENCE); // texte brut avec ses « \n » : aucun <br> à la place
   expect(screen.getAllByText('📝 Démarrage ✅').length).toBeGreaterThan(0);
 });
 
