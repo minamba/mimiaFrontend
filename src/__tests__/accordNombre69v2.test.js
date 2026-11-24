@@ -380,3 +380,18 @@ describe('administration : bilan de requalification des planches', () => {
     expect(bilanRequalification({ liberees: 2, examinees: 3 })).toBe('2 planches sur 3 rendues au professeur.');
   });
 });
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * #69 v5 (recherche élargie, accord plus loin dans la phrase) : places aux séances au-delà de la formule (Admin.js)
+ * ---------------------------------------------------------------------------------------------------------------- */
+describe('administration : places aux séances au-delà de la formule (#69 v5)', () => {
+  const { placesAuxSeances } = require('../components/Admin');
+
+  test('un seul enfant : « seul un enfant aura une place, le premier arrivé »', () => {
+    expect(placesAuxSeances(1)).toBe('seul un enfant aura une place, le premier arrivé');
+  });
+
+  test('deux enfants : « seuls 2 enfants auront une place, les premiers arrivés »', () => {
+    expect(placesAuxSeances(2)).toBe('seuls 2 enfants auront une place, les premiers arrivés');
+  });
+});

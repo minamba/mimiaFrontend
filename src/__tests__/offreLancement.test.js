@@ -257,3 +257,22 @@ test('les formules concernées sont nommées, pas devinées', () => {
 
   expect(screen.getByText(/la formule Solo et Duo/)).toBeInTheDocument();
 });
+
+// #69 v5 (recherche élargie) : le participe s'accorde avec le nombre d'heures, réglé en administration.
+test('une heure offerte : « 1 h de cours offerte », jamais « offertes »', () => {
+  mockOffre = vivante(dansDesJours(5), { heures: 1 });
+  dessiner();
+  expect(screen.getByText(/h de cours offert/)).toHaveTextContent(/^1 h de cours offerte$/);
+});
+
+test('une heure et demie : « 1,5 h de cours offerte » (virgule, singulier sous 2)', () => {
+  mockOffre = vivante(dansDesJours(5), { heures: 1.5 });
+  dessiner();
+  expect(screen.getByText(/h de cours offert/)).toHaveTextContent(/^1,5 h de cours offerte$/);
+});
+
+test('trois heures : « 3 h de cours offertes »', () => {
+  mockOffre = vivante(dansDesJours(5), { heures: 3 });
+  dessiner();
+  expect(screen.getByText(/h de cours offert/)).toHaveTextContent(/^3 h de cours offertes$/);
+});

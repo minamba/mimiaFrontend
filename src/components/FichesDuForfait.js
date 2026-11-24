@@ -79,7 +79,8 @@ export default function FichesDuForfait({ module = 'fiches', fenetre = false }) 
   // Dans la fenêtre, une phrase plutôt qu'une boîte vide.
   const indisponible = (texte) => (fenetre ? <p className="quota__resume achat-credits__message">{texte}</p> : null);
 
-  if (!ouvert) return indisponible(`Les ${podcasts ? 'podcasts' : 'fiches de révision'} ne sont pas ouverts pour le moment.`);
+  // Le genre suit le nom (#69 v5) : « Les fiches de révision ne sont pas ouvertes », « Les podcasts ne sont pas ouverts ».
+  if (!ouvert) return indisponible(podcasts ? 'Les podcasts ne sont pas ouverts pour le moment.' : 'Les fiches de révision ne sont pas ouvertes pour le moment.');
   if (!etat) return indisponible(charge ? 'Les crédits ne sont pas disponibles pour le moment. Réessayez dans un instant.' : 'Chargement…');
 
   const payer = async () => {

@@ -210,3 +210,26 @@ describe('séance : le temps restant annoncé', () => {
     expect(libelleTempsRestant(120)).toBe('Il reste 2 minutes de séance');
   });
 });
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * #69 v5 (recherche élargie, accord plus loin dans la phrase) : « … de cours offerte(s) » dans le bandeau de l'essai
+ * ---------------------------------------------------------------------------------------------------------------- */
+describe('tarifs : ce qui est offert à l’essai (#69 v5)', () => {
+  const offert = async (heuresPot) => {
+    getOffres.mockResolvedValue({ data: { formules: [{ ...ESSAI, heuresPot, joursValidite: 0 }, SOLO], recharges: [] } });
+    render(<Tarifs />);
+    return screen.findByText(/de cours offert/);
+  };
+
+  test('une heure : « 1 h de cours offerte »', async () => {
+    expect(await offert(1)).toHaveTextContent(/^1 h de cours offerte,$/);
+  });
+
+  test('trente minutes (réglage actuel) : « 30 minutes de cours offertes »', async () => {
+    expect(await offert(0.5)).toHaveTextContent(/^30 minutes de cours offertes,$/);
+  });
+
+  test('deux heures : « 2 h de cours offertes »', async () => {
+    expect(await offert(2)).toHaveTextContent(/^2 h de cours offertes,$/);
+  });
+});

@@ -12,6 +12,7 @@ import {
   usePodcasts,
 } from '../lib/storage/modeTest';
 import Loader from './Loader';
+import { accord } from '../lib/accord';
 import imageCalendrierEssai from '../assets/tarifs/calendrier-essai.webp';
 import './tarifsIllustre.css';
 import './tarifsCartesIllustre.css';
@@ -786,7 +787,9 @@ export default function Tarifs() {
             {/* LA PHRASE DE LA MAQUETTE (16/11/2026), plus courte : ce qui est offert en gras, puis les
                 trois garanties. Les jours ne sont cités que si l'offre en fixe encore. */}
             <p>
-              <b>{heures(essai.heuresPot)} de cours offertes,</b> une seule fois,{' '}
+              {/* « 1 h de cours offerte », « 30 minutes de cours offertes » (#69 v5) : le participe s'accorde avec ce que
+                  `heures()` affiche — des minutes sous l'heure, des heures au-delà. */}
+              <b>{heures(essai.heuresPot)} de cours {accord(essai.heuresPot > 0 && essai.heuresPot < 1 ? Math.round(essai.heuresPot * 60) : essai.heuresPot, 'offerte')},</b> une seule fois,{' '}
               {/* UN SEUL JOUR (#69 v3, retour d'Omar) : « dans les 1 jours » ne se dit pas. Le serveur fixe la fin
                   à début + 1 jour (`AddDays`), soit 24 heures pile. */}
               {essai.joursValidite === 1

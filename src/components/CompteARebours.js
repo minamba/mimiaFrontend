@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useOffreLancement } from '../lib/storage/modeTest';
+import { accord } from '../lib/accord';
 import './reboursIllustre.css';
 
 /**
@@ -102,7 +103,9 @@ export default function CompteARebours() {
           {/* LE NOMBRE VIENT DU SERVEUR, qui le lit dans le pack réglé en
               administration. Écrit en dur, il aurait continué d’annoncer
               trois heures le jour où l’offre en donne dix. */}
-          <strong>{offre.heures} h de cours offertes</strong>
+          {/* « 1 h de cours offerte », « 1,5 h de cours offerte », « 3 h de cours offertes » (#69 v5) : le participe
+              s'accorde avec les heures, réglées en administration (0,5 h, 1 h, 1,5 h sont possibles). */}
+          <strong>{`${offre.heures}`.replace('.', ',')} h de cours {accord(offre.heures, 'offerte')}</strong>
           {' '}sur {offre.formulesTexte ? `la formule ${offre.formulesTexte}` : 'nos formules'},
           {' '}le premier mois
         </p>

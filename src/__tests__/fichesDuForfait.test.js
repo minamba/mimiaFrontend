@@ -163,3 +163,16 @@ describe('les podcasts (15/11/2026)', () => {
     expect(container).toBeEmptyDOMElement();
   });
 });
+
+// #69 v5 (accord en genre, trouvé par la recherche élargie) : « Les fiches de révision ne sont pas ouvertes ».
+it('fenêtre, module des fiches éteint : « Les fiches de révision ne sont pas ouvertes pour le moment. »', () => {
+  mockOuvert = false;
+  render(<FichesDuForfait fenetre />);
+  expect(screen.getByText('Les fiches de révision ne sont pas ouvertes pour le moment.')).toBeInTheDocument();
+});
+
+it('fenêtre, podcasts éteints : « Les podcasts ne sont pas ouverts pour le moment. »', () => {
+  mockPodcasts = false;
+  render(<FichesDuForfait module="podcasts" fenetre />);
+  expect(screen.getByText('Les podcasts ne sont pas ouverts pour le moment.')).toBeInTheDocument();
+});
