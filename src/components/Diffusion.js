@@ -14,6 +14,7 @@ import ColonneModeles from './ColonneModeles';
 import LegendeVariables from './LegendeVariables';
 import PlanificationModele from './PlanificationModele';
 import { AIDE_CASE_PROMOTION } from '../lib/casePromotion';
+import { avecMarqueur as avecMarqueurHtml, estHtmlComplet, sansMarqueur } from '../lib/htmlComplet';
 import CarteExpediteur from './CarteExpediteur';
 import SectionMail from './SectionMail';
 
@@ -173,6 +174,25 @@ export default function Diffusion({ nombreParents }) {
   // d'introduction, placé au-dessus du bilan.
   const bilans = modele?.code === 'BILANS';
 
+  // LE MODE « HTML COMPLET » (Min's, le 24/11/2026) : porté par le texte (marqueur en fin, voir `htmlComplet.js`).
+  // Réservé au message de diffusion : ni courriel automatique, ni mot d'introduction des bilans.
+  const htmlPossible = !cadreAutomatique && !bilans;
+  const htmlComplet = htmlPossible && estHtmlComplet(texte);
+  const texteAffiche = htmlComplet ? sansMarqueur(texte) : texte;
+
+  let libelleTexte = 'Message';
+  if (bilans) libelleTexte = 'Message d’introduction';
+  else if (htmlComplet) libelleTexte = 'HTML du courriel';
+
+  let placeholderTexte = 'Bonjour,\n\nUne ligne vide sépare deux paragraphes.\n\nÀ bientôt,\nL’équipe Mimia';
+  if (bilans) placeholderTexte = 'Quelques mots placés au-dessus du bilan de chaque enfant. Laissez vide pour n’en mettre aucun.';
+  else if (htmlComplet) placeholderTexte = '<!DOCTYPE html>\n<html lang="fr">\n…\n</html>';
+
+  const basculerHtml = (coche) => {
+    setConfirme(false);
+    setTexte(coche ? avecMarqueurHtml(texte) : sansMarqueur(texte));
+  };
+
   const composition = { sujet, titre: titre || sujet, texte, images, documents };
 
   const voirApercu = async () => {
@@ -272,7 +292,7 @@ export default function Diffusion({ nombreParents }) {
     setNature(cle);
   };
 
-  const pret = sujet.trim().length > 0 && texte.trim().length > 0;
+  const pret = sujet.trim().length > 0 && texteAffiche.trim().length > 0;
 
   return (
     <div className="atelier-mails">
@@ -375,7 +395,26 @@ export default function Diffusion({ nombreParents }) {
               </span>
             </div>
 
-            {!bilans && (
+            {/* LE MODE « HTML COMPLET » : la maquette porte son titre, son en-tête et son pied. */}
+            {htmlPossible && (
+              <div className="diffusion__html">
+                <label className="diffusion__promotion-case">
+                  <input
+                    type="checkbox"
+                    checked={htmlComplet}
+                    disabled={envoi}
+                    onChange={(e) => basculerHtml(e.target.checked)}
+                  />
+                  <span>HTML complet</span>
+                </label>
+                <span className="champ__aide">
+                  Pour un courriel déjà mis en page (une maquette de Slimane, par exemple)&nbsp;: collez son HTML, il
+                  part tel quel, sans le gabarit du site.
+                </span>
+              </div>
+            )}
+
+            {!bilans && !htmlComplet && (
               <div className="champ">
                 <label htmlFor="dif-titre">Titre affiché dans le message</label>
                 <input
@@ -389,25 +428,36 @@ export default function Diffusion({ nombreParents }) {
             )}
 
             <div className="champ">
-              <label htmlFor="dif-texte">{bilans ? 'Message d’introduction' : 'Message'}</label>
-              <BarreOutilsTexte onGras={insererGras} onEmoji={insererEmoji} />
+              <label htmlFor="dif-texte">{libelleTexte}</label>
+              {!htmlComplet && <BarreOutilsTexte onGras={insererGras} onEmoji={insererEmoji} />}
               <textarea
                 id="dif-texte"
                 ref={zoneTexte}
-                rows={bilans ? 5 : 12}
-                value={texte}
-                onChange={(e) => setTexte(e.target.value)}
-                placeholder={bilans
-                  ? 'Quelques mots placés au-dessus du bilan de chaque enfant. Laissez vide pour n’en mettre aucun.'
-                  : 'Bonjour,\n\nUne ligne vide sépare deux paragraphes.\n\nÀ bientôt,\nL’équipe Mimia'}
+                className={htmlComplet ? 'champ-html' : undefined}
+                spellCheck={htmlComplet ? false : undefined}
+                rows={bilans ? 5 : (htmlComplet ? 20 : 12)}
+                value={texteAffiche}
+                onChange={(e) => setTexte(htmlComplet ? avecMarqueurHtml(e.target.value) : e.target.value)}
+                placeholder={placeholderTexte}
               />
-              <span className="champ__aide">
-                Une ligne vide crée un paragraphe. <strong>**Ainsi**</strong> devient du gras.
-                Une adresse comme <strong>https://mimia.fr</strong> devient un lien ; pour un lien avec
-                un texte, écrivez <strong>[voir les formules](https://mimia.fr/tarifs)</strong>.
-                Pour un bouton, seul dans son paragraphe (ligne vide avant et après)&nbsp;:{' '}
-                <strong>[[Voir les formules]](https://mimia.fr/tarifs)</strong>.
-              </span>
+              {htmlComplet ? (
+                <span className="champ__aide">
+                  Le HTML part tel quel&nbsp;: «&nbsp;Voir l’aperçu&nbsp;» le montre comme le parent le recevra. Les
+                  scripts, les attributs <strong>on…=</strong> et les liens <strong>javascript:</strong> sont retirés.
+                  Avec «&nbsp;Promotion&nbsp;», <strong>{'{{lien_desinscription}}'}</strong> devient le lien de
+                  désinscription de chaque parent (dans un <strong>href</strong>, l’adresse seule)&nbsp;; s’il manque,
+                  le pied légal est ajouté en bas. Les images de <strong>mimia.fr/email/</strong> (logo…) sont jointes
+                  au courriel.
+                </span>
+              ) : (
+                <span className="champ__aide">
+                  Une ligne vide crée un paragraphe. <strong>**Ainsi**</strong> devient du gras.
+                  Une adresse comme <strong>https://mimia.fr</strong> devient un lien ; pour un lien avec
+                  un texte, écrivez <strong>[voir les formules](https://mimia.fr/tarifs)</strong>.
+                  Pour un bouton, seul dans son paragraphe (ligne vide avant et après)&nbsp;:{' '}
+                  <strong>[[Voir les formules]](https://mimia.fr/tarifs)</strong>.
+                </span>
+              )}
             </div>
 
             {/* `{{lien_desinscription}}` est proposé avec sa règle : « seulement si Promotion est cochée ». */}
@@ -415,16 +465,19 @@ export default function Diffusion({ nombreParents }) {
 
             {!bilans && (
               <>
-                <BlocPieces
-                  titre="Images dans le message"
-                  items={images}
-                  onAjouter={(fichiers) => ajouterPieces('Image', fichiers)}
-                  onRetirer={(i) => retirerPiece('Image', i)}
-                  onInserer={insererMarqueur}
-                  accept="image/*"
-                  videTexte="Aucune image. Ajoutez-en une, puis cliquez sur « Insérer ici » pour la placer à l’endroit du curseur dans votre texte."
-                  avecMarqueur
-                />
+                {/* Un HTML complet cite ses images par leur adresse : pas de marqueur `[image:N]`. */}
+                {!htmlComplet && (
+                  <BlocPieces
+                    titre="Images dans le message"
+                    items={images}
+                    onAjouter={(fichiers) => ajouterPieces('Image', fichiers)}
+                    onRetirer={(i) => retirerPiece('Image', i)}
+                    onInserer={insererMarqueur}
+                    accept="image/*"
+                    videTexte="Aucune image. Ajoutez-en une, puis cliquez sur « Insérer ici » pour la placer à l’endroit du curseur dans votre texte."
+                    avecMarqueur
+                  />
+                )}
 
                 <BlocPieces
                   titre="Documents joints"

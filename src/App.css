@@ -16571,6 +16571,23 @@ html.defilement-bloque body {
 
 .diffusion__promotion-case input { width: 18px; height: 18px; margin: 0; flex: none; }
 
+/* LE MODE « HTML COMPLET » (Min's, 24/11/2026) : la case au-dessus du champ,
+   et un champ en chasse fixe pour relire un HTML collé. */
+.diffusion__html {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 14px;
+}
+
+.champ textarea.champ-html {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}
+
 /* `{{lien_desinscription}}` sans la case « Promotion » (20/11/2026) : c'est un
    modèle d'offre, on dit quoi faire. */
 .diffusion__lien-offre {
