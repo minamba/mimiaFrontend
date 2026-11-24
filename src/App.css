@@ -16592,6 +16592,10 @@ html.defilement-bloque body {
    ApercuCourriel.js. Presque tout l'écran, pour voir le courriel à sa vraie
    largeur ; « Téléphone » le montre à 390 px. Le cadre est blanc, comme une
    messagerie : un courriel sans fond ne prend pas celui du thème. */
+/* Au-dessus des raccourcis flottants de l'admin (1250) et des notifications de
+   courrier (1300), qui passaient par-dessus le courriel ; sous le signalement (1400). */
+.modale.apercu-courriel { z-index: 1350; }
+
 .modale__boite.apercu-courriel__boite {
   max-width: min(1100px, 100%);
   height: 92dvh;
