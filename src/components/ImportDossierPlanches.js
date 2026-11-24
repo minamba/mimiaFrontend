@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { importerPlanche } from '../lib/api/adminApi';
 import { analyserDossier, dejaAJour, licencesCitees, typeImage } from '../lib/planches/importDossier';
-import { nombreEt } from '../lib/accord';
+import { accord, nombreEt } from '../lib/accord';
 
 /**
  * IMPORTER UN DOSSIER DE SCHÉMAS — Camara, le 20/10/2026.
@@ -141,7 +141,7 @@ export default function ImportDossierPlanches({ figures, matiereDeLaCle, importe
         <div className="planches-dossier__bilan">
           <ul>
             <li><strong>{analyse.paires.length}</strong> schéma{analyse.paires.length > 1 ? 's' : ''} reconnu{analyse.paires.length > 1 ? 's' : ''}</li>
-            <li><strong>{analyse.aEnvoyer.length}</strong> à envoyer{analyse.aJour > 0 && <> · {analyse.aJour} déjà à jour, sautés</>}</li>
+            <li><strong>{analyse.aEnvoyer.length}</strong> à envoyer{analyse.aJour > 0 && <> · {analyse.aJour} déjà à jour, {accord(analyse.aJour, 'sauté')}</>}</li>
             {analyse.incompletes.length > 0 && (
               <li className="est-alerte">
                 {/* « 1 sans leur paire » (#69 v3) : un seul schéma incomplet se dit au singulier. */}
@@ -152,7 +152,7 @@ export default function ImportDossierPlanches({ figures, matiereDeLaCle, importe
             )}
             {analyse.inconnus.length > 0 && (
               <li className="est-alerte">
-                <strong>{analyse.inconnus.length}</strong> sans emplacement au catalogue, non importés :{' '}
+                <strong>{analyse.inconnus.length}</strong> sans emplacement au catalogue, {accord(analyse.inconnus.length, 'non importé')} :{' '}
                 {analyse.inconnus.slice(0, 12).map((i) => i.cle).join(', ')}
                 {analyse.inconnus.length > 12 && ` … et ${nombreEt(analyse.inconnus.length - 12, 'autre')}`}
               </li>
