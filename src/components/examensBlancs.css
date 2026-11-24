@@ -310,6 +310,34 @@
 
 .eb-carte__bas .eb-carte__action { align-self: stretch; }
 
+/* Une pastille par matière (signalement #73, décision de Min's du 24/11/2026) : une ligne par matière, son nom à
+   gauche, sa pastille à droite ; sur un écran étroit, la pastille passe sous le nom plutôt que de déborder. */
+.eb-carte__etats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: stretch;
+  margin: 8px 0 0; /* la marge haute de la pastille seule, reportée sur la liste : même place qu'avant */
+  padding: 0;
+  list-style: none;
+}
+
+.eb-carte__etat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.eb-carte__etat .pastille-pret { margin-top: 0; }
+
+.eb-carte__etat-matiere {
+  color: var(--encre-douce);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 /* ------------------------------------------------------------ la préparation, comme sur la carte d'un contrôle
    (Camara, le 23/11/2026 : « pourquoi le pourcentage n'a pas le même design que pour les contrôles ») : le même
    encadré, la même barre lumineuse que `controleCarteIllustre.css` (cartes `.cci`), recopiés pour la carte de
@@ -324,6 +352,10 @@
 
 :root .controles-liste > .controle-carte.eb-carte .preparation { margin: 0; gap: 8px; }
 :root .controles-liste > .controle-carte.eb-carte .preparation__ligne { color: #e8ecff; }
+
+/* Le nom de la matière devant sa pastille (#73 v2) : la carte reste sombre dans les DEUX thèmes, donc la même encre
+   claire que la ligne de préparation ; `--encre-douce` du thème clair (gris foncé) se lisait mal sur ce fond. */
+:root .controles-liste > .controle-carte.eb-carte .eb-carte__etat-matiere { color: #e8ecff; }
 
 :root .controles-liste > .controle-carte.eb-carte .preparation__libelle {
   color: #fff;

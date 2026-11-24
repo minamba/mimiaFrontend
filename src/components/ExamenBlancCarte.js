@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import BarrePreparation from './BarrePreparation';
-import PastillePret from './PastillePret';
+import PastillePret, { STATUTS_PRET } from './PastillePret';
 import './examensBlancs.css';
 
 /** Les jours qui restent jusqu'à l'examen blanc, en dates locales (« demain » ne doit pas dépendre de l'heure). */
@@ -29,6 +29,36 @@ const urgence = (jours) => {
 };
 
 /**
+ * LES PASTILLES D'UNE CARTE D'EXAMEN BLANC : UNE PAR MATIÈRE (signalement #73 ; décision de Min's, 24/11/2026).
+ * La carte prenait le statut de la PREMIÈRE matière qui en avait un : « Bientôt prêt » (Maths) alors que Français
+ * était « Pas encore prêt », sans dire de quelle matière il s'agissait.
+ *
+ * Désormais chaque matière a SA pastille, précédée de son nom (« Mathématiques · Bientôt prêt », « Français · Pas
+ * encore prêt »), dans l'ordre de l'examen : la carte redit ligne à ligne ce que dit la page de l'examen blanc.
+ * Rien n'est recalculé ni résumé : chaque statut reste celui du serveur, et chaque infobulle l'observation du
+ * professeur de SA matière (plus de question d'ex æquo).
+ *
+ * Rend une liste `{ cle, matiere, preparation }` (vide = pas de pastille) :
+ * - une matière sans statut connu (absent, null, inconnu) n'a pas de ligne, comme `PastillePret` qui ne rend rien
+ *   plutôt qu'une pastille fausse ;
+ * - examen à une seule matière : sa pastille SANS nom (le titre de la carte le dit déjà), comme l'ancien badge,
+ *   qui prenait celui de `seule` ;
+ * - matière sans libellé (absent, vide ou blanc) : sa pastille sans nom, jamais « undefined » ni un nom vide.
+ */
+export function etatsDeLaCarte(matieresDeLExamen) {
+  const toutes = matieresDeLExamen ?? [];
+  const nommer = toutes.length > 1;
+  return toutes
+    .map((m, rang) => ({ m, rang }))
+    .filter(({ m }) => Object.prototype.hasOwnProperty.call(STATUTS_PRET, m.preparation?.pretStatut ?? ''))
+    .map(({ m, rang }) => ({
+      cle: m.id ?? m.matiereId ?? `rang-${rang}`,
+      matiere: nommer ? (m.matiereLibelle ?? '').trim() : '',
+      preparation: m.preparation,
+    }));
+}
+
+/**
  * LA CARTE D'UN EXAMEN BLANC, PARMI LES CONTRÔLES — Camara, le 23/11/2026 : une seule carte « Brevet blanc » par
  * date, ses matières, son pourcentage global ; en cliquant, la page de l'examen blanc (comme la préparation au
  * brevet). Habillage à part (étiquette dorée) : on la distingue d'un coup d'œil d'un simple contrôle.
@@ -50,8 +80,8 @@ export default function ExamenBlancCarte({ examen, eleveId, illustre = false, on
     ? 'Faire le point'
     : commence ? 'Continuer la préparation' : 'Commencer la préparation';
 
-  // LE BADGE D'ÉTAT, comme sur la carte d'un contrôle : celui de la matière (ou de la première qui en a un).
-  const etat = (seule ?? (examen.matieres ?? []).find((m) => m.preparation?.pretStatut))?.preparation;
+  // LES BADGES D'ÉTAT, un par matière : voir `etatsDeLaCarte` (signalement #73, décision de Min's du 24/11/2026).
+  const etats = etatsDeLaCarte(examen.matieres);
 
   return (
     <li className={`controle-carte eb-carte${illustre ? ' eb-carte--illustree' : ''}`}>
@@ -87,7 +117,20 @@ export default function ExamenBlancCarte({ examen, eleveId, illustre = false, on
 
       {/* EN BAS DE LA CARTE, COMME LES AUTRES (Camara, le 23/11/2026) : le badge d'état, puis le bouton. */}
       <div className="eb-carte__bas">
-      <PastillePret statut={etat?.pretStatut} titre={etat?.pretObservation} />
+      {/* « Prêt pour l'épreuve » (décision de Min's, 24/11/2026) : un examen blanc se passe en épreuves, comme le
+          brevet ; « Prêt pour le contrôle » serait le mauvais mot. Les trois autres statuts sont inchangés. */}
+      {etats.length > 0 && (
+        <ul className="eb-carte__etats" aria-label="Où tu en es, matière par matière">
+          {etats.map(({ cle, matiere, preparation }) => (
+            <li key={cle} className="eb-carte__etat">
+              {/* L'espace sépare le nom du mot pour un lecteur d'écran (« Français Pas encore prêt ») ; dans la
+                  ligne flex, une espace seule ne s'affiche pas. */}
+              {matiere && <><span className="eb-carte__etat-matiere">{matiere}</span>{' '}</>}
+              <PastillePret statut={preparation.pretStatut} titre={preparation.pretObservation} cible="epreuve" />
+            </li>
+          ))}
+        </ul>
+      )}
       {seule && onPreparer ? (
         <button
           type="button"
