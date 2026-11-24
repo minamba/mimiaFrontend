@@ -67,6 +67,7 @@ import {
   copieRendue as copieEvaluationRendue,
 } from '../lib/storage/supportEvaluation';
 import SupportEvaluation from './SupportEvaluation';
+import RetraitNotion, { useRetraitNotion } from './RetraitNotion';
 import {
   supportEcritChoisi, marquerSupportEcrit,
   QUESTION_SUPPORT_ECRIT, CAHIER as ECRIT_CAHIER, CLAVIER as ECRIT_CLAVIER,
@@ -4580,6 +4581,9 @@ export default function Chat() {
     [envoyerTexte],
   );
 
+  // « Oui, retirer » / « Non, la garder » (#67 v7) : toute la logique du clic est dans `useRetraitNotion`.
+  const retrait = useRetraitNotion(messages, eleveId, envoyerTexte);
+
   /**
    * « Je t'aide à te corriger » / « Je corrige et t'explique » — Camara, le
    * 26/09/2026. Un tour normal, pour la même raison que le support : le
@@ -6494,6 +6498,17 @@ export default function Chat() {
           <SupportEvaluation
             disabled={streaming || seanceTerminee}
             onChoisir={choisirSupport}
+          />
+        )}
+
+        {/* LE RETRAIT D'UNE NOTION DU PROGRAMME (#67 v7) : seulement sous la balise du serveur, jamais pendant que le
+            professeur parle. */}
+        {retrait.attendu && !streaming && !seanceTerminee && (
+          <RetraitNotion
+            libelle={retrait.attendu.libelle}
+            onRepondre={retrait.repondre}
+            desactive={retrait.desactive}
+            erreur={retrait.erreur}
           />
         )}
 

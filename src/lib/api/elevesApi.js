@@ -278,6 +278,13 @@ export const modifierControle = (eleveId, controleId, { sujet, dateControle, heu
     sujet, dateControle, heureControle,
   });
 
+/**
+ * LE CLIC SUR « OUI, RETIRER » — signalement #67 v7. Seul chemin par lequel une notion sort du programme : le
+ * serveur retire CETTE ligne (cloisonnée à l'élève et au contrôle, jamais le programme vidé — 409).
+ */
+export const retirerNotionDuProgramme = (eleveId, controleId, notionId, libelle) =>
+  httpClient.post(`/eleves/${eleveId}/controles/${controleId}/notions/${notionId}/retrait`, { libelle });
+
 export const supprimerControle = (eleveId, controleId) =>
   httpClient.delete(`/eleves/${eleveId}/controles/${controleId}`);
 

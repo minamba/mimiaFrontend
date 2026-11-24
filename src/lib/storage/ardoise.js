@@ -8,6 +8,7 @@
  */
 
 import { envelopperFigures } from '../figureGeo';
+import { retirerBalisesRetrait } from './retraitNotion';
 
 const OUVERTURE = '[ARDOISE]';
 const FERMETURE = '[/ARDOISE]';
@@ -935,7 +936,8 @@ function retirerBloc(texte, ouverture, fermeture) {
 }
 
 function retirerMarqueurs(texte) {
-  const sansMarqueurs = (texte ?? '')
+  // #67 v7 : les balises du retrait par bouton (professeur et serveur) ne se voient ni ne s'entendent.
+  const sansMarqueurs = retirerBalisesRetrait(texte ?? '')
     .split(EVAL_DEBUT).join('')
     .split(EVAL_ABANDON).join('')
     .split(DICTEE_ABANDON).join('')

@@ -8,6 +8,7 @@ import { retirerMarqueurSupportSon } from './supportSon';
 import { retirerMarqueurSupport } from './supportEvaluation';
 import { retirerMarqueurTypeDictee } from './typeDictee';
 import { retirerMarqueurChoixExerciceSons } from './choixExerciceSons';
+import { retirerMarqueurClicRetrait } from './retraitNotion';
 import { MARQUEUR_LECTURE_IMAGE } from '../lectureDImage';
 import { sansBalisesAEcouter } from '../reponseADictee';
 
@@ -24,11 +25,11 @@ import { sansBalisesAEcouter } from '../reponseADictee';
  * aucun écran ne peut l'oublier.
  */
 export function retirerMarqueursApplication(texte) {
-  return retirerMarqueurChoixExerciceSons(retirerMarqueurLectureImage(retirerMarqueurSupportSon(retirerMarqueurTypeDictee(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
+  return retirerMarqueurClicRetrait(retirerMarqueurChoixExerciceSons(retirerMarqueurLectureImage(retirerMarqueurSupportSon(retirerMarqueurTypeDictee(retirerMarqueurSupportEcrit(retirerMarqueurConversation(
     retirerMarqueurSupport(retirerMarqueurCopieControle(
       retirerMarqueurCahier(retirerMarqueurEnonce(retirerMarqueurAvecCopie(texte ?? ''))),
     )),
-  ))))));
+  )))))));
 }
 
 /** La syllabe ou le mot à lire (07/11/2026) : le tableau le montre, la bulle ne le dit pas. */
