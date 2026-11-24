@@ -15,24 +15,9 @@ import LegendeVariables from './LegendeVariables';
 import PlanificationModele from './PlanificationModele';
 import { AIDE_CASE_PROMOTION } from '../lib/casePromotion';
 import { avecMarqueur as avecMarqueurHtml, estHtmlComplet, sansMarqueur } from '../lib/htmlComplet';
+import ApercuCourriel from './ApercuCourriel';
 import CarteExpediteur from './CarteExpediteur';
 import SectionMail from './SectionMail';
-
-/** Ouvre un courriel rendu dans un nouvel onglet. */
-function ouvrirApercu(html) {
-  // OUVERT DANS UN ONGLET, PAS DANS UNE FENÊTRE MODALE.
-  //
-  // Un courriel se lit en pleine largeur, avec les images et la mise en
-  // page réelles. Le montrer dans une boîte de 420 pixels donnerait un
-  // aperçu qui ne ressemble à rien de ce que le parent verra.
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank', 'noopener');
-
-  // L'adresse est révoquée après ouverture : sans ça, chaque aperçu
-  // laisserait un objet en mémoire jusqu'au rechargement de la page.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
 
 /**
  * Écrire à tous les parents — et régler les courriels automatiques.
@@ -87,6 +72,10 @@ const MOTIF_LIEN_DESINSCRIPTION = /\{\{\s*(lien_desinscription|liendesinscriptio
 export default function Diffusion({ nombreParents }) {
   // LA CASE « PROMOTION » : décochée par défaut, et à chaque message choisi ou nouveau.
   const [promotion, setPromotion] = useState(false);
+
+  // L'APERÇU, DANS UN CADRE ISOLÉ PLEIN ÉCRAN (contrôle d'Omar, 24/11/2026) : plus d'onglet `blob:`, qui prenait
+  // l'origine du site admin (un script collé s'y serait exécuté). Voir ApercuCourriel.
+  const [apercu, setApercu] = useState(null);
 
   const {
     nom, setNom,
@@ -203,10 +192,10 @@ export default function Diffusion({ nombreParents }) {
         // Ce qui est tapé d'abord : l'aperçu montre ce qui est enregistré.
         await enregistrer();
         const { data } = await (promotion ? apercuModeleMail(modele.id, { mode: 'offres' }) : apercuModeleMail(modele.id));
-        ouvrirApercu(data);
+        setApercu(data);
       } else {
         const { data } = await (promotion ? apercuDiffusion(composition, { mode: 'offres' }) : apercuDiffusion(composition));
-        ouvrirApercu(data);
+        setApercu(data);
       }
     } catch {
       setErreur("L'aperçu n'a pas pu être généré.");
@@ -442,12 +431,14 @@ export default function Diffusion({ nombreParents }) {
               />
               {htmlComplet ? (
                 <span className="champ__aide">
-                  Le HTML part tel quel&nbsp;: «&nbsp;Voir l’aperçu&nbsp;» le montre comme le parent le recevra. Les
-                  scripts, les attributs <strong>on…=</strong> et les liens <strong>javascript:</strong> sont retirés.
-                  Avec «&nbsp;Promotion&nbsp;», <strong>{'{{lien_desinscription}}'}</strong> devient le lien de
-                  désinscription de chaque parent (dans un <strong>href</strong>, l’adresse seule)&nbsp;; s’il manque,
-                  le pied légal est ajouté en bas. Les images de <strong>mimia.fr/email/</strong> (logo…) sont jointes
-                  au courriel.
+                  Le HTML part tel quel, une fois nettoyé&nbsp;: «&nbsp;Voir l’aperçu&nbsp;» le montre comme le parent le
+                  recevra. Le serveur retire ce qui pourrait s’exécuter (scripts, cadres, SVG, attributs
+                  <strong> on…</strong>, liens autres que <strong>https</strong>, <strong>mailto</strong> ou
+                  <strong> tel</strong>) et les commentaires, sauf ceux d’Outlook. Avec «&nbsp;Promotion&nbsp;»,
+                  <strong> {'{{lien_desinscription}}'}</strong> devient le lien de désinscription de chaque parent (dans
+                  un <strong>href</strong>, l’adresse seule)&nbsp;; s’il manque, le pied légal est ajouté en bas. Sans
+                  «&nbsp;Promotion&nbsp;», le pied «&nbsp;compte Mimia&nbsp;» est ajouté s’il manque. Les images de
+                  <strong> mimia.fr/email/</strong> (logo…) sont jointes au courriel.
                 </span>
               ) : (
                 <span className="champ__aide">
@@ -661,6 +652,8 @@ export default function Diffusion({ nombreParents }) {
         onSupprime={(id) => { if (modele?.id === id) deselectionner({ sansEnregistrer: true }); }}
         revision={revision}
       />
+
+      {apercu !== null && <ApercuCourriel html={apercu} onFermer={() => setApercu(null)} />}
     </div>
   );
 }

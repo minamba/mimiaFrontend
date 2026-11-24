@@ -125,6 +125,33 @@ test('HTML complet + balise : l’envoi exige « Promotion », l’aperçu et l�
   await waitFor(() => expect(api.diffuserModeleMail).toHaveBeenCalledWith(8, { mode: 'offres' }));
 });
 
+test('l’aperçu s’affiche dans un cadre isolé (sandbox vide), jamais dans un onglet blob: du site', async () => {
+  // Contrôle d'Omar (24/11/2026) : une adresse `blob:` prend l'origine du site admin, un script collé s'y exécutait.
+  const piege = '<html><body><h1>BF</h1><img src="x" onerror="alert(1)"></body></html>';
+  api.apercuModeleMail.mockResolvedValue({ data: piege });
+  render(<Diffusion nombreParents={3} />);
+  await choisir('Black Friday');
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Promotion' }));
+
+  fireEvent.click(screen.getByRole('button', { name: 'Voir l’aperçu' }));
+
+  const cadre = await screen.findByTitle('Aperçu du courriel');
+  expect(cadre.tagName).toBe('IFRAME');
+  expect(cadre).toHaveAttribute('sandbox', '');
+  expect(cadre).toHaveAttribute('srcdoc', piege);
+  expect(window.open).not.toHaveBeenCalled();
+  expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog', { name: 'Aperçu du courriel' })).toBeInTheDocument();
+
+  // « Téléphone » montre le courriel à 390 px ; Échap ferme.
+  fireEvent.click(screen.getByRole('button', { name: 'Téléphone' }));
+  expect(cadre).toHaveClass('apercu-courriel__cadre--telephone');
+  expect(screen.getByRole('button', { name: 'Téléphone' })).toHaveAttribute('aria-pressed', 'true');
+
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByTitle('Aperçu du courriel')).not.toBeInTheDocument();
+});
+
 test('un HTML complet vide n’est pas prêt à partir', async () => {
   render(<Diffusion nombreParents={3} />);
   await choisir('Rentrée');

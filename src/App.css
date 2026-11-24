@@ -16588,6 +16588,90 @@ html.defilement-bloque body {
   overflow-x: auto;
 }
 
+/* L'APERÇU D'UN COURRIEL DE L'ADMIN (contrôle d'Omar, 24/11/2026) — voir
+   ApercuCourriel.js. Presque tout l'écran, pour voir le courriel à sa vraie
+   largeur ; « Téléphone » le montre à 390 px. Le cadre est blanc, comme une
+   messagerie : un courriel sans fond ne prend pas celui du thème. */
+.modale__boite.apercu-courriel__boite {
+  max-width: min(1100px, 100%);
+  height: 92dvh;
+  max-height: 92dvh;
+  padding: 16px 18px 18px;
+  gap: 12px;
+}
+
+.apercu-courriel__tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.apercu-courriel__tete h2 { margin: 0; font-size: 18px; flex: 1 1 auto; }
+
+.apercu-courriel__largeurs {
+  display: inline-flex;
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.apercu-courriel__largeurs button {
+  padding: 6px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--encre);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.apercu-courriel__largeurs button.est-actif {
+  background: var(--surface-2);
+  font-weight: 700;
+}
+
+.apercu-courriel__fermer {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--encre);
+  cursor: pointer;
+}
+
+.apercu-courriel__fermer:hover,
+.apercu-courriel__largeurs button:hover { background: var(--surface-2); }
+
+.apercu-courriel__corps {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+  border-radius: 12px;
+  background: #e9ecf1;
+}
+
+.apercu-courriel__cadre {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.apercu-courriel__cadre--telephone { width: 390px; max-width: 100%; }
+
+@media (max-width: 600px) {
+  .modale.apercu-courriel { padding: 0; }
+  .modale__boite.apercu-courriel__boite { height: 100dvh; max-height: 100dvh; border-radius: 0; padding: 10px; }
+  .apercu-courriel__largeurs { display: none; }
+}
+
 /* `{{lien_desinscription}}` sans la case « Promotion » (20/11/2026) : c'est un
    modèle d'offre, on dit quoi faire. */
 .diffusion__lien-offre {

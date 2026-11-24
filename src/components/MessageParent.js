@@ -11,6 +11,7 @@ import {
   supprimerMessages,
 } from '../lib/api/adminApi';
 import { useModeleMail } from '../lib/hooks/useModeleMail';
+import ApercuCourriel from './ApercuCourriel';
 import BandeauModele from './BandeauModele';
 import BarreOutilsTexte from './BarreOutilsTexte';
 import BlocPieces from './BlocPieces';
@@ -74,6 +75,8 @@ export default function MessageParent({
   // sur « Cc » ou « Cci » ouvre leur champ.
   const [copies, setCopies] = useState([]);
   const [cachees, setCachees] = useState([]);
+  // L'APERÇU, DANS UN CADRE ISOLÉ (contrôle d'Omar, 24/11/2026) : voir ApercuCourriel.
+  const [apercu, setApercu] = useState(null);
   const [ccVisible, setCcVisible] = useState(false);
   const [cciVisible, setCciVisible] = useState(false);
   const equipe = useContactsEquipe();
@@ -310,12 +313,9 @@ export default function MessageParent({
         ({ data: html } = await apercuDiffusion(composition, { signature: true, boite, mode: promotion ? 'offres' : undefined }));
       }
 
-      // MÊME GESTE QUE LA DIFFUSION : un onglet plutôt qu'une modale, pour
-      // voir le courriel à sa taille réelle.
-      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank', 'noopener');
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      // MÊME GESTE QUE LA DIFFUSION : le courriel à sa taille réelle, dans un cadre
+      // isolé plein écran (plus d'onglet `blob:`, qui prenait l'origine du site).
+      setApercu(html);
     } catch {
       setErreur("L'aperçu n'a pas pu être généré.");
     }
@@ -741,6 +741,8 @@ export default function MessageParent({
         onSupprime={(id) => { if (modele?.id === id) deselectionner({ sansEnregistrer: true }); }}
         revision={revision}
       />
+
+      {apercu !== null && <ApercuCourriel html={apercu} onFermer={() => setApercu(null)} />}
     </div>
   );
 }

@@ -72,6 +72,16 @@ it('l’aperçu d’« Écrire à un parent » demande la signature de l’expé
 
   await waitFor(() => expect(api.apercuDiffusion).toHaveBeenCalledWith(
     expect.objectContaining({ sujet: 'Bonjour', texte: 'Un mot' }), { signature: true, boite: 'moi' }));
+
+  // Contrôle d'Omar (24/11/2026) : l'aperçu s'affiche dans un cadre `sandbox` vide, jamais dans un onglet `blob:`.
+  const cadre = await screen.findByTitle('Aperçu du courriel');
+  expect(cadre).toHaveAttribute('sandbox', '');
+  expect(cadre).toHaveAttribute('srcdoc', '<p>courriel</p>');
+  expect(window.open).not.toHaveBeenCalled();
+  expect(global.URL.createObjectURL).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Fermer l’aperçu' }));
+  expect(screen.queryByTitle('Aperçu du courriel')).not.toBeInTheDocument();
 });
 
 it('l’adresse d’envoi s’affiche au-dessus du formulaire', async () => {
