@@ -67,7 +67,7 @@ function MatiereExamenBlanc({ eleveId, examen, matiere, onChange, onReviser, ouv
           après, ses notions et leur avancement, comme la fiche d'un contrôle. */}
       {matiere.programmeValide ? (
         <>
-          <PastillePret statut={matiere.preparation?.pretStatut} titre={matiere.preparation?.pretObservation} />
+          <PastillePret statut={matiere.preparation?.pretStatut} titre={matiere.preparation?.pretObservation} cible="epreuve" />
           {matiere.preparation?.pretObservation && (
             <p className="eb-matiere__mot">
               <strong>Le mot de ton professeur</strong> {matiere.preparation.pretObservation}
