@@ -433,11 +433,13 @@ export default function Diffusion({ nombreParents }) {
                 <span className="champ__aide">
                   Le HTML part tel quel, une fois nettoyé&nbsp;: «&nbsp;Voir l’aperçu&nbsp;» le montre comme le parent le
                   recevra. Le serveur retire ce qui pourrait s’exécuter (scripts, cadres, SVG, attributs
-                  <strong> on…</strong>, liens autres que <strong>https</strong>, <strong>mailto</strong> ou
-                  <strong> tel</strong>) et les commentaires, sauf ceux d’Outlook. Avec «&nbsp;Promotion&nbsp;»,
+                  <strong> on…</strong>, adresses autres que <strong>https</strong>, <strong>http</strong>,
+                  <strong> mailto</strong>, <strong>tel</strong>, <strong>sms</strong>, <strong>cid</strong> ou, pour
+                  une image, <strong>data:image</strong>) et les commentaires, sauf ceux d’Outlook. Avec «&nbsp;Promotion&nbsp;»,
                   <strong> {'{{lien_desinscription}}'}</strong> devient le lien de désinscription de chaque parent (dans
                   un <strong>href</strong>, l’adresse seule)&nbsp;; s’il manque, le pied légal est ajouté en bas. Sans
-                  «&nbsp;Promotion&nbsp;», le pied «&nbsp;compte Mimia&nbsp;» est ajouté s’il manque. Les images de
+                  «&nbsp;Promotion&nbsp;», le pied «&nbsp;Vous recevez ce message parce que vous avez un compte
+                  Mimia&nbsp;» est ajouté s’il manque. Les images de
                   <strong> mimia.fr/email/</strong> (logo…) sont jointes au courriel.
                 </span>
               ) : (
