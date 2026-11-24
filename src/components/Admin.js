@@ -1033,6 +1033,24 @@ function EtatCompte({ etat }) {
   );
 }
 
+/**
+ * F5 GARDE LA SECTION OUVERTE (Camara, le 24/11/2026 : « quand je fais un F5 dans l'admin, ça me ramène
+ * toujours à la page des statistiques »). L'onglet et le sous-onglet des mails vivent dans `sessionStorage` :
+ * propre à l'onglet du NAVIGATEUR, il survit au rechargement, et un nouvel onglet repart des statistiques.
+ * Une adresse `?onglet=…` (notification de courriel, jeu de test) garde la priorité : ses effets passent après.
+ * Une section qui n'est plus permise se replie sur la première autorisée, comme avant.
+ */
+const CLE_ONGLET_ADMIN = 'mimia-admin-onglet';
+const CLE_SOUS_ONGLET_ADMIN = 'mimia-admin-sous-onglet';
+
+function lireMemoireAdmin(cle, defaut) {
+  try { return sessionStorage.getItem(cle) || defaut; } catch { return defaut; }
+}
+
+function ecrireMemoireAdmin(cle, valeur) {
+  try { sessionStorage.setItem(cle, valeur); } catch { /* navigation privée stricte : F5 ramènera au défaut */ }
+}
+
 export default function Admin() {
   const dispatch = useDispatch();
   const {
@@ -1064,11 +1082,14 @@ export default function Admin() {
    */
   const [ongletsAutorises, setOngletsAutorises] = useState(null);
 
-  const [onglet, setOnglet] = useState('stats');
+  const [onglet, setOnglet] = useState(() => lireMemoireAdmin(CLE_ONGLET_ADMIN, 'stats'));
 
   // La messagerie d'abord : c'est celle qu'on ouvre tous les jours, alors
   // qu'une diffusion se prépare trois fois par an.
-  const [sousOnglet, setSousOnglet] = useState('messagerie');
+  const [sousOnglet, setSousOnglet] = useState(() => lireMemoireAdmin(CLE_SOUS_ONGLET_ADMIN, 'messagerie'));
+
+  useEffect(() => { ecrireMemoireAdmin(CLE_ONGLET_ADMIN, onglet); }, [onglet]);
+  useEffect(() => { ecrireMemoireAdmin(CLE_SOUS_ONGLET_ADMIN, sousOnglet); }, [sousOnglet]);
   // Dans la messagerie : « Ma boîte » ou la boîte commune du support (17/10/2026).
   const [boiteMessagerie, setBoiteMessagerie] = useState('moi');
 
