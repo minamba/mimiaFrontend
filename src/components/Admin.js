@@ -1035,10 +1035,6 @@ function EtatCompte({ etat }) {
 }
 
 /**
- * Ce que la confirmation de suppression d'un parent annonce. « ses 1 profil(s) » sonnait faux (même famille que le
- * signalement #69) : le déterminant suit le nombre, et un compte sans enfant n'annonce aucun profil.
- */
-/**
  * Les places aux séances d'une famille au-delà de sa formule (#69 v5, recherche élargie : accord plus loin dans la phrase) :
  * « seul un enfant aura une place, le premier arrivé », jamais « seuls un enfant auront une place, les premiers arrivés ».
  */
@@ -1048,6 +1044,10 @@ export function placesAuxSeances(maximum) {
     : 'seul un enfant aura une place, le premier arrivé';
 }
 
+/**
+ * Ce que la confirmation de suppression d'un parent annonce. « ses 1 profil(s) » sonnait faux (même famille que le
+ * signalement #69) : le déterminant suit le nombre, et un compte sans enfant n'annonce aucun profil.
+ */
 export function libelleSuppressionParent(p) {
   const profils = p.nombreEleves > 1
     ? ` et ses ${p.nombreEleves} profils`
