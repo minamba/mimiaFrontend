@@ -103,6 +103,9 @@ const MATIERES = {
   AMC: { clair: '#1D6FB8', sombre: '#7AB8F0' },
   LLCER_ESPAGNOL: { clair: '#BE123C', sombre: '#FB7185' },
   SI: { clair: '#6B4400', sombre: '#E8C88E' },
+  // L'ingénierie de STI2D a son professeur, Lucas (23/11/2026). Gris ardoise :
+  // aucun autre professeur ne le porte. Provisoire, à revoir sur son portrait.
+  INGENIERIE: { clair: '#475569', sombre: '#CBD5E1' },
   LLCA_LATIN: { clair: '#B4531F', sombre: '#E2894F' },
   LLCA_GREC: { clair: '#B4531F', sombre: '#E2894F' },
   // Deux nouveaux professeurs : Théo (EPPCS), Jeanne (les sept arts).
@@ -180,6 +183,8 @@ const PAR_LIBELLE = {
   'droit et economie': 'DROIT_ECONOMIE',
   'biochimie, biologie et biotechnologies': 'BIOTECHNOLOGIES',
   'sciences physiques et chimiques en laboratoire': 'SPCL',
+  'ingenierie, innovation et developpement durable': 'INGENIERIE',
+  ingenierie: 'INGENIERIE',
   'biologie et physiopathologie humaines': 'BIOLOGIE_HUMAINE',
   'sciences et techniques sanitaires et sociales': 'SANITAIRE_SOCIAL',
   'economie droit': 'ECONOMIE_DROIT',
@@ -310,6 +315,7 @@ const MURS = {
   // L'écran et le code : ce qui se programme.
   NSI: 'informatique',
   SI: 'informatique',
+  INGENIERIE: 'informatique',
 
   // La table d'écriture, Hugo, Camus, Zola.
   FRANCAIS: 'francais',

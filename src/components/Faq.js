@@ -62,7 +62,7 @@ export const QUESTIONS = [
   {
     question: 'Quelles matières et quelles classes ?',
     reponse:
-      "Du CP à la Terminale : mathématiques, français, histoire-géographie, anglais, sciences puis physique-chimie et SVT, espagnol en LV2 et philosophie. Au lycée s'ajoutent les spécialités de la voie générale et celles des séries STMG, ST2S et STL. En voie professionnelle : français, histoire-géographie-EMC, mathématiques, anglais, physique-chimie selon la filière, économie et prévention-santé-environnement (pas l'enseignement du métier lui-même). Chaque matière a son professeur : vous les retrouvez tous dans l'équipe pédagogique, plus haut sur cette page.",
+      "Du CP à la Terminale : mathématiques, français, histoire-géographie, anglais, sciences puis physique-chimie et SVT, espagnol en LV2 et philosophie. Au lycée s'ajoutent les spécialités de la voie générale et celles des séries STMG, ST2S, STL et STI2D. En voie professionnelle : français, histoire-géographie-EMC, mathématiques, anglais, physique-chimie selon la filière, économie et prévention-santé-environnement (pas l'enseignement du métier lui-même). Chaque matière a son professeur : vous les retrouvez tous dans l'équipe pédagogique, plus haut sur cette page.",
   },
   {
     question: 'Mon enfant parle-t-il vraiment avec son professeur ?',

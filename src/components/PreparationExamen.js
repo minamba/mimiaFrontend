@@ -43,7 +43,11 @@ const ICONES = [
   [/\barts?\b|cinema|theatre|musique|danse|cirque/, '🎨'],
   [/sanitaire|sante|pse/, '🩺'],
   [/econom|gestion|management|droit|\bses\b/, '📈'],
+  // L'ingénierie de STI2D, avant le numérique (« systèmes d'information et numérique » est l'une de ses options).
+  [/ingenier/, '⚙️'],
   [/numerique|informatique|\bnsi\b/, '💻'],
+  // La « physique-chimie et mathématiques » de STI2D : surtout de la physique (12,5 points sur 18).
+  [/physique-chimie et math/, '🧪'],
   [/math/, '🧮'],
   [/histoire|geo|hggsp|politique/, '🌍'],
   [/svt|vie et de la terre|biolog|vivant|biotech/, '🍃'],

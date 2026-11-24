@@ -27,6 +27,7 @@ import photoLin from '../assets/profs/p_chinois.png';
 import photoYoussef from '../assets/profs/p_arabe.png';
 import photoMaelle from '../assets/profs/p_orientation.png';
 import photoHugo from '../assets/profs/p_pse.png';
+import photoLucas from '../assets/profs/p_ingenierie.png';
 
 import animNora from '../assets/profs/anim/nora.mp4';
 import animAdrien from '../assets/profs/anim/adrien.mp4';
@@ -47,6 +48,7 @@ import animLin from '../assets/profs/anim/lin.mp4';
 import animYoussef from '../assets/profs/anim/youssef.mp4';
 import animMaelle from '../assets/profs/anim/maelle.mp4';
 import animHugo from '../assets/profs/anim/hugo.mp4';
+import animLucas from '../assets/profs/anim/lucas.mp4';
 
 /**
  * LES VISAGES ILLUSTRÉS — voulus par Camara le 14/09/2026, d'abord pour Nora
@@ -87,6 +89,10 @@ const PHOTOS = {
   // généré (Higgsfield, GPT Image, deux portraits de l'équipe en référence de
   // style), cercle redécoupé net.
   hugo: photoHugo,
+  // Le professeur d'ingénierie de STI2D — portrait fourni par Camara le 23/11/2026 (second envoi). Son disque,
+  // un peu décentré, s'arrêtait à 43 % du côté par endroits, sous les 44 % visibles : le bord a été prolongé
+  // avec la couleur voisine jusqu'à 45,2 %, et l'intérieur (253/255) rendu opaque.
+  lucas: photoLucas,
 };
 
 /**
@@ -126,6 +132,11 @@ const BOUCLES = {
   // Higgsfield Kling 3.0, 4,5 crédits, le 11/10/2026 — même recette que les autres.
   maelle: animMaelle,
   hugo: animHugo,
+  // kie.ai, Gemini Omni 1.2 Flash (première et dernière image = le portrait), 27 crédits, le 23/11/2026. Le
+  // modèle rend du 16:9 : la vidéo est recollée au centre du portrait agrandi à 1280 px (lignes 280 à 1000,
+  // bords fondus sur 48 px), le haut des cheveux et les épaules restent fixes. 72 images, 14,7 Ko. Refaite le
+  // même jour sur le second portrait de Camara.
+  lucas: animLucas,
 };
 
 const PROFS = {
@@ -311,6 +322,16 @@ const PROFS = {
     coupe: 'courte',
     vetement: '#9A3412',
     lunettes: false,
+  },
+
+  // Ingénierie de STI2D (23/11/2026). Son image (`p_ingenierie.png`) et sa boucle
+  // priment. Cheveux noirs, lunettes, veste ardoise, comme le portrait.
+  lucas: {
+    peau: '#D9A27A',
+    cheveux: '#231B17',
+    coupe: 'courte',
+    vetement: '#475569',
+    lunettes: true,
   },
 };
 

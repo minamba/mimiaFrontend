@@ -262,6 +262,16 @@ const MOTIFS = {
     </>
   ),
 
+  // Un engrenage et un éclair : l'ingénierie de STI2D, matière et énergie.
+  INGENIERIE: (
+    <>
+      <circle cx="40" cy="56" r="16" />
+      <circle cx="40" cy="56" r="5" />
+      <path d="M40 28 v8 M40 76 v8 M12 56 h8 M60 56 h8 M20 36 l6 6 M54 70 l6 6 M20 76 l6 -6 M54 42 l6 -6" />
+      <path d="M100 18 L86 56 h14 L92 94 L114 48 h-14 Z" />
+    </>
+  ),
+
   // Un chronomètre et un ballon : l'EPPCS.
   EPPCS: (
     <>
