@@ -60,6 +60,10 @@ import rangeeInformatique from '../assets/carte-illustre/rangee-informatique.web
 import pastilleInformatique from '../assets/carte-illustre/pastille-informatique.webp';
 import rangeeIngenierie from '../assets/carte-illustre/rangee-ingenierie.webp';
 import pastilleIngenierie from '../assets/carte-illustre/pastille-ingenierie.webp';
+import rangeeScienceIngenierie from '../assets/carte-illustre/rangee-science_ingenierie.webp';
+import pastilleScienceIngenierie from '../assets/carte-illustre/pastille-science_ingenierie.webp';
+import rangeeTechnologie from '../assets/carte-illustre/rangee-technologie.webp';
+import pastilleTechnologie from '../assets/carte-illustre/pastille-technologie.webp';
 import rangeeItalien from '../assets/carte-illustre/rangee-italien.webp';
 import pastilleItalien from '../assets/carte-illustre/pastille-italien.webp';
 import rangeePhilosophie from '../assets/carte-illustre/rangee-philosophie.webp';
@@ -97,6 +101,10 @@ const DECORS = {
   economie: { decor: rangeeEconomie, pastille: pastilleEconomie, plein: true },
   informatique: { decor: rangeeInformatique, pastille: pastilleInformatique, plein: true },
   ingenierie: { decor: rangeeIngenierie, pastille: pastilleIngenierie, plein: true },
+  // Lucas et Amine (25/11/2026) : générés par Camara en 2172 × 724 ; la bande 1400 × 200 est découpée sur le sujet
+  // (le pont-serre, la serre et ses éoliennes). Originaux dans carte-generees.
+  science_ingenierie: { decor: rangeeScienceIngenierie, pastille: pastilleScienceIngenierie, plein: true },
+  technologie: { decor: rangeeTechnologie, pastille: pastilleTechnologie, plein: true },
   italien: { decor: rangeeItalien, pastille: pastilleItalien, plein: true },
   philosophie: { decor: rangeePhilosophie, pastille: pastillePhilosophie, plein: true },
   sante: { decor: rangeeSante, pastille: pastilleSante, plein: true },
@@ -116,7 +124,11 @@ const UNIVERS = [
   [/cirque/, 'cirque'],
   [/antiquite|\blatin\b|\bgrec\b/, 'antiquite'],
   [/philosophie|humanites|^hlp$/, 'philosophie'],
+  // L'ingénierie de STI2D (Lucas) a son décor depuis le 25/11/2026 ; « Sciences de l'ingénieur » (Yann) garde l'ancien.
+  [/^ingenierie/, 'science_ingenierie'],
   [/ingenieur|ingenierie/, 'ingenierie'],
+  // La technologie du collège (25/11/2026) : le libellé SEUL, « Sciences et technologie » reste aux sciences.
+  [/^technologie$/, 'technologie'],
   [/sanitaire|\bsante\b|prevention/, 'sante'],
   [/informatique|^nsi$/, 'informatique'],
   [/sport|education physique|^eppcs$/, 'sport'],

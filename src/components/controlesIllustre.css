@@ -308,6 +308,11 @@
   grid-column: 2;
 }
 
+/* La date officielle (25/11/2026), sur toute la largeur de la carte, sur fond sombre. */
+:root .ctr-illu .ctr-epreuve .epreuve-date { grid-column: 1 / -1; margin: 4px 0 6px; background: rgba(255, 255, 255, 0.06); color: #fff; }
+:root .ctr-illu .epreuve-date__horaire,
+:root .ctr-illu .epreuve-date__unite { color: rgba(255, 255, 255, 0.72); }
+
 :root .ctr-illu .ctr-epreuve .preparation,
 :root .ctr-illu .ctr-epreuve .epreuve-carte__matieres {
   grid-column: 1 / -1;
@@ -320,14 +325,18 @@
   margin-top: 4px;
 }
 
+/* LA PASTILLE TOUJOURS AU-DESSUS DU BOUTON — Camara, le 25/11/2026 : en ligne avec retour, elle se mettait à côté
+   du bouton quand la place le permettait (carte du brevet de français), au-dessus sinon. Une colonne : la pastille
+   d'abord, le bouton dessous, sur toute la largeur. */
 :root .ctr-illu .epreuve-carte__matiere {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
 }
 
-:root .ctr-illu .epreuve-carte__matiere .controle-carte__action { margin-top: 0; flex: 1 1 220px; }
+:root .ctr-illu .epreuve-carte__matiere .pastille-pret { align-self: flex-start; margin-top: 0; }
+:root .ctr-illu .epreuve-carte__matiere .controle-carte__action { margin-top: 0; width: 100%; }
 
 /* Plusieurs professeurs : le nom de la matière à gauche, séparé d'un trait ; son état et son bouton à droite. */
 :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) {
@@ -352,6 +361,35 @@
 
 :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) .pastille-pret { grid-column: 2; margin-top: 0; }
 :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) .controle-carte__action { grid-column: 2; width: 100%; }
+
+/* PLUSIEURS MATIÈRES DANS LA CARTE — Camara, le 25/11/2026 (brevet de sciences : physique-chimie, SVT, technologie) :
+   « les boutons doivent être moins gros et les textes tenir sur une seule ligne ». Des boutons à la taille de leur
+   texte (« Réviser avec Yann »), sur une ligne ; et UNE colonne de noms commune à toutes les matières (sous-grille) :
+   sans elle, chaque ligne prenait la largeur de son propre nom, et le trait et le bouton de « SVT » se décalaient. */
+:root .ctr-illu .epreuve-carte--plusieurs .epreuve-carte__matieres {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 12px;
+}
+
+:root .ctr-illu .epreuve-carte--plusieurs .epreuve-carte__matiere {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+:root .ctr-illu .epreuve-carte--plusieurs .epreuve-carte__matiere .controle-carte__action {
+  justify-self: start;
+  width: auto;
+  max-width: 100%;
+  padding: 7px 16px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:root .ctr-illu .epreuve-carte--plusieurs .epreuve-carte__matiere .pastille-pret { justify-self: start; }
 
 /* -------------------------------------------------------------------------- la préparation, en un chiffre */
 :root .ctr-illu .examen-section__global {
@@ -432,8 +470,6 @@
 
   :root .ctr-illu .ctr-epreuve { grid-template-columns: 48px minmax(0, 1fr); padding: 18px 16px 18px; }
   .ctr-epreuve__icone { font-size: 36px; }
-  /* Sur téléphone, le bouton prend la ligne entière sous la pastille : serré à côté, son texte se cassait. */
-  :root .ctr-illu .epreuve-carte__matiere .controle-carte__action { flex-basis: 100%; }
   /* Plusieurs professeurs, sur téléphone : la matière au-dessus de son état et de son bouton. */
   :root .ctr-illu .epreuve-carte__matiere:has(.epreuve-carte__libelle) { grid-template-columns: minmax(0, 1fr); }
   :root .ctr-illu .epreuve-carte__libelle { grid-row: auto; border-right: 0; padding-right: 0; }
@@ -445,3 +481,9 @@
   .ctr-illu__pied { justify-content: center; }
   .ctr-illu__pied-ecole { max-width: 100%; }
 }
+
+/* Le bandeau de la session (25/11/2026), sur fond sombre. */
+:root .ctr-illu .session-bandeau { background: rgba(10, 20, 60, 0.55); }
+:root .ctr-illu .session-bandeau__etendue { color: #fff; }
+:root .ctr-illu .session-bandeau__label,
+:root .ctr-illu .session-bandeau__prochaine { color: rgba(255, 255, 255, 0.8); }

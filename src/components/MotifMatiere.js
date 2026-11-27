@@ -272,6 +272,15 @@ const MOTIFS = {
     </>
   ),
 
+  // Une clé plate et une puce : la technologie du collège (25/11/2026), on répare et on programme.
+  TECHNOLOGIE: (
+    <>
+      <path d="M22 86 L52 56 M52 56 a12 12 0 1 0 8 -20 l-8 8 l-6 -2 l-2 -6 l8 -8 a12 12 0 0 0 -20 8" />
+      <rect x="78" y="40" width="30" height="30" rx="3" />
+      <path d="M84 40 v-8 M93 40 v-8 M102 40 v-8 M84 70 v8 M93 70 v8 M102 70 v8 M78 48 h-8 M78 62 h-8 M108 48 h8 M108 62 h8" />
+    </>
+  ),
+
   // Un chronomètre et un ballon : l'EPPCS.
   EPPCS: (
     <>

@@ -1,0 +1,95 @@
+/* L'ONGLET « SESSIONS D'EXAMENS » (25/11/2026) — préfixe `sx-`, libre dans App.css. */
+
+.sx { display: grid; gap: 14px; }
+
+.sx-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.sx-tete h2 { margin: 0 0 6px; }
+.sx-tete p { margin: 0; max-width: 70ch; color: var(--encre-douce); line-height: 1.5; }
+
+.sx-titre { display: flex; align-items: center; gap: 8px; margin: 18px 0 4px; font-size: 16px; }
+
+.sx-compte {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--corail, #e8562f);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sx-vide { color: var(--encre-douce); }
+.sx-duree { color: var(--encre-douce); }
+
+.sx-propositions { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+.sx-proposition {
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--corail, #e8562f) 45%, transparent);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.sx-epreuve { margin: 0 0 10px; }
+
+.sx-comparaison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.sx-comparaison > div {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.sx-comparaison .sx-nouvelle { outline: 2px solid color-mix(in srgb, var(--corail, #e8562f) 60%, transparent); }
+
+.sx-etiquette {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.sx-remplacement { font-size: 13px; color: var(--encre-douce); }
+
+.sx-extrait {
+  margin: 10px 0 6px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--trait);
+  color: var(--encre-douce);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.sx-provenance { margin: 0 0 10px; font-size: 13px; color: var(--encre-douce); }
+
+.sx-sources { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; }
+.sx-sources a { white-space: nowrap; }
+
+.sx-actions { display: flex; gap: 10px; }
+
+.sx-relecture,
+.sx-pages { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.sx-relecture a,
+.sx-pages a { word-break: break-all; }
+
+.sx-tableau-defile { overflow-x: auto; }
+.sx-tableau { min-width: 760px; }
+.sx-tableau td { vertical-align: top; }

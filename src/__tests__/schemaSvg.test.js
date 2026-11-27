@@ -197,6 +197,8 @@ describe('cohérence du catalogue', () => {
     'artspla', 'hda', 'cav', 'musique', 'theatre', 'danse', 'cirque',
     // Les quatre langues ajoutées le 13/10/2026.
     'de', 'it', 'zh', 'ar',
+    // La technologie du collège (25/11/2026).
+    'te',
   ];
 
   it('n’a aucune clé en double', () => {

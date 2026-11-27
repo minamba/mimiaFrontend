@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ajouterDocumentExamenBlanc, getFichierExamenBlanc, getTexteExamenBlanc, retirerDocumentExamenBlanc,
+  ajouterDocumentExamenBlanc, creerScanExamenBlanc, etatScanExamenBlanc, getFichierExamenBlanc, getTexteExamenBlanc,
+  retirerDocumentExamenBlanc,
 } from '../lib/api/examensBlancsApi';
 import { reduire } from './PieceJointe';
 import { Icone } from './CopieControle';
 import ApercuCoursControle from './ApercuCoursControle';
+import ScanMobileModale from './ScanMobileModale';
 import { TYPES_COURS } from './CoursDuControle';
 
 /** Vingt documents par matière, comme le serveur (Camara : « un élève n'atteindra jamais cette limite »). */
@@ -33,22 +35,34 @@ const AUCUN = [];
 /**
  * LES DOCUMENTS D'UNE MATIÈRE D'EXAMEN BLANC — Camara, le 23/11/2026 : « l'enfant envoie simplement tous ses
  * documents », et il peut les revoir. Mêmes gestes et même habillage que « Ton cours » d'un contrôle
- * (`CoursDuControle`), avec trois différences : vingt documents, AUCUNE limite de pages ni de taille propre (100 Mo
- * par fichier, pour le serveur), et pas encore de scan par téléphone.
+ * (`CoursDuControle`), avec deux différences : vingt documents, et AUCUNE limite de pages ni de taille propre (200 Mo
+ * par fichier, pour le serveur).
+ *
+ * LE SCAN PAR TÉLÉPHONE — Camara, le 25/11/2026 : « comme pour les contrôles ». Sur téléphone, « Prendre en photo »
+ * ouvre l'appareil ; sur ordinateur, « Scanner avec mon téléphone » affiche un QR code.
  *
  * DEUX RÉGIMES, comme pour le contrôle :
  *   - LA MATIÈRE EXISTE (`ligneId`) : chaque fichier part tout de suite ;
  *   - PAS ENCORE (la fenêtre d'ajout) : les fichiers attendent dans `enAttente`, et la fenêtre les envoie juste
- *     après avoir ajouté la matière.
+ *     après avoir ajouté la matière. Le QR code, lui, a besoin de la matière : `onBesoinDeLaMatiere` l'ajoute
+ *     d'abord, puis le QR code s'ouvre.
  */
 export default function DocumentsExamenBlanc({
   eleveId, examenId = null, ligneId = null, documents: initiaux = AUCUN, enAttente = AUCUN, onEnAttente = null,
-  onChange = null, disabled = false, onOccupe = null, titre = true,
+  onChange = null, disabled = false, onOccupe = null, titre = true, onBesoinDeLaMatiere = null,
 }) {
   const [documents, setDocuments] = useState(initiaux);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [enApercu, setEnApercu] = useState(null);
+  const [scanOuvert, setScanOuvert] = useState(false);
+
+  // UN TÉLÉPHONE PHOTOGRAPHIE AVEC SON APPAREIL NATIF ; sur ordinateur, on passe par le QR code (`CoursDuControle`).
+  const telephone = useMemo(
+    () => typeof window !== 'undefined'
+      && Boolean(window.matchMedia?.('(pointer: coarse)')?.matches),
+    [],
+  );
 
   useEffect(() => { setDocuments(initiaux); }, [initiaux]);
   useEffect(() => { onOccupe?.(envoi); }, [envoi, onOccupe]);
@@ -123,7 +137,36 @@ export default function DocumentsExamenBlanc({
       consultable: Boolean(genreLocal(f)),
     }));
 
+  const scanner = async () => {
+    setErreur(null);
+    if (enLigne) { setScanOuvert(true); return; }
+
+    // Le QR code a besoin de la matière : la fenêtre l'ajoute d'abord.
+    if (await onBesoinDeLaMatiere?.()) setScanOuvert(true);
+  };
+
+  const creerScan = useCallback(
+    () => creerScanExamenBlanc(eleveId, examenId, ligneId),
+    [eleveId, examenId, ligneId],
+  );
+
+  const lireScan = useCallback(
+    (jeton) => etatScanExamenBlanc(eleveId, examenId, ligneId, jeton),
+    [eleveId, examenId, ligneId],
+  );
+
+  const recu = useCallback((document) => {
+    setDocuments((liste) => (liste.some((d) => d.id === document.id) ? liste : [...liste, document]));
+  }, []);
+
+  // STABLE, MÊME SI LE PARENT PASSE UNE FONCTION NEUVE À CHAQUE RENDU : la modale relance son relevé quand
+  // `onTermine` change, et chaque photo reçue redessine la liste.
+  const onChangeRef = useRef(onChange);
+  useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+  const finScan = useCallback(() => onChangeRef.current?.(), []);
+
   const bloque = disabled || envoi || plein;
+  const scanPossible = !telephone && (enLigne || onBesoinDeLaMatiere);
 
   return (
     <div className="cours-controle" role="group" aria-label="Tes documents">
@@ -194,7 +237,44 @@ export default function DocumentsExamenBlanc({
               }}
             />
           </label>
+
+          {telephone ? (
+            <label className={`btn btn--compact btn--fantome cours-controle__bouton${bloque ? ' est-desactive' : ''}`}>
+              <Icone scan /> Prendre en photo
+              <input
+                type="file"
+                hidden
+                disabled={bloque}
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const choisis = e.target.files;
+                  ajouter(choisis);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          ) : scanPossible && (
+            <button
+              type="button"
+              className="btn btn--compact btn--fantome cours-controle__bouton"
+              disabled={bloque}
+              onClick={scanner}
+            >
+              <Icone scan /> Scanner avec mon téléphone
+            </button>
+          )}
         </div>
+      )}
+
+      {scanOuvert && enLigne && (
+        <ScanMobileModale
+          creer={creerScan}
+          lire={lireScan}
+          onRecu={recu}
+          onTermine={finScan}
+          onFermer={() => { setScanOuvert(false); finScan(); }}
+        />
       )}
 
       {enApercu?.fichier && (

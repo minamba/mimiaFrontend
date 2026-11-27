@@ -762,6 +762,42 @@ const NSI = [
   { cle: 'nsi-chiffrement-https', titre: 'Chiffrement symétrique, asymétrique et HTTPS', niveau: 'Tle' },
 ];
 
+/** Technologie du collège (Amine, 25/11/2026) : tirés de son référentiel, sans doubler un schéma déjà emprunté. */
+const TECHNOLOGIE = [
+  { cle: 'te-fonction-solution', titre: 'Fonction technique et solution technique', niveau: '5e' },
+  { cle: 'te-interacteurs', titre: 'Les interacteurs d’un objet technique', niveau: '5e' },
+  { cle: 'te-familles-materiaux', titre: 'Les familles de matériaux', niveau: '5e' },
+  { cle: 'te-chaine-energie-simple', titre: 'La chaîne d’énergie d’une trottinette électrique', niveau: '5e' },
+  { cle: 'te-chaine-information-simple', titre: 'La chaîne d’information d’un portail automatique', niveau: '5e' },
+  { cle: 'te-programme-blocs', titre: 'Un programme par blocs', niveau: '5e' },
+  { cle: 'te-reseau-local-college', titre: 'Le réseau local du collège', niveau: '5e' },
+  { cle: 'te-securite-atelier', titre: 'La sécurité à l’atelier', niveau: '5e' },
+  { cle: 'te-transmission-mouvement', titre: 'Transmettre un mouvement de rotation', niveau: '4e' },
+  { cle: 'te-transformation-mouvement', titre: 'Transformer un mouvement', niveau: '4e' },
+  { cle: 'te-conversions-energie', titre: 'Les conversions d’énergie', niveau: '4e' },
+  { cle: 'te-capteurs-actionneurs', titre: 'Capteurs et actionneurs d’une maison connectée', niveau: '4e' },
+  { cle: 'te-microcontroleur', titre: 'Une carte à microcontrôleur', niveau: '4e' },
+  { cle: 'te-procedes-fabrication', titre: 'Ajouter ou enlever de la matière', niveau: '4e' },
+  { cle: 'te-assemblages', titre: 'Assemblages fixes et démontables', niveau: '4e' },
+  { cle: 'te-sollicitations', titre: 'Comment un matériau est sollicité', niveau: '4e' },
+  { cle: 'te-adresse-ip', titre: 'L’adresse IP d’un objet connecté', niveau: '4e' },
+  { cle: 'te-gantt', titre: 'Planifier un projet', niveau: '4e' },
+  { cle: 'te-etiquette-reparabilite', titre: 'L’étiquette énergie et l’indice de réparabilité', niveau: '4e' },
+  { cle: 'te-algorigramme', titre: 'De l’algorithme à l’algorigramme', niveau: '4e' },
+  { cle: 'te-table-donnees', titre: 'Une table de données dans un tableur', niveau: '4e' },
+  { cle: 'te-schema-bloc-energie', titre: 'Le schéma-bloc d’une chaîne d’énergie', niveau: '3e' },
+  { cle: 'te-systeme-automatise', titre: 'Chaîne d’information et chaîne d’énergie ensemble', niveau: '3e' },
+  { cle: 'te-routage-internet', titre: 'Le trajet d’un paquet sur Internet', niveau: '3e' },
+  { cle: 'te-numerisation', titre: 'Numériser une grandeur', niveau: '3e' },
+  { cle: 'te-code-binaire', titre: 'Les bits, les octets et le code ASCII', niveau: '3e' },
+  { cle: 'te-blocs-vers-python', titre: 'Le même programme par blocs et en Python', niveau: '3e' },
+  { cle: 'te-sous-programme', titre: 'Un programme structuré en sous-programmes', niveau: '3e' },
+  { cle: 'te-cycle-vie-impacts', titre: 'Le cycle de vie d’un objet et ses impacts', niveau: '3e' },
+  { cle: 'te-developpement-durable', titre: 'Les trois piliers du développement durable', niveau: '3e' },
+  { cle: 'te-ia-apprentissage', titre: 'Les grands types d’apprentissage d’une IA', niveau: '3e' },
+  { cle: 'te-objets-communicants', titre: 'Deux objets qui communiquent', niveau: '3e' },
+];
+
 /** Sciences de l'ingénieur. */
 const SI = [
   { cle: 'si-effort-flux-puissance', titre: 'Grandeurs effort et flux de chaque énergie', niveau: '1re' },
@@ -1306,6 +1342,7 @@ export const EMPLACEMENTS = [
   ...SES,
   ...NSI,
   ...SI,
+  ...TECHNOLOGIE,
   ...EPPCS,
   ...SCIENCES_GESTION,
   ...MANAGEMENT,

@@ -12,6 +12,8 @@ import illuEcole from '../assets/controles-illustre/ecole.webp';
 import illuCerisiersGauche from '../assets/controles-illustre/cerisiers-gauche.webp';
 import illuCerisiersDroite from '../assets/controles-illustre/cerisiers-droite.webp';
 import './controlesIllustre.css';
+import { compteARebours, dureeEpreuve, etendueSession, jourEpreuve, jourLocal } from '../lib/datesEpreuves';
+import BlocDate, { heureBloc } from './BlocDate';
 
 /**
  * « Préparation au brevet » — la section posée sous « Mes contrôles ».
@@ -62,18 +64,106 @@ export function iconeEpreuve(epreuve) {
   return ICONES.find(([motif]) => motif.test(texte))?.[1] ?? '📘';
 }
 
-/** « Continuer la préparation avec Salim », quand l'épreuve a plusieurs professeurs. */
-export const libellePreparation = (matiere, plusieurs) => {
-  const verbe = (matiere.nombrePreparations ?? 0) > 0 ? 'Continuer la préparation' : 'Commencer à réviser';
+/**
+ * « Continuer la préparation avec Salim », quand l'épreuve a plusieurs professeurs.
+ *
+ * `court` : la carte de l'épreuve, quand elle porte plusieurs matières — Camara, le 25/11/2026 : « les boutons doivent
+ * être moins gros et les textes tenir sur une seule ligne ». « Réviser avec Yann », « Continuer avec Yann ». La page
+ * de l'épreuve, plus large, garde la phrase entière.
+ */
+export const libellePreparation = (matiere, plusieurs, court = false) => {
+  const commence = (matiere.nombrePreparations ?? 0) > 0;
+  if (court && plusieurs && matiere.profPrenom) {
+    return `${commence ? 'Continuer' : 'Réviser'} avec ${matiere.profPrenom}`;
+  }
+  const verbe = commence ? 'Continuer la préparation' : 'Commencer à réviser';
   return plusieurs && matiere.profPrenom ? `${verbe} avec ${matiere.profPrenom}` : verbe;
 };
+
+/**
+ * LA DATE OFFICIELLE DE L'ÉPREUVE, SOUS SON TITRE — Camara, le 25/11/2026 : « sur chaque card, les dates des
+ * épreuves ». Seule une date VALIDÉE arrive ici (le serveur ne renvoie pas les propositions de la veille). « Jeudi 24
+ * juin 2027 · 8 h · 3 h 15 », et à droite le compte à rebours, de plus en plus chaud à l'approche.
+ */
+export function DateOfficielle({ date }) {
+  const jour = jourEpreuve(date);
+  if (!jour) return null;
+  const heure = heureBloc(date.heureDebut);
+  const duree = dureeEpreuve(date);
+  const rebours = compteARebours(date);
+
+  return (
+    <BlocDate
+      date={date.dateEpreuve}
+      dateFin={date.nature === 'UN_DES_DEUX' ? date.dateFin : null}
+      titre={jour}
+      detail={[heure, duree && `Durée : ${duree}`].filter(Boolean).join(' · ') || null}
+      jours={rebours ? rebours.jours : null}
+    />
+  );
+}
+
+/** Un petit calendrier dessiné, pour le bandeau de la session (maquette de Camara, 25/11/2026). */
+function IconeCalendrier() {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="6" y="12" width="52" height="46" rx="9" fill="#f4f1ff" />
+      <path d="M6 21a9 9 0 0 1 9-9h34a9 9 0 0 1 9 9v6H6z" fill="#f2546b" />
+      <rect x="18" y="6" width="6" height="13" rx="3" fill="#5b5f7a" />
+      <rect x="40" y="6" width="6" height="13" rx="3" fill="#5b5f7a" />
+      {[0, 1, 2].map((l) => [0, 1, 2].map((c) => (
+        <rect key={`${l}${c}`} x={15 + c * 13} y={33 + l * 8} width="9" height="5" rx="1.5" fill="#b9b4e8" />
+      )))}
+    </svg>
+  );
+}
+
+/**
+ * LE BANDEAU DE LA SESSION — maquette de Camara (25/11/2026) : « Session des épreuves écrites », l'étendue en grand,
+ * la prochaine épreuve, et le compte à rebours jusqu'à elle. Rien tant qu'aucune date n'est validée.
+ */
+export function BandeauSession({ epreuves }) {
+  const datees = (epreuves ?? []).filter((e) => jourLocal(e.dateOfficielle?.dateEpreuve));
+  const etendue = etendueSession(datees.map((e) => e.dateOfficielle));
+  if (!etendue) return null;
+
+  const aujourdhui = new Date();
+  const prochaine = datees
+    .map((e) => ({ e, rebours: compteARebours(e.dateOfficielle, aujourdhui) }))
+    .filter((x) => x.rebours)
+    .sort((a, b) => a.rebours.jours - b.rebours.jours)[0];
+
+  const nom = prochaine
+    ? (prochaine.e.matieres?.length === 1 ? prochaine.e.matieres[0].libelle : prochaine.e.libelle)
+    : null;
+  const heure = prochaine && /^(\d{1,2}):(\d{2})/.exec(prochaine.e.dateOfficielle.heureDebut ?? '');
+
+  return (
+    <div className="session-bandeau">
+      <span className="session-bandeau__icone"><IconeCalendrier /></span>
+      <div className="session-bandeau__centre">
+        <p className="session-bandeau__label">Session des épreuves écrites</p>
+        <p className="session-bandeau__etendue">{etendue}</p>
+        {prochaine && (
+          <p className="session-bandeau__prochaine">
+            Prochaine épreuve : {nom} — {jourEpreuve(prochaine.e.dateOfficielle)}
+            {heure && ` à ${Number(heure[1])} h${heure[2] === '00' ? '' : ` ${heure[2]}`}`}
+          </p>
+        )}
+      </div>
+      {prochaine && (
+        <span className={`session-bandeau__rebours est-${prochaine.rebours.ton}`}>{prochaine.rebours.texte}</span>
+      )}
+    </div>
+  );
+}
 
 export function EpreuveCarte({ epreuve, eleveId, onPreparer, illustre = false }) {
   const plusieurs = epreuve.matieres.length > 1;
 
   return (
     <li
-      className={`controle-carte epreuve-carte${illustre ? ' ctr-epreuve' : ''}`}
+      className={`controle-carte epreuve-carte${plusieurs ? ' epreuve-carte--plusieurs' : ''}${illustre ? ' ctr-epreuve' : ''}`}
       style={styleMatiere({ matiereLibelle: epreuve.matieres[0]?.libelle })}
     >
       {illustre && (
@@ -93,6 +183,8 @@ export function EpreuveCarte({ epreuve, eleveId, onPreparer, illustre = false })
         {epreuve.libelle}
       </Link>
 
+      {epreuve.dateOfficielle && <DateOfficielle date={epreuve.dateOfficielle} />}
+
       <BarrePreparation pourcent={epreuve.pourcent} compact />
 
       <ul className="epreuve-carte__matieres">
@@ -111,7 +203,7 @@ export function EpreuveCarte({ epreuve, eleveId, onPreparer, illustre = false })
               className="btn btn--compact controle-carte__action"
               onClick={() => onPreparer?.(epreuve, matiere)}
             >
-              {libellePreparation(matiere, plusieurs)}
+              {libellePreparation(matiere, plusieurs, true)}
             </button>
           </li>
         ))}
@@ -165,12 +257,18 @@ export default function PreparationExamen({ eleveId, examen, onPreparer }) {
                 juin 2027 compte officiellement pour la session 2028 : écrire
                 « session 2027 » serait faux, et « session 2028 » ferait croire
                 qu'on a un an de plus. */}
+            {/* LES DATES OFFICIELLES QUAND ON LES A (25/11/2026) : elles vont dans le bandeau de la session, et la phrase
+                se simplifie (maquette de Camara). Sans date validée, le mois de la session, comme avant. */}
             <p>
-              Juin {examen.session} : les épreuves écrites, et où tu en es dans chacune.
+              {etendueSession((examen.epreuves ?? []).map((e) => e.dateOfficielle))
+                ? 'Tes épreuves écrites et ton avancement matière par matière.'
+                : `Juin ${examen.session} : les épreuves écrites, et où tu en es dans chacune.`}
             </p>
           </div>
         </div>
       </div>
+
+      <BandeauSession epreuves={examen.epreuves} />
 
       {/* LES SPÉCIALITÉS DÉCIDENT DES ÉPREUVES. Tant qu'il en manque une, la
           section le dit : sans cela, un élève de terminale croirait que son bac

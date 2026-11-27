@@ -13,7 +13,8 @@ import ExamenBlancForm from './ExamenBlancForm';
 import Loader from './Loader';
 import OuvertureSeance from './OuvertureSeance';
 import PastillePret from './PastillePret';
-import { LIBELLE_ETAT } from './ControleFiche';
+import { IconeCrayon, LIBELLE_ETAT } from './ControleFiche';
+import ExamenBlancModification from './ExamenBlancModification';
 import { useAffichageEleve } from '../lib/besoins';
 import { iconeEpreuve } from './PreparationExamen';
 import fujiCerisiers from '../assets/controles-illustre/fuji-cerisiers.webp';
@@ -168,6 +169,8 @@ export default function ExamenBlancFiche() {
   const [matieres, setMatieres] = useState([]);
   const [ajout, setAjout] = useState(false);
   const [confirmerSuppression, setConfirmerSuppression] = useState(false);
+  // MODIFIER LA DATE ET L'HEURE — Camara, le 25/11/2026 : « comme pour les contrôles ».
+  const [edition, setEdition] = useState(false);
   // LA SÉANCE DE PRÉPARATION (étape 3) : la durée et le casque, puis le cours, sur le contrôle caché de la matière.
   const [ouverture, setOuverture] = useState(null);
   const { calme } = useAffichageEleve(eleveId);
@@ -305,6 +308,16 @@ export default function ExamenBlancFiche() {
         >
           + Ajouter une matière
         </button>
+        <button
+          type="button"
+          className="btn-action btn-action--modifier"
+          disabled={!ouvert}
+          title={ouvert ? undefined : 'Les examens blancs sont réservés aux abonnés.'}
+          onClick={() => setEdition(true)}
+        >
+          <IconeCrayon />
+          Modifier
+        </button>
       </div>
 
       <div className="eb-supprimer">
@@ -337,6 +350,19 @@ export default function ExamenBlancFiche() {
             + `&mode=controle&controleId=${ouverture.controleId}`,
           )}
         />
+      )}
+
+      {edition && (
+        <div className="modale" role="dialog" aria-modal="true" aria-label="Modifier l’examen blanc">
+          <div className="modale__boite">
+            <ExamenBlancModification
+              eleveId={eleveId}
+              examen={examen}
+              onEnregistre={() => { setEdition(false); charger(); }}
+              onAnnule={() => setEdition(false)}
+            />
+          </div>
+        </div>
       )}
 
       {ajout && (

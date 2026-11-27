@@ -51,7 +51,7 @@ const dateCourte = (iso) =>
  * et une corbeille qui ressemble à autre chose sur Android est une corbeille
  * qu'on clique par erreur.
  */
-function IconeCrayon() {
+export function IconeCrayon() {
   return (
     <svg
       viewBox="0 0 16 16"

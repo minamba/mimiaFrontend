@@ -8509,6 +8509,16 @@ html.defilement-bloque body {
   --mur: url('./assets/walls/w_sport.webp');
 }
 
+.chat__tete[data-mur='ingenierie'] {
+  /* Ingénierie de STI2D, Lucas (25/11/2026) : le pont-serre sur l'eau. */
+  --mur: url('./assets/walls/w_ingenierie.webp');
+}
+
+.chat__tete[data-mur='technologie'] {
+  /* Technologie du collège, Amine (25/11/2026) : la serre et les éoliennes. */
+  --mur: url('./assets/walls/w_technologie.webp');
+}
+
 /* Toutes les matières allument le calque. Sans cette règle, une matière dont le
    décor serait inconnu peindrait un aplat plein à la place de l'image. */
 .chat__tete[data-mur='math']::before,
@@ -8527,7 +8537,9 @@ html.defilement-bloque body {
 .chat__tete[data-mur='arabe']::before,
 .chat__tete[data-mur='allemand']::before,
 .chat__tete[data-mur='italien']::before,
-.chat__tete[data-mur='sport']::before { display: block; }
+.chat__tete[data-mur='sport']::before,
+.chat__tete[data-mur='ingenierie']::before,
+.chat__tete[data-mur='technologie']::before { display: block; }
 
 @media (max-width: 1040px) {
   /* `top: 0` ET NON 62 PX, ET C'EST UNE CORRECTION — Camara, le 17/09/2026 :
@@ -24625,6 +24637,141 @@ html.defilement-bloque body {
   line-height: 1.45;
 }
 
+/* LA DATE OFFICIELLE DE L'ÉPREUVE (25/11/2026) — style voulu par Camara : la tuile du mois et du jour, la date et
+   l'horaire, les jours restants à droite. Le nombre se colore à l'approche : ambre sous 30 jours, corail sous 7. */
+.epreuve-date {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0 12px;
+  padding: 12px 16px 12px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--encre, #fff) 7%, transparent);
+}
+
+/* LE CALENDRIER À FEUILLETS (maquette de Camara) : bandeau à la couleur de la matière (`--matiere`, posée sur la
+   carte par styleMatiere), deux anneaux, le jour en grand, le mois dessous. */
+.epreuve-date__calendrier {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 54px;
+  padding: 17px 0 6px;
+  border-radius: 9px;
+  background: #fff;
+  color: #1f2333;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--matiere, #e8562f) 70%, #fff), 0 4px 10px rgba(0, 0, 0, 0.25);
+  line-height: 1;
+}
+
+.epreuve-date__calendrier::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 12px;
+  border-radius: 9px 9px 0 0;
+  background: var(--matiere, #e8562f);
+}
+
+.epreuve-date__calendrier::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 15px;
+  width: 4px;
+  height: 10px;
+  border-radius: 2px;
+  background: #4b5068;
+  box-shadow: 20px 0 0 #4b5068;
+}
+
+.epreuve-date__jour { font-size: 21px; font-weight: 800; }
+.epreuve-date__jour.est-double { font-size: 15px; }
+.epreuve-date__mois { margin-top: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #5b6275; }
+
+.epreuve-date__corps { display: grid; gap: 6px; min-width: 0; flex: 1; }
+.epreuve-date__titre { font-size: 15px; line-height: 1.3; }
+.epreuve-date__horaire { font-size: 14px; color: var(--encre-douce); }
+
+.epreuve-date__rebours { display: grid; justify-items: end; flex-shrink: 0; text-align: right; line-height: 1.15; }
+.epreuve-date__nombre { font-size: 22px; font-weight: 800; }
+.epreuve-date__unite { font-size: 13px; color: var(--encre-douce); }
+.epreuve-date__rebours.est-bientot .epreuve-date__nombre { color: #f5c451; }
+.epreuve-date__rebours.est-proche .epreuve-date__nombre { color: #ff8a6b; }
+
+/* LE BLOC ÉTROIT (cartes de contrôle du carrousel, téléphone) : il se resserre de lui-même, d'après SA largeur et non
+   celle de l'écran (requête de conteneur) — calendrier plus petit, « jours restants » sur deux lignes. */
+.epreuve-date { container-type: inline-size; }
+
+@container (max-width: 330px) {
+  .epreuve-date__corps { gap: 4px; }
+  .epreuve-date__titre { font-size: 13.5px; }
+  .epreuve-date__horaire { font-size: 12.5px; }
+  .epreuve-date__nombre { font-size: 19px; }
+  .epreuve-date__unite { max-width: 4.6em; font-size: 11px; line-height: 1.15; }
+}
+
+@media (max-width: 420px) {
+  .epreuve-date { gap: 10px; padding: 10px; }
+}
+
+/* LE BANDEAU DE LA SESSION (maquette de Camara, 25/11/2026) : cadre doré, l'étendue en grand, la prochaine épreuve,
+   et son compte à rebours dans une pastille dorée. */
+.session-bandeau {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 6px auto 18px;
+  max-width: 720px;
+  padding: 14px 22px;
+  border: 1.5px solid #f5c451;
+  border-radius: 18px;
+  background: color-mix(in srgb, #f5c451 6%, transparent);
+  box-shadow: 0 0 18px rgba(245, 196, 81, 0.22), inset 0 0 22px rgba(245, 196, 81, 0.06);
+}
+
+.session-bandeau__icone svg { width: 54px; height: 54px; display: block; }
+
+.session-bandeau__centre { flex: 1; min-width: 0; text-align: center; }
+
+.session-bandeau__label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--encre-douce);
+}
+
+.session-bandeau__label::before,
+.session-bandeau__label::after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: 0.5; }
+
+.session-bandeau__etendue { margin: 4px 0 2px; font-size: clamp(22px, 4vw, 32px); font-weight: 800; line-height: 1.15; }
+.session-bandeau__prochaine { margin: 0; font-size: 14px; color: var(--encre-douce); }
+
+.session-bandeau__rebours {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border: 2px solid #f5c451;
+  border-radius: 999px;
+  color: #f5c451;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(245, 196, 81, 0.3);
+}
+
+.session-bandeau__rebours.est-proche { border-color: #ff8a6b; color: #ff8a6b; box-shadow: 0 0 12px rgba(255, 138, 107, 0.35); }
+
+@media (max-width: 560px) {
+  .session-bandeau { flex-wrap: wrap; justify-content: center; padding: 14px; gap: 10px 14px; }
+  .session-bandeau__centre { flex-basis: 100%; order: -1; }
+}
+
 .epreuve-carte__matieres {
   list-style: none;
   margin: 10px 0 0;
@@ -24633,10 +24780,12 @@ html.defilement-bloque body {
   gap: 10px;
 }
 
+/* LA PASTILLE TOUJOURS AU-DESSUS DU BOUTON — Camara, le 25/11/2026 : en ligne, elle se mettait à côté quand la place
+   le permettait (« Pas encore prêt » à gauche de « Continuer la préparation »), au-dessus sinon. */
 .epreuve-carte__matiere {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
 }
 
@@ -24648,6 +24797,14 @@ html.defilement-bloque body {
 }
 
 .epreuve-carte__matiere .controle-carte__action { margin-top: 0; }
+
+/* Plusieurs matières dans la carte (25/11/2026) : le bouton tient sur une ligne (« Réviser avec Yann »). */
+.epreuve-carte--plusieurs .epreuve-carte__matiere .controle-carte__action {
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .epreuve-fiche__matiere + .epreuve-fiche__matiere {
   margin-top: 28px;
@@ -36049,7 +36206,7 @@ body:has(.cookies) .bouton-signalement { display: none; }
 }
 
 .mode__declinaison[data-saison-apercu='back-to-school'] .mode__declinaison-pastille {
-  background: linear-gradient(135deg, #1a8a63 0 60%, #ffc83d 60% 80%, #d62839 80% 100%);
+  background: linear-gradient(135deg, #8fc4ff 0 45%, #13306e 45% 70%, #ffc83d 70% 100%);
 }
 
 .mode__declinaisons-aide { margin: 0; font-size: 12.5px; color: var(--encre-douce); }
@@ -36174,7 +36331,8 @@ body:has(.cookies) .bouton-signalement { display: none; }
     --ombre: 0 18px 50px rgba(0, 10, 35, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     --ombre-l: 0 30px 80px rgba(0, 10, 35, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
-    --bs-voile-fond: linear-gradient(rgba(2, 12, 35, 0.3), rgba(2, 12, 35, 0.3));
+    /* Un peu plus sombre (0,3 → 0,4 → 0,48 → 0,53) : Camara, le 26/11/2026, « assombri le background ». */
+    --bs-voile-fond: linear-gradient(rgba(2, 12, 35, 0.53), rgba(2, 12, 35, 0.53));
     --bs-fond-bloc: #0b2550;
     --bs-degrade-bloc: linear-gradient(170deg, #16386e 0%, #0e2a58 55%, #081e44 100%);
     --bs-fond-carte: #12346a;
@@ -36241,7 +36399,8 @@ body:has(.cookies) .bouton-signalement { display: none; }
     --ombre: 0 18px 50px rgba(0, 5, 25, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
     --ombre-l: 0 30px 80px rgba(0, 5, 25, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.09);
 
-    --bs-voile-fond: linear-gradient(rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.32));
+    /* Un peu plus sombre (0,32 → 0,42 → 0,47) : Camara, le 26/11/2026, « assombri un peu le background ». */
+    --bs-voile-fond: linear-gradient(rgba(0, 0, 0, 0.47), rgba(0, 0, 0, 0.47));
     --bs-fond-bloc: #0c1a44;
     --bs-degrade-bloc: linear-gradient(170deg, #162a66 0%, #0f1f52 55%, #0a163c 100%);
     --bs-fond-carte: #11245a;
@@ -36311,7 +36470,10 @@ body:has(.cookies) .bouton-signalement { display: none; }
     --ombre: 0 18px 50px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     --ombre-l: 0 30px 80px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
-    --bs-voile-fond: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25));
+    /* UN VOILE GRIS CLAIR, plus un voile noir : Camara, le 26/11/2026 : « je voudrais que le fond soit plus clair,
+       qu'il tire plus vers le gris ». Fond moyen de 33 à 50 sur 255 (0,32, 0,26 puis 0,2 jugés trop clairs) ; les néons dorés restent lisibles.
+       La version nuit indigo (fond bf.png) essayée le même jour a été retirée à sa demande : « remet comme c'était ». */
+    --bs-voile-fond: linear-gradient(rgba(150, 150, 156, 0.17), rgba(150, 150, 156, 0.17));
     --bs-fond-bloc: #111111;
     --bs-degrade-bloc: linear-gradient(170deg, #1f1f1f 0%, #161616 55%, #0e0e0e 100%);
     --bs-fond-carte: #161616;
@@ -36384,7 +36546,8 @@ body:has(.cookies) .bouton-signalement { display: none; }
     --ombre: 0 18px 50px rgba(5, 0, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
     --ombre-l: 0 30px 80px rgba(5, 0, 20, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.09);
 
-    --bs-voile-fond: linear-gradient(rgba(5, 0, 20, 0.28), rgba(5, 0, 20, 0.28));
+    /* Un peu plus sombre (0,28 → 0,38) : Camara, le 26/11/2026, « assombrir un peu le background ». */
+    --bs-voile-fond: linear-gradient(rgba(5, 0, 20, 0.38), rgba(5, 0, 20, 0.38));
     --bs-fond-bloc: #130b34;
     --bs-degrade-bloc: linear-gradient(170deg, #22175a 0%, #1a114a 55%, #120a36 100%);
     --bs-fond-carte: #1a1148;
@@ -36439,72 +36602,77 @@ body:has(.cookies) .bouton-signalement { display: none; }
      rouge ; néons jaunes et blancs. Fond clair au centre, comme l'été : voile
      vert profond et ombre sur les titres. Cartes vert tableau, accents jaune
      crayon, boutons ROUGE POMME — l'orange est déjà celui de l'été. */
+  /* BACK TO SCHOOL, VERSION CIEL CLAIR — Camara, le 26/11/2026 (maquette) : le ciel bleu et les deux élèves
+     (backToschool.png), une barre et des cartes BLEU MARINE, des accents JAUNES, le bouton principal corail. Le
+     vert d'origine est abandonné. Les textes posés à même le ciel passent en marine (voir « BACK TO SCHOOL : LE
+     CIEL CLAIR » plus bas) ; ceux des cartes restent clairs, sur le marine. */
   :root[data-da='blue-sky'][data-saison='back-to-school'] {
-    --marque: #0f6b4d;
-    --papier: #073d2c;
-    --surface: #0e5e44;
+    --marque: #13306e;
+    --papier: #0b1f4d;
+    --surface: #16357a;
     --surface-2: rgba(255, 255, 255, 0.08);
-    --encre-douce: #d2f2e2;
-    --trait: rgba(190, 240, 215, 0.34);
-    --trait-bouton: rgba(210, 242, 226, 0.58);
-    --contour: rgba(210, 242, 226, 0.48);
+    --encre-douce: #d6e2fb;
+    --trait: rgba(190, 212, 255, 0.34);
+    --trait-bouton: rgba(214, 226, 251, 0.58);
+    --contour: rgba(214, 226, 251, 0.48);
     --corail: #ffc83d;
     --corail-sombre: #ffb81a;
     --corail-texte: #ffd966;
-    --corail-btn: #d62839;
-    --corail-btn-survol: #b71f2f;
-    /* La craie : un vert mentholé, pour « Voir la méthode » et les coches. */
-    --sarcelle: #b8f5d4;
-    --ombre: 0 18px 50px rgba(2, 30, 20, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    --ombre-l: 0 30px 80px rgba(2, 30, 20, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --corail-btn: #ec4330;
+    --corail-btn-survol: #cf3424;
+    /* Le bleu clair du ciel, pour « Voir la méthode » et les coches. */
+    --sarcelle: #9fd0ff;
+    --ombre: 0 18px 50px rgba(10, 30, 80, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --ombre-l: 0 30px 80px rgba(10, 30, 80, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
-    --bs-voile-fond: linear-gradient(180deg, rgba(4, 60, 40, 0.48) 0%, rgba(4, 70, 48, 0.32) 55%, rgba(4, 55, 38, 0.4) 100%);
-    --bs-fond-bloc: #0a4a35;
-    --bs-degrade-bloc: linear-gradient(170deg, #0f6b4d 0%, #0b5840 55%, #074331 100%);
-    --bs-fond-carte: #0e5e44;
-    --bs-degrade-carte: linear-gradient(170deg, #1a8a63 0%, #0f6b4d 38%, #0b5840 72%, #074331 100%);
+    /* Presque aucun voile : le ciel doit rester clair (un voile marine à 42 % essayé le 26/11/2026, refusé). */
+    --bs-voile-fond: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
+    --bs-fond-bloc: #12306b;
+    --bs-degrade-bloc: linear-gradient(170deg, #1d438f 0%, #15367a 55%, #0e275c 100%);
+    --bs-fond-carte: #16357a;
+    --bs-degrade-carte: linear-gradient(170deg, #2a55a8 0%, #1d438f 38%, #15367a 72%, #0e275c 100%);
 
-    --bs-lueur: 190 240 215;
-    --bs-lueur-2: 200 245 225;
-    --bs-lueur-3: 120 220 170;
+    --bs-lueur: 190 215 255;
+    --bs-lueur-2: 205 225 255;
+    --bs-lueur-3: 120 170 245;
     --bs-halo: 255 214 102;
-    --bs-halo-titre: 3 60 40;
-    --bs-nuit: 5 60 42;
-    --bs-nuit-2: 5 62 44;
-    --bs-nuit-3: 6 66 46;
-    --bs-barre: 6 70 48;
-    --bs-pied: 4 50 34;
-    --bs-ombre-rgb: 2 30 20;
-    --bs-marine: 8 80 55;
+    --bs-halo-titre: 10 35 90;
+    --bs-nuit: 14 40 95;
+    --bs-nuit-2: 15 42 100;
+    --bs-nuit-3: 17 46 106;
+    --bs-barre: 19 48 110;
+    --bs-pied: 12 34 82;
+    --bs-ombre-rgb: 10 30 80;
+    --bs-marine: 22 58 130;
     --bs-accent: 255 200 61;
-    --bs-encre-douce-rgb: 210 242 226;
-    --bs-bandeau-base: #0a4a35;
-    --bs-lisere: #2a8a64;
-    --bs-bleu-fonce: #0c5a41;
-    --bs-encre-marine: #084a34;
-    --bs-encre-marine-2: #0a553c;
+    --bs-encre-douce-rgb: 214 226 251;
+    --bs-bandeau-base: #12306b;
+    --bs-lisere: #3a68c4;
+    --bs-bleu-fonce: #15367a;
+    --bs-encre-marine: #0e275c;
+    --bs-encre-marine-2: #12306b;
     --bs-accent-plein: #ffc83d;
     --bs-accent-clair: #ffe9a8;
-    --bs-vert: #b8f5d4;
-    --bs-encre-teintee: #eafaf2;
-    --bs-encre-teintee-2: #f0fbf5;
-    --bs-encre-teintee-3: #cdeedd;
-    --bs-verre-haut: 80 190 140;
-    --bs-verre-milieu: 25 120 85;
-    --bs-verre-bas: 10 80 55;
-    --bs-encre-claire-rgb: 240 252 246;
-    --bs-lueur-4: 170 235 205;
-    --bs-demo-haut: #1a8a63;
-    --bs-demo-milieu: #0f6b4d;
-    --bs-demo-bas: #0b5840;
-    --bs-chat-fil: #083f2e;
-    --bs-chat-haut: #1a8a63;
-    --bs-chat-milieu: #0f6b4d;
-    --bs-chat-bas: #0b5840;
-    --bs-chat-bulle: #10704f;
-    --bs-encre-douce-plein: #d2f2e2;
-    --bs-encre-marine-3: #073d2c;
-    --bs-encre-teintee-4: #dcf5e9;
+    --bs-vert: #9fd0ff;
+    --bs-encre-teintee: #eaf1ff;
+    --bs-encre-teintee-2: #f1f6ff;
+    --bs-encre-teintee-3: #cddcf7;
+    --bs-verre-haut: 90 140 230;
+    --bs-verre-milieu: 30 70 150;
+    --bs-verre-bas: 14 40 95;
+    --bs-encre-claire-rgb: 240 246 255;
+    --bs-lueur-4: 175 205 250;
+    --bs-demo-haut: #2a55a8;
+    --bs-demo-milieu: #1d438f;
+    --bs-demo-bas: #15367a;
+    --bs-chat-fil: #0e275c;
+    --bs-chat-haut: #2a55a8;
+    --bs-chat-milieu: #1d438f;
+    --bs-chat-bas: #15367a;
+    --bs-chat-bulle: #1d438f;
+    --bs-encre-douce-plein: #d6e2fb;
+    --bs-encre-marine-3: #0b1f4d;
+    --bs-encre-teintee-4: #dde8fc;
   }
 
   /* ------------------------------------------------------------- LES FONDS
@@ -36573,6 +36741,294 @@ body:has(.cookies) .bouton-signalement { display: none; }
     :root[data-da='blue-sky'][data-saison='back-to-school'] body::before {
       background-image: var(--bs-voile-fond), url('./assets/saisons/back_to_school_bg.webp');
     }
+  }
+
+  /* ------------------------------------------------ BACK TO SCHOOL : LE CIEL CLAIR
+     Camara, le 26/11/2026 (maquette). Le haut de l'accueil est posé À MÊME LE
+     CIEL : ses textes passent en bleu marine, ses pastilles en blanc ou en
+     jaune. La démonstration devient une carte de verre blanc à barre marine.
+     Les cartes plus bas restent marine, à texte clair. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] {
+    --bts-encre: #0b1f4d;
+    --bts-encre-douce: #33466f;
+  }
+
+  /* Le halo sombre derrière le texte (lisibilité du blanc sur l'image) n'a plus lieu d'être : le texte est marine. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.heros__texte, .section__entete, .graphe__texte)::before {
+    display: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros .heros__texte h1,
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros .heros__texte .heros__pitch {
+    color: var(--bts-encre);
+    text-shadow: 0 1px 10px rgba(255, 255, 255, 0.55);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros .heros__texte h1 em {
+    color: #e39b00;
+    text-shadow: 0 1px 8px rgba(255, 255, 255, 0.6);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros .heros__pitch :is(strong, em, span, mark) {
+    color: #e08a00;
+    text-shadow: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros__note {
+    color: var(--bts-encre-douce);
+    text-shadow: 0 1px 6px rgba(255, 255, 255, 0.6);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros .etiquette {
+    background: #ffd65c;
+    border-color: #f2b81c;
+    color: var(--bts-encre);
+    box-shadow: 0 4px 14px rgba(230, 160, 0, 0.25);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .hero__programmes {
+    background: rgba(255, 255, 255, 0.82);
+    border-color: rgba(30, 70, 150, 0.25);
+    color: var(--bts-encre);
+    box-shadow: 0 4px 14px rgba(20, 50, 120, 0.12);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .heros__actions .btn--fantome {
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(40, 90, 190, 0.45);
+    color: #14367d;
+  }
+
+  /* LES ENTÊTES DE SECTION, AUSSI À MÊME LE CIEL (relevés le 26/11/2026 : tout texte de l'accueil sans carte
+     derrière lui). Le titre en marine, son mot clé en or foncé ou en bleu, l'étiquette en pastille jaune. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.section__entete, .accompagnement__entete,
+    .jeux-apercu__texte, .graphe__texte) :is(h2, p, p *),
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.parents-apercu__note, .comparatif__tva,
+    .prix-apercu__note, .avis__invite, .jeux-apercu__legende, .jeux-apercu__legende *) {
+    color: var(--bts-encre);
+    text-shadow: 0 1px 10px rgba(255, 255, 255, 0.55);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.section__entete, .accompagnement__entete,
+    .jeux-apercu__texte, .graphe__texte) p {
+    color: var(--bts-encre-douce);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.section__entete, .accompagnement__entete,
+    .jeux-apercu__texte, .graphe__texte) h2 :is(.titre-accent, em) {
+    color: #d98a00;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.section__entete, .accompagnement__entete,
+    .jeux-apercu__texte, .graphe__texte) h2 .titre-accent--sarcelle {
+    color: #2a5bd7;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.section__entete, .accompagnement__entete,
+    .jeux-apercu__texte, .graphe__texte) .etiquette {
+    background: #ffd65c;
+    border-color: #f2b81c;
+    color: var(--bts-encre);
+    text-shadow: none;
+  }
+
+  /* Les cartes de verre de l'accueil (tarifs…) : sur le ciel clair, le verre à 62 % laissait le texte blanc sur un
+     bleu moyen. Plus opaque ici. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .landing {
+    --surface: rgb(var(--bs-nuit-2) / 0.9);
+  }
+
+  /* SANS LES CARTES DES PROFESSEURS (26/11/2026, Camara : « pourquoi t'as fait sauter les backgrounds des
+     professeurs ? ») : leur décor de matière est une image de fond, que ce dégradé remplaçait. Elles gardent leur
+     décor, déjà sombre et opaque. Même chose pour le dernier appel (.final), qui a son image. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .landing :is(
+    .tuile, .exercices__carte, .avis__carte, .avis__resume, .prix-phare, .preuve, .parents__grille
+  ) {
+    background-image: linear-gradient(165deg, rgb(var(--bs-verre-haut) / 0.82) 0%, rgb(var(--bs-verre-milieu) / 0.9) 55%, rgb(var(--bs-verre-bas) / 0.94) 100%);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .landing :is(.prix-apercu__note, .avis__invite) a {
+    color: #c24f00;
+  }
+
+  /* LES PAGES DE L'APPLICATION — Camara, le 26/11/2026, capture de « Vos enfants » : « les textes et le truc de
+     l'abonnement ne sont pas visibles ». Le titre de page, son sous-titre et l'accroche de l'enfant passent en marine ;
+     le halo marine derrière eux, fait pour le blanc, est retiré ; la barre des heures devient un bandeau marine plein
+     (son verre à 40 % laissait le texte blanc sur du bleu ciel). */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] :is(.page__entete > div:first-child, header.page__entete)::before {
+    background: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .page__entete h1,
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .grille-matieres__entete .salutation h1 {
+    color: var(--bts-encre);
+    text-shadow: 0 1px 10px rgba(255, 255, 255, 0.55);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body :is(.page__sous-titre, .page__entete > div:first-child > p,
+    header.page__entete > p, .salutation__ligne, .salutation__ligne *:not(.badge)) {
+    color: var(--bts-encre-douce);
+    text-shadow: 0 1px 6px rgba(255, 255, 255, 0.6);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .page__entete h1 :is(.titre-accent, em, span:not(.salutation__prenom)) {
+    color: #d98a00;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .page__entete :is(.etiquette, .page__surtitre) {
+    background: #ffd65c;
+    border-color: #f2b81c;
+    color: var(--bts-encre);
+    text-shadow: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .reste-forfait.reste-forfait {
+    background: linear-gradient(180deg, #1d438f 0%, #12306b 100%);
+    border-color: #ffc83d;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .reste-forfait .reste-forfait__temps strong {
+    color: #ffd966;
+  }
+
+  /* LES FLÈCHES DE LA REMONTÉE (« Ce qui nous distingue ») : vert clair, invisibles sur le ciel (Camara, le
+     26/11/2026). En marine, un peu plus épaisses. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .remontee__lien span {
+    width: 3px;
+    background: #13306e;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body .remontee__lien span::after {
+    width: 9px;
+    height: 9px;
+    border-right: 3px solid #13306e;
+    border-bottom: 3px solid #13306e;
+  }
+
+  /* LES BARRES D'ONGLETS (« Mon compte », l'administration…) — Camara, le 26/11/2026 : « on voit même pas la barre
+     de menu ». Leurs libellés clairs étaient posés à même le ciel. Un bandeau marine derrière la rangée, plutôt
+     qu'un texte marine : la même barre vit aussi dans des cartes sombres, où le marine disparaîtrait. Sur petit
+     écran, la rangée devient un bouton de menu qui a déjà son fond. */
+  @media (min-width: 761px) {
+    :root[data-da='blue-sky'][data-saison='back-to-school'] body .onglets {
+      padding: 6px 10px 0;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #1d438f 0%, #13306e 100%);
+      box-shadow: 0 8px 24px rgba(10, 30, 80, 0.25);
+    }
+
+    :root[data-da='blue-sky'][data-saison='back-to-school'] body .onglets .onglet { color: #d6e2fb; }
+
+    :root[data-da='blue-sky'][data-saison='back-to-school'] body .onglets .onglet:hover,
+    :root[data-da='blue-sky'][data-saison='back-to-school'] body .onglets .onglet--actif {
+      color: #ffffff;
+    }
+  }
+
+  /* LES PAGES INTÉRIEURES SUR UNE FEUILLE MARINE — Camara, le 26/11/2026 : « Schémas … illisible », « Fréquentation
+     aussi », « vérifie ». Chaque page de l'espace parent et de l'administration pose ses textes, ses tableaux et ses
+     encadrés de verre à même le fond, écrits pour un fond SOMBRE ; les reprendre un à un n'aurait jamais fini. La
+     page entière est donc posée sur une feuille marine, le ciel tout autour : tout redevient lisible, comme dans
+     les autres thèmes. Restent sur le ciel, réglées à part : l'accueil (.landing), les pages illustrées (Tarifs,
+     « Vos enfants » : -illu) et les pages de l'enfant, qui ont leurs propres décors. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body main .page:not(.page-decor-enfant):not(.grille--enfant):not([class*='-illu']):not(.entree-eleve):not(.carte-illustree):not(.jeux-illustre) {
+    margin-top: 28px;
+    margin-bottom: 28px;
+    padding: 28px 32px 34px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(22, 53, 122, 0.95) 0%, rgba(12, 32, 80, 0.96) 100%);
+    box-shadow: 0 20px 60px rgba(10, 30, 80, 0.35);
+  }
+
+  @media (max-width: 760px) {
+    :root[data-da='blue-sky'][data-saison='back-to-school'] body main .page:not(.page-decor-enfant):not(.grille--enfant):not([class*='-illu']):not(.entree-eleve):not(.carte-illustree):not(.jeux-illustre) {
+      padding: 20px 16px 26px;
+      border-radius: 18px;
+    }
+  }
+
+  /* Sur la feuille, l'entête reprend son blanc (les règles « marine » plus haut sont faites pour le ciel). */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body main .page:not(.page-decor-enfant):not(.grille--enfant):not([class*='-illu']):not(.entree-eleve):not(.carte-illustree):not(.jeux-illustre) .page__entete h1 {
+    color: #ffffff;
+    text-shadow: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body main .page:not(.page-decor-enfant):not(.grille--enfant):not([class*='-illu']):not(.entree-eleve):not(.carte-illustree):not(.jeux-illustre) :is(.page__sous-titre, .page__entete > div:first-child > p, header.page__entete > p) {
+    color: var(--encre-douce);
+    text-shadow: none;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body main .page:not(.page-decor-enfant):not(.grille--enfant):not([class*='-illu']):not(.entree-eleve):not(.carte-illustree):not(.jeux-illustre) .page__entete h1 :is(.titre-accent, em, span) {
+    color: var(--corail-texte);
+  }
+
+  /* La barre d'onglets n'a plus besoin de son bandeau : elle est déjà sur du marine. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] body main .page:not(.page-decor-enfant):not(.grille--enfant):not([class*='-illu']):not(.entree-eleve):not(.carte-illustree):not(.jeux-illustre) .onglets.onglets {
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--trait);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* La démonstration : du verre blanc, une barre marine, des bulles blanches. */
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo {
+    background: rgba(240, 246, 255, 0.72);
+    border-color: rgba(255, 255, 255, 0.85);
+    color: var(--bts-encre);
+    box-shadow: 0 24px 60px rgba(20, 50, 120, 0.25);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__barre {
+    background: linear-gradient(165deg, #1d438f 0%, #13306e 100%);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__bulle--agent {
+    background: #ffffff;
+    color: var(--bts-encre);
+    border-color: rgba(30, 70, 150, 0.12);
+    box-shadow: 0 4px 14px rgba(20, 50, 120, 0.1);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__bulle--eleve {
+    background: #ffc83d;
+    color: var(--bts-encre);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__ardoise {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(30, 70, 150, 0.15);
+    border-left: 3px solid #2a5bd7;
+    color: var(--bts-encre);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__ardoise pre { color: var(--bts-encre); }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__ardoise-titre {
+    background: #dbe8ff;
+    color: #13306e;
+    width: fit-content;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__pied {
+    background: rgba(220, 232, 255, 0.92);
+    color: var(--bts-encre);
+  }
+
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__barre,
+  :root[data-da='blue-sky'][data-saison='back-to-school'] .demo__barre :is(.demo__prof, .demo__prof *, .demo__direct) {
+    color: #ffffff;
   }
 
   /* ------------------------------------------- LES VARIABLES LOCALES DE BLUE SKY
@@ -44571,6 +45027,9 @@ html:has(
   font-size: 1em;
   overflow: hidden;
   user-select: none;
+  /* SANS OMBRE (26/11/2026, Camara : « j'ai un double bonjour ») : le mot est transparent, mais l'ombre des titres
+     des saisons claires (soldes d'été, Back to School) se dessine quand même, et faisait un second « Bonjour » flou. */
+  text-shadow: none;
 }
 
 :root .grille--enfant .salutation__prenom {

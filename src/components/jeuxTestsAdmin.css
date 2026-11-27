@@ -413,6 +413,8 @@
 .jeux-tests__banniere[data-mur='sante'] { --mur: url('../assets/walls/w_sante.webp'); }
 .jeux-tests__banniere[data-mur='arts'] { --mur: url('../assets/walls/w_artd.webp'); }
 .jeux-tests__banniere[data-mur='sport'] { --mur: url('../assets/walls/w_sport.webp'); }
+.jeux-tests__banniere[data-mur='ingenierie'] { --mur: url('../assets/walls/w_ingenierie.webp'); }
+.jeux-tests__banniere[data-mur='technologie'] { --mur: url('../assets/walls/w_technologie.webp'); }
 .jeux-tests__banniere[data-mur='chinois'] { --mur: url('../assets/walls/w_chinois.webp'); }
 .jeux-tests__banniere[data-mur='arabe'] { --mur: url('../assets/walls/w_arabe.webp'); }
 .jeux-tests__banniere[data-mur='allemand'] { --mur: url('../assets/walls/w_allemand.webp'); }

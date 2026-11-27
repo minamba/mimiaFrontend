@@ -28,6 +28,7 @@ import photoYoussef from '../assets/profs/p_arabe.png';
 import photoMaelle from '../assets/profs/p_orientation.png';
 import photoHugo from '../assets/profs/p_pse.png';
 import photoLucas from '../assets/profs/p_ingenierie.png';
+import photoAmine from '../assets/profs/p_technologie.png';
 
 import animNora from '../assets/profs/anim/nora.mp4';
 import animAdrien from '../assets/profs/anim/adrien.mp4';
@@ -93,6 +94,9 @@ const PHOTOS = {
   // un peu décentré, s'arrêtait à 43 % du côté par endroits, sous les 44 % visibles : le bord a été prolongé
   // avec la couleur voisine jusqu'à 45,2 %, et l'intérieur (253/255) rendu opaque.
   lucas: photoLucas,
+  // Le professeur de technologie du collège — portrait fourni par Camara le 25/11/2026. Disque mesuré à 47 % du côté,
+  // au-delà des 44 % visibles : rien à prolonger.
+  amine: photoAmine,
 };
 
 /**
@@ -331,6 +335,17 @@ const PROFS = {
     cheveux: '#231B17',
     coupe: 'courte',
     vetement: '#475569',
+    lunettes: true,
+  },
+
+  // Technologie du collège (25/11/2026). Son image (`p_technologie.png`) prime ;
+  // ce dessin n'est que le repli. Cheveux noirs, lunettes, chemise bleue, comme
+  // le portrait.
+  amine: {
+    peau: '#C68E62',
+    cheveux: '#1B1310',
+    coupe: 'courte',
+    vetement: '#2B4E8C',
     lunettes: true,
   },
 };

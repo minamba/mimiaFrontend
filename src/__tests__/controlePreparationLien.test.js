@@ -57,17 +57,19 @@ test('la carte mène à la fiche du contrôle', () => {
   expect(screen.getByText('Mathématiques')).toBeInTheDocument();
 });
 
-test('le délai est affiché en pastille, avec son degré d’urgence', () => {
+// LE BLOC DE DATE DES ÉPREUVES (Camara, 25/11/2026 : « la même présentation ») : le délai y garde son degré
+// d'urgence — corail dans la dernière semaine, ambre sous un mois, neutre au-delà.
+test('le délai est affiché dans le bloc de date, avec son degré d’urgence', () => {
   const { rerender, container } = render(
     <ControleCarte controle={{ ...CONTROLE, joursRestants: 1 }} onPreparer={jest.fn()} />,
   );
-  expect(container.querySelector('.controle-carte__delai.est-imminent')).not.toBeNull();
-
-  rerender(<ControleCarte controle={{ ...CONTROLE, joursRestants: 3 }} onPreparer={jest.fn()} />);
-  expect(container.querySelector('.controle-carte__delai.est-proche')).not.toBeNull();
+  expect(container.querySelector('.epreuve-date__rebours.est-proche')).not.toBeNull();
 
   rerender(<ControleCarte controle={{ ...CONTROLE, joursRestants: 12 }} onPreparer={jest.fn()} />);
-  expect(container.querySelector('.controle-carte__delai.est-lointain')).not.toBeNull();
+  expect(container.querySelector('.epreuve-date__rebours.est-bientot')).not.toBeNull();
+
+  rerender(<ControleCarte controle={{ ...CONTROLE, joursRestants: 45 }} onPreparer={jest.fn()} />);
+  expect(container.querySelector('.epreuve-date__rebours.est-loin')).not.toBeNull();
 });
 
 test('un contrôle passé ne propose plus de le préparer', () => {

@@ -39,6 +39,11 @@ export default function ExamenBlancForm({
   const [erreur, setErreur] = useState(null);
   const [manquants, setManquants] = useState({});
   const [ajoute, setAjoute] = useState(null);
+  // AJOUTÉE AVANT LE SCAN (25/11/2026) : le QR code a besoin de la matière. La fenêtre reste ouverte, ses documents
+  // partent désormais un par un, comme sur la page de l'examen blanc.
+  const [cree, setCree] = useState(null);
+  const [documentsCrees, setDocumentsCrees] = useState([]);
+  const fige = Boolean(ajoute || cree);
 
   const verifier = () => {
     const m = {};
@@ -48,9 +53,51 @@ export default function ExamenBlancForm({
     return Object.keys(m).length === 0;
   };
 
+  /**
+   * « Scanner avec mon téléphone » AVANT d'avoir ajouté la matière, comme pour un contrôle : on l'ajoute maintenant,
+   * avec les fichiers déjà choisis, sans fermer la fenêtre. Vrai si le QR code peut s'ouvrir.
+   */
+  const ajouterAvantScan = async () => {
+    if (cree) return true;
+    if (!verifier()) return false;
+
+    setEnvoi(true);
+    setErreur(null);
+
+    try {
+      const { data } = await ajouterMatiereExamenBlanc(eleveId, {
+        matiereId: Number(matiereId),
+        dateExamen: date,
+        heureExamen: heure ? `${heure}:00` : null,
+      });
+
+      const envoyes = [];
+      for (const fichier of enAttente) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const { data: doc } = await ajouterDocumentExamenBlanc(eleveId, data.examenBlancId, data.matiereLigneId, fichier);
+          envoyes.push(doc);
+        } catch (e) {
+          setErreur(`« ${fichier.name} » n’est pas passé : ${e?.response?.data?.message ?? 'tu peux le renvoyer.'}`);
+        }
+      }
+
+      setEnAttente([]);
+      setDocumentsCrees(envoyes);
+      setCree(data);
+      return true;
+    } catch (e) {
+      setErreur(e?.response?.data?.message ?? 'La matière n’a pas pu être ajoutée. Tu peux réessayer ?');
+      return false;
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
   const soumettre = async (evenement) => {
     evenement.preventDefault();
     if (ajoute) { onEnregistre(ajoute.examenBlancId); return; }
+    if (cree) { onEnregistre(cree.examenBlancId); return; }
     if (!verifier()) return;
 
     setEnvoi(true);
@@ -100,7 +147,7 @@ export default function ExamenBlancForm({
           type="button"
           className="controle-form__fermer"
           aria-label="Fermer"
-          onClick={ajoute ? () => onEnregistre(ajoute.examenBlancId) : onAnnule}
+          onClick={fige ? () => onEnregistre((ajoute ?? cree).examenBlancId) : onAnnule}
         >
           ×
         </button>
@@ -113,7 +160,7 @@ export default function ExamenBlancForm({
         <select
           id="eb-matiere"
           value={matiereId}
-          disabled={Boolean(ajoute)}
+          disabled={fige}
           onChange={(e) => { setMatiereId(e.target.value); setManquants((m) => ({ ...m, matiere: undefined })); }}
           aria-invalid={Boolean(manquants.matiere)}
         >
@@ -134,7 +181,7 @@ export default function ExamenBlancForm({
             type="date"
             value={date}
             min={versISODate(new Date())}
-            disabled={Boolean(ajoute)}
+            disabled={fige}
             onChange={(e) => { setDate(e.target.value); setManquants((m) => ({ ...m, date: undefined })); }}
             aria-invalid={Boolean(manquants.date)}
           />
@@ -145,7 +192,8 @@ export default function ExamenBlancForm({
         </div>
       )}
 
-      {!dateFixee && (
+      {/* Masquée une fois la matière ajoutée pour le scan : rien ne l'enregistrerait plus. */}
+      {!dateFixee && !fige && (
         <div className="champ">
           <span id="eb-heure-libelle" className="champ__libelle">
             Heure <span className="champ__option">(facultatif)</span>
@@ -157,19 +205,23 @@ export default function ExamenBlancForm({
       {!ajoute && (
         <DocumentsExamenBlanc
           eleveId={eleveId}
+          examenId={cree?.examenBlancId ?? null}
+          ligneId={cree?.matiereLigneId ?? null}
+          documents={documentsCrees}
           enAttente={enAttente}
           onEnAttente={setEnAttente}
+          onBesoinDeLaMatiere={ajouterAvantScan}
           onOccupe={setOccupe}
           disabled={envoi}
         />
       )}
 
       <div className="modale__actions">
-        <button type="button" className="btn-ghost" onClick={ajoute ? () => onEnregistre(ajoute.examenBlancId) : onAnnule}>
+        <button type="button" className="btn-ghost" onClick={fige ? () => onEnregistre((ajoute ?? cree).examenBlancId) : onAnnule}>
           Annuler
         </button>
         <button type="submit" className="btn btn--compact" disabled={envoi || occupe || matieres.length === 0}>
-          {envoi ? 'Envoi…' : ajoute ? 'Terminer' : 'Ajouter'}
+          {envoi ? 'Envoi…' : fige ? 'Terminer' : 'Ajouter'}
         </button>
       </div>
     </form>

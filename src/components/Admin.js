@@ -76,6 +76,7 @@ import MessageInformation from './MessageInformation';
 import PromosAdmin from './PromosAdmin';
 import PeriodesVacancesAdmin from './PeriodesVacancesAdmin';
 import ProgrammeScolaireAdmin from './ProgrammeScolaireAdmin';
+import SessionsExamensAdmin from './SessionsExamensAdmin';
 import SignalementsAdmin from './SignalementsAdmin';
 import IdeesAdmin from './IdeesAdmin';
 import JeuxTestsAdmin from './JeuxTestsAdmin';
@@ -622,7 +623,7 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
   // poste par poste plutôt que déduits du total : sinon les frais de fond
   // resteraient dedans le jour où l'API en ajoute un.
   const famillesDollars = (cout?.dialogueDollars ?? 0) + (cout?.voixDollars ?? 0) + (cout?.fichesDollars ?? 0)
-    + (cout?.podcastsDollars ?? 0);
+    + (cout?.podcastsDollars ?? 0) + (cout?.documentsDollars ?? 0);
 
   const postes = cout?.postes ?? [];
 
@@ -797,6 +798,19 @@ function CoutTotal({ voirCout = true, voirRevenu = true }) {
                       </small>
                     </span>
                     <strong>{(cout?.podcastsDollars ?? 0).toFixed(2)} $</strong>
+                  </li>
+
+                  {/* LES DOCUMENTS ENVOYÉS — Camara, le 26/11/2026 : « le prix de quand un enfant upload un document ».
+                      La lecture des photos et des PDF à l'envoi (séance, cours d'un contrôle, examen blanc), sortie des
+                      frais de fond. Ce que le professeur en dit ensuite est dans le dialogue. */}
+                  <li>
+                    <span>
+                      Documents envoyés
+                      <small>
+                        lecture à l'envoi · {(cout?.documentsAppels ?? 0).toLocaleString('fr-FR')} appel{(cout?.documentsAppels ?? 0) > 1 ? 's' : ''}
+                      </small>
+                    </span>
+                    <strong>{(cout?.documentsDollars ?? 0).toFixed(2)} $</strong>
                   </li>
                 </ul>
               </section>
@@ -1441,6 +1455,8 @@ export default function Admin() {
       // les deux se lisent ensemble : l'un dit QUAND l'année scolaire se
       // déroule, l'autre QUEL programme y est enseigné.
       { cle: 'programme', libelle: 'Programme scolaire' },
+      // LES DATES OFFICIELLES DES ÉPREUVES (25/11/2026) : la veille propose, on valide ici.
+      { cle: 'sessions_examens', libelle: 'Sessions d’examens' },
       { cle: 'periodes', libelle: 'Périodes scolaires' },
       { cle: 'signalements', libelle: 'Signalements' },
       // CEUX DES ADMINISTRATEURS, RELIÉS AUX JEUX DE TEST (05/11/2026).
@@ -3328,6 +3344,8 @@ export default function Admin() {
       {onglet === 'schemas' && <Planches />}
 
       {onglet === 'programme' && <ProgrammeScolaireAdmin />}
+
+      {onglet === 'sessions_examens' && <SessionsExamensAdmin />}
 
       {onglet === 'periodes' && <PeriodesVacancesAdmin />}
 

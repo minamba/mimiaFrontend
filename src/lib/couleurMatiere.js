@@ -106,6 +106,9 @@ const MATIERES = {
   // L'ingénierie de STI2D a son professeur, Lucas (23/11/2026). Gris ardoise :
   // aucun autre professeur ne le porte. Provisoire, à revoir sur son portrait.
   INGENIERIE: { clair: '#475569', sombre: '#CBD5E1' },
+  // La technologie du collège a son professeur, Amine (25/11/2026). L'orange de
+  // Théo (EPPCS, lycée seul) : aucun élève ne voit les deux. Provisoire.
+  TECHNOLOGIE: { clair: '#C2410C', sombre: '#FDBA74' },
   LLCA_LATIN: { clair: '#B4531F', sombre: '#E2894F' },
   LLCA_GREC: { clair: '#B4531F', sombre: '#E2894F' },
   // Deux nouveaux professeurs : Théo (EPPCS), Jeanne (les sept arts).
@@ -185,6 +188,8 @@ const PAR_LIBELLE = {
   'sciences physiques et chimiques en laboratoire': 'SPCL',
   'ingenierie, innovation et developpement durable': 'INGENIERIE',
   ingenierie: 'INGENIERIE',
+  technologie: 'TECHNOLOGIE',
+  techno: 'TECHNOLOGIE',
   'biologie et physiopathologie humaines': 'BIOLOGIE_HUMAINE',
   'sciences et techniques sanitaires et sociales': 'SANITAIRE_SOCIAL',
   'economie droit': 'ECONOMIE_DROIT',
@@ -315,7 +320,9 @@ const MURS = {
   // L'écran et le code : ce qui se programme.
   NSI: 'informatique',
   SI: 'informatique',
-  INGENIERIE: 'informatique',
+  // Lucas et Amine ont leurs propres décors, générés par Camara le 25/11/2026.
+  INGENIERIE: 'ingenierie',
+  TECHNOLOGIE: 'technologie',
 
   // La table d'écriture, Hugo, Camus, Zola.
   FRANCAIS: 'francais',

@@ -155,7 +155,10 @@
 
 .eb-ajouter {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+  gap: 12px;
   margin-top: 20px;
 }
 
@@ -472,3 +475,6 @@
 @media (prefers-reduced-motion: reduce) {
   .eb-programme__jauge > span { transition: none; }
 }
+
+/* Le calendrier du bloc de date (25/11/2026) : l’or des examens blancs. */
+.eb-carte .epreuve-date__calendrier { --matiere: #d99a14; }

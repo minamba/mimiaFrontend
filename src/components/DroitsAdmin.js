@@ -31,6 +31,7 @@ export const LIBELLES = {
   avis: 'Avis',
   schemas: 'Schémas',
   programme: 'Programme scolaire',
+  sessions_examens: 'Sessions d’examens',
   periodes: 'Périodes scolaires',
   signalements: 'Signalements',
   idees: 'Idées',

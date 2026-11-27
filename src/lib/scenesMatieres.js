@@ -27,6 +27,8 @@ import economie from '../assets/scenes-matieres/economie.webp';
 import sante from '../assets/scenes-matieres/sante.webp';
 import informatique from '../assets/scenes-matieres/informatique.webp';
 import ingenierie from '../assets/scenes-matieres/ingenierie.webp';
+import scienceIngenierie from '../assets/scenes-matieres/science_ingenierie.webp';
+import technologie from '../assets/scenes-matieres/technologie.webp';
 import sport from '../assets/scenes-matieres/sport.webp';
 import arts from '../assets/scenes-matieres/arts.webp';
 import cinema from '../assets/scenes-matieres/cinema.webp';
@@ -55,6 +57,10 @@ export const SCENES = {
   sante: { image: sante, ratio: 1408 / 1024, haut: '#4d797a', bas: '#696157', bord: '#7fe8d0', bouton: ['#a8f5e2', '#4fcdb0'] },
   informatique: { image: informatique, ratio: 1408 / 1024, haut: '#1a1e44', bas: '#1b1d40', bord: '#6fb8ff', bouton: ['#8fd0ff', '#4f8cff'] },
   ingenierie: { image: ingenierie, ratio: 1408 / 1024, haut: '#284370', bas: '#24223c', bord: '#ffb066', bouton: ['#ffc58a', '#f08a3c'] },
+  // Lucas (ingénierie de STI2D) et Amine (technologie), scènes générées par Camara le 25/11/2026. `haut` et `bas`
+  // relevés sur l'image (moyenne des 40 premières et dernières lignes).
+  science_ingenierie: { image: scienceIngenierie, ratio: 1408 / 1024, haut: '#4a82e3', bas: '#91684d', bord: '#7fe8f0', bouton: ['#a8f0ff', '#3fb8d8'] },
+  technologie: { image: technologie, ratio: 1408 / 1024, haut: '#0c3094', bas: '#5e4c45', bord: '#ffb066', bouton: ['#ffc58a', '#f08a3c'] },
   sport: { image: sport, ratio: 1408 / 1024, haut: '#41467a', bas: '#662531', bord: '#ffa45c', bouton: ['#ffbe7a', '#f07a3c'] },
   arts: { image: arts, ratio: 1408 / 1024, haut: '#552a58', bas: '#693450', bord: '#ff8fd8', bouton: ['#ffb0e6', '#e45fc0'] },
   cinema: { image: cinema, ratio: 1408 / 1024, haut: '#1f1429', bas: '#401824', bord: '#ffcc66', bouton: ['#ffd98a', '#e0a83c'] },
@@ -98,7 +104,8 @@ const PAR_CODE = {
   PSE: 'sante',
   NSI: 'informatique',
   SI: 'ingenierie',
-  INGENIERIE: 'ingenierie',
+  INGENIERIE: 'science_ingenierie',
+  TECHNOLOGIE: 'technologie',
   EPPCS: 'sport',
   ARTS_PLASTIQUES: 'arts',
   HISTOIRE_ARTS: 'arts',

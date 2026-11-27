@@ -103,7 +103,8 @@ test('une carte porte la matière, le délai et le pourcentage EN TEXTE', () => 
   render(<MesControles eleveId="9" controles={[CONTROLE]} />);
 
   expect(screen.getByText('Mathématiques')).toBeInTheDocument();
-  expect(screen.getByText('dans 3 jours')).toBeInTheDocument();
+  // Le délai, en toutes lettres, dans le bloc de date (25/11/2026).
+  expect(screen.getByText('jours restants')).toBeInTheDocument();
 
   // Le chiffre lui-même, pas seulement la largeur de la barre.
   expect(screen.getByText('60 %')).toBeInTheDocument();
@@ -139,14 +140,14 @@ test('sans programme connu, la barre s’affiche quand même à 0 %', () => {
   expect(screen.getByText(/On ne sait pas encore ce qu’il y a dessus/)).toBeInTheDocument();
 });
 
-test('« demain » et « aujourd’hui » se disent en toutes lettres', () => {
+test('« 1 jour restant » et « aujourd’hui » se disent en toutes lettres', () => {
   const { rerender } = render(
     <MesControles eleveId="9" controles={[{ ...CONTROLE, joursRestants: 1 }]} />,
   );
-  expect(screen.getByText('demain')).toBeInTheDocument();
+  expect(screen.getByText('jour restant')).toBeInTheDocument();
 
   rerender(<MesControles eleveId="9" controles={[{ ...CONTROLE, joursRestants: 0 }]} />);
-  expect(screen.getByText("aujourd'hui")).toBeInTheDocument();
+  expect(screen.getByText('Aujourd’hui')).toBeInTheDocument();
 });
 
 /**

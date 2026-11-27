@@ -20,6 +20,8 @@ import chinois from '../assets/walls/w_chinois.webp';
 import arabe from '../assets/walls/w_arabe.webp';
 import allemand from '../assets/walls/w_allemand.webp';
 import italien from '../assets/walls/w_italien.webp';
+import ingenierie from '../assets/walls/w_ingenierie.webp';
+import technologie from '../assets/walls/w_technologie.webp';
 
 const IMAGES = {
   anglais,
@@ -39,6 +41,8 @@ const IMAGES = {
   arabe,
   allemand,
   italien,
+  ingenierie,
+  technologie,
 };
 
 /** L'image d'un décor (`math`, `francais`…), celle du français si le nom est inconnu. */

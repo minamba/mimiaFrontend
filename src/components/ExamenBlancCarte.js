@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import BarrePreparation from './BarrePreparation';
 import PastillePret, { STATUTS_PRET } from './PastillePret';
 import './examensBlancs.css';
+import { BlocDateControle } from './BlocDate';
 
 /** Les jours qui restent jusqu'à l'examen blanc, en dates locales (« demain » ne doit pas dépendre de l'heure). */
 export const joursAvant = (iso) => {
@@ -11,22 +12,9 @@ export const joursAvant = (iso) => {
   return Math.round((jour - aujourdhui) / 86400000);
 };
 
-// Les mêmes mots que la carte d'un contrôle (MesControles), recopiés ici : MesControles importe cette carte, et
-// l'import inverse ferait une boucle entre les deux fichiers.
-const delaiControle = (jours) => {
-  if (jours <= 0) return "aujourd'hui";
-  if (jours === 1) return 'demain';
-  return `dans ${jours} jours`;
-};
-
 const jourControle = (iso) =>
   new Date(`${iso.slice(0, 10)}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
-const urgence = (jours) => {
-  if (jours <= 1) return 'imminent';
-  if (jours <= 6) return 'proche';
-  return 'lointain';
-};
 
 /**
  * LES PASTILLES D'UNE CARTE D'EXAMEN BLANC : UNE PAR MATIÈRE (signalement #73 ; décision de Min's, 24/11/2026).
@@ -92,18 +80,17 @@ export default function ExamenBlancCarte({ examen, eleveId, illustre = false, on
           <Link to={lien} className="controle-carte__titre eb-carte__titre">
             {matieres.length > 0 ? matieres.join(' · ') : 'Ajoute tes matières'}
           </Link>
-          <p className="controle-carte__quand">
-            <span className="controle-carte__jour">{jourControle(examen.dateExamen)}</span>
-            {examen.heureExamen && ` · ${examen.heureExamen.slice(0, 5)}`}
-          </p>
+          {passe && (
+            <p className="controle-carte__quand">
+              <span className="controle-carte__jour">{jourControle(examen.dateExamen)}</span>
+              {examen.heureExamen && ` · ${examen.heureExamen.slice(0, 5)}`}
+            </p>
+          )}
         </div>
-        {jours >= 0 && (
-          <span className={`controle-carte__delai est-${urgence(jours)}`}>
-            <span aria-hidden="true">⏳ </span>
-            {delaiControle(jours)}
-          </span>
-        )}
       </div>
+
+      {/* LE BLOC DE DATE DES ÉPREUVES (Camara, 25/11/2026), comme les contrôles. */}
+      {!passe && <BlocDateControle date={examen.dateExamen} heure={examen.heureExamen} jours={jours} />}
 
       {/* « On ne sait pas encore ce qu'il y a dessus » serait faux ici : ses documents sont là, rangés. La note qui
           suit dit ce qui manque (le programme à valider). */}

@@ -82,9 +82,9 @@ test('une épreuve à deux professeurs a un bouton par professeur', async () => 
 
   render(<PreparationExamen eleveId="9" examen={EXAMEN} onPreparer={onPreparer} />);
 
-  expect(screen.getByRole('button', { name: 'Commencer à réviser avec Salim' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Réviser avec Salim' })).toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Continuer la préparation avec Marine' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Continuer avec Marine' }));
 
   expect(onPreparer).toHaveBeenCalledTimes(1);
   expect(onPreparer.mock.calls[0][0]).toMatchObject({ code: 'DNB_2027_SCIENCES' });

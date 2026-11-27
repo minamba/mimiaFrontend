@@ -14,6 +14,7 @@ import { iconeEpreuve, libellePreparation } from './PreparationExamen';
 import fujiCerisiers from '../assets/controles-illustre/fuji-cerisiers.webp';
 import toriiCerisiers from '../assets/controles-illustre/torii-cerisiers.webp';
 import './epreuveIllustre.css';
+import { compteARebours, horaireEpreuve, jourEpreuve, jourLocal } from '../lib/datesEpreuves';
 
 /**
  * La fiche d'une épreuve d'examen — le pendant de la fiche d'un contrôle.
@@ -239,6 +240,32 @@ function MatiereEpreuveIllustree({ matiere, plusieurs, onPreparer, portrait }) {
   );
 }
 
+/**
+ * LA DATE OFFICIELLE SUR LA PAGE DE L'ÉPREUVE (25/11/2026) : le jour, l'horaire complet, le compte à rebours, et la
+ * session de remplacement, qui n'a sa place qu'ici (elle ne concerne que les absents justifiés).
+ */
+function DateDeLEpreuve({ date, classe }) {
+  const jour = jourEpreuve(date);
+  if (!jour) return null;
+  const horaire = horaireEpreuve(date);
+  const rebours = compteARebours(date);
+  const remplacement = jourLocal(date.remplacementLe);
+
+  return (
+    <>
+      <p className={classe}>
+        <span aria-hidden="true">📅</span> {jour}{horaire && <> · {horaire}</>}{rebours && <> · <strong>{rebours.texte}</strong></>}
+      </p>
+      {remplacement && (
+        <p className={classe}>
+          Session de remplacement (absence justifiée) :{' '}
+          {remplacement.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}.
+        </p>
+      )}
+    </>
+  );
+}
+
 export default function EpreuveFiche() {
   const { eleveId, epreuveCode } = useParams();
   const navigate = useNavigate();
@@ -301,6 +328,7 @@ export default function EpreuveFiche() {
             <span className="epv-banniere__pourcent">{epreuve.pourcent} %</span>
           </div>
           <h1 className="epv-banniere__titre">{epreuve.libelle}</h1>
+          {epreuve.dateOfficielle && <DateDeLEpreuve date={epreuve.dateOfficielle} classe="epv-banniere__desc" />}
           {epreuve.description && (
             <p className="epv-banniere__desc"><span aria-hidden="true">🕒</span> {epreuve.description}</p>
           )}
@@ -343,6 +371,8 @@ export default function EpreuveFiche() {
           </div>
 
           <h1>{epreuve.libelle}</h1>
+
+          {epreuve.dateOfficielle && <DateDeLEpreuve date={epreuve.dateOfficielle} classe="controle-fiche__quand" />}
 
           {epreuve.description && <p className="controle-fiche__quand">{epreuve.description}</p>}
           {epreuve.remarque && <p className="epreuve-fiche__remarque">{epreuve.remarque}</p>}

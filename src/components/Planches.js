@@ -57,6 +57,8 @@ const MATIERES = {
   ses: { code: 'SES', libelle: 'Sciences économiques et sociales' },
   nsi: { code: 'NSI', libelle: 'Numérique et sciences informatiques' },
   si: { code: 'SI', libelle: 'Sciences de l’ingénieur' },
+  // La technologie du collège (Amine, 25/11/2026).
+  te: { code: 'TECHNOLOGIE', libelle: 'Technologie' },
   eppcs: { code: 'EPPCS', libelle: 'Éducation physique, pratiques et culture sportives' },
   // Les dix-huit matières qui n'avaient aucun emplacement (14/09/2026). Le
   // préfixe doit être ICI : c'est ce code qui part avec la planche importée, et

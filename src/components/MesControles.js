@@ -15,6 +15,7 @@ import { iconeEpreuve } from './PreparationExamen';
 import './controleCarteIllustre.css';
 import ExamenBlancCarte from './ExamenBlancCarte';
 import CarrouselControles from './CarrouselControles';
+import { BlocDateControle } from './BlocDate';
 
 /**
  * « Mes contrôles » — la section posée sous les cartes de matières.
@@ -42,20 +43,6 @@ export const jourControle = (iso) =>
   new Date(iso).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 
 /**
- * L'urgence d'un contrôle, en un mot et une teinte.
- *
- * TROIS PALIERS SEULEMENT, les mêmes que ceux qui font changer de ton le
- * professeur : au-delà d'une semaine on a le temps, en deçà de deux jours
- * c'est imminent. Un dégradé continu aurait demandé à l'enfant de comparer
- * des nuances pour savoir s'il doit s'inquiéter.
- */
-const urgence = (jours) => {
-  if (jours <= 1) return 'imminent';
-  if (jours <= 6) return 'proche';
-  return 'lointain';
-};
-
-/**
  * LA CARTE ILLUSTRÉE D'UN CONTRÔLE À VENIR — Camara, le 16/11/2026 (maquette : icône de matière, pastille, titre au
  * trait doré, délai, encadré « Préparation », pastille d'état, gros bouton doré), « adaptée en fonction des
  * matières » : l'icône, les couleurs et la scène de droite viennent de la matière du contrôle. Le contrôle ne porte
@@ -72,16 +59,6 @@ function habillage(controle) {
     '--cci-haut': scene.haut,
     '--cci-bas': scene.bas,
   };
-}
-
-function IconeCalendrier() {
-  return (
-    <svg className="cci__icone-ligne" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M9 14l2 2 4-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 function CarteIllustree({ controle, onPreparer, retour }) {
@@ -113,18 +90,12 @@ function CarteIllustree({ controle, onPreparer, retour }) {
             </Link>
             <span className="cci__trait" aria-hidden="true" />
           </span>
-          <p className="controle-carte__quand">
-            <IconeCalendrier />
-            <span className="controle-carte__jour">{jourControle(controle.dateControle)}</span>
-            {controle.heureControle && ` · ${controle.heureControle.slice(0, 5)}`}
-          </p>
         </div>
-
-        <span className={`controle-carte__delai est-${urgence(controle.joursRestants)}`}>
-          <span aria-hidden="true">⏳ </span>
-          {delaiControle(controle.joursRestants)}
-        </span>
       </div>
+
+      {/* LE BLOC DE DATE DES ÉPREUVES (Camara, 25/11/2026 : « je veux la même présentation ») : il remplace la ligne
+          de date et la pastille « dans 2 jours ». */}
+      <BlocDateControle date={controle.dateControle} heure={controle.heureControle} jours={controle.joursRestants} />
 
       <div className="cci__preparation">
         <BarrePreparation
@@ -180,11 +151,6 @@ export function ControleCarte({
         {/* Le délai en pastille plutôt qu'en fin de phrase : c'est la
             première chose qu'on cherche sur cette carte, et la dernière
             qu'on trouvait. */}
-        {!passe && (
-          <span className={`controle-carte__delai est-${urgence(controle.joursRestants)}`}>
-            {delaiControle(controle.joursRestants)}
-          </span>
-        )}
       </div>
 
       {/* D'OÙ L'ON VIENT VOYAGE DANS L'URL, ET NON DANS UN ÉTAT REACT.
@@ -198,10 +164,14 @@ export function ControleCarte({
         {controle.sujet || 'Sujet à préciser'}
       </Link>
 
-      <p className="controle-carte__quand">
-        <span className="controle-carte__jour">{jourControle(controle.dateControle)}</span>
-        {controle.heureControle && ` · ${controle.heureControle.slice(0, 5)}`}
-      </p>
+      {passe ? (
+        <p className="controle-carte__quand">
+          <span className="controle-carte__jour">{jourControle(controle.dateControle)}</span>
+          {controle.heureControle && ` · ${controle.heureControle.slice(0, 5)}`}
+        </p>
+      ) : (
+        <BlocDateControle date={controle.dateControle} heure={controle.heureControle} jours={controle.joursRestants} />
+      )}
 
       {/* Sur un contrôle passé, l'avancement des révisions n'a plus d'objet :
           c'est le résultat qu'on vient lire. */}
